@@ -1,10 +1,10 @@
 package org.fogbowcloud.scheduler.core;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,6 @@ import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class TestExecutionMonitor {
 
@@ -39,7 +38,7 @@ public class TestExecutionMonitor {
 	}
 	
 	@Test
-	public void testExecutionMonitor() throws InfrastructureException{
+	public void testExecutionMonitor() throws InfrastructureException, InterruptedException{
 		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
@@ -48,9 +47,12 @@ public class TestExecutionMonitor {
 		doReturn(resource).when(scheduler).getAssociateResource(task);
 		doReturn(true).when(resource).testSSHConnection();
 		doReturn(true).when(task).isFinished();
-		doNothing().when(IM).releaseResource(Mockito.any(Resource.class));	
+		doNothing().when(scheduler).taskCompleted(task);
 		executionMonitor.run();
+		Thread.sleep(500);
 		verify(task).isFinished();
-		verify(scheduler.getAssociateResource(task));
+		verify(job).finish(task);
+		verify(scheduler).getAssociateResource(task);
+		verify(scheduler).taskCompleted(task);
 	}
 }
