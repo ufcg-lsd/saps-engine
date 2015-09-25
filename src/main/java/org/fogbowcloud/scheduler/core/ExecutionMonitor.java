@@ -9,13 +9,11 @@ import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
-import org.fogbowcloud.scheduler.ssh.SshClientWrapper;
 
 public class ExecutionMonitor implements Runnable {
 
 	private Job job;
 	private Scheduler scheduler;
-	private SshClientWrapper sshClientWrapper;
 	private static final Logger LOGGER = Logger.getLogger(ExecutionMonitor.class);
 	private final int TEST_SSH_TIMEOUT = 10000;
 
