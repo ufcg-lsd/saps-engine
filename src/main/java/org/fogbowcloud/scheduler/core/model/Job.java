@@ -28,5 +28,15 @@ public class Job {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	public void finish(Task task) {
+		this.tasksRunning.remove(task);
+		this.tasksCompleted.add(task);
+	}
+
+	public void fail(Task task) {
+		this.tasksRunning.remove(task);
+		this.tasksCompleted.add(task);
 		
+	}
 }

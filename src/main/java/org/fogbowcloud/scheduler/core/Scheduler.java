@@ -51,4 +51,9 @@ public class Scheduler implements Runnable{
 		infraManager.releaseResource(runningTasks.get(task.getId()));
 		runningTasks.remove(task.getId());
 	}
+
+	public Resource getAssociateResource(
+			Task task) {
+		return runningTasks.get(task.getId());
+	}
 }
