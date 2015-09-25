@@ -18,7 +18,6 @@ public class ExecutionMonitor implements Runnable {
 	private final int TEST_SSH_TIMEOUT = 10000;
 
 	public ExecutionMonitor(Job job, Scheduler scheduler) {
-		// TODO Auto-generated constructor stub
 		this.job = job;
 		this.scheduler = scheduler;
 	}
