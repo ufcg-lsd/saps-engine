@@ -1,6 +1,7 @@
 package org.fogbowcloud.scheduler.core.model;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -26,12 +27,12 @@ public class Resource {
 	private String fogbowRequestId;
 	private String fogbowInstanceId;
 	
-	private Map<String, String> resourceMetadata;
+	private Map<String, String> resourceMetadata = new HashMap<String, String>();
 	
 	private Specification specification;
 	private String outputFolder;
     private String userName;
-    private final SshClientWrapper sshClientWrapper;
+    private SshClientWrapper sshClientWrapper;
 	
     public Resource(String fogbowInstanceId) {
     	this.fogbowInstanceId = fogbowInstanceId;
@@ -140,4 +141,12 @@ public class Resource {
 		this.specification = specification;
 	}
 
+	public SshClientWrapper getSshClientWrapper() {
+		return sshClientWrapper;
+	}
+
+	public void setSshClientWrapper(SshClientWrapper sshClientWrapper) {
+		this.sshClientWrapper = sshClientWrapper;
+	}
+	
 }

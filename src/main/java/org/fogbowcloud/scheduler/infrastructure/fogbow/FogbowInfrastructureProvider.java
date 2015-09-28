@@ -1,5 +1,6 @@
 package org.fogbowcloud.scheduler.infrastructure.fogbow;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -17,9 +18,11 @@ import org.fogbowcloud.manager.occi.request.RequestState;
 import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Specification;
+import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.util.AppUtil;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
+import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.RequestResourceException;
 
 public class FogbowInfrastructureProvider implements InfrastructureProvider {
@@ -33,7 +36,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private static final String AND_OPERATOR = " && ";
 	private static final String OR_OPERATOR = " || ";
 	private static final String CATEGORY = "Category";
-	private static final String X_OCCI_ATTRIBUTE = "X-OCCI-Attribute";
+	private static final String X_OCCI_ATTRIBUTE = "X-OCCI-Attribute: ";
 
 	public static final String INSTANCE_ATTRIBUTE_SSH_PUBLIC_ADDRESS_ATT = "org.fogbowcloud.request.ssh-public-address";
 	public static final String INSTANCE_ATTRIBUTE_SSH_USERNAME_ATT = "org.fogbowcloud.request.ssh-username";
@@ -42,11 +45,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	public static final String INSTANCE_ATTRIBUTE_VCORE = "occi.compute.cores";
 	public static final String INSTANCE_ATTRIBUTE_DISKSIZE = "TODO-AlterWhenFogbowReturns";  //TODO Alter when fogbow are returning this attribute
 	public static final String INSTANCE_ATTRIBUTE_MEMBER_ID = "TODO-AlterWhenFogbowReturns"; //TODO Alter when fogbow are returning this attribute
-
-	private long SECOND = 1000;
-	private long MINUTE = 60*SECOND;
-	//Timeout should be 20 Minutes, this is to prevent endlessly waiting for a non-responsive instance
-	private long TIMEOUT = 20*MINUTE;
 
 	// ------------------ ATTRIBUTES -----------------//
 	private HttpWrapper httpWrapper;
@@ -57,7 +55,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	public FogbowInfrastructureProvider(String managerUrl, Token token){
 		
 		httpWrapper = new HttpWrapper();
-		
 		this.managerUrl = managerUrl;
 		this.token = token;
 		
@@ -91,6 +88,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		if(specification == null){
 			throw new RequestResourceException("Invalid requestID suplied ["+requestID+"].");
 		}
+		
 		Resource newResource = null;
 
 		String fogbowInstanceId;
@@ -138,7 +136,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					//newResource.putMetadata(Resource.METADATA_LOCATION, instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID)); //TODO Descomentar quando o fogbow estiver retornando este atributo
 					
 					//Testing connection.
-					if(!newResource.testSSHConnection()){
+					if(!this.isResourceAlive(newResource)){
 						newResource = null;
 					}
 					
@@ -161,11 +159,22 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	}
 
 	@Override
-	public void deleteResource(Resource resource) {
-		// TODO Auto-generated method stub
-
+	public void deleteResource(Resource resource) throws InfrastructureException {
+		try{
+			this.doRequest("delete", managerUrl + "/compute/" + resource.getFogbowInstanceId(), new ArrayList<Header>());
+		}catch(Exception e){
+			throw new InfrastructureException("Error when tries to delete resource with IntanceId ["+resource.getFogbowInstanceId()+"]", e);
+		}
 	}
 	
+	public boolean isResourceAlive(Resource resource){
+		try {
+			resource.testSSHConnection();
+		} catch (InfrastructureException e) {
+			return false;
+		}
+		return true;
+	}
 	
 	// ----------------------- Private methods ----------------------- //
 
@@ -305,7 +314,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
         return atts;
     }
 	
-	private static RequestState getRequestState(String requestValue) {
+	private RequestState getRequestState(String requestValue) {
     	for (RequestState state : RequestState.values()) {
     		if (state.getValue().equals(requestValue)) {
     			return state;
@@ -314,16 +323,20 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
     	return null;
     }
 	
-	private String getNewID(){
-		return String.valueOf(UUID.randomUUID());
+	public HttpWrapper getHttpWrapper() {
+		return httpWrapper;
 	}
 
+	public void setHttpWrapper(HttpWrapper httpWrapper) {
+		this.httpWrapper = httpWrapper;
+	}
+	
+	public String getManagerUrl() {
+		return managerUrl;
+	}
 
-	private void sleep() {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-        }
-    }
-
+	public void setManagerUrl(String managerUrl) {
+		this.managerUrl = managerUrl;
+	}
+	
 }

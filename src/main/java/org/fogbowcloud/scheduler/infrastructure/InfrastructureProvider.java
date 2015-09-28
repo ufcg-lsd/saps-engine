@@ -15,5 +15,5 @@ public interface InfrastructureProvider {
 	
 	public Resource getResource(String requestID) throws RequestResourceException;
 	
-	public void deleteResource(Resource resource);
+	public void deleteResource(Resource resource) throws Exception;
 }
