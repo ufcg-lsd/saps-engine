@@ -10,13 +10,13 @@ public class Order {
 	
 	private Scheduler scheduler;
 	//TODO How to represent requeriments?
-	private String requirements;
+	private Specification specification;
 	private OrderState state;
 	private String requestId;
 	
-	public Order(Scheduler scheduler, String requirements) {
+	public Order(Scheduler scheduler, Specification specification) {
 		this.scheduler = scheduler;
-		this.requirements = requirements;
+		this.specification = specification;
 		this.state = OrderState.OPEN;
 	}
 
@@ -24,8 +24,8 @@ public class Order {
 		return scheduler;
 	}
 
-	public String getRequirements() {
-		return requirements;
+	public Specification getSpecification() {
+		return specification;
 	}
 
 	public OrderState getState() {

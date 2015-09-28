@@ -4,7 +4,7 @@ public class Task {
 
 	private boolean isFinished;
 	
-	public String getRequirements() {
+	public Specification getSpecification() {
 		// TODO Auto-generated method stub
 		return null;
 	}

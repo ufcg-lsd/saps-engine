@@ -9,6 +9,7 @@ import org.fogbowcloud.scheduler.core.ManagerTimer;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Order;
 import org.fogbowcloud.scheduler.core.model.Resource;
+import org.fogbowcloud.scheduler.core.model.Specification;
 
 public class InfrastructureManager {
 	
@@ -57,8 +58,8 @@ public class InfrastructureManager {
 		}, 0, orderPeriod);		
 	}
 	
-	public void orderResource(String requirements, Scheduler scheduler){
-		orders.add(new Order(scheduler, requirements));
+	public void orderResource(Specification specification, Scheduler scheduler){
+		orders.add(new Order(scheduler, specification));
 	}
 
 	//TODO Verificar sync. (Requisições concorrentes)

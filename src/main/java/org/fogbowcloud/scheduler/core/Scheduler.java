@@ -23,7 +23,7 @@ public class Scheduler implements Runnable{
 	@Override
 	public void run() {
 		for (Task task : job.getByState(TaskState.READY)) {
-			infraManager.orderResource(task.getRequirements(), this);
+			infraManager.orderResource(task.getSpecification(), this);
 		}
 	}
 	

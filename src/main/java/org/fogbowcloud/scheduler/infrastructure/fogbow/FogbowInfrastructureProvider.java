@@ -1,12 +1,10 @@
 package org.fogbowcloud.scheduler.infrastructure.fogbow;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
@@ -17,9 +15,8 @@ import org.fogbowcloud.manager.occi.request.RequestConstants;
 import org.fogbowcloud.manager.occi.request.RequestState;
 import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
-import org.fogbowcloud.scheduler.core.model.Specification;
-import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
+import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppUtil;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
@@ -50,7 +47,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private HttpWrapper httpWrapper;
 	private String managerUrl;
 	private Token token;
-	private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
+	//private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
 	
 	public FogbowInfrastructureProvider(String managerUrl, Token token){
 		
@@ -77,17 +74,11 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			throw new RequestResourceException("Create Request FAILED: "+e.getMessage(), e);
 		}
 		String requestId =  getRequestId(requestInformation);
-		pendingRequestsMap.put(requestId, requirements);
 		return requestId;
 	}
 
 	@Override
 	public Resource getResource(String requestID) throws RequestResourceException{
-		
-		Specification specification = pendingRequestsMap.get(requestID);
-		if(specification == null){
-			throw new RequestResourceException("Invalid requestID suplied ["+requestID+"].");
-		}
 		
 		Resource newResource = null;
 
@@ -113,10 +104,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					//Setting Instance ID
 					newResource = new Resource(fogbowInstanceId);
 					newResource.setFogbowRequestId(requestID);
-
-					//Sets the specification that generated this resource.
-					newResource.setSpecification(specification);
-					
 					
 					//Puting all metadatas on Resource
 					
@@ -148,10 +135,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			
 			LOGGER.error("Create Fogbow Resource FAILED - Resource : ", e);
 			newResource = null;
-		}
-		//If resource is OK (fulfilled), removes requestID and Requiriment from map
-		if(newResource != null){
-			pendingRequestsMap.remove(requestID);//Request is fulfilled, so it is removed from map os requests
 		}
 		
 		return newResource;
