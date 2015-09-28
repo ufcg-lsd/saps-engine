@@ -152,7 +152,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	
 	public boolean isResourceAlive(Resource resource){
 		try {
-			resource.testSSHConnection();
+			resource.checkConnectivity();
 		} catch (InfrastructureException e) {
 			return false;
 		}

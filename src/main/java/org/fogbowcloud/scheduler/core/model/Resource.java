@@ -67,7 +67,7 @@ public class Resource {
 		return true;
 	}
 
-	public boolean testSSHConnection() throws InfrastructureException{
+	public boolean checkConnectivity() throws InfrastructureException{
 		
 		String host = this.getMetadataValue(METADATA_SSH_HOST);
 		String port = this.getMetadataValue(METADATA_SSH_PORT);

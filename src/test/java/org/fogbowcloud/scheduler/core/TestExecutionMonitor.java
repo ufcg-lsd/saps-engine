@@ -46,7 +46,7 @@ public class TestExecutionMonitor {
 		doReturn(FAKE_TASK_ID).when(task).getId();
 		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
 		doReturn(resource).when(scheduler).getAssociateResource(task);
-		doReturn(true).when(resource).testSSHConnection();
+		doReturn(true).when(resource).checkConnectivity();
 		doReturn(true).when(task).isFinished();
 		doNothing().when(scheduler).taskCompleted(task);
 		executionMonitor.run();
@@ -65,7 +65,7 @@ public class TestExecutionMonitor {
 		doReturn(FAKE_TASK_ID).when(task).getId();
 		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
 		doReturn(resource).when(scheduler).getAssociateResource(task);
-		doReturn(false).when(resource).testSSHConnection();
+		doReturn(false).when(resource).checkConnectivity();
 		doNothing().when(scheduler).taskFailed(task);
 		executionMonitor.run();
 		Thread.sleep(500);
@@ -81,7 +81,7 @@ public class TestExecutionMonitor {
 		doReturn(FAKE_TASK_ID).when(task).getId();
 		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
 		doReturn(resource).when(scheduler).getAssociateResource(task);
-		doReturn(true).when(resource).testSSHConnection();
+		doReturn(true).when(resource).checkConnectivity();
 		doReturn(false).when(task).isFinished();
 		doNothing().when(scheduler).taskCompleted(task);
 		executionMonitor.run();

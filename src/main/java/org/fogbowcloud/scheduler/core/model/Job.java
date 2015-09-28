@@ -3,8 +3,6 @@ package org.fogbowcloud.scheduler.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.fogbowcloud.scheduler.core.model.Job.TaskState;
-
 public class Job {
 
 	public static enum TaskState{
@@ -14,7 +12,7 @@ public class Job {
 	List<Task> tasksReady = new ArrayList<Task>();
 	List<Task> tasksRunning = new ArrayList<Task>();
 	List<Task> tasksCompleted = new ArrayList<Task>();
-	List<Task> tasksfailed = new ArrayList<Task>();
+	List<Task> tasksFailed = new ArrayList<Task>();
 	
 	public void addTask(Task task){
 		tasksReady.add(task);
@@ -36,7 +34,7 @@ public class Job {
 
 	public void fail(Task task) {
 		this.tasksRunning.remove(task);
-		this.tasksCompleted.add(task);
+		this.tasksFailed.add(task);
 		
 	}
 }

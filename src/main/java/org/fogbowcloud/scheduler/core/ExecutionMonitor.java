@@ -15,7 +15,6 @@ public class ExecutionMonitor implements Runnable {
 	private Job job;
 	private Scheduler scheduler;
 	private static final Logger LOGGER = Logger.getLogger(ExecutionMonitor.class);
-	private final int TEST_SSH_TIMEOUT = 10000;
 
 	public ExecutionMonitor(Job job, Scheduler scheduler) {
 		this.job = job;
@@ -23,52 +22,46 @@ public class ExecutionMonitor implements Runnable {
 	}
 
 	@Override
-	public void run() {
-		
+	public void run() {		
 		ExecutorService service = Executors.newFixedThreadPool(3);
 		for (Task task : job.getByState(TaskState.RUNNING)) {
-			class TaskExecutionTest implements Runnable {
-
-				protected Task task; 
-				protected Scheduler scheduler;
-				protected Job job;
-
-				public TaskExecutionTest(Task task, Scheduler scheduler, Job job){
-					this.task = task;
-					this.scheduler = scheduler;
-					this.job = job;
-				}
-
-				@Override
-				public void run() {
-					try {
-						if (!testSshConnection(task)){
-							job.fail(task);
-							scheduler.taskFailed(task);
-						}
-					} catch (InfrastructureException e) {
-						e.printStackTrace();
-					}
-					/*    
-					 * if (is task completed)
-					 * 	   job.move(TaskState.RUNNING, TaskState.COMPLETED, task.getId());
-					 *     scheduler.taskCompleted(task)
-					 */
-					if (task.isFinished()){
-						job.finish(task);
-						scheduler.taskCompleted(task);
-					}
-
-				}
-
-				public boolean testSshConnection(Task task) throws InfrastructureException{
-					Resource resource = scheduler.getAssociateResource(task);
-					return resource.testSSHConnection();
-				}
-			}
-			service.submit(new TaskExecutionTest(task, this.scheduler, this.job));
+			service.submit(new TaskExecutionChecker(task, this.scheduler, this.job));
 		}
 	}
-
-
+	
+	class TaskExecutionChecker implements Runnable {
+		
+		protected Task task; 
+		protected Scheduler scheduler;
+		protected Job job;
+		
+		public TaskExecutionChecker(Task task, Scheduler scheduler, Job job){
+			this.task = task;
+			this.scheduler = scheduler;
+			this.job = job;
+		}
+		
+		@Override
+		public void run() {
+			if (task.isFinished()){
+				job.finish(task);
+				scheduler.taskCompleted(task);
+				return;
+			}
+			
+			try {
+				if (!checkResourceConnectivity(task)){
+					job.fail(task);
+					scheduler.taskFailed(task);
+				}
+			} catch (InfrastructureException e) {
+				LOGGER.error("Error while checking connectivity.", e);
+			}
+		}
+		
+		private boolean checkResourceConnectivity(Task task) throws InfrastructureException{
+			Resource resource = scheduler.getAssociateResource(task);
+			return resource.checkConnectivity();
+		}
+	}
 }
