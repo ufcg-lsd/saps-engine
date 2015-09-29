@@ -8,12 +8,12 @@ public interface InfrastructureProvider {
 
 	/**
 	 * Creates new Request for resource and return the Request ID
-	 * @param requirements
+	 * @param specification
 	 * @return Request's ID
 	 */
-	public String requestResource(Specification requirements) throws RequestResourceException;
+	public String requestResource(Specification specification) throws RequestResourceException;
 	
-	public Resource getResource(String requestID) throws RequestResourceException;
+	public Resource getResource(String requestID);
 	
 	public void deleteResource(Resource resource) throws Exception;
 }

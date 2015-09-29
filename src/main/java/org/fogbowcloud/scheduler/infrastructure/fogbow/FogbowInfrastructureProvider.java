@@ -47,7 +47,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private HttpWrapper httpWrapper;
 	private String managerUrl;
 	private Token token;
-	//private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
+	private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
 	
 	public FogbowInfrastructureProvider(String managerUrl, Token token){
 		
@@ -58,15 +58,15 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	}
 	
 	@Override
-	public String requestResource(Specification requirements) throws RequestResourceException {
+	public String requestResource(Specification spec) throws RequestResourceException {
 		
 		String requestInformation;
 		
 		try {
 
-			this.validateFogbowRequestRequirements(requirements);
+			this.validateFogbowRequestRequirements(spec);
 			
-			List<Header> headers = (LinkedList<Header>) requestNewInstanceHeaders(requirements);
+			List<Header> headers = (LinkedList<Header>) requestNewInstanceHeaders(spec);
 
 			requestInformation = this.doRequest("post", managerUrl+"/"+ RequestConstants.TERM, headers);
 
@@ -74,18 +74,33 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			throw new RequestResourceException("Create Request FAILED: "+e.getMessage(), e);
 		}
 		String requestId =  getRequestId(requestInformation);
+		pendingRequestsMap.put(requestId, spec);
 		return requestId;
 	}
 
 	@Override
-	public Resource getResource(String requestID) throws RequestResourceException{
+	public Resource getResource(String requestID) {
 		
-		Resource newResource = null;
+		Resource resource = getFogbowResource(requestID);
+		
+		if(resource == null){
+			return resource;
+		}
+		//Testing connection.
+		if(!resource.checkConnectivity()){
+			return null;
+		}
+		
+		pendingRequestsMap.remove(requestID);
+		return resource;
 
+	}
+
+	protected Resource getFogbowResource(String requestID) {
 		String fogbowInstanceId;
 		String sshInformation;
 		Map<String, String> requestAttributes;
-
+		Resource resource = null;
 		try {
 
 			//Attempt's to get the Instance ID from Fogbow Manager.
@@ -101,31 +116,26 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 				if (this.validateInstanceAttributes(instanceAttributes)) {
 					
-					//Setting Instance ID
-					newResource = new Resource(fogbowInstanceId);
-					newResource.setFogbowRequestId(requestID);
+					Specification spec = pendingRequestsMap.get(requestID);
+					resource = new Resource(fogbowInstanceId, spec);
 					
-					//Puting all metadatas on Resource
-					
+					//Putting all metadatas on Resource
 					sshInformation = instanceAttributes.get(INSTANCE_ATTRIBUTE_SSH_PUBLIC_ADDRESS_ATT);
 
 					String[] addressInfo = sshInformation.split(":");
 					String host = addressInfo[0];
 					String port = addressInfo[1];
 					
-					newResource.putMetadata(Resource.METADATA_SSH_HOST, host);
-					newResource.putMetadata(Resource.METADATA_SSH_PORT, port);
-					newResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, instanceAttributes.get(INSTANCE_ATTRIBUTE_SSH_USERNAME_ATT));
-					newResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, instanceAttributes.get(INSTANCE_ATTRIBUTE_EXTRA_PORTS_ATT));				
-					newResource.putMetadata(Resource.METADATA_VCPU, instanceAttributes.get(INSTANCE_ATTRIBUTE_VCORE));
-					newResource.putMetadata(Resource.METADATA_MEN_SIZE, instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMORY_SIZE));
-					//newResource.putMetadata(Resource.METADATA_DISK_SIZE, instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE)); //TODO Descomentar quando o fogbow estiver retornando este atributo
-					//newResource.putMetadata(Resource.METADATA_LOCATION, instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID)); //TODO Descomentar quando o fogbow estiver retornando este atributo
-					
-					//Testing connection.
-					if(!this.isResourceAlive(newResource)){
-						newResource = null;
-					}
+					resource.putMetadata(Resource.METADATA_SSH_HOST, host);
+					resource.putMetadata(Resource.METADATA_SSH_PORT, port);
+					resource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, instanceAttributes.get(INSTANCE_ATTRIBUTE_SSH_USERNAME_ATT));
+					resource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, instanceAttributes.get(INSTANCE_ATTRIBUTE_EXTRA_PORTS_ATT));				
+					resource.putMetadata(Resource.METADATA_VCPU, instanceAttributes.get(INSTANCE_ATTRIBUTE_VCORE));
+					resource.putMetadata(Resource.METADATA_MEN_SIZE, instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMORY_SIZE));
+					//TODO Descomentar quando o fogbow estiver retornando este atributo
+					//newResource.putMetadata(Resource.METADATA_DISK_SIZE, instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE)); 
+					//TODO Descomentar quando o fogbow estiver retornando este atributo
+					//newResource.putMetadata(Resource.METADATA_LOCATION, instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID)); 
 					
 				}
 				
@@ -133,31 +143,21 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			
 		} catch (Exception e) {
 			
-			LOGGER.error("Create Fogbow Resource FAILED - Resource : ", e);
-			newResource = null;
+			LOGGER.error("Error while getting ["+requestID+"]", e);
+			resource = null;
 		}
-		
-		return newResource;
-
+		return resource;
 	}
 
 	@Override
 	public void deleteResource(Resource resource) throws InfrastructureException {
 		try{
-			this.doRequest("delete", managerUrl + "/compute/" + resource.getFogbowInstanceId(), new ArrayList<Header>());
+			this.doRequest("delete", managerUrl + "/compute/" + resource.getId(), new ArrayList<Header>());
 		}catch(Exception e){
-			throw new InfrastructureException("Error when tries to delete resource with IntanceId ["+resource.getFogbowInstanceId()+"]", e);
+			throw new InfrastructureException("Error when tries to delete resource with IntanceId ["+resource.getId()+"]", e);
 		}
 	}
 	
-	public boolean isResourceAlive(Resource resource){
-		try {
-			resource.testSSHConnection();
-		} catch (InfrastructureException e) {
-			return false;
-		}
-		return true;
-	}
 	
 	// ----------------------- Private methods ----------------------- //
 

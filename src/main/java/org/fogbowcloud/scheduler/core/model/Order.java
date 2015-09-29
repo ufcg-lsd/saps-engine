@@ -9,7 +9,6 @@ public class Order {
 	}
 	
 	private Scheduler scheduler;
-	//TODO How to represent requeriments?
 	private Specification specification;
 	private OrderState state;
 	private String requestId;
@@ -43,5 +42,24 @@ public class Order {
 	public void setRequestId(String requestId) {
 		this.requestId = requestId;
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Order other = (Order) obj;
+		if (requestId == null) {
+			if (other.requestId != null)
+				return false;
+		} else if (!requestId.equals(other.requestId))
+			return false;
+		return true;
+	}
+
+	
 	
 }

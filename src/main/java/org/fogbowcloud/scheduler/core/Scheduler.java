@@ -8,6 +8,7 @@ import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
+import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 
 public class Scheduler implements Runnable{
 	
@@ -41,14 +42,24 @@ public class Scheduler implements Runnable{
 		job.addTask(newTask);
 		
 		// TODO Should we try reuse the same resource to new task? 
-		infraManager.releaseResource(runningTasks.get(task.getId()));
+		try {
+			infraManager.releaseResource(runningTasks.get(task.getId()));
+		} catch (Exception e) {
+			//TODO - Log ?
+			e.printStackTrace();
+		}
 		runningTasks.remove(task.getId());
 		
 		//TODO order new resource?!
 	}
 
 	public void taskCompleted(Task task) {
-		infraManager.releaseResource(runningTasks.get(task.getId()));
+		try {
+			infraManager.releaseResource(runningTasks.get(task.getId()));
+		} catch (Exception e) {
+			//TODO - Log ?
+			e.printStackTrace();
+		}
 		runningTasks.remove(task.getId());
 	}
 

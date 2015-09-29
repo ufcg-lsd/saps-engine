@@ -24,8 +24,6 @@ public class Resource {
     public static final String METADATA_LOCATION 		 = "metadataLocation";
 	
     private String id;
-	private String fogbowRequestId;
-	private String fogbowInstanceId;
 	
 	private Map<String, String> resourceMetadata = new HashMap<String, String>();
 	
@@ -34,8 +32,9 @@ public class Resource {
     private String userName;
     private SshClientWrapper sshClientWrapper;
 	
-    public Resource(String fogbowInstanceId) {
-    	this.fogbowInstanceId = fogbowInstanceId;
+    public Resource(String id, Specification spec) {
+    	this.id = id;
+    	this.specification = spec;
     	sshClientWrapper = new SshClientWrapper();
     }
 
@@ -47,16 +46,20 @@ public class Resource {
      * @param wantedSpecification
      * @return
      */
-    public boolean matchSpecification(Specification wantedSpecification){
+    public boolean match(Specification wantedSpecification){
 		
     	String fogbowRequirement = wantedSpecification.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS);
     	String image = wantedSpecification.getImage();
+    	String publicKey = wantedSpecification.getPublicKey();
     	if(fogbowRequirement != null && image != null){
     		
     		if(!FogbowRequirementsHelper.matches(this,fogbowRequirement)){
     			return false;
     		}
     		if(!image.equalsIgnoreCase(this.specification.getImage())){
+    			return false;
+    		}
+    		if(!publicKey.equalsIgnoreCase(this.specification.getPublicKey())){
     			return false;
     		}
     		
@@ -67,14 +70,12 @@ public class Resource {
 		return true;
 	}
 
-	public boolean testSSHConnection() throws InfrastructureException{
+	public boolean checkConnectivity(){
 		
 		String host = this.getMetadataValue(METADATA_SSH_HOST);
 		String port = this.getMetadataValue(METADATA_SSH_PORT);
 		try {
 			sshClientWrapper.connect(host, Integer.parseInt(port));
-		} catch (NumberFormatException e) {
-			throw new InfrastructureException("Invalid SSH port value ["+port+"] to "+this.getClass().getSimpleName()+" ["+fogbowInstanceId+"]");
 		} catch (IOException e) {
 			return false;
 		}
@@ -113,39 +114,19 @@ public class Resource {
 		this.userName = userName;
 	}
 
-	public String getFogbowRequestId() {
-		return fogbowRequestId;
-	}
-
-	public void setFogbowRequestId(String fogbowRequestId) {
-		this.fogbowRequestId = fogbowRequestId;
-	}
-
-	public String getFogbowInstanceId() {
-		return fogbowInstanceId;
-	}
-
 	public String getId() {
 		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public Specification getSpecification() {
 		return specification;
 	}
 
-	public void setSpecification(Specification specification) {
-		this.specification = specification;
-	}
-
 	public SshClientWrapper getSshClientWrapper() {
 		return sshClientWrapper;
 	}
 
-	public void setSshClientWrapper(SshClientWrapper sshClientWrapper) {
+	protected void setSshClientWrapper(SshClientWrapper sshClientWrapper) {
 		this.sshClientWrapper = sshClientWrapper;
 	}
 	

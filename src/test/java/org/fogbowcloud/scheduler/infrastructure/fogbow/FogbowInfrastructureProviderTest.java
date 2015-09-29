@@ -24,7 +24,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
-import org.owasp.esapi.waf.actions.DoNothingAction;
 
 
 public class FogbowInfrastructureProviderTest {
@@ -92,53 +91,30 @@ public class FogbowInfrastructureProviderTest {
 	}
 
 	@Test
-	public void getResourceTestSucess(){
+	public void getResourceTestSucess() throws Exception{
 		
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
-		String memSizeMock = "1024";
-		String coreSizeMock = "1";
-		String hostMock = "10.0.1.10";
-		String portMock = "8989";
 		
-		
-		try {
+		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Resource resourceMock = spy(new Resource(instanceIdMock, specs));
 
-			//Create Mock behavior for httpWrapperMock
-				//Creating response for request for resource.
-			createDefaultRequestResponse(requestIdMock);
-				//Creating response for request for Instance ID
-			createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
-				//Creating response for request for Instance Attributes
-			createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
-			
-			//To avoid SSH Connection Erro when tries to test connection to a FAKE host. 
-			doReturn(true).when(fogbowInfrastructureProvider).isResourceAlive(Mockito.any(Resource.class)); 
-			
-			Specification specs = new Specification("imageMock", "publicKeyMock");
+		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
+		doReturn(resourceMock).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
+		doReturn(true).when(resourceMock).checkConnectivity(); 
 
-			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-			fogbowInfrastructureProvider.requestResource(specs);
+		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 
-			Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
-			
-			assertNotNull(newResource);
-			assertEquals(instanceIdMock, newResource.getFogbowInstanceId());
-			assertEquals(memSizeMock, newResource.getMetadataValue(Resource.METADATA_MEN_SIZE));
-			assertEquals(coreSizeMock, newResource.getMetadataValue(Resource.METADATA_VCPU));
-			assertEquals(hostMock, newResource.getMetadataValue(Resource.METADATA_SSH_HOST));
-			assertEquals(portMock, newResource.getMetadataValue(Resource.METADATA_SSH_PORT));
-			
+		Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
+		assertNotNull(newResource);
+		assertEquals(instanceIdMock, newResource.getId());
+
 	}
 
 	@Test
-	public void getResourceTestNoInstanceId(){
+	public void getFogbowResourceTestSucess() throws Exception{
 		
 		//Attributes
 		String requestIdMock = "request01";
@@ -147,38 +123,30 @@ public class FogbowInfrastructureProviderTest {
 		String coreSizeMock = "1";
 		String hostMock = "10.0.1.10";
 		String portMock = "8989";
+
+		Specification specs = new Specification("imageMock", "publicKeyMock");
+
+		//Create Mock behavior for httpWrapperMock
+		//Creating response for request for resource.
+		createDefaultRequestResponse(requestIdMock);
+		//Creating response for request for Instance ID
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
+		//Creating response for request for Instance Attributes
+		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
 		
-		try {
+		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
+		fogbowInfrastructureProvider.requestResource(specs);
 
-			//Create Mock behavior for httpWrapperMock
-				//Creating response for request for resource.
-			createDefaultRequestResponse(requestIdMock);
-				//Creating response for request for Instance ID
-			createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FAILED);
-				//Creating response for request for Instance Attributes
-			createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
-			
-			//To avoid SSH Connection Erro when tries to test connection to a FAKE host. 
-			doReturn(true).when(fogbowInfrastructureProvider).isResourceAlive(Mockito.any(Resource.class)); 
-			
-			Specification specs = new Specification("imageMock", "publicKeyMock");
+		Resource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
 
-			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-			fogbowInfrastructureProvider.requestResource(specs);
-
-			Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
-			
-			assertNull(newResource);
-			
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
+		assertEquals(memSizeMock, newResource.getMetadataValue(Resource.METADATA_MEN_SIZE));
+		assertEquals(coreSizeMock, newResource.getMetadataValue(Resource.METADATA_VCPU));
+		assertEquals(hostMock, newResource.getMetadataValue(Resource.METADATA_SSH_HOST));
+		assertEquals(portMock, newResource.getMetadataValue(Resource.METADATA_SSH_PORT));
 	}
 	
 	@Test
-	public void getResourceTestNotFulfiled(){
+	public void getResourceTestNoInstanceId() throws Exception{
 		
 		//Attributes
 		String requestIdMock = "request01";
@@ -187,77 +155,29 @@ public class FogbowInfrastructureProviderTest {
 		String coreSizeMock = "1";
 		String hostMock = "10.0.1.10";
 		String portMock = "8989";
-		
-		
-		try {
 
-			//Create Mock behavior for httpWrapperMock
-				//Creating response for request for resource.
-			createDefaultRequestResponse(requestIdMock);
-				//Creating response for request for Instance ID
-			createDefaulRequestInstanceIdResponseNoId(requestIdMock);
-				//Creating response for request for Instance Attributes
-			createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
-			
-			//To avoid SSH Connection Erro when tries to test connection to a FAKE host. 
-			doReturn(true).when(fogbowInfrastructureProvider).isResourceAlive(Mockito.any(Resource.class)); 
-			
-			Specification specs = new Specification("imageMock", "publicKeyMock");
 
-			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-			fogbowInfrastructureProvider.requestResource(specs);
+		//Create Mock behavior for httpWrapperMock
+		//Creating response for request for resource.
+		createDefaultRequestResponse(requestIdMock);
+		//Creating response for request for Instance ID
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FAILED);
+		//Creating response for request for Instance Attributes
+		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
 
-			Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
-			
-			assertNull(newResource);
-			
+		Specification specs = new Specification("imageMock", "publicKeyMock");
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
+		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
+		fogbowInfrastructureProvider.requestResource(specs);
+
+		Resource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
+
+		assertNull(newResource);
+			
 	}
 	
 	@Test
-	public void getResourceTestNoSShInformation(){
-		
-		//Attributes
-		String requestIdMock = "request01";
-		String instanceIdMock = "instance01";
-		String memSizeMock = "1024";
-		String coreSizeMock = "1";
-		
-		try {
-
-			//Create Mock behavior for httpWrapperMock
-				//Creating response for request for resource.
-			createDefaultRequestResponse(requestIdMock);
-				//Creating response for request for Instance ID
-			createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
-				//Creating response for request for Instance Attributes
-			createDefaulInstanceAttributesResponseNoShh(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock);
-			
-			//To avoid SSH Connection Erro when tries to test connection to a FAKE host. 
-			doReturn(true).when(fogbowInfrastructureProvider).isResourceAlive(Mockito.any(Resource.class)); 
-			
-			Specification specs = new Specification("imageMock", "publicKeyMock");
-
-			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-			fogbowInfrastructureProvider.requestResource(specs);
-
-			Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
-			
-			assertNull(newResource);
-			
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
-	}
-	
-	@Test
-	public void getResourceTestSSHConnectionFailed(){
+	public void getResourceTestNotFulfiled() throws Exception{
 		
 		//Attributes
 		String requestIdMock = "request01";
@@ -266,57 +186,90 @@ public class FogbowInfrastructureProviderTest {
 		String coreSizeMock = "1";
 		String hostMock = "10.0.1.10";
 		String portMock = "8989";
+
+		//Create Mock behavior for httpWrapperMock
+		//Creating response for request for resource.
+		createDefaultRequestResponse(requestIdMock);
+		//Creating response for request for Instance ID
+		createDefaulRequestInstanceIdResponseNoId(requestIdMock);
+		//Creating response for request for Instance Attributes
+		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
+
+		Specification specs = new Specification("imageMock", "publicKeyMock");
+
+		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
+		fogbowInfrastructureProvider.requestResource(specs);
+
+		Resource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
+
+		assertNull(newResource);
+			
+	}
+	
+	@Test
+	public void getResourceTestNoSShInformation() throws Exception{
 		
+		//Attributes
+		String requestIdMock = "request01";
+		String instanceIdMock = "instance01";
+		String memSizeMock = "1024";
+		String coreSizeMock = "1";
+
+		//Create Mock behavior for httpWrapperMock
+		//Creating response for request for resource.
+		createDefaultRequestResponse(requestIdMock);
+		//Creating response for request for Instance ID
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
+		//Creating response for request for Instance Attributes
+		createDefaulInstanceAttributesResponseNoShh(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock);
+
+		Specification specs = new Specification("imageMock", "publicKeyMock");
+
+		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
+		fogbowInfrastructureProvider.requestResource(specs);
+
+		Resource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
+
+		assertNull(newResource);
+			
+	}
+	
+	@Test
+	public void getResourceTestSSHConnectionFailed() throws Exception{
 		
-		try {
+		//Attributes
+		String requestIdMock = "request01";
+		String instanceIdMock = "instance01";
 
-			//Create Mock behavior for httpWrapperMock
-				//Creating response for request for resource.
-			createDefaultRequestResponse(requestIdMock);
-				//Creating response for request for Instance ID
-			createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
-				//Creating response for request for Instance Attributes
-			createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
-			
-			//Mock Connection Erro when tries to test connection to a FAKE host. 
-			doReturn(false).when(fogbowInfrastructureProvider).isResourceAlive(Mockito.any(Resource.class)); 
-			
-			Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Resource resourceMock = spy(new Resource(instanceIdMock, specs));
 
-			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-			fogbowInfrastructureProvider.requestResource(specs);
+		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
+		doReturn(resourceMock).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
+		doReturn(false).when(resourceMock).checkConnectivity(); 
 
-			Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
-			
-			assertNull(newResource);
-			
+		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
+		Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
+
+		assertNull(newResource);
+			
 	}
 
 	@Test
-	public void deleteResourceTestSucess() {
+	public void deleteResourceTestSucess() throws Exception{
 		
 		String instanceIdMock = "instance01";
 		String urlEndpointInstanceDelete = FAKE_URL + "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(instanceIdMock);
-		
-		try {
+		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"));
+
+		doReturn("OK").when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
+				Mockito.any(String.class), Mockito.any(List.class));
+
+		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
+		fogbowInfrastructureProvider.deleteResource(resource);
 			
-			doReturn("OK").when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
-					Mockito.any(String.class), Mockito.any(List.class));
-			
-			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-			fogbowInfrastructureProvider.deleteResource(resource);
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
 	}
 	
 	@Test
@@ -327,7 +280,7 @@ public class FogbowInfrastructureProviderTest {
 		String instanceIdMock = "instance01";
 		String urlEndpointInstanceDelete = FAKE_URL + "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(instanceIdMock);
+		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"));
 
 		doThrow(new Exception("Erro on request.")).when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
 				Mockito.any(String.class), Mockito.any(List.class));

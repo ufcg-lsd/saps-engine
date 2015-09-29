@@ -20,7 +20,7 @@ public class ManagerTimer {
 				try {
 					task.run();
 				} catch (Throwable e) {
-//					LOGGER.error("Failed while executing timer task", e);
+					System.out.println("Failed while executing timer task: "+e.getMessage());
 				}
 			}
 		}, delay, period, TimeUnit.MILLISECONDS);
