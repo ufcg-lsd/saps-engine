@@ -158,7 +158,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		}
 	}
 	
-	
 	// ----------------------- Private methods ----------------------- //
 
 	private String getInstanceIdByRequestAttributes(Map<String, String> requestAttributes) throws RequestResourceException{

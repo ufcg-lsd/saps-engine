@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
-import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 
 //TODO this class should be abstract???
@@ -69,6 +68,7 @@ public class Resource {
     	
 		return true;
 	}
+
 
 	public boolean checkConnectivity(){
 		
