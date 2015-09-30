@@ -3,12 +3,14 @@ package org.fogbowcloud.scheduler.infrastructure.fogbow;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.request.RequestConstants;
@@ -17,6 +19,7 @@ import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.junit.After;
 import org.junit.Before;
@@ -35,7 +38,8 @@ public class FogbowInfrastructureProviderTest {
 	private final String FILE_RESPONSE_NO_SSH = "src/test/resources/instanceInfoWithoutSshInfo";
 	private final String FILE_RESPONSE_SSH = "src/test/resources/instanceInfoWithSshInfo";
 	private final String FILE_RESPONSE_REQUEST_INSTANCE = "src/test/resources/requestId";
-
+	private final String SEBAL_SCHEDULER_PROPERTIES = "src/test/resources/sebal-scheduler.properties";
+	
 
 	private static final String PRIVATE_KEY = "src/test/resources/privatekey";
 	private static final String PUBLIC_KEY = "src/test/resources/publickey";
@@ -44,24 +48,25 @@ public class FogbowInfrastructureProviderTest {
 	public final ExpectedException exception = ExpectedException.none();
 	
 	private FogbowInfrastructureProvider fogbowInfrastructureProvider; 
-	private Token tokenMock;
 	private HttpWrapper httpWrapperMock;
-	private SshClientWrapper sshClientWrapperMock;
-	private final String FAKE_URL = "10.01.01.01:9090"; 
-
+	private Properties properties;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
+		
+		//Initiating properties file.
+		properties = new Properties();
+		FileInputStream input;
+		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
+		properties.load(input);
+		
 		httpWrapperMock = mock(HttpWrapper.class);
-		sshClientWrapperMock = mock(SshClientWrapper.class);
 		Date date = new Date(System.currentTimeMillis() + (long)Math.pow(10,9));
-		tokenMock = new  Token("acessIdMock", "userMock", date, new HashMap<String, String>());
-		fogbowInfrastructureProvider = spy(new FogbowInfrastructureProvider(FAKE_URL,tokenMock));
+		fogbowInfrastructureProvider = spy(new FogbowInfrastructureProvider(properties));
 	}    
 
 	@After
 	public void setDown() {
-		tokenMock = null;
 		httpWrapperMock = null;
 		fogbowInfrastructureProvider = null;
 	}
@@ -260,7 +265,8 @@ public class FogbowInfrastructureProviderTest {
 	public void deleteResourceTestSucess() throws Exception{
 		
 		String instanceIdMock = "instance01";
-		String urlEndpointInstanceDelete = FAKE_URL + "/compute/" + instanceIdMock;
+		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
+				+ "/compute/" + instanceIdMock;
 		
 		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"));
 
@@ -278,7 +284,8 @@ public class FogbowInfrastructureProviderTest {
 		exception.expect(InfrastructureException.class);
 		
 		String instanceIdMock = "instance01";
-		String urlEndpointInstanceDelete = FAKE_URL + "/compute/" + instanceIdMock;
+		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
+				+ "/compute/" + instanceIdMock;
 		
 		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"));
 
@@ -295,7 +302,8 @@ public class FogbowInfrastructureProviderTest {
 	private void createDefaultRequestResponse(String requestIdMokc) 
 			throws FileNotFoundException, IOException, Exception {
 		
-		String urlEndpointNewInstance = FAKE_URL + "/" + RequestConstants.TERM;
+		String urlEndpointNewInstance = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
+				+ "/" + RequestConstants.TERM;
 		
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMokc);
@@ -308,7 +316,8 @@ public class FogbowInfrastructureProviderTest {
 	private void createDefaulInstanceIdResponse(String requestIdMock, String instanceIdMock, RequestState requestState) 
 			throws FileNotFoundException, IOException, Exception {
 		
-		String urlEndpointRequestInformations = FAKE_URL + "/" + RequestConstants.TERM + "/"+ requestIdMock;
+		String urlEndpointRequestInformations = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
+				+ "/" + RequestConstants.TERM + "/"+ requestIdMock;
 		
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);
@@ -323,7 +332,8 @@ public class FogbowInfrastructureProviderTest {
 	private void createDefaulRequestInstanceIdResponseNoId(String requestIdMock) 
 			throws FileNotFoundException, IOException, Exception {
 		
-		String urlEndpointRequestInformations = FAKE_URL + "/" + RequestConstants.TERM + "/"+ requestIdMock;
+		String urlEndpointRequestInformations = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
+				+ "/" + RequestConstants.TERM + "/"+ requestIdMock;
 		
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);
@@ -337,7 +347,8 @@ public class FogbowInfrastructureProviderTest {
 			String memSizeMock, String coreSizeMock, String hostMock, String portMock)
 					throws FileNotFoundException, IOException, Exception {
 		
-		String urlEndpointInstanceAttributes = FAKE_URL + "/compute/" + instanceIdMock;
+		String urlEndpointInstanceAttributes = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
+				+ "/compute/" + instanceIdMock;
 		
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);
@@ -357,7 +368,8 @@ public class FogbowInfrastructureProviderTest {
 			String memSizeMock, String coreSizeMock)
 					throws FileNotFoundException, IOException, Exception {
 		
-		String urlEndpointInstanceAttributes = FAKE_URL + "/compute/" + instanceIdMock;
+		String urlEndpointInstanceAttributes = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
+				+ "/compute/" + instanceIdMock;
 		
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);

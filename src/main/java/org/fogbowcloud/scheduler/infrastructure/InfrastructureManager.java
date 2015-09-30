@@ -1,5 +1,6 @@
 package org.fogbowcloud.scheduler.infrastructure;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -9,7 +10,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
@@ -23,7 +23,6 @@ import org.fogbowcloud.scheduler.core.util.AppUtil;
 import org.fogbowcloud.scheduler.core.util.DateUtils;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.RequestResourceException;
-import org.h2.mvstore.DataUtils;
 
 public class InfrastructureManager {
 
@@ -54,13 +53,26 @@ public class InfrastructureManager {
 		// Se tiver inicialSpecs, criar orders
 		// Recuperar do properties se é infra estatica OK
 
-		infraProvider = (InfrastructureProvider) AppUtil
-				.instantiateClass(properties.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME));
+		infraProvider = createFogbowInfraProvaiderInstance();
 		isStatic = new Boolean(properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
 		// Start order service to monitor and resolve orders.
 		triggerOrderTimer();
 		// Start resource service to monitor and resolve idle Resources.
 		triggerResourceTimer();
+	}
+	
+	private InfrastructureProvider createFogbowInfraProvaiderInstance() throws Exception{
+		
+		String providerClassName = properties.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
+		
+		Object clazz = Class.forName(properties.getProperty(providerClassName)).getConstructor(Properties.class)
+				.newInstance(properties);
+		if(!(clazz instanceof InfrastructureProvider)){
+			throw new Exception("Provider Class Name is not a InfrastructureProvider implementation");
+		}
+		
+		return (InfrastructureProvider) clazz;
+		
 	}
 
 	protected void triggerOrderTimer() {
@@ -184,6 +196,11 @@ public class InfrastructureManager {
 		int timeout = Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT));
 		return resource.checkConnectivity(timeout);
 	}
+	
+	private void disposeResource(Resource r) throws Exception{
+		infraProvider.deleteResource(r);
+		idleResources.remove(r);
+	}
 
 	private void validateProperties(Properties properties) throws InfrastructureException {
 
@@ -191,12 +208,9 @@ public class InfrastructureManager {
 			String providerClassName = properties.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
 			if(AppUtil.isStringEmpty(providerClassName)){
 				throw new Exception("Provider Class Name canot be empty");
-
 			}
-			Object clazz = AppUtil.instantiateClass(providerClassName);
-			if(!(clazz instanceof InfrastructureProvider)){
-				throw new Exception("Provider Class Name is not a InfrastructureProvider implementation");
-			}
+			createFogbowInfraProvaiderInstance();
+			
 		} catch (Exception e) {
 			LOGGER.debug("App Properties are not correctly configured: ["
 					+ AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME + "]", e);
@@ -243,19 +257,19 @@ public class InfrastructureManager {
 	
 	// ----- GETTERS AND SETTERS ----- //
 
-	public List<Resource> getAllocatedResources() {
+	protected List<Resource> getAllocatedResources() {
 		return new ArrayList<Resource>(allocatedResources.keySet());
 	}
 
-	public List<Resource> getIdleResources() {
+	protected List<Resource> getIdleResources() {
 		return new ArrayList<Resource>(idleResources.keySet());
 	}
 
-	public InfrastructureProvider getInfraProvider() {
+	protected InfrastructureProvider getInfraProvider() {
 		return infraProvider;
 	}
 
-	public void setInfraProvider(InfrastructureProvider infraProvider) {
+	protected void setInfraProvider(InfrastructureProvider infraProvider) {
 		this.infraProvider = infraProvider;
 	}
 
@@ -295,12 +309,13 @@ public class InfrastructureManager {
 			for (Entry<Resource, Long> entry : idleResources.entrySet()) {
 				// TODO Desenvolver a logica do metodo:
 				/*
-				 * Obs: Como tratar falha de recursos. Como tratar os recursos IDLE
+				 * Check if should exists more rules to dispose resources.
 				 */
 				Resource r = entry.getKey();
 				
 				if(!isResourceAlive(r)){
 					resourcesToRemove.add(r);
+					LOGGER.info("Resource: ["+r.getId()+"] to be disposed due fails connection");
 					continue;
 				}
 				
@@ -309,12 +324,17 @@ public class InfrastructureManager {
 				
 				if(expirationDate.before(actualDate)){
 					resourcesToRemove.add(r);
+					LOGGER.info("Resource: ["+r.getId()+"] to be disposed due lifetime's expiration");
 					continue;
 				}
 			}
 			
 			for(Resource r : resourcesToRemove){
-				idleResources.remove(r);
+				try {
+					disposeResource(r);
+				} catch (Exception e) {
+					LOGGER.error("Error while disposing resource: ["+r.getId()+"]");
+				}
 			}
 		}
 	}

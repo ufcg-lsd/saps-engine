@@ -11,6 +11,8 @@ public class AppPropertiesConstants {
 	public static final String INFRA_RESOURCE_CONNECTION_TIMEOUT = "infra.resource.connection.timeout";
 	public static final String INFRA_RESOURCE_IDLE_LIFETIME = "infra.resource.idle.lifetime";
 	
-	
+	// ---------- FOGBOW INFRASTRUCTURE CONSTANTS ---------- //
+	public static final String INFRA_FOGBOW_MANAGER_BASE_URL = "infra.fogbow.manager.base.url";
+	public static final String INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH = "infra.fogbow.token.public.key.filepath";
 
 }

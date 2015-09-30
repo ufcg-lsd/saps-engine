@@ -1,11 +1,17 @@
 package org.fogbowcloud.scheduler.infrastructure.fogbow;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
@@ -17,6 +23,7 @@ import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.core.util.AppUtil;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
@@ -33,6 +40,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private static final String OR_OPERATOR = " || ";
 	private static final String CATEGORY = "Category";
 	private static final String X_OCCI_ATTRIBUTE = "X-OCCI-Attribute: ";
+	private static final String DEFAULT_USER = "user";
 
 	public static final String INSTANCE_ATTRIBUTE_SSH_PUBLIC_ADDRESS_ATT = "org.fogbowcloud.request.ssh-public-address";
 	public static final String INSTANCE_ATTRIBUTE_SSH_USERNAME_ATT = "org.fogbowcloud.request.ssh-username";
@@ -48,11 +56,12 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private Token token;
 	private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
 	
-	public FogbowInfrastructureProvider(String managerUrl, Token token){
+	public FogbowInfrastructureProvider(Properties properties) throws Exception{
 		
 		httpWrapper = new HttpWrapper();
-		this.managerUrl = managerUrl;
-		this.token = token;
+		this.managerUrl = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL);
+		this.token = createNewTokenFromFile(
+				properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH));
 		
 	}
 	
@@ -174,6 +183,14 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	}
 	
 	// ----------------------- Private methods ----------------------- //
+	
+	private Token createNewTokenFromFile(String certificateFilePath) throws FileNotFoundException, IOException{
+		
+		String certificate = IOUtils.toString(new FileInputStream(certificateFilePath)).replaceAll("\n", "");
+		Date date = new Date(System.currentTimeMillis() + (long)Math.pow(10,9));
+
+		return new Token(certificate, DEFAULT_USER, date, new HashMap<String, String>());
+	}
 
 	private String getInstanceIdByRequestAttributes(Map<String, String> requestAttributes) throws RequestResourceException{
 		
