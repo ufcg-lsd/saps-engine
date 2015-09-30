@@ -299,7 +299,7 @@ public class InfrastructureManagerTest {
 
 			String fakeRequestId = "requestId";
 			String fakeFogbowInstanceId = "instanceId";
-			int timeSleep = 5000+Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOLVE_ORDER_TIME));
+			int timeSleep = 5000+Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_ORDER_SERVICE_TIME));
 
 			Specification specs = new Specification("imageMock", "publicKeyMock");
 			Resource fakeResource = spy(new Resource(fakeFogbowInstanceId,specs));
@@ -339,7 +339,7 @@ public class InfrastructureManagerTest {
 
 			String fakeRequestId = "requestId";
 			String fakeFogbowInstanceId = "instanceId";
-			int timeSleep = 8000+Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOLVE_ORDER_TIME));
+			int timeSleep = 8000+Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_ORDER_SERVICE_TIME));
 
 			Specification specs = new Specification("imageMock", "publicKeyMock");
 			Resource fakeResource = spy(new Resource(fakeFogbowInstanceId,specs));

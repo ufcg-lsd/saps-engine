@@ -89,4 +89,7 @@ public class SshClientWrapper {
     public void connect(String address, int port) throws IOException {
     	connect(address, port, null, null, 0);
     }
+    public void connect(String address, int port, int timeOut) throws IOException {
+    	connect(address, port, null, null, timeOut);
+    }
 }

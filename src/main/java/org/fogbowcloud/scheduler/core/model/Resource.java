@@ -72,10 +72,15 @@ public class Resource {
 
 	public boolean checkConnectivity(){
 		
+		return this.checkConnectivity(0);
+	}
+	
+	public boolean checkConnectivity(int timeOut){
+		
 		String host = this.getMetadataValue(METADATA_SSH_HOST);
 		String port = this.getMetadataValue(METADATA_SSH_PORT);
 		try {
-			sshClientWrapper.connect(host, Integer.parseInt(port));
+			sshClientWrapper.connect(host, Integer.parseInt(port), timeOut);
 		} catch (IOException e) {
 			return false;
 		}

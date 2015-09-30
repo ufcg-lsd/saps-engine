@@ -17,16 +17,16 @@ public class TokenHelper {
 	private static final String DEFAULT_USER = "user";
 
 
-	public static Token createNewTokenFromFile(String certificateFilePath) throws FileNotFoundException, IOException{
-		
-		String certificate = IOUtils.toString(new FileInputStream(certificateFilePath)).replaceAll("\n", "");
-		Date date = new Date(System.currentTimeMillis() + (long)Math.pow(10,9));
-
-		return new Token(certificate, DEFAULT_USER, date, new HashMap<String, String>());
-	}
-	
-	
-	public static Token createNewKeystoneToken(Map<String, String> credentials) throws FileNotFoundException, IOException{
-		return new KeystoneIdentityPlugin(new Properties()).createToken(credentials);
-	}
+//	public static Token createNewTokenFromFile(String certificateFilePath) throws FileNotFoundException, IOException{
+//		
+//		String certificate = IOUtils.toString(new FileInputStream(certificateFilePath)).replaceAll("\n", "");
+//		Date date = new Date(System.currentTimeMillis() + (long)Math.pow(10,9));
+//
+//		return new Token(certificate, DEFAULT_USER, date, new HashMap<String, String>());
+//	}
+//	
+//	
+//	public static Token createNewKeystoneToken(Map<String, String> credentials) throws FileNotFoundException, IOException{
+//		return new KeystoneIdentityPlugin(new Properties()).createToken(credentials);
+//	}
 }

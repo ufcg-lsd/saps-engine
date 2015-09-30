@@ -3,6 +3,7 @@ package org.fogbowcloud.scheduler.infrastructure.fogbow;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.Resource;
 
 import condor.classad.AttrRef;
@@ -14,6 +15,9 @@ import condor.classad.RecordExpr;
 
 public class FogbowRequirementsHelper {
 
+	private static final Logger LOGGER = Logger.getLogger(FogbowRequirementsHelper.class);
+	
+	// ------------------ CONSTANTS ------------------//
 	protected static final String ZERO = "0";
 
 	public static final String METADATA_FOGBOW_REQUIREMENTS = "FogbowRequirements";
@@ -23,21 +27,32 @@ public class FogbowRequirementsHelper {
 	public static final String METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID = "Glue2CloudComputeManagerID";
 	
 	public static boolean validateFogbowRequirementsSyntax(String requirementsString) {
+		
+		LOGGER.debug("Validating Fogbow Requirements ["+requirementsString+"]");
+		
 		if (requirementsString == null || requirementsString.isEmpty()) {
+			
+			LOGGER.debug("Fogbow Requirements ["+requirementsString+"] Validate with sucess.");
 			return true;
 		}
 		try {
 			ClassAdParser adParser = new ClassAdParser(requirementsString);
 			if (adParser.parse() != null) {
+			
+				LOGGER.debug("Fogbow Requirements ["+requirementsString+"] Validate with sucess.");
 				return true;
 			}
+			LOGGER.info("Fogbow Requirements ["+requirementsString+"] Invalid - Expression not found.");
 			return false;
 		} catch (Exception e) {
+			LOGGER.error("Fogbow Requirements ["+requirementsString+"] Invalid", e);
 			return false;
 		}
 	}
 
 	public static boolean matches(Resource Resource, String requirementsStr) {
+		
+		LOGGER.debug("Matching Fogbow Requirements ["+requirementsStr+"] with Resource [id: "+Resource.getId()+"]");
 		try {
 			if (requirementsStr == null  || requirementsStr.isEmpty()) {
 				return true;
@@ -81,6 +96,7 @@ public class FogbowRequirementsHelper {
 					}
 					
 					env.push((RecordExpr) new ClassAdParser("[" + attr + " = " + value + "]").parse());
+					LOGGER.debug("Matching Requirement [" + attr + " = " + value + "]");
 				}
 			}					
 			
@@ -91,7 +107,8 @@ public class FogbowRequirementsHelper {
 			
 			return expr.eval(env).isTrue();
 		} catch (Exception e) {
-			return true;
+			LOGGER.error("Matching Fogbow Requirements ["+requirementsStr+"] with Resource [id: "+Resource.getId()+"] FAILED", e);
+			return false;
 		}
 	}
 	

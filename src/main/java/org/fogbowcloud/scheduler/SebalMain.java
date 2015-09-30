@@ -44,7 +44,7 @@ public class SebalMain {
 			//		
 			//		}
 
-		} catch (InfrastructureException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

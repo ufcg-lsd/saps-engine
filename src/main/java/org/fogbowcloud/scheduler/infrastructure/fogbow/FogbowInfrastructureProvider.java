@@ -24,7 +24,6 @@ import org.fogbowcloud.scheduler.infrastructure.exceptions.RequestResourceExcept
 
 public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
-	//LOGGER
 	private static final Logger LOGGER = Logger.getLogger(FogbowInfrastructureProvider.class);
 
 	// ------------------ CONSTANTS ------------------//
@@ -60,51 +59,66 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	@Override
 	public String requestResource(Specification spec) throws RequestResourceException {
 		
+		LOGGER.debug("Requesting resource on Fogbow with specifications: "+spec.toString());
+		
 		String requestInformation;
 		
 		try {
 
-			this.validateFogbowRequestRequirements(spec);
+			this.validateSpecification(spec);
 			
 			List<Header> headers = (LinkedList<Header>) requestNewInstanceHeaders(spec);
 
 			requestInformation = this.doRequest("post", managerUrl+"/"+ RequestConstants.TERM, headers);
 
 		} catch (Exception e) {
-			throw new RequestResourceException("Create Request FAILED: "+e.getMessage(), e);
+			LOGGER.error("Error while requesting resource on Fogbow", e);
+			throw new RequestResourceException("Request for Fogbow Resource has FAILED: "+e.getMessage(), e);
 		}
 		String requestId =  getRequestId(requestInformation);
 		pendingRequestsMap.put(requestId, spec);
+		
+		LOGGER.debug("Request for Fogbow Resource was Successful. Request ID: ["+requestId+"]");
 		return requestId;
 	}
 
 	@Override
 	public Resource getResource(String requestID) {
 		
+		LOGGER.debug("Getting resource from request id: ["+requestID+"]");
+		
 		Resource resource = getFogbowResource(requestID);
 		
 		if(resource == null){
-			return resource;
+			return null;
 		}
 		//Testing connection.
 		if(!resource.checkConnectivity()){
+			LOGGER.info("Resource from request id: ["+requestID+"] is not responding to connection attempt");
 			return null;
 		}
 		
 		pendingRequestsMap.remove(requestID);
+		
+		LOGGER.debug("Returning Resource from request id: ["+requestID+"] - Resource ID : ["+resource.getId()+"]");
 		return resource;
 
 	}
 
 	protected Resource getFogbowResource(String requestID) {
+		
+		LOGGER.debug("Initiating Resource Instanciation - Request id: ["+requestID+"]");
 		String fogbowInstanceId;
 		String sshInformation;
 		Map<String, String> requestAttributes;
 		Resource resource = null;
+		
 		try {
 
+			LOGGER.debug("Getting request attributes - Retrieve Instace ID.");
 			//Attempt's to get the Instance ID from Fogbow Manager.
 			requestAttributes = getFogbowRequestAttributes(requestID);
+			
 			fogbowInstanceId = getInstanceIdByRequestAttributes(requestAttributes);
 
 
@@ -136,14 +150,15 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					//newResource.putMetadata(Resource.METADATA_DISK_SIZE, instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE)); 
 					//TODO Descomentar quando o fogbow estiver retornando este atributo
 					//newResource.putMetadata(Resource.METADATA_LOCATION, instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID)); 
-					
+
+					LOGGER.debug("New Fogbow Resource created - Instace ID: ["+fogbowInstanceId+"]");
 				}
 				
 			}
 			
 		} catch (Exception e) {
 			
-			LOGGER.error("Error while getting ["+requestID+"]", e);
+			LOGGER.error("Error while getting resource from request id: ["+requestID+"]", e);
 			resource = null;
 		}
 		return resource;
@@ -194,10 +209,22 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		return attrs;
 	}
 	
-	private void validateFogbowRequestRequirements(Specification  requirements) throws RequestResourceException{
+	private void validateSpecification(Specification  specification) throws RequestResourceException{
 		
-		if(!FogbowRequirementsHelper.validateFogbowRequirementsSyntax(requirements.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS))){
-			throw new RequestResourceException("FogbowRequirements is not in valid format. e.g: [Glue2vCPU >= 1 && Glue2RAM >= 1024 && Glue2disk >= 20 && Glue2CloudComputeManagerID ==\"servers.your.domain\"]");
+		if(specification.getImage() == null || specification.getImage().isEmpty()){
+			
+			throw new RequestResourceException("");
+		}
+		if(specification.getPublicKey() == null || specification.getPublicKey().isEmpty()){
+			
+			throw new RequestResourceException("");
+		}
+		
+		String fogbowRequirements = specification.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS);
+		
+		if(!FogbowRequirementsHelper.validateFogbowRequirementsSyntax(fogbowRequirements)){
+			LOGGER.debug("FogbowRequirements ["+fogbowRequirements+"] is not in valid format. e.g: [Glue2vCPU >= 1 && Glue2RAM >= 1024 && Glue2disk >= 20 && Glue2CloudComputeManagerID ==\"servers.your.domain\"]");
+			throw new RequestResourceException("FogbowRequirements ["+fogbowRequirements+"] is not in valid format. e.g: [Glue2vCPU >= 1 && Glue2RAM >= 1024 && Glue2disk >= 20 && Glue2CloudComputeManagerID ==\"servers.your.domain\"]");
 		}
 		
 	}

@@ -60,4 +60,17 @@ public class Specification {
 		this.contextScript = contextScript;
 	}
 	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Image: "+image);
+		sb.append("\nPublicKey: "+publicKey);
+		if(contextScript != null && !contextScript.isEmpty()){
+			sb.append("\nContextScript: "+contextScript);
+		}
+		for(Entry<String, String> entry : requirements.entrySet()){
+			sb.append("\n"+entry.getKey()+": "+entry.getValue());
+		}
+		return sb.toString();
+	}
 }

@@ -12,4 +12,10 @@ public class AppUtil {
 		return false;
 	}
 	
+	public static Object instantiateClass(String className) throws Exception{
+		
+		Class clazz = Class.forName(className);
+		return clazz.newInstance();
+		
+	}
 }
