@@ -1,29 +1,20 @@
 package org.fogbowcloud.scheduler.core.model;
 
-public class Task {
+import java.util.List;
 
-	private boolean isFinished;
-	
-	public Specification getSpecification() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	public Task clone() {
-		// TODO Auto-generated method stub
-		return new Task();
-	}
+import org.fogbowcloud.scheduler.core.model.Command.Type;
 
-	public String getId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	public void finish(){
-		this.isFinished = true;
-	}
+public interface Task {
 
-	public boolean isFinished() {
-		return this.isFinished;
-	}
+	public Specification getSpecification();
+
+	public Task clone();
+
+	public String getId();
+
+	public void finish();
+
+	public boolean isFinished();
+
+	public List<Command> getCommandsByType(Type commandType);
 }

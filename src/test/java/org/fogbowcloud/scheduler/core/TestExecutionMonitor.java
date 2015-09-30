@@ -3,9 +3,9 @@ package org.fogbowcloud.scheduler.core;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +14,7 @@ import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Task;
+import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.junit.Before;
@@ -30,7 +31,7 @@ public class TestExecutionMonitor {
 	
 	@Before
 	public void setUp(){
-		task = spy(new Task());
+		task = spy(new TaskImpl("id", null));
 		IM = mock(InfrastructureManager.class);
 		resource = mock(Resource.class);
 		job = spy(new Job());
