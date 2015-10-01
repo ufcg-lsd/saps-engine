@@ -50,9 +50,9 @@ public class FogbowRequirementsHelper {
 		}
 	}
 
-	public static boolean matches(Resource Resource, String requirementsStr) {
+	public static boolean matches(Resource resource, String requirementsStr) {
 		
-		LOGGER.debug("Matching Fogbow Requirements ["+requirementsStr+"] with Resource [id: "+Resource.getId()+"]");
+		LOGGER.debug("Matching Fogbow Requirements ["+requirementsStr+"] with Resource [id: "+resource.getId()+"]");
 		try {
 			if (requirementsStr == null  || requirementsStr.isEmpty()) {
 				return true;
@@ -78,21 +78,21 @@ public class FogbowRequirementsHelper {
 					
 					if (attr.equals(METADATA_FOGBOW_REQUIREMENTS_Glue2vCPU)) {
 						listAttrSearched.add(attr);
-						value = Resource.getMetadataValue(Resource.METADATA_VCPU);
+						value = resource.getMetadataValue(resource.METADATA_VCPU);
 					} 
 					else if (attr.equals(METADATA_FOGBOW_REQUIREMENTS_Glue2RAM)) {
 						listAttrSearched.add(attr);
-						value = Resource.getMetadataValue(Resource.METADATA_MEN_SIZE);
+						value = resource.getMetadataValue(resource.METADATA_MEN_SIZE);
 					} 
 					else if (attr.equals(METADATA_FOGBOW_REQUIREMENTS_Glue2disk)) {
-						value = Resource.getMetadataValue(Resource.METADATA_DISK_SIZE);
+						value = resource.getMetadataValue(resource.METADATA_DISK_SIZE);
 						if (value != null && !value.equals(ZERO) ) {
 							listAttrSearched.add(attr);							
 						}
 					} 
 					else if (attr.equals(METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID)) {
 						listAttrSearched.add(attr);
-						value = Resource.getMetadataValue(Resource.METADATA_LOCATION);
+						value = resource.getMetadataValue(resource.METADATA_LOCATION);
 					}
 					
 					env.push((RecordExpr) new ClassAdParser("[" + attr + " = " + value + "]").parse());
@@ -107,7 +107,7 @@ public class FogbowRequirementsHelper {
 			
 			return expr.eval(env).isTrue();
 		} catch (Exception e) {
-			LOGGER.error("Matching Fogbow Requirements ["+requirementsStr+"] with Resource [id: "+Resource.getId()+"] FAILED", e);
+			LOGGER.error("Matching Fogbow Requirements ["+requirementsStr+"] with Resource [id: "+resource.getId()+"] FAILED", e);
 			return false;
 		}
 	}

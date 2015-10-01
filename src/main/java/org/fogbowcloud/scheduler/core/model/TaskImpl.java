@@ -1,7 +1,9 @@
 package org.fogbowcloud.scheduler.core.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.fogbowcloud.scheduler.core.model.Command.Type;
 
@@ -15,10 +17,19 @@ public class TaskImpl implements Task {
 	private String id;
 	private Specification spec;
 	private List<Command> commands = new ArrayList<Command>();
+	private Map<String, String> metadata = new HashMap<String, String>();
 	
 	public TaskImpl(String id, Specification spec) {
 		this.id = id;
 		this.spec = spec;
+	}
+	
+	public void putMetadata(String attributeName, String value) {
+		metadata.put(attributeName, value);
+	}
+	
+	public String getMetadata(String attributeName) {
+		return metadata.get(attributeName);
 	}
 	
 	@Override

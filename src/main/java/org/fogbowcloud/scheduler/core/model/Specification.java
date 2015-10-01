@@ -7,17 +7,24 @@ import java.util.Map.Entry;
 public class Specification {
 
 	String image;
+	String username;
+	String privateKeyFilePath;
 	String publicKey;
 	String contextScript;
 	
 	Map<String, String> requirements = new HashMap<String, String>();
 
+	//TODO remove this constructor
 	public Specification(String image, String publicKey) {
-		
-		super();
 		this.image = image;
 		this.publicKey = publicKey;
-		
+	}
+	
+	public Specification(String image, String username, String publicKey, String privateKeyFilePath) {
+		this.image = image;
+		this.username = username;
+		this.publicKey = publicKey;
+		this.privateKeyFilePath = privateKeyFilePath;
 	}
 	
 	public void addRequitement(String key, String value){
@@ -44,8 +51,17 @@ public class Specification {
 	
 	// ----- GETTERS and SETTERS ------ //
 	
+	
 	public String getImage() {
 		return image;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public String getPrivateKeyFilePath() {
+		return privateKeyFilePath;
 	}
 
 	public String getPublicKey() {

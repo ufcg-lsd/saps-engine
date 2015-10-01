@@ -30,7 +30,7 @@ public class Resource {
     public static final String METADATA_DISK_SIZE 		 = "metadataDiskSize";
     public static final String METADATA_LOCATION 		 = "metadataLocation";
 	
-    private String id;	
+    private String id;
 	private Map<String, String> metadata = new HashMap<String, String>();
 	private Task task;
 	private TaskExecutionResult executionResult;
@@ -38,13 +38,16 @@ public class Resource {
 	
 	private Specification specification;
 	private String outputFolder;
-    private String userName;
+//    private String userName;
     private SshClientWrapper sshClientWrapper;
     
 	private static final Logger LOGGER = Logger.getLogger(Resource.class);
 	
     public Resource(String id, Specification spec) {
     	this.id = id;
+    	
+		// TODO we need to check if Resource needs to have a specification or
+		// translate some spec attributes into resources attributes
     	this.specification = spec;
     	sshClientWrapper = new SshClientWrapper();
     }
@@ -54,15 +57,17 @@ public class Resource {
      * <br>Is used to match the Fogbow requirements 
      * (VM.Cores >= Specs.Cores, VM.MenSize >= Specs.MenSize, VM.DiskSize >= Specs.DiskSize, VM.Location >= Specs.Location)
      *  and the Image (VM.image == Specs.image)
-     * @param wantedSpecification
+     * @param spec
      * @return
      */
-	public boolean match(Specification wantedSpecification) {
+	public boolean match(Specification spec) {
 
-		String fogbowRequirement = wantedSpecification
+		//TODO We need check fogbow requirements with resource values, image and public key
+		//Do we need to try connect to resource using spec username and privateKey?
+		String fogbowRequirement = spec
 				.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS);
-		String image = wantedSpecification.getImage();
-		String publicKey = wantedSpecification.getPublicKey();
+		String image = spec.getImage();
+		String publicKey = spec.getPublicKey();
 		if (fogbowRequirement != null && image != null) {
 
 			if (!FogbowRequirementsHelper.matches(this, fogbowRequirement)) {
@@ -152,7 +157,11 @@ public class Resource {
 		LOGGER.debug("Executing remote commands on " + getId());
 		int executionResult = TaskExecutionResult.OK;
 		if (remoteCommands != null && !remoteCommands.isEmpty()) {
-			executionResult = executionCommandHelper.execRemoteCommands(remoteCommands);
+			String host = getMetadataValue(METADATA_SSH_HOST);
+			int sshPort = Integer.parseInt(getMetadataValue(METADATA_SSH_PORT));
+			executionResult = executionCommandHelper.execRemoteCommands(host, sshPort, task
+					.getSpecification().getUsername(), task.getSpecification()
+					.getPrivateKeyFilePath(), remoteCommands);
 		}
 		LOGGER.debug("Remote commands finished on " + getId() + " with result " + executionResult);
 		return executionResult;
@@ -174,15 +183,6 @@ public class Resource {
 	}
 
 	//----------------------------------- GETTERS and SETTERS -----------------------------------//
-
-	public String getUserName() {
-		return userName;
-	}
-
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-
 	public String getId() {
 		return id;
 	}
