@@ -184,10 +184,8 @@ public class InfrastructureManagerTest {
 		
 		String initialSpecFile = "src/test/resources/Specs_Json";
 		
-		properties = new Properties();
-		properties.load(input);
-		properties.put(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING, "true");
-		properties.put(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH, initialSpecFile);
+//		properties.put(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING, "true");
+//		properties.put(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH, initialSpecFile);
 		
 		BufferedReader br = new BufferedReader(new FileReader(initialSpecFile));
 		Gson gson = new Gson();
