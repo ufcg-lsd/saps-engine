@@ -9,10 +9,16 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
+import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Order.OrderState;
 import org.fogbowcloud.scheduler.core.model.Resource;
@@ -32,14 +38,19 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.google.gson.Gson;
+
 
 public class InfrastructureManagerTest {
 
 	private final String SEBAL_SCHEDULER_PROPERTIES = "src/test/resources/sebal-scheduler.properties";
+	private final String DATASTORE_PATH = "src/test/resources/persistance/";
 	private Scheduler schedulerMock;
 	private InfrastructureProvider infrastructureProviderMock;
 	private InfrastructureManager infrastructureManager;
 	private Properties properties;
+	private DataStore ds;
+	
 	
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -61,13 +72,19 @@ public class InfrastructureManagerTest {
 		FileInputStream input;
 		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
 		properties.load(input);
+		properties.put("accounting_datastore_url", "jdbc:h2:mem:"
+				+ new File(DATASTORE_PATH).getAbsolutePath() + "orders");
 		
+		ds = mock(DataStore.class);
 		schedulerMock = mock(Scheduler.class);
 		infrastructureProviderMock = mock(InfrastructureProvider.class);
-
+		
+		doReturn(true).when(ds).update(Mockito.anyList());
+		
 		infrastructureManager = new InfrastructureManager(properties);
 		infrastructureManager.cancelOrderTimer();
 		infrastructureManager.cancelResourceTimer();
+		infrastructureManager.setDataStore(ds);
 	}    
 	
 
@@ -159,6 +176,58 @@ public class InfrastructureManagerTest {
 		infrastructureManager = new InfrastructureManager(properties);
 	}
 	
+	@Test
+	public void initiateInfraManagerWithInitialSpec() throws Exception{
+		
+		FileInputStream input;
+		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
+		
+		String initialSpecFile = "src/test/resources/Specs_Json";
+		
+		properties = new Properties();
+		properties.load(input);
+		properties.put(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING, "true");
+		properties.put(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH, initialSpecFile);
+		
+		BufferedReader br = new BufferedReader(new FileReader(initialSpecFile));
+		Gson gson = new Gson();
+		List<Specification> specifications = Arrays.asList(gson.fromJson(br, Specification[].class));
+
+		doReturn("FakeRequestID").when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class)); 
+		doAnswer(new Answer<Resource>() {
+
+			String fogbowInstanceId = "instanceId";
+			int count = 0;
+
+			@Override
+			public Resource answer(InvocationOnMock invocation) throws Throwable {
+				Resource fakeResource = spy(new Resource(fogbowInstanceId + (++count), new Specification("Image1", "Key1"), properties));
+
+				fakeResource.putMetadata(Resource.METADATA_SSH_HOST, "100.10.1.1" + count);
+				fakeResource.putMetadata(Resource.METADATA_SSH_PORT, "9898");
+				fakeResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "user");
+				fakeResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "");
+				fakeResource.putMetadata(Resource.METADATA_VCPU, "1");
+				fakeResource.putMetadata(Resource.METADATA_MEN_SIZE, "1024");
+				// fakeResource.putMetadata(Resource.METADATA_DISK_SIZE,
+				// instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE)); //TODO
+				// Descomentar quando o fogbow estiver retornando este atributo
+				// fakeResource.putMetadata(Resource.METADATA_LOCATION,
+				// instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID)); //TODO
+				// Descomentar quando o fogbow estiver retornando este atributo
+				doReturn(true).when(fakeResource).checkConnectivity(Mockito.anyInt());
+				return fakeResource;
+			}
+
+		}).when(infrastructureProviderMock).getResource(Mockito.any(String.class));
+		
+		infrastructureManager = new InfrastructureManager(properties);
+		infrastructureManager.setInfraProvider(infrastructureProviderMock);
+		infrastructureManager.cancelOrderTimer();
+		infrastructureManager.cancelResourceTimer();
+		//assertEquals(specifications.size(), infrastructureManager.getIdleResources().size());
+		
+	}
 
 	@Test
 	public void orderResourceTestSucess() throws Exception{
@@ -167,7 +236,7 @@ public class InfrastructureManagerTest {
 		String fakeFogbowInstanceId = "instanceId";
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = new Resource(fakeFogbowInstanceId, specs);
+		Resource fakeResource = new Resource(fakeFogbowInstanceId, specs, properties);
 
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.eq(specs));
@@ -204,7 +273,7 @@ public class InfrastructureManagerTest {
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId,specs));
+		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId, specs, properties));
 
 		//Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class)); //Return for new Instance's request 
@@ -258,7 +327,7 @@ public class InfrastructureManagerTest {
 
 			@Override
 			public Resource answer(InvocationOnMock invocation) throws Throwable {
-				Resource fakeResource = spy(new Resource(fogbowInstanceId + (++count), specs));
+				Resource fakeResource = spy(new Resource(fogbowInstanceId + (++count), specs, properties));
 
 				fakeResource.putMetadata(Resource.METADATA_SSH_HOST, "100.10.1.1" + count);
 				fakeResource.putMetadata(Resource.METADATA_SSH_PORT, "9898");
@@ -358,7 +427,7 @@ public class InfrastructureManagerTest {
 					spec = specsB;
 				}
 
-				Resource fakeResource = spy(new Resource(fogbowInstanceId+(++count),spec));
+				Resource fakeResource = spy(new Resource(fogbowInstanceId+(++count),spec, properties));
 
 				fakeResource.putMetadata(Resource.METADATA_SSH_HOST, "100.10.1.1"+count);
 				fakeResource.putMetadata(Resource.METADATA_SSH_PORT, "9898");
@@ -428,7 +497,7 @@ public class InfrastructureManagerTest {
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId,specs));
+		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId,specs, properties));
 
 		//Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class));  
@@ -479,7 +548,7 @@ public class InfrastructureManagerTest {
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId,specs));
+		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId, specs, properties));
 
 		//Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class)); //Return for new Instance's request 

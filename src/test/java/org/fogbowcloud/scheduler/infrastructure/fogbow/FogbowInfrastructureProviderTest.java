@@ -15,6 +15,7 @@ import java.util.Properties;
 import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.request.RequestConstants;
 import org.fogbowcloud.manager.occi.request.RequestState;
+import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
@@ -103,7 +104,7 @@ public class FogbowInfrastructureProviderTest {
 		String instanceIdMock = "instance01";
 		
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource resourceMock = spy(new Resource(instanceIdMock, specs));
+		Resource resourceMock = spy(new Resource(instanceIdMock, specs, properties));
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
 		doReturn(resourceMock).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
@@ -247,7 +248,7 @@ public class FogbowInfrastructureProviderTest {
 		String instanceIdMock = "instance01";
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource resourceMock = spy(new Resource(instanceIdMock, specs));
+		Resource resourceMock = spy(new Resource(instanceIdMock, specs, properties));
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
 		doReturn(resourceMock).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
@@ -268,7 +269,7 @@ public class FogbowInfrastructureProviderTest {
 		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"));
+		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"), properties);
 
 		doReturn("OK").when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
 				Mockito.any(String.class), Mockito.any(List.class));
@@ -287,7 +288,7 @@ public class FogbowInfrastructureProviderTest {
 		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"));
+		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"), properties);
 
 		doThrow(new Exception("Erro on request.")).when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
 				Mockito.any(String.class), Mockito.any(List.class));

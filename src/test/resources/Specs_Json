@@ -1,0 +1,3 @@
+[
+{"image":"Imagem_01","publicKey":"Public_KEY","requirements":{"Requiriment_2":"ValueRequirement_2","FogbowRequirements":"Glue2vCPU \u003e\u003d 1 \u0026\u0026 Glue2RAM \u003e\u003d 1024"}},{"image":"Imagem_02","publicKey":"Public_KEY","requirements":{"Requiriment_3":"ValueRequirement_3","FogbowRequirements":"Glue2vCPU \u003e\u003d 2 \u0026\u0026 Glue2RAM \u003e\u003d 2048"}}
+]
