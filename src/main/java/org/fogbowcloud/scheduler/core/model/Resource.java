@@ -33,7 +33,7 @@ public class Resource {
     private String id;
 	private Map<String, String> metadata = new HashMap<String, String>();
 	private Task task;
-	private TaskExecutionResult executionResult;
+	private TaskExecutionResult taskExecutionResult;
 	private ExecutionCommandHelper executionCommandHelper = new ExecutionCommandHelper();
 	
 	private Specification specification;
@@ -119,7 +119,7 @@ public class Resource {
 	public void executeTask(Task task) {
 		LOGGER.debug("Executing task " + task.getId());
         this.task = task;
-        this.executionResult = new TaskExecutionResult();
+        this.taskExecutionResult = new TaskExecutionResult();
         
 		if (!executePrologue() || !executeRemote() || !executeEpilogue()) {
 			finish(TaskExecutionResult.NOK);
@@ -130,7 +130,7 @@ public class Resource {
 	
 	private void finish(int exitValue) {
 		LOGGER.debug("Finishing task " + task.getId() + " with exit value = " + exitValue);
-		executionResult.finish(exitValue);
+		taskExecutionResult.finish(exitValue);
 	}
 	
 	private boolean executePrologue() {
@@ -191,8 +191,16 @@ public class Resource {
 		return specification;
 	}
 
-	public SshClientWrapper getSshClientWrapper() {
+	protected SshClientWrapper getSshClientWrapper() {
 		return sshClientWrapper;
+	}
+	
+	protected ExecutionCommandHelper getExecutionCommandHelper() {
+		return this.executionCommandHelper;
+	}
+	
+	protected TaskExecutionResult getTaskExecutionResult() {
+		return this.taskExecutionResult;
 	}
 
 	protected void setSshClientWrapper(SshClientWrapper sshClientWrapper) {
