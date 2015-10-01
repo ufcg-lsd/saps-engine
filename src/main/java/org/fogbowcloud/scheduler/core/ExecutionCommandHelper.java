@@ -1,7 +1,11 @@
 package org.fogbowcloud.scheduler.core;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.Command;
@@ -11,10 +15,78 @@ public class ExecutionCommandHelper {
 
 	private static final Logger LOGGER = Logger.getLogger(ExecutionCommandHelper.class);
 	private SshClientWrapper sshClientWrapper =new SshClientWrapper();
+	private final String LOCAL_COMMAND_INTERPRETER;
 	
-	public int execLocalCommands(List<Command> localCommands) {
-		// TODO Auto-generated method stub
-		return 0;
+	public ExecutionCommandHelper(Properties properties) {
+		LOCAL_COMMAND_INTERPRETER = properties.getProperty("local_command_interpreter");
+	}
+	
+	public int execLocalCommands(List<Command> localCommands, Map<String, String> additionalEnvVariables) {
+		for (Command command : localCommands) {
+			command.setState(Command.State.RUNNING);
+			try {
+				Process pr = starLocalProcess(command, additionalEnvVariables);
+				int exitValue = pr.waitFor();
+				LOGGER.debug("Local process [cmdLine=" + command + "] output was: \n"
+						+ getOutout(pr));
+				if (exitValue != TaskExecutionResult.OK) {
+					LOGGER.error("Error while executing local process. Process err output was: \n "
+							+ getErrOutput(pr));
+					command.setState(Command.State.FAILED);
+					return TaskExecutionResult.NOK;
+				}
+
+			} catch (InterruptedException e) {
+				LOGGER.error("Error while executing local process [cmdLine=" + command + "]", e);
+				return TaskExecutionResult.NOK;
+			} catch (IOException e) {
+				LOGGER.error("Error while starting or getting output of process [cmdLine="
+						+ command + "]", e);
+				return TaskExecutionResult.NOK;
+			}
+		}
+		return TaskExecutionResult.OK;
+	}
+
+	private Process starLocalProcess(Command command, Map<String, String> additionalEnvVariables)
+			throws IOException {
+		ProcessBuilder builder = new ProcessBuilder(LOCAL_COMMAND_INTERPRETER, "-c",
+				command.getCommand());
+		if (additionalEnvVariables == null || additionalEnvVariables.isEmpty()) {
+			return builder.start();	
+		}
+		
+		// adding additional environment variables related to resource and/or task
+		for (String envVariable : additionalEnvVariables.keySet()) {
+			builder.environment().put(envVariable, additionalEnvVariables.get(envVariable));
+		}
+		return builder.start();
+	}
+	
+	private String getOutout(Process pr) throws IOException {
+		BufferedReader r = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+		StringBuilder out = new StringBuilder();
+		while (true) {
+			String line = r.readLine();
+			if (line == null) {
+				break;
+			}
+			out.append(line);
+		}
+		return out.toString();
+	}
+
+	private String getErrOutput(Process pr) throws IOException {
+		BufferedReader r = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
+		StringBuilder err = new StringBuilder();
+		while (true) {
+			String line = r.readLine();
+			if (line == null) {
+				break;
+			}
+			err.append(line);
+		}
+		return err.toString();
 	}
 
 	public int execRemoteCommands(String address, int sshPort, String username,
@@ -41,21 +113,4 @@ public class ExecutionCommandHelper {
 		}
 		return TaskExecutionResult.OK;
 	}
-	
-//	public int doSsh(String address, int port, String command, String userName,
-//			String privateKeyFilePath) {
-//		try {
-//			sshClientWrapper.connect(address, port, userName,
-//					privateKeyFilePath);
-//			return sshClientWrapper.doSshExecution(command);
-//		} catch (Exception e) {
-//			return TaskExecutionResult.NOK;
-//		} finally {
-//			try {
-//				sshClientWrapper.disconnect();
-//			} catch (Throwable e) {
-//			}
-//		}
-//	}
-
 }

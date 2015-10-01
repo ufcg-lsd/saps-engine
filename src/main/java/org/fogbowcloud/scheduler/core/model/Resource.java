@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ExecutionCommandHelper;
@@ -17,8 +18,10 @@ public class Resource {
 	
 	// Environment variables to be replaced at prologue and epilogue scripts
 	//TODO how we should treat them?
-	public static final String ENV_HOST = "${HOST}";
-	public static final String ENV_SSH_PORT = "${SSH_PORT}";
+	public static final String ENV_HOST = "HOST";
+	public static final String ENV_SSH_PORT = "SSH_PORT";
+	public static final String ENV_SSH_USER = "SSH_USER";
+	public static final String ENV_PRIVATE_KEY_FILE = "PRIVATE_KEY_FILE";
 	
 	public static final String METADATA_SSH_HOST 		 = "metadataSSHHost";
     public static final String METADATA_SSH_PORT 		 = "metadataSSHPort";
@@ -34,22 +37,21 @@ public class Resource {
 	private Map<String, String> metadata = new HashMap<String, String>();
 	private Task task;
 	private TaskExecutionResult taskExecutionResult;
-	private ExecutionCommandHelper executionCommandHelper = new ExecutionCommandHelper();
+	private ExecutionCommandHelper executionCommandHelper;
 	
 	private Specification specification;
-	private String outputFolder;
+//	private String outputFolder;
 //    private String userName;
-    private SshClientWrapper sshClientWrapper;
+    private SshClientWrapper sshClientWrapper = new SshClientWrapper();
     
 	private static final Logger LOGGER = Logger.getLogger(Resource.class);
 	
-    public Resource(String id, Specification spec) {
-    	this.id = id;
-    	
+    public Resource(String id, Specification spec, Properties properties) {
+    	this.id = id;    	
 		// TODO we need to check if Resource needs to have a specification or
 		// translate some spec attributes into resources attributes
     	this.specification = spec;
-    	sshClientWrapper = new SshClientWrapper();
+    	executionCommandHelper = new ExecutionCommandHelper(properties);
     }
 
     /**
@@ -128,32 +130,41 @@ public class Resource {
 		finish(TaskExecutionResult.OK);
 	}
 	
-	private void finish(int exitValue) {
+	protected void finish(int exitValue) {
 		LOGGER.debug("Finishing task " + task.getId() + " with exit value = " + exitValue);
 		taskExecutionResult.finish(exitValue);
 	}
 	
-	private boolean executePrologue() {
+	protected boolean executePrologue() {
 		List<Command> commands = task.getCommandsByType(Command.Type.PROLOGUE);
 		return executePrologueCommands(commands) == TaskExecutionResult.OK;
 	}
 	
-	private int executePrologueCommands(List<Command> prologueCommands) {
+	protected int executePrologueCommands(List<Command> prologueCommands) {
 		LOGGER.debug("Executing prologue commands on " + getId());
 		int executionResult = TaskExecutionResult.OK;
 		if (prologueCommands != null && !prologueCommands.isEmpty()) {
-			executionResult = executionCommandHelper.execLocalCommands(prologueCommands);
+			executionResult = executionCommandHelper.execLocalCommands(prologueCommands, getAdditionalEnvVariables());
 		}
 		LOGGER.debug("Prologue commands finished on " + getId() + " with result " + executionResult);
 		return executionResult;
 	}
 
-	private boolean executeRemote() {
+	protected Map<String, String> getAdditionalEnvVariables() {
+		Map<String, String> additionalEnvVar = new HashMap<String, String>();
+		additionalEnvVar.put(ENV_HOST, getMetadataValue(METADATA_SSH_HOST));
+		additionalEnvVar.put(ENV_SSH_PORT, getMetadataValue(METADATA_SSH_PORT));
+		additionalEnvVar.put(ENV_SSH_USER, task.getSpecification().getUsername());
+		additionalEnvVar.put(ENV_PRIVATE_KEY_FILE, task.getSpecification().getPrivateKeyFilePath());
+		return additionalEnvVar;
+	}
+
+	protected boolean executeRemote() {
 		List<Command> commands = task.getCommandsByType(Command.Type.REMOTE);
 		return executeRemoteCommands(commands) == TaskExecutionResult.OK;
 	}
 
-	private int executeRemoteCommands(List<Command> remoteCommands) {
+	protected int executeRemoteCommands(List<Command> remoteCommands) {
 		LOGGER.debug("Executing remote commands on " + getId());
 		int executionResult = TaskExecutionResult.OK;
 		if (remoteCommands != null && !remoteCommands.isEmpty()) {
@@ -167,16 +178,17 @@ public class Resource {
 		return executionResult;
 	}
 
-	private boolean executeEpilogue() {
+	protected boolean executeEpilogue() {
 		List<Command> commands = task.getCommandsByType(Command.Type.EPILOGUE);
 		return executeEpilogueCommands(commands) == TaskExecutionResult.OK;
 	}
 	
-	private int executeEpilogueCommands(List<Command> epilogueCommands) {
+	protected int executeEpilogueCommands(List<Command> epilogueCommands) {
 		LOGGER.debug("Executing epilogue commands on " + getId());
 		int executionResult = TaskExecutionResult.OK;
 		if (epilogueCommands != null && !epilogueCommands.isEmpty()) {
-			executionResult = executionCommandHelper.execLocalCommands(epilogueCommands);
+			executionResult = executionCommandHelper.execLocalCommands(epilogueCommands,
+					getAdditionalEnvVariables());
 		}
 		LOGGER.debug("Epilogue commands finished on " + getId() + " with result " + executionResult);
 		return executionResult;
@@ -198,9 +210,17 @@ public class Resource {
 	protected ExecutionCommandHelper getExecutionCommandHelper() {
 		return this.executionCommandHelper;
 	}
-	
+
+	protected void setExecutionCommandHelper(ExecutionCommandHelper executionCommandHelper) {
+		this.executionCommandHelper = executionCommandHelper;
+	}
+
 	protected TaskExecutionResult getTaskExecutionResult() {
 		return this.taskExecutionResult;
+	}
+
+	protected void setTaskExecutionResult(TaskExecutionResult taskExecutionResult) {
+		this.taskExecutionResult = taskExecutionResult;
 	}
 
 	protected void setSshClientWrapper(SshClientWrapper sshClientWrapper) {

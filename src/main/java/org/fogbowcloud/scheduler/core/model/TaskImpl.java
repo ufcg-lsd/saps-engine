@@ -9,6 +9,9 @@ import org.fogbowcloud.scheduler.core.model.Command.Type;
 
 public class TaskImpl implements Task {
 
+	//Environment variables related to task
+	public static final String ENV_LOCAL_OUT_DIR = "";
+	
 	public static final String METADATA_REMOTE_OUTPUT_FOLDER = "remote_output_folder";
 	public static final String METADATA_LOCAL_OUTPUT_FOLDER = "local_output_folder";
 	public static final String METADATA_SANDBOX = "sandbox";

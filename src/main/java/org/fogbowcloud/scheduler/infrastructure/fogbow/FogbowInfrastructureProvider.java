@@ -54,11 +54,13 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private HttpWrapper httpWrapper;
 	private String managerUrl;
 	private Token token;
+	private Properties properties;
 	private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
 	
 	public FogbowInfrastructureProvider(Properties properties) throws Exception{
 		
 		httpWrapper = new HttpWrapper();
+		this.properties = properties;
 		this.managerUrl = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL);
 		this.token = createNewTokenFromFile(
 				properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH));
@@ -140,7 +142,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 				if (this.validateInstanceAttributes(instanceAttributes)) {
 					
 					Specification spec = pendingRequestsMap.get(requestID);
-					resource = new Resource(fogbowInstanceId, spec);
+					resource = new Resource(fogbowInstanceId, spec, properties);
 					
 					//Putting all metadatas on Resource
 					sshInformation = instanceAttributes.get(INSTANCE_ATTRIBUTE_SSH_PUBLIC_ADDRESS_ATT);
