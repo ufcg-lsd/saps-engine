@@ -517,4 +517,8 @@ public class InfrastructureManagerTest {
 
 	}
 	
+	@Test
+	public void TestDBConsistencyNoResources(){
+	}
+	
 }
