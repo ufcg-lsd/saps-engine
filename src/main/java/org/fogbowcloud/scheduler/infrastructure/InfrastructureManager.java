@@ -1,6 +1,5 @@
 package org.fogbowcloud.scheduler.infrastructure;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -33,7 +32,7 @@ public class InfrastructureManager {
 	private ManagerTimer resourceTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private ResourceService resourceService = new ResourceService();
 	private final ExecutorService resourceConnectivityMonitor = Executors.newCachedThreadPool();
-	
+
 	private InfrastructureProvider infraProvider;
 	private boolean isStatic;
 	private Properties properties;
@@ -41,38 +40,39 @@ public class InfrastructureManager {
 	private List<Order> orders = new ArrayList<Order>();
 	private Map<Resource, Order> allocatedResources = new ConcurrentHashMap<Resource, Order>();
 	private Map<Resource, Long> idleResources = new ConcurrentHashMap<Resource, Long>();
-	
+
 	private DateUtils dateUtils = new DateUtils();
 
 	public InfrastructureManager(Properties properties) throws Exception {
 
-		this.validateProperties(properties);
-
 		this.properties = properties;
+
+		this.validateProperties();
+
 		// Iniciar o provider OK
 		// Se tiver inicialSpecs, criar orders
 		// Recuperar do properties se é infra estatica OK
 
-		infraProvider = createFogbowInfraProvaiderInstance();
+		infraProvider = createInfraProvaiderInstance();
 		isStatic = new Boolean(properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
 		// Start order service to monitor and resolve orders.
 		triggerOrderTimer();
 		// Start resource service to monitor and resolve idle Resources.
 		triggerResourceTimer();
 	}
-	
-	private InfrastructureProvider createFogbowInfraProvaiderInstance() throws Exception{
-		
+
+	private InfrastructureProvider createInfraProvaiderInstance() throws Exception {
+
 		String providerClassName = properties.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
-		
-		Object clazz = Class.forName(properties.getProperty(providerClassName)).getConstructor(Properties.class)
+
+		Object clazz = Class.forName(providerClassName).getConstructor(Properties.class)
 				.newInstance(properties);
-		if(!(clazz instanceof InfrastructureProvider)){
+		if (!(clazz instanceof InfrastructureProvider)) {
 			throw new Exception("Provider Class Name is not a InfrastructureProvider implementation");
 		}
-		
+
 		return (InfrastructureProvider) clazz;
-		
+
 	}
 
 	protected void triggerOrderTimer() {
@@ -85,10 +85,11 @@ public class InfrastructureManager {
 		LOGGER.debug("Stoping Order Service");
 		orderTimer.cancel();
 	}
-	
+
 	protected void triggerResourceTimer() {
 		LOGGER.debug("Initiating Resource Service");
-		int resourcePeriod = Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME));
+		int resourcePeriod = Integer
+				.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME));
 		resourceTimer.scheduleAtFixedRate(resourceService, 0, resourcePeriod);
 	}
 
@@ -127,10 +128,11 @@ public class InfrastructureManager {
 
 		// If a resource that matches specification was founded:
 		if (resource != null) {
-			
-			//Async call to avoid wating time from test connectivity with resource
+
+			// Async call to avoid wating time from test connectivity with
+			// resource
 			this.ildeResourceToOrder(resource, order);
-			
+
 		} else { // Else, requests a new resource from provider.
 
 			try {
@@ -147,11 +149,11 @@ public class InfrastructureManager {
 		}
 
 	}
-	
+
 	private void resolveOrderedOrder(Order order) {
-		
+
 		LOGGER.debug("Resolving Ordered Order [" + order.getRequestId() + "]");
-		
+
 		Resource newResource = infraProvider.getResource(order.getRequestId());
 		if (newResource != null) {
 
@@ -159,65 +161,69 @@ public class InfrastructureManager {
 			order.getScheduler().resourceReady(newResource);
 
 			allocatedResources.put(newResource, order);
-			LOGGER.debug("Order [" + order.getRequestId() + "] resolved to Fulfilled with Resource ["+newResource.getId()+"]");
+			LOGGER.debug("Order [" + order.getRequestId() + "] resolved to Fulfilled with Resource ["
+					+ newResource.getId() + "]");
 		}
 	}
 
-	private void ildeResourceToOrder(final Resource idleResource, final Order order){
+	private void ildeResourceToOrder(final Resource idleResource, final Order order) {
 
 		resourceConnectivityMonitor.submit(new Runnable() {
 
-            @Override
-            public void run() {
-                
-            	if(isResourceAlive(idleResource)){
-            		LOGGER.debug("Idle Resource founded for Order [" + order.getRequestId() + "] - Specifications"
-            				+ order.getSpecification().toString());
-            		order.setState(OrderState.FULFILLED);
-            		// Allocate recource on Scheduler.
-            		order.getScheduler().resourceReady(idleResource);
-            		idleResources.remove(idleResource);
-            		allocatedResources.put(idleResource, order);
-            	}
-            }
-        });
-		
+			@Override
+			public void run() {
+
+				if (isResourceAlive(idleResource)) {
+					LOGGER.debug("Idle Resource founded for Order [" + order.getRequestId() + "] - Specifications"
+							+ order.getSpecification().toString());
+					order.setState(OrderState.FULFILLED);
+					order.getScheduler().resourceReady(idleResource);
+					idleResources.remove(idleResource);
+					allocatedResources.put(idleResource, order);
+				}
+			}
+		});
+
 	}
-	
-	private void moveResourceToIdle(Resource resource){
-		
-		int idleLifeTime = Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
-		Long expirationDate = Long.valueOf(dateUtils.currentTimeMillis()+idleLifeTime);
+
+	private void moveResourceToIdle(Resource resource) {
+
+		int idleLifeTime = Integer
+				.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
+		Long expirationDate = Long.valueOf(dateUtils.currentTimeMillis() + idleLifeTime);
 		idleResources.put(resource, expirationDate);
+		LOGGER.debug("Resource [" + resource.getId() + "] moved to Idle - Expiration Date: ["
+				+ dateUtils.getStringDateFromMiliFormat(expirationDate, DateUtils.DATE_FORMAT_YYYY_MM_DD_HOUR));
 	}
-	
-	private boolean isResourceAlive(Resource resource){
-		
-		int timeout = Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT));
+
+	protected boolean isResourceAlive(Resource resource) {
+
+		int timeout = Integer
+				.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT));
 		return resource.checkConnectivity(timeout);
 	}
-	
-	private void disposeResource(Resource r) throws Exception{
+
+	private void disposeResource(Resource r) throws Exception {
 		infraProvider.deleteResource(r);
 		idleResources.remove(r);
 	}
 
-	private void validateProperties(Properties properties) throws InfrastructureException {
+	private void validateProperties() throws InfrastructureException {
 
 		try {
 			String providerClassName = properties.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
-			if(AppUtil.isStringEmpty(providerClassName)){
+			if (AppUtil.isStringEmpty(providerClassName)) {
 				throw new Exception("Provider Class Name canot be empty");
 			}
-			createFogbowInfraProvaiderInstance();
-			
+			createInfraProvaiderInstance();
+
 		} catch (Exception e) {
 			LOGGER.debug("App Properties are not correctly configured: ["
 					+ AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME + "]", e);
 			throw new InfrastructureException("App Properties are not correctly configured: ["
 					+ AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME + "]", e);
 		}
-		
+
 		try {
 			Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT));
 		} catch (Exception e) {
@@ -226,7 +232,7 @@ public class InfrastructureManager {
 			throw new InfrastructureException("App Properties are not correctly configured: ["
 					+ AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT + "]", e);
 		}
-		
+
 		try {
 			Integer.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 		} catch (Exception e) {
@@ -252,19 +258,27 @@ public class InfrastructureManager {
 			throw new InfrastructureException("App Properties are not correctly configured: ["
 					+ AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME + "]", e);
 		}
-		
+
 	}
-	
+
 	// ----- GETTERS AND SETTERS ----- //
 
 	protected List<Resource> getAllocatedResources() {
 		return new ArrayList<Resource>(allocatedResources.keySet());
 	}
+	
+	protected Map<Resource, Order> getAllocatedResourcesMap() {
+		return allocatedResources;
+	}
 
 	protected List<Resource> getIdleResources() {
 		return new ArrayList<Resource>(idleResources.keySet());
 	}
-
+	
+	protected Map<Resource, Long> getIdleResourcesMap() {
+		return idleResources;
+	}
+	
 	protected InfrastructureProvider getInfraProvider() {
 		return infraProvider;
 	}
@@ -273,13 +287,27 @@ public class InfrastructureManager {
 		this.infraProvider = infraProvider;
 	}
 
-	public List<Order> getOrders() {
+	protected List<Order> getOrders() {
 		return orders;
 	}
 
 	protected OrderService getOrderService() {
 		return orderService;
 	}
+	
+	protected ResourceService getResourceService() {
+		return resourceService;
+	}
+	
+	protected DateUtils getDateUtils() {
+		return dateUtils;
+	}
+
+	protected void setDateUtils(DateUtils dateUtils) {
+		this.dateUtils = dateUtils;
+	}
+
+
 
 	protected class OrderService implements Runnable {
 		@Override
@@ -299,41 +327,41 @@ public class InfrastructureManager {
 			}
 		}
 	}
-	
+
 	protected class ResourceService implements Runnable {
 		@Override
 		public void run() {
-			
+
 			List<Resource> resourcesToRemove = new ArrayList<Resource>();
-			
+
 			for (Entry<Resource, Long> entry : idleResources.entrySet()) {
 				// TODO Desenvolver a logica do metodo:
 				/*
 				 * Check if should exists more rules to dispose resources.
 				 */
 				Resource r = entry.getKey();
-				
-				if(!isResourceAlive(r)){
+
+				if (!isResourceAlive(r)) {
 					resourcesToRemove.add(r);
-					LOGGER.info("Resource: ["+r.getId()+"] to be disposed due fails connection");
+					LOGGER.info("Resource: [" + r.getId() + "] to be disposed due fails connection");
 					continue;
 				}
-				
+
 				Date expirationDate = new Date(entry.getValue().longValue());
 				Date actualDate = new Date(dateUtils.currentTimeMillis());
-				
-				if(expirationDate.before(actualDate)){
+
+				if (expirationDate.before(actualDate)) {
 					resourcesToRemove.add(r);
-					LOGGER.info("Resource: ["+r.getId()+"] to be disposed due lifetime's expiration");
+					LOGGER.info("Resource: [" + r.getId() + "] to be disposed due lifetime's expiration");
 					continue;
 				}
 			}
-			
-			for(Resource r : resourcesToRemove){
+
+			for (Resource r : resourcesToRemove) {
 				try {
 					disposeResource(r);
 				} catch (Exception e) {
-					LOGGER.error("Error while disposing resource: ["+r.getId()+"]");
+					LOGGER.error("Error while disposing resource: [" + r.getId() + "]");
 				}
 			}
 		}
