@@ -32,6 +32,8 @@ public class Resource {
     public static final String METADATA_MEN_SIZE   		 = "metadataMenSize";
     public static final String METADATA_DISK_SIZE 		 = "metadataDiskSize";
     public static final String METADATA_LOCATION 		 = "metadataLocation";
+    
+    public static final String METADATA_REQUEST_TYPE 	 = "metadataRequestType";
 	
     private String id;
 	private Map<String, String> metadata = new HashMap<String, String>();

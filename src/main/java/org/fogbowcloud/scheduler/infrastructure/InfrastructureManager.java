@@ -88,17 +88,15 @@ public class InfrastructureManager {
 	private void recoveryPreviousResources() {
 		LOGGER.info("Recovering previous resources...");
 
-		Map<String, String> recoveredRequests = ds.getRequesId();
+		List<String> recoveredRequests = ds.getRequesId();
+		for(String requestId : recoveredRequests){
+			try {
+				infraProvider.deleteResource(requestId);
+			} catch (Exception e) {
+				LOGGER.error("Error while trying to delete Resource with request id ["+requestId+"]", e);
+			}
+		}
 		
-		/*
-		 * buscar no DB pelos request IDs verificar se alguma initial spec casa
-		 * com o recurso Se sim Adicionar o recurso no idleResource e marca o
-		 * initial spec como "atendido" Se não Deleta o recurso
-		 * 
-		 * 
-		 * TODO PRecisamos armazenar os idle resources tambem e diferenciar se o
-		 * recurso ja foi utilizado antes (ORDERED ou FULFILLED)
-		 */
 	}
 
 	public void orderResource(Specification specification, Scheduler scheduler) {
@@ -204,7 +202,6 @@ public class InfrastructureManager {
 			// if order is not realated to initial spec
 			if (order.getScheduler() != null) {
 				order.setState(OrderState.FULFILLED);
-				ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 				order.getScheduler().resourceReady(newResource);
 				
 				allocatedResources.put(newResource, order);
@@ -213,8 +210,11 @@ public class InfrastructureManager {
 			} else {
 				
 				//TODO How we could recovery this resource if it is not stored at DB?
+				orders.remove(order);
 				moveResourceToIdle(newResource);
 			}
+			
+			ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 		}
 	}
 	

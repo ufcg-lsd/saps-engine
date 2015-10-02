@@ -45,7 +45,7 @@ public class DataStore {
 			connection = getConnection();
 			statement = connection.createStatement();
 			statement.execute("CREATE TABLE IF NOT EXISTS " + REQUEST_ID_TABLE_NAME
-					+ "(" + REQUEST_ID+ " VARCHAR(255) PRIMARY KEY, "+REQUEST_STATE+" VARCHAR(50))");
+					+ "(" + REQUEST_ID+ " VARCHAR(255) PRIMARY KEY)");
 			statement.close();
 
 		} catch (Exception e) {
@@ -87,10 +87,8 @@ public class DataStore {
 		}
 	}
 
-
-
 	private static final String INSERT_MEMBER_USAGE_SQL = "INSERT INTO " + REQUEST_ID_TABLE_NAME
-			+ " VALUES(?,?)";
+			+ " VALUES(?)";
 
 	private static final String DELETE_ALL_CONTENT_SQL = "DELETE FROM " + REQUEST_ID_TABLE_NAME;
 
@@ -99,7 +97,6 @@ public class DataStore {
 		PreparedStatement deleteOldContent = null;
 		PreparedStatement updateRequestList = null;
 		Connection connection = null;
-
 		try {
 			connection = getConnection();
 			connection.setAutoCommit(false);
@@ -112,13 +109,11 @@ public class DataStore {
 			updateRequestList = prepare(connection, INSERT_MEMBER_USAGE_SQL);
 			for (Order order : orders){
 				updateRequestList.setString(1, order.getRequestId());
-				updateRequestList.setString(2, order.getState().name());
 				updateRequestList.addBatch();
 			}
 			
 			for (Resource resource : idleResource){
 				updateRequestList.setString(1, resource.getId());
-				updateRequestList.setString(2, REQUEST_STATE_IDLE);
 				updateRequestList.addBatch();
 			}
 			
@@ -150,37 +145,15 @@ public class DataStore {
 	}
 
 	private static final String SELECT_REQUEST_ID = "SELECT * FROM " + REQUEST_ID_TABLE_NAME;
-	private static final String SELECT_REQUEST_ID_BY_STATE = "SELECT * FROM " + REQUEST_ID_TABLE_NAME +" WHERE "+REQUEST_STATE+" LIKE "+REQUEST_STATE_TAG;
 
-	public Map<String, String> getRequesId() {
-		Map<String, String> orders = new HashMap<String, String>();
-		Statement getRequestIdStatement = null;
-		Connection connection = null;
-		try {
-			connection =  getConnection();
-			getRequestIdStatement = connection.createStatement();
-			getRequestIdStatement.execute(SELECT_REQUEST_ID);
-			ResultSet result = getRequestIdStatement.getResultSet();
-			while(result.next()){
-				orders.put(result.getString(REQUEST_ID), result.getString(REQUEST_STATE));
-			}
-			return orders;
-		} catch (SQLException e){
-			LOGGER.error("Couldn't recover request Ids from DB", e);	
-			return null;
-		} finally {
-			close(getRequestIdStatement, connection);
-		}
-	}
-	
-	public List<String> getIdleResourcesIds() {
+	public List<String> getRequesId() {
 		List<String> orders = new ArrayList<String>();
 		Statement getRequestIdStatement = null;
 		Connection connection = null;
 		try {
 			connection =  getConnection();
 			getRequestIdStatement = connection.createStatement();
-			getRequestIdStatement.executeQuery(SELECT_REQUEST_ID_BY_STATE.replace(REQUEST_STATE_TAG, "'"+REQUEST_STATE_IDLE+"'"));
+			getRequestIdStatement.execute(SELECT_REQUEST_ID);
 			ResultSet result = getRequestIdStatement.getResultSet();
 			while(result.next()){
 				orders.add(result.getString(REQUEST_ID));

@@ -25,6 +25,7 @@ public class FogbowRequirementsHelper {
 	public static final String METADATA_FOGBOW_REQUIREMENTS_Glue2RAM = "Glue2RAM";
 	public static final String METADATA_FOGBOW_REQUIREMENTS_Glue2disk = "Glue2disk";
 	public static final String METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID = "Glue2CloudComputeManagerID";
+	public static final String METADATA_FOGBOW_REQUEST_TYPE = "RequestType";
 	
 	public static boolean validateFogbowRequirementsSyntax(String requirementsString) {
 		

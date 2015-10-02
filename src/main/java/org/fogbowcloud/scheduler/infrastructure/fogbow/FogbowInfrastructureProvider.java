@@ -19,7 +19,6 @@ import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.request.RequestAttribute;
 import org.fogbowcloud.manager.occi.request.RequestConstants;
 import org.fogbowcloud.manager.occi.request.RequestState;
-import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
@@ -46,6 +45,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	public static final String INSTANCE_ATTRIBUTE_VCORE = "occi.compute.cores";
 	public static final String INSTANCE_ATTRIBUTE_DISKSIZE = "TODO-AlterWhenFogbowReturns";  //TODO Alter when fogbow are returning this attribute
 	public static final String INSTANCE_ATTRIBUTE_MEMBER_ID = "TODO-AlterWhenFogbowReturns"; //TODO Alter when fogbow are returning this attribute
+	public static final String INSTANCE_ATTRIBUTE_REQUEST_TYPE = "org.fogbowcloud.request.type";
 
 	// ------------------ ATTRIBUTES -----------------//
 	private HttpWrapper httpWrapper;
@@ -126,6 +126,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			LOGGER.debug("Getting request attributes - Retrieve Instace ID.");
 			//Attempt's to get the Instance ID from Fogbow Manager.
 			requestAttributes = getFogbowRequestAttributes(requestID);
+			String requestType = requestAttributes.get(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE);
 			
 			fogbowInstanceId = getInstanceIdByRequestAttributes(requestAttributes);
 
@@ -148,6 +149,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					String host = addressInfo[0];
 					String port = addressInfo[1];
 					
+					resource.putMetadata(Resource.METADATA_REQUEST_TYPE, requestType);
 					resource.putMetadata(Resource.METADATA_SSH_HOST, host);
 					resource.putMetadata(Resource.METADATA_SSH_PORT, port);
 					resource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, instanceAttributes.get(INSTANCE_ATTRIBUTE_SSH_USERNAME_ATT));
@@ -259,11 +261,12 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		
 		String fogbowImage = specs.getImage();
 		String fogbowRequirements = specs.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS);
+		String fogbowRequestType = specs.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE);
 		
         List<Header> headers = new LinkedList<Header>();
         headers.add(new BasicHeader(CATEGORY, RequestConstants.TERM+ "; scheme=\"" + RequestConstants.SCHEME + "\"; class=\""+ RequestConstants.KIND_CLASS + "\""));
         headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,RequestAttribute.INSTANCE_COUNT.getValue() + "=" + 1));
-        headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,RequestAttribute.TYPE.getValue() + "=" + RequestType.ONE_TIME.getValue())); //TODO alter to get type from Specs
+        headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,RequestAttribute.TYPE.getValue() + "=" + fogbowRequestType));
         headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,RequestAttribute.REQUIREMENTS.getValue() + "=" + fogbowRequirements));
         headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\""+ RequestConstants.TEMPLATE_OS_SCHEME + "\"; class=\""+ RequestConstants.MIXIN_CLASS + "\""));
         if (specs.getPublicKey() != null && !specs.getPublicKey().isEmpty()) {

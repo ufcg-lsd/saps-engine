@@ -66,9 +66,7 @@ public class TestDataStore {
 		Order order1 = mock(Order.class);
 		Order order2 = mock(Order.class);
 		doReturn(FAKE_REQUEST_ID1).when(order1).getRequestId();
-		doReturn(OrderState.ORDERED).when(order1).getState();
 		doReturn(FAKE_REQUEST_ID2).when(order2).getRequestId();
-		doReturn(OrderState.FULFILLED).when(order2).getState();
 		List<Order> orders = new ArrayList<Order>();
 		List<Resource> resources = new ArrayList<Resource>();
 		orders.add(order1);
@@ -80,10 +78,8 @@ public class TestDataStore {
 		ResultSet rs = db.getConnection().createStatement().executeQuery(sql);
 		rs.next();
 		assertEquals(rs.getString(DataStore.REQUEST_ID), FAKE_REQUEST_ID1);
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), OrderState.ORDERED.name());
 		rs.next();
 		assertEquals(rs.getString(DataStore.REQUEST_ID), FAKE_REQUEST_ID2);
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), OrderState.FULFILLED.name());
 	}
 	
 	@Test
@@ -94,11 +90,8 @@ public class TestDataStore {
 		Order order2 = mock(Order.class);
 		Order order3 = mock(Order.class);
 		doReturn(FAKE_REQUEST_ID1).when(order1).getRequestId();
-		doReturn(OrderState.ORDERED).when(order1).getState();
 		doReturn(FAKE_REQUEST_ID2).when(order2).getRequestId();
-		doReturn(OrderState.FULFILLED).when(order2).getState();
 		doReturn(FAKE_REQUEST_ID3).when(order3).getRequestId();
-		doReturn(OrderState.FULFILLED).when(order3).getState();
 		List<Order> orders = new ArrayList<Order>();
 		List<Order> orders2 = new ArrayList<Order>();
 		List<Resource> resources = new ArrayList<Resource>();
@@ -108,12 +101,10 @@ public class TestDataStore {
 		verify(db).getConnection();
 		verify(db).prepare(any(Connection.class), any(String.class));
 		
-		Map<String, String> requestIds = db.getRequesId();
+		List<String> requestIds = db.getRequesId();
 		assertEquals(2, requestIds.size());
-		assert(requestIds.containsKey(FAKE_REQUEST_ID1));
-		assertEquals(OrderState.ORDERED.name(), requestIds.get(FAKE_REQUEST_ID1));
-		assert(requestIds.containsKey(FAKE_REQUEST_ID2));
-		assertEquals(OrderState.FULFILLED.name(), requestIds.get(FAKE_REQUEST_ID2));
+		assert(requestIds.contains(FAKE_REQUEST_ID1));
+		assert(requestIds.contains(FAKE_REQUEST_ID2));
 	}
 	
 	@Test
@@ -124,11 +115,8 @@ public class TestDataStore {
 		Order order2 = mock(Order.class);
 		Order order3 = mock(Order.class);
 		doReturn(FAKE_REQUEST_ID1).when(order1).getRequestId();
-		doReturn(OrderState.ORDERED).when(order1).getState();
 		doReturn(FAKE_REQUEST_ID2).when(order2).getRequestId();
-		doReturn(OrderState.FULFILLED).when(order2).getState();
 		doReturn(FAKE_REQUEST_ID3).when(order3).getRequestId();
-		doReturn(OrderState.FULFILLED).when(order3).getState();
 		List<Order> orders = new ArrayList<Order>();
 		List<Order> orders2 = new ArrayList<Order>();
 		List<Resource> resources = new ArrayList<Resource>();
@@ -141,10 +129,8 @@ public class TestDataStore {
 		ResultSet rs = db.getConnection().createStatement().executeQuery(sql);
 		rs.next();
 		assertEquals(rs.getString(DataStore.REQUEST_ID), FAKE_REQUEST_ID1);
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), OrderState.ORDERED.name());
 		rs.next();
 		assertEquals(rs.getString(DataStore.REQUEST_ID), FAKE_REQUEST_ID2);
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), OrderState.FULFILLED.name());
 		
 		orders2.add(order3);
 		db.updateInfrastructureState(orders2, resources);
@@ -152,7 +138,6 @@ public class TestDataStore {
 		rs = db.getConnection().createStatement().executeQuery(sql);
 		rs.next();
 		assertEquals(FAKE_REQUEST_ID3, rs.getString(DataStore.REQUEST_ID));
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), OrderState.FULFILLED.name());
 		
 		assertEquals(1, db.getRequesId().size());
 	}
@@ -187,42 +172,12 @@ public class TestDataStore {
 		ResultSet rs = db.getConnection().createStatement().executeQuery(sql);
 		rs.next();
 		assertEquals(rs.getString(DataStore.REQUEST_ID), FAKE_REQUEST_ID1);
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), OrderState.ORDERED.name());
 		rs.next();
 		assertEquals(rs.getString(DataStore.REQUEST_ID), FAKE_REQUEST_ID2);
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), OrderState.FULFILLED.name());
-		
 		rs.next();
 		assertEquals(rs.getString(DataStore.REQUEST_ID), FAKE_REQUEST_ID4);
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), DataStore.REQUEST_STATE_IDLE);
-		
 		rs.next();
 		assertEquals(rs.getString(DataStore.REQUEST_ID), FAKE_REQUEST_ID5);
-		assertEquals(rs.getString(DataStore.REQUEST_STATE), DataStore.REQUEST_STATE_IDLE);
 	}
 	
-	@Test
-	public void testGetIdleResourcesIds() throws SQLException{
-		Scheduler scheduler = mock(Scheduler.class);
-		Specification specification = mock(Specification.class);
-		
-		List<Order> orders = new ArrayList<Order>();
-		
-		Resource resource1 = mock(Resource.class);
-		doReturn(FAKE_REQUEST_ID4).when(resource1).getId();
-		Resource resource2 = mock(Resource.class);
-		doReturn(FAKE_REQUEST_ID5).when(resource2).getId();
-		List<Resource> resources = new ArrayList<Resource>();
-		resources.add(resource1);
-		resources.add(resource2);
-		
-		db.updateInfrastructureState(orders, resources);
-		verify(db).getConnection();
-		verify(db).prepare(any(Connection.class), any(String.class));
-		
-		List<String> resourcesIds = db.getIdleResourcesIds();
-		assertEquals(2, resourcesIds.size());
-		assert(resourcesIds.contains(FAKE_REQUEST_ID4));
-		assert(resourcesIds.contains(FAKE_REQUEST_ID5));
-	}
 }
