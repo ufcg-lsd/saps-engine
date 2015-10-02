@@ -275,7 +275,7 @@ public class FogbowInfrastructureProviderTest {
 				Mockito.any(String.class), Mockito.any(List.class));
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-		fogbowInfrastructureProvider.deleteResource(resource);
+		fogbowInfrastructureProvider.deleteResource(resource.getId());
 			
 	}
 	
@@ -294,7 +294,7 @@ public class FogbowInfrastructureProviderTest {
 				Mockito.any(String.class), Mockito.any(List.class));
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-		fogbowInfrastructureProvider.deleteResource(resource);
+		fogbowInfrastructureProvider.deleteResource(resource.getId());
 			
 	}
 	

@@ -35,9 +35,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 	// ------------------ CONSTANTS ------------------//
 	private static final String NULL_VALUE = "null";
-	private static final String SPACE_VALUE = " ";
-	private static final String AND_OPERATOR = " && ";
-	private static final String OR_OPERATOR = " || ";
 	private static final String CATEGORY = "Category";
 	private static final String X_OCCI_ATTRIBUTE = "X-OCCI-Attribute: ";
 	private static final String DEFAULT_USER = "user";
@@ -176,11 +173,21 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	}
 
 	@Override
-	public void deleteResource(Resource resource) throws InfrastructureException {
-		try{
-			this.doRequest("delete", managerUrl + "/compute/" + resource.getId(), new ArrayList<Header>());
-		}catch(Exception e){
-			throw new InfrastructureException("Error when tries to delete resource with IntanceId ["+resource.getId()+"]", e);
+	public void deleteResource(String resourceId) throws InfrastructureException {
+		try {
+			Map<String, String> requestAttributes = getFogbowRequestAttributes(resourceId);
+			
+			String fogbowInstanceId = getInstanceIdByRequestAttributes(requestAttributes);
+			if (fogbowInstanceId != null) {
+				this.doRequest("delete", managerUrl + "/compute/" + fogbowInstanceId,
+						new ArrayList<Header>());
+			}
+			this.doRequest("delete", managerUrl + "/" + RequestConstants.TERM + "/" + resourceId,
+					new ArrayList<Header>());
+
+		} catch (Exception e) {
+			throw new InfrastructureException("Error when trying to delete resource id["
+					+ resourceId + "]", e);
 		}
 	}
 	

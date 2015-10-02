@@ -52,7 +52,8 @@ public class FogbowRequirementsHelper {
 
 	public static boolean matches(Resource resource, String requirementsStr) {
 		
-		LOGGER.debug("Matching Fogbow Requirements ["+requirementsStr+"] with Resource [id: "+resource.getId()+"]");
+		LOGGER.debug("Matching Fogbow Requirements [" + requirementsStr + "] with Resource [id: "
+				+ resource.getId() + "]");
 		try {
 			if (requirementsStr == null  || requirementsStr.isEmpty()) {
 				return true;

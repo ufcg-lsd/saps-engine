@@ -1,7 +1,11 @@
 package org.fogbowcloud.scheduler;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -13,11 +17,16 @@ import org.fogbowcloud.scheduler.core.ExecutionMonitor;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Job;
+import org.fogbowcloud.scheduler.core.model.Specification;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
+import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
+
+import com.google.gson.Gson;
 
 public class SebalMain {
 	
@@ -40,7 +49,24 @@ public class SebalMain {
 
 		Job job = new Job();
 
+		boolean blockWhileInitializing = new Boolean(properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING)).booleanValue();
+
+		boolean isElastic = new Boolean(properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
+		
+		String initialSpecsPathFile = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
+
+		if(initialSpecsPathFile != null && new File(initialSpecsPathFile).exists()){
+			LOGGER.info("Creating Initial Infrastructure "+ (blockWhileInitializing ? "with " : "without ") + "Blocking Creation!");
+			
+			BufferedReader br = new BufferedReader(new FileReader(initialSpecsPathFile));
+
+			Gson gson = new Gson();
+			List<Specification> specifications = Arrays.asList(gson.fromJson(br, Specification[].class));
+		}
+		
+		
 		InfrastructureManager infraManager = new InfrastructureManager(properties);
+		infraManager.start(blockWhileInitializing);
 		Scheduler scheduler = new Scheduler(job, infraManager);
 		ExecutionMonitor execMonitor = new ExecutionMonitor(job, scheduler);
 
@@ -85,6 +111,20 @@ public class SebalMain {
 				
 			}			
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
+
+	}
+	
+	private InfrastructureProvider createInfraProvaiderInstance(Properties properties) throws Exception {
+
+		String providerClassName = properties.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
+
+		Object clazz = Class.forName(providerClassName).getConstructor(Properties.class)
+				.newInstance(properties);
+		if (!(clazz instanceof InfrastructureProvider)) {
+			throw new Exception("Provider Class Name is not a InfrastructureProvider implementation");
+		}
+
+		return (InfrastructureProvider) clazz;
 
 	}
 	
