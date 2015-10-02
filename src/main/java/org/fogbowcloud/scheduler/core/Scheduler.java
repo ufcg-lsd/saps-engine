@@ -8,7 +8,6 @@ import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
-import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 
 public class Scheduler implements Runnable{
 	
@@ -30,7 +29,7 @@ public class Scheduler implements Runnable{
 	
 	public void resourceReady(Resource resource) {
 		/*
-		 * Looking for task compliant with resource
+		 * TODO Looking for task compliant with resource
 		 * Relate task -> resource
 		 * runningTask.put(taskId, resource)
 		 */

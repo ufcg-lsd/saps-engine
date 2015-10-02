@@ -4,7 +4,7 @@ public class AppPropertiesConstants {
 	
 	
 	// __________ INFRASTRUCTURE CONSTANTS __________ //
-	public static final String INFRA_IS_STATIC = "infra_is_static";
+	public static final String INFRA_IS_STATIC = "infra_is_elastic";
 	public static final String INFRA_PROVIDER_CLASS_NAME = "infra_provider_class_name";
 	public static final String INFRA_ORDER_SERVICE_TIME = "infra_order_service_time";
 	public static final String INFRA_RESOURCE_SERVICE_TIME = "infra_resource_service_time";

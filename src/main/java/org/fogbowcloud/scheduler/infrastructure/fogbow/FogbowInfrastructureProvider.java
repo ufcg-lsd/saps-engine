@@ -122,7 +122,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		Resource resource = null;
 		
 		try {
-
 			LOGGER.debug("Getting request attributes - Retrieve Instace ID.");
 			//Attempt's to get the Instance ID from Fogbow Manager.
 			requestAttributes = getFogbowRequestAttributes(requestID);

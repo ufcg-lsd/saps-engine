@@ -70,7 +70,7 @@ public class InfrastructureManager {
 	public void start(boolean blockWhileInitializing) throws Exception {
 		LOGGER.info("Starting Infrastructure Manager");
 
-		recoveryPreviousResources();		
+		removePreviousResources();		
 		this.createInitialOrders();			
 		// Start order service to monitor and resolve orders.
 		triggerOrderTimer();
@@ -85,8 +85,8 @@ public class InfrastructureManager {
 		}
 	}
 
-	private void recoveryPreviousResources() {
-		LOGGER.info("Recovering previous resources...");
+	private void removePreviousResources() {
+		LOGGER.info("Removing previous resources...");
 
 		List<String> recoveredRequests = ds.getRequesId();
 		for(String requestId : recoveredRequests){
@@ -96,7 +96,6 @@ public class InfrastructureManager {
 				LOGGER.error("Error while trying to delete Resource with request id ["+requestId+"]", e);
 			}
 		}
-		
 	}
 
 	public void orderResource(Specification specification, Scheduler scheduler) {
