@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
 import org.fogbowcloud.scheduler.core.Scheduler;
@@ -31,7 +32,7 @@ public class InfrastructureManager {
 	private ManagerTimer orderTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private OrderService orderService = new OrderService();
 	private ManagerTimer resourceTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
-	private CheckResourceExpirationService resourceExpirationService = new CheckResourceExpirationService();
+	private CheckInfrasctructureIntegrity resourceExpirationService = new CheckInfrasctructureIntegrity();
 	private final ExecutorService resourceConnectivityMonitor = Executors.newCachedThreadPool();
 
 	private InfrastructureProvider infraProvider;
@@ -208,7 +209,6 @@ public class InfrastructureManager {
 						+ newResource.getId() + "]");				
 			} else {
 				
-				//TODO How we could recovery this resource if it is not stored at DB?
 				orders.remove(order);
 				moveResourceToIdle(newResource);
 			}
@@ -224,7 +224,21 @@ public class InfrastructureManager {
 			@Override
 			public void run() {
 
-				if (isResourceAlive(idleResource)) {
+				String requestType = idleResource.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+				boolean resourceOK = true;
+				
+				if (!isResourceAlive(idleResource)) {
+					resourceOK = false;
+					//If is a persistent resource, tries to recover it.
+					if(RequestType.PERSISTENT.getValue().equals(requestType)){
+						Resource retry = infraProvider.getResource(idleResource.getId());
+						if(retry != null){
+							//TODO clone idleResource(retry);
+							resourceOK = true;
+						}
+					}
+				}
+				if(resourceOK){
 					LOGGER.debug("Idle Resource founded for Order [" + order.getRequestId() + "] - Specifications"
 							+ order.getSpecification().toString());
 					order.setState(OrderState.FULFILLED);
@@ -346,7 +360,7 @@ public class InfrastructureManager {
 		return orderService;
 	}
 	
-	protected CheckResourceExpirationService getResourceService() {
+	protected CheckInfrasctructureIntegrity getResourceService() {
 		return resourceExpirationService;
 	}
 	
@@ -381,7 +395,7 @@ public class InfrastructureManager {
 		}
 	}
 
-	protected class CheckResourceExpirationService implements Runnable {
+	protected class CheckInfrasctructureIntegrity implements Runnable {
 		@Override
 		public void run() {
 
@@ -390,19 +404,32 @@ public class InfrastructureManager {
 			for (Entry<Resource, Long> entry : idleResources.entrySet()) {
 				Resource r = entry.getKey();
 
-				if (!isResourceAlive(r)) {
-					resourcesToRemove.add(r);
-					LOGGER.info("Resource: [" + r.getId() + "] to be disposed due fails connection");
-					continue;
-				}
+				String requestType = r.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+				// Persistent resource can not be removed.
+				if (RequestType.ONE_TIME.getValue().equals(requestType)) {
 
-				if (isElastic) {
-					Date expirationDate = new Date(entry.getValue().longValue());
-					Date currentDate = new Date(dateUtils.currentTimeMillis());
-					
-					if (expirationDate.before(currentDate)) {
+					if (!isResourceAlive(r)) {
 						resourcesToRemove.add(r);
-						LOGGER.info("Resource: [" + r.getId() + "] to be disposed due lifetime's expiration");
+						LOGGER.info("Resource: [" + r.getId() + "] to be disposed due fails connection");
+						continue;
+					}
+
+					if (isElastic) {
+						Date expirationDate = new Date(entry.getValue().longValue());
+						Date currentDate = new Date(dateUtils.currentTimeMillis());
+
+						if (expirationDate.before(currentDate)) {
+							resourcesToRemove.add(r);
+							LOGGER.info("Resource: [" + r.getId() + "] to be disposed due lifetime's expiration");
+							continue;
+						}
+					}
+				}else{
+					if (!isResourceAlive(r)) {
+						Resource retry = infraProvider.getResource(r.getId());
+						if(retry != null){
+							r = retry;
+						}
 						continue;
 					}
 				}
@@ -410,8 +437,8 @@ public class InfrastructureManager {
 
 			for (Resource r : resourcesToRemove) {
 				try {
-					//TODO we need to check if the infra is static and create new resource when one is removed.
 					disposeResource(r);
+					
 				} catch (Exception e) {
 					LOGGER.error("Error while disposing resource: [" + r.getId() + "]");
 				}

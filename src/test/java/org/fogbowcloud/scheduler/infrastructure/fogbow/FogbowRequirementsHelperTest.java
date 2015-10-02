@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
@@ -75,13 +76,16 @@ public class FogbowRequirementsHelperTest {
 		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", spec, properties);
+		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
 		suitableResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "7060,8070");				
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "1");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "1024");
+		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
 		
 		assertTrue(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirements));
 
@@ -103,13 +107,16 @@ public class FogbowRequirementsHelperTest {
 		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", spec, properties);
+		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
 		suitableResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "7060,8070");				
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "3");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8192");
+		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
 		
 		assertTrue(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
@@ -131,13 +138,16 @@ public class FogbowRequirementsHelperTest {
 		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", spec, properties);
+		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
 		suitableResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "7060,8070");				
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "1");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8192");
+		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
 		
 		assertTrue(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
@@ -158,13 +168,16 @@ public class FogbowRequirementsHelperTest {
 		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", spec, properties);
+		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
 		suitableResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "7060,8070");				
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "1");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8192");
+		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
 		
 		assertFalse(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
@@ -187,13 +200,16 @@ public class FogbowRequirementsHelperTest {
 		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", spec, properties);
+		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
 		suitableResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "7060,8070");				
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "5"); //Out of range
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8192");
+		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
 		
 		assertFalse(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
@@ -214,13 +230,16 @@ public class FogbowRequirementsHelperTest {
 		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", spec, properties);
+		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
 		suitableResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "7060,8070");				
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "2");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "2047"); //Test low boundary value. 
+		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
 		
 		assertFalse(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
@@ -241,13 +260,16 @@ public class FogbowRequirementsHelperTest {
 		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", spec, properties);
+		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
 		suitableResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "7060,8070");				
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "2");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8193"); //Out of range - Test boundary value. 
+		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
 		
 		assertFalse(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 

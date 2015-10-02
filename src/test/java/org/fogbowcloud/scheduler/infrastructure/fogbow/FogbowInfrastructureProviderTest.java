@@ -104,7 +104,7 @@ public class FogbowInfrastructureProviderTest {
 		String instanceIdMock = "instance01";
 		
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource resourceMock = spy(new Resource(instanceIdMock, specs, properties));
+		Resource resourceMock = spy(new Resource(instanceIdMock, properties));
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
 		doReturn(resourceMock).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
@@ -248,7 +248,7 @@ public class FogbowInfrastructureProviderTest {
 		String instanceIdMock = "instance01";
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource resourceMock = spy(new Resource(requestIdMock, specs, properties));
+		Resource resourceMock = spy(new Resource(requestIdMock, properties));
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
 		doReturn(resourceMock).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
@@ -270,7 +270,7 @@ public class FogbowInfrastructureProviderTest {
 		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(requestIdMock, new Specification("image", "publicKey"), properties);
+		Resource resource = new Resource(requestIdMock, properties);
 		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
 
 		doReturn("OK").when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
@@ -291,7 +291,7 @@ public class FogbowInfrastructureProviderTest {
 		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(requestIdMock, new Specification("image", "publicKey"), properties);
+		Resource resource = new Resource(requestIdMock, properties);
 		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
 
 		doThrow(new Exception("Erro on request.")).when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 

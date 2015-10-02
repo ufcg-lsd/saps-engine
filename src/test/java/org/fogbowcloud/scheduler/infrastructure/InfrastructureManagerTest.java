@@ -52,14 +52,6 @@ public class InfrastructureManagerTest {
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 	
-
-	//TODO
-	/*
-	 *  1 - Testar remoção de recurso por time out e por expiração de data
-	 *  2 - Testar mover recursos pra IDLE e valor da data de expiração
-	 *  3 - Testar validação de properties (inclusive teste de falha)
-	 *  
-	 */
 	
 	@Before
 	public void setUp() throws Exception {
@@ -179,7 +171,7 @@ public class InfrastructureManagerTest {
 
 			@Override
 			public Resource answer(InvocationOnMock invocation) throws Throwable {
-				Resource fakeResource = spy(new Resource(fogbowInstanceId + (++count), new Specification("Image1", "Key1"), properties));
+				Resource fakeResource = spy(new Resource(fogbowInstanceId + (++count), properties));
 
 				fakeResource.putMetadata(Resource.METADATA_SSH_HOST, "100.10.1.1" + count);
 				fakeResource.putMetadata(Resource.METADATA_SSH_PORT, "9898");
@@ -215,7 +207,7 @@ public class InfrastructureManagerTest {
 		String fakeFogbowInstanceId = "instanceId";
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = new Resource(fakeFogbowInstanceId, specs, properties);
+		Resource fakeResource = new Resource(fakeFogbowInstanceId, properties);
 
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.eq(specs));
@@ -235,7 +227,6 @@ public class InfrastructureManagerTest {
 		// Test allocated resource
 		assertNotNull(fakeResource.getId());
 		assertEquals(1, infrastructureManager.getAllocatedResources().size());
-		assertEquals(specs, fakeResource.getSpecification());
 		assertEquals(OrderState.FULFILLED, infrastructureManager.getOrders().get(0).getState());
 		assertEquals(1, infrastructureManager.getOrders().size());
 
@@ -252,7 +243,7 @@ public class InfrastructureManagerTest {
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId, specs, properties));
+		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId, properties));
 
 		//Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class)); //Return for new Instance's request 
@@ -306,7 +297,7 @@ public class InfrastructureManagerTest {
 
 			@Override
 			public Resource answer(InvocationOnMock invocation) throws Throwable {
-				Resource fakeResource = spy(new Resource(fogbowInstanceId + (++count), specs, properties));
+				Resource fakeResource = spy(new Resource(fogbowInstanceId + (++count), properties));
 
 				fakeResource.putMetadata(Resource.METADATA_SSH_HOST, "100.10.1.1" + count);
 				fakeResource.putMetadata(Resource.METADATA_SSH_PORT, "9898");
@@ -406,7 +397,7 @@ public class InfrastructureManagerTest {
 					spec = specsB;
 				}
 
-				Resource fakeResource = spy(new Resource(fogbowInstanceId+(++count),spec, properties));
+				Resource fakeResource = spy(new Resource(fogbowInstanceId+(++count), properties));
 
 				fakeResource.putMetadata(Resource.METADATA_SSH_HOST, "100.10.1.1"+count);
 				fakeResource.putMetadata(Resource.METADATA_SSH_PORT, "9898");
@@ -476,7 +467,7 @@ public class InfrastructureManagerTest {
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId,specs, properties));
+		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId, properties));
 
 		//Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class));  
@@ -527,7 +518,7 @@ public class InfrastructureManagerTest {
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId, specs, properties));
+		Resource fakeResource = spy(new Resource(fakeFogbowInstanceId, properties));
 
 		//Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class)); //Return for new Instance's request 

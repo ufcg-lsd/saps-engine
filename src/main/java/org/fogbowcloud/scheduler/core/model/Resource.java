@@ -28,6 +28,9 @@ public class Resource {
 	public static final String METADATA_SSH_USERNAME_ATT = "metadateSshUsername";
 	public static final String METADATA_EXTRA_PORTS_ATT  = "metadateExtraPorts";
     
+	public static final String METADATA_IMAGE 		     = "metadataImage";
+	public static final String METADATA_PUBLIC_KEY 		 = "metadataPublicKey";
+	
     public static final String METADATA_VCPU 			 = "metadataVcpu";
     public static final String METADATA_MEN_SIZE   		 = "metadataMenSize";
     public static final String METADATA_DISK_SIZE 		 = "metadataDiskSize";
@@ -41,18 +44,18 @@ public class Resource {
 	private TaskExecutionResult taskExecutionResult;
 	private ExecutionCommandHelper executionCommandHelper;
 	
-	private Specification specification;
+//	private Specification specification;
 //	private String outputFolder;
 //    private String userName;
     private SshClientWrapper sshClientWrapper = new SshClientWrapper();
     
 	private static final Logger LOGGER = Logger.getLogger(Resource.class);
 	
-    public Resource(String id, Specification spec, Properties properties) {
+    public Resource(String id, Properties properties) {
     	this.id = id;    	
 		// TODO we need to check if Resource needs to have a specification or
 		// translate some spec attributes into resources attributes
-    	this.specification = spec;
+//    	this.specification = spec;
     	executionCommandHelper = new ExecutionCommandHelper(properties);
     }
 
@@ -77,10 +80,10 @@ public class Resource {
 			if (!FogbowRequirementsHelper.matches(this, fogbowRequirement)) {
 				return false;
 			}
-			if (!image.equalsIgnoreCase(this.specification.getImage())) {
+			if (!image.equalsIgnoreCase(metadata.get(METADATA_IMAGE))) {
 				return false;
 			}
-			if (!publicKey.equalsIgnoreCase(this.specification.getPublicKey())) {
+			if (!publicKey.equalsIgnoreCase(metadata.get(METADATA_PUBLIC_KEY))) {
 				return false;
 			}
 		} else {
@@ -118,6 +121,10 @@ public class Resource {
 	
 	public String getMetadataValue(String attributeName) {
 		return metadata.get(attributeName);
+	}
+	
+	public Map<String, String> getAllMetadata(){
+		return metadata;
 	}
 
 	public void executeTask(Task task) {
@@ -196,13 +203,15 @@ public class Resource {
 		return executionResult;
 	}
 
+	protected void copyInformations(Resource resource){
+		this.metadata.clear();
+		this.metadata.putAll(resource.getAllMetadata());
+	}
+	
+
 	//----------------------------------- GETTERS and SETTERS -----------------------------------//
 	public String getId() {
 		return id;
-	}
-
-	public Specification getSpecification() {
-		return specification;
 	}
 
 	protected SshClientWrapper getSshClientWrapper() {
