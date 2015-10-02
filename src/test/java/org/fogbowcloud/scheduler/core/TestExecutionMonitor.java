@@ -13,10 +13,12 @@ import java.util.List;
 import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
+import org.fogbowcloud.scheduler.core.model.SebalJob;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
+import org.fogbowcloud.sebal.ImageDataStore;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,13 +30,15 @@ public class TestExecutionMonitor {
 	public InfrastructureManager IM;
 	public Resource resource;
 	public String FAKE_TASK_ID = "FAKE_TEST_ID";
+	public ImageDataStore imageStore;
 	
 	@Before
 	public void setUp(){
 		task = spy(new TaskImpl("id", null));
 		IM = mock(InfrastructureManager.class);
 		resource = mock(Resource.class);
-		job = spy(new Job());
+		imageStore = mock(ImageDataStore.class);
+		job = spy(new SebalJob(imageStore));
 		
 		scheduler = spy(new Scheduler(job, IM));
 	}
