@@ -265,11 +265,13 @@ public class FogbowInfrastructureProviderTest {
 	@Test
 	public void deleteResourceTestSucess() throws Exception{
 		
+		String requestIdMock = "requestId";
 		String instanceIdMock = "instance01";
 		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(instanceIdMock, new Specification("image", "publicKey"), properties);
+		Resource resource = new Resource(requestIdMock, new Specification("image", "publicKey"), properties);
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
 
 		doReturn("OK").when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
 				Mockito.any(String.class), Mockito.any(List.class));
