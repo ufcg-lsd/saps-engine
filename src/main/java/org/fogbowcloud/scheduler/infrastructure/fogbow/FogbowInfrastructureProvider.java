@@ -255,21 +255,21 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		
 	}
 	
-	private List<Header> requestNewInstanceHeaders(Specification requirements) {
+	private List<Header> requestNewInstanceHeaders(Specification specs) {
 		
-		String fogbowImage = requirements.getImage();
-		String fogbowRequirements = requirements.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS);
+		String fogbowImage = specs.getImage();
+		String fogbowRequirements = specs.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS);
 		
         List<Header> headers = new LinkedList<Header>();
         headers.add(new BasicHeader(CATEGORY, RequestConstants.TERM+ "; scheme=\"" + RequestConstants.SCHEME + "\"; class=\""+ RequestConstants.KIND_CLASS + "\""));
         headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,RequestAttribute.INSTANCE_COUNT.getValue() + "=" + 1));
-        headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,RequestAttribute.TYPE.getValue() + "=" + RequestType.ONE_TIME.getValue()));
+        headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,RequestAttribute.TYPE.getValue() + "=" + RequestType.ONE_TIME.getValue())); //TODO alter to get type from Specs
         headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,RequestAttribute.REQUIREMENTS.getValue() + "=" + fogbowRequirements));
         headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\""+ RequestConstants.TEMPLATE_OS_SCHEME + "\"; class=\""+ RequestConstants.MIXIN_CLASS + "\""));
-        if (requirements.getPublicKey() != null && !requirements.getPublicKey().isEmpty()) {
+        if (specs.getPublicKey() != null && !specs.getPublicKey().isEmpty()) {
             headers.add(new BasicHeader(CATEGORY,RequestConstants.PUBLIC_KEY_TERM + "; scheme=\""+ 
             		RequestConstants.CREDENTIALS_RESOURCE_SCHEME + "\"; class=\"" + RequestConstants.MIXIN_CLASS+ "\""));
-            headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, RequestAttribute.DATA_PUBLIC_KEY.getValue() + "=" + requirements.getPublicKey()));
+            headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, RequestAttribute.DATA_PUBLIC_KEY.getValue() + "=" + specs.getPublicKey()));
         }
         return headers;
 

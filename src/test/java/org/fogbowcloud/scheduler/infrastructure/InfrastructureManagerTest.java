@@ -3,7 +3,6 @@ package org.fogbowcloud.scheduler.infrastructure;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -13,8 +12,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -26,8 +25,6 @@ import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.core.util.DateUtils;
 import org.fogbowcloud.scheduler.infrastructure.answer.ResourceReadyAnswer;
-import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
-import org.fogbowcloud.scheduler.infrastructure.exceptions.RequestResourceException;
 import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 import org.junit.After;
 import org.junit.Before;
@@ -79,9 +76,9 @@ public class InfrastructureManagerTest {
 		schedulerMock = mock(Scheduler.class);
 		infrastructureProviderMock = mock(InfrastructureProvider.class);
 		
-		doReturn(true).when(ds).update(Mockito.anyList());
+		doReturn(true).when(ds).updateInfrastructureState(Mockito.anyList(), Mockito.anyList());
 		
-		infrastructureManager = new InfrastructureManager(properties);
+		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 		infrastructureManager.cancelOrderTimer();
 		infrastructureManager.cancelResourceTimer();
 		infrastructureManager.setDataStore(ds);
@@ -103,21 +100,7 @@ public class InfrastructureManagerTest {
 		exception.expect(Exception.class);
 		
 		properties = new Properties();
-		infrastructureManager = new InfrastructureManager(properties);
-
-	}
-	
-	@Test
-	public void propertiesWrongProviderTest() throws Exception{
-		
-		exception.expect(Exception.class);
-		FileInputStream input;
-		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
-
-		properties = new Properties();
-		properties.load(input);
-		properties.put(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME, "org.fogbowcloud.scheduler.core.model.Specification");
-		infrastructureManager = new InfrastructureManager(properties);
+		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 
 	}
 	
@@ -131,7 +114,7 @@ public class InfrastructureManagerTest {
 		properties = new Properties();
 		properties.load(input);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT, "AB");
-		infrastructureManager = new InfrastructureManager(properties);
+		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 
 	}
 	
@@ -145,7 +128,7 @@ public class InfrastructureManagerTest {
 		properties = new Properties();
 		properties.load(input);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME, "AB");
-		infrastructureManager = new InfrastructureManager(properties);
+		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 
 	}
 	
@@ -159,7 +142,7 @@ public class InfrastructureManagerTest {
 		properties = new Properties();
 		properties.load(input);
 		properties.put(AppPropertiesConstants.INFRA_ORDER_SERVICE_TIME, "AB");
-		infrastructureManager = new InfrastructureManager(properties);
+		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 
 	}
 
@@ -173,7 +156,7 @@ public class InfrastructureManagerTest {
 		properties = new Properties();
 		properties.load(input);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME, "AB");
-		infrastructureManager = new InfrastructureManager(properties);
+		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 	}
 	
 	@Test
@@ -183,9 +166,6 @@ public class InfrastructureManagerTest {
 		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
 		
 		String initialSpecFile = "src/test/resources/Specs_Json";
-		
-//		properties.put(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING, "true");
-//		properties.put(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH, initialSpecFile);
 		
 		BufferedReader br = new BufferedReader(new FileReader(initialSpecFile));
 		Gson gson = new Gson();
@@ -219,11 +199,12 @@ public class InfrastructureManagerTest {
 
 		}).when(infrastructureProviderMock).getResource(Mockito.any(String.class));
 		
-		infrastructureManager = new InfrastructureManager(properties);
-		infrastructureManager.setInfraProvider(infrastructureProviderMock);
+		infrastructureManager = new InfrastructureManager(specifications, false, infrastructureProviderMock, properties);
+		infrastructureManager.setDataStore(ds);
+		infrastructureManager.start(true);
 		infrastructureManager.cancelOrderTimer();
 		infrastructureManager.cancelResourceTimer();
-		//assertEquals(specifications.size(), infrastructureManager.getIdleResources().size());
+		assertEquals(specifications.size(), infrastructureManager.getIdleResources().size());
 		
 	}
 

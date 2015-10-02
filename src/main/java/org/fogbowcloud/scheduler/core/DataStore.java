@@ -6,11 +6,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.Order;
+import org.fogbowcloud.scheduler.core.model.Resource;
 import org.h2.jdbcx.JdbcConnectionPool;
 
 public class DataStore {
@@ -21,6 +24,9 @@ public class DataStore {
 	protected static final String REQUEST_ID_TABLE_NAME = "request_Ids";
 
 	protected static final String REQUEST_ID = "requestid";
+	protected static final String REQUEST_STATE = "request_state";
+	protected static final String REQUEST_STATE_TAG = ":request_state";
+	protected static final String REQUEST_STATE_IDLE = "IDLE";
 
 	private String dataStoreURL;
 	private JdbcConnectionPool cp;
@@ -39,7 +45,7 @@ public class DataStore {
 			connection = getConnection();
 			statement = connection.createStatement();
 			statement.execute("CREATE TABLE IF NOT EXISTS " + REQUEST_ID_TABLE_NAME
-					+ "(" + REQUEST_ID+ " VARCHAR(255) PRIMARY KEY)");
+					+ "(" + REQUEST_ID+ " VARCHAR(255) PRIMARY KEY, "+REQUEST_STATE+" VARCHAR(50))");
 			statement.close();
 
 		} catch (Exception e) {
@@ -84,14 +90,14 @@ public class DataStore {
 
 
 	private static final String INSERT_MEMBER_USAGE_SQL = "INSERT INTO " + REQUEST_ID_TABLE_NAME
-			+ " VALUES(?)";
+			+ " VALUES(?,?)";
 
 	private static final String DELETE_ALL_CONTENT_SQL = "DELETE FROM " + REQUEST_ID_TABLE_NAME;
 
-	public boolean update(List<Order> orders){
+	public boolean updateInfrastructureState(List<Order> orders, List<Resource> idleResource){
 		LOGGER.debug("Updating current list of Orders that were requested to provider");
 		PreparedStatement deleteOldContent = null;
-		PreparedStatement updateOrderList = null;
+		PreparedStatement updateRequestList = null;
 		Connection connection = null;
 
 		try {
@@ -103,12 +109,20 @@ public class DataStore {
 				connection.rollback();
 				return false;
 			}
-			updateOrderList = prepare(connection, INSERT_MEMBER_USAGE_SQL);
+			updateRequestList = prepare(connection, INSERT_MEMBER_USAGE_SQL);
 			for (Order order : orders){
-				updateOrderList.setString(1, order.getRequestId());
-				updateOrderList.addBatch();
+				updateRequestList.setString(1, order.getRequestId());
+				updateRequestList.setString(2, order.getState().name());
+				updateRequestList.addBatch();
 			}
-			if (hasBatchExecutionError(updateOrderList.executeBatch())){
+			
+			for (Resource resource : idleResource){
+				updateRequestList.setString(1, resource.getId());
+				updateRequestList.setString(2, REQUEST_STATE_IDLE);
+				updateRequestList.addBatch();
+			}
+			
+			if (hasBatchExecutionError(updateRequestList.executeBatch())){
 				connection.rollback();
 				return false;
 			}
@@ -125,7 +139,7 @@ public class DataStore {
 			}
 			return false;
 		} finally {
-			close(updateOrderList, connection);
+			close(updateRequestList, connection);
 			close(deleteOldContent, connection);
 
 		}
@@ -136,15 +150,37 @@ public class DataStore {
 	}
 
 	private static final String SELECT_REQUEST_ID = "SELECT * FROM " + REQUEST_ID_TABLE_NAME;
+	private static final String SELECT_REQUEST_ID_BY_STATE = "SELECT * FROM " + REQUEST_ID_TABLE_NAME +" WHERE "+REQUEST_STATE+" LIKE "+REQUEST_STATE_TAG;
 
-	public List<String> getRequesId() {
-		ArrayList<String> orders = new ArrayList<String>();
+	public Map<String, String> getRequesId() {
+		Map<String, String> orders = new HashMap<String, String>();
 		Statement getRequestIdStatement = null;
 		Connection connection = null;
 		try {
 			connection =  getConnection();
 			getRequestIdStatement = connection.createStatement();
 			getRequestIdStatement.execute(SELECT_REQUEST_ID);
+			ResultSet result = getRequestIdStatement.getResultSet();
+			while(result.next()){
+				orders.put(result.getString(REQUEST_ID), result.getString(REQUEST_STATE));
+			}
+			return orders;
+		} catch (SQLException e){
+			LOGGER.error("Couldn't recover request Ids from DB", e);	
+			return null;
+		} finally {
+			close(getRequestIdStatement, connection);
+		}
+	}
+	
+	public List<String> getIdleResourcesIds() {
+		List<String> orders = new ArrayList<String>();
+		Statement getRequestIdStatement = null;
+		Connection connection = null;
+		try {
+			connection =  getConnection();
+			getRequestIdStatement = connection.createStatement();
+			getRequestIdStatement.executeQuery(SELECT_REQUEST_ID_BY_STATE.replace(REQUEST_STATE_TAG, "'"+REQUEST_STATE_IDLE+"'"));
 			ResultSet result = getRequestIdStatement.getResultSet();
 			while(result.next()){
 				orders.add(result.getString(REQUEST_ID));
@@ -157,6 +193,7 @@ public class DataStore {
 			close(getRequestIdStatement, connection);
 		}
 	}
+	
 	private boolean hasBatchExecutionError(int[] executeBatch) {
 		for (int i : executeBatch) {
 			if (i == PreparedStatement.EXECUTE_FAILED) {

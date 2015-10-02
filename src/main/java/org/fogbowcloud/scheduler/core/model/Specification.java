@@ -80,12 +80,16 @@ public class Specification {
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 		sb.append("Image: "+image);
-		sb.append("\nPublicKey: "+publicKey);
+		sb.append("- PublicKey: "+publicKey);
 		if(contextScript != null && !contextScript.isEmpty()){
 			sb.append("\nContextScript: "+contextScript);
 		}
-		for(Entry<String, String> entry : requirements.entrySet()){
-			sb.append("\n"+entry.getKey()+": "+entry.getValue());
+		if(requirements != null && !requirements.isEmpty()){
+			sb.append("\nRequiriments:{");
+			for(Entry<String, String> entry : requirements.entrySet()){
+				sb.append("\n\t"+entry.getKey()+": "+entry.getValue());
+			}
+			sb.append("\n}");
 		}
 		return sb.toString();
 	}

@@ -86,8 +86,9 @@ public class InfrastructureManager {
 	}
 
 	private void recoveryPreviousResources() {
-		// TODO Auto-generated method stub 
-		LOGGER.info("Recovering prevous resources...");
+		LOGGER.info("Recovering previous resources...");
+
+		Map<String, String> recoveredRequests = ds.getRequesId();
 		
 		/*
 		 * buscar no DB pelos request IDs verificar se alguma initial spec casa
@@ -127,7 +128,7 @@ public class InfrastructureManager {
 	// --------- PRIVATE OR PROTECTED METHODS --------- //
 	
 	private void createInitialOrders() {
-		LOGGER.info("Creating orders to initial specs: " + initialSpec);
+		LOGGER.info("Creating orders to initial specs: \n" + initialSpec);
 
 		for (Specification spec : initialSpec) {
 			orderResource(spec, null);
@@ -172,7 +173,7 @@ public class InfrastructureManager {
 
 			// Async call to avoid wating time from test connectivity with
 			// resource
-			this.ildeResourceToOrder(resource, order);
+			this.idleResourceToOrder(resource, order);
 
 		} else if (isElastic || order.getScheduler() == null) { // Else, requests a new resource from provider.
 
@@ -180,7 +181,7 @@ public class InfrastructureManager {
 				String requestId = infraProvider.requestResource(order.getSpecification());
 				order.setRequestId(requestId);
 				order.setState(OrderState.ORDERED);
-				ds.update(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED));
+				ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 				LOGGER.debug("Order [" + order.getRequestId() + "] update to Ordered with request [" + requestId + "]");
 
 			} catch (RequestResourceException e) {
@@ -203,7 +204,7 @@ public class InfrastructureManager {
 			// if order is not realated to initial spec
 			if (order.getScheduler() != null) {
 				order.setState(OrderState.FULFILLED);
-				ds.update(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED));
+				ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 				order.getScheduler().resourceReady(newResource);
 				
 				allocatedResources.put(newResource, order);
@@ -217,7 +218,7 @@ public class InfrastructureManager {
 		}
 	}
 	
-	protected void ildeResourceToOrder(final Resource idleResource, final Order order) {
+	protected void idleResourceToOrder(final Resource idleResource, final Order order) {
 
 		resourceConnectivityMonitor.submit(new Runnable() {
 
@@ -228,7 +229,7 @@ public class InfrastructureManager {
 					LOGGER.debug("Idle Resource founded for Order [" + order.getRequestId() + "] - Specifications"
 							+ order.getSpecification().toString());
 					order.setState(OrderState.FULFILLED);
-					ds.update(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED));
+					ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 					order.getScheduler().resourceReady(idleResource);
 					idleResources.remove(idleResource);
 					allocatedResources.put(idleResource, order);
@@ -243,6 +244,7 @@ public class InfrastructureManager {
 				.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 		Long expirationDate = Long.valueOf(dateUtils.currentTimeMillis() + idleLifeTime);
 		idleResources.put(resource, expirationDate);
+		ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 		LOGGER.debug("Resource [" + resource.getId() + "] moved to Idle - Expiration Date: ["
 				+ DateUtils.getStringDateFromMiliFormat(expirationDate, DateUtils.DATE_FORMAT_YYYY_MM_DD_HOUR));
 	}
