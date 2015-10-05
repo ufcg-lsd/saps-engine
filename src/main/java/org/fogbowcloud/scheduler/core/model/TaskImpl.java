@@ -27,10 +27,12 @@ public class TaskImpl implements Task {
 		this.spec = spec;
 	}
 	
+	@Override
 	public void putMetadata(String attributeName, String value) {
 		metadata.put(attributeName, value);
 	}
-	
+
+	@Override
 	public String getMetadata(String attributeName) {
 		return metadata.get(attributeName);
 	}

@@ -17,4 +17,8 @@ public interface Task {
 	public boolean isFinished();
 
 	public List<Command> getCommandsByType(Type commandType);
+
+	public void putMetadata(String attributeName, String value);
+
+	public String getMetadata(String attributeName);
 }
