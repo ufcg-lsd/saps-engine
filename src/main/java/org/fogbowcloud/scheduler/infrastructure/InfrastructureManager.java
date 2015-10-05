@@ -423,16 +423,19 @@ public class InfrastructureManager {
 		@Override
 		public void run() {
 			for (Order order : orders) {
+				
+				if(order!= null && order.getState()!=null){
 
-				switch (order.getState()) {
-				case OPEN:
-					resolveOpenOrder(order);
-					break;
-				case ORDERED:
-					resolveOrderedOrder(order);
-					break;
-				default:
-					break;
+					switch (order.getState()) {
+					case OPEN:
+						resolveOpenOrder(order);
+						break;
+					case ORDERED:
+						resolveOrderedOrder(order);
+						break;
+					default:
+						break;
+					}
 				}
 			}
 		}
@@ -445,46 +448,50 @@ public class InfrastructureManager {
 			List<Resource> resourcesToRemove = new ArrayList<Resource>();
 
 			for (Entry<Resource, Long> entry : idleResources.entrySet()) {
-				Resource r = entry.getKey();
+				if(entry != null ){
+					Resource r = entry.getKey();
 
-				String requestType = r.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
-				// Persistent resource can not be removed.
-				if (RequestType.ONE_TIME.getValue().equals(requestType)) {
+					String requestType = r.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+					// Persistent resource can not be removed.
+					if (RequestType.ONE_TIME.getValue().equals(requestType)) {
 
-					if (!isResourceAlive(r)) {
-						resourcesToRemove.add(r);
-						LOGGER.info("Resource: [" + r.getId() + "] to be disposed due connection's fail");
-						continue;
-					}
-
-					if (isElastic) {
-						Date expirationDate = new Date(entry.getValue().longValue());
-						Date currentDate = new Date(dateUtils.currentTimeMillis());
-
-						if (expirationDate.before(currentDate)) {
+						if (!isResourceAlive(r)) {
 							resourcesToRemove.add(r);
-							LOGGER.info("Resource: [" + r.getId() + "] to be disposed due lifetime's expiration");
+							LOGGER.info("Resource: [" + r.getId() + "] to be disposed due connection's fail");
 							continue;
 						}
-					}
-				}else{
-					if (!isResourceAlive(r)) {
-						Resource retryResource = infraProvider.getResource(r.getId());
-						if(retryResource != null){
-							r.copyInformations(retryResource);
-							retryResource = null;
+
+						if (isElastic) {
+							Date expirationDate = new Date(entry.getValue().longValue());
+							Date currentDate = new Date(dateUtils.currentTimeMillis());
+
+							if (expirationDate.before(currentDate)) {
+								resourcesToRemove.add(r);
+								LOGGER.info("Resource: [" + r.getId() + "] to be disposed due lifetime's expiration");
+								continue;
+							}
 						}
-						continue;
+					}else{
+						if (!isResourceAlive(r)) {
+							Resource retryResource = infraProvider.getResource(r.getId());
+							if(retryResource != null){
+								r.copyInformations(retryResource);
+								retryResource = null;
+							}
+							continue;
+						}
 					}
 				}
 			}
 
 			for (Resource r : resourcesToRemove) {
-				try {
-					disposeResource(r);
-					
-				} catch (Exception e) {
-					LOGGER.error("Error while disposing resource: [" + r.getId() + "]");
+				if(r != null){
+					try {
+						disposeResource(r);
+
+					} catch (Exception e) {
+						LOGGER.error("Error while disposing resource: [" + r.getId() + "]");
+					}
 				}
 			}
 		}

@@ -145,25 +145,14 @@ public class InfrastructureManagerTest {
 			fail();
 		}
 
+		Resource fakeResourceA = this.mountFakeResourceFromRequestId(requestIdFake1, specifications.get(0), true, RequestType.ONE_TIME);
+		Resource fakeResourceB = this.mountFakeResourceFromRequestId(requestIdFake2, specifications.get(1), true, RequestType.ONE_TIME);
+		
 		doReturn(requestIdFake1).when(infrastructureProviderMock).requestResource(Mockito.eq(specifications.get(0)));
 		doReturn(requestIdFake2).when(infrastructureProviderMock).requestResource(Mockito.eq(specifications.get(1))); 
-
-		doAnswer(new Answer<Resource>() {
-
-			@Override
-			public Resource answer(InvocationOnMock invocation) throws Throwable {
-				
-				String requestId = (String) invocation.getArguments()[0];
-				
-				Specification spec = specifications.get(0);
-				if(requestIdFake2.equals(requestId)){
-					spec = specifications.get(1);
-				}
-				
-				return mountFakeResourceFromRequestId(requestId, spec, true, RequestType.ONE_TIME);
-			}
-
-		}).when(infrastructureProviderMock).getResource(Mockito.any(String.class));
+		
+		doReturn(fakeResourceA).when(infrastructureProviderMock).getResource(Mockito.eq(requestIdFake1));
+		doReturn(fakeResourceB).when(infrastructureProviderMock).getResource(Mockito.eq(requestIdFake2));
 		
 		infrastructureManager = new InfrastructureManager(specifications, false, infrastructureProviderMock, properties);
 		infrastructureManager.setDataStore(ds);
@@ -182,11 +171,12 @@ public class InfrastructureManagerTest {
 		String fakeRequestId = "requestId";
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = new Resource(fakeRequestId, properties);
+		Resource fakeResource = spy(new Resource(fakeRequestId, properties));
 
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.eq(specs));
 		doReturn(fakeResource).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
+		doReturn(true).when(fakeResource).checkConnectivity(Mockito.anyInt());
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 
 		validateOrderRequested(specs);
@@ -212,28 +202,14 @@ public class InfrastructureManagerTest {
 		Long dateMock = System.currentTimeMillis();
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
 		Resource fakeResource = spy(new Resource(fakeRequestId, properties));
 		fakeResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
 
 		//Creating mocks behaviors
-		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class)); //Return for new Instance's request 
-		doReturn(fakeResource).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
-		doReturn(true).when(fakeResource).checkConnectivity(Mockito.anyInt());
 		doReturn(dateMock).when(dateUtilsMock).currentTimeMillis();
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 		infrastructureManager.setDateUtils(dateUtilsMock);
-
-		infrastructureManager.orderResource(specs, schedulerMock);
-
-		// resolving Open Orders (setting to Ordered)
-		infrastructureManager.getOrderService().run(); 
-		// resolving Ordered Orders (setting to Fulfilled)
-		infrastructureManager.getOrderService().run(); 
-
-		assertEquals(1, infrastructureManager.getAllocatedResources().size());
-		assertEquals(1, infrastructureManager.getOrders().size());
 
 		validateReleaseResource(fakeResource);
 		
@@ -359,51 +335,18 @@ public class InfrastructureManagerTest {
 
 		final Specification specsB = new Specification("imageMock", "publicKeyMock");
 		specsB.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementB);
+		
+		Resource fakeResourceA = this.mountFakeResourceFromRequestId(fakeRequestIdA, specsA, true, RequestType.ONE_TIME);
+		Resource fakeResourceB = this.mountFakeResourceFromRequestId(fakeRequestIdB, specsB, true, RequestType.ONE_TIME);
 
 		//Creating mocks behaviors
 		doReturn(fakeRequestIdA).when(infrastructureProviderMock).requestResource(Mockito.eq(specsA));
 		doReturn(fakeRequestIdB).when(infrastructureProviderMock).requestResource(Mockito.eq(specsB));
 
-		doAnswer(new Answer<Resource>() {
-
-			int count=0; 
-			@Override
-			public Resource answer(InvocationOnMock invocation) throws Throwable {
-
-				String requestId = (String) invocation.getArguments()[0];
-				String vpcu = "1";
-				String menSize = "1024";
-				Specification spec = specsA;
-				if(fakeRequestIdB.equals(requestId)){
-					vpcu = "2";
-					menSize = "2048";
-					spec = specsB;
-				}
-
-				Resource fakeResource = spy(new Resource(requestId, properties));
-
-				fakeResource.putMetadata(Resource.METADATA_SSH_HOST, "100.10.1.1"+count);
-				fakeResource.putMetadata(Resource.METADATA_SSH_PORT, "9898");
-				fakeResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "user");
-				fakeResource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT, "");
-				fakeResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
-				fakeResource.putMetadata(Resource.METADATA_IMAGE, spec.getImage());
-				fakeResource.putMetadata(Resource.METADATA_PUBLIC_KEY, spec.getPublicKey());
-				fakeResource.putMetadata(Resource.METADATA_VCPU, vpcu);
-				fakeResource.putMetadata(Resource.METADATA_MEN_SIZE, menSize);
-				//TODO Descomentar quando o fogbow estiver retornando este atributo
-				//fakeResource.putMetadata(Resource.METADATA_DISK_SIZE, instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE)); 
-				//TODO Descomentar quando o fogbow estiver retornando este atributo
-				//fakeResource.putMetadata(Resource.METADATA_LOCATION, instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID)); 
-				doReturn(true).when(fakeResource).checkConnectivity(Mockito.anyInt());
-
-				return fakeResource;
-			}
-
-		}).when(infrastructureProviderMock).getResource(Mockito.any(String.class));
+		doReturn(fakeResourceA).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestIdA));
+		doReturn(fakeResourceB).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestIdB));
 
 		doAnswer(rrAnswer).when(schedulerMock).resourceReady(Mockito.any(Resource.class));
-
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 
@@ -440,43 +383,45 @@ public class InfrastructureManagerTest {
 		DateUtils dateUtilsMock = mock(DateUtils.class);
 
 		String fakeRequestId = "requestId";
-		Long dateMock = System.currentTimeMillis();
+
+		String IP_RESOURCE_A = "100.10.1.1";
+		String IP_RESOURCE_B = "100.10.1.10";
 
 		Specification specs = new Specification("imageMock", "publicKeyMock");
-		Resource fakeResource = spy(new Resource(fakeRequestId, properties));
-		fakeResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.PERSISTENT.getValue());
-
+		
+		Resource fakeResourceA = spy(new Resource(fakeRequestId, properties));
+		fakeResourceA.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.PERSISTENT.getValue());
+		fakeResourceA.putMetadata(Resource.METADATA_SSH_HOST, IP_RESOURCE_A);
+		fakeResourceA.putMetadata(Resource.METADATA_IMAGE, specs.getImage());
+		fakeResourceA.putMetadata(Resource.METADATA_PUBLIC_KEY, specs.getPublicKey());
+		fakeResourceA.putMetadata(Resource.METADATA_VCPU, "1");
+		fakeResourceA.putMetadata(Resource.METADATA_MEN_SIZE, "1024");
+		doReturn(false).when(fakeResourceA).checkConnectivity(Mockito.anyInt());
+		
+		final Resource fakeResourceB = spy(new Resource(fakeRequestId, properties));
+		fakeResourceB.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.PERSISTENT.getValue());
+		fakeResourceB.putMetadata(Resource.METADATA_SSH_HOST, IP_RESOURCE_B);
+		fakeResourceB.putMetadata(Resource.METADATA_IMAGE, specs.getImage());
+		fakeResourceB.putMetadata(Resource.METADATA_PUBLIC_KEY, specs.getPublicKey());
+		fakeResourceB.putMetadata(Resource.METADATA_VCPU, "1");
+		fakeResourceB.putMetadata(Resource.METADATA_MEN_SIZE, "1024");
+		doReturn(true).when(fakeResourceB).checkConnectivity(Mockito.anyInt());
+		
 		//Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class)); //Return for new Instance's request 
-		doReturn(fakeResource).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
-		doReturn(true).when(fakeResource).checkConnectivity(Mockito.anyInt());
-		doReturn(dateMock).when(dateUtilsMock).currentTimeMillis();
+		doReturn(fakeResourceB).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 		infrastructureManager.setDateUtils(dateUtilsMock);
 
-		infrastructureManager.orderResource(specs, schedulerMock);
+		infrastructureManager.getIdleResourcesMap().put(fakeResourceA, new Long(0));
 
-		//Waits InfrastructureManager process order.
-		 // resolving Open Orders (setting to Ordered)
-		infrastructureManager.getOrderService().run();
-		// resolving Ordered Orders (setting to Fulfilled)
-		infrastructureManager.getOrderService().run(); 
-
-		assertEquals(1, infrastructureManager.getAllocatedResources().size());
-		assertEquals(1, infrastructureManager.getOrders().size());
-
-		validateReleaseResource(fakeResource);
-		
-		Long expirationTime = infrastructureManager.getIdleResourcesMap().get(fakeResource);
-		assertEquals(new Long(0), expirationTime);
-		
-		doReturn(false).when(fakeResource).checkConnectivity(Mockito.anyInt());
 		infrastructureManager.getInfraIntegrityService().run();
 		
+		verify(infrastructureProviderMock).getResource(fakeResourceA.getId());
 		assertEquals(0, infrastructureManager.getAllocatedResources().size());
 		assertEquals(1, infrastructureManager.getIdleResources().size());
-		verify(infrastructureProviderMock).getResource(fakeResource.getId());
+		assertEquals(IP_RESOURCE_B, fakeResourceA.getMetadataValue(Resource.METADATA_SSH_HOST));
 	}
 	
 
@@ -577,56 +522,20 @@ public class InfrastructureManagerTest {
 	@Test
 	public void removePreviousResourcesTest() throws Exception{
 	
-		String initialSpecFile = "src/test/resources/Specs_Json";
 		final String requestIdFake1 = "FakeRequestID1";
 		final String requestIdFake2 = "FakeRequestID2";
-		ResourceReadyAnswer rrAnswer = new ResourceReadyAnswer();
 		
-		BufferedReader br = new BufferedReader(new FileReader(initialSpecFile));
-		Gson gson = new Gson();
-		final List<Specification> specifications = Arrays.asList(gson.fromJson(br, Specification[].class));
-
-		//This test demands two initial specifications.
-		if(specifications.size() < 2){
-			fail();
-		}
+		List<String> requestIdsPrevious = new ArrayList<String>();
+		requestIdsPrevious.add(requestIdFake1);
+		requestIdsPrevious.add(requestIdFake2);
 		
-		doReturn(requestIdFake1).when(infrastructureProviderMock).requestResource(Mockito.eq(specifications.get(0)));
-		doReturn(requestIdFake2).when(infrastructureProviderMock).requestResource(Mockito.eq(specifications.get(1))); 
-		
-		doAnswer(new Answer<Resource>() {
-
-			@Override
-			public Resource answer(InvocationOnMock invocation) throws Throwable {
-				
-				String requestId = (String) invocation.getArguments()[0];
-				
-				Specification specs= specifications.get(0);
-				if(requestIdFake2.equals(requestId)){
-					specs = specifications.get(1);
-				}
-				
-				
-				return mountFakeResourceFromRequestId(requestId, specs, true, RequestType.ONE_TIME);
-			}
-
-		}).when(infrastructureProviderMock).getResource(Mockito.any(String.class));
-		doAnswer(rrAnswer).when(schedulerMock).resourceReady(Mockito.any(Resource.class));
-		
-		infrastructureManager = new InfrastructureManager(specifications, false, infrastructureProviderMock, properties);
+		doReturn(requestIdsPrevious).when(ds).getRequesId();
 		infrastructureManager.start(true);
-		infrastructureManager.cancelResourceTimer();
 		
-		//Simulate fail in program execution.
-		infrastructureManager = null;
-		infrastructureManager = new InfrastructureManager(specifications, false, infrastructureProviderMock, properties);
-		infrastructureManager.start(true);
 		verify(infrastructureProviderMock).deleteResource(requestIdFake1);
 		verify(infrastructureProviderMock).deleteResource(requestIdFake2);
-		assertEquals(specifications.size(), infrastructureManager.getIdleResources().size());
 		
 		infrastructureManager.stop();
-		br.close();
 		
 	}
 	
