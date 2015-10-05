@@ -69,7 +69,7 @@ public class Resource {
      */
 	public boolean match(Specification spec) {
 
-		//TODO We need check fogbow requirements with resource values, image and public key
+		//TODO
 		//Do we need to try connect to resource using spec username and privateKey?
 		String fogbowRequirement = spec
 				.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS);
@@ -203,7 +203,7 @@ public class Resource {
 		return executionResult;
 	}
 
-	protected void copyInformations(Resource resource){
+	public void copyInformations(Resource resource){
 		this.metadata.clear();
 		this.metadata.putAll(resource.getAllMetadata());
 	}
