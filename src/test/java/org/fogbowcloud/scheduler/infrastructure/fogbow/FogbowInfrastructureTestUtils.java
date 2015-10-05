@@ -23,13 +23,21 @@ public class FogbowInfrastructureTestUtils {
 	
 	public static String createHttpWrapperResponseFromFile(String filePath, Map<String, String> params) throws FileNotFoundException, IOException{
 
-		String response = IOUtils.toString(new FileInputStream(filePath));
-		
-		for(Entry<String, String> param : params.entrySet()){
-			response = response.replace(param.getKey(), param.getValue());
-		}
+		FileInputStream fis = null;
+		try{
 
-		return response;
+			fis = new FileInputStream(filePath);
+
+			String response = IOUtils.toString(fis);
+
+			for(Entry<String, String> param : params.entrySet()){
+				response = response.replace(param.getKey(), param.getValue());
+			}
+
+			return response;
+		}finally{
+			fis.close();
+		}
 	}
 	
 	

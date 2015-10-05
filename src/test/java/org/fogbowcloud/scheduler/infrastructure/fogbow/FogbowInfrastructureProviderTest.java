@@ -51,13 +51,13 @@ public class FogbowInfrastructureProviderTest {
 	private FogbowInfrastructureProvider fogbowInfrastructureProvider; 
 	private HttpWrapper httpWrapperMock;
 	private Properties properties;
-
+	FileInputStream input;
+	
 	@Before
 	public void setUp() throws Exception {
 		
 		//Initiating properties file.
 		properties = new Properties();
-		FileInputStream input;
 		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
 		properties.load(input);
 		
@@ -67,9 +67,10 @@ public class FogbowInfrastructureProviderTest {
 	}    
 
 	@After
-	public void setDown() {
+	public void setDown() throws Exception {
 		httpWrapperMock = null;
 		fogbowInfrastructureProvider = null;
+		input.close();
 	}
 
 	@Test

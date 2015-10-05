@@ -15,6 +15,7 @@ import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,17 +24,23 @@ public class FogbowRequirementsHelperTest {
 	private final String SEBAL_SCHEDULER_PROPERTIES = "src/test/resources/sebal-scheduler.properties";
 	
 	private Properties properties;
-
+	FileInputStream input;
+	
 	@Before
 	public void setUp() throws Exception {
 		
 		//Initiating properties file.
 		properties = new Properties();
-		FileInputStream input;
 		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
 		properties.load(input);
 		
 	} 
+	
+	@After
+	public void setDown() throws Exception {
+		properties = null;
+		input.close();
+	}
 
 	@Test
 	public void validateFogbowRequirementsSyntaxSucessTest(){
@@ -88,7 +95,6 @@ public class FogbowRequirementsHelperTest {
 		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
 		
 		assertTrue(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirements));
-
 		
 	}
 	

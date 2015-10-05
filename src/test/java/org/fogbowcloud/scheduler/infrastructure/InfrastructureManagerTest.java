@@ -43,7 +43,7 @@ public class InfrastructureManagerTest {
 	private InfrastructureManager infrastructureManager;
 	private Properties properties;
 	private DataStore ds;
-	
+	FileInputStream input;
 	
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -54,7 +54,6 @@ public class InfrastructureManagerTest {
 		
 		//Initiating properties file.
 		properties = new Properties();
-		FileInputStream input;
 		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
 		properties.load(input);
 		properties.put("accounting_datastore_url", "jdbc:h2:mem:"
@@ -82,6 +81,7 @@ public class InfrastructureManagerTest {
 		properties = null;
 		schedulerMock = null;
 		infrastructureProviderMock = null;
+		input.close();
 	}
 	
 	@Test
@@ -98,11 +98,6 @@ public class InfrastructureManagerTest {
 	public void propertiesWrongConnTimeoutTest() throws Exception{
 		
 		exception.expect(Exception.class);
-		FileInputStream input;
-		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
-
-		properties = new Properties();
-		properties.load(input);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT, "AB");
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 
@@ -112,11 +107,6 @@ public class InfrastructureManagerTest {
 	public void propertiesWrongIdleLifetimeTest() throws Exception{
 		
 		exception.expect(Exception.class);
-		FileInputStream input;
-		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
-
-		properties = new Properties();
-		properties.load(input);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME, "AB");
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 
@@ -126,11 +116,6 @@ public class InfrastructureManagerTest {
 	public void propertiesWrongOrderServiceTimeTest() throws Exception{
 		
 		exception.expect(Exception.class);
-		FileInputStream input;
-		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
-
-		properties = new Properties();
-		properties.load(input);
 		properties.put(AppPropertiesConstants.INFRA_ORDER_SERVICE_TIME, "AB");
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 
@@ -140,11 +125,6 @@ public class InfrastructureManagerTest {
 	public void propertiesWrongResourceServiceTimeTest() throws Exception{
 		
 		exception.expect(Exception.class);
-		FileInputStream input;
-		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
-		
-		properties = new Properties();
-		properties.load(input);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME, "AB");
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true, infrastructureProviderMock, properties);
 	}
@@ -192,6 +172,8 @@ public class InfrastructureManagerTest {
 		infrastructureManager.cancelResourceTimer();
 		assertEquals(specifications.size(), infrastructureManager.getIdleResources().size());
 		
+		infrastructureManager.stop();
+		br.close();
 	}
 
 	@Test
@@ -614,8 +596,6 @@ public class InfrastructureManagerTest {
 		
 		doAnswer(new Answer<Resource>() {
 
-			int count = 0;
-
 			@Override
 			public Resource answer(InvocationOnMock invocation) throws Throwable {
 				
@@ -644,6 +624,9 @@ public class InfrastructureManagerTest {
 		verify(infrastructureProviderMock).deleteResource(requestIdFake1);
 		verify(infrastructureProviderMock).deleteResource(requestIdFake2);
 		assertEquals(specifications.size(), infrastructureManager.getIdleResources().size());
+		
+		infrastructureManager.stop();
+		br.close();
 		
 	}
 	
