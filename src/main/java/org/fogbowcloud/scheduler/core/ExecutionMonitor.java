@@ -17,6 +17,10 @@ public class ExecutionMonitor implements Runnable {
 	private static final Logger LOGGER = Logger.getLogger(ExecutionMonitor.class);
 	private ExecutorService service;
 
+	public ExecutionMonitor(Job job, Scheduler scheduler) {
+		this(job, scheduler, Executors.newFixedThreadPool(3));
+	}
+	
 	public ExecutionMonitor(Job job, Scheduler scheduler, ExecutorService service) {
 		this.job = job;
 		this.scheduler = scheduler;

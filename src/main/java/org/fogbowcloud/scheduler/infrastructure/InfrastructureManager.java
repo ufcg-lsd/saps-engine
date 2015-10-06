@@ -48,17 +48,18 @@ public class InfrastructureManager {
 	private DateUtils dateUtils = new DateUtils();
 
 	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
+			InfrastructureProvider infraProvider, Properties properties) throws InfrastructureException {
+		this(initialSpec, isElastic, infraProvider, properties, Executors.newCachedThreadPool());
+	}
+	
+	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
 			InfrastructureProvider infraProvider, Properties properties, ExecutorService resourceConnectivityMonitor)
 					throws InfrastructureException {
 
 		this.properties = properties;
 		this.initialSpec = initialSpec;
 		this.infraProvider = infraProvider;
-		if (resourceConnectivityMonitor == null) {
-			this.resourceConnectivityMonitor = Executors.newCachedThreadPool();
-		} else {
-			this.resourceConnectivityMonitor = resourceConnectivityMonitor;
-		}
+		this.resourceConnectivityMonitor = resourceConnectivityMonitor;
 
 		this.validateProperties();
 

@@ -23,6 +23,10 @@ public class SebalTasks {
 	public static final String JOIN_F1_RESULTS_PHASE = "join-f1-results";
 	public static final String UPLOAD_PHASE = "upload";
 	public static final String F1_PHASE = "f1";
+	public static final String C_PHASE = "c";
+	public static final String F2_PHASE = "f2";
+	
+	
 	public static final String METADATA_PHASE = "phase";
 	public static final String METADATA_IMAGE_NAME = "image_name";
 	private static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
@@ -240,6 +244,18 @@ public class SebalTasks {
 		}
 		LOGGER.debug("Command that will be executed: " + command);
 		return command;
+	}
+
+	public static List<Task> createCTasks(Properties properties, String name,
+			Specification sebalSpec) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public static List<Task> createF2Tasks(Properties properties, String name,
+			Specification sebalSpec) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 //	public static Task createJoinF1ResultsTask(Properties props, String imageName) {

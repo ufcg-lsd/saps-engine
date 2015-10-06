@@ -79,56 +79,61 @@ public class SebalMain {
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 		
 		// scheduling previous image executions
-		try {
-			List<ImageData> notFinishedImages = imageStore.getIn(ImageState.RUNNING);
-			for (ImageData imageData : notFinishedImages) {
-				LOGGER.debug("The image " + imageData.getName() + " is in a execution state "
-						+ imageData.getState().getValue() + "(not finished).");
-				pendingImageExecution.put(imageData.getName(), imageData);
-
-				List<Task> f1Tasks = SebalTasks.createF1Tasks(properties, imageData.getName(),
-						sebalSpec);
-
-				for (Task task : f1Tasks) {
-					job.addTask(task);
-				}
-			}
-			
-			//Looking for REDUCING images and add task c
-
-		} catch (SQLException e) {
-			LOGGER.error("Error while getting image.", e);
-		}		
-		
+		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
+		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
+		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1);
+				
 		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-				ImageData imageData;
-				try {
-					imageData = selectImageToRun();
-					LOGGER.debug("Image selected to execute is " + imageData);
-					if (imageData == null) {
-						LOGGER.debug("There is not image to run.");
-						return;
-					}
+			
+				// TODO develop throughput and negation of task addition 
+				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
+				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
+				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED);
 
-					// TODO implement lock when exists more than one scheduler
-					imageData.setState(ImageState.RUNNING);
-					imageStore.update(imageData);
-					pendingImageExecution.put(imageData.getName(), imageData);
-
-					// adding f1 tasks to image
-					List<Task> f1Tasks = SebalTasks.createF1Tasks(properties, imageData.getName(),
-							sebalSpec);
-					for (Task task : f1Tasks) {
-						job.addTask(task);
-					}
-				} catch (SQLException e) {
-					LOGGER.error("Error while trying connecting images DB.", e);
-				}
 			}
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 
+	}
+
+	private static void addTasks(final Properties properties, final Job job,
+			final Specification sebalSpec, ImageState imageState) {
+		try {
+			List<ImageData> notFinishedExecutions = imageStore.getIn(imageState);
+			for (ImageData imageData : notFinishedExecutions) {
+				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
+						+ imageData.getState().getValue() + " (not finished).");
+				pendingImageExecution.put(imageData.getName(), imageData);
+
+				List<Task> tasks = new ArrayList<Task>();
+				
+				if (ImageState.RUNNING_F1.equals(imageState)
+						|| ImageState.DOWNLOADED.equals(imageState)) {
+					tasks = SebalTasks.createF1Tasks(properties, imageData.getName(),
+							sebalSpec);
+					imageData.setState(ImageState.RUNNING_F1);
+				} else if (ImageState.RUNNING_C.equals(imageState)
+						|| ImageState.READY_FOR_PHASE_C.equals(imageState)) {
+					tasks = SebalTasks.createCTasks(properties, imageData.getName(),
+							sebalSpec);
+					imageData.setState(ImageState.RUNNING_C);
+				} else if (ImageState.RUNNING_F2.equals(imageState)
+						|| ImageState.READY_FOR_PHASE_F2.equals(imageState)) {
+					tasks = SebalTasks.createF2Tasks(properties, imageData.getName(),
+							sebalSpec);
+					imageData.setState(ImageState.RUNNING_F2);
+				}
+
+				for (Task task : tasks) {
+					job.addTask(task);
+				}
+				
+				imageStore.update(imageData);
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Error while getting image.", e);
+		}
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {
@@ -136,16 +141,6 @@ public class SebalMain {
 		return null;
 	}
 	
-	private static ImageData selectImageToRun() throws SQLException {		
-		LOGGER.debug("Searching for image to run.");
-		//TODO Should we need to select image specifying the federation member?!
-		List<ImageData> imageDataList = imageStore.getIn(ImageState.DOWNLOADED, 1);
-		if (imageDataList != null && imageDataList.size() > 0) {
-			return imageDataList.get(0);
-		}
-		return null;
-	}
-
 	private static List<Specification> getInitialSpecs(Properties properties)
 			throws FileNotFoundException {
 		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);		

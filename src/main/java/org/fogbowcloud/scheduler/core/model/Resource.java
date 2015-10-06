@@ -164,6 +164,8 @@ public class Resource {
 		additionalEnvVar.put(ENV_SSH_PORT, getMetadataValue(METADATA_SSH_PORT));
 		additionalEnvVar.put(ENV_SSH_USER, task.getSpecification().getUsername());
 		additionalEnvVar.put(ENV_PRIVATE_KEY_FILE, task.getSpecification().getPrivateKeyFilePath());
+		//TODO getEnvVariables from task
+		
 		return additionalEnvVar;
 	}
 

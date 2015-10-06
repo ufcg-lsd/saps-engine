@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.fogbowcloud.scheduler.core.model.Command.Type;
 
@@ -44,10 +45,28 @@ public class TaskImpl implements Task {
 
 	@Override
 	public Task clone() {
-		// TODO Auto-generated method stub
-		// Add commands unstarted??
-		// Same id?
-		return new TaskImpl(getId(), getSpecification());
+		TaskImpl taskClone = new TaskImpl(UUID.randomUUID().toString() + "_clonedFrom_" + getId(),
+				getSpecification());
+		Map<String, String> allMetadata = getAllMetadata();
+		for (String attribute : allMetadata.keySet()) {
+			taskClone.putMetadata(attribute, allMetadata.get(attribute));
+		}
+
+		List<Command> commands = getAllCommands();
+		for (Command command : commands) {
+			taskClone.addCommand(command);
+		}
+		return taskClone;
+	}
+
+	@Override
+	public List<Command> getAllCommands() {
+		return commands;
+	}
+
+	@Override
+	public Map<String, String> getAllMetadata() {
+		return metadata;
 	}
 
 	@Override
@@ -74,5 +93,10 @@ public class TaskImpl implements Task {
 			}
 		}
 		return commandsToReturn;
+	}
+
+	@Override
+	public void addCommand(Command command) {
+		commands.add(command);		
 	}
 }
