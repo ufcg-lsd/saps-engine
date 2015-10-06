@@ -15,15 +15,21 @@ public class ExecutionMonitor implements Runnable {
 	private Job job;
 	private Scheduler scheduler;
 	private static final Logger LOGGER = Logger.getLogger(ExecutionMonitor.class);
+	private ExecutorService service;
 
-	public ExecutionMonitor(Job job, Scheduler scheduler) {
+	public ExecutionMonitor(Job job, Scheduler scheduler, ExecutorService service) {
 		this.job = job;
 		this.scheduler = scheduler;
+		if(service == null){
+			this.service = Executors.newFixedThreadPool(3);
+		}else{
+			this.service = service;
+		}
 	}
 
 	@Override
 	public void run() {		
-		ExecutorService service = Executors.newFixedThreadPool(3);
+		
 		for (Task task : job.getByState(TaskState.RUNNING)) {
 			service.submit(new TaskExecutionChecker(task, this.scheduler, this.job));
 		}

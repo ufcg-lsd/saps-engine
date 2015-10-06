@@ -33,7 +33,7 @@ public class InfrastructureManager {
 	private OrderService orderService = new OrderService();
 	private ManagerTimer resourceTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private InfraIntegrityService infraIntegrityService = new InfraIntegrityService();
-	private final ExecutorService resourceConnectivityMonitor = Executors.newCachedThreadPool();
+	private ExecutorService resourceConnectivityMonitor;
 
 	private InfrastructureProvider infraProvider;
 	private boolean isElastic;
@@ -48,75 +48,80 @@ public class InfrastructureManager {
 	private DateUtils dateUtils = new DateUtils();
 
 	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
-			InfrastructureProvider infraProvider, Properties properties)
-			throws InfrastructureException {
+			InfrastructureProvider infraProvider, Properties properties, ExecutorService resourceConnectivityMonitor)
+					throws InfrastructureException {
 
 		this.properties = properties;
 		this.initialSpec = initialSpec;
 		this.infraProvider = infraProvider;
+		if (resourceConnectivityMonitor == null) {
+			this.resourceConnectivityMonitor = Executors.newCachedThreadPool();
+		} else {
+			this.resourceConnectivityMonitor = resourceConnectivityMonitor;
+		}
 
 		this.validateProperties();
 
 		if (!isElastic && (initialSpec == null || initialSpec.isEmpty())) {
-			throw new IllegalArgumentException("No resource may be created with isElastic="
-					+ isElastic + " and initialSpec=" + initialSpec + ".");
+			throw new IllegalArgumentException(
+					"No resource may be created with isElastic=" + isElastic + " and initialSpec=" + initialSpec + ".");
 		}
 
 		ds = new DataStore(properties);
 		this.isElastic = isElastic;
 	}
-	
+
 	// --------- PUBLIC METHODS --------- //
-	
+
 	public void start(boolean blockWhileInitializing) throws Exception {
 		LOGGER.info("Starting Infrastructure Manager");
 
-		removePreviousResources();		
-		this.createInitialOrders();			
+		removePreviousResources();
+		this.createInitialOrders();
 		// Start order service to monitor and resolve orders.
 		triggerOrderTimer();
 		// Start resource service to monitor and resolve idle Resources.
 		triggerResourceTimer();
-		
+
 		LOGGER.info("Block while waiting initial resources? " + blockWhileInitializing);
-		if (blockWhileInitializing) {			
+		if (blockWhileInitializing) {
 			while (idleResources.size() != initialSpec.size()) {
 				Thread.sleep(2000);
-			}			
+			}
 		}
 	}
-	
+
 	public void stop() throws Exception {
 		LOGGER.info("Stoping Infrastructure Manager");
 
 		cancelOrderTimer();
 		cancelResourceTimer();
 		resourceConnectivityMonitor.shutdownNow();
-		
-		for(Order o : getOrdersByState(OrderState.ORDERED)){
+
+		for (Order o : getOrdersByState(OrderState.ORDERED)) {
 			infraProvider.deleteResource(o.getRequestId());
 		}
-		
-		for(Resource r : getAllResources()){
+
+		for (Resource r : getAllResources()) {
 			infraProvider.deleteResource(r.getId());
 		}
-		
+
 		orders.clear();
 		allocatedResources.clear();
 		idleResources.clear();
 		ds.dispose();
-		
+
 	}
 
 	private void removePreviousResources() {
 		LOGGER.info("Removing previous resources...");
 
 		List<String> recoveredRequests = ds.getRequesId();
-		for(String requestId : recoveredRequests){
+		for (String requestId : recoveredRequests) {
 			try {
 				infraProvider.deleteResource(requestId);
 			} catch (Exception e) {
-				LOGGER.error("Error while trying to delete Resource with request id ["+requestId+"]", e);
+				LOGGER.error("Error while trying to delete Resource with request id [" + requestId + "]", e);
 			}
 		}
 	}
@@ -134,7 +139,7 @@ public class InfrastructureManager {
 		moveResourceToIdle(resource);
 
 	}
-	
+
 	public void cancelOrderTimer() {
 		LOGGER.debug("Stoping Order Service");
 		orderTimer.cancel();
@@ -144,9 +149,9 @@ public class InfrastructureManager {
 		LOGGER.debug("Stoping Resource Service");
 		resourceTimer.cancel();
 	}
-	
+
 	// --------- PRIVATE OR PROTECTED METHODS --------- //
-	
+
 	private void createInitialOrders() {
 		LOGGER.info("Creating orders to initial specs: \n" + initialSpec);
 
@@ -161,15 +166,12 @@ public class InfrastructureManager {
 		orderTimer.scheduleAtFixedRate(orderService, 0, orderPeriod);
 	}
 
-
 	protected void triggerResourceTimer() {
 		LOGGER.debug("Initiating Resource Service");
 		int resourcePeriod = Integer
 				.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME));
 		resourceTimer.scheduleAtFixedRate(infraIntegrityService, 0, resourcePeriod);
 	}
-
-	
 
 	protected void resolveOpenOrder(Order order) {
 
@@ -195,13 +197,18 @@ public class InfrastructureManager {
 			// resource
 			this.idleResourceToOrder(resource, order);
 
-		} else if (isElastic || order.getScheduler() == null) { // Else, requests a new resource from provider.
+		} else if (isElastic || order.getScheduler() == null) { // Else,
+																// requests a
+																// new resource
+																// from
+																// provider.
 
 			try {
 				String requestId = infraProvider.requestResource(order.getSpecification());
 				order.setRequestId(requestId);
 				order.setState(OrderState.ORDERED);
-				ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
+				ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
+						getIdleResources());
 				LOGGER.debug("Order [" + order.getRequestId() + "] update to Ordered with request [" + requestId + "]");
 
 			} catch (RequestResourceException e) {
@@ -225,20 +232,21 @@ public class InfrastructureManager {
 			if (order.getScheduler() != null) {
 				order.setState(OrderState.FULFILLED);
 				order.getScheduler().resourceReady(newResource);
-				
+
 				allocatedResources.put(newResource, order);
 				LOGGER.debug("Order [" + order.getRequestId() + "] resolved to Fulfilled with Resource ["
-						+ newResource.getId() + "]");				
+						+ newResource.getId() + "]");
 			} else {
-				
+
 				orders.remove(order);
 				moveResourceToIdle(newResource);
 			}
-			
-			ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
+
+			ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
+					getIdleResources());
 		}
 	}
-	
+
 	protected void idleResourceToOrder(final Resource idleResource, final Order order) {
 
 		resourceConnectivityMonitor.submit(new Runnable() {
@@ -248,24 +256,25 @@ public class InfrastructureManager {
 
 				String requestType = idleResource.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 				boolean resourceOK = true;
-				
+
 				if (!isResourceAlive(idleResource)) {
 					resourceOK = false;
-					//If is a persistent resource, tries to recover it.
-					if(RequestType.PERSISTENT.getValue().equals(requestType)){
+					// If is a persistent resource, tries to recover it.
+					if (RequestType.PERSISTENT.getValue().equals(requestType)) {
 						Resource retryResource = infraProvider.getResource(idleResource.getId());
-						if(retryResource != null){
+						if (retryResource != null) {
 							idleResource.copyInformations(retryResource);
 							resourceOK = true;
 							retryResource = null;
 						}
 					}
 				}
-				if(resourceOK){
+				if (resourceOK) {
 					LOGGER.debug("Idle Resource founded for Order [" + order.getRequestId() + "] - Specifications"
 							+ order.getSpecification().toString());
 					order.setState(OrderState.FULFILLED);
-					ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
+					ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
+							getIdleResources());
 					order.getScheduler().resourceReady(idleResource);
 					idleResources.remove(idleResource);
 					allocatedResources.put(idleResource, order);
@@ -273,12 +282,12 @@ public class InfrastructureManager {
 			}
 		});
 	}
-	
+
 	protected void moveResourceToIdle(Resource resource) {
 
 		Long expirationDate = new Long(0);
-		
-		if(RequestType.ONE_TIME.getValue().equals(resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE))){
+
+		if (RequestType.ONE_TIME.getValue().equals(resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE))) {
 			int idleLifeTime = Integer
 					.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 			expirationDate = Long.valueOf(dateUtils.currentTimeMillis() + idleLifeTime);
@@ -286,7 +295,7 @@ public class InfrastructureManager {
 		idleResources.put(resource, expirationDate);
 		ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 		LOGGER.debug("Resource [" + resource.getId() + "] moved to Idle - Expiration Date: ["
-				+ DateUtils.getStringDateFromMiliFormat(expirationDate, DateUtils.DATE_FORMAT_YYYY_MM_DD_HOUR)+"]");
+				+ DateUtils.getStringDateFromMiliFormat(expirationDate, DateUtils.DATE_FORMAT_YYYY_MM_DD_HOUR) + "]");
 	}
 
 	protected boolean isResourceAlive(Resource resource) {
@@ -341,24 +350,24 @@ public class InfrastructureManager {
 	}
 
 	// ----- GETTERS AND SETTERS ----- //
-	protected List<Order> getOrdersByState(OrderState... states){
-		
+	protected List<Order> getOrdersByState(OrderState... states) {
+
 		List<Order> filtredOrders = new ArrayList<Order>();
 		List<OrderState> filters = Arrays.asList(states);
-		
-		for(Order o : orders){
-			if(filters.contains(o.getState())){
+
+		for (Order o : orders) {
+			if (filters.contains(o.getState())) {
 				filtredOrders.add(o);
 			}
 		}
-		
+
 		return filtredOrders;
 	}
 
 	protected List<Resource> getAllocatedResources() {
 		return new ArrayList<Resource>(allocatedResources.keySet());
 	}
-	
+
 	protected Map<Resource, Order> getAllocatedResourcesMap() {
 		return allocatedResources;
 	}
@@ -366,19 +375,19 @@ public class InfrastructureManager {
 	protected List<Resource> getIdleResources() {
 		return new ArrayList<Resource>(idleResources.keySet());
 	}
-	
+
 	protected Map<Resource, Long> getIdleResourcesMap() {
 		return idleResources;
 	}
-	
-	protected List<Resource> getAllResources(){
+
+	protected List<Resource> getAllResources() {
 		List<Resource> resources = new ArrayList<Resource>();
 		resources.addAll(this.getAllocatedResources());
 		resources.addAll(this.getIdleResources());
 		return resources;
-		
+
 	}
-	
+
 	protected InfrastructureProvider getInfraProvider() {
 		return infraProvider;
 	}
@@ -394,15 +403,15 @@ public class InfrastructureManager {
 	protected OrderService getOrderService() {
 		return orderService;
 	}
-	
+
 	protected InfraIntegrityService getInfraIntegrityService() {
 		return infraIntegrityService;
 	}
-	
-	protected ExecutorService getResourceConnectivityMonitor(){
+
+	protected ExecutorService getResourceConnectivityMonitor() {
 		return resourceConnectivityMonitor;
 	}
-	
+
 	protected DateUtils getDateUtils() {
 		return dateUtils;
 	}
@@ -411,11 +420,11 @@ public class InfrastructureManager {
 		this.dateUtils = dateUtils;
 	}
 
-	protected void setDataStore(DataStore ds){
+	protected void setDataStore(DataStore ds) {
 		this.ds = ds;
 	}
-	
-	protected DataStore getDataStore(){
+
+	protected DataStore getDataStore() {
 		return this.ds;
 	}
 
@@ -423,8 +432,8 @@ public class InfrastructureManager {
 		@Override
 		public void run() {
 			for (Order order : orders) {
-				
-				if(order!= null && order.getState()!=null){
+
+				if (order != null && order.getState() != null) {
 
 					switch (order.getState()) {
 					case OPEN:
@@ -448,7 +457,7 @@ public class InfrastructureManager {
 			List<Resource> resourcesToRemove = new ArrayList<Resource>();
 
 			for (Entry<Resource, Long> entry : idleResources.entrySet()) {
-				if(entry != null ){
+				if (entry != null) {
 					Resource r = entry.getKey();
 
 					String requestType = r.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
@@ -471,11 +480,14 @@ public class InfrastructureManager {
 								continue;
 							}
 						}
-					}else{
+					} else {
 						if (!isResourceAlive(r)) {
 							Resource retryResource = infraProvider.getResource(r.getId());
-							if(retryResource != null){
+							if (retryResource != null) {
 								r.copyInformations(retryResource);
+								LOGGER.debug("Resource [ID: " + r.getId() + "] new ssh information: "
+										+ retryResource.getMetadataValue(Resource.METADATA_SSH_HOST) + ":"
+										+ retryResource.getMetadataValue(Resource.METADATA_SSH_PORT));
 								retryResource = null;
 							}
 							continue;
@@ -485,7 +497,7 @@ public class InfrastructureManager {
 			}
 
 			for (Resource r : resourcesToRemove) {
-				if(r != null){
+				if (r != null) {
 					try {
 						disposeResource(r);
 

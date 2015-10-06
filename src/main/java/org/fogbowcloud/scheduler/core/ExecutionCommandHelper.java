@@ -14,11 +14,12 @@ import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
 public class ExecutionCommandHelper {
 
 	private static final Logger LOGGER = Logger.getLogger(ExecutionCommandHelper.class);
-	private SshClientWrapper sshClientWrapper =new SshClientWrapper();
+	private SshClientWrapper sshClientWrapper;
 	private final String LOCAL_COMMAND_INTERPRETER;
 	
-	public ExecutionCommandHelper(Properties properties) {
+	public ExecutionCommandHelper(Properties properties, SshClientWrapper sshClientWrapper) {
 		LOCAL_COMMAND_INTERPRETER = properties.getProperty("local_command_interpreter");
+		this.sshClientWrapper = sshClientWrapper;
 	}
 	
 	public int execLocalCommands(List<Command> localCommands, Map<String, String> additionalEnvVariables) {

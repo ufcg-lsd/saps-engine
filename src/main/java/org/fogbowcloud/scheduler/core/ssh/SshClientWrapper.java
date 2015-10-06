@@ -11,7 +11,7 @@ import net.schmizz.sshj.transport.verification.HostKeyVerifier;
 import net.schmizz.sshj.xfer.FileSystemFile;
 import net.schmizz.sshj.xfer.scp.SCPFileTransfer;
 
-public class SshClientWrapper {
+public class SshClientWrapper{
 
     private SSHClient client;
     private Session session;

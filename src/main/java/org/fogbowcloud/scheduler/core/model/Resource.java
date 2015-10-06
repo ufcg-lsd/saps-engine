@@ -44,13 +44,18 @@ public class Resource {
 	private TaskExecutionResult taskExecutionResult;
 	private ExecutionCommandHelper executionCommandHelper;
 	
-    private SshClientWrapper sshClientWrapper = new SshClientWrapper();
+    private SshClientWrapper sshClientWrapper;
     
 	private static final Logger LOGGER = Logger.getLogger(Resource.class);
 	
     public Resource(String id, Properties properties) {
+    	this(id, properties, new SshClientWrapper());
+    }
+    
+    protected Resource(String id, Properties properties, SshClientWrapper sshClientWrapper) {
     	this.id = id;    	
-    	executionCommandHelper = new ExecutionCommandHelper(properties);
+    	executionCommandHelper = new ExecutionCommandHelper(properties, sshClientWrapper);
+    	this.sshClientWrapper = sshClientWrapper;
     }
 
     /**

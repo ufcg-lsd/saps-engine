@@ -50,6 +50,7 @@ public class TestFogbowRequirementsHelper {
 		spec = null;
 		suitableResource.getAllMetadata().clear();
 		suitableResource = null;
+		properties.clear();
 		properties = null;
 	}
 
