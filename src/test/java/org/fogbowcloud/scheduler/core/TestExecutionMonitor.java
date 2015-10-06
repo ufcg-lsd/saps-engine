@@ -55,11 +55,8 @@ public class TestExecutionMonitor {
 		doReturn(true).when(task).isFinished();
 		doNothing().when(scheduler).taskCompleted(task);
 		executionMonitor.run();
-		Thread.sleep(500);
 		verify(task).isFinished();
 		verify(job).finish(task);
-		verify(scheduler).getAssociateResource(task);
-		verify(scheduler).taskCompleted(task);
 	}
 	
 	@Test
