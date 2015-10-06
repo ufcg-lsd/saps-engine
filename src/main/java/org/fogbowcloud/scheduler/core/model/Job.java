@@ -2,6 +2,7 @@ package org.fogbowcloud.scheduler.core.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class Job {
 
@@ -14,10 +15,17 @@ public abstract class Job {
 	protected List<Task> tasksCompleted = new ArrayList<Task>();
 	protected List<Task> tasksFailed = new ArrayList<Task>();
 	
-	public void addTask(Task task){
-		tasksReady.add(task);
-	}
+	protected ReentrantReadWriteLock taskReadyLock = new ReentrantReadWriteLock();
 	
+	public void addTask(Task task) {
+		taskReadyLock.writeLock().lock();
+		try {
+			tasksReady.add(task);
+		} finally {
+			taskReadyLock.writeLock().unlock();
+		}
+	}
+
 	public List<Task> getByState(TaskState state) {
 		if (state.equals(TaskState.READY)) {
 			return tasksReady;

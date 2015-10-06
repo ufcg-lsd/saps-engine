@@ -14,12 +14,6 @@ public class Specification {
 	
 	Map<String, String> requirements = new HashMap<String, String>();
 
-	//TODO remove this constructor
-	public Specification(String image, String publicKey) {
-		this.image = image;
-		this.publicKey = publicKey;
-	}
-	
 	public Specification(String image, String username, String publicKey, String privateKeyFilePath) {
 		this.image = image;
 		this.username = username;

@@ -3,6 +3,7 @@ package org.fogbowcloud.scheduler.infrastructure.fogbow;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 
-public class FogbowInfrastructureProviderTest {
+public class TestFogbowInfrastructureProvider {
 	
 	//150.65.15.81 8182 - URL fogbow
 	
@@ -39,7 +40,6 @@ public class FogbowInfrastructureProviderTest {
 	private final String FILE_RESPONSE_NO_SSH = "src/test/resources/instanceInfoWithoutSshInfo";
 	private final String FILE_RESPONSE_SSH = "src/test/resources/instanceInfoWithSshInfo";
 	private final String FILE_RESPONSE_REQUEST_INSTANCE = "src/test/resources/requestId";
-	private final String SEBAL_SCHEDULER_PROPERTIES = "src/test/resources/sebal-scheduler.properties";
 	
 
 	private static final String PRIVATE_KEY = "src/test/resources/privatekey";
@@ -51,15 +51,12 @@ public class FogbowInfrastructureProviderTest {
 	private FogbowInfrastructureProvider fogbowInfrastructureProvider; 
 	private HttpWrapper httpWrapperMock;
 	private Properties properties;
-	FileInputStream input;
 	
 	@Before
 	public void setUp() throws Exception {
 		
 		//Initiating properties file.
-		properties = new Properties();
-		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
-		properties.load(input);
+		this.generateDefaulProperties();
 		
 		httpWrapperMock = mock(HttpWrapper.class);
 		Date date = new Date(System.currentTimeMillis() + (long)Math.pow(10,9));
@@ -70,7 +67,6 @@ public class FogbowInfrastructureProviderTest {
 	public void setDown() throws Exception {
 		httpWrapperMock = null;
 		fogbowInfrastructureProvider = null;
-		input.close();
 	}
 
 	@Test
@@ -83,7 +79,7 @@ public class FogbowInfrastructureProviderTest {
 			//Create Mock behavior for httpWrapperMock
 			createDefaultRequestResponse(requestIdMokc);
 
-			Specification specs = new Specification("imageMock", "publicKeyMock");
+			Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 
 			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 
@@ -104,7 +100,7 @@ public class FogbowInfrastructureProviderTest {
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
 		
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		Resource resourceMock = spy(new Resource(instanceIdMock, properties));
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
@@ -131,7 +127,7 @@ public class FogbowInfrastructureProviderTest {
 		String hostMock = "10.0.1.10";
 		String portMock = "8989";
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 
 		//Create Mock behavior for httpWrapperMock
 		//Creating response for request for resource.
@@ -172,7 +168,7 @@ public class FogbowInfrastructureProviderTest {
 		//Creating response for request for Instance Attributes
 		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.requestResource(specs);
@@ -202,7 +198,7 @@ public class FogbowInfrastructureProviderTest {
 		//Creating response for request for Instance Attributes
 		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.requestResource(specs);
@@ -230,7 +226,7 @@ public class FogbowInfrastructureProviderTest {
 		//Creating response for request for Instance Attributes
 		createDefaulInstanceAttributesResponseNoShh(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock);
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.requestResource(specs);
@@ -248,7 +244,7 @@ public class FogbowInfrastructureProviderTest {
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		Resource resourceMock = spy(new Resource(requestIdMock, properties));
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
@@ -389,5 +385,23 @@ public class FogbowInfrastructureProviderTest {
 				Mockito.any(String.class), Mockito.any(List.class));
 	}
 	
+	private void generateDefaulProperties(){
+		
+		properties = new Properties();
+		
+		properties.setProperty(AppPropertiesConstants.INFRA_IS_STATIC, "false");
+		properties.setProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME,
+				"org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowInfrastructureProvider");
+		properties.setProperty(AppPropertiesConstants.INFRA_ORDER_SERVICE_TIME, "2000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME, "3000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT, "10000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME, "300000");
+		properties.setProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH, "src/test/resources/Specs_Json");
+		properties.setProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING, "false");
+		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL, "100_02_01_01:8098");
+		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH,
+				"src/test/resources/publickey_file");
+		
+	}
 	
 }

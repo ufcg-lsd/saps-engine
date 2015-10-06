@@ -55,6 +55,10 @@ public class FogbowRequirementsHelper {
 		
 		LOGGER.debug("Matching Fogbow Requirements [" + requirementsStr + "] with Resource [id: "
 				+ resource.getId() + "]");
+		
+		List<String> listAttrSearched = new ArrayList<String>();
+		List<String> listAttrProvided = new ArrayList<String>();
+		
 		try {
 			if (requirementsStr == null  || requirementsStr.isEmpty()) {
 				return true;
@@ -63,12 +67,12 @@ public class FogbowRequirementsHelper {
 			ClassAdParser classAdParser = new ClassAdParser(requirementsStr);		
 			Op expr = (Op) classAdParser.parse();
 			
-			List<String> listAttrSearched = new ArrayList<String>();
-			List<String> listAttrProvided = new ArrayList<String>();
 			listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_Glue2vCPU);
 			listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_Glue2RAM);
-			//listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_Glue2disk); TODO Descomentar estas duas linhas quando for implementadas 
-			//listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID); \\as alterações no fogbow para retornar estes atributos
+			//TODO Descomentar estas duas linhas quando for implementadas
+			//as alterações no fogbow para retornar estes atributos
+			//listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_Glue2disk);  
+			//listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID); 
 			
 			Env env = new Env();
 			String value = null;
@@ -111,6 +115,9 @@ public class FogbowRequirementsHelper {
 		} catch (Exception e) {
 			LOGGER.error("Matching Fogbow Requirements ["+requirementsStr+"] with Resource [id: "+resource.getId()+"] FAILED", e);
 			return false;
+		}finally {
+			listAttrSearched.clear();
+			listAttrProvided.clear();
 		}
 	}
 	

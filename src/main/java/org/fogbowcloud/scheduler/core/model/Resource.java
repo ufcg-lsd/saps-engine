@@ -44,18 +44,12 @@ public class Resource {
 	private TaskExecutionResult taskExecutionResult;
 	private ExecutionCommandHelper executionCommandHelper;
 	
-//	private Specification specification;
-//	private String outputFolder;
-//    private String userName;
     private SshClientWrapper sshClientWrapper = new SshClientWrapper();
     
 	private static final Logger LOGGER = Logger.getLogger(Resource.class);
 	
     public Resource(String id, Properties properties) {
     	this.id = id;    	
-		// TODO we need to check if Resource needs to have a specification or
-		// translate some spec attributes into resources attributes
-//    	this.specification = spec;
     	executionCommandHelper = new ExecutionCommandHelper(properties);
     }
 

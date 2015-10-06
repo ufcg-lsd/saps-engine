@@ -3,6 +3,7 @@ package org.fogbowcloud.scheduler.core;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
@@ -14,6 +15,8 @@ public class Scheduler implements Runnable{
 	private Job job;
 	private InfrastructureManager infraManager;
 	private Map<String, Resource> runningTasks = new HashMap<String, Resource>();
+	
+	private static final Logger LOGGER = Logger.getLogger(Scheduler.class);
 	
 	public Scheduler(Job job, InfrastructureManager infraManager) {
 		this.job = job;
@@ -28,42 +31,41 @@ public class Scheduler implements Runnable{
 	}
 	
 	public void resourceReady(Resource resource) {
-		/*
-		 * TODO Looking for task compliant with resource
-		 * Relate task -> resource
-		 * runningTask.put(taskId, resource)
-		 */
 		
+		LOGGER.debug("Receiving resource ready [ID:"+resource.getId()+"]");
+		
+		for (Task task : job.getByState(TaskState.READY)) {
+			if(resource.match(task.getSpecification())){
+				LOGGER.debug("Relating resource [ID:"+resource.getId()+"] with task [ID:"+task.getId()+"]");
+				resource.executeTask(task);
+				job.run(task);
+				runningTasks.put(task.getId(), resource);
+				return;
+			}
+		}
+		
+		infraManager.releaseResource(resource);
 	}
 
 	public void taskFailed(Task task) {
 		Task newTask = task.clone();
 		job.addTask(newTask);
-		
-		// TODO Should we try reuse the same resource to new task? 
-		try {
-			infraManager.releaseResource(runningTasks.get(task.getId()));
-		} catch (Exception e) {
-			//TODO - Log ?
-			e.printStackTrace();
-		}
+		infraManager.releaseResource(runningTasks.get(task.getId()));
 		runningTasks.remove(task.getId());
 		
-		//TODO order new resource?!
 	}
 
 	public void taskCompleted(Task task) {
-		try {
-			infraManager.releaseResource(runningTasks.get(task.getId()));
-		} catch (Exception e) {
-			//TODO - Log ?
-			e.printStackTrace();
-		}
+		infraManager.releaseResource(runningTasks.get(task.getId()));
 		runningTasks.remove(task.getId());
 	}
 
 	public Resource getAssociateResource(
 			Task task) {
 		return runningTasks.get(task.getId());
+	}
+	
+	protected Map<String, Resource> getRunningTasks(){
+		return runningTasks;
 	}
 }

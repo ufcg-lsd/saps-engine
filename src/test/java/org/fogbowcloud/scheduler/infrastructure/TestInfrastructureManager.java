@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,22 +27,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.google.gson.Gson;
 
 
-public class InfrastructureManagerTest {
+public class TestInfrastructureManager {
 
-	private final String SEBAL_SCHEDULER_PROPERTIES = "src/test/resources/sebal-scheduler.properties";
 	private final String DATASTORE_PATH = "src/test/resources/persistance/";
 	private Scheduler schedulerMock;
 	private InfrastructureProvider infrastructureProviderMock;
 	private InfrastructureManager infrastructureManager;
 	private Properties properties;
 	private DataStore ds;
-	FileInputStream input;
 	
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -53,11 +48,7 @@ public class InfrastructureManagerTest {
 	public void setUp() throws Exception {
 		
 		//Initiating properties file.
-		properties = new Properties();
-		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
-		properties.load(input);
-		properties.put("accounting_datastore_url", "jdbc:h2:mem:"
-				+ new File(DATASTORE_PATH).getAbsolutePath() + "orders");
+		generateDefaulProperties();
 		
 		ds = mock(DataStore.class);
 		schedulerMock = mock(Scheduler.class);
@@ -81,7 +72,6 @@ public class InfrastructureManagerTest {
 		properties = null;
 		schedulerMock = null;
 		infrastructureProviderMock = null;
-		input.close();
 	}
 	
 	@Test
@@ -170,7 +160,7 @@ public class InfrastructureManagerTest {
 
 		String fakeRequestId = "requestId";
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		Resource fakeResource = spy(new Resource(fakeRequestId, properties));
 
 		// Creating mocks behaviors
@@ -228,7 +218,7 @@ public class InfrastructureManagerTest {
 		String fogbowRequirement = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		String IP_RESOURCE_A = "100.10.1.1";
 
-		final Specification specs = new Specification("imageMock", "publicKeyMock");
+		final Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		specs.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 
 		Resource fakeResourceA = spy(new Resource(fakeRequestId, properties));
@@ -272,7 +262,7 @@ public class InfrastructureManagerTest {
 		String IP_RESOURCE_A = "100.10.1.1";
 		String IP_RESOURCE_B = "100.10.1.10";
 
-		final Specification specs = new Specification("imageMock", "publicKeyMock");
+		final Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		specs.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 
 		Resource fakeResourceA = spy(new Resource(fakeRequestId, properties));
@@ -330,10 +320,10 @@ public class InfrastructureManagerTest {
 		String fogbowRequirementA = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		String fogbowRequirementB = "Glue2vCPU >= 1 && Glue2RAM >= 2048";
 
-		final Specification specsA = new Specification("imageMock", "publicKeyMock");
+		final Specification specsA = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		specsA.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementA);
 
-		final Specification specsB = new Specification("imageMock", "publicKeyMock");
+		final Specification specsB = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		specsB.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementB);
 		
 		Resource fakeResourceA = this.mountFakeResourceFromRequestId(fakeRequestIdA, specsA, true, RequestType.ONE_TIME);
@@ -387,7 +377,7 @@ public class InfrastructureManagerTest {
 		String IP_RESOURCE_A = "100.10.1.1";
 		String IP_RESOURCE_B = "100.10.1.10";
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		
 		Resource fakeResourceA = spy(new Resource(fakeRequestId, properties));
 		fakeResourceA.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.PERSISTENT.getValue());
@@ -434,7 +424,7 @@ public class InfrastructureManagerTest {
 		Long dateMock = System.currentTimeMillis();
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		Resource fakeResource = spy(new Resource(fakeRequestId, properties));
 		fakeResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
 
@@ -481,7 +471,7 @@ public class InfrastructureManagerTest {
 		Long dateMock = System.currentTimeMillis();
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
-		Specification specs = new Specification("imageMock", "publicKeyMock");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 		Resource fakeResource = spy(new Resource(fakeRequestId, properties));
 		fakeResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
 
@@ -577,5 +567,26 @@ public class InfrastructureManagerTest {
 		// Descomentar quando o fogbow estiver retornando este atributo
 		doReturn(connectivity).when(fakeResource).checkConnectivity(Mockito.anyInt());
 		return fakeResource;
+	}
+	
+	private void generateDefaulProperties(){
+	
+		properties = new Properties();
+		
+		properties.setProperty(AppPropertiesConstants.INFRA_IS_STATIC, "false");
+		properties.setProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME,
+				"org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowInfrastructureProvider");
+		properties.setProperty(AppPropertiesConstants.INFRA_ORDER_SERVICE_TIME, "2000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME, "3000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT, "10000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME, "300000");
+		properties.setProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH, "src/test/resources/Specs_Json");
+		properties.setProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING, "false");
+		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL, "100_02_01_01:8098");
+		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH,
+				"src/test/resources/publickey_file");
+		properties.put("accounting_datastore_url",
+				"jdbc:h2:mem:" + new File(DATASTORE_PATH).getAbsolutePath() + "orders");
+		
 	}
 }

@@ -15,31 +15,42 @@ import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class FogbowRequirementsHelperTest {
-	
-	private final String SEBAL_SCHEDULER_PROPERTIES = "src/test/resources/sebal-scheduler.properties";
+public class TestFogbowRequirementsHelper {
 	
 	private Properties properties;
-	FileInputStream input;
+	private Map<String, String> requirements;
+	private Specification spec;
+	private Resource suitableResource;
 	
 	@Before
 	public void setUp() throws Exception {
+
+		this.generateDefaulProperties();
 		
-		//Initiating properties file.
-		properties = new Properties();
-		input = new FileInputStream(SEBAL_SCHEDULER_PROPERTIES);
-		properties.load(input);
+		String image = "ubunto01";
+		String userName = "userName";
+		String publicKey = "key01";
+		String privateKey = "privKey01";
 		
+		requirements = new HashMap<String, String>();
+		spec = new Specification(image,userName,publicKey,privateKey);
+		suitableResource = new Resource("Intance_A", properties);
 	} 
 	
 	@After
 	public void setDown() throws Exception {
+		requirements.clear();
+		requirements = null;
+		spec.getAllRequirements().clear();
+		spec = null;
+		suitableResource.getAllMetadata().clear();
+		suitableResource = null;
 		properties = null;
-		input.close();
 	}
 
 	@Test
@@ -72,18 +83,11 @@ public class FogbowRequirementsHelperTest {
 	@Test
 	public void matchesResourceSucessA(){
 		
-		//Creating mocks
-		String image = "ubunto01";
-		String publicKey = "key01";
 		String fogbowRequirements = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		
-		Map<String, String> requirements = new HashMap<String, String>();
 		requirements.put(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirements);
-		
-		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
@@ -91,8 +95,8 @@ public class FogbowRequirementsHelperTest {
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "1");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "1024");
 		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
-		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
-		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, spec.getImage());
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, spec.getPublicKey());
 		
 		assertTrue(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirements));
 		
@@ -101,19 +105,12 @@ public class FogbowRequirementsHelperTest {
 	@Test
 	public void matchesResourceSucessB(){
 		
-		//Creating mocks
-		String image = "ubunto01";
-		String publicKey = "key01";
 		String fogbowRequirementsA = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		String fogbowRequirementsB = "Glue2vCPU >= 2 && Glue2RAM >= 2048";
 		
-		Map<String, String> requirements = new HashMap<String, String>();
 		requirements.put(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementsA);
-		
-		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
@@ -121,30 +118,22 @@ public class FogbowRequirementsHelperTest {
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "3");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8192");
 		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
-		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
-		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, spec.getImage());
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, spec.getPublicKey());
 		
 		assertTrue(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
-		
 	}
 	
 	@Test
 	public void matchesResourceSucessVCpuOrMenSize(){
 		
-		//Creating mocks
-		String image = "ubunto01";
-		String publicKey = "key01";
 		String fogbowRequirementsA = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		String fogbowRequirementsB = "Glue2vCPU >= 2 || Glue2RAM >= 2048";
 		
-		Map<String, String> requirements = new HashMap<String, String>();
 		requirements.put(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementsA);
-		
-		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
@@ -152,29 +141,21 @@ public class FogbowRequirementsHelperTest {
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "1");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8192");
 		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
-		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
-		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, spec.getImage());
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, spec.getPublicKey());
 		
 		assertTrue(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
-
 	}
 	
 	@Test
 	public void matchesResourceVcpuFail(){
 		
-		//Creating mocks
-		String image = "ubunto01";
-		String publicKey = "key01";
 		String fogbowRequirementsA = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		String fogbowRequirementsB = "Glue2vCPU >= 2 && Glue2RAM >= 2048";
 		
-		Map<String, String> requirements = new HashMap<String, String>();
 		requirements.put(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementsA);
-		
-		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
@@ -182,8 +163,8 @@ public class FogbowRequirementsHelperTest {
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "1");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8192");
 		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
-		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
-		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, spec.getImage());
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, spec.getPublicKey());
 		
 		assertFalse(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
@@ -192,21 +173,14 @@ public class FogbowRequirementsHelperTest {
 	@Test
 	public void matchesResourceVcpuFailOutOfRange(){
 		
-		//Creating mocks
-		String image = "ubunto01";
-		String publicKey = "key01";
 		String fogbowRequirementsA = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		String fogbowRequirementsB = "Glue2vCPU >= 2 && Glue2vCPU <= 4 && Glue2RAM >= 2048";
 		
 		FogbowRequirementsHelper.validateFogbowRequirementsSyntax(fogbowRequirementsB);
 		
-		Map<String, String> requirements = new HashMap<String, String>();
 		requirements.put(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementsA);
-		
-		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
@@ -214,8 +188,8 @@ public class FogbowRequirementsHelperTest {
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "5"); //Out of range
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8192");
 		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
-		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
-		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, spec.getImage());
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, spec.getPublicKey());
 		
 		assertFalse(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
@@ -224,19 +198,12 @@ public class FogbowRequirementsHelperTest {
 	@Test
 	public void matchesResourceMenSizeFail(){
 		
-		//Creating mocks
-		String image = "ubunto01";
-		String publicKey = "key01";
 		String fogbowRequirementsA = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		String fogbowRequirementsB = "Glue2vCPU >= 2 && Glue2RAM >= 2048";
 		
-		Map<String, String> requirements = new HashMap<String, String>();
 		requirements.put(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementsA);
-		
-		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
@@ -244,8 +211,8 @@ public class FogbowRequirementsHelperTest {
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "2");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "2047"); //Test low boundary value. 
 		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
-		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
-		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, spec.getImage());
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, spec.getPublicKey());
 		
 		assertFalse(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
@@ -254,19 +221,12 @@ public class FogbowRequirementsHelperTest {
 	@Test
 	public void matchesResourceMenSizeFailOutOfRange(){
 		
-		//Creating mocks
-		String image = "ubunto01";
-		String publicKey = "key01";
 		String fogbowRequirementsA = "Glue2vCPU >= 1 && Glue2RAM >= 1024";
 		String fogbowRequirementsB = "Glue2vCPU >= 2 && Glue2RAM >= 2048 && Glue2RAM <= 8192";
 		
-		Map<String, String> requirements = new HashMap<String, String>();
 		requirements.put(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirementsA);
-		
-		Specification spec = new Specification(image,publicKey);
 		spec.putAllRequirements(requirements);
 		
-		Resource suitableResource = new Resource("Intance_A", properties);
 		suitableResource.putMetadata(Resource.METADATA_SSH_HOST, "10.10.1.1");
 		suitableResource.putMetadata(Resource.METADATA_SSH_PORT, "8008");
 		suitableResource.putMetadata(Resource.METADATA_SSH_USERNAME_ATT, "userName");
@@ -274,11 +234,30 @@ public class FogbowRequirementsHelperTest {
 		suitableResource.putMetadata(Resource.METADATA_VCPU, "2");
 		suitableResource.putMetadata(Resource.METADATA_MEN_SIZE, "8193"); //Out of range - Test boundary value. 
 		suitableResource.putMetadata(Resource.METADATA_REQUEST_TYPE, RequestType.ONE_TIME.getValue());
-		suitableResource.putMetadata(Resource.METADATA_IMAGE, image);
-		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
+		suitableResource.putMetadata(Resource.METADATA_IMAGE, spec.getImage());
+		suitableResource.putMetadata(Resource.METADATA_PUBLIC_KEY, spec.getPublicKey());
 		
 		assertFalse(FogbowRequirementsHelper.matches(suitableResource, fogbowRequirementsB));
 
+	}
+	
+	private void generateDefaulProperties(){
+		
+		properties = new Properties();
+		
+		properties.setProperty(AppPropertiesConstants.INFRA_IS_STATIC, "false");
+		properties.setProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME,
+				"org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowInfrastructureProvider");
+		properties.setProperty(AppPropertiesConstants.INFRA_ORDER_SERVICE_TIME, "2000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME, "3000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT, "10000");
+		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME, "300000");
+		properties.setProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH, "src/test/resources/Specs_Json");
+		properties.setProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING, "false");
+		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL, "100_02_01_01:8098");
+		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH,
+				"src/test/resources/publickey_file");
+		
 	}
 	
 }
