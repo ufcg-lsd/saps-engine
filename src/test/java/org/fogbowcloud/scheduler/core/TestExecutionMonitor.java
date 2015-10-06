@@ -29,12 +29,12 @@ public class TestExecutionMonitor {
 	public Job job;
 	public InfrastructureManager IM;
 	public Resource resource;
-	public String FAKE_TASK_ID = "FAKE_TEST_ID";
+	public String FAKE_TASK_ID = "FAKE_TASK_ID";
 	public ImageDataStore imageStore;
 	
 	@Before
 	public void setUp(){
-		task = spy(new TaskImpl("id", null));
+		task = spy(new TaskImpl(FAKE_TASK_ID, null));
 		IM = mock(InfrastructureManager.class);
 		resource = mock(Resource.class);
 		imageStore = mock(ImageDataStore.class);
@@ -48,13 +48,13 @@ public class TestExecutionMonitor {
 		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
-		doReturn(FAKE_TASK_ID).when(task).getId();
 		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
 		doReturn(resource).when(scheduler).getAssociateResource(task);
 		doReturn(true).when(resource).checkConnectivity();
 		doReturn(true).when(task).isFinished();
 		doNothing().when(scheduler).taskCompleted(task);
 		executionMonitor.run();
+		Thread.sleep(500);
 		verify(task).isFinished();
 		verify(job).finish(task);
 	}
