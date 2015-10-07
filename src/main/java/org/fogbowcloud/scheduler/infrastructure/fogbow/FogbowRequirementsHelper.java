@@ -60,7 +60,7 @@ public class FogbowRequirementsHelper {
 		List<String> listAttrProvided = new ArrayList<String>();
 		
 		try {
-			if (requirementsStr == null  || requirementsStr.isEmpty()) {
+			if (requirementsStr == null  || requirementsStr.trim().isEmpty()) {
 				return true;
 			}
 			
@@ -69,10 +69,8 @@ public class FogbowRequirementsHelper {
 			
 			listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_Glue2vCPU);
 			listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_Glue2RAM);
-			//TODO Descomentar estas duas linhas quando for implementadas
-			//as alterações no fogbow para retornar estes atributos
-			//listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_Glue2disk);  
-			//listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID); 
+			listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_Glue2disk);  
+			listAttrProvided.add(METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID); 
 			
 			Env env = new Env();
 			String value = null;

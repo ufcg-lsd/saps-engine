@@ -47,6 +47,8 @@ public class InfrastructureManager {
 
 	private DateUtils dateUtils = new DateUtils();
 
+	Long noExpirationDate = new Long(0);
+	
 	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
 			InfrastructureProvider infraProvider, Properties properties) throws InfrastructureException {
 		this(initialSpec, isElastic, infraProvider, properties, Executors.newCachedThreadPool());
@@ -198,11 +200,8 @@ public class InfrastructureManager {
 			// resource
 			this.idleResourceToOrder(resource, order);
 
-		} else if (isElastic || order.getScheduler() == null) { // Else,
-																// requests a
-																// new resource
-																// from
-																// provider.
+			// Else, requests a new resource from provider.
+		} else if (isElastic || order.getScheduler() == null) { 
 
 			try {
 				String requestId = infraProvider.requestResource(order.getSpecification());
@@ -286,7 +285,7 @@ public class InfrastructureManager {
 
 	protected void moveResourceToIdle(Resource resource) {
 
-		Long expirationDate = new Long(0);
+		Long expirationDate = noExpirationDate;
 
 		if (RequestType.ONE_TIME.getValue().equals(resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE))) {
 			int idleLifeTime = Integer
@@ -471,7 +470,7 @@ public class InfrastructureManager {
 							continue;
 						}
 
-						if (isElastic) {
+						if (isElastic && noExpirationDate.compareTo(entry.getValue())!=0) {
 							Date expirationDate = new Date(entry.getValue().longValue());
 							Date currentDate = new Date(dateUtils.currentTimeMillis());
 

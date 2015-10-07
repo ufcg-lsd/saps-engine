@@ -79,10 +79,10 @@ public class Resource {
 			if (!FogbowRequirementsHelper.matches(this, fogbowRequirement)) {
 				return false;
 			}
-			if (!image.equalsIgnoreCase(metadata.get(METADATA_IMAGE))) {
+			if (!image.equalsIgnoreCase(this.getMetadataValue(METADATA_IMAGE))) {
 				return false;
 			}
-			if (!publicKey.equalsIgnoreCase(metadata.get(METADATA_PUBLIC_KEY))) {
+			if (!publicKey.equalsIgnoreCase(this.getMetadataValue(METADATA_PUBLIC_KEY))) {
 				return false;
 			}
 		} else {

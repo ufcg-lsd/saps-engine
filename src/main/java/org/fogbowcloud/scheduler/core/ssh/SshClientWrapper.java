@@ -25,7 +25,7 @@ public class SshClientWrapper{
         addBlankHostKeyVerifier(client);
     }
 
-    private void addBlankHostKeyVerifier(SSHClient ssh) {
+    protected void addBlankHostKeyVerifier(SSHClient ssh) {
         ssh.addHostKeyVerifier(new HostKeyVerifier() {
             @Override
             public boolean verify(String arg0, int arg1, PublicKey arg2) {
@@ -92,4 +92,21 @@ public class SshClientWrapper{
     public void connect(String address, int port, int timeOut) throws IOException {
     	connect(address, port, null, null, timeOut);
     }
+
+	protected SSHClient getClient() {
+		return client;
+	}
+
+	protected void setClient(SSHClient client) {
+		this.client = client;
+	}
+
+	protected Session getSession() {
+		return session;
+	}
+
+	protected void setSession(Session session) {
+		this.session = session;
+	}
+    
 }

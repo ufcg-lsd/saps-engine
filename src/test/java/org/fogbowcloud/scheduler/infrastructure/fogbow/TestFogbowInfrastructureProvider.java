@@ -98,21 +98,20 @@ public class TestFogbowInfrastructureProvider {
 		
 		//Attributes
 		String requestIdMock = "request01";
-		String instanceIdMock = "instance01";
 		
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
-		Resource resourceMock = spy(new Resource(instanceIdMock, properties));
+		Resource resource = mock(Resource.class);
+		doReturn(requestIdMock).when(resource).getId();
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
-		doReturn(resourceMock).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
-		doReturn(true).when(resourceMock).checkConnectivity(); 
+		doReturn(resource).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
+		doReturn(true).when(resource).checkConnectivity(); 
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 
 		Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
 
 		assertNotNull(newResource);
-		assertEquals(instanceIdMock, newResource.getId());
+		assertEquals(requestIdMock, newResource.getId());
 
 	}
 
@@ -242,14 +241,13 @@ public class TestFogbowInfrastructureProvider {
 		
 		//Attributes
 		String requestIdMock = "request01";
-		String instanceIdMock = "instance01";
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
-		Resource resourceMock = spy(new Resource(requestIdMock, properties));
+		Resource resource = mock(Resource.class);
+		doReturn(requestIdMock).when(resource).getId();
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
-		doReturn(resourceMock).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
-		doReturn(false).when(resourceMock).checkConnectivity(); 
+		doReturn(resource).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
+		doReturn(false).when(resource).checkConnectivity(); 
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 
@@ -267,7 +265,8 @@ public class TestFogbowInfrastructureProvider {
 		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(requestIdMock, properties);
+		Resource resource = mock(Resource.class);
+		doReturn(requestIdMock).when(resource).getId();
 		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
 
 		doReturn("OK").when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
@@ -288,7 +287,8 @@ public class TestFogbowInfrastructureProvider {
 		String urlEndpointInstanceDelete = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 		
-		Resource resource = new Resource(requestIdMock, properties);
+		Resource resource = mock(Resource.class);
+		doReturn(requestIdMock).when(resource).getId();
 		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
 
 		doThrow(new Exception("Erro on request.")).when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
