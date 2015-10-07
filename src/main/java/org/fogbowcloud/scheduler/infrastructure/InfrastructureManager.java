@@ -2,6 +2,7 @@ package org.fogbowcloud.scheduler.infrastructure;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.manager.core.ConfigurationConstants;
 import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
@@ -130,7 +132,9 @@ public class InfrastructureManager {
 	}
 
 	public void orderResource(Specification specification, Scheduler scheduler) {
-		orders.add(new Order(scheduler, specification));
+		Order order = new Order(scheduler, specification);
+		orders.add(order);
+		resolveOpenOrder(order);
 	}
 
 	public void releaseResource(Resource resource) {
@@ -290,12 +294,18 @@ public class InfrastructureManager {
 		if (RequestType.ONE_TIME.getValue().equals(resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE))) {
 			int idleLifeTime = Integer
 					.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
-			expirationDate = Long.valueOf(dateUtils.currentTimeMillis() + idleLifeTime);
+			
+			expirationDate = Long.valueOf( + idleLifeTime);
+			Calendar c = Calendar.getInstance();
+			c.setTime(new Date(dateUtils.currentTimeMillis()));
+			c.add(Calendar.MILLISECOND, idleLifeTime);
+			expirationDate = c.getTimeInMillis();
 		}
 		idleResources.put(resource, expirationDate);
 		ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 		LOGGER.debug("Resource [" + resource.getId() + "] moved to Idle - Expiration Date: ["
 				+ DateUtils.getStringDateFromMiliFormat(expirationDate, DateUtils.DATE_FORMAT_YYYY_MM_DD_HOUR) + "]");
+		
 	}
 
 	protected boolean isResourceAlive(Resource resource) {

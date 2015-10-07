@@ -30,12 +30,14 @@ import org.fogbowcloud.scheduler.infrastructure.exceptions.RequestResourceExcept
 
 public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
+	private static final int MEMORY_1Gbit = 1024;
+
 	private static final Logger LOGGER = Logger.getLogger(FogbowInfrastructureProvider.class);
 
 	// ------------------ CONSTANTS ------------------//
 	private static final String NULL_VALUE = "null";
 	private static final String CATEGORY = "Category";
-	private static final String X_OCCI_ATTRIBUTE = "X-OCCI-Attribute: ";
+	private static final String X_OCCI_ATTRIBUTE = "X-OCCI-Attribute";
 	private static final String DEFAULT_USER = "user";
 
 	public static final String INSTANCE_ATTRIBUTE_SSH_PUBLIC_ADDRESS_ATT = "org.fogbowcloud.request.ssh-public-address";
@@ -161,8 +163,9 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					resource.putMetadata(Resource.METADATA_EXTRA_PORTS_ATT,
 							instanceAttributes.get(INSTANCE_ATTRIBUTE_EXTRA_PORTS_ATT));
 					resource.putMetadata(Resource.METADATA_VCPU, instanceAttributes.get(INSTANCE_ATTRIBUTE_VCORE));
-					resource.putMetadata(Resource.METADATA_MEN_SIZE,
-							instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMORY_SIZE));
+					float menSize = Float.parseFloat(instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMORY_SIZE));
+					String menSizeFormated = String.valueOf(menSize*MEMORY_1Gbit);
+					resource.putMetadata(Resource.METADATA_MEN_SIZE,menSizeFormated);
 					// TODO Descomentar quando o fogbow estiver retornando este
 					// atributo
 					// newResource.putMetadata(Resource.METADATA_DISK_SIZE,
@@ -347,8 +350,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private Map<String, String> parseRequestAttributes(String response) {
 		Map<String, String> atts = new HashMap<String, String>();
 		for (String responseLine : response.split("\n")) {
-			if (responseLine.contains(X_OCCI_ATTRIBUTE)) {
-				String[] responseLineSplit = responseLine.substring(X_OCCI_ATTRIBUTE.length()).split("=");
+			if (responseLine.contains(X_OCCI_ATTRIBUTE+": ")) {
+				String[] responseLineSplit = responseLine.substring((X_OCCI_ATTRIBUTE+": ").length()).split("=");
 				String valueStr = responseLineSplit[1].trim().replace("\"", "");
 				if (!valueStr.equals(NULL_VALUE)) {
 					atts.put(responseLineSplit[0].trim(), valueStr);
@@ -361,8 +364,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private Map<String, String> parseAttributes(String response) {
 		Map<String, String> atts = new HashMap<String, String>();
 		for (String responseLine : response.split("\n")) {
-			if (responseLine.contains(X_OCCI_ATTRIBUTE)) {
-				String[] responseLineSplit = responseLine.substring(X_OCCI_ATTRIBUTE.length()).split("=");
+			if (responseLine.contains(X_OCCI_ATTRIBUTE+": ")) {
+				String[] responseLineSplit = responseLine.substring((X_OCCI_ATTRIBUTE+": ").length()).split("=");
 				String valueStr = responseLineSplit[1].trim().replace("\"", "");
 				if (!valueStr.equals(NULL_VALUE)) {
 					atts.put(responseLineSplit[0].trim(), valueStr);
