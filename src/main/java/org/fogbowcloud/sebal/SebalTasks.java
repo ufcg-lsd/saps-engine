@@ -16,16 +16,14 @@ import org.fogbowcloud.scheduler.core.model.Command;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.sebal.bootstrap.DBBootstrap;
 
 
 public class SebalTasks {
 
-	public static final String JOIN_F1_RESULTS_PHASE = "join-f1-results";
-	public static final String UPLOAD_PHASE = "upload";
 	public static final String F1_PHASE = "f1";
 	public static final String C_PHASE = "c";
 	public static final String F2_PHASE = "f2";
-	
 	
 	public static final String METADATA_PHASE = "phase";
 	public static final String METADATA_IMAGE_NAME = "image_name";
@@ -84,9 +82,9 @@ public class SebalTasks {
 						+ privateKeyFile.getName();
 				
 				f1Task.putMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH, remotePrivateKeyPath);
-//				f1Task.addCommand(new StageCommand(Command.Type.STAGE_IN, privateKeyFile
-//						.getAbsolutePath(), remotePrivateKeyPath));
-				//TODO Prologue command
+				String scpUploadCommand = createSCPUploadCommand(privateKeyFile.getAbsolutePath(),
+						remotePrivateKeyPath);
+				f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
 			}
 		
 			// treating boundingbox 
@@ -103,11 +101,9 @@ public class SebalTasks {
 							+ "/boundingbox_vertices";
 
 					f1Task.putMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH, remoteBoundingboxPath);
-//					f1Task.addCommand(new StageCommand(Command.Type.STAGE_IN, boundingboxFile
-//							.getAbsolutePath(), remoteBoundingboxPath));
-					
-					//TODO PRologue command
-					
+					String scpUploadCommand = createSCPUploadCommand(
+							boundingboxFile.getAbsolutePath(), remoteBoundingboxPath);
+					f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
 				} else {
 					LOGGER.warn("There is no boundingbox file specified for image " + imageName);
 				}
@@ -118,26 +114,37 @@ public class SebalTasks {
 			String remoteScriptPath = f1Task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/"
 					+ localScriptFile.getName();
 			
-			// adding commands
-//			f1Task.addCommand(new StageCommand(Command.Type.STAGE_IN, localScriptFile
-//					.getAbsolutePath(), remoteScriptPath));
-			//TODO Prologue command 
+			// adding command
+			String scpUploadCommand = createSCPUploadCommand(
+					localScriptFile.getAbsolutePath(), remoteScriptPath);
+			f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
 			
-			//f1Task.addCommand(getTaskExecuteCommand(f1Task, remoteScriptPath));
-			//TODO remote command
-			
+			// adding remote command
+			String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);
+			f1Task.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
+
+			// adding epilogue command
 			String outputFileName = imageName + "_" + f1Task.getMetadata(METADATA_PARTITION_INDEX)
 					+ "_" + f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS);
 			
-//			f1Task.addCommand(new StageCommand(Command.Type.STAGE_OUT, f1Task
-//					.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/" + outputFileName,
-//					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-//							+ outputFileName));
-			//TODO Epilogue command 
-			
+			String scpDownloadCommand = createSCPDownloadCommand(
+					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/" + outputFileName,
+					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/" + outputFileName);
+			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+
 			f1Tasks.add(f1Task);
 		}
 		return f1Tasks;
+	}
+
+	private static String createSCPDownloadCommand(String remoteFilePath, String localFilePath) {
+		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT $SSH_USER@$HOST:"
+				+ remoteFilePath + " " + localFilePath;
+	}
+
+	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
+		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT "
+				+ localFilePath + " $SSH_USER@$HOST:" + remoteFilePath;
 	}
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
@@ -160,11 +167,11 @@ public class SebalTasks {
 				properties.getProperty("sebal_results_mount_point"));
 	}
 
-//	private static Command getTaskExecuteCommand(TaskImpl task, String remoteScript) {
-//		String command = "chmod +x " + remoteScript + "; nohup " + remoteScript
-//				+ " > /dev/null 2>&1 &";
-//		return new ExecuteCommand(command);
-//	}
+	private static String createRemoteScriptExecCommand(String remoteScript) {
+		String execScriptCommand = "chmod +x " + remoteScript + "; nohup " + remoteScript
+				+ " > /dev/null 2>&1 &";
+		return execScriptCommand;
+	}
 
 	private static File createScriptFile(Properties props, TaskImpl task) {
 		File tempFile = null;
@@ -257,34 +264,4 @@ public class SebalTasks {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-//	public static Task createJoinF1ResultsTask(Properties props, String imageName) {
-//		TaskImpl joinResultsTask = new TaskImpl();
-//		
-//		// setting metadata
-//		joinResultsTask.setId(UUID.randomUUID().toString());
-//				
-//		joinResultsTask.putMetadata(METADATA_PHASE, JOIN_F1_RESULTS_PHASE);
-//		
-//		settingCommonTaskMetadata(props, joinResultsTask);
-//		
-//		// creating join-f1-results script for this image
-//		File localScriptFile = createScriptFile(props, joinResultsTask);
-//		String remoteScriptPath = joinResultsTask.getMetadata(TaskImpl.METADATA_SANDBOX) + "/"
-//				+ localScriptFile.getName();
-//
-//		// adding commands
-//		joinResultsTask.addCommand(new StageCommand(Command.Type.STAGE_IN,
-//				localScriptFile.getAbsolutePath(), remoteScriptPath));
-//
-//		joinResultsTask.addCommand(getTaskExecuteCommand(joinResultsTask, remoteScriptPath));
-//
-//		String outputFileName = imageName + "_results_joined";
-//		
-//		joinResultsTask.addCommand(new StageCommand(Command.Type.STAGE_OUT, joinResultsTask
-//				.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/" + outputFileName, joinResultsTask
-//				.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/" + outputFileName));
-//		
-//		return joinResultsTask;
-//	}
 }

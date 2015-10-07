@@ -96,16 +96,12 @@ public class SebalJob extends Job {
 	public void fail(Task task) {
 		this.tasksRunning.remove(task);
 		this.tasksFailed.add(task);
-		
-		this.tasksReady.add(task.clone());
 	}
 
 	@Override
 	public void run(Task task) {
-		// TODO Auto-generated method stub		
 		tasksReady.remove(task);
-		tasksRunning.add(task);
-		
+		tasksRunning.add(task);		
 	}
 
 	private List<Task> getTasksOfImageByState(String imageName, TaskState... taskStates) {
@@ -132,18 +128,4 @@ public class SebalJob extends Job {
 		}
 		return imageTasks;
 	}
-//
-//	private static boolean allTasksFinished(Scheduler scheduler, List<Task> imageTasks,
-//			String... phasesToBeFinished) {
-//		List<String> phasesToBeFinishedList = Arrays.asList(phasesToBeFinished);
-//		for (Task task : imageTasks) {
-//			if (!scheduler.getTaskState(task.getId()).equals(Task.State.FINISHED)
-//					&& phasesToBeFinishedList.contains(task.getMetadata(SebalTasks.METADATA_PHASE))) {
-//				LOGGER.debug("Task " + task.getId() + " is in state "
-//						+ scheduler.getTaskState(task.getId()));
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
 }

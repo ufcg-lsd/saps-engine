@@ -1,4 +1,4 @@
-package org.fogbowcloud.sebal;
+package org.fogbowcloud.sebal.bootstrap;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +17,8 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.NASARepository;
 
 public class DBBootstrap {
 

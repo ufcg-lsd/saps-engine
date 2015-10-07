@@ -114,4 +114,27 @@ public class ExecutionCommandHelper {
 		}
 		return TaskExecutionResult.OK;
 	}
+
+	public Integer getRemoteCommandExitValue(String address, int sshPort, String username,
+			String privateKeyFilePath, String remoteFileExit) {
+        String exitFileExistsCommand = "cat " + remoteFileExit;
+        try {
+			sshClientWrapper.connect(address, sshPort, username, privateKeyFilePath);
+			int exitFileExists = sshClientWrapper.doSshExecution(exitFileExistsCommand);
+			if (exitFileExists != TaskExecutionResult.OK) {
+				return null;
+			}
+			String exitStatusCommand = "cat " + remoteFileExit + " | grep -w 0";
+			int exitStatus = sshClientWrapper.doSshExecution(exitStatusCommand);
+			return exitStatus;
+		} catch (IOException e) {
+			LOGGER.error("Error while connecting resource.", e);
+			return null;
+		} finally {
+			try {
+				sshClientWrapper.disconnect();
+			} catch (Throwable e) {
+			}
+		}
+   }
 }

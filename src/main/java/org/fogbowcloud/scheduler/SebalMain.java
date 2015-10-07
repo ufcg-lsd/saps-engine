@@ -42,7 +42,7 @@ public class SebalMain {
 	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
 	private static ImageDataStore imageStore;
 	
-	private static final Logger LOGGER = Logger.getLogger(InfrastructureManager.class);
+	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 
 	public static void main(String[] args) throws Exception {
 
@@ -79,8 +79,8 @@ public class SebalMain {
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 		
 		// scheduling previous image executions
-		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
-		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
+//		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
+//		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
 		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1);
 				
 		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
@@ -88,8 +88,8 @@ public class SebalMain {
 			public void run() {
 			
 				// TODO develop throughput and negation of task addition 
-				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
-				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
+//				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
+//				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
 				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED);
 
 			}

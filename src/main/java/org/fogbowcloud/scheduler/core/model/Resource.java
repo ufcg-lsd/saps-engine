@@ -47,6 +47,7 @@ public class Resource {
     private SshClientWrapper sshClientWrapper;
     
 	private static final Logger LOGGER = Logger.getLogger(Resource.class);
+	private static final long REMOTE_COMMAND_CHECKER_PERIOD = 5000;
 	
     public Resource(String id, Properties properties) {
     	this(id, properties, new SshClientWrapper());
@@ -176,16 +177,36 @@ public class Resource {
 
 	protected int executeRemoteCommands(List<Command> remoteCommands) {
 		LOGGER.debug("Executing remote commands on " + getId());
+		String host = getMetadataValue(METADATA_SSH_HOST);
+		int sshPort = Integer.parseInt(getMetadataValue(METADATA_SSH_PORT));
+		
 		int executionResult = TaskExecutionResult.OK;
 		if (remoteCommands != null && !remoteCommands.isEmpty()) {
-			String host = getMetadataValue(METADATA_SSH_HOST);
-			int sshPort = Integer.parseInt(getMetadataValue(METADATA_SSH_PORT));
 			executionResult = executionCommandHelper.execRemoteCommands(host, sshPort, task
 					.getSpecification().getUsername(), task.getSpecification()
 					.getPrivateKeyFilePath(), remoteCommands);
+			if (executionResult != TaskExecutionResult.OK) {
+				return executionResult;
+			}
 		}
-		LOGGER.debug("Remote commands finished on " + getId() + " with result " + executionResult);
-		return executionResult;
+
+		Integer exitValue = null;
+		while ((exitValue = executionCommandHelper.getRemoteCommandExitValue(host, sshPort, task
+				.getSpecification().getUsername(), task.getSpecification()
+				.getPrivateKeyFilePath(), task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH))) == null) {
+			try {
+				Thread.sleep(REMOTE_COMMAND_CHECKER_PERIOD);
+			} catch (InterruptedException e) {
+				//TODO it must not happen here
+			}
+		}
+		for (Command command : remoteCommands) {
+			command.setState(exitValue == TaskExecutionResult.OK ? Command.State.FINISHED
+					: Command.State.FAILED);
+		}
+		
+		LOGGER.debug("Remote commands finished on " + getId() + " with result " + exitValue);
+		return exitValue;
 	}
 
 	protected boolean executeEpilogue() {
