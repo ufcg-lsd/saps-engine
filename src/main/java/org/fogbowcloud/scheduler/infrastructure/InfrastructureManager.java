@@ -520,7 +520,7 @@ public class InfrastructureManager {
 						disposeResource(r);
 
 					} catch (Exception e) {
-						LOGGER.error("Error while disposing resource: [" + r.getId() + "]");
+						LOGGER.error("Error while disposing resource: [" + r.getId() + "]",e);
 					}
 				}
 			}

@@ -14,7 +14,6 @@ public class DateUtils {
 
 	public static Date getDateFromFormat(String value, String format) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
-		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		try {
 			return dateFormat.parse(value);
 		} catch (Exception e) {
@@ -24,7 +23,6 @@ public class DateUtils {
 
 	public static String getStringDateFromMiliFormat(long dateMili, String format) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
-		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		String expirationDate = dateFormat.format(new Date(dateMili));
 		return expirationDate;
 	}

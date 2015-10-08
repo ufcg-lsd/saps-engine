@@ -130,7 +130,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			LOGGER.debug("Getting request attributes - Retrieve Instace ID.");
 			// Attempt's to get the Instance ID from Fogbow Manager.
 			requestAttributes = getFogbowRequestAttributes(requestID);
-			String requestType = requestAttributes.get(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE);
 
 			fogbowInstanceId = getInstanceIdByRequestAttributes(requestAttributes);
 
@@ -145,7 +144,9 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 				if (this.validateInstanceAttributes(instanceAttributes)) {
 					
 					Specification spec = pendingRequestsMap.get(requestID);
-					resource = new Resource(fogbowInstanceId, properties);
+					resource = new Resource(requestID, properties);
+					
+					String requestType = spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE);
 
 					LOGGER.debug("Getting Instance attributes.");
 					// Putting all metadatas on Resource
@@ -226,10 +227,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		String instanceId = null;
 		try {
 			instanceId = requestAttributes.get(RequestAttribute.INSTANCE_ID.getValue());
-			String requestState = requestAttributes.get(RequestAttribute.STATE.getValue());
-			if (getRequestState(requestState).notIn(RequestState.FULFILLED)) {
-				instanceId = null;
-			}
 		} catch (Exception e) {
 			throw new RequestResourceException("Get Instance Id FAILED: " + e.getMessage(), e);
 		}
