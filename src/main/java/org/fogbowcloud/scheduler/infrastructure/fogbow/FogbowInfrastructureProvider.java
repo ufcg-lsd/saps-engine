@@ -137,15 +137,17 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			// If has Instance ID, then verifies resource's SSH and Other
 			// Informations;
 			if (fogbowInstanceId != null && !fogbowInstanceId.isEmpty()) {
+				LOGGER.debug("Instance ID returned: "+fogbowInstanceId);
 
 				// Recovers Instance's attributes.
 				Map<String, String> instanceAttributes = getFogbowInstanceAttributes(fogbowInstanceId);
 
 				if (this.validateInstanceAttributes(instanceAttributes)) {
-
+					
 					Specification spec = pendingRequestsMap.get(requestID);
 					resource = new Resource(fogbowInstanceId, properties);
 
+					LOGGER.debug("Getting Instance attributes.");
 					// Putting all metadatas on Resource
 					sshInformation = instanceAttributes.get(INSTANCE_ATTRIBUTE_SSH_PUBLIC_ADDRESS_ATT);
 
@@ -176,6 +178,9 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					// instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID));
 
 					LOGGER.debug("New Fogbow Resource created - Instace ID: [" + fogbowInstanceId + "]");
+				}else{
+					LOGGER.debug("Instance attributes not ready yet for instance: ["+fogbowInstanceId+"]");
+					return null;
 				}
 
 			}
@@ -313,6 +318,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 	private boolean validateInstanceAttributes(Map<String, String> instanceAttributes) {
 
+		LOGGER.debug("Validating instance attributes.");
+		
 		boolean isValid = true;
 
 		if (instanceAttributes != null && !instanceAttributes.isEmpty()) {
@@ -324,23 +331,26 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			String memberId = instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID);
 
 			// If any of these attributes are empty, then return invalid.
+			//TODO: add to "isStringEmpty diskSize and memberId when fogbow being returning this two attributes.
 			isValid = !AppUtil.isStringEmpty(sshInformation, vcore,
-					memorySize /*
-								 * , diskSize, memberId TODO descomentar esse
-								 * trecho quando tiver sido implementado no
-								 * fogbow o retorno destes atributos
-								 */);
+					memorySize );
+			if(!isValid){
+				LOGGER.debug("Instance attributes invalids.");
+				return false;
+			}
 
 			String[] addressInfo = sshInformation.split(":");
 			if (addressInfo != null && addressInfo.length > 1) {
 				String host = addressInfo[0];
 				String port = addressInfo[1];
 				isValid = !AppUtil.isStringEmpty(host, port);
-			} else {
-
+			}else{
+				LOGGER.debug("Instance attributes invalids.");
+				isValid = false;
 			}
 
 		} else {
+			LOGGER.debug("Instance attributes invalids.");
 			isValid = false;
 		}
 

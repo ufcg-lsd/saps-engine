@@ -211,10 +211,8 @@ public class TestInfrastructureManager {
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 
 		validateOrderRequested(specs);
-		assertEquals(OrderState.OPEN, infrastructureManager.getOrders().get(0).getState());
+		assertEquals(OrderState.ORDERED, infrastructureManager.getOrders().get(0).getState());
 
-		// resolving Open Orders (setting to Ordered)
-		infrastructureManager.getOrderService().run(); 
 		// resolving Ordered Orders (setting to Fulfilled)
 		infrastructureManager.getOrderService().run(); 
 

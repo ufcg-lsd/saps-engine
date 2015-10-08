@@ -10,9 +10,11 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.Command;
 import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
+import org.fogbowcloud.scheduler.core.util.AppUtil;
 
 public class ExecutionCommandHelper {
 
+	private static final int EXIT_CODE_SUCCESS = 0;
 	private static final Logger LOGGER = Logger.getLogger(ExecutionCommandHelper.class);
 	private SshClientWrapper sshClientWrapper;
 	private final String LOCAL_COMMAND_INTERPRETER;
@@ -24,6 +26,7 @@ public class ExecutionCommandHelper {
 	
 	public int execLocalCommands(List<Command> localCommands, Map<String, String> additionalEnvVariables) {
 		for (Command command : localCommands) {
+			LOGGER.debug("Executin local command: [Type: "+command.getType().name()+" - Command: "+command.getCommand()+"]");
 			command.setState(Command.State.RUNNING);
 			try {
 				Process pr = starLocalProcess(command, additionalEnvVariables);
@@ -117,6 +120,9 @@ public class ExecutionCommandHelper {
 
 	public Integer getRemoteCommandExitValue(String address, int sshPort, String username,
 			String privateKeyFilePath, String remoteFileExit) {
+		if(AppUtil.isStringEmpty(remoteFileExit)){
+			return EXIT_CODE_SUCCESS;
+		}
         String exitFileExistsCommand = "cat " + remoteFileExit;
         try {
 			sshClientWrapper.connect(address, sshPort, username, privateKeyFilePath);
