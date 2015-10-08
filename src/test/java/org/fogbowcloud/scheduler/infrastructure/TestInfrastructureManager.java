@@ -1,7 +1,15 @@
 package org.fogbowcloud.scheduler.infrastructure;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,13 +21,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.fogbowcloud.manager.occi.TestTokenServerResource;
 import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.CurrentThreadExecutorService;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.Scheduler;
-import org.fogbowcloud.scheduler.core.model.Order.OrderState;
 import org.fogbowcloud.scheduler.core.model.Order;
+import org.fogbowcloud.scheduler.core.model.Order.OrderState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.TestResourceHelper;
