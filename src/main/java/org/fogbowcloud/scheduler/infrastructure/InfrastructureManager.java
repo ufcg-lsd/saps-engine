@@ -26,6 +26,7 @@ import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.core.util.DateUtils;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.RequestResourceException;
+import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 
 public class InfrastructureManager {
 
@@ -163,6 +164,8 @@ public class InfrastructureManager {
 		LOGGER.info("Creating orders to initial specs: \n" + initialSpec);
 
 		for (Specification spec : initialSpec) {
+			//Initial specs must be Persistent
+			spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE, RequestType.PERSISTENT.getValue());
 			orderResource(spec, null);
 		}
 	}
@@ -253,6 +256,9 @@ public class InfrastructureManager {
 
 	protected void idleResourceToOrder(final Resource idleResource, final Order order) {
 
+		idleResources.remove(idleResource);
+		allocatedResources.put(idleResource, order);
+		
 		resourceConnectivityMonitor.submit(new Runnable() {
 
 			@Override
@@ -274,14 +280,16 @@ public class InfrastructureManager {
 					}
 				}
 				if (resourceOK) {
-					LOGGER.debug("Idle Resource founded for Order [" + order.getRequestId() + "] - Specifications"
+					LOGGER.debug("Idle Resource founded for new Order with Specifications: "
 							+ order.getSpecification().toString());
+					order.setRequestId(idleResource.getId());
 					order.setState(OrderState.FULFILLED);
 					ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
 							getIdleResources());
 					order.getScheduler().resourceReady(idleResource);
-					idleResources.remove(idleResource);
-					allocatedResources.put(idleResource, order);
+				}else{
+					allocatedResources.remove(idleResource);
+					moveResourceToIdle(idleResource);
 				}
 			}
 		});

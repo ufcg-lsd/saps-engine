@@ -141,6 +141,7 @@ public class Resource {
 	
 	protected void finish(int exitValue) {
 		LOGGER.debug("Finishing task " + task.getId() + " with exit value = " + exitValue);
+		task.finish();
 		taskExecutionResult.finish(exitValue);
 	}
 	
@@ -163,7 +164,11 @@ public class Resource {
 		Map<String, String> additionalEnvVar = new HashMap<String, String>();
 		additionalEnvVar.put(ENV_HOST, getMetadataValue(METADATA_SSH_HOST));
 		additionalEnvVar.put(ENV_SSH_PORT, getMetadataValue(METADATA_SSH_PORT));
-		additionalEnvVar.put(ENV_SSH_USER, task.getSpecification().getUsername());
+		if(task.getSpecification().getUsername()!= null && !task.getSpecification().getUsername().isEmpty()){
+			additionalEnvVar.put(ENV_SSH_USER, task.getSpecification().getUsername());
+		}else{
+			additionalEnvVar.put(ENV_SSH_USER, getMetadataValue(ENV_SSH_USER));
+		}
 		additionalEnvVar.put(ENV_PRIVATE_KEY_FILE, task.getSpecification().getPrivateKeyFilePath());
 		//TODO getEnvVariables from task
 		

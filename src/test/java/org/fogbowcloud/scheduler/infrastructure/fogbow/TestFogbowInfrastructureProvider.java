@@ -121,7 +121,8 @@ public class TestFogbowInfrastructureProvider {
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
-		String memSizeMock = "1024";
+		String memSizeMock = "1.0";
+		String menSizeFormated = String.valueOf(Float.parseFloat(memSizeMock)*1024);
 		String coreSizeMock = "1";
 		String hostMock = "10.0.1.10";
 		String portMock = "8989";
@@ -141,7 +142,40 @@ public class TestFogbowInfrastructureProvider {
 
 		Resource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
 
-		assertEquals(memSizeMock, newResource.getMetadataValue(Resource.METADATA_MEN_SIZE));
+		assertEquals(menSizeFormated, newResource.getMetadataValue(Resource.METADATA_MEN_SIZE));
+		assertEquals(coreSizeMock, newResource.getMetadataValue(Resource.METADATA_VCPU));
+		assertEquals(hostMock, newResource.getMetadataValue(Resource.METADATA_SSH_HOST));
+		assertEquals(portMock, newResource.getMetadataValue(Resource.METADATA_SSH_PORT));
+	}
+	
+	@Test
+	public void getFogbowResourceTestSucessB() throws Exception{
+		
+		//Attributes
+		String requestIdMock = "request01";
+		String instanceIdMock = "instance01";
+		String memSizeMock = "3.0";
+		String menSizeFormated = String.valueOf(Float.parseFloat(memSizeMock)*1024);
+		String coreSizeMock = "1";
+		String hostMock = "10.0.1.10";
+		String portMock = "8989";
+
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+
+		//Create Mock behavior for httpWrapperMock
+		//Creating response for request for resource.
+		createDefaultRequestResponse(requestIdMock);
+		//Creating response for request for Instance ID
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, RequestState.FULFILLED);
+		//Creating response for request for Instance Attributes
+		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
+		
+		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
+		fogbowInfrastructureProvider.requestResource(specs);
+
+		Resource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
+
+		assertEquals(menSizeFormated, newResource.getMetadataValue(Resource.METADATA_MEN_SIZE));
 		assertEquals(coreSizeMock, newResource.getMetadataValue(Resource.METADATA_VCPU));
 		assertEquals(hostMock, newResource.getMetadataValue(Resource.METADATA_SSH_HOST));
 		assertEquals(portMock, newResource.getMetadataValue(Resource.METADATA_SSH_PORT));
@@ -153,7 +187,7 @@ public class TestFogbowInfrastructureProvider {
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
-		String memSizeMock = "1024";
+		String memSizeMock = "1.0";
 		String coreSizeMock = "1";
 		String hostMock = "10.0.1.10";
 		String portMock = "8989";
@@ -184,7 +218,7 @@ public class TestFogbowInfrastructureProvider {
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
-		String memSizeMock = "1024";
+		String memSizeMock = "1.0";
 		String coreSizeMock = "1";
 		String hostMock = "10.0.1.10";
 		String portMock = "8989";
@@ -214,7 +248,7 @@ public class TestFogbowInfrastructureProvider {
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
-		String memSizeMock = "1024";
+		String memSizeMock = "1.0";
 		String coreSizeMock = "1";
 
 		//Create Mock behavior for httpWrapperMock
