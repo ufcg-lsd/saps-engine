@@ -13,11 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.manager.core.plugins.accounting.DataStore;
 
 public class JDBCImageDataStore implements ImageDataStore {
 
-	private static final Logger LOGGER = Logger.getLogger(DataStore.class);
+	private static final Logger LOGGER = Logger.getLogger(JDBCImageDataStore.class);
 	protected static final String IMAGE_TABLE_NAME = "NASA_IMAGES";
 	private static final String IMAGE_NAME_COL = "image_name";
 	private static final String DOWNLOAD_LINK_COL = "download_link";
