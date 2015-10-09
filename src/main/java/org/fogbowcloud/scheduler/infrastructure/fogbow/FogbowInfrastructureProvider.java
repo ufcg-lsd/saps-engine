@@ -169,7 +169,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					float menSize = Float.parseFloat(instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMORY_SIZE));
 					String menSizeFormated = String.valueOf(menSize*MEMORY_1Gbit);
 					resource.putMetadata(Resource.METADATA_MEN_SIZE,menSizeFormated);
-					resource.putMetadata(Resource.METADATA_LOCATION, requestAttributes.get(REQUEST_ATTRIBUTE_MEMBER_ID));
+					resource.putMetadata(Resource.METADATA_LOCATION, "\"" + requestAttributes.get(REQUEST_ATTRIBUTE_MEMBER_ID) + "\"");
 					// TODO Descomentar quando o fogbow estiver retornando este
 					// atributo
 					// newResource.putMetadata(Resource.METADATA_DISK_SIZE,
