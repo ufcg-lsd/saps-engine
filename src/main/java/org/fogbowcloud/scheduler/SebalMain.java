@@ -72,18 +72,18 @@ public class SebalMain {
 		Scheduler scheduler = new Scheduler(job, infraManager);
 		ExecutionMonitor execMonitor = new ExecutionMonitor(job, scheduler);
 
-		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
-				Integer.parseInt(properties.getProperty("execution_monitor_period")));
-
-		schedulerTimer.scheduleAtFixedRate(scheduler, 0,
-				Integer.parseInt(properties.getProperty("scheduler_period")));
-
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 		
 		// scheduling previous image executions
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
 		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1);
+
+		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
+				Integer.parseInt(properties.getProperty("execution_monitor_period")));
+
+		schedulerTimer.scheduleAtFixedRate(scheduler, 0,
+				Integer.parseInt(properties.getProperty("scheduler_period")));
 				
 		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
