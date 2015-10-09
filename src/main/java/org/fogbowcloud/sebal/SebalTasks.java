@@ -16,6 +16,8 @@ import org.fogbowcloud.scheduler.core.model.Command;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowInfrastructureProvider;
+import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 import org.fogbowcloud.sebal.bootstrap.DBBootstrap;
 
 
@@ -46,14 +48,25 @@ public class SebalTasks {
 	private static final String METADATA_RESULT_REPOSITORY = "result_repository";
 	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
 
-	public static List<Task> createF1Tasks(Properties properties, String imageName, Specification spec) {
+	public static List<Task> createF1Tasks(Properties properties, String imageName, Specification spec, String location) {
 		LOGGER.debug("Creating F1 tasks for image " + imageName);
 
 		String numberOfPartitions = properties.getProperty("sebal_number_of_partitions");
 		List<Task> f1Tasks = new ArrayList<Task>();
 
 		for (int partitionIndex = 1; partitionIndex <= Integer.parseInt(numberOfPartitions); partitionIndex++) {
-			
+			//setting location on spec
+//			String locationSpec = "Glue2CloudComputeManagerID==\"" + location + "\"";
+//			if (spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS) == null) {
+//				spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
+//						locationSpec);
+//			} else {
+//				spec.addRequitement(
+//						FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
+//						spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS)
+//								+ " && " + locationSpec);
+//			}
+
 			TaskImpl f1Task = new TaskImpl(UUID.randomUUID().toString(), spec);
 						
 			settingCommonTaskMetadata(properties, f1Task);
@@ -84,6 +97,7 @@ public class SebalTasks {
 				f1Task.putMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH, remotePrivateKeyPath);
 				String scpUploadCommand = createSCPUploadCommand(privateKeyFile.getAbsolutePath(),
 						remotePrivateKeyPath);
+				LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 				f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
 			}
 		
@@ -103,6 +117,7 @@ public class SebalTasks {
 					f1Task.putMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH, remoteBoundingboxPath);
 					String scpUploadCommand = createSCPUploadCommand(
 							boundingboxFile.getAbsolutePath(), remoteBoundingboxPath);
+					LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 					f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
 				} else {
 					LOGGER.warn("There is no boundingbox file specified for image " + imageName);
@@ -117,10 +132,12 @@ public class SebalTasks {
 			// adding command
 			String scpUploadCommand = createSCPUploadCommand(
 					localScriptFile.getAbsolutePath(), remoteScriptPath);
+			LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 			f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
 			
 			// adding remote command
 			String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);
+			LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 			f1Task.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
 
 			// adding epilogue command
@@ -229,6 +246,9 @@ public class SebalTasks {
 		if (task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH) != null) {
 			command = command.replaceAll(Pattern.quote("${ADDITIONAL_LIBRARY_PATH}"),
 					":" + task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH));
+		} else {
+			command = command.replaceAll(Pattern.quote("${ADDITIONAL_LIBRARY_PATH}"),
+					"");
 		}
 
 		command = command.replaceAll(Pattern.quote("${NUMBER_OF_PARTITIONS}"),

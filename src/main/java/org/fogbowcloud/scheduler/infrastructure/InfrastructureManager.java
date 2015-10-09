@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.manager.core.ConfigurationConstants;
 import org.fogbowcloud.manager.occi.request.RequestType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
@@ -237,7 +236,7 @@ public class InfrastructureManager {
 
 			// if order is not related to initial spec
 			if (order.getScheduler() != null) {
-				
+
 				this.relateResourceToOrder(newResource, order, false);
 				
 			} else {

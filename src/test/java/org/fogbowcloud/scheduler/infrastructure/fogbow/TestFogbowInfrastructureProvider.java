@@ -1,10 +1,14 @@
 package org.fogbowcloud.scheduler.infrastructure.fogbow;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
@@ -13,14 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.request.RequestConstants;
 import org.fogbowcloud.manager.occi.request.RequestState;
-import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
-import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.junit.After;
@@ -277,26 +278,6 @@ public class TestFogbowInfrastructureProvider {
 			
 	}
 	
-	@Test
-	public void getResourceTestSSHConnectionFailed() throws Exception{
-		
-		//Attributes
-		String requestIdMock = "request01";
-
-		Resource resource = mock(Resource.class);
-		doReturn(requestIdMock).when(resource).getId();
-
-		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
-		doReturn(resource).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
-		doReturn(false).when(resource).checkConnectivity(); 
-
-		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
-
-		Resource newResource = fogbowInfrastructureProvider.getResource(requestIdMock);
-
-		assertNull(newResource);
-			
-	}
 
 	@Test
 	public void deleteResourceTestSucess() throws Exception{

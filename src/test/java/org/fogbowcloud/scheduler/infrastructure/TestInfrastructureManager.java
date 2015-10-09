@@ -265,7 +265,6 @@ public class TestInfrastructureManager {
 		DateUtils dateUtilsMock = mock(DateUtils.class);
 
 		Long dateMock = System.currentTimeMillis();
-		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
 		Resource fakeResource = mock(Resource.class);
 		Map<String, String> resourceAMetadata = new HashMap<String, String>();
@@ -364,6 +363,8 @@ public class TestInfrastructureManager {
 		// doReturn(true).when(fakeResourceB).match(Mockito.eq(specs));
 		doNothing().when(fakeResourceA).copyInformations(fakeResourceB);
 		doReturn(fakeResourceB).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
+		doReturn(false).when(fakeResourceA).checkConnectivity((Mockito.anyInt()));
+		doReturn(true).when(fakeResourceB).checkConnectivity((Mockito.anyInt()));
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 		infrastructureManager.getIdleResourcesMap().put(fakeResourceA, new Long(0));

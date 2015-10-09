@@ -72,18 +72,18 @@ public class SebalMain {
 		Scheduler scheduler = new Scheduler(job, infraManager);
 		ExecutionMonitor execMonitor = new ExecutionMonitor(job, scheduler);
 
-		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
-				Integer.parseInt(properties.getProperty("execution_monitor_period")));
-
-		schedulerTimer.scheduleAtFixedRate(scheduler, 0,
-				Integer.parseInt(properties.getProperty("scheduler_period")));
-
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 		
 		// scheduling previous image executions
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
 		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1);
+
+		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
+				Integer.parseInt(properties.getProperty("execution_monitor_period")));
+
+		schedulerTimer.scheduleAtFixedRate(scheduler, 0,
+				Integer.parseInt(properties.getProperty("scheduler_period")));
 				
 		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
@@ -113,7 +113,7 @@ public class SebalMain {
 				if (ImageState.RUNNING_F1.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)) {
 					tasks = SebalTasks.createF1Tasks(properties, imageData.getName(),
-							sebalSpec);
+							sebalSpec, imageData.getFederationMember());
 					imageData.setState(ImageState.RUNNING_F1);
 				} else if (ImageState.RUNNING_C.equals(imageState)
 						|| ImageState.READY_FOR_PHASE_C.equals(imageState)) {
@@ -139,7 +139,7 @@ public class SebalMain {
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {
-		String sebalSpecFile = properties.getProperty("sebal_task_specification_file");
+		String sebalSpecFile = properties.getProperty("sebal_task_spec_path");
 		List<Specification> specs = new ArrayList<Specification>();
 		try {
 			specs = Specification.getSpecificationsFromJSonFile(sebalSpecFile);
