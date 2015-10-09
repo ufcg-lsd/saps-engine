@@ -205,7 +205,7 @@ public class InfrastructureManager {
 
 			// Async call to avoid wating time from test connectivity with
 			// resource
-			this.idleResourceToOrder(resource, order);
+			this.relateResourceToOrder(resource, order, true);
 
 			// Else, requests a new resource from provider.
 		} else if (isElastic || order.getScheduler() == null) { 
@@ -235,14 +235,11 @@ public class InfrastructureManager {
 		Resource newResource = infraProvider.getResource(order.getRequestId());
 		if (newResource != null) {
 
-			// if order is not realated to initial spec
+			// if order is not related to initial spec
 			if (order.getScheduler() != null) {
-				order.setState(OrderState.FULFILLED);
-				order.getScheduler().resourceReady(newResource);
-
-				allocatedResources.put(newResource, order);
-				LOGGER.debug("Order [" + order.getRequestId() + "] resolved to Fulfilled with Resource ["
-						+ newResource.getId() + "]");
+				
+				this.relateResourceToOrder(newResource, order, false);
+				
 			} else {
 
 				orders.remove(order);
@@ -254,42 +251,47 @@ public class InfrastructureManager {
 		}
 	}
 
-	protected void idleResourceToOrder(final Resource idleResource, final Order order) {
+	protected void relateResourceToOrder(final Resource resource, final Order order, final boolean isIdle) {
 
-		idleResources.remove(idleResource);
-		allocatedResources.put(idleResource, order);
+		if(isIdle){
+			idleResources.remove(resource);
+		}
+		allocatedResources.put(resource, order);
 		
 		resourceConnectivityMonitor.submit(new Runnable() {
 
 			@Override
 			public void run() {
 
-				String requestType = idleResource.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+				String requestType = resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 				boolean resourceOK = true;
 
-				if (!isResourceAlive(idleResource)) {
+				if (!isResourceAlive(resource)) {
 					resourceOK = false;
 					// If is a persistent resource, tries to recover it.
 					if (RequestType.PERSISTENT.getValue().equals(requestType)) {
-						Resource retryResource = infraProvider.getResource(idleResource.getId());
-						if (retryResource != null) {
-							idleResource.copyInformations(retryResource);
+						Resource retryResource = infraProvider.getResource(resource.getId());
+						if (retryResource != null && isResourceAlive(retryResource)) {
+							resource.copyInformations(retryResource);
 							resourceOK = true;
 							retryResource = null;
 						}
 					}
 				}
 				if (resourceOK) {
-					LOGGER.debug("Idle Resource founded for new Order with Specifications: "
+					LOGGER.debug("Resource related Order with Specifications: "
 							+ order.getSpecification().toString());
-					order.setRequestId(idleResource.getId());
+					order.setRequestId(resource.getId());
 					order.setState(OrderState.FULFILLED);
 					ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
 							getIdleResources());
-					order.getScheduler().resourceReady(idleResource);
+					order.getScheduler().resourceReady(resource);
+					
 				}else{
-					allocatedResources.remove(idleResource);
-					moveResourceToIdle(idleResource);
+					allocatedResources.remove(resource);
+					if(isIdle){
+						moveResourceToIdle(resource);
+					}
 				}
 			}
 		});
