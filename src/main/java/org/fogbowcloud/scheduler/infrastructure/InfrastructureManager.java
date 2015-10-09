@@ -235,12 +235,12 @@ public class InfrastructureManager {
 		Resource newResource = infraProvider.getResource(order.getRequestId());
 		if (newResource != null) {
 
-			// if order is not realated to initial spec
+			// if order is not related to initial spec
 			if (order.getScheduler() != null) {
 				order.setState(OrderState.FULFILLED);
-				order.getScheduler().resourceReady(newResource);
-
 				allocatedResources.put(newResource, order);
+
+				order.getScheduler().resourceReady(newResource);
 				LOGGER.debug("Order [" + order.getRequestId() + "] resolved to Fulfilled with Resource ["
 						+ newResource.getId() + "]");
 			} else {

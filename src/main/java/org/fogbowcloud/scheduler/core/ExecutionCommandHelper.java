@@ -95,9 +95,12 @@ public class ExecutionCommandHelper {
 
 	public int execRemoteCommands(String address, int sshPort, String username,
 			String privateKeyFilePath, List<Command> remoteCommands) {
+		LOGGER.debug("Connecting host " + address + " on port " + sshPort + " with user "
+				+ username + " and privateKey " + privateKeyFilePath);
 		try {
 			sshClientWrapper.connect(address, sshPort, username, privateKeyFilePath);
 			for (Command command : remoteCommands) {
+				LOGGER.debug("Executin remote command: [Type: "+command.getType().name()+" - Command: "+command.getCommand()+"]");
 				command.setState(Command.State.RUNNING);
 				Integer exitStatus = sshClientWrapper.doSshExecution(command.getCommand());
 				if (exitStatus != TaskExecutionResult.OK) {

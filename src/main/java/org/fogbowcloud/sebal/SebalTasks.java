@@ -137,6 +137,7 @@ public class SebalTasks {
 			
 			// adding remote command
 			String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);
+			LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 			f1Task.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
 
 			// adding epilogue command
