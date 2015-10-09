@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,7 @@ import org.fogbowcloud.scheduler.core.model.SebalJob;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
+import org.fogbowcloud.scheduler.core.util.Constants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.sebal.ImageData;
@@ -137,23 +139,25 @@ public class SebalMain {
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {
-		// TODO Auto-generated method stub
-		return null;
+		String sebalSpecFile = properties.getProperty("sebal_task_specification_file");
+		List<Specification> specs = new ArrayList<Specification>();
+		try {
+			specs = Specification.getSpecificationsFromJSonFile(sebalSpecFile);
+			if(specs!= null && !specs.isEmpty()){
+				return specs.get(Constants.LIST_ARRAY_FIRST_ELEMENT);
+			}
+			return null;
+		} catch (IOException e) {
+			return null;
+		}
 	}
 	
 	private static List<Specification> getInitialSpecs(Properties properties)
-			throws FileNotFoundException {
+			throws IOException {
 		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);		
 		LOGGER.info("Getting initial spec from file " + initialSpecsFilePath);
 		
-		List<Specification> specifications = new ArrayList<Specification>();
-		if (initialSpecsFilePath != null && new File(initialSpecsFilePath).exists()) {
-			BufferedReader br = new BufferedReader(new FileReader(initialSpecsFilePath));
-
-			Gson gson = new Gson();
-			specifications = Arrays.asList(gson.fromJson(br, Specification[].class));
-		}
-		return specifications;
+		return Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 	}
 	
 	private static InfrastructureProvider createInfraProvaiderInstance(Properties properties)

@@ -19,6 +19,7 @@ public class FogbowInfrastructureTestUtils {
 	public static final String PORT_TAG = "${PORT}";
 	public static final String REQUEST_ID_TAG = "${REQUEST_ID}";
 	public static final String STATE_TAG = "${STATE}";
+	public static final String PROVIDER_MEMBER_TAG = "${PROVIDER_MEMBER}";
 	
 	
 	public static String createHttpWrapperResponseFromFile(String filePath, Map<String, String> params) throws FileNotFoundException, IOException{

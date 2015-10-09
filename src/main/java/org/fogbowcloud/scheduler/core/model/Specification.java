@@ -1,8 +1,20 @@
 package org.fogbowcloud.scheduler.core.model;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import com.google.gson.Gson;
 
 public class Specification {
 
@@ -41,6 +53,48 @@ public class Specification {
 	
 	public void removeAllRequirements(){
 		requirements = new HashMap<String, String>();
+	}
+	
+	public static List<Specification> getSpecificationsFromJSonFile(String jsonFilePath) throws IOException{
+		
+
+		List<Specification> specifications = new ArrayList<Specification>();
+		if (jsonFilePath != null && !jsonFilePath.isEmpty()) {
+			
+			BufferedReader br = new BufferedReader(new FileReader(jsonFilePath));
+
+			Gson gson = new Gson();
+			specifications = Arrays.asList(gson.fromJson(br, Specification[].class));
+			br.close();
+		}
+		return specifications;
+	}
+	
+	public boolean parseToJsonFile(String jsonDestFilePath){
+		
+		List<Specification> spec = new ArrayList<Specification>();
+		spec.add(this);
+		return Specification.parseSpecsToJsonFile(spec, jsonDestFilePath);
+	} 
+	
+	public static boolean parseSpecsToJsonFile(List<Specification> specs, String jsonDestFilePath){
+		
+		if (jsonDestFilePath != null && !jsonDestFilePath.isEmpty()) {
+
+			BufferedWriter bw;
+			try {
+				bw = new BufferedWriter(new FileWriter(jsonDestFilePath));
+				Gson gson = new Gson();
+				String spectString = gson.toJson(specs);
+				bw.write(spectString);
+				bw.close();
+				return true;
+			} catch (IOException e) {
+				return false;
+			}
+		}else{
+			return false;
+		}
 	}
 	
 	// ----- GETTERS and SETTERS ------ //

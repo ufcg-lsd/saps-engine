@@ -40,6 +40,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private static final String X_OCCI_ATTRIBUTE = "X-OCCI-Attribute";
 	private static final String DEFAULT_USER = "user";
 
+	public static final String REQUEST_ATTRIBUTE_MEMBER_ID = "org.fogbowcloud.request.providing-member";
+
 	public static final String INSTANCE_ATTRIBUTE_SSH_PUBLIC_ADDRESS_ATT = "org.fogbowcloud.request.ssh-public-address";
 	public static final String INSTANCE_ATTRIBUTE_SSH_USERNAME_ATT = "org.fogbowcloud.request.ssh-username";
 	public static final String INSTANCE_ATTRIBUTE_EXTRA_PORTS_ATT = "org.fogbowcloud.request.extra-ports";
@@ -47,8 +49,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	public static final String INSTANCE_ATTRIBUTE_VCORE = "occi.compute.cores";
 	// TODO Alter when fogbow are returning this attribute
 	public static final String INSTANCE_ATTRIBUTE_DISKSIZE = "TODO-AlterWhenFogbowReturns"; 
-	// TODO Alter when fogbow are returning this attribute
-	public static final String INSTANCE_ATTRIBUTE_MEMBER_ID = "TODO-AlterWhenFogbowReturns"; 
 	public static final String INSTANCE_ATTRIBUTE_REQUEST_TYPE = "org.fogbowcloud.request.type";
 
 	// ------------------ ATTRIBUTES -----------------//
@@ -121,7 +121,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	protected Resource getFogbowResource(String requestID) {
 
 		LOGGER.debug("Initiating Resource Instanciation - Request id: [" + requestID + "]");
-		String fogbowInstanceId;
+		String instanceId;
 		String sshInformation;
 		Map<String, String> requestAttributes;
 		Resource resource = null;
@@ -131,15 +131,15 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			// Attempt's to get the Instance ID from Fogbow Manager.
 			requestAttributes = getFogbowRequestAttributes(requestID);
 
-			fogbowInstanceId = getInstanceIdByRequestAttributes(requestAttributes);
+			instanceId = requestAttributes.get(RequestAttribute.INSTANCE_ID.getValue());
 
 			// If has Instance ID, then verifies resource's SSH and Other
 			// Informations;
-			if (fogbowInstanceId != null && !fogbowInstanceId.isEmpty()) {
-				LOGGER.debug("Instance ID returned: "+fogbowInstanceId);
+			if (instanceId != null && !instanceId.isEmpty()) {
+				LOGGER.debug("Instance ID returned: "+instanceId);
 
 				// Recovers Instance's attributes.
-				Map<String, String> instanceAttributes = getFogbowInstanceAttributes(fogbowInstanceId);
+				Map<String, String> instanceAttributes = getFogbowInstanceAttributes(instanceId);
 
 				if (this.validateInstanceAttributes(instanceAttributes)) {
 					
@@ -169,18 +169,15 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					float menSize = Float.parseFloat(instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMORY_SIZE));
 					String menSizeFormated = String.valueOf(menSize*MEMORY_1Gbit);
 					resource.putMetadata(Resource.METADATA_MEN_SIZE,menSizeFormated);
+					resource.putMetadata(Resource.METADATA_LOCATION, requestAttributes.get(REQUEST_ATTRIBUTE_MEMBER_ID));
 					// TODO Descomentar quando o fogbow estiver retornando este
 					// atributo
 					// newResource.putMetadata(Resource.METADATA_DISK_SIZE,
 					// instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE));
-					// TODO Descomentar quando o fogbow estiver retornando este
-					// atributo
-					// newResource.putMetadata(Resource.METADATA_LOCATION,
-					// instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID));
 
-					LOGGER.debug("New Fogbow Resource created - Instace ID: [" + fogbowInstanceId + "]");
+					LOGGER.debug("New Fogbow Resource created - Instace ID: [" + instanceId + "]");
 				}else{
-					LOGGER.debug("Instance attributes not ready yet for instance: ["+fogbowInstanceId+"]");
+					LOGGER.debug("Instance attributes not ready yet for instance: ["+instanceId+"]");
 					return null;
 				}
 
@@ -199,9 +196,9 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		try {
 			Map<String, String> requestAttributes = getFogbowRequestAttributes(resourceId);
 
-			String fogbowInstanceId = getInstanceIdByRequestAttributes(requestAttributes);
-			if (fogbowInstanceId != null) {
-				this.doRequest("delete", managerUrl + "/compute/" + fogbowInstanceId, new ArrayList<Header>());
+			String instanceId = requestAttributes.get(RequestAttribute.INSTANCE_ID.getValue());
+			if (instanceId != null) {
+				this.doRequest("delete", managerUrl + "/compute/" + instanceId, new ArrayList<Header>());
 			}
 			this.doRequest("delete", managerUrl + "/" + RequestConstants.TERM + "/" + resourceId,
 					new ArrayList<Header>());
@@ -219,19 +216,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		Date date = new Date(System.currentTimeMillis() + (long) Math.pow(10, 9));
 
 		return new Token(certificate, DEFAULT_USER, date, new HashMap<String, String>());
-	}
-
-	private String getInstanceIdByRequestAttributes(Map<String, String> requestAttributes)
-			throws RequestResourceException {
-
-		String instanceId = null;
-		try {
-			instanceId = requestAttributes.get(RequestAttribute.INSTANCE_ID.getValue());
-		} catch (Exception e) {
-			throw new RequestResourceException("Get Instance Id FAILED: " + e.getMessage(), e);
-		}
-
-		return instanceId;
 	}
 
 	private Map<String, String> getFogbowRequestAttributes(String requestId) throws Exception {
@@ -325,7 +309,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			String vcore = instanceAttributes.get(INSTANCE_ATTRIBUTE_VCORE);
 			String memorySize = instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMORY_SIZE);
 			String diskSize = instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE);
-			String memberId = instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMBER_ID);
+			String memberId = instanceAttributes.get(REQUEST_ATTRIBUTE_MEMBER_ID);
 
 			// If any of these attributes are empty, then return invalid.
 			//TODO: add to "isStringEmpty diskSize and memberId when fogbow being returning this two attributes.

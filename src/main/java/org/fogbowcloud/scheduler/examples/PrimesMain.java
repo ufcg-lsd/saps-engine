@@ -55,9 +55,9 @@ public class PrimesMain {
 		loadConfigFromProperties();
 
 		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
-		List<Specification> initialSpecs = getInitialSpecs(initialSpecsFilePath);
+		List<Specification> initialSpecs = Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 
-		List<Specification> taskSpecs = getInitialSpecs(SPEC_FILE_PATH);
+		List<Specification> taskSpecs = Specification.getSpecificationsFromJSonFile(SPEC_FILE_PATH);
 		
 		InfrastructureProvider infraProvider = createInfraProvaiderInstance();
 		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic, infraProvider,
@@ -91,19 +91,6 @@ public class PrimesMain {
 
 	}
 
-	private static List<Specification> getInitialSpecs(String specsFilePath) throws FileNotFoundException {
-		
-		LOGGER.info("Getting initial spec from file " + specsFilePath);
-
-		List<Specification> specifications = new ArrayList<Specification>();
-		if (specsFilePath != null && new File(specsFilePath).exists()) {
-			BufferedReader br = new BufferedReader(new FileReader(specsFilePath));
-
-			Gson gson = new Gson();
-			specifications = Arrays.asList(gson.fromJson(br, Specification[].class));
-		}
-		return specifications;
-	}
 
 	private static InfrastructureProvider createInfraProvaiderInstance() throws Exception {
 
