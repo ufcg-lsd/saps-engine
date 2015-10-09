@@ -126,9 +126,10 @@ public class ExecutionCommandHelper {
 	}
 
 	private Process startRemoteProcess(String address, int sshPort, String username, String privateKeyFilePath, String command) throws IOException {
-		ProcessBuilder builder = new ProcessBuilder(LOCAL_COMMAND_INTERPRETER, "-c", "ssh -i "
-				+ privateKeyFilePath + " " + username + "@" + address + " -p " + sshPort + " "
-				+ command);
+		ProcessBuilder builder = new ProcessBuilder(LOCAL_COMMAND_INTERPRETER, "-c",
+				"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "
+						+ privateKeyFilePath + " " + username + "@" + address + " -p " + sshPort
+						+ " " + command);
 		return builder.start();
 
 	}
