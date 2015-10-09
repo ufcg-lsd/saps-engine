@@ -56,6 +56,8 @@ public class BootstrapMain {
 //	         System.out.println("Opened database successfully");
 
 
+//	    	   updateState("LT52160651985034CUB00", ImageState.NOT_DOWNLOADED);
+//	    	   
 	     		PreparedStatement selectStatement = null;
 		     			
 //   				selectStatement = c.prepareStatement(SELECT_LIMITED_IMAGES_IN_STATE_SQL);
@@ -212,6 +214,41 @@ public class BootstrapMain {
 	         System.exit(0);
 	       }
 	       System.out.println("Operation done successfully");
+	}
+	
+	private static final String UPDATE_STATE_SQL = "UPDATE nasa_images SET state = ? WHERE image_name = ?";
+
+	
+	public static void updateState(String imageName, ImageState state) throws SQLException {
+
+		if (imageName == null || imageName.isEmpty() || state == null) {
+//			LOGGER.error("Invalid image name " + imageName + " or state " + state);
+			throw new IllegalArgumentException("Invalid image name " + imageName + " or state "
+					+ state);
+		}
+		PreparedStatement updateStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			updateStatement = connection.prepareStatement(UPDATE_STATE_SQL);
+			updateStatement.setString(1, state.getValue());
+			updateStatement.setString(2, imageName);
+			updateStatement.execute();
+		} finally {
+			if (updateStatement != null) {
+				try {
+					if (!updateStatement.isClosed()) {
+						updateStatement.close();
+					}
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			connection.close();
+		}
 	}
 	
 	public static Connection getConnection() throws SQLException {

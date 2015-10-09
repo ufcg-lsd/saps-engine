@@ -16,6 +16,8 @@ import org.fogbowcloud.scheduler.core.model.Command;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowInfrastructureProvider;
+import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 import org.fogbowcloud.sebal.bootstrap.DBBootstrap;
 
 
@@ -46,14 +48,25 @@ public class SebalTasks {
 	private static final String METADATA_RESULT_REPOSITORY = "result_repository";
 	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
 
-	public static List<Task> createF1Tasks(Properties properties, String imageName, Specification spec) {
+	public static List<Task> createF1Tasks(Properties properties, String imageName, Specification spec, String location) {
 		LOGGER.debug("Creating F1 tasks for image " + imageName);
 
 		String numberOfPartitions = properties.getProperty("sebal_number_of_partitions");
 		List<Task> f1Tasks = new ArrayList<Task>();
 
 		for (int partitionIndex = 1; partitionIndex <= Integer.parseInt(numberOfPartitions); partitionIndex++) {
-			
+			//setting location on spec
+//			String locationSpec = "Glue2CloudComputeManagerID==\"" + location + "\"";
+//			if (spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS) == null) {
+//				spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
+//						locationSpec);
+//			} else {
+//				spec.addRequitement(
+//						FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
+//						spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS)
+//								+ " && " + locationSpec);
+//			}
+
 			TaskImpl f1Task = new TaskImpl(UUID.randomUUID().toString(), spec);
 						
 			settingCommonTaskMetadata(properties, f1Task);

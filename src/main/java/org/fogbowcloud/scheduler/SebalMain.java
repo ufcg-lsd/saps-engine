@@ -113,7 +113,7 @@ public class SebalMain {
 				if (ImageState.RUNNING_F1.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)) {
 					tasks = SebalTasks.createF1Tasks(properties, imageData.getName(),
-							sebalSpec);
+							sebalSpec, imageData.getFederationMember());
 					imageData.setState(ImageState.RUNNING_F1);
 				} else if (ImageState.RUNNING_C.equals(imageState)
 						|| ImageState.READY_FOR_PHASE_C.equals(imageState)) {
@@ -139,7 +139,7 @@ public class SebalMain {
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {
-		String sebalSpecFile = properties.getProperty("sebal_task_specification_file");
+		String sebalSpecFile = properties.getProperty("sebal_task_spec_path");
 		List<Specification> specs = new ArrayList<Specification>();
 		try {
 			specs = Specification.getSpecificationsFromJSonFile(sebalSpecFile);
