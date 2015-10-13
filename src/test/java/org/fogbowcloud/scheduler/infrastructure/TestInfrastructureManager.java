@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.fogbowcloud.manager.occi.request.RequestType;
-import org.fogbowcloud.scheduler.core.CurrentThreadExecutorService;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Order;

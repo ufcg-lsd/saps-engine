@@ -94,36 +94,7 @@ public class Resource {
 		String host = this.getMetadataValue(METADATA_SSH_HOST);
 		String port = this.getMetadataValue(METADATA_SSH_PORT);
 		
-		Runtime run = null;
-		Process p = null;
-		Scanner scanner = null;
-		
-		try {
-			run = Runtime.getRuntime();
-			p = run.exec(new String[] {  
-				    "/bin/bash",  
-				    "-c",  
-				    "echo quit | telnet "+host+" "+port+" 2>/dev/null | grep Connected"}); 
-			p.waitFor();
-			scanner = new Scanner(p.getInputStream());
-			if(scanner.hasNext()){
-				String result = scanner.nextLine();
-				if(result != null && !result.isEmpty()){
-					return true;
-				}
-			}
-		} catch (Exception e) {
-			return false;
-		}finally {
-			run = null;
-			if(p != null){
-				p.destroy();
-			}
-			if(scanner != null){
-				scanner.close();
-			}
-		}
-		return false;
+		return executionCommandHelper.checkConnectivity(host, port);
 	}
 
 	public void putMetadata(String attributeName, String value) {

@@ -145,8 +145,8 @@ public class InfrastructureManager {
 		Order orderToRemove = allocatedResources.get(resource);
 		if(orderToRemove != null){
 			orders.remove(orderToRemove);
+			allocatedResources.remove(resource);
 		}
-		allocatedResources.remove(resource);
 
 		if (isResourceAlive(resource)) {
 			//Anticipating resource to Scheduler if it is needed  
@@ -154,12 +154,10 @@ public class InfrastructureManager {
 
 				if(order.getScheduler()!=null){
 					if(resource.match(order.getSpecification())){
-						allocatedResources.put(resource, null);
 						order.getScheduler().resourceReady(resource);
 						return;
 					}
 				}
-
 			}
 		}
 		
@@ -265,7 +263,6 @@ public class InfrastructureManager {
 
 		if (resource != null) {
 
-			allocatedResources.put(resource, null);
 			order.getScheduler().resourceReady(resource);
 			
 		} 
