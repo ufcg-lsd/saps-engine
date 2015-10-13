@@ -85,6 +85,8 @@ public class SebalTasks {
 					properties.getProperty("sebal_image_interval_lower_y"));
 			f1Task.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 					properties.getProperty("sebal_local_scripts_dir"));
+			f1Task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
+					f1Task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + f1Task.getId());
 			
 			//treating repository user private key
 			if (properties.getProperty("sebal_repository_user_private_key") != null) {
@@ -261,6 +263,9 @@ public class SebalTasks {
 		command = command.replaceAll(Pattern.quote("${LOWER_Y}"),
 				task.getMetadata(METADATA_LOWER_Y));
 
+		command = command.replaceAll(Pattern.quote("${REMOTE_COMMAND_EXIT_PATH}"),
+				task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH));
+		
 		if (task.getMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH) != null) {
 			command = command.replaceAll(Pattern.quote("${BOUNDING_BOX_PATH}"),
 					task.getMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH));
