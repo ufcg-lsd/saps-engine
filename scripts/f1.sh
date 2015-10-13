@@ -25,7 +25,7 @@ LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
 
 cd SEBAL
 
-java -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.DeployBulkMain ../${IMAGE_NAME}_MTL.txt ${RESULTS_MOUNT_POINT}/results ${LEFT_X} ${UPPER_Y} ${RIGHT_X} ${LOWER_Y} F1 ${NUMBER_OF_PARTITIONS} ${PARTITION_INDEX} ${BOUNDING_BOX_PATH} sebal-deployment.conf ${IMAGES_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}_MTLFmask > ${OUTPUT_FOLDER}/out 2> ${OUTPUT_FOLDER}/err
+java -Xss4m -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.DeployBulkMain ../${IMAGE_NAME}_MTL.txt ${RESULTS_MOUNT_POINT}/results ${LEFT_X} ${UPPER_Y} ${RIGHT_X} ${LOWER_Y} F1 ${NUMBER_OF_PARTITIONS} ${PARTITION_INDEX} ${BOUNDING_BOX_PATH} sebal-deployment.conf ${IMAGES_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}_MTLFmask > ${OUTPUT_FOLDER}/out 2> ${OUTPUT_FOLDER}/err
 
 PROCESS_OUTPUT=$?
 

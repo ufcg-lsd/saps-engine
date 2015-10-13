@@ -183,8 +183,8 @@ public class SebalTasks {
 	}
 
 	private static String createRemoteScriptExecCommand(String remoteScript) {
-		String execScriptCommand = "chmod +x " + remoteScript + "; nohup " + remoteScript
-				+ " > /dev/null 2>&1 &";
+		String execScriptCommand = "\"chmod +x " + remoteScript + "; nohup " + remoteScript
+				+ " > /dev/null 2>&1 &\"";
 		return execScriptCommand;
 	}
 
