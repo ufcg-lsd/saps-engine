@@ -1,7 +1,7 @@
 package org.fogbowcloud.scheduler.infrastructure;
 
-import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Resource;
+import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.RequestResourceException;
 
 public interface InfrastructureProvider {

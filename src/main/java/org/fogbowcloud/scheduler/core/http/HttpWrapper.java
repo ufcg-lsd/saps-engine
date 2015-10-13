@@ -16,7 +16,6 @@ import org.apache.http.util.EntityUtils;
 import org.fogbowcloud.manager.occi.model.HeaderUtils;
 import org.fogbowcloud.manager.occi.model.OCCIHeaders;
 import org.fogbowcloud.manager.occi.request.RequestConstants;
-import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 
 public class HttpWrapper {
 

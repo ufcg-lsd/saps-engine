@@ -9,7 +9,6 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.Command;
-import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
 import org.fogbowcloud.scheduler.core.util.AppUtil;
 
 public class ExecutionCommandHelper {
@@ -19,7 +18,7 @@ public class ExecutionCommandHelper {
 //	private SshClientWrapper sshClientWrapper;
 	private final String LOCAL_COMMAND_INTERPRETER;
 	
-	public ExecutionCommandHelper(Properties properties, SshClientWrapper sshClientWrapper) {
+	public ExecutionCommandHelper(Properties properties) {
 		LOCAL_COMMAND_INTERPRETER = properties.getProperty("local_command_interpreter");
 //		this.sshClientWrapper = sshClientWrapper;
 	}

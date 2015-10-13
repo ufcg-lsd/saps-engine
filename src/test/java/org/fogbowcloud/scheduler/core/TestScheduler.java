@@ -32,13 +32,15 @@ public class TestScheduler {
 	private Scheduler scheduler;
 	private Job jobMock;
 	private InfrastructureManager infraManagerMock;
+	private CurrentThreadExecutorService executorService;
 	
 	@Before
 	public void setUp() throws Exception {
 		
+		executorService = new CurrentThreadExecutorService();
 		jobMock = mock(Job.class);
 		infraManagerMock = mock(InfrastructureManager.class);
-		scheduler = spy(new Scheduler(jobMock, infraManagerMock));
+		scheduler = spy(new Scheduler(jobMock, infraManagerMock, executorService));
 		
 	}    
 

@@ -1,9 +1,14 @@
 package org.fogbowcloud.scheduler.core.model;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +17,6 @@ import java.util.Properties;
 
 import org.fogbowcloud.scheduler.core.ExecutionCommandHelper;
 import org.fogbowcloud.scheduler.core.TaskExecutionResult;
-import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 import org.junit.After;
@@ -26,24 +30,21 @@ public class TestResource {
 	
 	private Properties properties;
 	private ExecutionCommandHelper executionCommandHelperMock;
-	private SshClientWrapper sshClientWrapperMock;
 	
 	@Before
 	public void setUp() throws Exception {
 		
 		this.generateDefaulProperties();
 		
-		sshClientWrapperMock = mock(SshClientWrapper.class);
 		executionCommandHelperMock = mock(ExecutionCommandHelper.class);
 		
-		resource = spy(new Resource("resource_01",properties,sshClientWrapperMock));
+		resource = spy(new Resource("resource_01",properties));
 		resource.setExecutionCommandHelper(executionCommandHelperMock);
 	}    
 
 	@After
 	public void setDown() throws Exception {
 		
-		sshClientWrapperMock = null;
 		executionCommandHelperMock = null;
 		resource.getAllMetadata().clear();
 		resource = null;
@@ -175,39 +176,6 @@ public class TestResource {
 		spec = null;
 	}
 
-	@Test
-	public void testConnection() throws NumberFormatException, IOException {
-
-		String sshHost = "10.10.0.1";
-		String sshPort = "1091";
-
-		resource.putMetadata(Resource.METADATA_IMAGE, "image");
-		resource.putMetadata(Resource.METADATA_PUBLIC_KEY, "publicKey");
-		resource.putMetadata(Resource.METADATA_SSH_HOST, sshHost);
-		resource.putMetadata(Resource.METADATA_SSH_PORT, sshPort);
-
-		assertTrue(resource.checkConnectivity());
-		verify(sshClientWrapperMock).connect(Mockito.eq(sshHost), Mockito.eq(Integer.valueOf(sshPort)), Mockito.eq(0));
-
-	}
-
-	@Test
-	public void testConnectionFails() throws NumberFormatException, IOException {
-
-		String sshHost = "10.10.0.1";
-		String sshPort = "1091";
-
-		resource.putMetadata(Resource.METADATA_IMAGE, "image");
-		resource.putMetadata(Resource.METADATA_PUBLIC_KEY, "publicKey");
-		resource.putMetadata(Resource.METADATA_SSH_HOST, sshHost);
-		resource.putMetadata(Resource.METADATA_SSH_PORT, sshPort);
-
-		doThrow(new IOException("timeout")).when(sshClientWrapperMock).connect(Mockito.eq(sshHost),
-				Mockito.eq(Integer.valueOf(sshPort)), Mockito.eq(1000));
-
-		assertFalse(resource.checkConnectivity(1000));
-
-	}
 	
 	@Test
 	public void testExecuteTask(){

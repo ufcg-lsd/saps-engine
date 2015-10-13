@@ -16,8 +16,6 @@ import org.fogbowcloud.scheduler.core.model.Command;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
-import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowInfrastructureProvider;
-import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 import org.fogbowcloud.sebal.bootstrap.DBBootstrap;
 
 

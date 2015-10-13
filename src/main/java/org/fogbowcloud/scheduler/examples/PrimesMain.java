@@ -1,12 +1,6 @@
 package org.fogbowcloud.scheduler.examples;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -25,8 +19,6 @@ import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
-
-import com.google.gson.Gson;
 
 public class PrimesMain {
 
@@ -66,9 +58,9 @@ public class PrimesMain {
 		
 		Specification spec = taskSpecs.get(0);
 		LOGGER.debug("Task spec: "+spec.toString());
-		
+			
 		Job primeJob = new PrimeJob();
-		for(int count=0; count < 3; count++){
+		for(int count=0; count < 1; count++){
 			primeJob.addTask(getPrimeTask(spec, count*1000, (count+1)*1000));
 		}
 		
@@ -110,6 +102,7 @@ public class PrimesMain {
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty("local.output"));
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);
 		//task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER+"/exit");
+		task.addCommand(cleanPreviousExecution(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(mkdirRemoteFolder(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(stageInCommand("isprime.py", task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py"));
 		task.addCommand(remoteCommand("python /"+task.getMetadata(TaskImpl.METADATA_SANDBOX)+"/isprime.py "+init+" "+end));
@@ -121,6 +114,12 @@ public class PrimesMain {
 	
 	private static Command remoteCommand(String remoteCommand){
 		return new Command(remoteCommand, Command.Type.REMOTE);
+	}
+	
+	private static Command cleanPreviousExecution(String folder){
+		String mkdirCommand = "ssh "+SSH_SCP_PRECOMMAND+" -p $" + Resource.ENV_SSH_PORT + " -i $" + Resource.ENV_PRIVATE_KEY_FILE +" $"
+				+ Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST + " rm -rfv " + folder;
+		return new Command(mkdirCommand, Command.Type.PROLOGUE);
 	}
 	
 	private static Command mkdirRemoteFolder(String folder){

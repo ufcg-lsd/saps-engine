@@ -4,10 +4,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.examples.PrimesMain;
+
 public class ManagerTimer {
 
 	private ScheduledExecutorService executor;
 	private ScheduledFuture<?> future;
+	private static final Logger LOGGER = Logger.getLogger(ManagerTimer.class);
 	
 	public ManagerTimer(ScheduledExecutorService executor) {
 		this.executor = executor;
@@ -20,7 +24,7 @@ public class ManagerTimer {
 				try {
 					task.run();
 				} catch (Throwable e) {
-					System.out.println("Failed while executing timer task: "+e.getMessage());
+					LOGGER.error("Failed while executing timer task: "+e.getMessage(), e);
 				}
 			}
 		}, delay, period, TimeUnit.MILLISECONDS);

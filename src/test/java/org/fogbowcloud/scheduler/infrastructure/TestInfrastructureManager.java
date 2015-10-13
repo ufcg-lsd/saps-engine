@@ -30,7 +30,6 @@ import org.fogbowcloud.scheduler.core.model.Order.OrderState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.TestResourceHelper;
-import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.core.util.DateUtils;
 import org.fogbowcloud.scheduler.infrastructure.answer.ResourceReadyAnswer;
@@ -52,8 +51,6 @@ public class TestInfrastructureManager {
 	private InfrastructureManager infrastructureManager;
 	private Properties properties;
 	private DataStore ds;
-	private CurrentThreadExecutorService executorService;
-	private SshClientWrapper sshMock;
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -67,14 +64,11 @@ public class TestInfrastructureManager {
 		ds = mock(DataStore.class);
 		schedulerMock = mock(Scheduler.class);
 		infrastructureProviderMock = mock(InfrastructureProvider.class);
-		sshMock = mock(SshClientWrapper.class);
 
 		doReturn(true).when(ds).updateInfrastructureState(Mockito.anyList(), Mockito.anyList());
 
-		executorService = new CurrentThreadExecutorService();
-
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true,
-				infrastructureProviderMock, properties, executorService);
+				infrastructureProviderMock, properties);
 		infrastructureManager.cancelOrderTimer();
 		infrastructureManager.cancelResourceTimer();
 		infrastructureManager.setDataStore(ds);
@@ -89,8 +83,6 @@ public class TestInfrastructureManager {
 		properties = null;
 		schedulerMock = null;
 		infrastructureProviderMock = null;
-		executorService.shutdown();
-		executorService = null;
 	}
 
 	@Test
@@ -100,7 +92,7 @@ public class TestInfrastructureManager {
 
 		properties = new Properties();
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true,
-				infrastructureProviderMock, properties, executorService);
+				infrastructureProviderMock, properties);
 
 	}
 
@@ -110,7 +102,7 @@ public class TestInfrastructureManager {
 		exception.expect(Exception.class);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT, "AB");
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true,
-				infrastructureProviderMock, properties, executorService);
+				infrastructureProviderMock, properties);
 
 	}
 
@@ -120,7 +112,7 @@ public class TestInfrastructureManager {
 		exception.expect(Exception.class);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME, "AB");
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true,
-				infrastructureProviderMock, properties, executorService);
+				infrastructureProviderMock, properties);
 
 	}
 
@@ -130,7 +122,7 @@ public class TestInfrastructureManager {
 		exception.expect(Exception.class);
 		properties.put(AppPropertiesConstants.INFRA_ORDER_SERVICE_TIME, "AB");
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true,
-				infrastructureProviderMock, properties, executorService);
+				infrastructureProviderMock, properties);
 
 	}
 
@@ -140,7 +132,7 @@ public class TestInfrastructureManager {
 		exception.expect(Exception.class);
 		properties.put(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME, "AB");
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true,
-				infrastructureProviderMock, properties, executorService);
+				infrastructureProviderMock, properties);
 	}
 
 	@Test
@@ -148,7 +140,7 @@ public class TestInfrastructureManager {
 
 		exception.expect(Exception.class);
 		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), false,
-				infrastructureProviderMock, properties, executorService);
+				infrastructureProviderMock, properties);
 	}
 
 	@Test
@@ -191,8 +183,7 @@ public class TestInfrastructureManager {
 		doReturn(fakeResourceA).when(infrastructureProviderMock).getResource(Mockito.eq(requestIdFake1));
 		doReturn(fakeResourceB).when(infrastructureProviderMock).getResource(Mockito.eq(requestIdFake2));
 
-		infrastructureManager = new InfrastructureManager(specifications, false, infrastructureProviderMock, properties,
-				executorService);
+		infrastructureManager = new InfrastructureManager(specifications, false, infrastructureProviderMock, properties);
 		infrastructureManager.setDataStore(ds);
 		infrastructureManager.start(true);
 		infrastructureManager.cancelOrderTimer();
@@ -214,7 +205,7 @@ public class TestInfrastructureManager {
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.eq(specs));
 		doReturn(fakeResource).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
-		doReturn(true).when(fakeResource).checkConnectivity(Mockito.anyInt());
+		doReturn(true).when(fakeResource).checkConnectivity();
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 
 		validateOrderRequested(specs);
@@ -311,7 +302,7 @@ public class TestInfrastructureManager {
 				location);
 		Resource fakeResourceA = TestResourceHelper.generateMockResource(fakeRequestId, resourceAMetadata, false);
 		// doReturn(true).when(fakeResourceA).match(specs);
-		doReturn(true).when(fakeResourceA).checkConnectivity(Mockito.anyInt());
+		doReturn(true).when(fakeResourceA).checkConnectivity();
 		doAnswer(rrAnswer).when(schedulerMock).resourceReady(Mockito.any(Resource.class));
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
@@ -363,8 +354,8 @@ public class TestInfrastructureManager {
 		// doReturn(true).when(fakeResourceB).match(Mockito.eq(specs));
 		doNothing().when(fakeResourceA).copyInformations(fakeResourceB);
 		doReturn(fakeResourceB).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
-		doReturn(false).when(fakeResourceA).checkConnectivity((Mockito.anyInt()));
-		doReturn(true).when(fakeResourceB).checkConnectivity((Mockito.anyInt()));
+		doReturn(false).when(fakeResourceA).checkConnectivity();
+		doReturn(true).when(fakeResourceB).checkConnectivity();
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 		infrastructureManager.getIdleResourcesMap().put(fakeResourceA, new Long(0));
@@ -528,7 +519,7 @@ public class TestInfrastructureManager {
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class));
 		doReturn(fakeResource).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
-		doReturn(true).when(fakeResource).checkConnectivity(Mockito.anyInt());
+		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(dateMock).when(dateUtilsMock).currentTimeMillis();
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
@@ -579,7 +570,7 @@ public class TestInfrastructureManager {
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.any(Specification.class));
 		doReturn(fakeResource).when(infrastructureProviderMock).getResource(Mockito.eq(fakeRequestId));
-		doReturn(true).when(fakeResource).checkConnectivity(Mockito.anyInt());
+		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(dateMock).when(dateUtilsMock).currentTimeMillis();
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
@@ -602,7 +593,7 @@ public class TestInfrastructureManager {
 		assertNotNull(expirationTime);
 		assertEquals(Long.valueOf(dateMock + lifetime), Long.valueOf(expirationTime));
 
-		doReturn(false).when(fakeResource).checkConnectivity(Mockito.anyInt());
+		doReturn(false).when(fakeResource).checkConnectivity();
 		infrastructureManager.getInfraIntegrityService().run();
 
 		assertEquals(0, infrastructureManager.getAllocatedResources().size());

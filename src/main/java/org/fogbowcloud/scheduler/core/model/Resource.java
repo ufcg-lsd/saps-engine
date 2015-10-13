@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ExecutionCommandHelper;
 import org.fogbowcloud.scheduler.core.TaskExecutionResult;
-import org.fogbowcloud.scheduler.core.ssh.SshClientWrapper;
 import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 
 //TODO this class should be abstract???
@@ -44,21 +44,16 @@ public class Resource {
 	private TaskExecutionResult taskExecutionResult;
 	private ExecutionCommandHelper executionCommandHelper;
 	
-    private SshClientWrapper sshClientWrapper;
+    //private SshClientWrapper sshClientWrapper;
     
 	private static final Logger LOGGER = Logger.getLogger(Resource.class);
 	private static final long REMOTE_COMMAND_CHECKER_PERIOD = 5000;
 	
     public Resource(String id, Properties properties) {
-    	this(id, properties, new SshClientWrapper());
+    	this.id = id;    	
+    	executionCommandHelper = new ExecutionCommandHelper(properties);
     }
     
-    protected Resource(String id, Properties properties, SshClientWrapper sshClientWrapper) {
-    	this.id = id;    	
-    	executionCommandHelper = new ExecutionCommandHelper(properties, sshClientWrapper);
-    	this.sshClientWrapper = sshClientWrapper;
-    }
-
     /**
      * This method receives a wanted specification and verifies if this resource matches with it. 
      * <br>Is used to match the Fogbow requirements 
@@ -95,18 +90,40 @@ public class Resource {
 
 
 	public boolean checkConnectivity() {
-		return this.checkConnectivity(0);
-	}
-	
-	public boolean checkConnectivity(int timeOut) {
+		
 		String host = this.getMetadataValue(METADATA_SSH_HOST);
 		String port = this.getMetadataValue(METADATA_SSH_PORT);
+		
+		Runtime run = null;
+		Process p = null;
+		Scanner scanner = null;
+		
 		try {
-			sshClientWrapper.connect(host, Integer.parseInt(port), timeOut);
-		} catch (IOException e) {
+			run = Runtime.getRuntime();
+			p = run.exec(new String[] {  
+				    "/bin/bash",  
+				    "-c",  
+				    "echo quit | telnet "+host+" "+port+" 2>/dev/null | grep Connected"}); 
+			p.waitFor();
+			scanner = new Scanner(p.getInputStream());
+			if(scanner.hasNext()){
+				String result = scanner.nextLine();
+				if(result != null && !result.isEmpty()){
+					return true;
+				}
+			}
+		} catch (Exception e) {
 			return false;
+		}finally {
+			run = null;
+			if(p != null){
+				p.destroy();
+			}
+			if(scanner != null){
+				scanner.close();
+			}
 		}
-		return true;
+		return false;
 	}
 
 	public void putMetadata(String attributeName, String value) {
@@ -241,10 +258,6 @@ public class Resource {
 		return id;
 	}
 
-	protected SshClientWrapper getSshClientWrapper() {
-		return sshClientWrapper;
-	}
-	
 	protected ExecutionCommandHelper getExecutionCommandHelper() {
 		return this.executionCommandHelper;
 	}
@@ -261,7 +274,4 @@ public class Resource {
 		this.taskExecutionResult = taskExecutionResult;
 	}
 
-	protected void setSshClientWrapper(SshClientWrapper sshClientWrapper) {
-		this.sshClientWrapper = sshClientWrapper;
-	}
 }

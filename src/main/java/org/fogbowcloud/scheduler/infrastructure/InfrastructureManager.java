@@ -11,6 +11,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.manager.occi.request.RequestType;
@@ -35,7 +37,7 @@ public class InfrastructureManager {
 	private OrderService orderService = new OrderService();
 	private ManagerTimer resourceTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private InfraIntegrityService infraIntegrityService = new InfraIntegrityService();
-	private ExecutorService resourceConnectivityMonitor;
+	
 
 	private InfrastructureProvider infraProvider;
 	private boolean isElastic;
@@ -51,6 +53,8 @@ public class InfrastructureManager {
 
 	Long noExpirationDate = new Long(0);
 	
+	//private ReentrantReadWriteLock ordersLock =  new ReentrantReadWriteLock();
+	
 	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
 			InfrastructureProvider infraProvider, Properties properties) throws InfrastructureException {
 		this(initialSpec, isElastic, infraProvider, properties, Executors.newCachedThreadPool());
@@ -63,7 +67,6 @@ public class InfrastructureManager {
 		this.properties = properties;
 		this.initialSpec = initialSpec;
 		this.infraProvider = infraProvider;
-		this.resourceConnectivityMonitor = resourceConnectivityMonitor;
 
 		this.validateProperties();
 
@@ -101,7 +104,6 @@ public class InfrastructureManager {
 
 		cancelOrderTimer();
 		cancelResourceTimer();
-		resourceConnectivityMonitor.shutdownNow();
 
 		for (Order o : getOrdersByState(OrderState.ORDERED)) {
 			infraProvider.deleteResource(o.getRequestId());
@@ -141,8 +143,26 @@ public class InfrastructureManager {
 
 		LOGGER.debug("Releasing Resource [" + resource.getId() + "]");
 		Order orderToRemove = allocatedResources.get(resource);
-		orders.remove(orderToRemove);
+		if(orderToRemove != null){
+			orders.remove(orderToRemove);
+		}
 		allocatedResources.remove(resource);
+
+		if (isResourceAlive(resource)) {
+			//Anticipating resource to Scheduler if it is needed  
+			for(Order order : this.getOrdersByState(OrderState.OPEN, OrderState.ORDERED)){
+
+				if(order.getScheduler()!=null){
+					if(resource.match(order.getSpecification())){
+						allocatedResources.put(resource, null);
+						order.getScheduler().resourceReady(resource);
+						return;
+					}
+				}
+
+			}
+		}
+		
 		moveResourceToIdle(resource);
 
 	}
@@ -230,7 +250,30 @@ public class InfrastructureManager {
 	protected void resolveOrderedOrder(Order order) {
 
 		LOGGER.debug("Resolving Ordered Order [" + order.getRequestId() + "]");
+		
+		Resource resource = null;
+		
+		//First verify if any idle resource can be resolve this order.
+		if (idleResources != null && !idleResources.isEmpty() && order.getScheduler() != null) {
+			for (Resource idleResource : idleResources.keySet()) {
+				if (idleResource.match(order.getSpecification())) {
+					resource = idleResource;
+					break;
+				}
+			}
+		}
 
+		if (resource != null) {
+
+			allocatedResources.put(resource, null);
+			order.getScheduler().resourceReady(resource);
+			
+		} 
+		/*
+		 * Attempt to get resource from this order, even when a idle resource
+		 * was founded. If a new resource is returned and don't exists any task
+		 * to execute, this resource is move to idle by scheduler.
+		 */
 		Resource newResource = infraProvider.getResource(order.getRequestId());
 		if (newResource != null) {
 
@@ -238,7 +281,7 @@ public class InfrastructureManager {
 			if (order.getScheduler() != null) {
 
 				this.relateResourceToOrder(newResource, order, false);
-				
+
 			} else {
 
 				orders.remove(order);
@@ -248,52 +291,46 @@ public class InfrastructureManager {
 			ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
 					getIdleResources());
 		}
+		
+
 	}
 
-	protected void relateResourceToOrder(final Resource resource, final Order order, final boolean isIdle) {
+	protected void relateResourceToOrder(Resource resource, Order order, boolean isIdle) {
 
 		if(isIdle){
 			idleResources.remove(resource);
 		}
 		allocatedResources.put(resource, order);
-		
-		resourceConnectivityMonitor.submit(new Runnable() {
 
-			@Override
-			public void run() {
+		String requestType = resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		boolean resourceOK = true;
 
-				String requestType = resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
-				boolean resourceOK = true;
-
-				if (!isResourceAlive(resource)) {
-					resourceOK = false;
-					// If is a persistent resource, tries to recover it.
-					if (RequestType.PERSISTENT.getValue().equals(requestType)) {
-						Resource retryResource = infraProvider.getResource(resource.getId());
-						if (retryResource != null && isResourceAlive(retryResource)) {
-							resource.copyInformations(retryResource);
-							resourceOK = true;
-							retryResource = null;
-						}
-					}
-				}
-				if (resourceOK) {
-					LOGGER.debug("Resource related Order with Specifications: "
-							+ order.getSpecification().toString());
-					order.setRequestId(resource.getId());
-					order.setState(OrderState.FULFILLED);
-					ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
-							getIdleResources());
-					order.getScheduler().resourceReady(resource);
-					
-				}else{
-					allocatedResources.remove(resource);
-					if(isIdle){
-						moveResourceToIdle(resource);
-					}
+		if (!isResourceAlive(resource)) {
+			resourceOK = false;
+			// If is a persistent resource, tries to recover it.
+			if (RequestType.PERSISTENT.getValue().equals(requestType)) {
+				Resource retryResource = infraProvider.getResource(resource.getId());
+				if (retryResource != null && isResourceAlive(retryResource)) {
+					resource.copyInformations(retryResource);
+					resourceOK = true;
+					retryResource = null;
 				}
 			}
-		});
+		}
+		if (resourceOK) {
+			LOGGER.debug("Resource related Order with Specifications: " + order.getSpecification().toString());
+			order.setRequestId(resource.getId());
+			order.setState(OrderState.FULFILLED);
+			ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
+					getIdleResources());
+			order.getScheduler().resourceReady(resource);
+
+		} else {
+			allocatedResources.remove(resource);
+			if (isIdle) {
+				moveResourceToIdle(resource);
+			}
+		}
 	}
 
 	protected void moveResourceToIdle(Resource resource) {
@@ -319,9 +356,7 @@ public class InfrastructureManager {
 
 	protected boolean isResourceAlive(Resource resource) {
 
-		int timeout = Integer
-				.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT));
-		return resource.checkConnectivity(timeout);
+		return resource.checkConnectivity();
 	}
 
 	protected void disposeResource(Resource resource) throws Exception {
@@ -427,10 +462,6 @@ public class InfrastructureManager {
 		return infraIntegrityService;
 	}
 
-	protected ExecutorService getResourceConnectivityMonitor() {
-		return resourceConnectivityMonitor;
-	}
-
 	protected DateUtils getDateUtils() {
 		return dateUtils;
 	}
@@ -450,7 +481,7 @@ public class InfrastructureManager {
 	protected class OrderService implements Runnable {
 		@Override
 		public void run() {
-			for (Order order : orders) {
+			for (Order order : new ArrayList<Order>(orders)) {
 
 				if (order != null && order.getState() != null) {
 

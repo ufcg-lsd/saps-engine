@@ -181,7 +181,7 @@ public class TestFogbowInfrastructureProvider {
 
 		Resource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
 
-		assertEquals(memberIdMock, newResource.getMetadataValue(Resource.METADATA_LOCATION));
+		assertEquals("\""+memberIdMock+"\"", newResource.getMetadataValue(Resource.METADATA_LOCATION));
 		assertEquals(menSizeFormated, newResource.getMetadataValue(Resource.METADATA_MEN_SIZE));
 		assertEquals(coreSizeMock, newResource.getMetadataValue(Resource.METADATA_VCPU));
 		assertEquals(hostMock, newResource.getMetadataValue(Resource.METADATA_SSH_HOST));

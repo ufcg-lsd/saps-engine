@@ -1,14 +1,9 @@
 package org.fogbowcloud.scheduler;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -32,8 +27,6 @@ import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
-
-import com.google.gson.Gson;
 
 public class SebalMain {
 	

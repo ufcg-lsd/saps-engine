@@ -28,13 +28,13 @@ public abstract class Job {
 
 	public List<Task> getByState(TaskState state) {
 		if (state.equals(TaskState.READY)) {
-			return tasksReady;
+			return new ArrayList<Task>(tasksReady);
 		} else if (state.equals(TaskState.RUNNING)) {
-			return tasksRunning;
+			return new ArrayList<Task>(tasksRunning);
 		} else if (state.equals(TaskState.COMPLETED)) {
-			return tasksCompleted;
+			return new ArrayList<Task>(tasksCompleted);
 		} else if (state.equals(TaskState.FAILED)) {
-			return tasksFailed;
+			return new ArrayList<Task>(tasksFailed);
 		} 
 		return null;
 	}

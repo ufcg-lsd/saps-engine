@@ -1,7 +1,5 @@
 package org.fogbowcloud.scheduler.core.model;
 
-import java.io.Serializable;
-
 import org.fogbowcloud.scheduler.core.Scheduler;
 
 public class Order{

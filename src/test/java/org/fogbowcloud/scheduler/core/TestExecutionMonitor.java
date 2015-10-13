@@ -13,7 +13,6 @@ import java.util.List;
 import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
-import org.fogbowcloud.scheduler.core.model.SebalJob;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;

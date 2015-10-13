@@ -17,7 +17,7 @@ public class TestResourceHelper {
 		Resource fakeResource = mock(Resource.class);
 
 		// Environment
-		doReturn(connectivity).when(fakeResource).checkConnectivity(Mockito.anyInt());
+		doReturn(connectivity).when(fakeResource).checkConnectivity();
 		doReturn(resourceMetadata).when(fakeResource).getAllMetadata();
 		doReturn(resourceId).when(fakeResource).getId();
 		doReturn(resourceMetadata.get(Resource.METADATA_REQUEST_TYPE)).when(fakeResource)

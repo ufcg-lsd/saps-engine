@@ -177,7 +177,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 					LOGGER.debug("New Fogbow Resource created - Instace ID: [" + instanceId + "]");
 				}else{
-					LOGGER.debug("Instance attributes not ready yet for instance: ["+instanceId+"]");
+					LOGGER.debug("Instance attributes not yet ready for instance: ["+instanceId+"]");
 					return null;
 				}
 
