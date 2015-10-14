@@ -63,7 +63,7 @@ public class TestScheduler {
 		
 		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
 		scheduler.run();
-		verify(infraManagerMock, times(qty)).orderResource(spec, scheduler);
+		verify(infraManagerMock).orderResource(Mockito.eq(spec), Mockito.eq(scheduler), Mockito.anyInt());
 	}
 	
 	@Test
@@ -86,11 +86,8 @@ public class TestScheduler {
 		
 		scheduler.resourceReady(resourceMock);
 		
-		verify(resourceMock, times(1)).executeTask(tMatch);
-		verify(jobMock, times(1)).run(tMatch);
-		
-		assertEquals(resourceMock.getId(), scheduler.getAssociateResource(tMatch).getId());
-		
+		verify(resourceMock, times(1)).match(specB);
+		assertEquals(1, scheduler.getRunningTasks().size());
 	}
 	
 	@Test
@@ -106,12 +103,12 @@ public class TestScheduler {
 		
 		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
 		doReturn("resource01").when(resourceMock).getId();
-		doReturn(true).when(resourceMock).match(specB);
+		doReturn(false).when(resourceMock).match(specB);
 		
 		scheduler.resourceReady(resourceMock);
 		
-		verify(resourceMock, times(0)).executeTask(Mockito.any(Task.class));
-		verify(jobMock, times(0)).run(Mockito.any(Task.class));
+		verify(resourceMock, times(3)).match(specB);
+		assertEquals(0, scheduler.getRunningTasks().size());
 		verify(infraManagerMock, times(1)).releaseResource(resourceMock);
 		
 	}
