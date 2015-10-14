@@ -52,12 +52,31 @@ public class TestExecutionMonitor {
 		doReturn(resource).when(scheduler).getAssociateResource(task);
 		doReturn(true).when(resource).checkConnectivity();
 		doReturn(true).when(task).isFinished();
+		doReturn(false).when(task).isFailed();
 		doNothing().when(scheduler).taskCompleted(task);
 		doNothing().when(job).finish(task);
 		executionMonitor.run();
 		Thread.sleep(500);
 		verify(task).isFinished();
 		verify(job).finish(task);
+	}
+	
+	@Test
+	public void testExecutionMonitorTaskFails() throws InterruptedException{
+		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler,executorService);
+		List<Task> runningTasks = new ArrayList<Task>();
+		runningTasks.add(task);
+		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
+		doReturn(resource).when(scheduler).getAssociateResource(task);
+		doReturn(true).when(resource).checkConnectivity();
+		doReturn(true).when(task).isFinished();
+		doReturn(true).when(task).isFailed();
+		doNothing().when(scheduler).taskCompleted(task);
+		doNothing().when(job).finish(task);
+		executionMonitor.run();
+		Thread.sleep(500);
+		verify(task).isFinished();
+		verify(job).fail(task);
 	}
 	
 	@Test
