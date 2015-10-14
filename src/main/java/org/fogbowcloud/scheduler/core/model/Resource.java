@@ -1,12 +1,10 @@
 package org.fogbowcloud.scheduler.core.model;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ExecutionCommandHelper;
@@ -116,7 +114,7 @@ public class Resource {
 	}
 
 	public void executeTask(Task task) {
-		LOGGER.debug("Executing task " + task.getId());
+		LOGGER.debug("Executing task " + task.getId() + " on resource " + getId());
         this.task = task;
         this.taskExecutionResult = new TaskExecutionResult();
         

@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
+import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 
@@ -33,13 +34,25 @@ public class Scheduler implements Runnable{
 
 	@Override
 	public void run() {
+		LOGGER.info("Running scheduler...");
+		Map<Specification, Integer> specDemand = new HashMap<Specification, Integer>();		
+
 		for (Task task : job.getByState(TaskState.READY)) {
-			infraManager.orderResource(task.getSpecification(), this, 1);
+			Specification taskSpec = task.getSpecification();
+			if (!specDemand.containsKey(taskSpec)) {
+				specDemand.put(taskSpec, 0);
+			}
+			int currentDemand = specDemand.get(taskSpec); 
+			specDemand.put(taskSpec, currentDemand++);
+		}
+		
+		LOGGER.debug("Current job demand is " + specDemand);
+		for (Specification spec : specDemand.keySet()) {			
+			infraManager.orderResource(spec, this, specDemand.get(spec));
 		}
 	}
 	
 	public void resourceReady(final Resource resource) {
-		
 		LOGGER.debug("Receiving resource ready [ID:"+resource.getId()+"]");
 		
 		for (final Task task : job.getByState(TaskState.READY)) {
@@ -63,6 +76,7 @@ public class Scheduler implements Runnable{
 	}
 
 	public void taskFailed(Task task) {
+		LOGGER.info("Task " + task.getId() + " failed and will be cloned.");
 		Task newTask = task.clone();
 		job.addTask(newTask);
 		infraManager.releaseResource(runningTasks.get(task.getId()));
@@ -71,6 +85,7 @@ public class Scheduler implements Runnable{
 	}
 
 	public void taskCompleted(Task task) {
+		LOGGER.info("Task " + task.getId() + " was completed.");
 		infraManager.releaseResource(runningTasks.get(task.getId()));
 		runningTasks.remove(task.getId());
 	}

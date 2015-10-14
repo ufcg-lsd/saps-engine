@@ -53,6 +53,7 @@ public class ExecutionMonitor implements Runnable {
 		
 		@Override
 		public void run() {
+			LOGGER.info("Monitoring task " + task.getId());
 			if (task.isFinished()){
 				job.finish(task);
 				scheduler.taskCompleted(task);

@@ -98,13 +98,11 @@ public class ExecutionCommandHelper {
 		LOGGER.debug("Connecting host " + address + " on port " + sshPort + " with user "
 				+ username + " and privateKey " + privateKeyFilePath);
 		try {
-//			sshClientWrapper.connect(address, sshPort, username, privateKeyFilePath);
 			for (Command command : remoteCommands) {
-				LOGGER.debug("Executin remote command: [Type: "+command.getType().name()+" - Command: "+command.getCommand()+"]");
+				LOGGER.debug("Executing remote command: [Type: "+command.getType().name()+" - Command: "+command.getCommand()+"]");
 				command.setState(Command.State.RUNNING);
 				
 				Process remoteProcess = startRemoteProcess(address, sshPort, username, privateKeyFilePath, command.getCommand());
-//				Integer exitStatus = sshClientWrapper.doSshExecution(command.getCommand());
 				int exitStatus = remoteProcess.waitFor();
 				if (exitStatus != TaskExecutionResult.OK) {
 					LOGGER.error("Error while executing command line '" + command.getCommand() + "'.");
@@ -116,11 +114,6 @@ public class ExecutionCommandHelper {
 			LOGGER.error("Error while execution remote command.",e );
 		} catch (IOException e) {
 			LOGGER.error("Error while execution remote command.",e );
-		} finally {
-//			try {
-//				sshClientWrapper.disconnect();
-//			} catch (Throwable e) {
-//			}
 		}
 		return TaskExecutionResult.OK;
 	}

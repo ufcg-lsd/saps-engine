@@ -123,17 +123,17 @@ public class Specification {
 	}
 	
 	@Override
-	public String toString(){
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Image: "+image);
-		sb.append("- PublicKey: "+publicKey);
-		if(contextScript != null && !contextScript.isEmpty()){
-			sb.append("\nContextScript: "+contextScript);
+		sb.append("Image: " + image);
+		sb.append("- PublicKey: " + publicKey);
+		if (contextScript != null && !contextScript.isEmpty()) {
+			sb.append("\nContextScript: " + contextScript);
 		}
-		if(requirements != null && !requirements.isEmpty()){
+		if (requirements != null && !requirements.isEmpty()) {
 			sb.append("\nRequiriments:{");
-			for(Entry<String, String> entry : requirements.entrySet()){
-				sb.append("\n\t"+entry.getKey()+": "+entry.getValue());
+			for (Entry<String, String> entry : requirements.entrySet()) {
+				sb.append("\n\t" + entry.getKey() + ": " + entry.getValue());
 			}
 			sb.append("\n}");
 		}

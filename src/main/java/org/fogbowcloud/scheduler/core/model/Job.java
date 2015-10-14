@@ -4,11 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.log4j.Logger;
+
 public abstract class Job {
 
 	public static enum TaskState{
 		READY,RUNNING,COMPLETED,FAILED
 	}
+	
+	public static final Logger LOGGER = Logger.getLogger(Job.class);
 	
 	protected List<Task> tasksReady = new ArrayList<Task>();
 	protected List<Task> tasksRunning = new ArrayList<Task>();
@@ -18,6 +22,7 @@ public abstract class Job {
 	protected ReentrantReadWriteLock taskReadyLock = new ReentrantReadWriteLock();
 	
 	public void addTask(Task task) {
+		LOGGER.debug("Adding task " + task.getId());
 		taskReadyLock.writeLock().lock();
 		try {
 			tasksReady.add(task);
