@@ -46,14 +46,13 @@ public class InfrastructureManager {
 	private List<Specification> initialSpec;
 
 	private List<Order> orders = new ArrayList<Order>();
+	
 	private Map<Resource, Order> allocatedResources = new ConcurrentHashMap<Resource, Order>();
 	private Map<Resource, Long> idleResources = new ConcurrentHashMap<Resource, Long>();
 
 	private DateUtils dateUtils = new DateUtils();
 
 	Long noExpirationDate = new Long(0);
-	
-	//private ReentrantReadWriteLock ordersLock =  new ReentrantReadWriteLock();
 	
 	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
 			InfrastructureProvider infraProvider, Properties properties) throws InfrastructureException {
@@ -97,6 +96,7 @@ public class InfrastructureManager {
 				Thread.sleep(2000);
 			}
 		}
+		LOGGER.info("Starting Infrastructure Manager finished");
 	}
 
 	public void stop() throws Exception {
@@ -117,6 +117,7 @@ public class InfrastructureManager {
 		allocatedResources.clear();
 		idleResources.clear();
 		ds.dispose();
+		LOGGER.info("Stoping Infrastructure Manager finished");
 
 	}
 
@@ -131,9 +132,10 @@ public class InfrastructureManager {
 				LOGGER.error("Error while trying to delete Resource with request id [" + requestId + "]", e);
 			}
 		}
+		LOGGER.info("Removing previous resources finished");
 	}
 
-	public void orderResource(Specification specification, Scheduler scheduler) {
+	public void orderResource(Specification specification, Scheduler scheduler, int resourceNumber) {
 		Order order = new Order(scheduler, specification);
 		orders.add(order);
 		resolveOpenOrder(order);
@@ -183,7 +185,7 @@ public class InfrastructureManager {
 		for (Specification spec : initialSpec) {
 			//Initial specs must be Persistent
 			spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE, RequestType.PERSISTENT.getValue());
-			orderResource(spec, null);
+			orderResource(spec, null, 1);
 		}
 	}
 
@@ -231,8 +233,7 @@ public class InfrastructureManager {
 				String requestId = infraProvider.requestResource(order.getSpecification());
 				order.setRequestId(requestId);
 				order.setState(OrderState.ORDERED);
-				ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
-						getIdleResources());
+				updateInfrastuctureState();
 				LOGGER.debug("Order [" + order.getRequestId() + "] update to Ordered with request [" + requestId + "]");
 
 			} catch (RequestResourceException e) {
@@ -285,8 +286,7 @@ public class InfrastructureManager {
 				moveResourceToIdle(newResource);
 			}
 
-			ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
-					getIdleResources());
+			updateInfrastuctureState();
 		}
 		
 
@@ -318,8 +318,7 @@ public class InfrastructureManager {
 			LOGGER.debug("Resource related Order with Specifications: " + order.getSpecification().toString());
 			order.setRequestId(resource.getId());
 			order.setState(OrderState.FULFILLED);
-			ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
-					getIdleResources());
+			updateInfrastuctureState();
 			order.getScheduler().resourceReady(resource);
 
 		} else {
@@ -328,6 +327,11 @@ public class InfrastructureManager {
 				moveResourceToIdle(resource);
 			}
 		}
+	}
+
+	private void updateInfrastuctureState() {
+		ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
+				getIdleResources());
 	}
 
 	protected void moveResourceToIdle(Resource resource) {
@@ -345,7 +349,7 @@ public class InfrastructureManager {
 			expirationDate = c.getTimeInMillis();
 		}
 		idleResources.put(resource, expirationDate);
-		ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
+		updateInfrastuctureState();
 		LOGGER.debug("Resource [" + resource.getId() + "] moved to Idle - Expiration Date: ["
 				+ DateUtils.getStringDateFromMiliFormat(expirationDate, DateUtils.DATE_FORMAT_YYYY_MM_DD_HOUR) + "]");
 		

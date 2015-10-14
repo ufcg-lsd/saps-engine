@@ -101,12 +101,11 @@ public class PrimesMain {
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER, METADATA_REMOTE_OUTPUT_FOLDER);
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty("local.output"));
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);
-		//task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER+"/exit");
+		task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER+"/exit");
 		task.addCommand(cleanPreviousExecution(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(mkdirRemoteFolder(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(stageInCommand("isprime.py", task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py"));
-		task.addCommand(remoteCommand("python /"+task.getMetadata(TaskImpl.METADATA_SANDBOX)+"/isprime.py "+init+" "+end));
-		//task.addCommand(remoteCommand("echo 0 > "+task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH)));
+		task.addCommand(remoteCommand("\"python /"+task.getMetadata(TaskImpl.METADATA_SANDBOX)+"/isprime.py "+init+" "+end+" ; echo 0 > "+task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH)+"\""));
 		task.addCommand(stageOutCommand("/tmp/primeresult",
 				properties.getProperty("local.output") + "/primeresult-" + task.getId()));
 		return task;

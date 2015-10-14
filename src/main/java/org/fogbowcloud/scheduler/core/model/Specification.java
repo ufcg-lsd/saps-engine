@@ -139,4 +139,61 @@ public class Specification {
 		}
 		return sb.toString();
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((contextScript == null) ? 0 : contextScript.hashCode());
+		result = prime * result + ((image == null) ? 0 : image.hashCode());
+		result = prime * result + ((privateKeyFilePath == null) ? 0 : privateKeyFilePath.hashCode());
+		result = prime * result + ((publicKey == null) ? 0 : publicKey.hashCode());
+		result = prime * result + ((requirements == null) ? 0 : requirements.hashCode());
+		result = prime * result + ((username == null) ? 0 : username.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Specification other = (Specification) obj;
+		if (contextScript == null) {
+			if (other.contextScript != null)
+				return false;
+		} else if (!contextScript.equals(other.contextScript))
+			return false;
+		if (image == null) {
+			if (other.image != null)
+				return false;
+		} else if (!image.equals(other.image))
+			return false;
+		if (privateKeyFilePath == null) {
+			if (other.privateKeyFilePath != null)
+				return false;
+		} else if (!privateKeyFilePath.equals(other.privateKeyFilePath))
+			return false;
+		if (publicKey == null) {
+			if (other.publicKey != null)
+				return false;
+		} else if (!publicKey.equals(other.publicKey))
+			return false;
+		if (requirements == null) {
+			if (other.requirements != null)
+				return false;
+		} else if (!requirements.equals(other.requirements))
+			return false;
+		if (username == null) {
+			if (other.username != null)
+				return false;
+		} else if (!username.equals(other.username))
+			return false;
+		return true;
+	}
+	
+	
 }
