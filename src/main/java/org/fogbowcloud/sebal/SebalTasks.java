@@ -150,8 +150,8 @@ public class SebalTasks {
 //			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
 			
 			String copyCommand = "cp -R " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX)
-					+ "/SEBAL/local_results " + f1Task.getMetadata(METADATA_RESULTS_MOUNT_POINT)
-					+ "/results";
+					+ "/SEBAL/local_results/" + f1Task.getMetadata(METADATA_IMAGE_NAME) + " "
+					+ f1Task.getMetadata(METADATA_RESULTS_MOUNT_POINT) + "/results";
 			String remoteCopyCommand = createEpilogueRemote(copyCommand);
 			f1Task.addCommand(new Command(remoteCopyCommand, Command.Type.EPILOGUE));
 			
