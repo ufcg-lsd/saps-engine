@@ -493,8 +493,8 @@ public class InfrastructureManager {
 
 		for (Order o : orders) {
 			if (filters.contains(o.getState()) 
-					&& scheduler.equals(o.getScheduler())
-						&& spec.equals(o.getSpecification())) {
+					&& (scheduler == null || scheduler.equals(o.getScheduler()))
+					&& (spec == null || spec.equals(o.getSpecification()))) {
 				filtredOrders.add(o);
 			}
 		}
