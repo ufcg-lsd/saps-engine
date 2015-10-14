@@ -23,6 +23,7 @@ public class TaskImpl implements Task {
 	private Specification spec;
 	private List<Command> commands = new ArrayList<Command>();
 	private Map<String, String> metadata = new HashMap<String, String>();
+	private boolean isFailed = false;
 	
 	public TaskImpl(String id, Specification spec) {
 		this.id = id;
@@ -99,5 +100,15 @@ public class TaskImpl implements Task {
 	@Override
 	public void addCommand(Command command) {
 		commands.add(command);		
+	}
+
+	@Override
+	public void fail() {
+		isFailed = true;
+	}
+
+	@Override
+	public boolean isFailed() {
+		return isFailed;
 	}
 }

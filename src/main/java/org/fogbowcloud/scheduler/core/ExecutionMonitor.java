@@ -55,6 +55,11 @@ public class ExecutionMonitor implements Runnable {
 		public void run() {
 			LOGGER.info("Monitoring task " + task.getId());
 			if (task.isFinished()){
+				if(task.isFailed()){
+					job.fail(task);
+					scheduler.taskFailed(task);
+					return;
+				}
 				job.finish(task);
 				scheduler.taskCompleted(task);
 				return;

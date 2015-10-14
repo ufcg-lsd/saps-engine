@@ -14,8 +14,12 @@ public interface Task {
 	public String getId();
 
 	public void finish();
+	
+	public void fail();
 
 	public boolean isFinished();
+	
+	public boolean isFailed();
 
 	public void addCommand(Command command);
 	

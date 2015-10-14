@@ -11,8 +11,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.manager.occi.request.RequestType;
@@ -37,7 +35,6 @@ public class InfrastructureManager {
 	private OrderService orderService = new OrderService();
 	private ManagerTimer resourceTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private InfraIntegrityService infraIntegrityService = new InfraIntegrityService();
-	
 
 	private InfrastructureProvider infraProvider;
 	private boolean isElastic;
@@ -46,19 +43,19 @@ public class InfrastructureManager {
 	private List<Specification> initialSpec;
 
 	private List<Order> orders = new ArrayList<Order>();
-	
+
 	private Map<Resource, Order> allocatedResources = new ConcurrentHashMap<Resource, Order>();
 	private Map<Resource, Long> idleResources = new ConcurrentHashMap<Resource, Long>();
 
 	private DateUtils dateUtils = new DateUtils();
 
 	Long noExpirationDate = new Long(0);
-	
+
 	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
 			InfrastructureProvider infraProvider, Properties properties) throws InfrastructureException {
 		this(initialSpec, isElastic, infraProvider, properties, Executors.newCachedThreadPool());
 	}
-	
+
 	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
 			InfrastructureProvider infraProvider, Properties properties, ExecutorService resourceConnectivityMonitor)
 					throws InfrastructureException {
@@ -91,7 +88,7 @@ public class InfrastructureManager {
 		triggerResourceTimer();
 
 		LOGGER.info("Block while waiting initial resources? " + blockWhileInitializing);
-		if (blockWhileInitializing) {
+		if (blockWhileInitializing && initialSpec != null) {
 			while (idleResources.size() != initialSpec.size()) {
 				Thread.sleep(2000);
 			}
@@ -136,33 +133,82 @@ public class InfrastructureManager {
 	}
 
 	public void orderResource(Specification specification, Scheduler scheduler, int resourceNumber) {
-		Order order = new Order(scheduler, specification);
-		orders.add(order);
-		resolveOpenOrder(order);
+
+		List<Order> existingOrdersMatches = this.getOrdersByStateAndSchedulerAndSpec(scheduler, specification, OrderState.OPEN);
+		existingOrdersMatches.addAll(this.getOrdersByStateAndSchedulerAndSpec(scheduler, specification, OrderState.ORDERED));
+		
+		int qtyOpenOrOrdered = existingOrdersMatches.size();
+		// int qtyIdle = existingIdlesMatches.size();
+
+		int qtyToRequest = resourceNumber - qtyOpenOrOrdered;
+
+		/*
+		 * If scheduler need less resources than existings Orders and Idles
+		 * resources that matches with required specifications, then the surplus
+		 * orders related to this scheduler with this specs will be removed
+		 */
+		if (qtyToRequest < 0) {
+
+			qtyToRequest = qtyToRequest * (-1);
+			for (int count = 0; count < qtyToRequest; count++) {
+				Order toDispose = existingOrdersMatches.get(count);
+				try {
+					orders.remove(toDispose);
+					disposeOrder(existingOrdersMatches.get(count));
+				} catch (Exception e) {
+					LOGGER.error("ERROR While trying to dispose order [RequestID: " + toDispose.getRequestId(), e);
+				}
+			}
+		} else if (qtyToRequest == 0) {
+			/*
+			 * If already have quantity of open or ordered orders that matches
+			 * this specifications then do nothing
+			 */
+			return;
+		} else {
+			for (int count = 0; count < qtyToRequest; count++) {
+				Order order = new Order(scheduler, specification);
+				orders.add(order);
+				resolveOpenOrder(order);
+			}
+		}
+
+		this.updateInfrastuctureState();
+
 	}
 
 	public void releaseResource(Resource resource) {
 
 		LOGGER.debug("Releasing Resource [" + resource.getId() + "]");
 		Order orderToRemove = allocatedResources.get(resource);
-		if(orderToRemove != null){
+		if (orderToRemove != null) {
 			orders.remove(orderToRemove);
 			allocatedResources.remove(resource);
 		}
 
 		if (isResourceAlive(resource)) {
-			//Anticipating resource to Scheduler if it is needed  
-			for(Order order : this.getOrdersByState(OrderState.OPEN, OrderState.ORDERED)){
+			// Anticipating resource to Scheduler if it is needed
+			for (Order order : this.getOrdersByState(OrderState.OPEN, OrderState.ORDERED)) {
 
-				if(order.getScheduler()!=null){
-					if(resource.match(order.getSpecification())){
-						order.getScheduler().resourceReady(resource);
-						return;
+				if (order.getScheduler() != null) {
+					if (resource.match(order.getSpecification())) {
+						try {
+							this.disposeOrder(order);
+							order.setRequestId(resource.getId());
+							order.setState(OrderState.FULFILLED);
+							allocatedResources.put(resource, order);
+							this.updateInfrastuctureState();
+							order.getScheduler().resourceReady(resource);
+							return;
+						} catch (Exception e) {
+							LOGGER.error("Error while trying to relate Idle Resource to Ordered request [RequestID: "
+									+ order.getRequestId() + "]", e);
+						}
 					}
 				}
 			}
 		}
-		
+
 		moveResourceToIdle(resource);
 
 	}
@@ -180,12 +226,15 @@ public class InfrastructureManager {
 	// --------- PRIVATE OR PROTECTED METHODS --------- //
 
 	private void createInitialOrders() {
-		LOGGER.info("Creating orders to initial specs: \n" + initialSpec);
+		if(initialSpec!=null){
+			LOGGER.info("Creating orders to initial specs: \n" + initialSpec);
 
-		for (Specification spec : initialSpec) {
-			//Initial specs must be Persistent
-			spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE, RequestType.PERSISTENT.getValue());
-			orderResource(spec, null, 1);
+			for (Specification spec : initialSpec) {
+				// Initial specs must be Persistent
+				spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
+						RequestType.PERSISTENT.getValue());
+				orderResource(spec, null, 1);
+			}
 		}
 	}
 
@@ -227,7 +276,7 @@ public class InfrastructureManager {
 			this.relateResourceToOrder(resource, order, true);
 
 			// Else, requests a new resource from provider.
-		} else if (isElastic || order.getScheduler() == null) { 
+		} else if (isElastic || order.getScheduler() == null) {
 
 			try {
 				String requestId = infraProvider.requestResource(order.getSpecification());
@@ -249,10 +298,10 @@ public class InfrastructureManager {
 	protected void resolveOrderedOrder(Order order) {
 
 		LOGGER.debug("Resolving Ordered Order [" + order.getRequestId() + "]");
-		
+
 		Resource resource = null;
-		
-		//First verify if any idle resource can be resolve this order.
+
+		// First verify if any idle resource can be resolve this order.
 		if (idleResources != null && !idleResources.isEmpty() && order.getScheduler() != null) {
 			for (Resource idleResource : idleResources.keySet()) {
 				if (idleResource.match(order.getSpecification())) {
@@ -264,37 +313,42 @@ public class InfrastructureManager {
 
 		if (resource != null) {
 
-			order.getScheduler().resourceReady(resource);
-			
-		} 
-		/*
-		 * Attempt to get resource from this order, even when a idle resource
-		 * was founded. If a new resource is returned and don't exists any task
-		 * to execute, this resource is move to idle by scheduler.
-		 */
-		Resource newResource = infraProvider.getResource(order.getRequestId());
-		if (newResource != null) {
-
-			// if order is not related to initial spec
-			if (order.getScheduler() != null) {
-
-				this.relateResourceToOrder(newResource, order, false);
-
-			} else {
-
-				orders.remove(order);
-				moveResourceToIdle(newResource);
+			try {
+				this.disposeOrder(order);
+				relateResourceToOrder(resource, order, true);
+			} catch (Exception e) {
+				LOGGER.error("Error while trying to relate Idle Resource to Ordered request [RequestID: "
+						+ order.getRequestId() + "]");
 			}
 
-			updateInfrastuctureState();
-		}
-		
+		}else{
+			/*
+			 * Attempt to get resource from this order, even when a idle resource
+			 * was founded. If a new resource is returned and don't exists any task
+			 * to execute, this resource is move to idle by scheduler.
+			 */
+			Resource newResource = infraProvider.getResource(order.getRequestId());
+			if (newResource != null) {
 
+				// if order is not related to initial spec
+				if (order.getScheduler() != null) {
+
+					this.relateResourceToOrder(newResource, order, false);
+
+				} else {
+
+					orders.remove(order);
+					moveResourceToIdle(newResource);
+				}
+
+				updateInfrastuctureState();
+			}
+		}
 	}
 
 	protected void relateResourceToOrder(Resource resource, Order order, boolean isIdle) {
 
-		if(isIdle){
+		if (isIdle) {
 			idleResources.remove(resource);
 		}
 		allocatedResources.put(resource, order);
@@ -330,8 +384,7 @@ public class InfrastructureManager {
 	}
 
 	private void updateInfrastuctureState() {
-		ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED),
-				getIdleResources());
+		ds.updateInfrastructureState(getOrdersByState(OrderState.ORDERED, OrderState.FULFILLED), getIdleResources());
 	}
 
 	protected void moveResourceToIdle(Resource resource) {
@@ -341,8 +394,8 @@ public class InfrastructureManager {
 		if (RequestType.ONE_TIME.getValue().equals(resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE))) {
 			int idleLifeTime = Integer
 					.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
-			
-			expirationDate = Long.valueOf( + idleLifeTime);
+
+			expirationDate = Long.valueOf(+idleLifeTime);
 			Calendar c = Calendar.getInstance();
 			c.setTime(new Date(dateUtils.currentTimeMillis()));
 			c.add(Calendar.MILLISECOND, idleLifeTime);
@@ -352,7 +405,7 @@ public class InfrastructureManager {
 		updateInfrastuctureState();
 		LOGGER.debug("Resource [" + resource.getId() + "] moved to Idle - Expiration Date: ["
 				+ DateUtils.getStringDateFromMiliFormat(expirationDate, DateUtils.DATE_FORMAT_YYYY_MM_DD_HOUR) + "]");
-		
+
 	}
 
 	protected boolean isResourceAlive(Resource resource) {
@@ -363,6 +416,10 @@ public class InfrastructureManager {
 	protected void disposeResource(Resource resource) throws Exception {
 		infraProvider.deleteResource(resource.getId());
 		idleResources.remove(resource);
+	}
+
+	protected void disposeOrder(Order order) throws Exception {
+		infraProvider.deleteResource(order.getRequestId());
 	}
 
 	private void validateProperties() throws InfrastructureException {
@@ -405,6 +462,16 @@ public class InfrastructureManager {
 	}
 
 	// ----- GETTERS AND SETTERS ----- //
+	protected List<Resource> getIdleResourceBySpec(Specification spec) {
+		List<Resource> maches = new ArrayList<Resource>();
+		for (Resource r : getIdleResources()) {
+			if (r.match(spec)) {
+				maches.add(r);
+			}
+		}
+		return maches;
+	}
+
 	protected List<Order> getOrdersByState(OrderState... states) {
 
 		List<Order> filtredOrders = new ArrayList<Order>();
@@ -412,6 +479,22 @@ public class InfrastructureManager {
 
 		for (Order o : orders) {
 			if (filters.contains(o.getState())) {
+				filtredOrders.add(o);
+			}
+		}
+
+		return filtredOrders;
+	}
+
+	protected List<Order> getOrdersByStateAndSchedulerAndSpec(Scheduler scheduler, Specification spec, OrderState... states) {
+
+		List<Order> filtredOrders = new ArrayList<Order>();
+		List<OrderState> filters = Arrays.asList(states);
+
+		for (Order o : orders) {
+			if (filters.contains(o.getState()) 
+					&& scheduler.equals(o.getScheduler())
+						&& spec.equals(o.getSpecification())) {
 				filtredOrders.add(o);
 			}
 		}
@@ -521,7 +604,7 @@ public class InfrastructureManager {
 							continue;
 						}
 
-						if (isElastic && noExpirationDate.compareTo(entry.getValue())!=0) {
+						if (isElastic && noExpirationDate.compareTo(entry.getValue()) != 0) {
 							Date expirationDate = new Date(entry.getValue().longValue());
 							Date currentDate = new Date(dateUtils.currentTimeMillis());
 
@@ -553,7 +636,7 @@ public class InfrastructureManager {
 						disposeResource(r);
 
 					} catch (Exception e) {
-						LOGGER.error("Error while disposing resource: [" + r.getId() + "]",e);
+						LOGGER.error("Error while disposing resource: [" + r.getId() + "]", e);
 					}
 				}
 			}

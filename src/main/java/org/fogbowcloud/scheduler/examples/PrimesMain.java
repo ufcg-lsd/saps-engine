@@ -30,6 +30,7 @@ public class PrimesMain {
 	private static boolean blockWhileInitializing;
 	private static boolean isElastic;
 	private static ManagerTimer executionMonitorTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
+	private static ManagerTimer schedulerTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 
 
 	private static Properties properties;
@@ -52,7 +53,9 @@ public class PrimesMain {
 		List<Specification> taskSpecs = Specification.getSpecificationsFromJSonFile(SPEC_FILE_PATH);
 		
 		InfrastructureProvider infraProvider = createInfraProvaiderInstance();
-		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic, infraProvider,
+//		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic, infraProvider,
+//				properties);
+		InfrastructureManager infraManager = new InfrastructureManager(null, isElastic, infraProvider,
 				properties);
 		infraManager.start(blockWhileInitializing);
 		
@@ -60,18 +63,19 @@ public class PrimesMain {
 		LOGGER.debug("Task spec: "+spec.toString());
 			
 		Job primeJob = new PrimeJob();
-		for(int count=0; count < 1; count++){
+		for(int count=0; count < 3; count++){
 			primeJob.addTask(getPrimeTask(spec, count*1000, (count+1)*1000));
 		}
+		primeJob.addTask(getPrimeErrorTask(spec, 6000, 7000));
 		
 		Scheduler scheduler = new Scheduler(primeJob, infraManager);
 		ExecutionMonitor execMonitor = new ExecutionMonitor(primeJob, scheduler);
 
+		LOGGER.debug("Starting Scheduler and Execution Monitor");
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
+		schedulerTimer.scheduleAtFixedRate(scheduler, 0, 30000);
 
-		LOGGER.debug("Starting Scheduler");
-		scheduler.run();
 
 	}
 
@@ -110,6 +114,22 @@ public class PrimesMain {
 				properties.getProperty("local.output") + "/primeresult-" + task.getId()));
 		return task;
 	}
+	
+	private static Task getPrimeErrorTask(Specification spec, int init, int end) {
+		TaskImpl task = new TaskImpl(UUID.randomUUID().toString(), spec);
+		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER, METADATA_REMOTE_OUTPUT_FOLDER);
+		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty("local.output"));
+		task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);
+		task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER+"/exit");
+		task.addCommand(cleanPreviousExecution(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
+		task.addCommand(mkdirRemoteFolder(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
+		task.addCommand(stageInCommand("isprime.py", task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py"));
+		task.addCommand(remoteCommand("\"python /"+task.getMetadata(TaskImpl.METADATA_SANDBOX)+"/isprime.py "+init+" "+end+" ; echo 128 > "+task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH)+"\""));
+		task.addCommand(stageOutCommand("/tmp/primeresult",
+				properties.getProperty("local.output") + "/primeresult-" + task.getId()));
+		return task;
+	}
+	
 	
 	private static Command remoteCommand(String remoteCommand){
 		return new Command(remoteCommand, Command.Type.REMOTE);

@@ -128,8 +128,12 @@ public class Resource {
 	protected void finish(int exitValue) {
 		LOGGER.debug("Finishing task " + task.getId() + " with exit value = " + exitValue);
 		task.finish();
+		if(TaskExecutionResult.NOK == exitValue){
+			task.fail();
+		}
 		taskExecutionResult.finish(exitValue);
 	}
+	
 	
 	protected boolean executePrologue() {
 		List<Command> commands = task.getCommandsByType(Command.Type.PROLOGUE);

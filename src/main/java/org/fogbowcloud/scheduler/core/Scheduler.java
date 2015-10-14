@@ -2,6 +2,7 @@ package org.fogbowcloud.scheduler.core;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,6 +16,7 @@ import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 
 public class Scheduler implements Runnable{
 	
+	private final String id;
 	private Job job;
 	private InfrastructureManager infraManager;
 	private Map<String, Resource> runningTasks = new HashMap<String, Resource>();
@@ -25,6 +27,7 @@ public class Scheduler implements Runnable{
 	public Scheduler(Job job, InfrastructureManager infraManager) {
 		this.job = job;
 		this.infraManager = infraManager;
+		this.id = UUID.randomUUID().toString();
 	}
 	
 	protected Scheduler(Job job, InfrastructureManager infraManager, ExecutorService taskExecutor) {
@@ -43,7 +46,7 @@ public class Scheduler implements Runnable{
 				specDemand.put(taskSpec, 0);
 			}
 			int currentDemand = specDemand.get(taskSpec); 
-			specDemand.put(taskSpec, currentDemand++);
+			specDemand.put(taskSpec, ++currentDemand);
 		}
 		
 		LOGGER.debug("Current job demand is " + specDemand);
@@ -76,7 +79,9 @@ public class Scheduler implements Runnable{
 	}
 
 	public void taskFailed(Task task) {
-		LOGGER.info("Task " + task.getId() + " failed and will be cloned.");
+		LOGGER.debug("============================================================");
+		LOGGER.debug("==  Task " + task.getId() + " failed and will be cloned.  ==");
+		LOGGER.debug("============================================================");
 		Task newTask = task.clone();
 		job.addTask(newTask);
 		infraManager.releaseResource(runningTasks.get(task.getId()));
@@ -98,4 +103,27 @@ public class Scheduler implements Runnable{
 	protected Map<String, Resource> getRunningTasks(){
 		return runningTasks;
 	}
+
+	protected String getId() {
+		return id;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Scheduler other = (Scheduler) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		return true;
+	}
+	
+	
 }
