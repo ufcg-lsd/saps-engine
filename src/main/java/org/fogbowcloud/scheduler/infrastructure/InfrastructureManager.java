@@ -49,7 +49,7 @@ public class InfrastructureManager {
 
 	private DateUtils dateUtils = new DateUtils();
 
-	Long noExpirationDate = new Long(0);
+	private Long noExpirationDate = new Long(0);
 
 	public InfrastructureManager(List<Specification> initialSpec, boolean isElastic,
 			InfrastructureProvider infraProvider, Properties properties) throws InfrastructureException {
@@ -154,7 +154,7 @@ public class InfrastructureManager {
 				Order toDispose = existingOrdersMatches.get(count);
 				try {
 					orders.remove(toDispose);
-					disposeOrder(existingOrdersMatches.get(count));
+					disposeRequest(existingOrdersMatches.get(count).getRequestId());
 				} catch (Exception e) {
 					LOGGER.error("ERROR While trying to dispose order [RequestID: " + toDispose.getRequestId(), e);
 				}
@@ -193,7 +193,7 @@ public class InfrastructureManager {
 				if (order.getScheduler() != null) {
 					if (resource.match(order.getSpecification())) {
 						try {
-							this.disposeOrder(order);
+							this.disposeRequest(order.getRequestId());
 							order.setRequestId(resource.getId());
 							order.setState(OrderState.FULFILLED);
 							allocatedResources.put(resource, order);
@@ -269,14 +269,17 @@ public class InfrastructureManager {
 			}
 		}
 
+		boolean resolvedWithIdle = false;
+		
 		if (resource != null) {
 
 			// Async call to avoid wating time from test connectivity with
 			// resource
-			this.relateResourceToOrder(resource, order, true);
+			resolvedWithIdle = this.relateResourceToOrder(resource, order, true);
 
 			// Else, requests a new resource from provider.
-		} else if (isElastic || order.getScheduler() == null) {
+		}
+		if (!resolvedWithIdle && (isElastic || order.getScheduler() == null)) {
 
 			try {
 				String requestId = infraProvider.requestResource(order.getSpecification());
@@ -286,7 +289,7 @@ public class InfrastructureManager {
 				LOGGER.debug("Order [" + order.getRequestId() + "] update to Ordered with request [" + requestId + "]");
 
 			} catch (RequestResourceException e) {
-				LOGGER.error("Error while resolving Order [" + order.getRequestId() + "]", e);
+				LOGGER.error("Error while resolving Order", e);
 				order.setState(OrderState.OPEN);
 			}
 		} else {
@@ -311,17 +314,23 @@ public class InfrastructureManager {
 			}
 		}
 
+		boolean resolvedWithIdle = false;
+		
 		if (resource != null) {
 
 			try {
-				this.disposeOrder(order);
-				relateResourceToOrder(resource, order, true);
+				String oldRequest = order.getRequestId();
+				resolvedWithIdle = relateResourceToOrder(resource, order, true);
+				if(resolvedWithIdle){
+					this.disposeRequest(oldRequest);
+				}
 			} catch (Exception e) {
 				LOGGER.error("Error while trying to relate Idle Resource to Ordered request [RequestID: "
 						+ order.getRequestId() + "]");
 			}
 
-		}else{
+		}
+		if (!resolvedWithIdle){
 			/*
 			 * Attempt to get resource from this order, even when a idle resource
 			 * was founded. If a new resource is returned and don't exists any task
@@ -346,7 +355,7 @@ public class InfrastructureManager {
 		}
 	}
 
-	protected void relateResourceToOrder(Resource resource, Order order, boolean isIdle) {
+	protected boolean relateResourceToOrder(Resource resource, Order order, boolean isIdle) {
 
 		if (isIdle) {
 			idleResources.remove(resource);
@@ -381,6 +390,8 @@ public class InfrastructureManager {
 				moveResourceToIdle(resource);
 			}
 		}
+		
+		return resourceOK;
 	}
 
 	private void updateInfrastuctureState() {
@@ -418,8 +429,8 @@ public class InfrastructureManager {
 		idleResources.remove(resource);
 	}
 
-	protected void disposeOrder(Order order) throws Exception {
-		infraProvider.deleteResource(order.getRequestId());
+	protected void disposeRequest(String request) throws Exception {
+		infraProvider.deleteResource(request);
 	}
 
 	private void validateProperties() throws InfrastructureException {
