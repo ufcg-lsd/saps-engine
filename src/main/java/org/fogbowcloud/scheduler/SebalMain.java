@@ -34,7 +34,7 @@ public class SebalMain {
 	private static ManagerTimer schedulerTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 
-	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
+//	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
 	private static ImageDataStore imageStore;
 	
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
@@ -95,12 +95,15 @@ public class SebalMain {
 	private static void addTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState) {
 		try {
+			
 			List<ImageData> notFinishedExecutions = imageStore.getIn(imageState);
 			for (ImageData imageData : notFinishedExecutions) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
-				pendingImageExecution.put(imageData.getName(), imageData);
+//				pendingImageExecution.put(imageData.getName(), imageData);
 
+				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
+				
 				List<Task> tasks = new ArrayList<Task>();
 				
 				if (ImageState.RUNNING_F1.equals(imageState)

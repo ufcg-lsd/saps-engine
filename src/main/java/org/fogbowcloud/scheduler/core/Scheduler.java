@@ -1,6 +1,7 @@
 package org.fogbowcloud.scheduler.core;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -40,7 +41,13 @@ public class Scheduler implements Runnable{
 		LOGGER.info("Running scheduler...");
 		Map<Specification, Integer> specDemand = new HashMap<Specification, Integer>();		
 
-		for (Task task : job.getByState(TaskState.READY)) {
+		List<Task> readyTasks = job.getByState(TaskState.READY);
+		
+		LOGGER.debug("There are " + readyTasks.size() + " ready tasks.");
+		LOGGER.debug("Scheduler running tasks is " + runningTasks.size()
+				+ ", and job running tasks is " + job.getByState(TaskState.RUNNING));
+		
+		for (Task task : readyTasks) {
 			Specification taskSpec = task.getSpecification();
 			if (!specDemand.containsKey(taskSpec)) {
 				specDemand.put(taskSpec, 0);
@@ -62,13 +69,17 @@ public class Scheduler implements Runnable{
 			if(resource.match(task.getSpecification())){
 				
 				LOGGER.debug("Relating resource [ID:"+resource.getId()+"] with task [ID:"+task.getId()+"]");
-				taskExecutor.submit(new Runnable() {
+				job.run(task);
+				runningTasks.put(task.getId(), resource);
 
+				taskExecutor.submit(new Runnable() {
 					@Override
 					public void run() {
-						job.run(task);
-						resource.executeTask(task);
-						runningTasks.put(task.getId(), resource);
+						try {
+							resource.executeTask(task);
+						} catch (Throwable e) {
+							LOGGER.error("Error while executing task.", e);
+						}
 					}
 				});
 				return;

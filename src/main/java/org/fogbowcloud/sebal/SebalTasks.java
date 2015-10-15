@@ -88,6 +88,11 @@ public class SebalTasks {
 			f1Task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 					f1Task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + f1Task.getId());
 			
+			// creating sandbox
+			String mkdirCommand = "mkdir -p " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX);
+			String mkdirRemotly = createCommandToRunRemotly(mkdirCommand);
+			f1Task.addCommand(new Command(mkdirRemotly, Command.Type.PROLOGUE));
+			
 			//treating repository user private key
 			if (properties.getProperty("sebal_repository_user_private_key") != null) {
 				File privateKeyFile = new File(properties.getProperty("sebal_repository_user_private_key"));
@@ -141,23 +146,37 @@ public class SebalTasks {
 			f1Task.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
 
 			// adding epilogue command
-			String outputFileName = imageName + "_" + f1Task.getMetadata(METADATA_PARTITION_INDEX)
-					+ "_" + f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS);
+//			String outputFileName = imageName + "_" + f1Task.getMetadata(METADATA_PARTITION_INDEX)
+//					+ "_" + f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS);
+//			
+//			String scpDownloadCommand = createSCPDownloadCommand(
+//					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/" + outputFileName,
+//					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/" + outputFileName);
+//			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
 			
-			String scpDownloadCommand = createSCPDownloadCommand(
-					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/" + outputFileName,
-					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/" + outputFileName);
-			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+			String copyCommand = "cp -R " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX)
+					+ "/SEBAL/local_results/" + f1Task.getMetadata(METADATA_IMAGE_NAME) + " "
+					+ f1Task.getMetadata(METADATA_RESULTS_MOUNT_POINT) + "/results";
+			String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
+			f1Task.addCommand(new Command(remoteCopyCommand, Command.Type.EPILOGUE));
+			
+			String cleanEnvironment = "rm -r " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX);
+			String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
+			f1Task.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
 
 			f1Tasks.add(f1Task);
 		}
 		return f1Tasks;
 	}
 
-	private static String createSCPDownloadCommand(String remoteFilePath, String localFilePath) {
-		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT $SSH_USER@$HOST:"
-				+ remoteFilePath + " " + localFilePath;
+	private static String createCommandToRunRemotly(String command) {		
+		return "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $PRIVATE_KEY_FILE $SSH_USER@$HOST -p $SSH_PORT " + command;
 	}
+	
+//	private static String createSCPDownloadCommand(String remoteFilePath, String localFilePath) {
+//		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT $SSH_USER@$HOST:"
+//				+ remoteFilePath + " " + localFilePath;
+//	}
 
 	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
 		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT "
@@ -166,7 +185,7 @@ public class SebalTasks {
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
 		// sdexs properties
-		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty("sebal_sandbox"));
+		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty("sebal_sandbox") + "/" + task.getId());
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,
 				properties.getProperty("sebal_sandbox") + "/output");
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER,

@@ -75,7 +75,7 @@ public class TestExecutionMonitor {
 		doNothing().when(job).finish(task);
 		executionMonitor.run();
 		Thread.sleep(500);
-		verify(task).isFinished();
+		verify(task).isFailed();
 		verify(job).fail(task);
 	}
 	
