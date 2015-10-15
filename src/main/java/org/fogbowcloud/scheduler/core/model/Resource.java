@@ -128,7 +128,7 @@ public class Resource {
 	protected void finish(int exitValue) {
 		LOGGER.debug("Finishing task " + task.getId() + " with exit value = " + exitValue);
 		task.finish();
-		if(TaskExecutionResult.NOK == exitValue){
+		if(TaskExecutionResult.OK != exitValue){
 			task.fail();
 		}
 		taskExecutionResult.finish(exitValue);

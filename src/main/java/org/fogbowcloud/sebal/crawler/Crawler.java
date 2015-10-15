@@ -152,6 +152,7 @@ public class Crawler {
 					int exitValue = runFmask(imageData);					
 					if (exitValue != 0) {
 						LOGGER.error("It was not possible run Fmask for image " + imageData.getName());
+						removeFromPendingAndUpdateState(imageData);
 						return;
 					}
 					
@@ -160,14 +161,18 @@ public class Crawler {
 					pendingImageDownload.remove(imageData.getName());					
 				} catch (Exception e) {
 					LOGGER.error("Couldn't download image " + imageData.getName() + ".", e);
-					pendingImageDownload.remove(imageData.getName());
-					try {
-						imageData.setFederationMember(ImageDataStore.NONE);
-						imageData.setState(ImageState.NOT_DOWNLOADED);
-						imageStore.update(imageData);
-					} catch (SQLException e1) {
-						Crawler.LOGGER.error("Error while updating image data.", e);
-					}
+					removeFromPendingAndUpdateState(imageData);
+				}
+			}
+
+			private void removeFromPendingAndUpdateState(final ImageData imageData) {
+				pendingImageDownload.remove(imageData.getName());
+				try {
+					imageData.setFederationMember(ImageDataStore.NONE);
+					imageData.setState(ImageState.NOT_DOWNLOADED);
+					imageStore.update(imageData);
+				} catch (SQLException e1) {
+					Crawler.LOGGER.error("Error while updating image data.", e1);
 				}
 			}
 
