@@ -88,6 +88,11 @@ public class SebalTasks {
 			f1Task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 					f1Task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + f1Task.getId());
 			
+			// creating sandbox
+			String mkdirCommand = "mkdir -p " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX);
+			String mkdirRemotly = createCommandToRunRemotly(mkdirCommand);
+			f1Task.addCommand(new Command(mkdirRemotly, Command.Type.PROLOGUE));
+			
 			//treating repository user private key
 			if (properties.getProperty("sebal_repository_user_private_key") != null) {
 				File privateKeyFile = new File(properties.getProperty("sebal_repository_user_private_key"));
@@ -152,11 +157,11 @@ public class SebalTasks {
 			String copyCommand = "cp -R " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ "/SEBAL/local_results/" + f1Task.getMetadata(METADATA_IMAGE_NAME) + " "
 					+ f1Task.getMetadata(METADATA_RESULTS_MOUNT_POINT) + "/results";
-			String remoteCopyCommand = createEpilogueRemote(copyCommand);
+			String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
 			f1Task.addCommand(new Command(remoteCopyCommand, Command.Type.EPILOGUE));
 			
 			String cleanEnvironment = "rm -r " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX);
-			String remoteCleanEnv = createEpilogueRemote(cleanEnvironment);
+			String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
 			f1Task.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
 
 			f1Tasks.add(f1Task);
@@ -164,7 +169,7 @@ public class SebalTasks {
 		return f1Tasks;
 	}
 
-	private static String createEpilogueRemote(String command) {		
+	private static String createCommandToRunRemotly(String command) {		
 		return "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $PRIVATE_KEY_FILE $SSH_USER@$HOST -p $SSH_PORT " + command;
 	}
 	
@@ -180,7 +185,7 @@ public class SebalTasks {
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
 		// sdexs properties
-		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty("sebal_sandbox"));
+		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty("sebal_sandbox") + "/" + task.getId());
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,
 				properties.getProperty("sebal_sandbox") + "/output");
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER,
