@@ -6,6 +6,7 @@ import java.util.List;
 public interface ImageDataStore {
 
 	public final static String NONE = "None";
+	public final static int UNLIMITED = -1;
 
 	public void add(String imageName, String downloadLink, int priority) throws SQLException;
 

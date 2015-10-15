@@ -36,7 +36,6 @@ public class SebalMain {
 
 //	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
 	private static ImageDataStore imageStore;
-	
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 
 	public static void main(String[] args) throws Exception {
@@ -70,7 +69,7 @@ public class SebalMain {
 		// scheduling previous image executions
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
-		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1);
+		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
 
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
@@ -85,19 +84,17 @@ public class SebalMain {
 				// TODO develop throughput and negation of task addition 
 //				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
 //				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
-				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED);
-
+				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 			}
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
-
 	}
 
 	private static void addTasks(final Properties properties, final Job job,
-			final Specification sebalSpec, ImageState imageState) {
+			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
+			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);				
 			
-			List<ImageData> notFinishedExecutions = imageStore.getIn(imageState);
-			for (ImageData imageData : notFinishedExecutions) {
+			for (ImageData imageData : imagesToExecute) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
 //				pendingImageExecution.put(imageData.getName(), imageData);

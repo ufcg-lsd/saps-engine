@@ -230,7 +230,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			connection = getConnection();
 			
-			if (limit == -1) {
+			if (limit == UNLIMITED) {
 				selectStatement = connection.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
 				selectStatement.setString(1, state.getValue());
 				selectStatement.execute();
@@ -252,7 +252,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	
 	@Override
 	public List<ImageData> getIn(ImageState state) throws SQLException {
-		return getIn(state, -1);
+		return getIn(state, UNLIMITED);
 	}
 
 	private static List<ImageData> extractImageDataFrom(ResultSet rs) throws SQLException {
