@@ -32,4 +32,5 @@ public interface Task {
 	public String getMetadata(String attributeName);
 	
 	public Map<String, String> getAllMetadata();
+	
 }

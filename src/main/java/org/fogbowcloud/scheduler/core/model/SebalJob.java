@@ -114,7 +114,7 @@ public class SebalJob extends Job {
 		tasksRunning.add(task);		
 	}
 
-	private List<Task> getTasksOfImageByState(String imageName, TaskState... taskStates) {
+	public List<Task> getTasksOfImageByState(String imageName, TaskState... taskStates) {
 		List<Task> allTasks = new ArrayList<Task>();
 		
 		for (TaskState taskState : taskStates) {

@@ -13,6 +13,7 @@ import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
+import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 
 public class Scheduler implements Runnable{
@@ -71,7 +72,7 @@ public class Scheduler implements Runnable{
 				LOGGER.debug("Relating resource [ID:"+resource.getId()+"] with task [ID:"+task.getId()+"]");
 				job.run(task);
 				runningTasks.put(task.getId(), resource);
-
+				task.putMetadata(TaskImpl.METADATA_RESOURCE_ID, resource.getId());
 				taskExecutor.submit(new Runnable() {
 					@Override
 					public void run() {

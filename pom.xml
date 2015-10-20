@@ -62,6 +62,14 @@
 		</pluginManagement>
 	</build>
 
+	<repositories>
+		<repository>
+			<id>maven-restlet</id>
+			<name>Restlet repository</name>
+			<url>http://maven.restlet.com</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 	
 		<dependency>
@@ -117,6 +125,19 @@
 			<artifactId>httpmime</artifactId>
 			<version>4.5</version>
 		</dependency>
+				
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet</artifactId>
+			<version>2.3.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.jackson</artifactId>
+			<version>2.3.4</version>
+		</dependency>
+		
 				
 		<dependency>
 			<groupId>org.apache.commons</groupId>
