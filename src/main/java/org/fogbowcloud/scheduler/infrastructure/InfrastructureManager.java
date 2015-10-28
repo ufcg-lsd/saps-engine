@@ -42,6 +42,8 @@ public class InfrastructureManager {
 	private DataStore ds;
 	private List<Specification> initialSpec;
 
+	private int resourceReuseTimes = Integer.MAX_VALUE;
+
 	private List<Order> orders = new ArrayList<Order>();
 
 	private Map<Resource, Order> allocatedResources = new ConcurrentHashMap<Resource, Order>();
@@ -63,6 +65,12 @@ public class InfrastructureManager {
 		this.properties = properties;
 		this.initialSpec = initialSpec;
 		this.infraProvider = infraProvider;
+
+		String resourceReuseTimesStr = this.properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_REUSE_TIMES);
+
+		if (!(this.properties.get("resource_reuse_times")== null || resourceReuseTimesStr.isEmpty())){
+			this.resourceReuseTimes = Integer.getInteger(resourceReuseTimesStr);
+		}
 
 		this.validateProperties();
 
@@ -136,7 +144,7 @@ public class InfrastructureManager {
 
 		List<Order> existingOrdersMatches = this.getOrdersByStateAndSchedulerAndSpec(scheduler, specification, OrderState.OPEN);
 		existingOrdersMatches.addAll(this.getOrdersByStateAndSchedulerAndSpec(scheduler, specification, OrderState.ORDERED));
-		
+
 		int qtyOpenOrOrdered = existingOrdersMatches.size();
 		// int qtyIdle = existingIdlesMatches.size();
 
@@ -178,38 +186,46 @@ public class InfrastructureManager {
 	}
 
 	public void releaseResource(Resource resource) {
-
+		resource.reuse();
 		LOGGER.debug("Releasing Resource [" + resource.getId() + "]");
 		Order orderToRemove = allocatedResources.get(resource);
 		if (orderToRemove != null) {
 			orders.remove(orderToRemove);
 			allocatedResources.remove(resource);
 		}
+		if (resource.getReusedTimes() <= getReuseTimes()){
+			if (isResourceAlive(resource)) {
+				// Anticipating resource to Scheduler if it is needed
+				for (Order order : this.getOrdersByState(OrderState.OPEN, OrderState.ORDERED)) {
 
-		if (isResourceAlive(resource)) {
-			// Anticipating resource to Scheduler if it is needed
-			for (Order order : this.getOrdersByState(OrderState.OPEN, OrderState.ORDERED)) {
-
-				if (order.getScheduler() != null) {
-					if (resource.match(order.getSpecification())) {
-						try {
-							this.disposeRequest(order.getRequestId());
-							order.setRequestId(resource.getId());
-							order.setState(OrderState.FULFILLED);
-							allocatedResources.put(resource, order);
-							this.updateInfrastuctureState();
-							order.getScheduler().resourceReady(resource);
-							return;
-						} catch (Exception e) {
-							LOGGER.error("Error while trying to relate Idle Resource to Ordered request [RequestID: "
-									+ order.getRequestId() + "]", e);
+					if (order.getScheduler() != null) {
+						if (resource.match(order.getSpecification())) {
+							try {
+								this.disposeRequest(order.getRequestId());
+								order.setRequestId(resource.getId());
+								order.setState(OrderState.FULFILLED);
+								allocatedResources.put(resource, order);
+								this.updateInfrastuctureState();
+								order.getScheduler().resourceReady(resource);
+								return;
+							} catch (Exception e) {
+								LOGGER.error("Error while trying to relate Idle Resource to Ordered request [RequestID: "
+										+ order.getRequestId() + "]", e);
+							}
 						}
 					}
 				}
 			}
-		}
 
-		moveResourceToIdle(resource);
+			moveResourceToIdle(resource);
+		} else {
+			try {
+				disposeResource(resource);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				LOGGER.error("Error when disposing of resource for excessive reuse", e);
+			}
+		}
 
 	}
 
@@ -270,7 +286,7 @@ public class InfrastructureManager {
 		}
 
 		boolean resolvedWithIdle = false;
-		
+
 		if (resource != null) {
 
 			// Async call to avoid wating time from test connectivity with
@@ -315,7 +331,7 @@ public class InfrastructureManager {
 		}
 
 		boolean resolvedWithIdle = false;
-		
+
 		if (resource != null) {
 
 			try {
@@ -390,7 +406,7 @@ public class InfrastructureManager {
 				moveResourceToIdle(resource);
 			}
 		}
-		
+
 		return resourceOK;
 	}
 
@@ -571,6 +587,11 @@ public class InfrastructureManager {
 
 	protected DataStore getDataStore() {
 		return this.ds;
+	}
+	
+	
+	public int getReuseTimes(){
+		return this.resourceReuseTimes;
 	}
 
 	protected class OrderService implements Runnable {

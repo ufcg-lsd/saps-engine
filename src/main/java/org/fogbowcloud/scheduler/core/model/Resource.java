@@ -43,6 +43,7 @@ public class Resource {
 	private TaskExecutionResult taskExecutionResult;
 	private ExecutionCommandHelper executionCommandHelper;
 	private DateUtils dateUtils = new DateUtils();
+	private int timesReused = 0;
 
 	// private SshClientWrapper sshClientWrapper;
 
@@ -262,6 +263,14 @@ public class Resource {
 
 	protected void setTaskExecutionResult(TaskExecutionResult taskExecutionResult) {
 		this.taskExecutionResult = taskExecutionResult;
+	}
+	
+	public void reuse(){
+		timesReused++;
+	}
+	
+	public int getReusedTimes(){
+		return this.timesReused;
 	}
 
 }

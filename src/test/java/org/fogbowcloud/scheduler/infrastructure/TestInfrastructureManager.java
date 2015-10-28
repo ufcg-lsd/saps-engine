@@ -58,8 +58,8 @@ public class TestInfrastructureManager {
 
 		doReturn(true).when(dsMock).updateInfrastructureState(Mockito.anyList(), Mockito.anyList());
 
-		infrastructureManager = new InfrastructureManager(new ArrayList<Specification>(), true,
-				infrastructureProviderMock, properties);
+		infrastructureManager = spy(new InfrastructureManager(new ArrayList<Specification>(), true,
+				infrastructureProviderMock, properties));
 		infrastructureManager.cancelOrderTimer();
 		infrastructureManager.cancelResourceTimer();
 		infrastructureManager.setDataStore(dsMock);
@@ -437,6 +437,44 @@ public class TestInfrastructureManager {
 		assertEquals(Long.valueOf(dateMock + lifetime), expirationTime);
 
 	}
+	
+	@Test
+	public void releaseResourceReusedTooManyTimes() {
+
+		String fakeRequestId = "requestId";
+		Specification specs = mock(Specification.class);
+
+		String orderIdA = "request01";
+
+		Order orderA = new Order(schedulerMock, specs);
+		orderA.setRequestId(orderIdA);
+		orderA.setState(OrderState.FULFILLED);
+
+		Resource fakeResource = mock(Resource.class);
+		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(true).when(fakeResource).checkConnectivity();
+		doReturn(fakeRequestId).when(fakeResource).getId();
+		doReturn(true).when(fakeResource).match(specs);
+		doReturn(1).when(fakeResource).getReusedTimes();
+
+		DateUtils dateUtilsMock = mock(DateUtils.class);
+
+		Long dateMock = System.currentTimeMillis();
+		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
+		doReturn(dateMock).when(dateUtilsMock).currentTimeMillis();
+		doReturn(0).when(infrastructureManager).getReuseTimes();
+
+		infrastructureManager.getAllocatedResourcesMap().put(fakeResource, orderA);
+		infrastructureManager.getOrders().add(orderA);
+		infrastructureManager.setDateUtils(dateUtilsMock);
+		infrastructureManager.releaseResource(fakeResource);
+
+		
+		assertEquals(0, infrastructureManager.getAllocatedResources().size());
+		assertEquals(0, infrastructureManager.getIdleResources().size());
+		assertEquals(0, infrastructureManager.getOrders().size());
+
+	}
 
 	@Test
 	public void releaseResourceReuseOpen() {
@@ -793,7 +831,6 @@ public class TestInfrastructureManager {
 		DateUtils dateUtilsMock = mock(DateUtils.class);
 
 		Long dateMock = System.currentTimeMillis();
-		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
 		String resourceId ="resource01";
 		Resource fakeResource = mock(Resource.class);
@@ -805,10 +842,10 @@ public class TestInfrastructureManager {
 
 		infrastructureManager.setInfraProvider(infrastructureProviderMock);
 		infrastructureManager.setDateUtils(dateUtilsMock);
-		infrastructureManager.getIdleResourcesMap().put(fakeResource, Long.valueOf(dateMock + lifetime));
+		infrastructureManager.getIdleResourcesMap().put(fakeResource, dateMock);
 
 		// "advancing time to simulate future monitor of the idle resource.
-		doReturn(dateMock + (lifetime * 2)).when(dateUtilsMock).currentTimeMillis();
+		doReturn(dateMock + 1).when(dateUtilsMock).currentTimeMillis();
 		infrastructureManager.getInfraIntegrityService().run();
 
 		assertEquals(0, infrastructureManager.getAllocatedResources().size());
