@@ -49,4 +49,14 @@ public abstract class Job {
 	public abstract void finish(Task task);
 
 	public abstract void fail(Task task);
+	
+	public void addRecoveredTask(Task task) {
+		LOGGER.debug("Adding recovered task " + task.getId());
+		taskReadyLock.writeLock().lock();
+		try {
+			tasksReady.add(0, task);
+		} finally {
+			taskReadyLock.writeLock().unlock();
+		}
+	}
 }

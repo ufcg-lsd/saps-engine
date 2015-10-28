@@ -95,7 +95,7 @@ public class Scheduler implements Runnable{
 		LOGGER.debug("==  Task " + task.getId() + " failed and will be cloned.  ==");
 		LOGGER.debug("============================================================");
 		Task newTask = task.clone();
-		job.addTask(newTask);
+		job.addRecoveredTask(newTask);
 		infraManager.releaseResource(runningTasks.get(task.getId()));
 		runningTasks.remove(task.getId());
 		
