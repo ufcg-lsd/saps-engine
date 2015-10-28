@@ -130,7 +130,7 @@ public class TestScheduler {
 		
 		scheduler.taskFailed(t);
 		
-		verify(jobMock, times(1)).addRecoveredTask(tClone);
+		verify(jobMock, times(1)).recoverTask(t);
 		verify(infraManagerMock, times(1)).releaseResource(resourceMock);
 		
 		assertNull(scheduler.getRunningTasks().get(t.getId()));

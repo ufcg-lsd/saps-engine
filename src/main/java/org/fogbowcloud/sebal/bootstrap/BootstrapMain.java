@@ -34,11 +34,10 @@ public class BootstrapMain {
 //		
 //		dbBootstrap.fillDB();
 //			
-		//SELECT 	
+		//SELECT 
 		 Connection c = null;
 //	       Statement stmt = null;
-		
-		
+				
 		connectionPool = new BasicDataSource();
 		connectionPool.setUsername(properties.getProperty("datastore_username"));
 		connectionPool.setPassword(properties.getProperty("datastore_password"));
@@ -55,8 +54,7 @@ public class BootstrapMain {
 //	         c.setAutoCommit(false);
 //	         System.out.println("Opened database successfully");
 
-
-//	    	   updateState("LT52160651985034CUB00", ImageState.NOT_DOWNLOADED);
+//	    	   updateState("LT52160651987312CUB00", ImageState.READY_FOR_PHASE_C);
 //	    	   
 	     		PreparedStatement selectStatement = null;
 		     			

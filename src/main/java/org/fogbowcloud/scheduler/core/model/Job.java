@@ -50,11 +50,12 @@ public abstract class Job {
 
 	public abstract void fail(Task task);
 	
-	public void addRecoveredTask(Task task) {
-		LOGGER.debug("Adding recovered task " + task.getId());
+	public void recoverTask(Task task) {
+		LOGGER.debug("Recovering task " + task.getId());
+		Task taskClone = task.clone();
 		taskReadyLock.writeLock().lock();
 		try {
-			tasksReady.add(0, task);
+			tasksReady.add(0, taskClone);
 		} finally {
 			taskReadyLock.writeLock().unlock();
 		}

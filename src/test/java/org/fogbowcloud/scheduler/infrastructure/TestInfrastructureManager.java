@@ -462,7 +462,7 @@ public class TestInfrastructureManager {
 		Long dateMock = System.currentTimeMillis();
 		Long lifetime = Long.valueOf(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 		doReturn(dateMock).when(dateUtilsMock).currentTimeMillis();
-		doReturn(0).when(infrastructureManager).getReuseTimes();
+		doReturn(0).when(infrastructureManager).getMaxResourceReuses();
 
 		infrastructureManager.getAllocatedResourcesMap().put(fakeResource, orderA);
 		infrastructureManager.getOrders().add(orderA);

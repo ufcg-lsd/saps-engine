@@ -10,7 +10,7 @@ public class AppPropertiesConstants {
 	public static final String INFRA_RESOURCE_SERVICE_TIME = "infra_resource_service_time";
 	public static final String INFRA_RESOURCE_CONNECTION_TIMEOUT = "infra_resource_connection_timeout";
 	public static final String INFRA_RESOURCE_IDLE_LIFETIME = "infra_resource_idle_lifetime";
-	public static final String INFRA_RESOURCE_REUSE_TIMES = "resource_reuse_times";
+	public static final String INFRA_RESOURCE_REUSE_TIMES = "max_resource_reuse";
 	
 	public static final String INFRA_INITIAL_SPECS_FILE_PATH = "infra_initial_specs_file_path";
 	public static final String INFRA_INITIAL_SPECS_BLOCK_CREATING = "infra_initial_specs_block_creating";

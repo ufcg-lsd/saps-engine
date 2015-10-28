@@ -21,13 +21,14 @@ public class TestJob {
 		
 		Task trecovered = mock(Task.class);		
 		doReturn("taskRecovered").when(trecovered).getId();
+		doReturn(trecovered).when(trecovered).clone();
 		
 		job.addTask(t);
 		job.addTask(t2);
 		
 		assertEquals("task1", job.getByState(TaskState.READY).get(0).getId());
 		
-		job.addRecoveredTask(trecovered);
+		job.recoverTask(trecovered);
 		
 		assertEquals("taskRecovered", job.getByState(TaskState.READY).get(0).getId());
 		assertEquals("task1", job.getByState(TaskState.READY).get(1).getId());
@@ -45,18 +46,20 @@ public class TestJob {
 		
 		Task trecovered = mock(Task.class);		
 		doReturn("taskRecovered").when(trecovered).getId();
+		doReturn(trecovered).when(trecovered).clone();
 		
 		Task trecovered2 = mock(Task.class);		
 		doReturn("taskRecovered2").when(trecovered2).getId();
+		doReturn(trecovered2).when(trecovered2).clone();
 		
 		job.addTask(t);
 		job.addTask(t2);
 		
 		assertEquals("task1", job.getByState(TaskState.READY).get(0).getId());
+		assertEquals("task2", job.getByState(TaskState.READY).get(1).getId());
 		
-		job.addRecoveredTask(trecovered);
-		job.addRecoveredTask(trecovered2);
-
+		job.recoverTask(trecovered);
+		job.recoverTask(trecovered2);
 		
 		assertEquals("taskRecovered2", job.getByState(TaskState.READY).get(0).getId());
 		assertEquals("taskRecovered", job.getByState(TaskState.READY).get(1).getId());

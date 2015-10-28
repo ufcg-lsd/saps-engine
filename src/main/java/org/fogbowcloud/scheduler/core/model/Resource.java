@@ -265,7 +265,7 @@ public class Resource {
 		this.taskExecutionResult = taskExecutionResult;
 	}
 	
-	public void reuse(){
+	public void incReuse(){
 		timesReused++;
 	}
 	

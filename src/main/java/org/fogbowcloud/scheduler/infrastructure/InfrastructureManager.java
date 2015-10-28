@@ -42,7 +42,7 @@ public class InfrastructureManager {
 	private DataStore ds;
 	private List<Specification> initialSpec;
 
-	private int resourceReuseTimes = Integer.MAX_VALUE;
+	private int maxResourceReuses = Integer.MAX_VALUE;
 
 	private List<Order> orders = new ArrayList<Order>();
 
@@ -68,8 +68,8 @@ public class InfrastructureManager {
 
 		String resourceReuseTimesStr = this.properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_REUSE_TIMES);
 
-		if (!(this.properties.get("resource_reuse_times")== null || resourceReuseTimesStr.isEmpty())){
-			this.resourceReuseTimes = Integer.getInteger(resourceReuseTimesStr);
+		if (!(resourceReuseTimesStr == null || resourceReuseTimesStr.isEmpty())){
+			this.maxResourceReuses = Integer.getInteger(resourceReuseTimesStr);
 		}
 
 		this.validateProperties();
@@ -182,18 +182,17 @@ public class InfrastructureManager {
 		}
 
 		this.updateInfrastuctureState();
-
 	}
 
 	public void releaseResource(Resource resource) {
-		resource.reuse();
+		resource.incReuse();
 		LOGGER.debug("Releasing Resource [" + resource.getId() + "]");
 		Order orderToRemove = allocatedResources.get(resource);
 		if (orderToRemove != null) {
 			orders.remove(orderToRemove);
 			allocatedResources.remove(resource);
 		}
-		if (resource.getReusedTimes() <= getReuseTimes()){
+		if (resource.getReusedTimes() <= getMaxResourceReuses()){
 			if (isResourceAlive(resource)) {
 				// Anticipating resource to Scheduler if it is needed
 				for (Order order : this.getOrdersByState(OrderState.OPEN, OrderState.ORDERED)) {
@@ -222,11 +221,9 @@ public class InfrastructureManager {
 			try {
 				disposeResource(resource);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				LOGGER.error("Error when disposing of resource for excessive reuse", e);
 			}
 		}
-
 	}
 
 	public void cancelOrderTimer() {
@@ -590,8 +587,8 @@ public class InfrastructureManager {
 	}
 	
 	
-	public int getReuseTimes(){
-		return this.resourceReuseTimes;
+	public int getMaxResourceReuses(){
+		return this.maxResourceReuses;
 	}
 
 	protected class OrderService implements Runnable {

@@ -190,7 +190,8 @@ public class SebalTasks {
 				properties.getProperty("sebal_sandbox") + "/output");
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER,
 				properties.getProperty("sebal_local_output_dir"));
-
+		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, properties.getProperty("sebal_task_timeout"));
+		
 		// repository properties
 		task.putMetadata(METADATA_REPOS_USER, properties.getProperty("sebal_remote_user"));
 		task.putMetadata(METADATA_IMAGE_REPOSITORY,
