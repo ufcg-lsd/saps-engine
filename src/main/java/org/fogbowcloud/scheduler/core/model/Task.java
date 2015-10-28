@@ -20,12 +20,16 @@ public interface Task {
 	public boolean isFinished();
 	
 	public boolean isFailed();
+	
+	public boolean checkTimeOuted();
 
 	public void addCommand(Command command);
 	
 	public List<Command> getCommandsByType(Type commandType);
 	
 	public List<Command> getAllCommands();
+	
+	public void startedRunning();
 
 	public void putMetadata(String attributeName, String value);
 

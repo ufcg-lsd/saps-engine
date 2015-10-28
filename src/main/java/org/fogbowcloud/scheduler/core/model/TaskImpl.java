@@ -18,6 +18,8 @@ public class TaskImpl implements Task {
 	public static final String METADATA_SANDBOX = "sandbox";
 	public static final String METADATA_REMOTE_COMMAND_EXIT_PATH = "remote_command_exit_path";
 	public static final String METADATA_RESOURCE_ID = "resource_id";
+	public static final String METADATA_TASK_TIMEOUT = "task_timeout";
+	
 	
 	private boolean isFinished = false;
 	private String id;
@@ -25,6 +27,8 @@ public class TaskImpl implements Task {
 	private List<Command> commands = new ArrayList<Command>();
 	private Map<String, String> metadata = new HashMap<String, String>();
 	private boolean isFailed = false;
+	
+	private long startedRunningAt = Long.MAX_VALUE;
 	
 	public TaskImpl(String id, Specification spec) {
 		this.id = id;
@@ -111,5 +115,26 @@ public class TaskImpl implements Task {
 	@Override
 	public boolean isFailed() {
 		return isFailed;
+	}
+
+	@Override
+	public boolean checkTimeOuted() {
+		String timeOutRaw = getMetadata(METADATA_TASK_TIMEOUT);
+		if (timeOutRaw == null || timeOutRaw.isEmpty()){
+			return false;
+		}
+		long timeOut = Long.getLong(timeOutRaw);
+		if (System.currentTimeMillis() - this.startedRunningAt > timeOut){
+			return true;
+		} else {
+			return false;
+		}
+		
+	}
+
+	@Override
+	public void startedRunning() {
+		this.startedRunningAt = System.currentTimeMillis();
+		
 	}
 }

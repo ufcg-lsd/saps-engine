@@ -72,6 +72,7 @@ public class Scheduler implements Runnable{
 				LOGGER.debug("Relating resource [ID:"+resource.getId()+"] with task [ID:"+task.getId()+"]");
 				job.run(task);
 				runningTasks.put(task.getId(), resource);
+				task.startedRunning();
 				task.putMetadata(TaskImpl.METADATA_RESOURCE_ID, resource.getId());
 				taskExecutor.submit(new Runnable() {
 					@Override

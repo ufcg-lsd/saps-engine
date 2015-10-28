@@ -53,6 +53,7 @@ public class TestExecutionMonitor {
 		doReturn(true).when(resource).checkConnectivity();
 		doReturn(true).when(task).isFinished();
 		doReturn(false).when(task).isFailed();
+		doReturn(false).when(task).checkTimeOuted();
 		doNothing().when(scheduler).taskCompleted(task);
 		doNothing().when(job).finish(task);
 		executionMonitor.run();
@@ -71,6 +72,7 @@ public class TestExecutionMonitor {
 		doReturn(true).when(resource).checkConnectivity();
 		doReturn(true).when(task).isFinished();
 		doReturn(true).when(task).isFailed();
+		doReturn(false).when(task).checkTimeOuted();
 		doNothing().when(scheduler).taskCompleted(task);
 		doNothing().when(job).finish(task);
 		executionMonitor.run();
@@ -105,6 +107,7 @@ public class TestExecutionMonitor {
 		doReturn(resource).when(scheduler).getAssociateResource(task);
 		doReturn(true).when(resource).checkConnectivity();
 		doReturn(false).when(task).isFinished();
+		doReturn(false).when(task).checkTimeOuted();
 		doNothing().when(scheduler).taskCompleted(task);
 		executionMonitor.run();
 		verify(task).isFinished();
@@ -112,4 +115,26 @@ public class TestExecutionMonitor {
 		verify(scheduler).getAssociateResource(task);
 		verify(scheduler, never()).taskCompleted(task);
 	}
+	
+	@Test
+	public void testExecutionTimedOut() throws InfrastructureException, InterruptedException{
+		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler,executorService);
+		List<Task> runningTasks = new ArrayList<Task>();
+		runningTasks.add(task);
+		doReturn(FAKE_TASK_ID).when(task).getId();
+		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
+		doReturn(resource).when(scheduler).getAssociateResource(task);
+		doReturn(true).when(resource).checkConnectivity();
+		doReturn(false).when(task).isFinished();
+		doReturn(true).when(task).checkTimeOuted();
+		doNothing().when(scheduler).taskFailed(task);
+		executionMonitor.run();
+		verify(task).checkTimeOuted();
+		verify(job, never()).finish(task);;
+		verify(scheduler).getAssociateResource(task);
+		verify(scheduler, never()).taskCompleted(task);
+		verify(job).fail(task);
+		verify(scheduler).taskFailed(task);
+	}
+	
 }

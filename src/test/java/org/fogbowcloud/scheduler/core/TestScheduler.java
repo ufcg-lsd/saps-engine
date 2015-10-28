@@ -3,6 +3,7 @@ package org.fogbowcloud.scheduler.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -158,6 +159,7 @@ public class TestScheduler {
 			Task t = mock(Task.class);
 			doReturn("Task_0"+String.valueOf(count)).when(t).getId();
 			doReturn(spec).when(t).getSpecification();
+			doNothing().when(t).startedRunning();
 			tasks.add(t);
 		}
 		

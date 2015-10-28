@@ -111,7 +111,7 @@ public class SebalJob extends Job {
 	public void run(Task task) {
 		LOGGER.debug("Moving task " + task.getId() + " from READY to RUNNING.");
 		tasksReady.remove(task);
-		tasksRunning.add(task);		
+		tasksRunning.add(task);
 	}
 
 	public List<Task> getTasksOfImageByState(String imageName, TaskState... taskStates) {
