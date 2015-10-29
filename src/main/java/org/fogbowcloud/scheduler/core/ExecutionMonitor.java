@@ -53,21 +53,24 @@ public class ExecutionMonitor implements Runnable {
 		
 		@Override
 		public void run() {
-			LOGGER.info("Monitoring task " + task.getId());
+			LOGGER.info("Monitoring task " + task.getId() + ", failed=" + task.isFailed()
+					+ ", completed=" + task.isFinished());
 			
-			if (task.checkTimeOuted()){
-				job.fail(task);
-				scheduler.taskFailed(task);
-				LOGGER.error("Task "+ task.getId() + " timed out");
-			}
+//			if (task.checkTimeOuted()){
+//				job.fail(task);
+//				scheduler.taskFailed(task);
+//				LOGGER.error("Task "+ task.getId() + " timed out");
+//			}
 			
 			if (task.isFailed()) {
+				LOGGER.info("Failing task " + task.getId());
 				job.fail(task);
 				scheduler.taskFailed(task);
 				return;
 			}
 			
 			if (task.isFinished()){
+				LOGGER.info("Completing task " + task.getId());
 				job.finish(task);
 				scheduler.taskCompleted(task);
 				return;
