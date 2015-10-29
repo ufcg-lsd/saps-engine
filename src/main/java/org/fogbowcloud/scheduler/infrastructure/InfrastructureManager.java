@@ -68,8 +68,8 @@ public class InfrastructureManager {
 
 		String resourceReuseTimesStr = this.properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_REUSE_TIMES);
 
-		if (!(resourceReuseTimesStr == null || resourceReuseTimesStr.isEmpty())){
-			this.maxResourceReuses = Integer.getInteger(resourceReuseTimesStr);
+		if (resourceReuseTimesStr != null && !resourceReuseTimesStr.isEmpty()){
+			this.maxResourceReuses = Integer.parseInt(resourceReuseTimesStr);
 		}
 
 		this.validateProperties();
