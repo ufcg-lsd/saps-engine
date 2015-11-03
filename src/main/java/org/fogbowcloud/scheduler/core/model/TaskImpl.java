@@ -8,8 +8,12 @@ import java.util.UUID;
 
 import org.fogbowcloud.scheduler.core.model.Command.Type;
 
+import org.apache.log4j.Logger;
+
 public class TaskImpl implements Task {
 
+	private static final Logger LOGGER = Logger.getLogger(TaskImpl.class);
+	
 	//Environment variables related to task
 	public static final String ENV_LOCAL_OUT_DIR = "";
 	
@@ -123,7 +127,13 @@ public class TaskImpl implements Task {
 		if (timeOutRaw == null || timeOutRaw.isEmpty()){
 			return false;
 		}
-		long timeOut = Long.getLong(timeOutRaw);
+		long timeOut;
+		try {
+		timeOut = Long.parseLong(timeOutRaw);
+		} catch (NumberFormatException e){
+			LOGGER.error("Timeout badly formated, ignoring it: ", e);
+			return false;
+		}
 		if (System.currentTimeMillis() - this.startedRunningAt > timeOut){
 			return true;
 		} else {

@@ -56,11 +56,11 @@ public class ExecutionMonitor implements Runnable {
 			LOGGER.info("Monitoring task " + task.getId() + ", failed=" + task.isFailed()
 					+ ", completed=" + task.isFinished());
 			
-//			if (task.checkTimeOuted()){
-//				job.fail(task);
-//				scheduler.taskFailed(task);
-//				LOGGER.error("Task "+ task.getId() + " timed out");
-//			}
+			if (task.checkTimeOuted()){
+				job.fail(task);
+				scheduler.taskFailed(task);
+				LOGGER.error("Task "+ task.getId() + " timed out");
+			}
 			
 			if (task.isFailed()) {
 				LOGGER.info("Failing task " + task.getId());
