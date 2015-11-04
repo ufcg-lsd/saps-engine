@@ -1,6 +1,7 @@
 package org.fogbowcloud.scheduler.core;
 
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -58,7 +59,7 @@ public class TestExecutionMonitor {
 		doNothing().when(job).finish(task);
 		executionMonitor.run();
 		Thread.sleep(500);
-		verify(task).isFinished();
+		verify(task, times(2)).isFinished();
 		verify(job).finish(task);
 	}
 	
@@ -77,7 +78,7 @@ public class TestExecutionMonitor {
 		doNothing().when(job).finish(task);
 		executionMonitor.run();
 		Thread.sleep(500);
-		verify(task).isFailed();
+		verify(task, times(2)).isFailed();
 		verify(job).fail(task);
 	}
 	
@@ -110,7 +111,7 @@ public class TestExecutionMonitor {
 		doReturn(false).when(task).checkTimeOuted();
 		doNothing().when(scheduler).taskCompleted(task);
 		executionMonitor.run();
-		verify(task).isFinished();
+		verify(task, times(2)).isFinished();
 		verify(job, never()).finish(task);;
 		verify(scheduler).getAssociateResource(task);
 		verify(scheduler, never()).taskCompleted(task);
