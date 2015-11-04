@@ -57,7 +57,8 @@ public class SebalScheduleApplication extends Application {
 		
 		Router router = new Router(getContext());
 		router.attach("/sebal-scheduler/images", ImageResource.class);
-		router.attach("/sebal-scheduler/tasks/{imgName}", TaskResource.class);
+		router.attach("/sebal-scheduler/images/{imgName}", ImageResource.class);
+		router.attach("/sebal-scheduler/tasks/{taskid}", TaskResource.class);
 		return router;
 	}
 	
@@ -82,6 +83,15 @@ public class SebalScheduleApplication extends Application {
 		}
 		
 		return tasks;
+	}
+	
+	public Task getTaskById(String taskId){
+		return job.getCompletedTask(taskId);
+	}
+	
+	public List<Task> getAllCompletedTasks() {
+		return job.getTasksByState(TaskState.COMPLETED);
+		
 	}
 
 }

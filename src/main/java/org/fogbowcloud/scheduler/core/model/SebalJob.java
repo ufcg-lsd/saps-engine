@@ -142,4 +142,30 @@ public class SebalJob extends Job {
 		}
 		return imageTasks;
 	}
+	
+	public Task getCompletedTask(String taskId){
+		for (Task task : this.tasksCompleted){
+			if (task.getId().equals(taskId)){
+				return task;
+			}
+		}
+		return null;
+	}
+	
+	public List<Task> getTasksByState(TaskState... taskStates) {
+		List<Task> allTasks = new ArrayList<Task>();
+		
+		for (TaskState taskState : taskStates) {
+			if (TaskState.READY.equals(taskState)) {
+				allTasks.addAll(tasksReady);
+			} else if (TaskState.RUNNING.equals(taskState)) {
+				allTasks.addAll(tasksRunning);
+			} else if (TaskState.FAILED.equals(taskState)) {
+				allTasks.addAll(tasksFailed);
+			} else if (TaskState.COMPLETED.equals(taskState)) {
+				allTasks.addAll(tasksCompleted);			
+			}			
+		}
+		return allTasks;
+	}
 }

@@ -1,6 +1,6 @@
 package org.fogbowcloud.scheduler.restlet.resource;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
@@ -20,19 +20,28 @@ public class TaskResource  extends ServerResource {
 	@Get
 	public Representation getEvents() throws Exception{
 		
-		String imageName = (String) getRequest().getAttributes().get("imgName");
-		Map<Task, TaskState> tasks = ((SebalScheduleApplication) getApplication()).getAllTaskByImage(imageName);
+		String taskId = (String) getRequest().getAttributes().get("taskId");
+		
+		if (taskId != null){
+		Task task = ((SebalScheduleApplication) getApplication()).getTaskById(taskId);
+		JSONObject jsonTask = new JSONObject();
+		jsonTask.put("taskId", task.getId());
+		jsonTask.put("resultingFile", task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER));
+		StringRepresentation sr = new StringRepresentation(jsonTask.toString(), MediaType.TEXT_PLAIN);
+		return sr;
+		} else {
+		List<Task> tasks = ((SebalScheduleApplication) getApplication()).getAllCompletedTasks();
 		JSONArray jasonTasks = new JSONArray();
-		for(Entry<Task, TaskState> e : tasks.entrySet()){
+		for(Task e : tasks){
 			JSONObject jsonTask = new JSONObject();
-			jsonTask.put("taskId", e.getKey().getId());
-			jsonTask.put("state", e.getValue().name());
-			jsonTask.put("resourceId", e.getKey().getMetadata(TaskImpl.METADATA_RESOURCE_ID));
+			jsonTask.put("taskId", e.getId());
+			jsonTask.put("resultingFile", e.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER));
 			jasonTasks.put(jsonTask);
 		}
 
 		StringRepresentation sr = new StringRepresentation(jasonTasks.toString(), MediaType.TEXT_PLAIN);
 		return sr;
+		}
 	}
 	
 	
