@@ -98,7 +98,7 @@ public class TaskImpl implements Task {
 	@Override
 	public List<Command> getCommandsByType(Type commandType) {
 		List<Command> commandsToReturn = new ArrayList<Command>();
-		for (Command command : commands) {
+		for (Command command : getAllCommands()) {
 			if (command.getType().equals(commandType)) {
 				commandsToReturn.add(command);
 			}

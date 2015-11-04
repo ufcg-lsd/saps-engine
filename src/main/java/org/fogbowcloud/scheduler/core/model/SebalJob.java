@@ -72,25 +72,25 @@ public class SebalJob extends Job {
 		}
 	}
 
-	private void udpateDB(String imageName, ImageState imageState) {
+	protected void udpateDB(String imageName, ImageState imageState) {
 		LOGGER.debug("Updating image " + imageName + " to state " + imageState.getValue());
 		try {
 			imageStore.updateState(imageName, imageState);
 
 			// updating previous images not updated yet because of any connection problem
-			for (String pendingImage : new ArrayList<String>(pendingUpdates.keySet())) {
-				imageStore.updateState(pendingImage, pendingUpdates.get(pendingImage));
-				pendingUpdates.remove(pendingImage);
+			for (String pendingImage : new ArrayList<String>(getPendingUpdates().keySet())) {
+				imageStore.updateState(pendingImage, getPendingUpdates().get(pendingImage));
+				getPendingUpdates().remove(pendingImage);
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image " + imageName + " to state "
 					+ imageState.getValue());
 			LOGGER.debug("Adding image " + imageName + " to pendingUpdates.");
-			pendingUpdates.put(imageName, imageState);
+			getPendingUpdates().put(imageName, imageState);
 		}
 	}
 
-	private List<Task> filterTaskByPhase(List<Task> tasks, String taskPhase) {
+	protected List<Task> filterTaskByPhase(List<Task> tasks, String taskPhase) {
 		List<Task> filteredTasks = new ArrayList<Task>();
 		for (Task task : tasks) {
 			if (taskPhase.equals(task.getMetadata(SebalTasks.METADATA_PHASE))) {
@@ -114,6 +114,10 @@ public class SebalJob extends Job {
 		tasksRunning.add(task);
 	}
 
+	protected Map<String, ImageState> getPendingUpdates(){
+		return this.pendingUpdates;
+	}
+	
 	public List<Task> getTasksOfImageByState(String imageName, TaskState... taskStates) {
 		List<Task> allTasks = new ArrayList<Task>();
 		
