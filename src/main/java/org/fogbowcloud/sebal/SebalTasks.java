@@ -27,19 +27,19 @@ public class SebalTasks {
 	
 	public static final String METADATA_PHASE = "phase";
 	public static final String METADATA_IMAGE_NAME = "image_name";
-	private static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
-	private static final String METADATA_PARTITION_INDEX = "partition_index";
+	public static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
+	public static final String METADATA_PARTITION_INDEX = "partition_index";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 	private static final String METADATA_ADDITIONAL_LIBRARY_PATH = "additonal_library_path";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
-	private static final String METADATA_LEFT_X = "left_x";
-	private static final String METADATA_UPPER_Y = "upper_y";
-	private static final String METADATA_RIGHT_X = "right_x";
-	private static final String METADATA_LOWER_Y = "lower_y";
+	public static final String METADATA_LEFT_X = "left_x";
+	public static final String METADATA_UPPER_Y = "upper_y";
+	public static final String METADATA_RIGHT_X = "right_x";
+	public static final String METADATA_LOWER_Y = "lower_y";
 	private static final String METADATA_REMOTE_BOUNDINGBOX_PATH = "remote_boundingbox_path";
 	private static final String METADATA_IMAGES_MOUNT_POINT = "images_mount_point";
-	private static final String METADATA_RESULTS_MOUNT_POINT = "results_mount_point";
+	public static final String METADATA_RESULTS_MOUNT_POINT = "results_mount_point";
 	private static final String METADATA_SEBAL_URL = "sebal_url";
 	private static final String METADATA_REPOS_USER = "repository_user";
 	private static final String METADATA_IMAGE_REPOSITORY = "image_repository";

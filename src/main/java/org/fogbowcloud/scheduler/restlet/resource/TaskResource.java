@@ -11,13 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-
+import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
+import org.fogbowcloud.sebal.SebalTasks;
 import org.restlet.data.MediaType;
 import org.restlet.representation.ObjectRepresentation;
 import org.restlet.representation.Representation;
@@ -25,36 +22,57 @@ import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
+import com.amazonaws.util.json.JSONObject;
+
 public class TaskResource  extends ServerResource {
 
 	List<String> validVariables = new ArrayList<String>();
 	
-	
-	
+
+
 	@Get
 	public Representation getEvents() throws Exception{
-
+		fillValidVariables();
 		String taskId = (String) getRequest().getAttributes().get("taskId");
-		
+		String var = (String) getRequest().getAttributes().get("var");
+
 		if (taskId != null){
 			Task task = ((SebalScheduleApplication) getApplication()).getTaskById(taskId);
 			JSONObject jsonTask = new JSONObject();
 
-			String preffix = task.getMetadata(SebalTasks.)
+			String preffix = task.getMetadata(SebalTasks.METADATA_LEFT_X) + "." + 
+					task.getMetadata(SebalTasks.METADATA_UPPER_Y) + "." +
+					task.getMetadata(SebalTasks.METADATA_RIGHT_X) + "." +
+					task.getMetadata(SebalTasks.METADATA_LOWER_Y) + "_" +
+					task.getMetadata(SebalTasks.METADATA_NUMBER_OF_PARTITIONS) + "_" +
+					task.getMetadata(SebalTasks.METADATA_PARTITION_INDEX) + "_new_"
+					;
+			Map<String, String> varPathMap = filelist(task.getMetadata(SebalTasks.METADATA_RESULTS_MOUNT_POINT) +"/results/" + task.getMetadata(SebalTasks.METADATA_IMAGE_NAME), preffix, validVariables);
 			
-			jsonTask.put("resultingFile", task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER));
+			for (String key : varPathMap.keySet()){
+				jsonTask.put(key, varPathMap.get(key));
+			}
+		
 			StringRepresentation sr = new StringRepresentation(jsonTask.toString(), MediaType.TEXT_PLAIN);
-			ProcessBuilder builder = new ProcessBuilder(LOCAL_COMMAND_INTERPRETER, "-c",
-					"commandodemontagem");
 			return sr;
 		}
 		return null;
 	}
 
+	private void fillValidVariables() {
+		validVariables.add("ndvi");
+		validVariables.add("evi");
+		validVariables.add("iaf");
+		validVariables.add("ts");
+		validVariables.add("alpha");
+		validVariables.add("rn");
+		validVariables.add("g");
+	}
+
 	public Map<String, String> filelist(String parentFolder, String prefix, List<String> validSuffixes){
-		
+
 		Map<String, String> filePathMap = new HashMap<String, String>();
-		
+
 		File parentFolderFile = new File(parentFolder);
 		File[] listOfFiles = parentFolderFile.listFiles();
 
@@ -63,38 +81,17 @@ public class TaskResource  extends ServerResource {
 			if (file.isFile())
 			{
 				for (String variable : validSuffixes){
-				if ( file.getName().startsWith(prefix+"_"+ variable)) {
-					filePathMap.put(variable, file.getAbsolutePath());
-				};
+					if ( file.getName().startsWith(prefix+"_"+ variable)) {
+						filePathMap.put(variable, file.getAbsolutePath());
+					};
 				}
-					}
-				}
+			}
+		}
 		return null;
 	}
 
-	@GET
-	@Produces("application/bitmap")
-	public Response getImageBitMap(String fileName)
-	{
-		System.out.println("File requested is : " + fileName);
+	private Representation getImagemAsRepresentation(String fileName) throws FileNotFoundException{
 
-		//Put some validations here such as invalid file name or missing file name
-		if(fileName == null || fileName.isEmpty())
-		{
-			ResponseBuilder response = Response.status(Status.BAD_REQUEST);
-			return response.build();
-		}
-
-		//Prepare a file object with file to return
-		File file = new File("c:/demoPDFFile.pdf");
-
-		ResponseBuilder response = Response.ok((Object) file);
-		response.header("Content-Disposition", "attachment; filename="+fileName);
-		return response.build();
-	}
-	
-private Representation getImagemAsRepresentation(String fileName) throws FileNotFoundException{
-		
 		File file = new File(fileName);
 
 		FileInputStream fis = new FileInputStream(file);
@@ -111,17 +108,16 @@ private Representation getImagemAsRepresentation(String fileName) throws FileNot
 
 		byte[] data = bos.toByteArray();
 
-		
+
 		ObjectRepresentation<byte[]> or=new ObjectRepresentation<byte[]>(data, MediaType.IMAGE_BMP) {
-	        @Override
-	        public void write(OutputStream os) throws IOException {
-	            super.write(os);
-	            os.write(this.getObject());
-	        }
-	    };
+			@Override
+			public void write(OutputStream os) throws IOException {
+				super.write(os);
+				os.write(this.getObject());
+			}
+		};
 
-	    return or; 
-		
+		return or; 
+
 	}
-
 }
