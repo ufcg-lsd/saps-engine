@@ -66,6 +66,7 @@ public class TaskResource  extends ServerResource {
 		
 		JSONObject jsonTask = new JSONObject();		
 		Map<String, String> existingFiles = filelist(imageResultFolder, fileNamePrefix);
+		LOGGER.debug("existing files are " + existingFiles);
 		
 		if (existingFiles.size() != validVariables.size()) {
 			LOGGER.debug("Results are not generated yet.");
@@ -196,8 +197,8 @@ public class TaskResource  extends ServerResource {
 	
 	private String getFileNamePrefix(Task task) {
 		return task.getMetadata(SebalTasks.METADATA_LEFT_X) + "."
-				+  task.getMetadata(SebalTasks.METADATA_UPPER_Y) + "."
 				+ task.getMetadata(SebalTasks.METADATA_RIGHT_X) + "."
+				+ task.getMetadata(SebalTasks.METADATA_UPPER_Y) + "."
 				+ task.getMetadata(SebalTasks.METADATA_LOWER_Y) + "_"
 				+ task.getMetadata(SebalTasks.METADATA_NUMBER_OF_PARTITIONS) + "_"
 				+ task.getMetadata(SebalTasks.METADATA_PARTITION_INDEX) + "_new_";
