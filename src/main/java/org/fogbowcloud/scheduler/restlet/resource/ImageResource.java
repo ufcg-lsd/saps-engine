@@ -45,7 +45,7 @@ public class ImageResource extends ServerResource {
 		List<ImageData> images = ((SebalScheduleApplication) getApplication()).getAllImages();
 		
 		for(ImageData image : images){
-			Map<Task, TaskState> tasks = ((SebalScheduleApplication) getApplication()).getAllTaskByImage(imageName);
+			Map<Task, TaskState> tasks = ((SebalScheduleApplication) getApplication()).getAllTaskByImage(image.getName());
 			Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 			for(Entry<Task, TaskState> e : tasks.entrySet()){
 				
