@@ -87,10 +87,26 @@ public class TaskResource  extends ServerResource {
 
 		String imagesDir = properties.getProperty("scheduler_images_dir") == null ? "/mnt/sebal-images/images"
 				: properties.getProperty("scheduler_images_dir");
+		
+		//untaring image for getting MTL file	
+		String imageName = task.getMetadata(SebalTasks.METADATA_IMAGE_NAME);
+		String untarCommand = "mkdir -p /tmp/" + imageName + "; cp " + imagesDir + "/" + imageName
+				+ "/" + imageName + ".tar.gz /tmp/" + imageName + "; cd /tmp/" + imageName
+				+ "; tar -xvzf " + imageName + ".tar.gz"; 
+		
+		LOGGER.debug("Untar command: " + untarCommand);
+		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", untarCommand);
+		Process pr = builder.start();
+		int exitValue = pr.waitFor();
 
-		String mtlFilePath = imagesDir + "/" + task.getMetadata(SebalTasks.METADATA_IMAGE_NAME)
-				+ "/" + task.getMetadata(SebalTasks.METADATA_IMAGE_NAME) + "_MTL.txt";
-
+		LOGGER.debug("Local process [cmdLine=" + untarCommand + "] output was: \n" + getOutout(pr));
+		if (exitValue != 0) {
+			LOGGER.debug("Local process [cmdLine=" + untarCommand + "] error output was: \n"
+					+ getErrOutput(pr));
+		}
+		
+		String mtlFilePath = "/tmp/" + imageName + "/" + imageName + "_MTL.txt";
+		
 		String resultstDir = properties.getProperty("scheduler_results_dir") == null ? "/mnt/sebal-results/results"
 				: properties.getProperty("scheduler_results_dir");
 		
@@ -103,7 +119,7 @@ public class TaskResource  extends ServerResource {
 		String i = task.getMetadata(SebalTasks.METADATA_PARTITION_INDEX);
 		String boundingboxFilePath = getBoundingBoxFilePath(task, properties);
 				
-		String command = "java -Xss4m -Djava.library.path=" + libraryPath + " -cp "
+		String command = "java -Xss16m -Djava.library.path=" + libraryPath + " -cp "
 				+ sebalClassPath + " org.fogbowcloud.sebal.render.RenderHelper " + mtlFilePath
 				+ " " + resultstDir + " " + range + " " + n + " " + i + " " + boundingboxFilePath + " bmp";
 
@@ -114,9 +130,9 @@ public class TaskResource  extends ServerResource {
 		// 1 1 boundingbox_vertices_niels tiff
 
 		LOGGER.debug("Render command: " + command);
-		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", command);
-		Process pr = builder.start();
-		int exitValue = pr.waitFor();
+		builder = new ProcessBuilder("/bin/bash", "-c", command);
+		pr = builder.start();
+		exitValue = pr.waitFor();
 
 		LOGGER.debug("Local process [cmdLine=" + command + "] output was: \n" + getOutout(pr));
 		if (exitValue != 0) {
