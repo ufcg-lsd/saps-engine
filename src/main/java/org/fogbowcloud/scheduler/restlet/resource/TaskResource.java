@@ -28,13 +28,13 @@ import org.restlet.resource.ServerResource;
 
 import com.amazonaws.util.json.JSONObject;
 
-public class TaskResource  extends ServerResource {
+public class TaskResource extends ServerResource {
 	private static final Logger LOGGER = Logger.getLogger(TaskResource.class);
 
 	List<String> validVariables = new ArrayList<String>();
-	
+
 	@Get
-	public Representation fetch() throws Exception{
+	public Representation fetch() throws Exception {
 		LOGGER.info("Getting tasks...");
 		fillValidVariables();
 		String taskId = (String) getRequest().getAttributes().get("taskId");
@@ -52,22 +52,23 @@ public class TaskResource  extends ServerResource {
 		if (task == null) {
 			throw new ResourceException("TaskId " + taskId + " is not a completed task.");
 		}
-		
+
 		Properties properties = application.getProperties();
 		String resultstDir = properties.getProperty("scheduler_results_dir") == null ? "/mnt/sebal-results/results"
 				: properties.getProperty("scheduler_results_dir");
-		
-		String imageResultFolder = resultstDir + "/"  + task.getMetadata(SebalTasks.METADATA_IMAGE_NAME);
+
+		String imageResultFolder = resultstDir + "/"
+				+ task.getMetadata(SebalTasks.METADATA_IMAGE_NAME);
 		String fileNamePrefix = getFileNamePrefix(task);
 
 		if (varName != null) {
 			return getImagemAsRepresentation(imageResultFolder, fileNamePrefix, varName);
 		}
-		
-		JSONObject jsonTask = new JSONObject();		
+
+		JSONObject jsonTask = new JSONObject();
 		Map<String, String> existingFiles = filelist(imageResultFolder, fileNamePrefix);
 		LOGGER.debug("existing files are " + existingFiles);
-		
+
 		if (existingFiles.size() != validVariables.size()) {
 			LOGGER.debug("Results are not generated yet.");
 			try {
@@ -78,14 +79,15 @@ public class TaskResource  extends ServerResource {
 						+ taskId + ".");
 			}
 		}
-		
+
 		jsonTask.put("variables", validVariables);
 		return new StringRepresentation(jsonTask.toString(), MediaType.TEXT_PLAIN);
 	}
 
-	private void render(Task task, Properties properties) throws IOException, InterruptedException, ResourceException {		
+	private void render(Task task, Properties properties) throws IOException, InterruptedException,
+			ResourceException {
 		LOGGER.debug("Rendering results to task " + task);
-		
+
 		String libraryPath = properties.getProperty("scheduler_library_path") == null ? "/usr/local/lib/"
 				: properties.getProperty("scheduler_library_path");
 
@@ -94,42 +96,46 @@ public class TaskResource  extends ServerResource {
 
 		String imagesDir = properties.getProperty("scheduler_images_dir") == null ? "/mnt/sebal-images/images"
 				: properties.getProperty("scheduler_images_dir");
-		
-		//untaring image for getting MTL file	
-		String imageName = task.getMetadata(SebalTasks.METADATA_IMAGE_NAME);
-		String untarCommand = "mkdir -p /tmp/" + imageName + "; cp " + imagesDir + "/" + imageName
-				+ "/" + imageName + ".tar.gz /tmp/" + imageName + "; cd /tmp/" + imageName
-				+ "; tar -xvzf " + imageName + ".tar.gz"; 
-		
-		LOGGER.debug("Untar command: " + untarCommand);
-		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", untarCommand);
-		Process pr = builder.start();
-		int exitValue = pr.waitFor();
 
-		LOGGER.debug("Local process [cmdLine=" + untarCommand + "] output was: \n" + getOutout(pr));
-		if (exitValue != 0) {
-			LOGGER.debug("Local process [cmdLine=" + untarCommand + "] error output was: \n"
-					+ getErrOutput(pr));
-			throw new ResourceException("It was not possible run command " + untarCommand);
-		}
-		
+		// untaring image for getting MTL file
+		String imageName = task.getMetadata(SebalTasks.METADATA_IMAGE_NAME);
 		String mtlFilePath = "/tmp/" + imageName + "/" + imageName + "_MTL.txt";
-		
+
+		if (!new File(mtlFilePath).exists()) {
+			String untarCommand = "mkdir -p /tmp/" + imageName + "; cp " + imagesDir + "/"
+					+ imageName + "/" + imageName + ".tar.gz /tmp/" + imageName + "; cd /tmp/"
+					+ imageName + "; tar -xvzf " + imageName + ".tar.gz";
+
+			LOGGER.debug("Untar command: " + untarCommand);
+			ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", untarCommand);
+			Process pr = builder.start();
+			int exitValue = pr.waitFor();
+
+			LOGGER.debug("Local process [cmdLine=" + untarCommand + "] output was: \n"
+					+ getOutout(pr));
+			if (exitValue != 0) {
+				LOGGER.debug("Local process [cmdLine=" + untarCommand + "] error output was: \n"
+						+ getErrOutput(pr));
+				throw new ResourceException("It was not possible run command " + untarCommand);
+			}
+		}
+
 		String resultstDir = properties.getProperty("scheduler_results_dir") == null ? "/mnt/sebal-results/results"
 				: properties.getProperty("scheduler_results_dir");
-		
+
 		String range = task.getMetadata(SebalTasks.METADATA_LEFT_X) + " "
 				+ task.getMetadata(SebalTasks.METADATA_UPPER_Y) + " "
 				+ task.getMetadata(SebalTasks.METADATA_RIGHT_X) + " "
 				+ task.getMetadata(SebalTasks.METADATA_LOWER_Y);
-		
+
 		String n = task.getMetadata(SebalTasks.METADATA_NUMBER_OF_PARTITIONS);
 		String i = task.getMetadata(SebalTasks.METADATA_PARTITION_INDEX);
 		String boundingboxFilePath = getBoundingBoxFilePath(task, properties);
-				
+
 		String command = "java -Xss16m -Djava.library.path=" + libraryPath + " -cp "
 				+ sebalClassPath + " org.fogbowcloud.sebal.render.RenderHelper " + mtlFilePath
-				+ " " + resultstDir + " " + range + " " + n + " " + i + " " + boundingboxFilePath + " bmp";
+				+ " " + resultstDir + " " + range + " " + n + " " + i + " " + boundingboxFilePath
+				+ " bmp";
 
 		// java -Xss4m -Djava.library.path=/usr/local/lib/ -cp
 		// target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/*
@@ -138,9 +144,9 @@ public class TaskResource  extends ServerResource {
 		// 1 1 boundingbox_vertices_niels tiff
 
 		LOGGER.debug("Render command: " + command);
-		builder = new ProcessBuilder("/bin/bash", "-c", command);
-		pr = builder.start();
-		exitValue = pr.waitFor();
+		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", command);
+		Process pr = builder.start();
+		int exitValue = pr.waitFor();
 
 		LOGGER.debug("Local process [cmdLine=" + command + "] output was: \n" + getOutout(pr));
 		if (exitValue != 0) {
@@ -153,13 +159,15 @@ public class TaskResource  extends ServerResource {
 
 	private String getBoundingBoxFilePath(Task task, Properties properties) {
 		String boundingboxFilePath = "";
-		
+
 		if (properties.getProperty("sebal_local_boundingbox_dir") != null) {
 			LOGGER.debug("Region of image is "
-					+ DBBootstrap.getImageRegionFromName(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME)));
-			File boundingboxFile = new File(
-					properties.getProperty("sebal_local_boundingbox_dir") + "/boundingbox_"
-							+ DBBootstrap.getImageRegionFromName(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME)));
+					+ DBBootstrap.getImageRegionFromName(task
+							.getMetadata(SebalTasks.METADATA_IMAGE_NAME)));
+			File boundingboxFile = new File(properties.getProperty("sebal_local_boundingbox_dir")
+					+ "/boundingbox_"
+					+ DBBootstrap.getImageRegionFromName(task
+							.getMetadata(SebalTasks.METADATA_IMAGE_NAME)));
 			LOGGER.debug("The boundingbox file for this image should be "
 					+ boundingboxFile.getAbsolutePath());
 			if (boundingboxFile.exists()) {
@@ -168,7 +176,7 @@ public class TaskResource  extends ServerResource {
 		}
 		return boundingboxFilePath;
 	}
-	
+
 	private String getOutout(Process pr) throws IOException {
 		BufferedReader r = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 		StringBuilder out = new StringBuilder();
@@ -194,7 +202,7 @@ public class TaskResource  extends ServerResource {
 		}
 		return err.toString();
 	}
-	
+
 	private String getFileNamePrefix(Task task) {
 		return task.getMetadata(SebalTasks.METADATA_LEFT_X) + "."
 				+ task.getMetadata(SebalTasks.METADATA_RIGHT_X) + "."
@@ -229,16 +237,17 @@ public class TaskResource  extends ServerResource {
 				}
 			}
 		} else {
-			
+
 		}
 		return varNameToFile;
 	}
 
-	private Representation getImagemAsRepresentation(String resultFolder, String fileNamePrefix, String varName) throws ResourceException{
+	private Representation getImagemAsRepresentation(String resultFolder, String fileNamePrefix,
+			String varName) throws ResourceException {
 		File file = new File(resultFolder, fileNamePrefix + varName + ".bmp");
 
 		LOGGER.debug("Image result file path" + file.getAbsolutePath());
-		if (file.exists()) {			
+		if (file.exists()) {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			FileInputStream fis = null;
 			byte[] buf = new byte[1024];
@@ -248,9 +257,9 @@ public class TaskResource  extends ServerResource {
 					// Writes to this byte array output stream
 					bos.write(buf, 0, readNum);
 				}
-				
+
 				byte[] data = bos.toByteArray();
-				
+
 				ObjectRepresentation<byte[]> or = new ObjectRepresentation<byte[]>(data,
 						MediaType.IMAGE_BMP) {
 					@Override
@@ -259,7 +268,7 @@ public class TaskResource  extends ServerResource {
 						os.write(this.getObject());
 					}
 				};
-				return or; 
+				return or;
 			} catch (IOException ex) {
 			} finally {
 				try {
@@ -268,9 +277,9 @@ public class TaskResource  extends ServerResource {
 					}
 					bos.close();
 				} catch (IOException e) {
-					
+
 				}
-			}		
+			}
 		} else {
 			LOGGER.error("Image result file path" + file.getAbsolutePath() + " does not exist.");
 		}

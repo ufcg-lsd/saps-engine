@@ -85,9 +85,15 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					setToken(createToken(props));
 				} catch (Throwable e) {
 					LOGGER.error("Error while setting token.", e);
+					try {
+						setToken(createNewTokenFromFile(
+								properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH)));
+					} catch (IOException e1) {
+						LOGGER.error("Error while getting token from file.", e);
+					}
 				}
 			}
-		}, 10, 10, TimeUnit.MINUTES);
+		}, 6, 6, TimeUnit.HOURS);
 	}
 
 	private Token createToken(final Properties props) {
