@@ -18,6 +18,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
+import org.apache.log4j.lf5.PassingLogRecordFilter;
 import org.fogbowcloud.manager.core.plugins.identity.voms.VomsIdentityPlugin;
 import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.request.RequestAttribute;
@@ -72,10 +73,11 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 		ScheduledExecutorService handleTokenUpdateExecutor = Executors.newScheduledThreadPool(1);
 		handleTokenUpdate(handleTokenUpdateExecutor, properties);
-	}
+	}	
 	
 	private void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor,
 			final Properties props) {
+		LOGGER.debug("Turning on handle token update.");
 		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
@@ -90,6 +92,9 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		HashMap<String, String> credentials = new HashMap<String, String>();
 		credentials.put("password", props.getProperty("fogbow.voms.certificate.password"));
 		credentials.put("serverName", props.getProperty("fogbow.voms.server"));
+		LOGGER.debug("Creating token update with serverName="
+				+ props.getProperty("fogbow.voms.server") + " and password="
+				+ props.getProperty("fogbow.voms.certificate.password"));
 
 		Token token = vomsIdentityPlugin.createToken(credentials);
 		LOGGER.debug("VOMS proxy updated. New proxy is " + token.toString());
@@ -98,6 +103,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	}
 
 	private void setToken(Token token) {
+		LOGGER.debug("Setting token to " + token);
 		this.token = token;
 	}
 	
