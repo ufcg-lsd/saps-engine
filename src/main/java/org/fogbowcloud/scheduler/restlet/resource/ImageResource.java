@@ -52,7 +52,7 @@ public class ImageResource extends ServerResource {
 				Integer increment = new Integer(1);
 				
 				if(tasksStatesCount.containsKey(e.getValue().name())){
-					increment = increment+1;
+					increment = tasksStatesCount.get(e.getValue().name())+1;
 				}
 				tasksStatesCount.put(e.getValue().name(), increment);
 				
