@@ -81,7 +81,11 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
-				setToken(createToken(props));
+				try {
+					setToken(createToken(props));
+				} catch (Throwable e) {
+					LOGGER.error("Error while setting token.", e);
+				}
 			}
 		}, 10, 10, TimeUnit.MINUTES);
 	}

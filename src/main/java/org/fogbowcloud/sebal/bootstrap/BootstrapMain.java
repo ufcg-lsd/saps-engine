@@ -54,7 +54,7 @@ public class BootstrapMain {
 //	         c.setAutoCommit(false);
 //	         System.out.println("Opened database successfully");
 
-//	    	   updateState("LT52160651992278CUB00", ImageState.READY_FOR_PHASE_C);
+//	    	   updateState("LT52160651994139CUB00", ImageState.DOWNLOADED);
 //	    	   
 	     		PreparedStatement selectStatement = null;
 		     			
