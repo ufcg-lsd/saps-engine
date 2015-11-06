@@ -84,9 +84,12 @@ public class SebalMain {
 			
 				// TODO develop throughput and negation of task addition 
 //				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
-//				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
+				//addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
 				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
+				addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
 			}
+
+			
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 
 		
@@ -95,6 +98,30 @@ public class SebalMain {
 
 	}
 
+	private static void addFakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
+		try {
+			List<ImageData> completedImages = imageStore.getIn(imageState);
+
+			for (ImageData imageData : completedImages) {
+
+				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
+
+				List<Task> tasks = new ArrayList<Task>();
+
+				tasks = SebalTasks.createF1Tasks(properties, imageData.getName(), sebalSpec,
+						imageData.getFederationMember());
+
+				for (Task task : tasks) {
+					job.addFakeTask(task);
+				}
+			}
+
+		} catch (SQLException e) {
+			LOGGER.error("Error while getting image.", e);
+		}
+
+	}
+	
 	private static void addTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
@@ -132,6 +159,8 @@ public class SebalMain {
 				
 				imageStore.update(imageData);
 			}
+			
+			
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
