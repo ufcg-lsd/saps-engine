@@ -70,8 +70,10 @@ public class SebalMain {
 		// scheduling previous image executions
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
-//		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
+		addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
+		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
 
+		
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
 
@@ -85,8 +87,7 @@ public class SebalMain {
 				// TODO develop throughput and negation of task addition 
 //				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
 				//addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
-//				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
-				addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
+				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 			}
 
 			

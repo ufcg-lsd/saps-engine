@@ -81,7 +81,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			public void run() {
 				setToken(createToken(props));
 			}
-		}, 6, 6, TimeUnit.HOURS);
+		}, 10, 10, TimeUnit.MINUTES);
 	}
 
 	private Token createToken(final Properties props) {
