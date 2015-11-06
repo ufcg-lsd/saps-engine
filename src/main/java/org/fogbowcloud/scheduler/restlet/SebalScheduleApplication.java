@@ -58,8 +58,8 @@ public class SebalScheduleApplication extends Application {
 		Router router = new Router(getContext());
 		router.attach("/sebal-scheduler/image", ImageResource.class);
 		router.attach("/sebal-scheduler/image/{imgName}", ImageResource.class);
-		router.attach("/sebal-scheduler/task/{taskid}", TaskResource.class);
-		router.attach("/sebal-scheduler/task/{taskid}/{varName}", TaskResource.class);
+		router.attach("/sebal-scheduler/task/{taskId}", TaskResource.class);
+		router.attach("/sebal-scheduler/task/{taskId}/{varName}", TaskResource.class);
 		
 		return router;
 	}

@@ -33,7 +33,7 @@ public abstract class Job {
 	}
 	
 	public void addFakeTask(Task task) {
-		LOGGER.debug("Adding task " + task.getId());
+		LOGGER.debug("Adding fake completed task " + task.getId());
 		taskCompletedLock.writeLock().lock();
 		try {
 			tasksCompleted.add(task);

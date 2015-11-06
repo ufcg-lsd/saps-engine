@@ -35,9 +35,12 @@ public class TaskResource  extends ServerResource {
 	
 	@Get
 	public Representation fetch() throws Exception{
+		LOGGER.info("Getting tasks...");
 		fillValidVariables();
 		String taskId = (String) getRequest().getAttributes().get("taskId");
+		LOGGER.debug("TaskId is " + taskId);
 		String varName = (String) getRequest().getAttributes().get("varName");
+		LOGGER.debug("varName is " + varName);
 
 		if (taskId == null) {
 			throw new ResourceException("TaskId was not specified.");
@@ -45,6 +48,7 @@ public class TaskResource  extends ServerResource {
 
 		SebalScheduleApplication application = (SebalScheduleApplication) getApplication();
 		Task task = application.getTaskById(taskId);
+		LOGGER.debug("TaskId " + taskId + " is of task " + task);
 		if (task == null) {
 			throw new ResourceException("TaskId " + taskId + " is not a completed task.");
 		}
@@ -64,6 +68,7 @@ public class TaskResource  extends ServerResource {
 		Map<String, String> existingFiles = filelist(imageResultFolder, fileNamePrefix);
 		
 		if (existingFiles.size() != validVariables.size()) {
+			LOGGER.debug("Results are not generated yet.");
 			try {
 				render(task, properties);
 			} catch (Exception e) {
@@ -77,8 +82,9 @@ public class TaskResource  extends ServerResource {
 		return new StringRepresentation(jsonTask.toString(), MediaType.TEXT_PLAIN);
 	}
 
-	private void render(Task task, Properties properties) throws IOException, InterruptedException {		
-
+	private void render(Task task, Properties properties) throws IOException, InterruptedException, ResourceException {		
+		LOGGER.debug("Rendering results to task " + task);
+		
 		String libraryPath = properties.getProperty("scheduler_library_path") == null ? "/usr/local/lib/"
 				: properties.getProperty("scheduler_library_path");
 
@@ -103,6 +109,7 @@ public class TaskResource  extends ServerResource {
 		if (exitValue != 0) {
 			LOGGER.debug("Local process [cmdLine=" + untarCommand + "] error output was: \n"
 					+ getErrOutput(pr));
+			throw new ResourceException("It was not possible run command " + untarCommand);
 		}
 		
 		String mtlFilePath = "/tmp/" + imageName + "/" + imageName + "_MTL.txt";
@@ -138,6 +145,7 @@ public class TaskResource  extends ServerResource {
 		if (exitValue != 0) {
 			LOGGER.debug("Local process [cmdLine=" + command + "] error output was: \n"
 					+ getErrOutput(pr));
+			throw new ResourceException("It was not possible run command " + command);
 
 		}
 	}
@@ -209,12 +217,14 @@ public class TaskResource  extends ServerResource {
 		Map<String, String> varNameToFile = new HashMap<String, String>();
 		File parentFolderFile = new File(parentFolder);
 
-		for (String varName : validVariables) {
-			for (File file : parentFolderFile.listFiles()) {
-				if (file.isFile() && file.getName().startsWith(prefix + "_" + varName)
-						&& file.getName().endsWith(".bmp")) {
-					varNameToFile.put(varName, file.getAbsolutePath());
-					break;
+		if (parentFolderFile.exists() && parentFolderFile.isDirectory()) {
+			for (String varName : validVariables) {
+				for (File file : parentFolderFile.listFiles()) {
+					if (file.isFile() && file.getName().startsWith(prefix + "_" + varName)
+							&& file.getName().endsWith(".bmp")) {
+						varNameToFile.put(varName, file.getAbsolutePath());
+						break;
+					}
 				}
 			}
 		}
@@ -224,38 +234,43 @@ public class TaskResource  extends ServerResource {
 	private Representation getImagemAsRepresentation(String resultFolder, String fileNamePrefix, String varName) throws ResourceException{
 		File file = new File(resultFolder, fileNamePrefix + varName + ".bmp");
 
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		FileInputStream fis = null;
-		byte[] buf = new byte[1024];
-		try {
-			fis = new FileInputStream(file);
-			for (int readNum; (readNum = fis.read(buf)) != -1;) {
-				// Writes to this byte array output stream
-				bos.write(buf, 0, readNum);
-			}
-
-			byte[] data = bos.toByteArray();
-
-			ObjectRepresentation<byte[]> or = new ObjectRepresentation<byte[]>(data,
-					MediaType.IMAGE_BMP) {
-				@Override
-				public void write(OutputStream os) throws IOException {
-					super.write(os);
-					os.write(this.getObject());
-				}
-			};
-			return or; 
-		} catch (IOException ex) {
-		} finally {
+		LOGGER.debug("Image result file path" + file.getAbsolutePath());
+		if (file.exists()) {			
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			FileInputStream fis = null;
+			byte[] buf = new byte[1024];
 			try {
-				if (fis != null) {
-					fis.close();
+				fis = new FileInputStream(file);
+				for (int readNum; (readNum = fis.read(buf)) != -1;) {
+					// Writes to this byte array output stream
+					bos.write(buf, 0, readNum);
 				}
-				bos.close();
-			} catch (IOException e) {
 				
-			}
-		}		
+				byte[] data = bos.toByteArray();
+				
+				ObjectRepresentation<byte[]> or = new ObjectRepresentation<byte[]>(data,
+						MediaType.IMAGE_BMP) {
+					@Override
+					public void write(OutputStream os) throws IOException {
+						super.write(os);
+						os.write(this.getObject());
+					}
+				};
+				return or; 
+			} catch (IOException ex) {
+			} finally {
+				try {
+					if (fis != null) {
+						fis.close();
+					}
+					bos.close();
+				} catch (IOException e) {
+					
+				}
+			}		
+		} else {
+			LOGGER.error("Image result file path" + file.getAbsolutePath() + " does not exist.");
+		}
 		throw new ResourceException("It was not possible download the file for variable " + varName);
 	}
 }
