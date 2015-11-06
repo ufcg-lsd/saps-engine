@@ -218,16 +218,18 @@ public class TaskResource  extends ServerResource {
 		Map<String, String> varNameToFile = new HashMap<String, String>();
 		File parentFolderFile = new File(parentFolder);
 
+		LOGGER.debug("image result dir is " + parentFolderFile.getAbsolutePath());
 		if (parentFolderFile.exists() && parentFolderFile.isDirectory()) {
 			for (String varName : validVariables) {
 				for (File file : parentFolderFile.listFiles()) {
-					if (file.isFile() && file.getName().startsWith(prefix + "_" + varName)
-							&& file.getName().endsWith(".bmp")) {
+					if (file.isFile() && file.getName().equals(prefix + varName + ".bmp")) {
 						varNameToFile.put(varName, file.getAbsolutePath());
 						break;
 					}
 				}
 			}
+		} else {
+			
 		}
 		return varNameToFile;
 	}
