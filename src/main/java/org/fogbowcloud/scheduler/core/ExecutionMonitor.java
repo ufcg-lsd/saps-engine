@@ -60,6 +60,7 @@ public class ExecutionMonitor implements Runnable {
 				job.fail(task);
 				scheduler.taskFailed(task);
 				LOGGER.error("Task "+ task.getId() + " timed out");
+				return;
 			}
 			
 			if (task.isFailed()) {

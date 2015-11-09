@@ -23,7 +23,7 @@ import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 public class PrimesMain {
 
 	private final static String METADATA_REMOTE_OUTPUT_FOLDER = "/tmp/";
-	private final static String SPEC_FILE_PATH = "/home/gustavorag/Dev/sebalScheduleEnv/initialSpec";
+	private final static String SPEC_FILE_PATH = "/home/igorvcs/Dev/sebalScheduleEnv/initialSpec";
 	private final static String SANDBOX = "/tmp/sandbox";
 	private final static String SSH_SCP_PRECOMMAND = "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
 	
@@ -63,7 +63,7 @@ public class PrimesMain {
 		LOGGER.debug("Task spec: "+spec.toString());
 			
 		Job primeJob = new PrimeJob();
-		for(int count=0; count < 3; count++){
+		for(int count=0; count < 2; count++){
 			primeJob.addTask(getPrimeTask(spec, count*1000, (count+1)*1000));
 		}
 		primeJob.addTask(getPrimeErrorTask(spec, 6000, 7000));
@@ -106,6 +106,7 @@ public class PrimesMain {
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty("local.output"));
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);
 		task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER+"/exit");
+		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, "5000");
 		task.addCommand(cleanPreviousExecution(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(mkdirRemoteFolder(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(stageInCommand("isprime.py", task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py"));
