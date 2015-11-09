@@ -217,6 +217,9 @@ public class SebalTasks {
 	}
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
+		// task property
+		task.putMetadata(TaskImpl.METADATA_MAX_RESOURCE_CONN_RETRIES, properties.getProperty("max_resource_conn_retries"));
+		
 		// sdexs properties
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty("sebal_sandbox") + "/" + task.getId());
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,

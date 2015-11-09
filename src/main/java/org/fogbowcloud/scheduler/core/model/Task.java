@@ -37,4 +37,9 @@ public interface Task {
 	
 	public Map<String, String> getAllMetadata();
 	
+	public boolean mayRetry();
+
+	public int getRetries();
+
+	public void setRetries(int retries);
 }
