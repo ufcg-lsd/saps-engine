@@ -79,8 +79,14 @@ public class ExecutionMonitor implements Runnable {
 			
 			try {
 				if (!checkResourceConnectivity(task)){
-					job.fail(task);
-					scheduler.taskFailed(task);
+					if (!task.mayRetry()) {
+						job.fail(task);
+						scheduler.taskFailed(task);
+					} else {
+						task.setRetries(task.getRetries() + 1);
+					}
+				} else {
+					task.setRetries(0);
 				}
 			} catch (InfrastructureException e) {
 				LOGGER.error("Error while checking connectivity.", e);
