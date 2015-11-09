@@ -23,14 +23,15 @@ public class TaskImpl implements Task {
 	public static final String METADATA_REMOTE_COMMAND_EXIT_PATH = "remote_command_exit_path";
 	public static final String METADATA_RESOURCE_ID = "resource_id";
 	public static final String METADATA_TASK_TIMEOUT = "task_timeout";
-	
-	
+	public static final String METADATA_MAX_RESOURCE_CONN_RETRIES = "max_conn_retries";
+		
 	private boolean isFinished = false;
 	private String id;
 	private Specification spec;
 	private List<Command> commands = new ArrayList<Command>();
 	private Map<String, String> metadata = new HashMap<String, String>();
 	private boolean isFailed = false;
+	private int retries = 0;
 	
 	private long startedRunningAt = Long.MAX_VALUE;
 	
@@ -146,5 +147,23 @@ public class TaskImpl implements Task {
 	public void startedRunning() {
 		this.startedRunningAt = System.currentTimeMillis();
 		
+	}
+
+	@Override
+	public boolean mayRetry() {
+		if (getMetadata(METADATA_MAX_RESOURCE_CONN_RETRIES) != null) {
+			return getRetries() <= Integer.parseInt(getMetadata(METADATA_MAX_RESOURCE_CONN_RETRIES));
+		}
+		return false;
+	}
+
+	@Override
+	public int getRetries() { 
+		return retries;
+	}
+
+	@Override
+	public void setRetries(int retries) {
+		this.retries = retries;		
 	}
 }

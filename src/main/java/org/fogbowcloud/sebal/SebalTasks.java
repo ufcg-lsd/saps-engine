@@ -176,6 +176,26 @@ public class SebalTasks {
 					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
 							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteErrFilePath);
 			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+
+			// stage out render out 
+			String remoteRenderOutFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
+					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_render_out";
+			
+			scpDownloadCommand = createSCPDownloadCommand(
+					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
+							+ remoteRenderOutFilePath,
+					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
+							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteRenderOutFilePath);
+			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+
+			String remoteRenderErrFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
+					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_render_err";
+			scpDownloadCommand = createSCPDownloadCommand(
+					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
+							+ remoteRenderErrFilePath,
+					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
+							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteRenderErrFilePath);
+			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
 			
 			f1Tasks.add(f1Task);
 		}
@@ -197,6 +217,9 @@ public class SebalTasks {
 	}
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
+		// task property
+		task.putMetadata(TaskImpl.METADATA_MAX_RESOURCE_CONN_RETRIES, properties.getProperty("max_resource_conn_retries"));
+		
 		// sdexs properties
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty("sebal_sandbox") + "/" + task.getId());
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,
