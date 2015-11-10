@@ -35,6 +35,4 @@ java -Xmx1G -Xss1G -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAP
 
 PROCESS_OUTPUT=$?
 
-java -Xss16m -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.render.RenderHelper ../${IMAGE_NAME}/${IMAGE_NAME}_MTL.txt $LOCAL_RESULTS ${LEFT_X} ${UPPER_Y} ${RIGHT_X} ${LOWER_Y} ${NUMBER_OF_PARTITIONS} ${PARTITION_INDEX} ${BOUNDING_BOX_PATH} bmp > ${OUTPUT_FOLDER}/${NUMBER_OF_PARTITIONS}_${PARTITION_INDEX}_render_out 2> ${OUTPUT_FOLDER}/${NUMBER_OF_PARTITIONS}_${PARTITION_INDEX}_render_err
-
 echo $PROCESS_OUTPUT > ${REMOTE_COMMAND_EXIT_PATH}
