@@ -64,9 +64,9 @@ public class Scheduler implements Runnable{
 			}
 
 			LOGGER.debug("Current job demand is " + specDemand);
-			for (Specification spec : specDemand.keySet()) {			
-				infraManager.orderResource(spec, this, specDemand.get(spec));
-			}
+		}
+		for (Specification spec : specDemand.keySet()) {			
+			infraManager.orderResource(spec, this, specDemand.get(spec));
 		}
 	}
 
@@ -105,7 +105,7 @@ public class Scheduler implements Runnable{
 		LOGGER.debug("============================================================");
 		Job job = getJobOfFailedTask(task);
 		if (job != null) {
-		job.recoverTask(task);
+			job.recoverTask(task);
 		} else {
 			LOGGER.error("Task was from a non-existing Job");
 		}

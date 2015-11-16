@@ -68,7 +68,7 @@ public class TestScheduler {
 		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
 		doReturn(tasks2).when(jobMock2).getByState(TaskState.READY);
 		scheduler.run();
-		verify(infraManagerMock, times(2)).orderResource(Mockito.eq(spec), Mockito.eq(scheduler), Mockito.anyInt());
+		verify(infraManagerMock).orderResource(Mockito.eq(spec), Mockito.eq(scheduler), Mockito.anyInt());
 	}
 	
 	@Test
