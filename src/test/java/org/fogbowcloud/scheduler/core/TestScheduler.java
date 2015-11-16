@@ -32,6 +32,7 @@ public class TestScheduler {
 	
 	private Scheduler scheduler;
 	private Job jobMock;
+	private Job jobMock2;
 	private InfrastructureManager infraManagerMock;
 	private CurrentThreadExecutorService executorService;
 	
@@ -40,8 +41,9 @@ public class TestScheduler {
 		
 		executorService = new CurrentThreadExecutorService();
 		jobMock = mock(Job.class);
+		jobMock2 = mock(Job.class);
 		infraManagerMock = mock(InfrastructureManager.class);
-		scheduler = spy(new Scheduler(jobMock, infraManagerMock, executorService));
+		scheduler = spy(new Scheduler(infraManagerMock, executorService, jobMock, jobMock2));
 		
 	}    
 
@@ -49,6 +51,7 @@ public class TestScheduler {
 	public void setDown() throws Exception {
 		
 		jobMock = null;
+		jobMock2 = null;
 		infraManagerMock = null;
 		scheduler = null;
 		
@@ -61,10 +64,11 @@ public class TestScheduler {
 		
 		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath");
 		List<Task> tasks = this.generateMockTasks(qty,spec);
-		
+		List<Task> tasks2 = this.generateMockTasks(qty, spec);		
 		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
+		doReturn(tasks2).when(jobMock2).getByState(TaskState.READY);
 		scheduler.run();
-		verify(infraManagerMock).orderResource(Mockito.eq(spec), Mockito.eq(scheduler), Mockito.anyInt());
+		verify(infraManagerMock, times(2)).orderResource(Mockito.eq(spec), Mockito.eq(scheduler), Mockito.anyInt());
 	}
 	
 	@Test

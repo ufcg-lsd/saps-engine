@@ -43,7 +43,7 @@ public class TestExecutionMonitor {
 		imageStore = mock(ImageDataStore.class);
 		job = mock(Job.class);
 		executorService = new CurrentThreadExecutorService();
-		scheduler = spy(new Scheduler(job, IM));
+		scheduler = spy(new Scheduler(IM, job));
 	}
 	
 	@Test
@@ -126,7 +126,6 @@ public class TestExecutionMonitor {
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();
 		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
-		doReturn(resource).when(scheduler).getAssociateResource(task);
 		doReturn(true).when(resource).checkConnectivity();
 		doReturn(false).when(task).isFinished();
 		doReturn(true).when(task).checkTimeOuted();
@@ -134,7 +133,6 @@ public class TestExecutionMonitor {
 		executionMonitor.run();
 		verify(task).checkTimeOuted();
 		verify(job, never()).finish(task);;
-		verify(scheduler).getAssociateResource(task);
 		verify(scheduler, never()).taskCompleted(task);
 		verify(job).fail(task);
 		verify(scheduler).taskFailed(task);

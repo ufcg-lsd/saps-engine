@@ -62,7 +62,7 @@ public class SebalMain {
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 		
-		Scheduler scheduler = new Scheduler(job, infraManager);
+		Scheduler scheduler = new Scheduler(infraManager, job);
 		ExecutionMonitor execMonitor = new ExecutionMonitor(job, scheduler);
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
