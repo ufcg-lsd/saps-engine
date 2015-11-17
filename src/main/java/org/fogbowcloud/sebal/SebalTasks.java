@@ -27,19 +27,19 @@ public class SebalTasks {
 	
 	public static final String METADATA_PHASE = "phase";
 	public static final String METADATA_IMAGE_NAME = "image_name";
-	private static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
-	private static final String METADATA_PARTITION_INDEX = "partition_index";
+	public static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
+	public static final String METADATA_PARTITION_INDEX = "partition_index";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 	private static final String METADATA_ADDITIONAL_LIBRARY_PATH = "additonal_library_path";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
-	private static final String METADATA_LEFT_X = "left_x";
-	private static final String METADATA_UPPER_Y = "upper_y";
-	private static final String METADATA_RIGHT_X = "right_x";
-	private static final String METADATA_LOWER_Y = "lower_y";
+	public static final String METADATA_LEFT_X = "left_x";
+	public static final String METADATA_UPPER_Y = "upper_y";
+	public static final String METADATA_RIGHT_X = "right_x";
+	public static final String METADATA_LOWER_Y = "lower_y";
 	private static final String METADATA_REMOTE_BOUNDINGBOX_PATH = "remote_boundingbox_path";
 	private static final String METADATA_IMAGES_MOUNT_POINT = "images_mount_point";
-	private static final String METADATA_RESULTS_MOUNT_POINT = "results_mount_point";
+	public static final String METADATA_RESULTS_MOUNT_POINT = "results_mount_point";
 	private static final String METADATA_SEBAL_URL = "sebal_url";
 	private static final String METADATA_REPOS_USER = "repository_user";
 	private static final String METADATA_IMAGE_REPOSITORY = "image_repository";
@@ -146,13 +146,6 @@ public class SebalTasks {
 			f1Task.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
 
 			// adding epilogue command
-//			String outputFileName = imageName + "_" + f1Task.getMetadata(METADATA_PARTITION_INDEX)
-//					+ "_" + f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS);
-//			
-//			String scpDownloadCommand = createSCPDownloadCommand(
-//					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/" + outputFileName,
-//					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/" + outputFileName);
-//			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
 			
 			String copyCommand = "cp -R " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ "/SEBAL/local_results/" + f1Task.getMetadata(METADATA_IMAGE_NAME) + " "
@@ -164,6 +157,46 @@ public class SebalTasks {
 			String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
 			f1Task.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
 
+			// stage out of output files
+			String remoteOutFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
+					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_out";
+			
+			String scpDownloadCommand = createSCPDownloadCommand(
+					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
+							+ remoteOutFilePath,
+					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
+							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteOutFilePath);
+			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+
+			String remoteErrFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
+					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_err";
+			scpDownloadCommand = createSCPDownloadCommand(
+					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
+							+ remoteErrFilePath,
+					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
+							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteErrFilePath);
+			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+
+//			// stage out render out 
+//			String remoteRenderOutFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
+//					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_render_out";
+//			
+//			scpDownloadCommand = createSCPDownloadCommand(
+//					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
+//							+ remoteRenderOutFilePath,
+//					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
+//							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteRenderOutFilePath);
+//			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+//
+//			String remoteRenderErrFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
+//					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_render_err";
+//			scpDownloadCommand = createSCPDownloadCommand(
+//					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
+//							+ remoteRenderErrFilePath,
+//					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
+//							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteRenderErrFilePath);
+//			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+			
 			f1Tasks.add(f1Task);
 		}
 		return f1Tasks;
@@ -173,10 +206,10 @@ public class SebalTasks {
 		return "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $PRIVATE_KEY_FILE $SSH_USER@$HOST -p $SSH_PORT " + command;
 	}
 	
-//	private static String createSCPDownloadCommand(String remoteFilePath, String localFilePath) {
-//		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT $SSH_USER@$HOST:"
-//				+ remoteFilePath + " " + localFilePath;
-//	}
+	private static String createSCPDownloadCommand(String remoteFilePath, String localFilePath) {
+		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT $SSH_USER@$HOST:"
+				+ remoteFilePath + " " + localFilePath;
+	}
 
 	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
 		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT "
@@ -184,13 +217,17 @@ public class SebalTasks {
 	}
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
+		// task property
+		task.putMetadata(TaskImpl.METADATA_MAX_RESOURCE_CONN_RETRIES, properties.getProperty("max_resource_conn_retries"));
+		
 		// sdexs properties
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty("sebal_sandbox") + "/" + task.getId());
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,
 				properties.getProperty("sebal_sandbox") + "/output");
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER,
 				properties.getProperty("sebal_local_output_dir"));
-
+		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, properties.getProperty("sebal_task_timeout"));
+		
 		// repository properties
 		task.putMetadata(METADATA_REPOS_USER, properties.getProperty("sebal_remote_user"));
 		task.putMetadata(METADATA_IMAGE_REPOSITORY,

@@ -62,16 +62,18 @@ public class SebalMain {
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 		
-		Scheduler scheduler = new Scheduler(job, infraManager);
-		ExecutionMonitor execMonitor = new ExecutionMonitor(job, scheduler);
+		Scheduler scheduler = new Scheduler(infraManager, job);
+		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, job);
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 		
 		// scheduling previous image executions
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
+		addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
 		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
 
+		
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
 
@@ -84,9 +86,11 @@ public class SebalMain {
 			
 				// TODO develop throughput and negation of task addition 
 //				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
-//				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
+				//addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
 				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 			}
+
+			
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 
 		
@@ -95,6 +99,30 @@ public class SebalMain {
 
 	}
 
+	private static void addFakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
+		try {
+			List<ImageData> completedImages = imageStore.getIn(imageState);
+
+			for (ImageData imageData : completedImages) {
+
+				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
+
+				List<Task> tasks = new ArrayList<Task>();
+
+				tasks = SebalTasks.createF1Tasks(properties, imageData.getName(), sebalSpec,
+						imageData.getFederationMember());
+
+				for (Task task : tasks) {
+					job.addFakeTask(task);
+				}
+			}
+
+		} catch (SQLException e) {
+			LOGGER.error("Error while getting image.", e);
+		}
+
+	}
+	
 	private static void addTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
@@ -132,6 +160,8 @@ public class SebalMain {
 				
 				imageStore.update(imageData);
 			}
+			
+			
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}

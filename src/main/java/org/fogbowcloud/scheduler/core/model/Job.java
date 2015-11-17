@@ -20,6 +20,7 @@ public abstract class Job {
 	protected List<Task> tasksFailed = new ArrayList<Task>();
 	
 	protected ReentrantReadWriteLock taskReadyLock = new ReentrantReadWriteLock();
+	protected ReentrantReadWriteLock taskCompletedLock = new ReentrantReadWriteLock();
 	
 	public void addTask(Task task) {
 		LOGGER.debug("Adding task " + task.getId());
@@ -28,6 +29,16 @@ public abstract class Job {
 			tasksReady.add(task);
 		} finally {
 			taskReadyLock.writeLock().unlock();
+		}
+	}
+	
+	public void addFakeTask(Task task) {
+		LOGGER.debug("Adding fake completed task " + task.getId());
+		taskCompletedLock.writeLock().lock();
+		try {
+			tasksCompleted.add(task);
+		} finally {
+			taskCompletedLock.writeLock().unlock();
 		}
 	}
 
@@ -49,4 +60,15 @@ public abstract class Job {
 	public abstract void finish(Task task);
 
 	public abstract void fail(Task task);
+	
+	public void recoverTask(Task task) {
+		LOGGER.debug("Recovering task " + task.getId());
+		Task taskClone = task.clone();
+		taskReadyLock.writeLock().lock();
+		try {
+			tasksReady.add(0, taskClone);
+		} finally {
+			taskReadyLock.writeLock().unlock();
+		}
+	}
 }

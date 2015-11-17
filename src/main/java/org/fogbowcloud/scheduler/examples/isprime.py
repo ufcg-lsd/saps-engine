@@ -1,5 +1,6 @@
 import math
 import sys
+import time
 
 def is_prime(n):
     if n % 2 == 0 and n > 2: 
@@ -19,5 +20,7 @@ def find_primes(i, f):
 	f.write(str(primes))
 	f.close()
 
+
+time.sleep(300000000)
 find_primes(int(sys.argv[1]), int(sys.argv[2]))
 

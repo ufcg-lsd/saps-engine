@@ -10,11 +10,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
+import org.apache.log4j.lf5.PassingLogRecordFilter;
+import org.fogbowcloud.manager.core.plugins.identity.voms.VomsIdentityPlugin;
 import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.request.RequestAttribute;
 import org.fogbowcloud.manager.occi.request.RequestConstants;
@@ -66,8 +71,52 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		this.token = createNewTokenFromFile(
 				properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH));
 
+		ScheduledExecutorService handleTokenUpdateExecutor = Executors.newScheduledThreadPool(1);
+		handleTokenUpdate(handleTokenUpdateExecutor, properties);
+	}	
+	
+	private void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor,
+			final Properties props) {
+		LOGGER.debug("Turning on handle token update.");
+		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					setToken(createToken(props));
+				} catch (Throwable e) {
+					LOGGER.error("Error while setting token.", e);
+					try {
+						setToken(createNewTokenFromFile(
+								properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH)));
+					} catch (IOException e1) {
+						LOGGER.error("Error while getting token from file.", e);
+					}
+				}
+			}
+		}, 6, 6, TimeUnit.HOURS);
 	}
 
+	private Token createToken(final Properties props) {
+		VomsIdentityPlugin vomsIdentityPlugin = new VomsIdentityPlugin(new Properties());
+
+		HashMap<String, String> credentials = new HashMap<String, String>();
+		credentials.put("password", props.getProperty("fogbow.voms.certificate.password"));
+		credentials.put("serverName", props.getProperty("fogbow.voms.server"));
+		LOGGER.debug("Creating token update with serverName="
+				+ props.getProperty("fogbow.voms.server") + " and password="
+				+ props.getProperty("fogbow.voms.certificate.password"));
+
+		Token token = vomsIdentityPlugin.createToken(credentials);
+		LOGGER.debug("VOMS proxy updated. New proxy is " + token.toString());
+
+		return token;
+	}
+
+	private void setToken(Token token) {
+		LOGGER.debug("Setting token to " + token);
+		this.token = token;
+	}
+	
 	@Override
 	public String requestResource(Specification spec) throws RequestResourceException {
 

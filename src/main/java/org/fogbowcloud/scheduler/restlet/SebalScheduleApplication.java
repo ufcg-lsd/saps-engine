@@ -56,8 +56,11 @@ public class SebalScheduleApplication extends Application {
 	public Restlet createInboundRoot() {
 		
 		Router router = new Router(getContext());
-		router.attach("/sebal-scheduler/images", ImageResource.class);
-		router.attach("/sebal-scheduler/tasks/{imgName}", TaskResource.class);
+		router.attach("/sebal-scheduler/image", ImageResource.class);
+		router.attach("/sebal-scheduler/image/{imgName}", ImageResource.class);
+		router.attach("/sebal-scheduler/task/{taskId}", TaskResource.class);
+		router.attach("/sebal-scheduler/task/{taskId}/{varName}", TaskResource.class);
+		
 		return router;
 	}
 	
@@ -82,6 +85,19 @@ public class SebalScheduleApplication extends Application {
 		}
 		
 		return tasks;
+	}
+	
+	public Task getTaskById(String taskId){
+		return job.getCompletedTask(taskId);
+	}
+	
+	public List<Task> getAllCompletedTasks() {
+		return job.getTasksByState(TaskState.COMPLETED);
+		
+	}
+	
+	public Properties getProperties() {
+		return properties;
 	}
 
 }

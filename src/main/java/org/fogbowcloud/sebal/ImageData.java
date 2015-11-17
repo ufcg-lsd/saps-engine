@@ -1,5 +1,7 @@
 package org.fogbowcloud.sebal;
 
+import java.util.HashMap;
+import java.util.Map;
 
 public class ImageData {
 
@@ -8,6 +10,7 @@ public class ImageData {
 	private ImageState state;
 	private String federationMember;
 	private int priority;
+	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 
 	public ImageData(String name, String downloadLink, ImageState state, String federationMember,
 			int priority) {
@@ -63,6 +66,14 @@ public class ImageData {
 				+ ", " + priority;
 	}
 	
+	public Map<String, Integer> getTasksStatesCount() {
+		return tasksStatesCount;
+	}
+
+	public void setTasksStatesCount(Map<String, Integer> tasksStatesCount) {
+		this.tasksStatesCount = tasksStatesCount;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof ImageData) {

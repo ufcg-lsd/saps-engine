@@ -8,8 +8,12 @@ import java.util.UUID;
 
 import org.fogbowcloud.scheduler.core.model.Command.Type;
 
+import org.apache.log4j.Logger;
+
 public class TaskImpl implements Task {
 
+	private static final Logger LOGGER = Logger.getLogger(TaskImpl.class);
+	
 	//Environment variables related to task
 	public static final String ENV_LOCAL_OUT_DIR = "";
 	
@@ -18,13 +22,18 @@ public class TaskImpl implements Task {
 	public static final String METADATA_SANDBOX = "sandbox";
 	public static final String METADATA_REMOTE_COMMAND_EXIT_PATH = "remote_command_exit_path";
 	public static final String METADATA_RESOURCE_ID = "resource_id";
-	
+	public static final String METADATA_TASK_TIMEOUT = "task_timeout";
+	public static final String METADATA_MAX_RESOURCE_CONN_RETRIES = "max_conn_retries";
+		
 	private boolean isFinished = false;
 	private String id;
 	private Specification spec;
 	private List<Command> commands = new ArrayList<Command>();
 	private Map<String, String> metadata = new HashMap<String, String>();
 	private boolean isFailed = false;
+	private int retries = 0;
+	
+	private long startedRunningAt = Long.MAX_VALUE;
 	
 	public TaskImpl(String id, Specification spec) {
 		this.id = id;
@@ -90,7 +99,7 @@ public class TaskImpl implements Task {
 	@Override
 	public List<Command> getCommandsByType(Type commandType) {
 		List<Command> commandsToReturn = new ArrayList<Command>();
-		for (Command command : commands) {
+		for (Command command : getAllCommands()) {
 			if (command.getType().equals(commandType)) {
 				commandsToReturn.add(command);
 			}
@@ -111,5 +120,50 @@ public class TaskImpl implements Task {
 	@Override
 	public boolean isFailed() {
 		return isFailed;
+	}
+
+	@Override
+	public boolean checkTimeOuted() {
+		String timeOutRaw = getMetadata(METADATA_TASK_TIMEOUT);
+		if (timeOutRaw == null || timeOutRaw.isEmpty()){
+			return false;
+		}
+		long timeOut;
+		try {
+		timeOut = Long.parseLong(timeOutRaw);
+		} catch (NumberFormatException e){
+			LOGGER.error("Timeout badly formated, ignoring it: ", e);
+			return false;
+		}
+		if (System.currentTimeMillis() - this.startedRunningAt > timeOut){
+			return true;
+		} else {
+			return false;
+		}
+		
+	}
+
+	@Override
+	public void startedRunning() {
+		this.startedRunningAt = System.currentTimeMillis();
+		
+	}
+
+	@Override
+	public boolean mayRetry() {
+		if (getMetadata(METADATA_MAX_RESOURCE_CONN_RETRIES) != null) {
+			return getRetries() <= Integer.parseInt(getMetadata(METADATA_MAX_RESOURCE_CONN_RETRIES));
+		}
+		return false;
+	}
+
+	@Override
+	public int getRetries() { 
+		return retries;
+	}
+
+	@Override
+	public void setRetries(int retries) {
+		this.retries = retries;		
 	}
 }
