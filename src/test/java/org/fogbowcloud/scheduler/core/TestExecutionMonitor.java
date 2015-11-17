@@ -48,7 +48,7 @@ public class TestExecutionMonitor {
 	
 	@Test
 	public void testExecutionMonitor() throws InfrastructureException, InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler,executorService);
+		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
@@ -67,7 +67,7 @@ public class TestExecutionMonitor {
 	
 	@Test
 	public void testExecutionMonitorTaskFails() throws InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler,executorService);
+		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
@@ -86,7 +86,7 @@ public class TestExecutionMonitor {
 	
 	@Test
 	public void testConnectionFails() throws InfrastructureException, InterruptedException {
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler,executorService);
+		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();
@@ -102,7 +102,7 @@ public class TestExecutionMonitor {
 	
 	@Test
 	public void testExecutionIsNotOver() throws InfrastructureException, InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler,executorService);
+		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();
@@ -121,7 +121,7 @@ public class TestExecutionMonitor {
 	
 	@Test
 	public void testExecutionTimedOut() throws InfrastructureException, InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler,executorService);
+		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();
@@ -140,7 +140,7 @@ public class TestExecutionMonitor {
 
 	@Test
 	public void testTaskRetry() throws InfrastructureException, InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(job, scheduler,executorService);
+		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();

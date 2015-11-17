@@ -69,7 +69,7 @@ public class PrimesMain {
 		primeJob.addTask(getPrimeErrorTask(spec, 6000, 7000));
 		
 		Scheduler scheduler = new Scheduler(infraManager, primeJob);
-		ExecutionMonitor execMonitor = new ExecutionMonitor(primeJob, scheduler);
+		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, primeJob);
 
 		LOGGER.debug("Starting Scheduler and Execution Monitor");
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
