@@ -72,17 +72,17 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 				properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH));
 
 		ScheduledExecutorService handleTokenUpdateExecutor = Executors.newScheduledThreadPool(1);
-		handleTokenUpdate(handleTokenUpdateExecutor, properties);
+		handleTokenUpdate(handleTokenUpdateExecutor, properties.getProperty("fogbow.voms.server"),  properties.getProperty("fogbow.voms.certificate.password") );
 	}	
 	
 	private void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor,
-			final Properties props) {
+			final String vomsServer, final String password) {
 		LOGGER.debug("Turning on handle token update.");
 		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					setToken(createToken(props));
+					setToken(createToken(vomsServer, password));
 				} catch (Throwable e) {
 					LOGGER.error("Error while setting token.", e);
 					try {
@@ -96,15 +96,15 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		}, 6, 6, TimeUnit.HOURS);
 	}
 
-	private Token createToken(final Properties props) {
+	private Token createToken(final String vomsServer, final String password) {
 		VomsIdentityPlugin vomsIdentityPlugin = new VomsIdentityPlugin(new Properties());
 
 		HashMap<String, String> credentials = new HashMap<String, String>();
-		credentials.put("password", props.getProperty("fogbow.voms.certificate.password"));
-		credentials.put("serverName", props.getProperty("fogbow.voms.server"));
+		credentials.put("password", password);
+		credentials.put("serverName", vomsServer);
 		LOGGER.debug("Creating token update with serverName="
-				+ props.getProperty("fogbow.voms.server") + " and password="
-				+ props.getProperty("fogbow.voms.certificate.password"));
+				+ vomsServer + " and password="
+				+ password);
 
 		Token token = vomsIdentityPlugin.createToken(credentials);
 		LOGGER.debug("VOMS proxy updated. New proxy is " + token.toString());

@@ -15,3 +15,6 @@ accounting_datastore_url=jdbc:h2:/home/igorvcs/Dev/sebalScheduleEnv/h2db/orders
 execution_monitor_period=60000
 local.output = /home/igorvcs/Dev/sebalScheduleEnv/result
 local_command_interpreter=/bin/bash
+
+fogbow.voms.certificate.password=0k4s3t0k4
+fogbow.voms.server=eubrazilcc
