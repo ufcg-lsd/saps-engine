@@ -31,7 +31,7 @@ public class Specification {
 		this.privateKeyFilePath = privateKeyFilePath;
 	}
 	
-	public void addRequitement(String key, String value){
+	public void addRequirement(String key, String value){
 		requirements.put(key, value);
 	}
 	

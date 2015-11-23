@@ -68,7 +68,7 @@ public class TestResource {
 		String location = "edu.ufcg.lsd.cloud_1s";
 		
 		Specification spec = new Specification(image, userName, publicKey, privateKey);
-		spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
+		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 		
 		resource.putMetadata(Resource.METADATA_IMAGE, image);
 		resource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
@@ -99,7 +99,7 @@ public class TestResource {
 		String location = "edu.ufcg.lsd.cloud_1s";
 		
 		Specification spec = new Specification(image, userName, publicKey, privateKey);
-		spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
+		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 		
 		resource.putMetadata(Resource.METADATA_IMAGE, image);
 		resource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
@@ -130,7 +130,7 @@ public class TestResource {
 		String location = "edu.ufcg.lsd.cloud_1s";
 		
 		Specification spec = new Specification(imageB, userName, publicKey, privateKey);
-		spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
+		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 		
 		resource.putMetadata(Resource.METADATA_IMAGE, imageA);
 		resource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKey);
@@ -161,7 +161,7 @@ public class TestResource {
 		String location = "edu.ufcg.lsd.cloud_1s";
 
 		Specification spec = new Specification(image, userName, publicKeyB, privateKey);
-		spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
+		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 
 		resource.putMetadata(Resource.METADATA_IMAGE, image);
 		resource.putMetadata(Resource.METADATA_PUBLIC_KEY, publicKeyA);

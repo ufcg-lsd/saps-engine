@@ -62,20 +62,25 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private Token token;
 	private Properties properties;
 	private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
-
-	public FogbowInfrastructureProvider(Properties properties) throws Exception {
-
+	private ScheduledExecutorService handleTokenUpdateExecutor;
+	
+	
+	public FogbowInfrastructureProvider(Properties properties, ScheduledExecutorService handleTokeUpdateExecutor) throws FileNotFoundException, IOException{
 		httpWrapper = new HttpWrapper();
 		this.properties = properties;
 		this.managerUrl = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL);
 		this.token = createNewTokenFromFile(
 				properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH));
-
-		ScheduledExecutorService handleTokenUpdateExecutor = Executors.newScheduledThreadPool(1);
+		
+		ScheduledExecutorService handleTokenUpdateExecutor = handleTokeUpdateExecutor;
 		handleTokenUpdate(handleTokenUpdateExecutor, properties.getProperty("fogbow.voms.server"),  properties.getProperty("fogbow.voms.certificate.password") );
-	}	
+	}
+	public FogbowInfrastructureProvider(Properties properties) throws Exception {
+		this(properties, Executors.newScheduledThreadPool(1));
+	}
 	
-	private void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor,
+	
+	protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor,
 			final String vomsServer, final String password) {
 		LOGGER.debug("Turning on handle token update.");
 		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
@@ -96,7 +101,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		}, 6, 6, TimeUnit.HOURS);
 	}
 
-	private Token createToken(final String vomsServer, final String password) {
+	protected Token createToken(final String vomsServer, final String password) {
 		VomsIdentityPlugin vomsIdentityPlugin = new VomsIdentityPlugin(new Properties());
 
 		HashMap<String, String> credentials = new HashMap<String, String>();
@@ -112,7 +117,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		return token;
 	}
 
-	private void setToken(Token token) {
+	protected void setToken(Token token) {
 		LOGGER.debug("Setting token to " + token);
 		this.token = token;
 	}
@@ -259,7 +264,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 	// ----------------------- Private methods ----------------------- //
 
-	private Token createNewTokenFromFile(String certificateFilePath) throws FileNotFoundException, IOException {
+	protected Token createNewTokenFromFile(String certificateFilePath) throws FileNotFoundException, IOException {
 
 		String certificate = IOUtils.toString(new FileInputStream(certificateFilePath)).replaceAll("\n", "");
 		Date date = new Date(System.currentTimeMillis() + (long) Math.pow(10, 9));
