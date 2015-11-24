@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -18,9 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ScheduledExecutorService;
 
-import org.fogbowcloud.scheduler.core.CurrentThreadExecutorService;
+import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.request.RequestConstants;
 import org.fogbowcloud.manager.occi.request.RequestState;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
@@ -35,12 +34,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
-import org.fogbowcloud.manager.occi.model.Token;
-
 
 public class TestFogbowInfrastructureProvider {
-
-	//150.65.15.81 8182 - URL fogbow
 
 	private final String FILE_RESPONSE_NO_INSTANCE_ID = "src/test/resources/requestInfoWithoutInstanceId";
 	private final String FILE_RESPONSE_INSTANCE_ID = "src/test/resources/requestInfoWithInstanceId";
@@ -87,7 +82,6 @@ public class TestFogbowInfrastructureProvider {
 		doNothing().when(fogbowInfrastructureProvider).setToken(token);
 		fogbowInfrastructureProvider.handleTokenUpdate(exec, "otherServer", "otherPassword");
 		verify(fogbowInfrastructureProvider).setToken(token);
-
 	}
 
 	@Test
