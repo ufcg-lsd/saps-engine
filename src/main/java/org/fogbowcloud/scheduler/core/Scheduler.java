@@ -46,25 +46,23 @@ public class Scheduler implements Runnable{
 		LOGGER.info("Running scheduler...");
 		Map<Specification, Integer> specDemand = new HashMap<Specification, Integer>();		
 
+		List<Task> readyTasks = new ArrayList<Task>();
 		for (Job job : jobList){
-			List<Task> readyTasks = job.getByState(TaskState.READY);
-
-
-			LOGGER.debug("There are " + readyTasks.size() + " ready tasks.");
-			LOGGER.debug("Scheduler running tasks is " + runningTasks.size()
-			+ ", and job running tasks is " + job.getByState(TaskState.RUNNING));
-
-			for (Task task : readyTasks) {
-				Specification taskSpec = task.getSpecification();
-				if (!specDemand.containsKey(taskSpec)) {
-					specDemand.put(taskSpec, 0);
-				}
-				int currentDemand = specDemand.get(taskSpec); 
-				specDemand.put(taskSpec, ++currentDemand);
-			}
-
-			LOGGER.debug("Current job demand is " + specDemand);
+			readyTasks.addAll(job.getByState(TaskState.READY));
 		}
+		LOGGER.debug("There are " + readyTasks.size() + " ready tasks.");
+		LOGGER.debug("Scheduler running tasks is " + runningTasks.size());
+
+		for (Task task : readyTasks) {
+			Specification taskSpec = task.getSpecification();
+			if (!specDemand.containsKey(taskSpec)) {
+				specDemand.put(taskSpec, 0);
+			}
+			int currentDemand = specDemand.get(taskSpec); 
+			specDemand.put(taskSpec, ++currentDemand);
+		}
+
+		LOGGER.debug("Current job demand is " + specDemand);
 		for (Specification spec : specDemand.keySet()) {			
 			infraManager.orderResource(spec, this, specDemand.get(spec));
 		}

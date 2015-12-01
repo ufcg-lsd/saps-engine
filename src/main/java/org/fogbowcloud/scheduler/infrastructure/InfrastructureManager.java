@@ -244,7 +244,7 @@ public class InfrastructureManager {
 
 			for (Specification spec : initialSpec) {
 				// Initial specs must be Persistent
-				spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
+				spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
 						RequestType.PERSISTENT.getValue());
 				orderResource(spec, null, 1);
 			}

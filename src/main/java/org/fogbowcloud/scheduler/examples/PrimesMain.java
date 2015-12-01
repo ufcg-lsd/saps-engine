@@ -66,10 +66,14 @@ public class PrimesMain {
 		for(int count=0; count < 2; count++){
 			primeJob.addTask(getPrimeTask(spec, count*1000, (count+1)*1000));
 		}
-		primeJob.addTask(getPrimeErrorTask(spec, 6000, 7000));
+		Job primeJob2 = new PrimeJob();
+		for (int counter = 2; counter < 4; counter++) {
+			primeJob2.addTask(getPrimeTask(spec, counter*1000, (counter+1)*1000));
+		}
+//		primeJob.addTask(getPrimeErrorTask(spec, 7000, 8000));
 		
-		Scheduler scheduler = new Scheduler(infraManager, primeJob);
-		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, primeJob);
+		Scheduler scheduler = new Scheduler(infraManager, primeJob, primeJob2);
+		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, primeJob, primeJob2);
 
 		LOGGER.debug("Starting Scheduler and Execution Monitor");
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
@@ -106,7 +110,7 @@ public class PrimesMain {
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty("local.output"));
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);
 		task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER+"/exit");
-		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, "5000");
+		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, "50000000");
 		task.addCommand(cleanPreviousExecution(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(mkdirRemoteFolder(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(stageInCommand("isprime.py", task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py"));
