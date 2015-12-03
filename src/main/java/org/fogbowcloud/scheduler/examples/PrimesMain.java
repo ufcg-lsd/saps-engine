@@ -1,6 +1,7 @@
 package org.fogbowcloud.scheduler.examples;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
+import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 
 public class PrimesMain {
 
@@ -50,7 +52,6 @@ public class PrimesMain {
 		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
 		List<Specification> initialSpecs = Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 
-		List<Specification> taskSpecs = Specification.getSpecificationsFromJSonFile(SPEC_FILE_PATH);
 		
 		InfrastructureProvider infraProvider = createInfraProvaiderInstance();
 //		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic, infraProvider,
@@ -59,21 +60,17 @@ public class PrimesMain {
 				properties);
 		infraManager.start(blockWhileInitializing);
 		
-		Specification spec = taskSpecs.get(0);
-		LOGGER.debug("Task spec: "+spec.toString());
+		
 			
 		Job primeJob = new PrimeJob();
-		for(int count=0; count < 2; count++){
-			primeJob.addTask(getPrimeTask(spec, count*1000, (count+1)*1000));
-		}
+		primeJob.addTask(getPrimeTask(1000, 2000, "\"fogbow01.cmcc.it\""));
+		
 		Job primeJob2 = new PrimeJob();
-		for (int counter = 2; counter < 4; counter++) {
-			primeJob2.addTask(getPrimeTask(spec, counter*1000, (counter+1)*1000));
-		}
+		primeJob2.addTask(getPrimeTask(2000, 3000, null));
 //		primeJob.addTask(getPrimeErrorTask(spec, 7000, 8000));
 		
 		Scheduler scheduler = new Scheduler(infraManager, primeJob, primeJob2);
-		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, primeJob, primeJob2);
+		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler);
 
 		LOGGER.debug("Starting Scheduler and Execution Monitor");
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
@@ -104,8 +101,13 @@ public class PrimesMain {
 		return (InfrastructureProvider) clazz;
 	}
 
-	private static Task getPrimeTask(Specification spec, int init, int end) {
-		TaskImpl task = new TaskImpl(UUID.randomUUID().toString(), spec);
+	private static Task getPrimeTask(int init, int end, String location) throws IOException {
+		List<Specification> taskSpecs = Specification.getSpecificationsFromJSonFile(SPEC_FILE_PATH);
+		Specification spec = taskSpecs.get(0);
+		LOGGER.debug("Task spec: "+spec.toString());
+		if (location != null) {
+		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS) + " && "+ FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID + "==" +location);	
+		}TaskImpl task = new TaskImpl(UUID.randomUUID().toString(), spec);
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER, METADATA_REMOTE_OUTPUT_FOLDER);
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty("local.output"));
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);

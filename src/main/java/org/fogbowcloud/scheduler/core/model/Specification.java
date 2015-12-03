@@ -195,5 +195,9 @@ public class Specification {
 		return true;
 	}
 	
-	
+	public Specification clone() {
+		Specification cloneSpec = new Specification(this.image, this.username, this.publicKey, this.privateKeyFilePath);
+		cloneSpec.putAllRequirements(this.getAllRequirements());
+		return cloneSpec;
+	}
 }
