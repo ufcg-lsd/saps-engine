@@ -131,7 +131,7 @@ public class Specification {
 			sb.append("\nContextScript: " + contextScript);
 		}
 		if (requirements != null && !requirements.isEmpty()) {
-			sb.append("\nRequiriments:{");
+			sb.append("\nRequirements:{");
 			for (Entry<String, String> entry : requirements.entrySet()) {
 				sb.append("\n\t" + entry.getKey() + ": " + entry.getValue());
 			}

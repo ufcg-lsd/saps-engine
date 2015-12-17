@@ -18,7 +18,7 @@ public class AppPropertiesConstants {
 	// __________ FOGBOW INFRASTRUCTURE CONSTANTS __________ //
 	public static final String INFRA_FOGBOW_MANAGER_BASE_URL = "infra_fogbow_manager_base_url";
 	public static final String INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH = "infra_fogbow_token_public_key_filepath";
-	
+	public static final String INFRA_FOGBOW_USERNAME = "fogbow_username";
 	
 	
 	public static final String REST_SERVER_PORT = "rest_server_port";

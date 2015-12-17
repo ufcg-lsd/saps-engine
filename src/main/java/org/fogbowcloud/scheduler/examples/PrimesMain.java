@@ -28,12 +28,11 @@ public class PrimesMain {
 	private final static String SPEC_FILE_PATH = "/home/igorvcs/Dev/sebalScheduleEnv/initialSpec";
 	private final static String SANDBOX = "/tmp/sandbox";
 	private final static String SSH_SCP_PRECOMMAND = "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
-	
+
 	private static boolean blockWhileInitializing;
 	private static boolean isElastic;
 	private static ManagerTimer executionMonitorTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private static ManagerTimer schedulerTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
-
 
 	private static Properties properties;
 
@@ -42,41 +41,37 @@ public class PrimesMain {
 	public static void main(String[] args) throws Exception {
 
 		LOGGER.debug("Starting ExampleMain");
-		
+
 		properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
-		
+
 		loadConfigFromProperties();
 
 		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
 		List<Specification> initialSpecs = Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 
-		
 		InfrastructureProvider infraProvider = createInfraProvaiderInstance();
-//		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic, infraProvider,
-//				properties);
-		InfrastructureManager infraManager = new InfrastructureManager(null, isElastic, infraProvider,
-				properties);
+		// InfrastructureManager infraManager = new
+		// InfrastructureManager(initialSpecs, isElastic, infraProvider,
+		// properties);
+		InfrastructureManager infraManager = new InfrastructureManager(null, isElastic, infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
-		
-		
-			
+
 		Job primeJob = new PrimeJob();
-		primeJob.addTask(getPrimeTask(1000, 2000, "\"fogbow01.cmcc.it\""));
-		
+		primeJob.addTask(getPrimeTask(1000, 2000, null));
+
 		Job primeJob2 = new PrimeJob();
 		primeJob2.addTask(getPrimeTask(2000, 3000, null));
-//		primeJob.addTask(getPrimeErrorTask(spec, 7000, 8000));
-		
+		// primeJob.addTask(getPrimeErrorTask(spec, 7000, 8000));
+
 		Scheduler scheduler = new Scheduler(infraManager, primeJob, primeJob2);
-		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler);
+		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, primeJob, primeJob2);
 
 		LOGGER.debug("Starting Scheduler and Execution Monitor");
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
 		schedulerTimer.scheduleAtFixedRate(scheduler, 0, 30000);
-
 
 	}
 
@@ -87,7 +82,6 @@ public class PrimesMain {
 		isElastic = new Boolean(properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
 
 	}
-
 
 	private static InfrastructureProvider createInfraProvaiderInstance() throws Exception {
 
@@ -104,70 +98,80 @@ public class PrimesMain {
 	private static Task getPrimeTask(int init, int end, String location) throws IOException {
 		List<Specification> taskSpecs = Specification.getSpecificationsFromJSonFile(SPEC_FILE_PATH);
 		Specification spec = taskSpecs.get(0);
-		LOGGER.debug("Task spec: "+spec.toString());
+		LOGGER.debug("Task spec: " + spec.toString());
 		if (location != null) {
-		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS) + " && "+ FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID + "==" +location);	
-		}TaskImpl task = new TaskImpl(UUID.randomUUID().toString(), spec);
+			spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
+					spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS) + " && "
+							+ FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID + "=="
+							+ location);
+		}
+		TaskImpl task = new TaskImpl(UUID.randomUUID().toString(), spec);
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER, METADATA_REMOTE_OUTPUT_FOLDER);
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty("local.output"));
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);
-		task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER+"/exit");
+		task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER + "/exit");
 		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, "50000000");
 		task.addCommand(cleanPreviousExecution(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(mkdirRemoteFolder(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(stageInCommand("isprime.py", task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py"));
-		task.addCommand(remoteCommand("\"python /"+task.getMetadata(TaskImpl.METADATA_SANDBOX)+"/isprime.py "+init+" "+end+" ; echo 0 > "+task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH)+"\""));
+		task.addCommand(remoteCommand("\"python /" + task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py " + init
+				+ " " + end + " ; echo 0 > " + task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH) + "\""));
 		task.addCommand(stageOutCommand("/tmp/primeresult",
 				properties.getProperty("local.output") + "/primeresult-" + task.getId()));
+		LOGGER.debug("Task specs:" + spec.toString());
 		return task;
 	}
-	
+
 	private static Task getPrimeErrorTask(Specification spec, int init, int end) {
 		TaskImpl task = new TaskImpl(UUID.randomUUID().toString(), spec);
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER, METADATA_REMOTE_OUTPUT_FOLDER);
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty("local.output"));
 		task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);
-		task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER+"/exit");
+		task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, METADATA_REMOTE_OUTPUT_FOLDER + "/exit");
 		task.addCommand(cleanPreviousExecution(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(mkdirRemoteFolder(task.getMetadata(TaskImpl.METADATA_SANDBOX)));
 		task.addCommand(stageInCommand("isprime.py", task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py"));
-		task.addCommand(remoteCommand("\"python /"+task.getMetadata(TaskImpl.METADATA_SANDBOX)+"/isprime.py "+init+" "+end+" ; echo 128 > "+task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH)+"\""));
+		task.addCommand(remoteCommand("\"python /" + task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/isprime.py " + init
+				+ " " + end + " ; echo 128 > " + task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH) + "\""));
 		task.addCommand(stageOutCommand("/tmp/primeresult",
 				properties.getProperty("local.output") + "/primeresult-" + task.getId()));
 		return task;
 	}
-	
-	
-	private static Command remoteCommand(String remoteCommand){
+
+	private static Command remoteCommand(String remoteCommand) {
 		return new Command(remoteCommand, Command.Type.REMOTE);
 	}
-	
-	private static Command cleanPreviousExecution(String folder){
-		String mkdirCommand = "ssh "+SSH_SCP_PRECOMMAND+" -p $" + Resource.ENV_SSH_PORT + " -i $" + Resource.ENV_PRIVATE_KEY_FILE +" $"
-				+ Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST + " rm -rfv " + folder;
+
+	private static Command cleanPreviousExecution(String folder) {
+		String mkdirCommand = "ssh " + SSH_SCP_PRECOMMAND + " -p $" + Resource.ENV_SSH_PORT + " -i $"
+				+ Resource.ENV_PRIVATE_KEY_FILE + " $" + Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST
+				+ " rm -rfv " + folder;
 		return new Command(mkdirCommand, Command.Type.PROLOGUE);
 	}
-	
-	private static Command mkdirRemoteFolder(String folder){
-		String mkdirCommand = "ssh "+SSH_SCP_PRECOMMAND+" -p $" + Resource.ENV_SSH_PORT + " -i $" + Resource.ENV_PRIVATE_KEY_FILE +" $"
-				+ Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST + " mkdir " + folder;
+
+	private static Command mkdirRemoteFolder(String folder) {
+		String mkdirCommand = "ssh " + SSH_SCP_PRECOMMAND + " -p $" + Resource.ENV_SSH_PORT + " -i $"
+				+ Resource.ENV_PRIVATE_KEY_FILE + " $" + Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST
+				+ " mkdir " + folder;
 		return new Command(mkdirCommand, Command.Type.PROLOGUE);
 	}
-	
+
 	private static Command stageInCommand(String localFile, String remoteFile) {
-		String scpCommand = "scp "+SSH_SCP_PRECOMMAND+" -P $" + Resource.ENV_SSH_PORT + " -i $" + Resource.ENV_PRIVATE_KEY_FILE +" "+localFile+ " $"
-				+ Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST + ":" + remoteFile;
+		String scpCommand = "scp " + SSH_SCP_PRECOMMAND + " -P $" + Resource.ENV_SSH_PORT + " -i $"
+				+ Resource.ENV_PRIVATE_KEY_FILE + " " + localFile + " $" + Resource.ENV_SSH_USER + "@" + "$"
+				+ Resource.ENV_HOST + ":" + remoteFile;
 		return new Command(scpCommand, Command.Type.PROLOGUE);
 	}
 
 	private static Command stageOutCommand(String remoteFile, String localFile) {
 
-		String scpCommand = "scp "+SSH_SCP_PRECOMMAND+" -P $" + Resource.ENV_SSH_PORT + " -i $" + Resource.ENV_PRIVATE_KEY_FILE + " $"
-				+ Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST + ":" + remoteFile + " " + localFile+"_[$"+Resource.ENV_SSH_PORT+"]";
+		String scpCommand = "scp " + SSH_SCP_PRECOMMAND + " -P $" + Resource.ENV_SSH_PORT + " -i $"
+				+ Resource.ENV_PRIVATE_KEY_FILE + " $" + Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST + ":"
+				+ remoteFile + " " + localFile + "_[$" + Resource.ENV_SSH_PORT + "]";
 		return new Command(scpCommand, Command.Type.EPILOGUE);
 	}
-	
-	static class PrimeJob extends Job{
+
+	static class PrimeJob extends Job {
 
 		@Override
 		public void run(Task task) {

@@ -1,8 +1,8 @@
 [
 {"image":"fogbow-ubuntu",
  "username":"fogbow",
- "publicKey":"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDI6g9Q7epXV1ciIsPHiesAjeLUaEvNSCUzIWHSG0tWmK4S+edOYYIX0KRIkDJGrgMzC8xFzQ2rTlt4YYVcToGsDKGUw6fAYss6uLhnp72o6LI7GVLoFni4MLwyCRvKn9aGvukLkrfHWI/IUamxbU66DRKRmGEkAk3JVXw9QhoBZl3V77THM8GOD0Fz1RAtERZMFqQyZoGw4HhK7KtzElsh2MPmI5rRCwxtya/p0Kxi5gsd0Sr0Gm9qJUB3CX0jIAhTSkygbP/s01bIGrMiQnEW5ACV7k683UN6fEeUiKM/sk/Futu/3qnDYTF28p7/setZ8+D7G8pmmxHS7QFN1uRb gustavorag@apogon",
- "privateKeyFilePath":"/home/gustavorag/.ssh/id_rsa",
+ "publicKey":"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDG2U8rz4I31LIyDBPpe01WJdGt0JBowZ0Zq7Nxq7mol3G4cW5OJt9v3aQLRU8zanceXXSagNg8O4v2ppFzROYlIOgg2KN3Zu6Tj7Evmfp++J160dwshnP3aQCSLIDSBnMsZyPRprIbaL2LifVmrKcOfG3QcRQHZx2HRWJp+lty0IqP+FBaobB7nXzF58ibOJ84Fk9QpQmS5JK3AXdwCISmN8bgfcjoUJB2FMB5OU8ilkIyG4HDZmI82z+6hUS2sVd/ss8biIN6qGfRVxEDhVlDw3o+XqL+HQ7udd2Q61oHs8iBa711SWG64Eie6HAm8SIOsL7dvPx1rBfBsp3Dq3gjnIpTZqwluiTE8q9S6rTiDQndCGWvAnSU01BePD51ZnMEckluYTOhNLgCMtNTXZJgYSHPVsLWXa5xdGSffL73a4gIupE36tnZlNyiAQGDJUrWh+ygEc2ALdQfpOVWo+CMkTBswvrHYSJdFC7r1U8ACrOlsLE02/uqqBbp7fTUuuMk77J8t0ocxuz48tVKOlog0ajS5nphPLfPGnP2PVTh7GXNTLOnqGVwMrjFIAHj7ukd+l36wUAIHR7Y4YWKVaIBvTZS/fQNn0cOGon2DnNL3wNAUc6pthhXlNY33aU2ky55mZR4drAdbRGRdEZQF0YHEFnzP0x2GucHwg6ZtMJ2Aw== igorvcs@bobo",
+ "privateKeyFilePath":"/home/igorvcs/.ssh/id_rsa",
  "requirements":{
 	"FogbowRequirements":"Glue2RAM >= 1024 && Glue2CloudComputeManagerID==\"servers.lsd.ufcg.edu.br\"",
 	"RequestType":"one-time"}
