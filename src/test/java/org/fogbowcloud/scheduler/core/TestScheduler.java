@@ -33,6 +33,7 @@ public class TestScheduler {
 	private Scheduler scheduler;
 	private Job jobMock;
 	private Job jobMock2;
+	private Job jobMock3;
 	private InfrastructureManager infraManagerMock;
 	private CurrentThreadExecutorService executorService;
 	
@@ -42,6 +43,7 @@ public class TestScheduler {
 		executorService = new CurrentThreadExecutorService();
 		jobMock = mock(Job.class);
 		jobMock2 = mock(Job.class);
+		jobMock3 = mock(Job.class);
 		infraManagerMock = mock(InfrastructureManager.class);
 		scheduler = spy(new Scheduler(infraManagerMock, executorService, jobMock, jobMock2));
 		
@@ -169,5 +171,23 @@ public class TestScheduler {
 		
 		return tasks;
 		
+	}
+	
+	@Test
+	public void testAddJob(){
+		
+		int qty = 5;
+		
+		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath");
+		List<Task> tasks = this.generateMockTasks(qty,spec);
+		List<Task> tasks2 = this.generateMockTasks(qty, spec);		
+		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
+		doReturn(tasks2).when(jobMock2).getByState(TaskState.READY);
+		scheduler.run();
+		verify(infraManagerMock).orderResource(Mockito.eq(spec), Mockito.eq(scheduler), Mockito.anyInt());
+		doReturn(new ArrayList<Task>()).when(jobMock3).getByState(TaskState.READY);
+		scheduler.addJob(jobMock3);
+		scheduler.run();
+		verify(jobMock3).getByState(TaskState.READY);
 	}
 }

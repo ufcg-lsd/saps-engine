@@ -156,5 +156,8 @@ public class Scheduler implements Runnable{
 		return true;
 	}
 
+	public void addJob(Job job) {
+		this.jobList.add(job);
+	}
 
 }
