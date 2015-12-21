@@ -238,6 +238,7 @@ public class JDFTasks {
 		for ( IOEntry ioEntry : finalBlocks ) {
 			String sourceFile = parseEnvironmentVariables(jobID, task.getId(), ioEntry.getSourceFile());
 			String destination = parseEnvironmentVariables(jobID, task.getId(), ioEntry.getDestination());
+			task.addCommand(mkdirLocalFolder(getDirectoryTree(destination)));
 			task.addCommand(stageOutCommand(sourceFile, destination));
 			LOGGER.debug("Output command:" + stageOutCommand(sourceFile, destination).getCommand());
 
@@ -250,4 +251,10 @@ public class JDFTasks {
 				+ Resource.ENV_SSH_USER + "@" + "$" + Resource.ENV_HOST + ":" + remoteFile + " " + localFile;
 		return new Command(scpCommand, Command.Type.EPILOGUE);
 	}
+	
+	private static Command mkdirLocalFolder(String folder) {
+		String mkdirCommand = "mkdir -p " + folder;
+		return new Command(mkdirCommand, Command.Type.PROLOGUE);
+	}
+	
 }
