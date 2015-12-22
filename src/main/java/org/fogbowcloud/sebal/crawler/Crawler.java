@@ -152,8 +152,9 @@ public class Crawler {
 					int exitValue = runFmask(imageData);					
 					if (exitValue != 0) {
 						LOGGER.error("It was not possible run Fmask for image " + imageData.getName());
-						removeFromPendingAndUpdateState(imageData);
-						return;
+//						removeFromPendingAndUpdateState(imageData);
+//						return;
+						imageData.setFederationMember(ImageDataStore.NONE);
 					}
 					
 					imageData.setState(ImageState.DOWNLOADED);
