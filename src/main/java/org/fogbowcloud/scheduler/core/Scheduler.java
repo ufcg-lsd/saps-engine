@@ -160,4 +160,20 @@ public class Scheduler implements Runnable{
 		this.jobList.add(job);
 	}
 
+	public ArrayList<Job> getJobs() {
+		return this.jobList;
+	}
+
+	
+	public Job getJobById(String jobId) {
+		if (jobId == null) {
+			return null;
+		}
+		for (Job job : this.jobList) {
+			if (jobId.equals(job.getId())) {
+				return job;
+			}
+		}
+		return null;
+	}
 }

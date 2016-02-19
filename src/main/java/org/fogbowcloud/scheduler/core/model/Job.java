@@ -71,4 +71,8 @@ public abstract class Job {
 			taskReadyLock.writeLock().unlock();
 		}
 	}
+	
+	public String getId(){
+		return null;
+	}
 }
