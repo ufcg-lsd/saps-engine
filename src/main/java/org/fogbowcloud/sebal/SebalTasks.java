@@ -24,6 +24,7 @@ public class SebalTasks {
 	public static final String F1_PHASE = "f1";
 	public static final String C_PHASE = "c";
 	public static final String F2_PHASE = "f2";
+	public static final String R_SCRIPT_PHASE = "rscript";
 	
 	public static final String METADATA_PHASE = "phase";
 	public static final String METADATA_IMAGE_NAME = "image_name";
@@ -41,6 +42,7 @@ public class SebalTasks {
 	private static final String METADATA_IMAGES_MOUNT_POINT = "images_mount_point";
 	public static final String METADATA_RESULTS_MOUNT_POINT = "results_mount_point";
 	private static final String METADATA_SEBAL_URL = "sebal_url";
+	private static final String METADATA_R_URL = "r_url";
 	private static final String METADATA_REPOS_USER = "repository_user";
 	private static final String METADATA_IMAGE_REPOSITORY = "image_repository";
 	private static final String METADATA_RESULT_REPOSITORY = "result_repository";
@@ -200,6 +202,135 @@ public class SebalTasks {
 			f1Tasks.add(f1Task);
 		}
 		return f1Tasks;
+	}
+	
+	public static List<Task> createRTasks(Properties properties, String imageName, Specification spec, String location) {
+		LOGGER.debug("Creating R tasks for image " + imageName);
+
+		String numberOfPartitions = properties.getProperty("sebal_number_of_partitions");
+		List<Task> rTasks = new ArrayList<Task>();
+
+		for (int partitionIndex = 1; partitionIndex <= Integer.parseInt(numberOfPartitions); partitionIndex++) {
+			//setting location on spec
+//			String locationSpec = "Glue2CloudComputeManagerID==\"" + location + "\"";
+//			if (spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS) == null) {
+//				spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
+//						locationSpec);
+//			} else {
+//				spec.addRequitement(
+//						FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
+//						spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS)
+//								+ " && " + locationSpec);
+//			}
+
+			TaskImpl rTaskImpl = new TaskImpl(UUID.randomUUID().toString(), spec);
+						
+			settingCommonTaskMetadata(properties, rTaskImpl);
+			
+			// setting image R execution properties
+			rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
+			rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
+			rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
+			rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
+					properties.getProperty("sebal_local_scripts_dir"));
+			rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
+					rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + rTaskImpl.getId());
+			
+			// creating sandbox
+			String mkdirCommand = "mkdir -p " + rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
+			String mkdirRemotly = createCommandToRunRemotly(mkdirCommand);
+			rTaskImpl.addCommand(new Command(mkdirRemotly, Command.Type.PROLOGUE));
+			
+			//treating repository user private key
+			if (properties.getProperty("sebal_repository_user_private_key") != null) {
+				File privateKeyFile = new File(properties.getProperty("sebal_repository_user_private_key"));
+				String remotePrivateKeyPath = rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/"
+						+ privateKeyFile.getName();
+				
+				rTaskImpl.putMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH, remotePrivateKeyPath);
+				String scpUploadCommand = createSCPUploadCommand(privateKeyFile.getAbsolutePath(),
+						remotePrivateKeyPath);
+				LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
+				rTaskImpl.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
+			}
+		
+			// treating boundingbox 
+			if (properties.getProperty("sebal_local_boundingbox_dir") != null) {
+				LOGGER.debug("Region of image is "
+						+ DBBootstrap.getImageRegionFromName(imageName));
+				File boundingboxFile = new File(
+						properties.getProperty("sebal_local_boundingbox_dir") + "/boundingbox_"
+								+ DBBootstrap.getImageRegionFromName(imageName));
+				LOGGER.debug("The boundingbox file for this image should be "
+						+ boundingboxFile.getAbsolutePath());
+				if (boundingboxFile.exists()) {
+					String remoteBoundingboxPath = rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+							+ "/boundingbox_vertices";
+
+					rTaskImpl.putMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH, remoteBoundingboxPath);
+					String scpUploadCommand = createSCPUploadCommand(
+							boundingboxFile.getAbsolutePath(), remoteBoundingboxPath);
+					LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
+					rTaskImpl.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
+				} else {
+					LOGGER.warn("There is no boundingbox file specified for image " + imageName);
+				}
+			}
+			
+			//TODO: check if the following have to change to support new script
+			
+			// creating r script for this image
+			File localScriptFile = createScriptFile(properties, rTaskImpl);
+			String remoteScriptPath = rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/"
+					+ localScriptFile.getName();
+			
+			// adding command
+			String scpUploadCommand = createSCPUploadCommand(
+					localScriptFile.getAbsolutePath(), remoteScriptPath);
+			LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
+			rTaskImpl.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
+			
+			// adding remote command
+			String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);
+			LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
+			rTaskImpl.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
+
+			// adding epilogue command
+			
+			String copyCommand = "cp -R " + rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+					+ "/SEBAL/local_results/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + " "
+					+ rTaskImpl.getMetadata(METADATA_RESULTS_MOUNT_POINT) + "/results";
+			String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
+			rTaskImpl.addCommand(new Command(remoteCopyCommand, Command.Type.EPILOGUE));
+			
+			String cleanEnvironment = "rm -r " + rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
+			String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
+			rTaskImpl.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
+
+			// number of partitions and partition index doesn't exist in R implementation
+			// stage out of output files
+			String remoteOutFilePath = rTaskImpl.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
+					+ rTaskImpl.getMetadata(METADATA_PARTITION_INDEX) + "_out";
+			
+			String scpDownloadCommand = createSCPDownloadCommand(
+					rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
+							+ remoteOutFilePath,
+					rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
+							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteOutFilePath);
+			rTaskImpl.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+
+			String remoteErrFilePath = rTaskImpl.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
+					+ rTaskImpl.getMetadata(METADATA_PARTITION_INDEX) + "_err";
+			scpDownloadCommand = createSCPDownloadCommand(
+					rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
+							+ remoteErrFilePath,
+					rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
+							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteErrFilePath);
+			rTaskImpl.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
+			
+			rTasks.add(rTaskImpl);
+		}
+		return rTasks;
 	}
 
 	private static String createCommandToRunRemotly(String command) {		
