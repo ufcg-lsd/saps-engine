@@ -18,7 +18,7 @@ import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
-import org.fogbowcloud.sebal.ImageDataStore;
+import org.fogbowcloud.sebal.DataStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class TestExecutionMonitor {
 	public InfrastructureManager IM;
 	public Resource resource;
 	public String FAKE_TASK_ID = "FAKE_TASK_ID";
-	public ImageDataStore imageStore;
+	public DataStore imageStore;
 	private CurrentThreadExecutorService executorService;
 	
 	@Before
@@ -40,7 +40,7 @@ public class TestExecutionMonitor {
 		task = spy(new TaskImpl(FAKE_TASK_ID, null));
 		IM = mock(InfrastructureManager.class);
 		resource = mock(Resource.class);
-		imageStore = mock(ImageDataStore.class);
+		imageStore = mock(DataStore.class);
 		job = mock(Job.class);
 		executorService = new CurrentThreadExecutorService();
 		scheduler = spy(new Scheduler(IM, job));

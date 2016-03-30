@@ -8,19 +8,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.ImageDataStore;
+import org.fogbowcloud.sebal.DataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.SebalTasks;
 
 
 public class SebalJob extends Job {
 
-	private ImageDataStore imageStore;
+	private DataStore imageStore;
 	private Map<String, ImageState> pendingUpdates = new HashMap<String, ImageState>();
 	
 	public static final Logger LOGGER = Logger.getLogger(SebalJob.class);
 	
-	public SebalJob(ImageDataStore imageStore) {
+	public SebalJob(DataStore imageStore) {
 		this.imageStore = imageStore;
 	}
 
@@ -75,11 +75,11 @@ public class SebalJob extends Job {
 	protected void udpateDB(String imageName, ImageState imageState) {
 		LOGGER.debug("Updating image " + imageName + " to state " + imageState.getValue());
 		try {
-			imageStore.updateState(imageName, imageState);
+			imageStore.updateImageState(imageName, imageState);
 
 			// updating previous images not updated yet because of any connection problem
 			for (String pendingImage : new ArrayList<String>(getPendingUpdates().keySet())) {
-				imageStore.updateState(pendingImage, getPendingUpdates().get(pendingImage));
+				imageStore.updateImageState(pendingImage, getPendingUpdates().get(pendingImage));
 				getPendingUpdates().remove(pendingImage);
 			}
 		} catch (SQLException e) {

@@ -22,9 +22,9 @@ import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.ImageData;
-import org.fogbowcloud.sebal.ImageDataStore;
+import org.fogbowcloud.sebal.DataStore;
 import org.fogbowcloud.sebal.ImageState;
-import org.fogbowcloud.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.JDBCDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
 
 public class SebalMain {
@@ -34,7 +34,7 @@ public class SebalMain {
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 
 //	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
-	private static ImageDataStore imageStore;
+	private static DataStore imageStore;
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 
 	public static void main(String[] args) throws Exception {
@@ -43,7 +43,7 @@ public class SebalMain {
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		imageStore = new JDBCImageDataStore(properties);
+		imageStore = new JDBCDataStore(properties);
 
 		final Job job = new SebalJob(imageStore);
 
@@ -75,7 +75,7 @@ public class SebalMain {
 		
 		//For R case
 		addFakeRTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
-		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
+		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, DataStore.UNLIMITED);
 		
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
@@ -104,12 +104,11 @@ public class SebalMain {
 		
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
-
 	}
 
 	private static void addFakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
 		try {
-			List<ImageData> completedImages = imageStore.getIn(imageState);
+			List<ImageData> completedImages = imageStore.getImageIn(imageState);
 
 			for (ImageData imageData : completedImages) {
 
@@ -134,7 +133,7 @@ public class SebalMain {
 			Specification sebalSpec, ImageState imageState) {
 		// TODO Auto-generated method stub
 		try {
-			List<ImageData> completedImages = imageStore.getIn(imageState);
+			List<ImageData> completedImages = imageStore.getImageIn(imageState);
 
 			for (ImageData imageData : completedImages) {
 
@@ -158,7 +157,7 @@ public class SebalMain {
 	private static void addTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
-			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);				
+			List<ImageData> imagesToExecute = imageStore.getImageIn(imageState, limit);				
 			
 			for (ImageData imageData : imagesToExecute) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
@@ -190,7 +189,7 @@ public class SebalMain {
 					job.addTask(task);
 				}
 				
-				imageStore.update(imageData);
+				imageStore.updateImage(imageData);
 			}
 			
 			
@@ -202,7 +201,7 @@ public class SebalMain {
 	private static void addRTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
-			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);				
+			List<ImageData> imagesToExecute = imageStore.getImageIn(imageState, limit);				
 			
 			for (ImageData imageData : imagesToExecute) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
@@ -223,7 +222,7 @@ public class SebalMain {
 					job.addTask(task);
 				}
 				
-				imageStore.update(imageData);
+				imageStore.updateImage(imageData);
 			}
 			
 		} catch (SQLException e) {

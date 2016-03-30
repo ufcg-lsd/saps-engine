@@ -219,6 +219,9 @@ public class SebalTasks {
 			rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 			rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
 			rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
+			rTaskImpl.putMetadata(METADATA_NUMBER_OF_PARTITIONS,
+					properties.getProperty("sebal_number_of_partitions"));
+			rTaskImpl.putMetadata(METADATA_PARTITION_INDEX, String.valueOf(partitionIndex));
 			rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 					properties.getProperty("sebal_local_scripts_dir"));
 			rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
@@ -296,7 +299,6 @@ public class SebalTasks {
 			String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
 			rTaskImpl.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
 
-			// number of partitions and partition index doesn't exist in R implementation
 			// stage out of output files
 			String remoteOutFilePath = rTaskImpl.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
 					+ rTaskImpl.getMetadata(METADATA_PARTITION_INDEX) + "_out";
@@ -403,6 +405,8 @@ public class SebalTasks {
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
 		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
 				task.getMetadata(METADATA_SEBAL_URL));
+		command = command.replaceAll(Pattern.quote("${R_URL}"),
+				task.getMetadata(METADATA_R_URL));
 
 		// repositories properties
 		command = command.replaceAll(Pattern.quote("${REMOTE_USER}"),

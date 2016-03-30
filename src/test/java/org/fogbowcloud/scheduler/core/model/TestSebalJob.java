@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
-import org.fogbowcloud.sebal.ImageDataStore;
+import org.fogbowcloud.sebal.DataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.SebalTasks;
 import org.junit.Before;
@@ -26,12 +26,12 @@ public class TestSebalJob {
 	private static final String FAKE_TASK_ID = "taskId";
 	private static final String IMAGE_1_NAME = "image1Name";
 	SebalJob job;
-	ImageDataStore dstore;
+	DataStore dstore;
 	
 	
 	@Before
 	public void setUp(){
-		dstore = mock(ImageDataStore.class);
+		dstore = mock(DataStore.class);
 		job = spy(new SebalJob(dstore));
 	}
 	
@@ -118,38 +118,38 @@ public class TestSebalJob {
 	@Test
 	public void testUpdateDBOnlyOneValue() throws SQLException{
 		String fakeImageName = "fakeimagename";
-		doNothing().when(dstore).updateState(fakeImageName, ImageState.FINISHED);
+		doNothing().when(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
 		Map<String, ImageState> fakePendingMap = new HashMap<String, ImageState>();
 		doReturn(fakePendingMap).when(job).getPendingUpdates();
 		
 		job.udpateDB(fakeImageName, ImageState.FINISHED);
-		verify(dstore).updateState(fakeImageName, ImageState.FINISHED);
+		verify(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
 	}
 	
 	@Test
 	public void testUpdateDBWithPendingRequests() throws SQLException{
 		String fakeImageName = "fakeimagename";
-		doNothing().when(dstore).updateState(fakeImageName, ImageState.FINISHED);
+		doNothing().when(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
 		Map<String, ImageState> fakePendingMap = new HashMap<String, ImageState>();
 		
 		String pendingImageName = "pendindImage";
-		doNothing().when(dstore).updateState(pendingImageName, ImageState.FINISHED);
+		doNothing().when(dstore).updateImageState(pendingImageName, ImageState.FINISHED);
 		fakePendingMap.put(pendingImageName, ImageState.FINISHED);
 		doReturn(fakePendingMap).when(job).getPendingUpdates();
 		
 		job.udpateDB(fakeImageName, ImageState.FINISHED);
-		verify(dstore).updateState(fakeImageName, ImageState.FINISHED);
-		verify(dstore).updateState(pendingImageName, ImageState.FINISHED);
+		verify(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
+		verify(dstore).updateImageState(pendingImageName, ImageState.FINISHED);
 	}
 	
 	@Test
 	public void testUpdateDBExceptionOcccurs() throws SQLException{
 		String fakeImageName = "fakeimagename";
-		doThrow(new SQLException("Invalid format")).when(dstore).updateState(fakeImageName, ImageState.FINISHED);
+		doThrow(new SQLException("Invalid format")).when(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
 		Map<String, ImageState> fakePendingMap = new HashMap<String, ImageState>();
 		
 		String pendingImageName = "pendindImage";
-		doNothing().when(dstore).updateState(pendingImageName, ImageState.FINISHED);
+		doNothing().when(dstore).updateImageState(pendingImageName, ImageState.FINISHED);
 		fakePendingMap.put(pendingImageName, ImageState.FINISHED);
 		doReturn(fakePendingMap).when(job).getPendingUpdates();
 		

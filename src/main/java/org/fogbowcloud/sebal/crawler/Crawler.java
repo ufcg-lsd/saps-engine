@@ -20,37 +20,39 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.DataStore;
+import org.fogbowcloud.sebal.ElevationData;
 import org.fogbowcloud.sebal.ImageData;
-import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
-import org.fogbowcloud.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.JDBCDataStore;
 import org.fogbowcloud.sebal.NASARepository;
 
 public class Crawler {
 
 	public Properties properties;
-	public ImageDataStore imageStore;
+	public DataStore dataStore;
 	int maxSimultaneousDownload;
 	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
+	public Map<String, ElevationData> pendingElevationDownload = new HashMap<String, ElevationData>();
 	private ScheduledExecutorService executor;
 	private NASARepository NASARepository;
 
-	private ExecutorService imageDownloader = Executors.newFixedThreadPool(5);
+	private ExecutorService downloader = Executors.newFixedThreadPool(5);
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	private static final int DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD = 1;
 
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
 	public Crawler(Properties properties) {
-		this(properties, new JDBCImageDataStore(properties), null);
+		this(properties, new JDBCDataStore(properties), null);
 	}
 
-	public Crawler(Properties properties, ImageDataStore imageStore, ScheduledExecutorService executor) {
+	public Crawler(Properties properties, DataStore imageStore, ScheduledExecutorService executor) {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
 		this.properties = properties;
-		this.imageStore = imageStore;
+		this.dataStore = imageStore;
 		this.NASARepository = new NASARepository(properties);
 		if (executor == null) {
 			this.executor = Executors.newScheduledThreadPool(1);
@@ -98,6 +100,21 @@ public class Crawler {
 					}
 					
 					downloadImage(imageData);
+					
+					if (pendingElevationDownload.size() >= maxSimultaneousDownload) {
+						LOGGER.debug("Already downloading " + pendingImageDownload.size()
+								+ "elevations and max allowed is " + maxSimultaneousDownload);
+						return;
+					}
+
+					ElevationData elevationData = selectElevationToDownload();
+					
+					if (elevationData == null) {
+						LOGGER.debug("There is not elevation to download.");
+						return;
+					}
+					
+					downloadElevation(elevationData);
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
 				}
@@ -107,8 +124,8 @@ public class Crawler {
 	}
 
 	private void schedulePreviousDownloadsNotFinished() throws SQLException {
-		List<ImageData> previousDownloads = imageStore.getIn(ImageState.DOWNLOADING);
-		for (ImageData imageData : previousDownloads) {
+		List<ImageData> previousImagesDownloads = dataStore.getImageIn(ImageState.DOWNLOADING);
+		for (ImageData imageData : previousImagesDownloads) {
 			if (imageData.getFederationMember().equals(properties.getProperty("federation_member"))) {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is a previous download not finished.");
@@ -120,20 +137,20 @@ public class Crawler {
 
 	private ImageData selectImageToDownload() throws SQLException {
 		LOGGER.debug("Searching for image to download.");
-		List<ImageData> imageDataList = imageStore.getIn(ImageState.NOT_DOWNLOADED,
+		List<ImageData> imageDataList = dataStore.getImageIn(ImageState.NOT_DOWNLOADED,
 				10);
 		
 		for (int i = 0; i < imageDataList.size(); i++) {
 			ImageData imageData = imageDataList.get(i);
 			
-			if (imageStore.lock(imageData.getName())) {
+			if (dataStore.lockImage(imageData.getName())) {
 				imageData.setState(ImageState.DOWNLOADING);
 				imageData.setFederationMember(properties.getProperty("federation_member"));
 				
 				pendingImageDownload.put(imageData.getName(), imageData);
-				imageStore.update(imageData);
+				dataStore.updateImage(imageData);
 				
-				imageStore.unlock(imageData.getName());
+				dataStore.unlockImage(imageData.getName());
 				return imageData;
 			}
 		}
@@ -141,7 +158,7 @@ public class Crawler {
 	}
 	
 	private void downloadImage(final ImageData imageData) {
-		imageDownloader.execute(new Runnable() {
+		downloader.execute(new Runnable() {
 			
 			@Override
 			public void run() {
@@ -154,11 +171,11 @@ public class Crawler {
 						LOGGER.error("It was not possible run Fmask for image " + imageData.getName());
 //						removeFromPendingAndUpdateState(imageData);
 //						return;
-						imageData.setFederationMember(ImageDataStore.NONE);
+						imageData.setFederationMember(DataStore.NONE);
 					}
 					
 					imageData.setState(ImageState.DOWNLOADED);
-					imageStore.update(imageData);					
+					dataStore.updateImage(imageData);					
 					pendingImageDownload.remove(imageData.getName());					
 				} catch (Exception e) {
 					LOGGER.error("Couldn't download image " + imageData.getName() + ".", e);
@@ -169,9 +186,9 @@ public class Crawler {
 			private void removeFromPendingAndUpdateState(final ImageData imageData) {
 				pendingImageDownload.remove(imageData.getName());
 				try {
-					imageData.setFederationMember(ImageDataStore.NONE);
+					imageData.setFederationMember(DataStore.NONE);
 					imageData.setState(ImageState.NOT_DOWNLOADED);
-					imageStore.update(imageData);
+					dataStore.updateImage(imageData);
 				} catch (SQLException e1) {
 					Crawler.LOGGER.error("Error while updating image data.", e1);
 				}
@@ -232,6 +249,15 @@ public class Crawler {
 			}
 		});
 	}
+	
+	private ElevationData selectElevationToDownload() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	private void downloadElevation(ElevationData elevationData) {
+		//TODO Auto-generated method stub
+	}
 
 	protected String replaceVariables(String command, ImageData imageData) {
 		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"), imageData.getName());
@@ -254,7 +280,7 @@ public class Crawler {
 	 * This method must be used only for testing
 	 */
 	protected void setImageDownloader(ExecutorService imageDownloader) {
-		this.imageDownloader = imageDownloader;
+		this.downloader = imageDownloader;
 		
 	}
 
