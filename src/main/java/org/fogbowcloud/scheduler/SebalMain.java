@@ -74,8 +74,8 @@ public class SebalMain {
 		//addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
 		
 		//For R case
-		addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
-		addTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
+		addFakeRTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
+		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
 		
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
@@ -90,7 +90,12 @@ public class SebalMain {
 				// TODO develop throughput and negation of task addition 
 //				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
 				//addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
-				addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
+				
+				//Used before:
+				//addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
+				
+				//For R case
+				addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 			}
 
 			
@@ -123,7 +128,31 @@ public class SebalMain {
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
+	}
+	
+	private static void addFakeRTasks(Properties properties, Job job,
+			Specification sebalSpec, ImageState imageState) {
+		// TODO Auto-generated method stub
+		try {
+			List<ImageData> completedImages = imageStore.getIn(imageState);
 
+			for (ImageData imageData : completedImages) {
+
+				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
+
+				List<Task> tasks = new ArrayList<Task>();
+
+				tasks = SebalTasks.createRTasks(properties, imageData.getName(), sebalSpec,
+						imageData.getFederationMember());
+
+				for (Task task : tasks) {
+					job.addFakeTask(task);
+				}
+			}
+
+		} catch (SQLException e) {
+			LOGGER.error("Error while getting image.", e);
+		}
 	}
 	
 	private static void addTasks(final Properties properties, final Job job,
@@ -170,6 +199,38 @@ public class SebalMain {
 		}
 	}
 	
+	private static void addRTasks(final Properties properties, final Job job,
+			final Specification sebalSpec, ImageState imageState, int limit) {
+		try {
+			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);				
+			
+			for (ImageData imageData : imagesToExecute) {
+				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
+						+ imageData.getState().getValue() + " (not finished).");
+
+				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
+				
+				List<Task> tasks = new ArrayList<Task>();
+				
+				if (ImageState.RUNNING_R.equals(imageState)
+						|| ImageState.DOWNLOADED.equals(imageState)) {
+					tasks = SebalTasks.createRTasks(properties, imageData.getName(),
+							sebalSpec, imageData.getFederationMember());
+					imageData.setState(ImageState.RUNNING_R);
+				}
+
+				for (Task task : tasks) {
+					job.addTask(task);
+				}
+				
+				imageStore.update(imageData);
+			}
+			
+		} catch (SQLException e) {
+			LOGGER.error("Error while getting image.", e);
+		}
+	}
+	
 	private static Specification getSebalSpecFromFile(Properties properties) {
 		String sebalSpecFile = properties.getProperty("sebal_task_spec_path");
 		List<Specification> specs = new ArrayList<Specification>();
@@ -183,6 +244,8 @@ public class SebalMain {
 			return null;
 		}
 	}
+	
+	
 	
 	private static List<Specification> getInitialSpecs(Properties properties)
 			throws IOException {
