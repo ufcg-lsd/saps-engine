@@ -211,18 +211,6 @@ public class SebalTasks {
 		List<Task> rTasks = new ArrayList<Task>();
 
 		for (int partitionIndex = 1; partitionIndex <= Integer.parseInt(numberOfPartitions); partitionIndex++) {
-			//setting location on spec
-//			String locationSpec = "Glue2CloudComputeManagerID==\"" + location + "\"";
-//			if (spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS) == null) {
-//				spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
-//						locationSpec);
-//			} else {
-//				spec.addRequitement(
-//						FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
-//						spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS)
-//								+ " && " + locationSpec);
-//			}
-
 			TaskImpl rTaskImpl = new TaskImpl(UUID.randomUUID().toString(), spec);
 						
 			settingCommonTaskMetadata(properties, rTaskImpl);
@@ -254,6 +242,7 @@ public class SebalTasks {
 				rTaskImpl.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
 			}
 		
+			//TODO: this will probably change
 			// treating boundingbox 
 			if (properties.getProperty("sebal_local_boundingbox_dir") != null) {
 				LOGGER.debug("Region of image is "

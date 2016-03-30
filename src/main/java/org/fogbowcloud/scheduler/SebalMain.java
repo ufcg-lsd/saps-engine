@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
@@ -70,9 +68,14 @@ public class SebalMain {
 		// scheduling previous image executions
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
 //		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
-		addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
-		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
-
+		
+		//Used before:
+		//addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
+		//addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
+		
+		//For R case
+		addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
+		addTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
 		
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
