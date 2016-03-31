@@ -244,30 +244,6 @@ public class SebalTasks {
 				LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 				rTaskImpl.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
 			}
-		
-			//TODO: this will probably change
-			// treating boundingbox 
-			if (properties.getProperty("sebal_local_boundingbox_dir") != null) {
-				LOGGER.debug("Region of image is "
-						+ DBBootstrap.getImageRegionFromName(imageName));
-				File boundingboxFile = new File(
-						properties.getProperty("sebal_local_boundingbox_dir") + "/boundingbox_"
-								+ DBBootstrap.getImageRegionFromName(imageName));
-				LOGGER.debug("The boundingbox file for this image should be "
-						+ boundingboxFile.getAbsolutePath());
-				if (boundingboxFile.exists()) {
-					String remoteBoundingboxPath = rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
-							+ "/boundingbox_vertices";
-
-					rTaskImpl.putMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH, remoteBoundingboxPath);
-					String scpUploadCommand = createSCPUploadCommand(
-							boundingboxFile.getAbsolutePath(), remoteBoundingboxPath);
-					LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-					rTaskImpl.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
-				} else {
-					LOGGER.warn("There is no boundingbox file specified for image " + imageName);
-				}
-			}
 			
 			//TODO: check if the following have to change to support new script
 			
@@ -287,8 +263,7 @@ public class SebalTasks {
 			LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 			rTaskImpl.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
 
-			// adding epilogue command
-			
+			// adding epilogue command			
 			String copyCommand = "cp -R " + rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ "/SEBAL/local_results/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + " "
 					+ rTaskImpl.getMetadata(METADATA_RESULTS_MOUNT_POINT) + "/results";
