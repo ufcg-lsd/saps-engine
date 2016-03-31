@@ -17,12 +17,12 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.JDBCDataStore;
+import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.NASARepository;
 
 public class DBBootstrap {
 
-	private JDBCDataStore imageStore;
+	private JDBCImageDataStore imageStore;
 	Properties properties;
 	private NASARepository nasaRepository;
 
@@ -33,7 +33,7 @@ public class DBBootstrap {
 			throw new IllegalArgumentException("The properties must not bu null.");
 		}
 		this.properties = properties;
-		imageStore = new JDBCDataStore(properties);
+		imageStore = new JDBCImageDataStore(properties);
 		nasaRepository = new NASARepository(properties);
 	}
 
@@ -94,7 +94,7 @@ public class DBBootstrap {
 		return regions;
 	}
 
-	public JDBCDataStore getImageStore() {
+	public JDBCImageDataStore getImageStore() {
 		return imageStore;
 		
 	}

@@ -24,7 +24,7 @@ import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
-import org.fogbowcloud.sebal.JDBCDataStore;
+import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
 
 public class SebalMain {
@@ -43,7 +43,7 @@ public class SebalMain {
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		imageStore = new JDBCDataStore(properties);
+		imageStore = new JDBCImageDataStore(properties);
 
 		final Job job = new SebalJob(imageStore);
 

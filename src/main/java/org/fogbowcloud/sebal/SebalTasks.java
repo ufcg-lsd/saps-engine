@@ -43,6 +43,8 @@ public class SebalTasks {
 	public static final String METADATA_RESULTS_MOUNT_POINT = "results_mount_point";
 	private static final String METADATA_SEBAL_URL = "sebal_url";
 	private static final String METADATA_R_URL = "r_url";
+	private static final String METADATA_CSV_CHANGER_URL = "csv_changer_url";
+	private static final String METADATA_CSV_CHANGER_NAME = "csv_changer_name";
 	private static final String METADATA_REPOS_USER = "repository_user";
 	private static final String METADATA_IMAGE_REPOSITORY = "image_repository";
 	private static final String METADATA_RESULT_REPOSITORY = "result_repository";
@@ -218,10 +220,9 @@ public class SebalTasks {
 			// setting image R execution properties
 			rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 			rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
+			rTaskImpl.putMetadata(METADATA_CSV_CHANGER_URL, properties.getProperty("csv_changer_url"));
+			rTaskImpl.putMetadata(METADATA_CSV_CHANGER_NAME, properties.getProperty("csv_changer_name"));
 			rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
-			rTaskImpl.putMetadata(METADATA_NUMBER_OF_PARTITIONS,
-					properties.getProperty("sebal_number_of_partitions"));
-			rTaskImpl.putMetadata(METADATA_PARTITION_INDEX, String.valueOf(partitionIndex));
 			rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 					properties.getProperty("sebal_local_scripts_dir"));
 			rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
@@ -273,25 +274,19 @@ public class SebalTasks {
 			String cleanEnvironment = "rm -r " + rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 			String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
 			rTaskImpl.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
-
-			// stage out of output files
-			String remoteOutFilePath = rTaskImpl.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
-					+ rTaskImpl.getMetadata(METADATA_PARTITION_INDEX) + "_out";
 			
 			String scpDownloadCommand = createSCPDownloadCommand(
 					rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
-							+ remoteOutFilePath,
+							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
 					rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteOutFilePath);
+							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_out");
 			rTaskImpl.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
 
-			String remoteErrFilePath = rTaskImpl.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
-					+ rTaskImpl.getMetadata(METADATA_PARTITION_INDEX) + "_err";
 			scpDownloadCommand = createSCPDownloadCommand(
 					rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
-							+ remoteErrFilePath,
+							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
 					rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteErrFilePath);
+							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_err");
 			rTaskImpl.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
 			
 			rTasks.add(rTaskImpl);
@@ -382,6 +377,10 @@ public class SebalTasks {
 				task.getMetadata(METADATA_SEBAL_URL));
 		command = command.replaceAll(Pattern.quote("${R_URL}"),
 				task.getMetadata(METADATA_R_URL));
+		command = command.replaceAll(Pattern.quote("${CSV_CHANGER_URL}"),
+				task.getMetadata(METADATA_CSV_CHANGER_URL));
+		command = command.replaceAll(Pattern.quote("${CSV_CHANGER_NAME}"),
+				task.getMetadata(METADATA_CSV_CHANGER_NAME));
 
 		// repositories properties
 		command = command.replaceAll(Pattern.quote("${REMOTE_USER}"),

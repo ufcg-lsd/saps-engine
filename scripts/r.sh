@@ -30,7 +30,7 @@ cd ${SANDBOX}
 
 # download and run script to change dados.csv
 wget -nc ${CSV_CHANGER_URL}
-./nome_script.sh param1 param2 ... paramN
+./${CSV_CHANGER_NAME} param1 param2 ... paramN
 
 # see if this script already run Rscript command...in this case, either the code below will be removed or the script will change
 

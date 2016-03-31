@@ -14,9 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 
-public class JDBCDataStore implements ImageDataStore {
+public class JDBCImageDataStore implements ImageDataStore {
 
-	private static final Logger LOGGER = Logger.getLogger(JDBCDataStore.class);
+	private static final Logger LOGGER = Logger.getLogger(JDBCImageDataStore.class);
 	protected static final String IMAGE_TABLE_NAME = "NASA_IMAGES";
 	private static final String IMAGE_NAME_COL = "image_name";
 	private static final String DOWNLOAD_LINK_COL = "download_link";
@@ -26,7 +26,7 @@ public class JDBCDataStore implements ImageDataStore {
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
 	private BasicDataSource connectionPool;
 
-	public JDBCDataStore(Properties properties) {
+	public JDBCImageDataStore(Properties properties) {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}

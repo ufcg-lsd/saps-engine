@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
-import org.fogbowcloud.sebal.JDBCDataStore;
+import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.NASARepository;
 
 public class Crawler {
@@ -42,7 +42,7 @@ public class Crawler {
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
 	public Crawler(Properties properties) {
-		this(properties, new JDBCDataStore(properties), null);
+		this(properties, new JDBCImageDataStore(properties), null);
 	}
 
 	public Crawler(Properties properties, ImageDataStore imageStore, ScheduledExecutorService executor) {
