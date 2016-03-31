@@ -14,20 +14,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 
-public class JDBCDataStore implements DataStore {
+public class JDBCDataStore implements ImageDataStore {
 
 	private static final Logger LOGGER = Logger.getLogger(JDBCDataStore.class);
 	protected static final String IMAGE_TABLE_NAME = "NASA_IMAGES";
-	protected static final String ELEVATION_TABLE_NAME = "ELEVATION_FILES";
 	private static final String IMAGE_NAME_COL = "image_name";
-	private static final String ELEVATION_NAME_COL = "image_name";
-	private static final String IMAGE_DOWNLOAD_LINK_COL = "download_link";
-	private static final String ELEVATION_DOWNLOAD_LINK_COL = "download_link";
+	private static final String DOWNLOAD_LINK_COL = "download_link";
 	private static final String PRIORITY_COL = "priority";
 	private static final String FEDERATION_MEMBER_COL = "federation_member";
 	private static final String STATE_COL = "state";
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
-	private Map<String, Connection> lockedElevation = new ConcurrentHashMap<String, Connection>();
 	private BasicDataSource connectionPool;
 
 	public JDBCDataStore(Properties properties) {
@@ -50,11 +46,7 @@ public class JDBCDataStore implements DataStore {
 			connection = getConnection();
 			statement = connection.createStatement();
 			statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME + "("
-					+ IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, " + IMAGE_DOWNLOAD_LINK_COL
-					+ " VARCHAR(255), " + STATE_COL + " VARCHAR(100), " + FEDERATION_MEMBER_COL
-					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER)");
-			statement.execute("CREATE TABLE IF NOT EXISTS " + ELEVATION_TABLE_NAME + "("
-					+ ELEVATION_NAME_COL + " VARCHAR(255) PRIMARY KEY, " + ELEVATION_DOWNLOAD_LINK_COL
+					+ IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, " + DOWNLOAD_LINK_COL
 					+ " VARCHAR(255), " + STATE_COL + " VARCHAR(100), " + FEDERATION_MEMBER_COL
 					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER)");			
 			statement.close();
@@ -103,9 +95,6 @@ public class JDBCDataStore implements DataStore {
 
 	private static final String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
 			+ " VALUES(?, ?, ?, ?, ?)";
-	
-	private static final String INSERT_ELEVATION_SQL = "INSERT INTO " + ELEVATION_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?)";
 
 	@Override
 	public void addImage(String imageName, String downloadLink, int priority) throws SQLException {
@@ -127,36 +116,7 @@ public class JDBCDataStore implements DataStore {
 			insertStatement.setString(1, imageName);
 			insertStatement.setString(2, downloadLink);
 			insertStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
-			insertStatement.setString(4, DataStore.NONE);
-			insertStatement.setInt(5, priority);
-
-			insertStatement.execute();
-		} finally {
-			close(insertStatement, connection);
-		}
-	}
-	
-	@Override
-	public void addElevation(String elevationName, String downloadLink, int priority) throws SQLException {
-		LOGGER.info("Adding image " + elevationName + " with download link " + downloadLink
-				+ " and priority " + priority);
-		if (elevationName == null || elevationName.isEmpty() || downloadLink == null
-				|| downloadLink.isEmpty()) {
-			LOGGER.error("Invalid elevation name " + elevationName);
-			throw new IllegalArgumentException("Invalid elevation name " + elevationName);
-		}
-
-		PreparedStatement insertStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			insertStatement = connection.prepareStatement(INSERT_ELEVATION_SQL);
-			insertStatement.setString(1, elevationName);
-			insertStatement.setString(2, downloadLink);
-			insertStatement.setString(3, ElevationState.NOT_DOWNLOADED.getValue());
-			insertStatement.setString(4, DataStore.NONE);
+			insertStatement.setString(4, ImageDataStore.NONE);
 			insertStatement.setInt(5, priority);
 
 			insertStatement.execute();
@@ -167,9 +127,6 @@ public class JDBCDataStore implements DataStore {
 
 	private static final String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME
 			+ " SET state = ? WHERE image_name = ?";
-	
-	private static final String UPDATE_ELEVATION_STATE_SQL = "UPDATE " + ELEVATION_TABLE_NAME
-			+ " SET state = ? WHERE elevation_name = ?";
 
 	@Override
 	public void updateImageState(String imageName, ImageState state) throws SQLException {
@@ -194,36 +151,9 @@ public class JDBCDataStore implements DataStore {
 		}
 	}
 	
-	@Override
-	public void updateElevationState(String elevationName, ElevationState state) throws SQLException {
-
-		if (elevationName == null || elevationName.isEmpty() || state == null) {
-			LOGGER.error("Invalid elevation name " + elevationName + " or state " + state);
-			throw new IllegalArgumentException("Invalid elevation name " + elevationName + " or state "
-					+ state);
-		}
-		PreparedStatement updateStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			updateStatement = connection.prepareStatement(UPDATE_ELEVATION_STATE_SQL);
-			updateStatement.setString(1, state.getValue());
-			updateStatement.setString(2, elevationName);
-			updateStatement.execute();
-		} finally {
-			close(updateStatement, connection);
-		}
-	}
-	
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " "
 			+ "SET download_link = ?, state = ?, federation_member = ? "
 			+ ", priority = ? WHERE image_name = ?";
-	
-	private static final String UPDATE_ELEVATIONDATA_SQL = "UPDATE " + ELEVATION_TABLE_NAME + " "
-			+ "SET download_link = ?, state = ?, federation_member = ? "
-			+ ", priority = ? WHERE elevation_name = ?";
 	
 	@Override
 	public void updateImage(ImageData imageData) throws SQLException {
@@ -250,32 +180,6 @@ public class JDBCDataStore implements DataStore {
 			close(updateStatement, connection);
 		}
 	}
-	
-	@Override
-	public void updateElevation(ElevationData elevationData) throws SQLException {
-		if (elevationData == null) {
-			LOGGER.error("Invalid elevation " + elevationData);
-			throw new IllegalArgumentException("Invalid elevation data " + elevationData);
-		}
-		
-		PreparedStatement updateStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			updateStatement = connection.prepareStatement(UPDATE_ELEVATIONDATA_SQL);
-			updateStatement.setString(1, elevationData.getDownloadLink());
-			updateStatement.setString(2, elevationData.getState().getValue());
-			updateStatement.setString(3, elevationData.getFederationMember());
-			updateStatement.setInt(4, elevationData.getPriority());
-			updateStatement.setString(5, elevationData.getName());
-
-			updateStatement.execute();
-		} finally {
-			close(updateStatement, connection);
-		}
-	}
 
 	@Override
 	public void dispose() {
@@ -287,8 +191,6 @@ public class JDBCDataStore implements DataStore {
 	}
 
 	private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
-	
-	private static final String SELECT_ALL_ELEVATION_SQL = "SELECT * FROM " + ELEVATION_TABLE_NAME;
 
 	@Override
 	public List<ImageData> getAllImages() throws SQLException {
@@ -309,38 +211,12 @@ public class JDBCDataStore implements DataStore {
 			close(statement, conn);
 		}
 	}
-	
-	@Override
-	public List<ElevationData> getAllElevation() throws SQLException {
-		LOGGER.debug("Getting all elevation.");
-
-		Statement statement = null;
-		Connection conn = null;
-		try {
-			conn = getConnection();
-			statement = conn.createStatement();
-
-			statement.execute(SELECT_ALL_ELEVATION_SQL);
-			ResultSet rs = statement.getResultSet();
-			List<ElevationData> elevationDatas = extractElevationDataFrom(rs);
-			LOGGER.debug("Current images on data base: " + elevationDatas);			
-			return elevationDatas;
-		} finally {
-			close(statement, conn);
-		}
-	}
 
 	private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
 			+ " WHERE state = ? ORDER BY priority, image_name";
 	
 	private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
 			+ " WHERE state = ? ORDER BY priority, image_name LIMIT ?";
-	
-	private static final String SELECT_ELEVATION_IN_STATE_SQL = "SELECT * FROM " + ELEVATION_TABLE_NAME
-			+ " WHERE state = ? ORDER BY priority, elevation_name";
-	
-	private static final String SELECT_LIMITED_ELEVATION_IN_STATE_SQL = "SELECT * FROM " + ELEVATION_TABLE_NAME
-			+ " WHERE state = ? ORDER BY priority, elevation_name LIMIT ?";
 
 	@Override
 	public List<ImageData> getImageIn(ImageState state, int limit) throws SQLException {
@@ -378,71 +254,20 @@ public class JDBCDataStore implements DataStore {
 	public List<ImageData> getImageIn(ImageState state) throws SQLException {
 		return getImageIn(state, UNLIMITED);
 	}
-	
-	@Override
-	public List<ElevationData> getElevationIn(ElevationState state, int limit) throws SQLException {
-		if (state == null) {
-			LOGGER.error("Invalid state " + state);
-			throw new IllegalArgumentException("Invalid state " + state);
-		}
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-		
-		try {
-			connection = getConnection();
-			
-			if (limit == UNLIMITED) {
-				selectStatement = connection.prepareStatement(SELECT_ELEVATION_IN_STATE_SQL);
-				selectStatement.setString(1, state.getValue());
-				selectStatement.execute();
-			} else {
-				selectStatement = connection.prepareStatement(SELECT_LIMITED_ELEVATION_IN_STATE_SQL);
-				selectStatement.setString(1, state.getValue());
-				selectStatement.setInt(2, limit);
-				selectStatement.execute();
-			}
-			
-			ResultSet rs = selectStatement.getResultSet();
-			List<ElevationData> elevationDatas = extractElevationDataFrom(rs);
-			rs.close();
-			return elevationDatas;
-		} finally {
-			close(selectStatement, connection);
-		}
-	}
-	
-	@Override
-	public List<ElevationData> getElevationIn(ElevationState state) throws SQLException {
-		return getElevationIn(state, UNLIMITED);
-	}
 
 	private static List<ImageData> extractImageDataFrom(ResultSet rs) throws SQLException {
 		List<ImageData> imageDatas = new ArrayList<ImageData>();
 		while (rs.next()) {
 			imageDatas.add(new ImageData(rs.getString(IMAGE_NAME_COL), rs
-					.getString(IMAGE_DOWNLOAD_LINK_COL), ImageState.getStateFromStr(rs
+					.getString(DOWNLOAD_LINK_COL), ImageState.getStateFromStr(rs
 					.getString(STATE_COL)), rs.getString(FEDERATION_MEMBER_COL), rs
 					.getInt(PRIORITY_COL)));
 		}
 		return imageDatas;
 	}
-	
-	private static List<ElevationData> extractElevationDataFrom(ResultSet rs) throws SQLException {
-		List<ElevationData> elevationDatas = new ArrayList<ElevationData>();
-		while (rs.next()) {
-			elevationDatas.add(new ElevationData(rs.getString(ELEVATION_NAME_COL), rs
-					.getString(ELEVATION_DOWNLOAD_LINK_COL), ElevationState.getStateFromStr(rs
-					.getString(STATE_COL)), rs.getString(FEDERATION_MEMBER_COL), rs
-					.getInt(PRIORITY_COL)));
-		}
-		return elevationDatas;
-	}
 
 	private static final String SELECT_IMAGE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
 			+ " WHERE image_name = ?";
-	
-	private static final String SELECT_ELEVATION_SQL = "SELECT * FROM " + ELEVATION_TABLE_NAME
-			+ " WHERE elevation_name = ?";
 	
 	@Override
 	public ImageData getImage(String imageName) throws SQLException {
@@ -468,37 +293,9 @@ public class JDBCDataStore implements DataStore {
 			close(selectStatement, connection);
 		}
 	}
-	
-	@Override
-	public ElevationData getElevation(String elevationName) throws SQLException {
-		if (elevationName == null) {
-			LOGGER.error("Invalid elevationName " + elevationName);
-			throw new IllegalArgumentException("Invalid state " + elevationName);
-		}
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			selectStatement = connection.prepareStatement(SELECT_ELEVATION_SQL);
-			selectStatement.setString(1, elevationName);
-			selectStatement.execute();
-
-			ResultSet rs = selectStatement.getResultSet();
-			List<ElevationData> elevationDatas = extractElevationDataFrom(rs);
-			rs.close();
-			return elevationDatas.get(0);
-		} finally {
-			close(selectStatement, connection);
-		}
-	}
 
 	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM "
 			+ IMAGE_TABLE_NAME + " WHERE image_name = ?";
-	
-	private final String LOCK_ELEVATION_SQL = "SELECT pg_try_advisory_lock(?) FROM "
-			+ ELEVATION_TABLE_NAME + " WHERE elevation_name = ?";
 
 	@Override
 	public boolean lockImage(String imageName) throws SQLException {
@@ -532,43 +329,8 @@ public class JDBCDataStore implements DataStore {
 		}		
 		return locked;
 	}
-	
-	@Override
-	public boolean lockElevation(String elevationName) throws SQLException {
-		if (elevationName == null) {
-			LOGGER.error("Invalid elevationName " + elevationName);
-			throw new IllegalArgumentException("Invalid state " + elevationName);
-		}
-		PreparedStatement lockElevationStatement = null;
-		Connection connection = null;
-
-		boolean locked = false;
-		try {
-			connection = getConnection();
-			lockElevationStatement = connection.prepareStatement(LOCK_ELEVATION_SQL);
-     		final int imageHashCode = elevationName.hashCode();
-			lockElevationStatement.setInt(1, imageHashCode);
-     		lockElevationStatement.setString(2, elevationName);
-     		ResultSet rs = lockElevationStatement.executeQuery(); 
-     		if (rs.next()) {
-     			locked = rs.getBoolean(1);
-     		}
-
-			if (locked) {
-				lockedElevation.put(elevationName, connection);
-				close(lockElevationStatement);
-			}
-		} finally {
-			if (!locked) {
-				close(lockElevationStatement, connection);
-			}
-		}		
-		return locked;
-	}
 
 	private final String UNLOCK_IMAGE_SQL  = "SELECT pg_advisory_unlock(?)";
-	
-	private final String UNLOCK_ELEVATION_SQL  = "SELECT pg_advisory_unlock(?)";
 	
 	@Override
 	public boolean unlockImage(String imageName) throws SQLException {
@@ -592,35 +354,6 @@ public class JDBCDataStore implements DataStore {
 				}
 				
 				lockedImages.remove(imageName);
-			} finally {
-				close(selectStatement, connection);
-			}
-		}	
-		return unlocked;
-	}
-	
-	@Override
-	public boolean unlockElevation(String elevationName) throws SQLException {
-		if (elevationName == null) {
-			LOGGER.error("Invalid elevationName " + elevationName);
-			throw new IllegalArgumentException("Invalid state " + elevationName);
-		}
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-
-		boolean unlocked = false;
-		if (lockedElevation.containsKey(elevationName)) {
-			connection = lockedElevation.get(elevationName);
-			try {
-				selectStatement = connection.prepareStatement(UNLOCK_ELEVATION_SQL);
-				selectStatement.setInt(1, elevationName.hashCode());
-				ResultSet rs = selectStatement.executeQuery();
-				
-				if (rs.next()) {
-					unlocked = rs.getBoolean(1);
-				}
-				
-				lockedElevation.remove(elevationName);
 			} finally {
 				close(selectStatement, connection);
 			}

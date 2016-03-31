@@ -14,7 +14,7 @@ import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.restlet.resource.ImageResource;
 import org.fogbowcloud.scheduler.restlet.resource.TaskResource;
 import org.fogbowcloud.sebal.ImageData;
-import org.fogbowcloud.sebal.DataStore;
+import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -27,9 +27,9 @@ public class SebalScheduleApplication extends Application {
 	
 	private SebalJob job;
 	private Properties properties;
-	private DataStore imageDataStore;
+	private ImageDataStore imageDataStore;
 	
-	public SebalScheduleApplication(SebalJob job, DataStore imageDataStore, Properties properties){
+	public SebalScheduleApplication(SebalJob job, ImageDataStore imageDataStore, Properties properties){
 		this.job = job;
 		this.properties = properties;
 		this.imageDataStore = imageDataStore;

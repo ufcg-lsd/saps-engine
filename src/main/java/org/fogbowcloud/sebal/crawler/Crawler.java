@@ -20,9 +20,8 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.DataStore;
-import org.fogbowcloud.sebal.ElevationData;
 import org.fogbowcloud.sebal.ImageData;
+import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCDataStore;
 import org.fogbowcloud.sebal.NASARepository;
@@ -30,10 +29,9 @@ import org.fogbowcloud.sebal.NASARepository;
 public class Crawler {
 
 	public Properties properties;
-	public DataStore dataStore;
+	public ImageDataStore imageStore;
 	int maxSimultaneousDownload;
 	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
-	public Map<String, ElevationData> pendingElevationDownload = new HashMap<String, ElevationData>();
 	private ScheduledExecutorService executor;
 	private NASARepository NASARepository;
 
@@ -47,12 +45,12 @@ public class Crawler {
 		this(properties, new JDBCDataStore(properties), null);
 	}
 
-	public Crawler(Properties properties, DataStore imageStore, ScheduledExecutorService executor) {
+	public Crawler(Properties properties, ImageDataStore imageStore, ScheduledExecutorService executor) {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
 		this.properties = properties;
-		this.dataStore = imageStore;
+		this.imageStore = imageStore;
 		this.NASARepository = new NASARepository(properties);
 		if (executor == null) {
 			this.executor = Executors.newScheduledThreadPool(1);
@@ -100,21 +98,6 @@ public class Crawler {
 					}
 					
 					downloadImage(imageData);
-					
-					if (pendingElevationDownload.size() >= maxSimultaneousDownload) {
-						LOGGER.debug("Already downloading " + pendingImageDownload.size()
-								+ "elevations and max allowed is " + maxSimultaneousDownload);
-						return;
-					}
-
-					ElevationData elevationData = selectElevationToDownload();
-					
-					if (elevationData == null) {
-						LOGGER.debug("There is not elevation to download.");
-						return;
-					}
-					
-					downloadElevation(elevationData);
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
 				}
@@ -124,7 +107,7 @@ public class Crawler {
 	}
 
 	private void schedulePreviousDownloadsNotFinished() throws SQLException {
-		List<ImageData> previousImagesDownloads = dataStore.getImageIn(ImageState.DOWNLOADING);
+		List<ImageData> previousImagesDownloads = imageStore.getImageIn(ImageState.DOWNLOADING);
 		for (ImageData imageData : previousImagesDownloads) {
 			if (imageData.getFederationMember().equals(properties.getProperty("federation_member"))) {
 				LOGGER.debug("The image " + imageData.getName()
@@ -137,20 +120,20 @@ public class Crawler {
 
 	private ImageData selectImageToDownload() throws SQLException {
 		LOGGER.debug("Searching for image to download.");
-		List<ImageData> imageDataList = dataStore.getImageIn(ImageState.NOT_DOWNLOADED,
+		List<ImageData> imageDataList = imageStore.getImageIn(ImageState.NOT_DOWNLOADED,
 				10);
 		
 		for (int i = 0; i < imageDataList.size(); i++) {
 			ImageData imageData = imageDataList.get(i);
 			
-			if (dataStore.lockImage(imageData.getName())) {
+			if (imageStore.lockImage(imageData.getName())) {
 				imageData.setState(ImageState.DOWNLOADING);
 				imageData.setFederationMember(properties.getProperty("federation_member"));
 				
 				pendingImageDownload.put(imageData.getName(), imageData);
-				dataStore.updateImage(imageData);
+				imageStore.updateImage(imageData);
 				
-				dataStore.unlockImage(imageData.getName());
+				imageStore.unlockImage(imageData.getName());
 				return imageData;
 			}
 		}
@@ -171,11 +154,11 @@ public class Crawler {
 						LOGGER.error("It was not possible run Fmask for image " + imageData.getName());
 //						removeFromPendingAndUpdateState(imageData);
 //						return;
-						imageData.setFederationMember(DataStore.NONE);
+						imageData.setFederationMember(ImageDataStore.NONE);
 					}
 					
 					imageData.setState(ImageState.DOWNLOADED);
-					dataStore.updateImage(imageData);					
+					imageStore.updateImage(imageData);					
 					pendingImageDownload.remove(imageData.getName());					
 				} catch (Exception e) {
 					LOGGER.error("Couldn't download image " + imageData.getName() + ".", e);
@@ -186,9 +169,9 @@ public class Crawler {
 			private void removeFromPendingAndUpdateState(final ImageData imageData) {
 				pendingImageDownload.remove(imageData.getName());
 				try {
-					imageData.setFederationMember(DataStore.NONE);
+					imageData.setFederationMember(ImageDataStore.NONE);
 					imageData.setState(ImageState.NOT_DOWNLOADED);
-					dataStore.updateImage(imageData);
+					imageStore.updateImage(imageData);
 				} catch (SQLException e1) {
 					Crawler.LOGGER.error("Error while updating image data.", e1);
 				}
@@ -248,15 +231,6 @@ public class Crawler {
 				return error;
 			}
 		});
-	}
-	
-	private ElevationData selectElevationToDownload() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	private void downloadElevation(ElevationData elevationData) {
-		//TODO Auto-generated method stub
 	}
 
 	protected String replaceVariables(String command, ImageData imageData) {

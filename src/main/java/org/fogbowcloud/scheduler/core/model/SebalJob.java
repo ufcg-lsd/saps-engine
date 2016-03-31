@@ -8,19 +8,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.DataStore;
+import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.SebalTasks;
 
 
 public class SebalJob extends Job {
 
-	private DataStore imageStore;
+	private ImageDataStore imageStore;
 	private Map<String, ImageState> pendingUpdates = new HashMap<String, ImageState>();
 	
 	public static final Logger LOGGER = Logger.getLogger(SebalJob.class);
 	
-	public SebalJob(DataStore imageStore) {
+	public SebalJob(ImageDataStore imageStore) {
 		this.imageStore = imageStore;
 	}
 

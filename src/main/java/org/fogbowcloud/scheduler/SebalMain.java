@@ -22,7 +22,7 @@ import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.ImageData;
-import org.fogbowcloud.sebal.DataStore;
+import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
@@ -34,7 +34,7 @@ public class SebalMain {
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 
 //	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
-	private static DataStore imageStore;
+	private static ImageDataStore imageStore;
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 
 	public static void main(String[] args) throws Exception {
@@ -75,7 +75,7 @@ public class SebalMain {
 		
 		//For R case
 		addFakeRTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
-		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, DataStore.UNLIMITED);
+		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
 		
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
@@ -215,7 +215,7 @@ public class SebalMain {
 						|| ImageState.DOWNLOADED.equals(imageState)) {
 					tasks = SebalTasks.createRTasks(properties, imageData.getName(),
 							sebalSpec, imageData.getFederationMember());
-					imageData.setState(ImageState.RUNNING_R);
+					imageData.setState(ImageState.RUNNING_R);					
 				}
 
 				for (Task task : tasks) {
