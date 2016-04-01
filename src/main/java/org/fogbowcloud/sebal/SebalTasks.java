@@ -43,8 +43,6 @@ public class SebalTasks {
 	public static final String METADATA_RESULTS_MOUNT_POINT = "results_mount_point";
 	private static final String METADATA_SEBAL_URL = "sebal_url";
 	private static final String METADATA_R_URL = "r_url";
-	private static final String METADATA_CSV_CHANGER_URL = "csv_changer_url";
-	private static final String METADATA_CSV_CHANGER_NAME = "csv_changer_name";
 	private static final String METADATA_REPOS_USER = "repository_user";
 	private static final String METADATA_IMAGE_REPOSITORY = "image_repository";
 	private static final String METADATA_RESULT_REPOSITORY = "result_repository";
@@ -220,8 +218,6 @@ public class SebalTasks {
 			// setting image R execution properties
 			rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 			rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
-			rTaskImpl.putMetadata(METADATA_CSV_CHANGER_URL, properties.getProperty("csv_changer_url"));
-			rTaskImpl.putMetadata(METADATA_CSV_CHANGER_NAME, properties.getProperty("csv_changer_name"));
 			rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 			rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 					properties.getProperty("sebal_local_scripts_dir"));
@@ -377,10 +373,6 @@ public class SebalTasks {
 				task.getMetadata(METADATA_SEBAL_URL));
 		command = command.replaceAll(Pattern.quote("${R_URL}"),
 				task.getMetadata(METADATA_R_URL));
-		command = command.replaceAll(Pattern.quote("${CSV_CHANGER_URL}"),
-				task.getMetadata(METADATA_CSV_CHANGER_URL));
-		command = command.replaceAll(Pattern.quote("${CSV_CHANGER_NAME}"),
-				task.getMetadata(METADATA_CSV_CHANGER_NAME));
 
 		// repositories properties
 		command = command.replaceAll(Pattern.quote("${REMOTE_USER}"),

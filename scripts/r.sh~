@@ -19,29 +19,58 @@ mkdir -p ${RESULTS_MOUNT_POINT}
 sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${SEBAL_RESULT_REPOSITORY} ${RESULTS_MOUNT_POINT}
 
 # untar image
-mkdir ${IMAGE_NAME}
-cd ${IMAGE_NAME}
-cp ${IMAGES_MOUNT_POINT}/images/${IMAGE_NAME}/* .
-tar -zxvf ${IMAGE_NAME}.tar.gz
+#mkdir ${IMAGE_NAME}
+#cd ${IMAGE_NAME}
+#cp ${IMAGES_MOUNT_POINT}/images/${IMAGE_NAME}/* .
+#tar -zxvf ${IMAGE_NAME}.tar.gz
+
+cd ${IMAGES_MOUNT_POINT}/images/
+
+ls > images.txt
+
+IMAGE_NAMES_FILE=${IMAGES_MOUNT_POINT}/images/images.txt
 
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
 
 cd ${SANDBOX}
 
-# download and run script to change dados.csv
-wget -nc ${CSV_CHANGER_URL}
-./${CSV_CHANGER_NAME} param1 param2 ... paramN
-
-# see if this script already run Rscript command...in this case, either the code below will be removed or the script will change
-
-cd R/
-
 mkdir -p local_results
-LOCAL_RESULTS=local_results
+LOCAL_RESULTS=${SANDBOX}/local_results
 
-Rscript AlgoritmoFinal.R ${SANDBOX}/R/
+cd ${IMAGES_MOUNT_POINT}/images/
 
-#java -Xmx1G -Xss1G -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.DeployBulkMain ../${IMAGE_NAME}/${IMAGE_NAME}_MTL.txt $LOCAL_RESULTS ${LEFT_X} ${UPPER_Y} ${RIGHT_X} ${LOWER_Y} F1 ${NUMBER_OF_PARTITIONS} ${PARTITION_INDEX} ${BOUNDING_BOX_PATH} sebal-deployment.conf ../${IMAGE_NAME}/${IMAGE_NAME}_MTLFmask > ${OUTPUT_FOLDER}/${NUMBER_OF_PARTITIONS}_${PARTITION_INDEX}_out 2> ${OUTPUT_FOLDER}/${NUMBER_OF_PARTITIONS}_${PARTITION_INDEX}_err
+echo "Image names file is "$IMAGE_NAMES_FILE
+
+for IMAGE_NAME in `cat $IMAGE_NAMES_FILE`
+
+do
+   # untar image
+   echo "Untaring image $IMAGE_NAME"
+   mkdir ${SANDBOX}/$IMAGE_NAME
+   cd ${SANDBOX}/$IMAGE_NAME
+   cp ${IMAGES_MOUNT_POINT}/images/$IMAGE_NAME".tar.gz" . 
+   tar -xvzf $IMAGE_NAME".tar.gz"
+
+   echo "Creating image output directory"
+   OUTPUT_IMAGE_DIR=$LOCAL_RESULTS/$IMAGE_NAME
+   mkdir -p $OUTPUT_IMAGE_DIR
+
+   echo "Creating dados.csv for image $IMAGE_NAME"
+
+   R_EXEC_DIR=${SANDBOX}/R/
+   cd $R_EXEC_DIR
+
+   echo "File images,MTL,File Station Weather,File Fmask,Path Output\n/tmp/$IMAGE_NAME,/tmp/$IMAGE_NAME/$IMAGE_NAME"_MTL.txt",$IMAGES_DIR/$IMAGE_NAME/$IMAGE_NAME".station.csv",$IMAGES_DIR/$IMAGE_NAME/$IMAGE_NAME"_MTLFmask",$OUTPUT_IMAGE_DIR" > dados.csv
+
+   echo "Executing R script..."
+   Rscript AlgoritmoFinal.R $R_EXEC_DIR
+
+   echo "Renaming dados file"
+   mv dados.csv dados"-$IMAGE_NAME".csv
+
+   rm -r ${SANDBOX}/$IMAGE_NAME
+   rm -r /tmp/Rtmp*
+done
 
 PROCESS_OUTPUT=$?
 
