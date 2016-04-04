@@ -18,6 +18,7 @@ import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.SebalTasks;
 import org.fogbowcloud.sebal.bootstrap.DBBootstrap;
+import org.json.JSONObject;
 import org.opensaml.util.resource.ResourceException;
 import org.restlet.data.MediaType;
 import org.restlet.representation.ObjectRepresentation;
@@ -26,7 +27,6 @@ import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 
-import com.amazonaws.util.json.JSONObject;
 
 public class TaskResource extends ServerResource {
 	private static final Logger LOGGER = Logger.getLogger(TaskResource.class);

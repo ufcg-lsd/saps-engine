@@ -18,12 +18,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
-import org.apache.log4j.lf5.PassingLogRecordFilter;
 import org.fogbowcloud.manager.core.plugins.identity.voms.VomsIdentityPlugin;
 import org.fogbowcloud.manager.occi.model.Token;
-import org.fogbowcloud.manager.occi.request.RequestAttribute;
-import org.fogbowcloud.manager.occi.request.RequestConstants;
-import org.fogbowcloud.manager.occi.request.RequestState;
+import org.fogbowcloud.manager.occi.order.OrderAttribute;
+import org.fogbowcloud.manager.occi.order.OrderConstants;
+import org.fogbowcloud.manager.occi.order.OrderState;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
@@ -135,7 +134,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 			List<Header> headers = (LinkedList<Header>) requestNewInstanceHeaders(spec);
 
-			requestInformation = this.doRequest("post", managerUrl + "/" + RequestConstants.TERM, headers);
+			requestInformation = this.doRequest("post", managerUrl + "/" + OrderConstants.TERM, headers);
 
 		} catch (Exception e) {
 			LOGGER.error("Error while requesting resource on Fogbow", e);
@@ -185,7 +184,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			// Attempt's to get the Instance ID from Fogbow Manager.
 			requestAttributes = getFogbowRequestAttributes(requestID);
 
-			instanceId = requestAttributes.get(RequestAttribute.INSTANCE_ID.getValue());
+			instanceId = requestAttributes.get(OrderAttribute.INSTANCE_ID.getValue());
 
 			// If has Instance ID, then verifies resource's SSH and Other
 			// Informations;
@@ -250,11 +249,11 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		try {
 			Map<String, String> requestAttributes = getFogbowRequestAttributes(resourceId);
 
-			String instanceId = requestAttributes.get(RequestAttribute.INSTANCE_ID.getValue());
+			String instanceId = requestAttributes.get(OrderAttribute.INSTANCE_ID.getValue());
 			if (instanceId != null) {
 				this.doRequest("delete", managerUrl + "/compute/" + instanceId, new ArrayList<Header>());
 			}
-			this.doRequest("delete", managerUrl + "/" + RequestConstants.TERM + "/" + resourceId,
+			this.doRequest("delete", managerUrl + "/" + OrderConstants.TERM + "/" + resourceId,
 					new ArrayList<Header>());
 
 		} catch (Exception e) {
@@ -274,7 +273,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 	private Map<String, String> getFogbowRequestAttributes(String requestId) throws Exception {
 
-		String endpoint = managerUrl + "/" + RequestConstants.TERM + "/" + requestId;
+		String endpoint = managerUrl + "/" + OrderConstants.TERM + "/" + requestId;
 		String requestResponse = doRequest("get", endpoint, new ArrayList<Header>());
 
 		Map<String, String> attrs = parseRequestAttributes(requestResponse);
@@ -320,22 +319,22 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		String fogbowRequestType = specs.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE);
 
 		List<Header> headers = new LinkedList<Header>();
-		headers.add(new BasicHeader(CATEGORY, RequestConstants.TERM + "; scheme=\"" + RequestConstants.SCHEME
-				+ "\"; class=\"" + RequestConstants.KIND_CLASS + "\""));
-		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, RequestAttribute.INSTANCE_COUNT.getValue() + "=" + 1));
-		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, RequestAttribute.TYPE.getValue() + "=" + fogbowRequestType));
+		headers.add(new BasicHeader(CATEGORY, OrderConstants.TERM + "; scheme=\"" + OrderConstants.SCHEME
+				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
+		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.INSTANCE_COUNT.getValue() + "=" + 1));
+		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.TYPE.getValue() + "=" + fogbowRequestType));
 		headers.add(
-				new BasicHeader(X_OCCI_ATTRIBUTE, RequestAttribute.REQUIREMENTS.getValue() + "=" + fogbowRequirements));
-		headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\"" + RequestConstants.TEMPLATE_OS_SCHEME
-				+ "\"; class=\"" + RequestConstants.MIXIN_CLASS + "\""));
+				new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.REQUIREMENTS.getValue() + "=" + fogbowRequirements));
+		headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\"" + OrderConstants.TEMPLATE_OS_SCHEME
+				+ "\"; class=\"" + OrderConstants.MIXIN_CLASS + "\""));
 		if (specs.getPublicKey() != null && !specs.getPublicKey().isEmpty()) {
 			headers.add(
 					new BasicHeader(CATEGORY,
-							RequestConstants.PUBLIC_KEY_TERM + "; scheme=\""
-									+ RequestConstants.CREDENTIALS_RESOURCE_SCHEME + "\"; class=\""
-									+ RequestConstants.MIXIN_CLASS + "\""));
+							OrderConstants.PUBLIC_KEY_TERM + "; scheme=\""
+									+ OrderConstants.CREDENTIALS_RESOURCE_SCHEME + "\"; class=\""
+									+ OrderConstants.MIXIN_CLASS + "\""));
 			headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,
-					RequestAttribute.DATA_PUBLIC_KEY.getValue() + "=" + specs.getPublicKey()));
+					OrderAttribute.DATA_PUBLIC_KEY.getValue() + "=" + specs.getPublicKey()));
 		}
 		return headers;
 
@@ -420,8 +419,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		return atts;
 	}
 
-	private RequestState getRequestState(String requestValue) {
-		for (RequestState state : RequestState.values()) {
+	private OrderState getRequestState(String requestValue) {
+		for (OrderState state : OrderState.values()) {
 			if (state.getValue().equals(requestValue)) {
 				return state;
 			}

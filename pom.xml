@@ -68,6 +68,17 @@
 			<name>Restlet repository</name>
 			<url>http://maven.restlet.com</url>
 		</repository>
+		
+		<repository>
+			<id>maven-fogbow</id>
+			<url>https://github.com/fogbow/mvn-repo/raw/master/releases/</url>
+		</repository>
+		<repository>
+			<id>contrail</id>
+			<name>Contrail repository</name>
+			<url>http://contrail.ow2.org/repositories/thirdparty</url>
+		</repository>
+		
 	</repositories>
 
 	<dependencies>
@@ -157,5 +168,11 @@
 			<version>1.8.2</version>
 		</dependency>
 		
+		<dependency>
+			<groupId>condor</groupId>
+			<artifactId>classad</artifactId>
+			<version>2.4</version>
+		</dependency>
+
 	</dependencies>
 </project>

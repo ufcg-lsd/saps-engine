@@ -1,7 +1,16 @@
 package org.fogbowcloud.scheduler.infrastructure;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.fogbowcloud.manager.occi.request.RequestType;
+import org.fogbowcloud.manager.occi.order.OrderType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Order;
@@ -413,7 +422,7 @@ public class TestInfrastructureManager {
 		orderA.setState(OrderState.FULFILLED);
 
 		Resource fakeResource = mock(Resource.class);
-		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(fakeRequestId).when(fakeResource).getId();
 		doReturn(true).when(fakeResource).match(specs);
@@ -451,7 +460,7 @@ public class TestInfrastructureManager {
 		orderA.setState(OrderState.FULFILLED);
 
 		Resource fakeResource = mock(Resource.class);
-		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(fakeRequestId).when(fakeResource).getId();
 		doReturn(true).when(fakeResource).match(specs);
@@ -494,7 +503,7 @@ public class TestInfrastructureManager {
 		orderB.setState(OrderState.OPEN);
 
 		Resource fakeResource = mock(Resource.class);
-		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(fakeRequestId).when(fakeResource).getId();
 		doReturn(true).when(fakeResource).match(specs);
@@ -535,7 +544,7 @@ public class TestInfrastructureManager {
 		orderB.setState(OrderState.ORDERED);
 
 		Resource fakeResource = mock(Resource.class);
-		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(fakeRequestId).when(fakeResource).getId();
 		doReturn(true).when(fakeResource).match(specs);
@@ -570,7 +579,7 @@ public class TestInfrastructureManager {
 
 		Resource fakeResource = mock(Resource.class);
 		Map<String, String> resourceAMetadata = new HashMap<String, String>();
-		resourceAMetadata.put(Resource.METADATA_REQUEST_TYPE, RequestType.PERSISTENT.getValue());
+		resourceAMetadata.put(Resource.METADATA_REQUEST_TYPE, OrderType.PERSISTENT.getValue());
 		doReturn(resourceAMetadata).when(fakeResource).getAllMetadata();
 		doReturn(resourceAMetadata.get(Resource.METADATA_REQUEST_TYPE)).when(fakeResource)
 				.getMetadataValue(Mockito.eq(Resource.METADATA_REQUEST_TYPE));
@@ -606,7 +615,7 @@ public class TestInfrastructureManager {
 		Order orderC = new Order(schedulerMock, specC);
 
 		Resource fakeResource = mock(Resource.class);
-		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(resourceId).when(fakeResource).getId();
 		doReturn(true).when(fakeResource).match(specA);
@@ -649,7 +658,7 @@ public class TestInfrastructureManager {
 		Order orderA = new Order(schedulerMock, specA);
 
 		Resource fakeResource = mock(Resource.class);
-		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(false).when(fakeResource).checkConnectivity();
 		doReturn(resourceId).when(fakeResource).getId();
 		doReturn(true).when(fakeResource).match(specA);
@@ -753,13 +762,13 @@ public class TestInfrastructureManager {
 		orderA.setState(OrderState.ORDERED);
 
 		Resource fakeResourceA = mock(Resource.class);
-		doReturn(RequestType.PERSISTENT.getValue()).when(fakeResourceA).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.PERSISTENT.getValue()).when(fakeResourceA).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(false).when(fakeResourceA).checkConnectivity();
 		doReturn(resourceIdA).when(fakeResourceA).getId();
 		doReturn(true).when(fakeResourceA).match(specA);
 		
 		Resource fakeResourceB = mock(Resource.class);
-		doReturn(RequestType.PERSISTENT.getValue()).when(fakeResourceB).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.PERSISTENT.getValue()).when(fakeResourceB).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(true).when(fakeResourceB).checkConnectivity();
 		doReturn(resourceIdA).when(fakeResourceB).getId();
 		doReturn(true).when(fakeResourceB).match(specA);
@@ -798,12 +807,12 @@ public class TestInfrastructureManager {
 		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
 
 		Map<String, String> resourceAMetadata = TestResourceHelper.generateResourceMetadata(hostA, port, userName,
-				extraPorts, RequestType.PERSISTENT, specs.getImage(), specs.getPublicKey(), cpuSize, menSize, diskSize,
+				extraPorts, OrderType.PERSISTENT, specs.getImage(), specs.getPublicKey(), cpuSize, menSize, diskSize,
 				location);
 		Resource fakeResourceA = TestResourceHelper.generateMockResource(fakeRequestId, resourceAMetadata, false);
 
 		Map<String, String> resourceBMetadata = TestResourceHelper.generateResourceMetadata(hostB, port, userName,
-				extraPorts, RequestType.PERSISTENT, specs.getImage(), specs.getPublicKey(), cpuSize, menSize, diskSize,
+				extraPorts, OrderType.PERSISTENT, specs.getImage(), specs.getPublicKey(), cpuSize, menSize, diskSize,
 				location);
 
 		Resource fakeResourceB = TestResourceHelper.generateMockResource(fakeRequestId, resourceBMetadata, true);
@@ -834,7 +843,7 @@ public class TestInfrastructureManager {
 
 		String resourceId ="resource01";
 		Resource fakeResource = mock(Resource.class);
-		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(resourceId).when(fakeResource).getId();
 
@@ -861,7 +870,7 @@ public class TestInfrastructureManager {
 
 		String resourceId ="resource01";
 		Resource fakeResource = mock(Resource.class);
-		doReturn(RequestType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		doReturn(OrderType.ONE_TIME.getValue()).when(fakeResource).getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 		doReturn(false).when(fakeResource).checkConnectivity();
 		doReturn(resourceId).when(fakeResource).getId();
 
