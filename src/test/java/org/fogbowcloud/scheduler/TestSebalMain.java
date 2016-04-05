@@ -26,21 +26,21 @@ import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
+import org.junit.Test;
 
-public class SebalMain {
+public class TestSebalMain {
 	
 	private static ManagerTimer executionMonitorTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private static ManagerTimer schedulerTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
-
-//	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
+	
 	private static ImageDataStore imageStore;
-	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
-
-	public static void main(String[] args) throws Exception {
-
+	private static final Logger LOGGER = Logger.getLogger(TestSebalMain.class);
+	
+	@Test
+	public void runTest() throws Exception {
 		final Properties properties = new Properties();
-		FileInputStream input = new FileInputStream(args[0]);
+		FileInputStream input = new FileInputStream("scheduler/scheduler.conf");
 		properties.load(input);
 		
 		imageStore = new JDBCImageDataStore(properties);
@@ -64,16 +64,7 @@ public class SebalMain {
 		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, job);
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
-		
-		// scheduling previous image executions
-//		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
-//		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
-		
-		//Used before:
-		//addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
-		//addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
-		
-		//For R case
+
 		addFakeRTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
 		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
 		
@@ -86,47 +77,12 @@ public class SebalMain {
 		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-			
-				// TODO develop throughput and negation of task addition 
-//				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
-				//addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
-				
-				//Used before:
-				//addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
-				
-				//For R case
 				addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 			}
-
-			
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
-
 		
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
-	}
-
-	private static void addF1FakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
-		try {
-			List<ImageData> completedImages = imageStore.getImageIn(imageState);
-
-			for (ImageData imageData : completedImages) {
-
-				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
-
-				List<Task> tasks = new ArrayList<Task>();
-
-				tasks = SebalTasks.createF1Tasks(properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember());
-
-				for (Task task : tasks) {
-					job.addFakeTask(task);
-				}
-			}
-
-		} catch (SQLException e) {
-			LOGGER.error("Error while getting image.", e);
-		}
 	}
 	
 	private static void addFakeRTasks(Properties properties, Job job,
@@ -148,50 +104,6 @@ public class SebalMain {
 				}
 			}
 
-		} catch (SQLException e) {
-			LOGGER.error("Error while getting image.", e);
-		}
-	}
-	
-	private static void addF1CF2Tasks(final Properties properties, final Job job,
-			final Specification sebalSpec, ImageState imageState, int limit) {
-		try {
-			List<ImageData> imagesToExecute = imageStore.getImageIn(imageState, limit);				
-			
-			for (ImageData imageData : imagesToExecute) {
-				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
-						+ imageData.getState().getValue() + " (not finished).");
-//				pendingImageExecution.put(imageData.getName(), imageData);
-
-				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
-				
-				List<Task> tasks = new ArrayList<Task>();
-				
-				if (ImageState.RUNNING_F1.equals(imageState)
-						|| ImageState.DOWNLOADED.equals(imageState)) {
-					tasks = SebalTasks.createF1Tasks(properties, imageData.getName(),
-							sebalSpec, imageData.getFederationMember());
-					imageData.setState(ImageState.RUNNING_F1);
-				} else if (ImageState.RUNNING_C.equals(imageState)
-						|| ImageState.READY_FOR_PHASE_C.equals(imageState)) {
-					tasks = SebalTasks.createCTasks(properties, imageData.getName(),
-							sebalSpec);
-					imageData.setState(ImageState.RUNNING_C);
-				} else if (ImageState.RUNNING_F2.equals(imageState)
-						|| ImageState.READY_FOR_PHASE_F2.equals(imageState)) {
-					tasks = SebalTasks.createF2Tasks(properties, imageData.getName(),
-							sebalSpec);
-					imageData.setState(ImageState.RUNNING_F2);
-				}
-
-				for (Task task : tasks) {
-					job.addTask(task);
-				}
-				
-				imageStore.updateImage(imageData);
-			}
-			
-			
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
@@ -253,7 +165,6 @@ public class SebalMain {
 	
 	private static InfrastructureProvider createInfraProvaiderInstance(Properties properties)
 			throws Exception {
-
 		String providerClassName = properties
 				.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
 
@@ -266,4 +177,5 @@ public class SebalMain {
 
 		return (InfrastructureProvider) clazz;
 	}
+	
 }

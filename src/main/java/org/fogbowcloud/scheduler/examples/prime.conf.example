@@ -5,7 +5,7 @@ infra_resource_service_time=100000
 infra_resource_connection_timeout=300000
 infra_resource_idle_lifetime=30000
 	
-infra_initial_specs_file_path=/home/igorvcs/Dev/sebalScheduleEnv/initialSpec
+infra_initial_specs_file_path=/home/esdras/~public_html/
 infra_initial_specs_block_creating=true
 	
 infra_fogbow_manager_base_url=http://150.165.15.81:8182
