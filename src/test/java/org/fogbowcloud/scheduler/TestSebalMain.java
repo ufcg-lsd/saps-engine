@@ -97,7 +97,7 @@ public class TestSebalMain {
 				List<Task> tasks = new ArrayList<Task>();
 
 				tasks = SebalTasks.createRTasks(properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember());
+						imageData.getFederationMember(), imageData.getSiteIP());
 
 				for (Task task : tasks) {
 					job.addFakeTask(task);
@@ -125,7 +125,7 @@ public class TestSebalMain {
 				if (ImageState.RUNNING_R.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)) {
 					tasks = SebalTasks.createRTasks(properties, imageData.getName(),
-							sebalSpec, imageData.getFederationMember());
+							sebalSpec, imageData.getFederationMember(), imageData.getSiteIP());
 					imageData.setState(ImageState.RUNNING_R);					
 				}
 

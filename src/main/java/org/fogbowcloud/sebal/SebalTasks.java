@@ -32,6 +32,7 @@ public class SebalTasks {
 	public static final String METADATA_PARTITION_INDEX = "partition_index";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 	private static final String METADATA_ADDITIONAL_LIBRARY_PATH = "additonal_library_path";
+	private static final String METADATA_IMAGE_SITE_IP = "site_ip";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -204,7 +205,8 @@ public class SebalTasks {
 		return f1Tasks;
 	}
 	
-	public static List<Task> createRTasks(Properties properties, String imageName, Specification spec, String location) {
+	public static List<Task> createRTasks(Properties properties,
+			String imageName, Specification spec, String location, String siteIP) {
 		LOGGER.debug("Creating R tasks for image " + imageName);
 
 		String numberOfPartitions = properties.getProperty("sebal_number_of_partitions");
@@ -221,6 +223,7 @@ public class SebalTasks {
 			rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 			rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 					properties.getProperty("sebal_local_scripts_dir"));
+			rTaskImpl.putMetadata(METADATA_IMAGE_SITE_IP, siteIP);
 			rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 					rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + rTaskImpl.getId());
 			
@@ -387,6 +390,7 @@ public class SebalTasks {
 				task.getMetadata(METADATA_IMAGE_REPOSITORY));
 		command = command.replaceAll(Pattern.quote("${SEBAL_RESULT_REPOSITORY}"),
 				task.getMetadata(METADATA_RESULT_REPOSITORY));
+		command = command.replaceAll(METADATA_IMAGE_SITE_IP, "${IMAGE_SITE_IP}");
 
 		// execution properties
 		if (task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH) != null) {
