@@ -8,7 +8,7 @@ public interface ImageDataStore {
 	public final static String NONE = "None";
 	public final static int UNLIMITED = -1;
 
-	public void addImage(String imageName, String downloadLink, int priority) throws SQLException;
+	public void addImage(String imageName, String downloadLink, int priority, String siteIP) throws SQLException;
 
 	public void updateImage(ImageData imageData) throws SQLException;
 

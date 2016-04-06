@@ -55,7 +55,7 @@ public class SebalMain {
 				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
 		List<Specification> initialSpecs = getInitialSpecs(properties);
 
-		InfrastructureProvider infraProvider = createInfraProvaiderInstance(properties);
+		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic,
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
@@ -251,7 +251,7 @@ public class SebalMain {
 		return Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 	}
 	
-	private static InfrastructureProvider createInfraProvaiderInstance(Properties properties)
+	private static InfrastructureProvider createInfraProviderInstance(Properties properties)
 			throws Exception {
 
 		String providerClassName = properties

@@ -61,7 +61,8 @@ public class DBBootstrap {
 				
 				for (String imageName : imageAndDownloadLink.keySet()) {
 					try {
-						imageStore.addImage(imageName, imageAndDownloadLink.get(imageName), priority);
+						//TODO: See how site IP will fit here
+						imageStore.addImage(imageName, imageAndDownloadLink.get(imageName), priority, "");
 					} catch (SQLException e) {
 						// TODO do we need to do something?
 						LOGGER.error("Error while adding image at data base.", e);

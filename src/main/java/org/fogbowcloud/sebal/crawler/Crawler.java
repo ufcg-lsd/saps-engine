@@ -96,8 +96,8 @@ public class Crawler {
 						LOGGER.debug("There is not image to download.");
 						return;
 					}
-					
-					downloadImage(imageData);
+					//TODO: Modify the following to get site IP
+					downloadImage(imageData, "site IP here");
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
 				}
@@ -113,7 +113,8 @@ public class Crawler {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is a previous download not finished.");
 				pendingImageDownload.put(imageData.getName(), imageData);
-				downloadImage(imageData);
+				//TODO: Modify the following to get site IP
+				downloadImage(imageData, "site IP here");
 			}
 		}
 	}
@@ -140,7 +141,7 @@ public class Crawler {
 		return null;
 	}
 	
-	private void downloadImage(final ImageData imageData) {
+	private void downloadImage(final ImageData imageData, final String siteIP) {
 		downloader.execute(new Runnable() {
 			
 			@Override
@@ -158,6 +159,8 @@ public class Crawler {
 					}
 					
 					imageData.setState(ImageState.DOWNLOADED);
+					//TODO:
+					imageData.setSiteIP(siteIP);
 					imageStore.updateImage(imageData);					
 					pendingImageDownload.remove(imageData.getName());					
 				} catch (Exception e) {

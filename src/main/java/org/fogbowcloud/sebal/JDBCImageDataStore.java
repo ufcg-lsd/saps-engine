@@ -23,6 +23,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String PRIORITY_COL = "priority";
 	private static final String FEDERATION_MEMBER_COL = "federation_member";
 	private static final String STATE_COL = "state";
+	private static final String SITE_IP_COL = "site_ip";
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
 	private BasicDataSource connectionPool;
 
@@ -48,7 +49,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME + "("
 					+ IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, " + DOWNLOAD_LINK_COL
 					+ " VARCHAR(255), " + STATE_COL + " VARCHAR(100), " + FEDERATION_MEMBER_COL
-					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER)");			
+					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER), " + SITE_IP_COL + " VARCHAR(255)");			
 			statement.close();
 
 		} catch (Exception e) {
@@ -94,12 +95,12 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?)";
 
 	@Override
-	public void addImage(String imageName, String downloadLink, int priority) throws SQLException {
+	public void addImage(String imageName, String downloadLink, int priority, String siteIP) throws SQLException {
 		LOGGER.info("Adding image " + imageName + " with download link " + downloadLink
-				+ " and priority " + priority);
+				+ ", priority " + priority + " and site IP " + siteIP);
 		if (imageName == null || imageName.isEmpty() || downloadLink == null
 				|| downloadLink.isEmpty()) {
 			LOGGER.error("Invalid image name " + imageName);
@@ -118,6 +119,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
 			insertStatement.setString(4, ImageDataStore.NONE);
 			insertStatement.setInt(5, priority);
+			insertStatement.setString(6, siteIP);
 
 			insertStatement.execute();
 		} finally {
@@ -153,7 +155,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " "
 			+ "SET download_link = ?, state = ?, federation_member = ? "
-			+ ", priority = ? WHERE image_name = ?";
+			+ ", priority = ?, site_IP = ? WHERE image_name = ?";
 	
 	@Override
 	public void updateImage(ImageData imageData) throws SQLException {
@@ -174,6 +176,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(3, imageData.getFederationMember());
 			updateStatement.setInt(4, imageData.getPriority());
 			updateStatement.setString(5, imageData.getName());
+			updateStatement.setString(6, imageData.getSiteIP());
 
 			updateStatement.execute();
 		} finally {
@@ -261,7 +264,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			imageDatas.add(new ImageData(rs.getString(IMAGE_NAME_COL), rs
 					.getString(DOWNLOAD_LINK_COL), ImageState.getStateFromStr(rs
 					.getString(STATE_COL)), rs.getString(FEDERATION_MEMBER_COL), rs
-					.getInt(PRIORITY_COL)));
+					.getInt(PRIORITY_COL), rs.getString(SITE_IP_COL)));
 		}
 		return imageDatas;
 	}
