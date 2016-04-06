@@ -31,8 +31,21 @@ public class SebalJob extends Job {
 		this.tasksRunning.remove(task);
 		this.tasksCompleted.add(task);
 		
-		// check if all F1 tasks already ran for the image
-		if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.F1_PHASE)){
+		//TODO: Change this to support R
+		// check if all R tasks already ran for the image
+		if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.R_SCRIPT_PHASE)){
+			List<Task> readyOrRunningTasks = getTasksOfImageByState(
+					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME), TaskState.READY, TaskState.RUNNING);
+			
+			List<Task> rTasks = filterTaskByPhase(readyOrRunningTasks, SebalTasks.R_SCRIPT_PHASE);
+			LOGGER.debug("There is " + rTasks.size() + " tasks of image "
+					+ task.getMetadata(SebalTasks.METADATA_IMAGE_NAME) + " in R script phase.");
+			if (rTasks == null || rTasks.isEmpty()) {
+				udpateDB(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME),
+						ImageState.FINISHED);
+			}
+			// check if all F1 tasks already ran for the image
+		} else if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.F1_PHASE)){
 			List<Task> readyOrRunningTasks = getTasksOfImageByState(
 					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME), TaskState.READY, TaskState.RUNNING);
 			
