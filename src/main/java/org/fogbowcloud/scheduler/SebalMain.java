@@ -211,10 +211,13 @@ public class SebalMain {
 				List<Task> tasks = new ArrayList<Task>();
 				
 				if (ImageState.RUNNING_R.equals(imageState)
-						|| ImageState.DOWNLOADED.equals(imageState)) {
-					tasks = SebalTasks.createRTasks(properties, imageData.getName(),
-							sebalSpec, imageData.getFederationMember(), imageData.getSiteIP());
-					imageData.setState(ImageState.RUNNING_R);					
+						|| ImageState.DOWNLOADED.equals(imageState)
+						|| ImageState.READY_FOR_R.equals(imageState)) {
+					tasks = SebalTasks.createRTasks(properties,
+							imageData.getName(), sebalSpec,
+							imageData.getFederationMember(),
+							imageData.getSiteIP());
+					imageData.setState(ImageState.RUNNING_R);
 				}
 
 				for (Task task : tasks) {

@@ -12,11 +12,15 @@ sudo apt-get install sshfs
 
 # mounting image repository
 mkdir -p ${IMAGES_MOUNT_POINT}
-sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${SEBAL_IMAGE_REPOSITORY} ${IMAGES_MOUNT_POINT}
+sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${IMAGE_SITE_IP}:${SEBAL_IMAGE_REPOSITORY} ${IMAGES_MOUNT_POINT}
+# for nfs:
+#mount ${REMOTE_USER}@${IMAGE_SITE_IP}:${SEBAL_IMAGE_REPOSITORY} ${IMAGES_MOUNT_POINT}
 
 # mounting result repository
 mkdir -p ${RESULTS_MOUNT_POINT}
-sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${SEBAL_RESULT_REPOSITORY} ${RESULTS_MOUNT_POINT}
+sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${IMAGE_SITE_IP}:${SEBAL_RESULT_REPOSITORY} ${RESULTS_MOUNT_POINT}
+# for nfs:
+#mount ${REMOTE_USER}@${IMAGE_SITE_IP}:${SEBAL_RESULT_REPOSITORY} ${RESULTS_MOUNT_POINT}
 
 # untar image
 #mkdir ${IMAGE_NAME}
@@ -24,20 +28,22 @@ sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFil
 #cp ${IMAGES_MOUNT_POINT}/images/${IMAGE_NAME}/* .
 #tar -zxvf ${IMAGE_NAME}.tar.gz
 
-cd ${IMAGES_MOUNT_POINT}/images/
+cd ${IMAGES_MOUNT_POINT}
 
 ls > images.txt
 
-IMAGE_NAMES_FILE=${IMAGES_MOUNT_POINT}/images/images.txt
+IMAGE_NAMES_FILE=${IMAGES_MOUNT_POINT}/images.txt
 
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
 
 cd ${SANDBOX}
 
-mkdir -p local_results
-LOCAL_RESULTS=${SANDBOX}/local_results
+mkdir -p ${RESULTS_MOUNT_POINT}
+#LOCAL_RESULTS=${RESULTS_MOUNT_POINT}/local_results
 
 cd ${IMAGES_MOUNT_POINT}/images/
+
+# remember to verify if the following will be for a number of images or for one image
 
 echo "Image names file is "$IMAGE_NAMES_FILE
 
@@ -46,13 +52,13 @@ for IMAGE_NAME in `cat $IMAGE_NAMES_FILE`
 do
    # untar image
    echo "Untaring image $IMAGE_NAME"
-   mkdir ${SANDBOX}/$IMAGE_NAME
-   cd ${SANDBOX}/$IMAGE_NAME
-   cp ${IMAGES_MOUNT_POINT}/images/$IMAGE_NAME".tar.gz" . 
+   mkdir ${IMAGES_MOUNT_POINT}/$IMAGE_NAME
+   cd ${IMAGES_MOUNT_POINT}/$IMAGE_NAME
+   cp ${SEBAL_IMAGE_REPOSITORY}/images/$IMAGE_NAME".tar.gz" . 
    tar -xvzf $IMAGE_NAME".tar.gz"
 
    echo "Creating image output directory"
-   OUTPUT_IMAGE_DIR=$LOCAL_RESULTS/$IMAGE_NAME
+   OUTPUT_IMAGE_DIR=${RESULTS_MOUNT_POINT}/$IMAGE_NAME
    mkdir -p $OUTPUT_IMAGE_DIR
 
    echo "Creating dados.csv for image $IMAGE_NAME"
@@ -68,9 +74,11 @@ do
    echo "Renaming dados file"
    mv dados.csv dados"-$IMAGE_NAME".csv
 
-   rm -r ${SANDBOX}/$IMAGE_NAME
+   rm -r ${IMAGES_MOUNT_POINT}/$IMAGE_NAME
    rm -r /tmp/Rtmp*
 done
+
+cp ${RESULTS_MOUNT_POINT}/* ${SEBAL_RESULT_REPOSITORY}
 
 PROCESS_OUTPUT=$?
 
