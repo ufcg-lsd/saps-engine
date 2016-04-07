@@ -22,6 +22,8 @@ import org.ourgrid.common.specification.main.CompilerException;
 
 public class JDFTasks {
 	
+	private static final String SCHED_PATH = "SchedPath";
+
 	private static final String SANDBOX = "sandbox";
 
 	private static final String LOCAL_OUTPUT_FOLDER = "local_output";
@@ -38,8 +40,8 @@ public class JDFTasks {
 	
 	private final static String SSH_SCP_PRECOMMAND = "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
 	
-	
-	public static List<Task> getTasksFromJDFFile(String jobID, String jdfFilePath, Properties properties) {
+		
+	public static List<Task> getTasksFromJDFFile(String jobID, String jdfFilePath, String schedPath, Properties properties) {
 
 			ArrayList<Task> taskList = new ArrayList<Task>();
 		
@@ -95,15 +97,15 @@ public class JDFTasks {
 
 							Task task = new TaskImpl("TaskNumber"+taskID, spec);
 							task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER, properties.getProperty(REMOTE_OUTPUT_FOLDER));
-							task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, properties.getProperty(LOCAL_OUTPUT_FOLDER));
+							task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER, schedPath + properties.getProperty(LOCAL_OUTPUT_FOLDER));
 							task.putMetadata(TaskImpl.METADATA_SANDBOX, SANDBOX);
 							task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH, properties.getProperty(REMOTE_OUTPUT_FOLDER) + "/exit");
 
-							parseInputBlocks( jobID, taskSpec, task );
+							parseInputBlocks( jobID, taskSpec, task , schedPath);
 
 							parseExecutable( jobID, taskSpec, task );
 
-							parseOutputBlocks( jobID, taskSpec, task );
+							parseOutputBlocks( jobID, taskSpec, task , schedPath);
 
 							parseEpilogue( jobID, taskSpec, task );
 
@@ -188,8 +190,9 @@ public class JDFTasks {
 	 * @param jobID 
 	 * @param taskSpec The task specification {@link TaskSpecification}
 	 * @param task The output expression containing the JDL job
+	 * @param string 
 	 */
-	private static void parseInputBlocks( String jobID, TaskSpecification taskSpec, Task task ) {
+	private static void parseInputBlocks( String jobID, TaskSpecification taskSpec, Task task, String schedPath ) {
 
 		List<IOEntry> initBlocks = taskSpec.getInitBlock().getEntry( "" );
 		if ( initBlocks == null ) {
@@ -200,8 +203,8 @@ public class JDFTasks {
 			String destination = parseEnvironmentVariables(jobID,task.getId(), ioEntry.getDestination());
 			
 			task.addCommand(mkdirRemoteFolder(getDirectoryTree(destination)));			
-			task.addCommand(stageInCommand(sourceFile, destination));
-			LOGGER.debug("Input command:" + stageInCommand(sourceFile, destination).getCommand());
+			task.addCommand(stageInCommand(schedPath + sourceFile, destination));
+			LOGGER.debug("Input command:" + stageInCommand(schedPath+ sourceFile, destination).getCommand());
 		}
 	}
 	
@@ -229,7 +232,7 @@ public class JDFTasks {
 	 * @param taskSpec The task specification {@link TaskSpecification}
 	 * @param task The output expression containing the JDL job
 	 */
-	private static void parseOutputBlocks( String jobID, TaskSpecification taskSpec, Task task ) {
+	private static void parseOutputBlocks( String jobID, TaskSpecification taskSpec, Task task, String schedPath ) {
 
 		List<IOEntry> finalBlocks = taskSpec.getFinalBlock().getEntry( "" );
 		if ( finalBlocks == null ) {
@@ -238,9 +241,9 @@ public class JDFTasks {
 		for ( IOEntry ioEntry : finalBlocks ) {
 			String sourceFile = parseEnvironmentVariables(jobID, task.getId(), ioEntry.getSourceFile());
 			String destination = parseEnvironmentVariables(jobID, task.getId(), ioEntry.getDestination());
-			task.addCommand(mkdirLocalFolder(getDirectoryTree(destination)));
-			task.addCommand(stageOutCommand(sourceFile, destination));
-			LOGGER.debug("Output command:" + stageOutCommand(sourceFile, destination).getCommand());
+			task.addCommand(mkdirLocalFolder(getDirectoryTree(schedPath + destination)));
+			task.addCommand(stageOutCommand(sourceFile, schedPath + destination));
+			LOGGER.debug("Output command:" + stageOutCommand(sourceFile, schedPath + destination).getCommand());
 
 		}
 	}

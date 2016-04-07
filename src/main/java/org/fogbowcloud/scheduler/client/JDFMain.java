@@ -1,48 +1,21 @@
 package org.fogbowcloud.scheduler.client;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
-import java.util.Scanner;
 import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
 
-import javax.naming.directory.InvalidAttributeValueException;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ExecutionMonitor;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
 import org.fogbowcloud.scheduler.core.Scheduler;
-import org.fogbowcloud.scheduler.core.model.Command;
 import org.fogbowcloud.scheduler.core.model.JDFJob;
-import org.fogbowcloud.scheduler.core.model.Job;
-import org.fogbowcloud.scheduler.core.model.Resource;
-import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
-import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
-import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
-import org.glite.jdl.CollectionAd;
-import org.glite.jdl.Jdl;
-import org.ourgrid.common.specification.job.IOEntry;
-import org.ourgrid.common.specification.job.JobSpecification;
-import org.ourgrid.common.specification.job.TaskSpecification;
-import org.ourgrid.common.specification.main.CommonCompiler;
-import org.ourgrid.common.specification.main.CommonCompiler.FileType;
-import org.ourgrid.common.specification.main.CompilerException;
-import org.ourgrid.common.specification.main.JdlOGExtension;
-
-import com.amazonaws.services.opsworks.model.App;
-
-import condor.classad.Constant;
-import condor.classad.ListExpr;
-import condor.classad.RecordExpr;
+import org.fogbowcloud.scheduler.restlet.JDFSchedulerApplication;
 
 /**
  * This class works as a translator. It receives a JDF file as an input
@@ -52,17 +25,6 @@ import condor.classad.RecordExpr;
 public class JDFMain {
 
 	public static final Logger LOGGER = Logger.getLogger(JDFMain.class);
-
-	private final static String METADATA_REMOTE_OUTPUT_FOLDER = "/tmp/";
-	private final static String SANDBOX = "/tmp/sandbox";
-	private final static String SSH_SCP_PRECOMMAND = "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
-
-	private static int jobID = 0;
-
-	private static int taskID = 0;
-
-	private static String standardImage = "fogbow-ubuntu";
-
 
 	private static boolean blockWhileInitializing;
 	private static boolean isElastic;
@@ -78,7 +40,7 @@ public class JDFMain {
 	 */
 	public static void main( String[ ] args ) throws Exception {
 		properties = new Properties();
-		FileInputStream input = new FileInputStream(args[1]);
+		FileInputStream input = new FileInputStream(args[2]);
 		properties.load(input);
 
 		loadConfigFromProperties();
@@ -92,8 +54,10 @@ public class JDFMain {
 		JDFJob job = new JDFJob();
 		
 		String jdfFilePath = args[0];
+		
+		String schedPath = args[1];
 
-		List<Task> taskList = JDFTasks.getTasksFromJDFFile(job.getId(), jdfFilePath, properties);
+		List<Task> taskList = JDFTasks.getTasksFromJDFFile(job.getId(), jdfFilePath, schedPath, properties);
 		
 		for (Task task : taskList) {
 			job.addTask(task);
@@ -108,6 +72,9 @@ public class JDFMain {
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
 				Integer.parseInt(properties.getProperty("execution_monitor_period")));
 		schedulerTimer.scheduleAtFixedRate(scheduler, 0, 30000);
+		
+		JDFSchedulerApplication app = new JDFSchedulerApplication(scheduler, properties);
+		app.start();
 	}
 
 	private static void loadConfigFromProperties() {

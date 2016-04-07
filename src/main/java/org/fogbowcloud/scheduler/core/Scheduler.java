@@ -24,7 +24,6 @@ public class Scheduler implements Runnable{
 	private InfrastructureManager infraManager;
 	private Map<String, Resource> runningTasks = new HashMap<String, Resource>();
 	private ExecutorService taskExecutor =  Executors.newCachedThreadPool();
-	private ArrayList<Task> taskBuffer = new ArrayList<Task>();
 
 	private static final Logger LOGGER = Logger.getLogger(Scheduler.class);
 
@@ -105,7 +104,7 @@ public class Scheduler implements Runnable{
 		if (job != null) {
 			job.recoverTask(task);
 		} else {
-			LOGGER.error("Task was from a non-existing Job");
+			LOGGER.error("Task was from a non-existing or removed Job");
 		}
 		infraManager.releaseResource(runningTasks.get(task.getId()));
 		runningTasks.remove(task.getId());
@@ -175,5 +174,14 @@ public class Scheduler implements Runnable{
 			}
 		}
 		return null;
+	}
+	
+	public Job removeJob(String jobId) {
+		Job toBeRemoved = getJobById(jobId);
+		this.jobList.remove(toBeRemoved);
+		for (Task task : toBeRemoved.getByState(TaskState.RUNNING)) {
+			this.taskFailed(task);
+		}
+		return toBeRemoved;
 	}
 }
