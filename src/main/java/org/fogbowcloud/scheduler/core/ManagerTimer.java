@@ -5,7 +5,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.scheduler.examples.PrimesMain;
 
 public class ManagerTimer {
 

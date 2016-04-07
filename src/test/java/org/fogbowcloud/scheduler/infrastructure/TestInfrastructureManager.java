@@ -906,8 +906,8 @@ public class TestInfrastructureManager {
 		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_SERVICE_TIME, "2000");
 		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_CONNECTION_TIMEOUT, "10000");
 		properties.setProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME, "300000");
-		properties.setProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH, "src/test/resources/Specs_Json");
-		properties.setProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING, "false");
+		properties.setProperty(AppPropertiesConstants.INFRA_SCHEDULER_SPECS_FILE_PATH, "src/test/resources/Specs_Json");
+		properties.setProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING, "false");
 		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL, "100_02_01_01:8098");
 		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH,
 				"src/test/resources/publickey_file");

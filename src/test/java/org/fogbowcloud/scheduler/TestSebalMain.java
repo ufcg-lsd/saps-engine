@@ -48,7 +48,7 @@ public class TestSebalMain {
 		final Job job = new SebalJob(imageStore);
 
 		boolean blockWhileInitializing = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING))
+				properties.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
 				.booleanValue();
 
 		boolean isElastic = new Boolean(
@@ -157,7 +157,7 @@ public class TestSebalMain {
 	
 	private static List<Specification> getInitialSpecs(Properties properties)
 			throws IOException {
-		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);		
+		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_SCHEDULER_SPECS_FILE_PATH);		
 		LOGGER.info("Getting initial spec from file " + initialSpecsFilePath);
 		
 		return Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);

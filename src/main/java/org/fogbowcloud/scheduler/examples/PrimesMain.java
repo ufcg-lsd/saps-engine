@@ -47,7 +47,7 @@ public class PrimesMain {
 		
 		loadConfigFromProperties();
 
-		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
+		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_SCHEDULER_SPECS_FILE_PATH);
 		List<Specification> initialSpecs = Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 
 		List<Specification> taskSpecs = Specification.getSpecificationsFromJSonFile(SPEC_FILE_PATH);
@@ -86,7 +86,7 @@ public class PrimesMain {
 	private static void loadConfigFromProperties() {
 
 		blockWhileInitializing = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING)).booleanValue();
+				properties.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING)).booleanValue();
 		isElastic = new Boolean(properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
 
 	}

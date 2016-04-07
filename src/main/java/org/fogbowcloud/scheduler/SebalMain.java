@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ExecutionMonitor;
@@ -26,6 +27,7 @@ import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
+import org.fogbowcloud.sebal.crawler.Crawler;
 
 public class SebalMain {
 	
@@ -36,6 +38,9 @@ public class SebalMain {
 //	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
 	private static ImageDataStore imageStore;
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
+	
+	// Necessary for Crawler:
+	private static ScheduledExecutorService executor;
 
 	public static void main(String[] args) throws Exception {
 
@@ -44,19 +49,46 @@ public class SebalMain {
 		properties.load(input);
 		
 		imageStore = new JDBCImageDataStore(properties);
+		
+		boolean blockWhileInitializing = new Boolean(
+				properties.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
+				.booleanValue();
+		
+		boolean isElastic = new Boolean(
+				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
+		List<Specification> crawlerSpecs = getCrawlerSpecs(properties);
+		
+		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
+		InfrastructureManager infraManager = new InfrastructureManager(crawlerSpecs, isElastic,
+				infraProvider, properties);
+		infraManager.start(blockWhileInitializing);
+		
+		final Crawler crawler = new Crawler(properties, imageStore, executor);
+		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
+		
+		executionMonitorTimer.scheduleAtFixedRate(execCrawlerMonitor, 0,
+				Integer.parseInt(properties.getProperty("execution_monitor_period")));
+
+		schedulerTimer.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				crawler.init();
+			}
+		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
 
 		final Job job = new SebalJob(imageStore);
 
-		boolean blockWhileInitializing = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_BLOCK_CREATING))
-				.booleanValue();
+		//blockWhileInitializing = new Boolean(
+		//		properties.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
+		//		.booleanValue();
 
-		boolean isElastic = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
-		List<Specification> initialSpecs = getInitialSpecs(properties);
+		//isElastic = new Boolean(
+		//		properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
+		
+		List<Specification> schedulerSpecs = getSchedulerSpecs(properties);
 
-		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
-		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic,
+		//infraProvider = createInfraProviderInstance(properties);
+		infraManager = new InfrastructureManager(schedulerSpecs, isElastic,
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 		
@@ -246,12 +278,28 @@ public class SebalMain {
 		}
 	}
 	
-	private static List<Specification> getInitialSpecs(Properties properties)
+	private static List<Specification> getSchedulerSpecs(Properties properties)
 			throws IOException {
-		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);		
+		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_SCHEDULER_SPECS_FILE_PATH);		
 		LOGGER.info("Getting initial spec from file " + initialSpecsFilePath);
 		
 		return Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
+	}
+	
+	private static List<Specification> getCrawlerSpecs(Properties properties)
+			throws IOException {
+		String crawlerSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_CRAWLER_SPECS_FILE_PATH);		
+		LOGGER.info("Getting crawler spec from file " + crawlerSpecsFilePath);
+		
+		return Specification.getSpecificationsFromJSonFile(crawlerSpecsFilePath);
+	}
+	
+	private static List<Specification> getFetcherSpecs(Properties properties)
+			throws IOException {
+		String fetcherSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_FETCHER_SPECS_FILE_PATH);		
+		LOGGER.info("Getting fetcher spec from file " + fetcherSpecsFilePath);
+		
+		return Specification.getSpecificationsFromJSonFile(fetcherSpecsFilePath);
 	}
 	
 	private static InfrastructureProvider createInfraProviderInstance(Properties properties)
