@@ -56,25 +56,10 @@ public class SebalMain {
 		
 		boolean isElastic = new Boolean(
 				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
-		List<Specification> crawlerSpecs = getCrawlerSpecs(properties);
 		
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
-		InfrastructureManager infraManager = new InfrastructureManager(crawlerSpecs, isElastic,
-				infraProvider, properties);
-		infraManager.start(blockWhileInitializing);
 		
-		final Crawler crawler = new Crawler(properties, imageStore, executor);
-		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
-		
-		executionMonitorTimer.scheduleAtFixedRate(execCrawlerMonitor, 0,
-				Integer.parseInt(properties.getProperty("execution_monitor_period")));
-
-		schedulerTimer.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				crawler.init();
-			}
-		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
+		initializeCrawlerInstance(properties, blockWhileInitializing, isElastic, infraProvider);
 
 		final Job job = new SebalJob(imageStore);
 
@@ -88,7 +73,7 @@ public class SebalMain {
 		List<Specification> schedulerSpecs = getSchedulerSpecs(properties);
 
 		//infraProvider = createInfraProviderInstance(properties);
-		infraManager = new InfrastructureManager(schedulerSpecs, isElastic,
+		InfrastructureManager infraManager = new InfrastructureManager(schedulerSpecs, isElastic,
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 		
@@ -136,6 +121,30 @@ public class SebalMain {
 		
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
+	}
+	
+	private static void initializeCrawlerInstance(Properties properties,
+			boolean blockWhileInitializing, boolean isElastic,
+			InfrastructureProvider infraProvider) throws Exception {
+		List<Specification> crawlerSpecs = getCrawlerSpecs(properties);
+
+		InfrastructureManager infraManager = new InfrastructureManager(
+				crawlerSpecs, isElastic, infraProvider, properties);
+		infraManager.start(blockWhileInitializing);
+
+		final Crawler crawler = new Crawler(properties, imageStore, executor);
+		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
+
+		executionMonitorTimer.scheduleAtFixedRate(execCrawlerMonitor, 0,
+				Integer.parseInt(properties
+						.getProperty("execution_monitor_period")));
+
+		schedulerTimer.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				crawler.init();
+			}
+		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
 	}
 
 	private static void addF1FakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
