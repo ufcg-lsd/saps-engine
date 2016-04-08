@@ -34,6 +34,7 @@ public class Crawler {
 	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
 	private ScheduledExecutorService executor;
 	private NASARepository NASARepository;
+	private String remoteRepositoryIP;
 
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
@@ -42,23 +43,27 @@ public class Crawler {
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
 	public Crawler(Properties properties) {
-		this(properties, new JDBCImageDataStore(properties), null);
+		this(properties, new JDBCImageDataStore(properties), null, null);
 	}
 
-	public Crawler(Properties properties, ImageDataStore imageStore, ScheduledExecutorService executor) {
+	public Crawler(Properties properties, ImageDataStore imageStore,
+			ScheduledExecutorService executor, String remoteRepositoryIP) {
 		if (properties == null) {
-			throw new IllegalArgumentException("Properties arg must not be null.");
+			throw new IllegalArgumentException(
+					"Properties arg must not be null.");
 		}
 		this.properties = properties;
 		this.imageStore = imageStore;
 		this.NASARepository = new NASARepository(properties);
+		this.remoteRepositoryIP = remoteRepositoryIP;
 		if (executor == null) {
 			this.executor = Executors.newScheduledThreadPool(1);
 		} else {
 			this.executor = executor;
 		}
-		
-		String maxSimultaneousDownloadStr = properties.getProperty("max_simultaneous_download");
+
+		String maxSimultaneousDownloadStr = properties
+				.getProperty("max_simultaneous_download");
 		maxSimultaneousDownload = (maxSimultaneousDownloadStr == null ? DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD
 				: Integer.parseInt(maxSimultaneousDownloadStr));
 	}
@@ -96,8 +101,8 @@ public class Crawler {
 						LOGGER.debug("There is not image to download.");
 						return;
 					}
-					//TODO: Modify the following to get site IP
-					downloadImage(imageData, "site IP here");
+					
+					downloadImage(imageData, remoteRepositoryIP);
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
 				}
@@ -141,13 +146,14 @@ public class Crawler {
 		return null;
 	}
 	
-	private void downloadImage(final ImageData imageData, final String siteIP) {
+	private void downloadImage(final ImageData imageData, final String remoteRepositoryIP) {
 		downloader.execute(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					NASARepository.downloadImage(imageData);
+					imageData.setRemoteRepositoryIP(remoteRepositoryIP);
+					NASARepository.downloadImage(imageData, remoteRepositoryIP);
 
 					//running Fmask					
 					int exitValue = runFmask(imageData);					
@@ -159,8 +165,6 @@ public class Crawler {
 					}
 					
 					imageData.setState(ImageState.DOWNLOADED);
-					//TODO:
-					imageData.setSiteIP(siteIP);
 					imageStore.updateImage(imageData);					
 					pendingImageDownload.remove(imageData.getName());					
 				} catch (Exception e) {

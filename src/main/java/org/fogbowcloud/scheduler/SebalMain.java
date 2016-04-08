@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -17,6 +18,7 @@ import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.SebalJob;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.Task;
+import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.core.util.Constants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
@@ -59,7 +61,10 @@ public class SebalMain {
 		
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 		
-		initializeCrawlerInstance(properties, blockWhileInitializing, isElastic, infraProvider);
+		//TODO: see how this will change exactly
+		String remoteRepositoryIP = new String();
+		
+		initializeCrawlerInstance(properties, blockWhileInitializing, isElastic, infraProvider, remoteRepositoryIP);
 
 		final Job job = new SebalJob(imageStore);
 
@@ -125,14 +130,16 @@ public class SebalMain {
 	
 	private static void initializeCrawlerInstance(Properties properties,
 			boolean blockWhileInitializing, boolean isElastic,
-			InfrastructureProvider infraProvider) throws Exception {
+			InfrastructureProvider infraProvider, String remoteRepositoryIP)
+			throws Exception {
 		List<Specification> crawlerSpecs = getCrawlerSpecs(properties);
 
 		InfrastructureManager infraManager = new InfrastructureManager(
 				crawlerSpecs, isElastic, infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 
-		final Crawler crawler = new Crawler(properties, imageStore, executor);
+		final Crawler crawler = new Crawler(properties, imageStore, executor,
+				remoteRepositoryIP);
 		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
 
 		executionMonitorTimer.scheduleAtFixedRate(execCrawlerMonitor, 0,
@@ -176,17 +183,23 @@ public class SebalMain {
 			List<ImageData> completedImages = imageStore.getImageIn(imageState);
 
 			for (ImageData imageData : completedImages) {
-
 				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
 
-				List<Task> tasks = new ArrayList<Task>();
+				//List<Task> tasks = new ArrayList<Task>();
 
-				tasks = SebalTasks.createRTasks(properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember(), imageData.getSiteIP());
+				/*tasks = SebalTasks.createRTask(properties, imageData.getName(), sebalSpec,
+						imageData.getFederationMember(), imageData.getRemoteRepositoryIP());*/
+				
+				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
+				
+				taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(), sebalSpec,
+						imageData.getFederationMember(), imageData.getRemoteRepositoryIP());
 
-				for (Task task : tasks) {
+/*				for (Task task : tasks) {
 					job.addFakeTask(task);
-				}
+				}*/
+				
+				job.addFakeTask(taskImpl);
 			}
 
 		} catch (SQLException e) {
@@ -249,21 +262,31 @@ public class SebalMain {
 
 				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
 				
-				List<Task> tasks = new ArrayList<Task>();
+				//List<Task> tasks = new ArrayList<Task>();
+				
+				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 				
 				if (ImageState.RUNNING_R.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)
 						|| ImageState.READY_FOR_R.equals(imageState)) {
-					tasks = SebalTasks.createRTasks(properties,
+					/*tasks = SebalTasks.createRTask(properties,
 							imageData.getName(), sebalSpec,
 							imageData.getFederationMember(),
-							imageData.getSiteIP());
+							imageData.getRemoteRepositoryIP());*/
+					
+					taskImpl = SebalTasks.createRTask(taskImpl, properties,
+							imageData.getName(), sebalSpec,
+							imageData.getFederationMember(),
+							imageData.getRemoteRepositoryIP());
+					
 					imageData.setState(ImageState.RUNNING_R);
 				}
 
-				for (Task task : tasks) {
+/*				for (Task task : tasks) {
 					job.addTask(task);
-				}
+				}*/
+				
+				job.addTask(taskImpl);
 				
 				imageStore.updateImage(imageData);
 			}

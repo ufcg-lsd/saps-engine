@@ -12,15 +12,15 @@ sudo apt-get install sshfs
 
 # mounting image repository
 mkdir -p ${IMAGES_MOUNT_POINT}
-sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${IMAGE_SITE_IP}:${SEBAL_IMAGE_REPOSITORY} ${IMAGES_MOUNT_POINT}
+sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${IMAGE_REMOTE_REP_IP}:${SEBAL_IMAGE_REPOSITORY} ${IMAGES_MOUNT_POINT}
 # for nfs:
-#mount ${REMOTE_USER}@${IMAGE_SITE_IP}:${SEBAL_IMAGE_REPOSITORY} ${IMAGES_MOUNT_POINT}
+#mount ${REMOTE_USER}@${IMAGE_REMOTE_REP_IP}:${SEBAL_IMAGE_REPOSITORY} ${IMAGES_MOUNT_POINT}
 
 # mounting result repository
 mkdir -p ${RESULTS_MOUNT_POINT}
-sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${IMAGE_SITE_IP}:${SEBAL_RESULT_REPOSITORY} ${RESULTS_MOUNT_POINT}
+sshfs -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentityFile=${USER_PRIVATE_KEY} ${REMOTE_USER}@${IMAGE_REMOTE_REP_IP}:${SEBAL_RESULT_REPOSITORY} ${RESULTS_MOUNT_POINT}
 # for nfs:
-#mount ${REMOTE_USER}@${IMAGE_SITE_IP}:${SEBAL_RESULT_REPOSITORY} ${RESULTS_MOUNT_POINT}
+#mount ${REMOTE_USER}@${IMAGE_REMOTE_REP_IP}:${SEBAL_RESULT_REPOSITORY} ${RESULTS_MOUNT_POINT}
 
 # untar image
 #mkdir ${IMAGE_NAME}

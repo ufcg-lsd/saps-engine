@@ -176,7 +176,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(3, imageData.getFederationMember());
 			updateStatement.setInt(4, imageData.getPriority());
 			updateStatement.setString(5, imageData.getName());
-			updateStatement.setString(6, imageData.getSiteIP());
+			updateStatement.setString(6, imageData.getRemoteRepositoryIP());
 
 			updateStatement.execute();
 		} finally {

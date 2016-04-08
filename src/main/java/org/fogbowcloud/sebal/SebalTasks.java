@@ -32,7 +32,7 @@ public class SebalTasks {
 	public static final String METADATA_PARTITION_INDEX = "partition_index";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 	private static final String METADATA_ADDITIONAL_LIBRARY_PATH = "additonal_library_path";
-	private static final String METADATA_IMAGE_SITE_IP = "site_ip";
+	private static final String METADATA_IMAGE_REMOTE_REP_IP = "site_ip";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -205,92 +205,106 @@ public class SebalTasks {
 		return f1Tasks;
 	}
 	
-	public static List<Task> createRTasks(Properties properties,
-			String imageName, Specification spec, String location, String siteIP) {
-		LOGGER.debug("Creating R tasks for image " + imageName);
+	public static TaskImpl createRTask(TaskImpl rTaskImpl,
+			Properties properties, String imageName, Specification spec,
+			String location, String remoteRepositoryIP) {
+		LOGGER.debug("Creating R task for image " + imageName);
 
-		String numberOfPartitions = properties.getProperty("sebal_number_of_partitions");
-		List<Task> rTasks = new ArrayList<Task>();
+		settingCommonTaskMetadata(properties, rTaskImpl);
 
-		for (int partitionIndex = 1; partitionIndex <= Integer.parseInt(numberOfPartitions); partitionIndex++) {
-			TaskImpl rTaskImpl = new TaskImpl(UUID.randomUUID().toString(), spec);
-						
-			settingCommonTaskMetadata(properties, rTaskImpl);
-			
-			// setting image R execution properties
-			rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
-			rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
-			rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
-			rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
-					properties.getProperty("sebal_local_scripts_dir"));
-			rTaskImpl.putMetadata(METADATA_IMAGE_SITE_IP, siteIP);
-			rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
-					rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + rTaskImpl.getId());
-			
-			// creating sandbox
-			String mkdirCommand = "mkdir -p " + rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
-			String mkdirRemotly = createCommandToRunRemotly(mkdirCommand);
-			rTaskImpl.addCommand(new Command(mkdirRemotly, Command.Type.PROLOGUE));
-			
-			//treating repository user private key
-			if (properties.getProperty("sebal_repository_user_private_key") != null) {
-				File privateKeyFile = new File(properties.getProperty("sebal_repository_user_private_key"));
-				String remotePrivateKeyPath = rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/"
-						+ privateKeyFile.getName();
-				
-				rTaskImpl.putMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH, remotePrivateKeyPath);
-				String scpUploadCommand = createSCPUploadCommand(privateKeyFile.getAbsolutePath(),
-						remotePrivateKeyPath);
-				LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-				rTaskImpl.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
-			}
-			
-			//TODO: check if the following have to change to support new script
-			
-			// creating r script for this image
-			File localScriptFile = createScriptFile(properties, rTaskImpl);
-			String remoteScriptPath = rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/"
-					+ localScriptFile.getName();
-			
-			// adding command
+		// setting image R execution properties
+		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
+		rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
+		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
+		rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
+				properties.getProperty("sebal_local_scripts_dir"));
+		rTaskImpl.putMetadata(METADATA_IMAGE_REMOTE_REP_IP, remoteRepositoryIP);
+		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
+				rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_"
+						+ rTaskImpl.getId());
+
+		// creating sandbox
+		String mkdirCommand = "mkdir -p "
+				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
+		String mkdirRemotly = createCommandToRunRemotly(mkdirCommand);
+		rTaskImpl.addCommand(new Command(mkdirRemotly, Command.Type.PROLOGUE));
+
+		// treating repository user private key
+		if (properties.getProperty("sebal_repository_user_private_key") != null) {
+			File privateKeyFile = new File(
+					properties.getProperty("sebal_repository_user_private_key"));
+			String remotePrivateKeyPath = rTaskImpl
+					.getMetadata(TaskImpl.METADATA_SANDBOX)
+					+ "/"
+					+ privateKeyFile.getName();
+
+			rTaskImpl.putMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH,
+					remotePrivateKeyPath);
 			String scpUploadCommand = createSCPUploadCommand(
-					localScriptFile.getAbsolutePath(), remoteScriptPath);
+					privateKeyFile.getAbsolutePath(), remotePrivateKeyPath);
 			LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-			rTaskImpl.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
-			
-			// adding remote command
-			String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);
-			LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
-			rTaskImpl.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
-
-			// adding epilogue command			
-			String copyCommand = "cp -R " + rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
-					+ "/SEBAL/local_results/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + " "
-					+ rTaskImpl.getMetadata(METADATA_RESULTS_MOUNT_POINT) + "/results";
-			String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
-			rTaskImpl.addCommand(new Command(remoteCopyCommand, Command.Type.EPILOGUE));
-			
-			String cleanEnvironment = "rm -r " + rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
-			String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
-			rTaskImpl.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
-			
-			String scpDownloadCommand = createSCPDownloadCommand(
-					rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
-							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
-					rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_out");
-			rTaskImpl.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
-
-			scpDownloadCommand = createSCPDownloadCommand(
-					rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
-							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
-					rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-							+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_err");
-			rTaskImpl.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
-			
-			rTasks.add(rTaskImpl);
+			rTaskImpl.addCommand(new Command(scpUploadCommand,
+					Command.Type.PROLOGUE));
 		}
-		return rTasks;
+
+		// TODO: check if the following have to change to support new script
+
+		// creating r script for this image
+		File localScriptFile = createScriptFile(properties, rTaskImpl);
+		String remoteScriptPath = rTaskImpl
+				.getMetadata(TaskImpl.METADATA_SANDBOX)
+				+ "/"
+				+ localScriptFile.getName();
+
+		// adding command
+		String scpUploadCommand = createSCPUploadCommand(
+				localScriptFile.getAbsolutePath(), remoteScriptPath);
+		LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
+		rTaskImpl.addCommand(new Command(scpUploadCommand,
+				Command.Type.PROLOGUE));
+
+		// adding remote command
+		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);
+		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
+		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
+				Command.Type.REMOTE));
+
+		// adding epilogue command
+		String copyCommand = "cp -R "
+				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+				+ "/SEBAL/local_results/"
+				+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + " "
+				+ rTaskImpl.getMetadata(METADATA_RESULTS_MOUNT_POINT)
+				+ "/results";
+		String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
+		rTaskImpl.addCommand(new Command(remoteCopyCommand,
+				Command.Type.EPILOGUE));
+
+		String cleanEnvironment = "rm -r "
+				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
+		String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
+		rTaskImpl
+				.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
+
+		String scpDownloadCommand = createSCPDownloadCommand(
+				rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER)
+						+ "/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
+				rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER)
+						+ "/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME)
+						+ "_out");
+		rTaskImpl.addCommand(new Command(scpDownloadCommand,
+				Command.Type.EPILOGUE));
+
+		scpDownloadCommand = createSCPDownloadCommand(
+				rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER)
+						+ "/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
+				rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER)
+						+ "/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME)
+						+ "_err");
+		rTaskImpl.addCommand(new Command(scpDownloadCommand,
+				Command.Type.EPILOGUE));
+
+		return rTaskImpl;
 	}
 
 	private static String createCommandToRunRemotly(String command) {		
@@ -390,7 +404,7 @@ public class SebalTasks {
 				task.getMetadata(METADATA_IMAGE_REPOSITORY));
 		command = command.replaceAll(Pattern.quote("${SEBAL_RESULT_REPOSITORY}"),
 				task.getMetadata(METADATA_RESULT_REPOSITORY));
-		command = command.replaceAll(METADATA_IMAGE_SITE_IP, "${IMAGE_SITE_IP}");
+		command = command.replaceAll(METADATA_IMAGE_REMOTE_REP_IP, "${IMAGE_REMOTE_REP_IP}");
 
 		// execution properties
 		if (task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH) != null) {
