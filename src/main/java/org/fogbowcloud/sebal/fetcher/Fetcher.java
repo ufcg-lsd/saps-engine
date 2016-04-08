@@ -1,4 +1,4 @@
-package org.fogbowcloud.sebal.crawler;
+package org.fogbowcloud.sebal.fetcher;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -7,7 +7,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,34 +22,40 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
-import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.NASARepository;
+import org.fogbowcloud.sebal.crawler.Crawler;
 
-public class Crawler {
-
-	public Properties properties;
+public class Fetcher {
+	
+	private Properties properties;
 	public ImageDataStore imageStore;
 	int maxSimultaneousDownload;
 	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
 	private ScheduledExecutorService executor;
-	private NASARepository NASARepository;
 	private String remoteRepositoryIP;
-
+	
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	private static final int DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD = 1;
-
-	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
-
-	public Crawler(Properties properties) {
-		this(properties, new JDBCImageDataStore(properties), null, null);
-	}
-
-	public Crawler(Properties properties, ImageDataStore imageStore,
+	
+	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
+	
+	public Fetcher(Properties properties, ImageDataStore imageStore,
 			ScheduledExecutorService executor, String remoteRepositoryIP) {
 		if (properties == null) {
 			throw new IllegalArgumentException(
@@ -54,7 +63,6 @@ public class Crawler {
 		}
 		this.properties = properties;
 		this.imageStore = imageStore;
-		this.NASARepository = new NASARepository(properties);
 		this.remoteRepositoryIP = remoteRepositoryIP;
 		if (executor == null) {
 			this.executor = Executors.newScheduledThreadPool(1);
@@ -67,9 +75,9 @@ public class Crawler {
 		maxSimultaneousDownload = (maxSimultaneousDownloadStr == null ? DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD
 				: Integer.parseInt(maxSimultaneousDownloadStr));
 	}
-
+	
 	public void init() {
-		LOGGER.info("Initializing crawler... ");
+		LOGGER.info("Initializing fetcher... ");
 		
 		// scheduling possible previous image download not finished before
 		// process stopping
@@ -85,7 +93,6 @@ public class Crawler {
 
 		LOGGER.debug("scheduler period: " + schedulerPeriod);
 		executor.scheduleWithFixedDelay(new Runnable() {
-
 			@Override
 			public void run() {
 				try {
@@ -112,7 +119,7 @@ public class Crawler {
 	}
 
 	private void schedulePreviousDownloadsNotFinished() throws SQLException {
-		List<ImageData> previousImagesDownloads = imageStore.getImageIn(ImageState.DOWNLOADING);
+		List<ImageData> previousImagesDownloads = imageStore.getImageIn(ImageState.FETCHER_DOWNLOADING);
 		for (ImageData imageData : previousImagesDownloads) {
 			if (imageData.getFederationMember().equals(properties.getProperty("federation_member"))) {
 				LOGGER.debug("The image " + imageData.getName()
@@ -122,17 +129,17 @@ public class Crawler {
 			}
 		}
 	}
-
+	
 	private ImageData selectImageToDownload() throws SQLException {
 		LOGGER.debug("Searching for image to download.");
-		List<ImageData> imageDataList = imageStore.getImageIn(ImageState.NOT_DOWNLOADED,
+		List<ImageData> imageDataList = imageStore.getImageIn(ImageState.FINISHED,
 				10);
 		
 		for (int i = 0; i < imageDataList.size(); i++) {
 			ImageData imageData = imageDataList.get(i);
 			
 			if (imageStore.lockImage(imageData.getName())) {
-				imageData.setState(ImageState.DOWNLOADING);
+				imageData.setState(ImageState.FETCHER_DOWNLOADING);
 				imageData.setFederationMember(properties.getProperty("federation_member"));
 				
 				pendingImageDownload.put(imageData.getName(), imageData);
@@ -152,7 +159,7 @@ public class Crawler {
 			public void run() {
 				try {
 					imageData.setRemoteRepositoryIP(remoteRepositoryIP);
-					NASARepository.downloadImage(imageData, remoteRepositoryIP);
+					downloadResultsInRepository(imageData, remoteRepositoryIP);
 
 					//running Fmask					
 					int exitValue = runFmask(imageData);					
@@ -238,7 +245,58 @@ public class Crawler {
 			}
 		});
 	}
+	
+	public void downloadResultsInRepository(final ImageData imageData, String remoteRepositoryIP) throws Exception {
+		HttpClient httpClient = initClient();
+		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
+		HttpResponse response = httpClient.execute(homeGet);
 
+		String imageDirPath = remoteRepositoryIP + ":" + properties.getProperty("result_repository_path") + "/"
+				+ imageData.getName();
+		File imageDir = new File(imageDirPath);
+		if (!imageDir.exists() || !imageDir.isDirectory()) {
+			imageDir.mkdirs();
+		}	
+		
+		String localImageFilePath = imageDirPath + "/" + imageData.getName() + ".tar.gz";
+		
+		File localImageFile = new File(localImageFilePath);
+		if (localImageFile.exists()) {
+			LOGGER.debug("The file for image " + imageData.getName()
+					+ " already exist, but may not be downloaded successfully. The file "
+					+ localImageFilePath + " will be download again.");
+			localImageFile.delete();			
+		}
+		
+		LOGGER.info("Downloading image " + imageData.getName() + " into file " + localImageFilePath);
+		File file = new File(localImageFilePath);
+		OutputStream outStream = new FileOutputStream(file);
+		IOUtils.copy(response.getEntity().getContent(), outStream);
+	}
+
+	private HttpClient initClient() throws IOException, ClientProtocolException,
+			UnsupportedEncodingException {
+		BasicCookieStore cookieStore = new BasicCookieStore();
+		HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore)
+				.build();
+
+		HttpGet homeGet = new HttpGet(properties.getProperty("nasa_login_url"));
+		httpClient.execute(homeGet);
+
+		HttpPost homePost = new HttpPost(properties.getProperty("nasa_login_url"));
+
+		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+
+		nvps.add(new BasicNameValuePair("username", properties.getProperty("nasa_username")));
+		nvps.add(new BasicNameValuePair("password", properties.getProperty("nasa_password")));
+		nvps.add(new BasicNameValuePair("rememberMe", "0"));
+
+		homePost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+		HttpResponse homePostResponse = httpClient.execute(homePost);
+		EntityUtils.toString(homePostResponse.getEntity());
+		return httpClient;
+	}
+	
 	protected String replaceVariables(String command, ImageData imageData) {
 		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"), imageData.getName());
 		command = command.replaceAll(Pattern.quote("${IMAGES_MOUNT_POINT}"),
@@ -247,21 +305,4 @@ public class Crawler {
 				properties.getProperty("fmask_tool_path"));
 		return command;
 	}
-
-	/*
-	 * This method must be used only for testing
-	 */
-	protected void setNASARepository(NASARepository nasaRepository) {
-		this.NASARepository = nasaRepository;
-		
-	}
-	
-	/*
-	 * This method must be used only for testing
-	 */
-	protected void setImageDownloader(ExecutorService imageDownloader) {
-		this.downloader = imageDownloader;
-		
-	}
-
 }

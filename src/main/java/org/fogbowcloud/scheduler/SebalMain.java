@@ -17,7 +17,6 @@ import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.SebalJob;
 import org.fogbowcloud.scheduler.core.model.Specification;
-import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.core.util.Constants;
@@ -154,7 +153,7 @@ public class SebalMain {
 		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
 	}
 
-	private static void addF1FakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
+/*	private static void addF1FakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
 		try {
 			List<ImageData> completedImages = imageStore.getImageIn(imageState);
 
@@ -175,7 +174,7 @@ public class SebalMain {
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
-	}
+	}*/
 	
 	private static void addFakeRTasks(Properties properties, Job job,
 			Specification sebalSpec, ImageState imageState) {
@@ -207,7 +206,7 @@ public class SebalMain {
 		}
 	}
 	
-	private static void addF1CF2Tasks(final Properties properties, final Job job,
+/*	private static void addF1CF2Tasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
 			List<ImageData> imagesToExecute = imageStore.getImageIn(imageState, limit);				
@@ -249,7 +248,7 @@ public class SebalMain {
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
-	}
+	}*/
 	
 	private static void addRTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
@@ -326,6 +325,7 @@ public class SebalMain {
 		return Specification.getSpecificationsFromJSonFile(crawlerSpecsFilePath);
 	}
 	
+	//TODO: implement fetcher to use this
 	private static List<Specification> getFetcherSpecs(Properties properties)
 			throws IOException {
 		String fetcherSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_FETCHER_SPECS_FILE_PATH);		

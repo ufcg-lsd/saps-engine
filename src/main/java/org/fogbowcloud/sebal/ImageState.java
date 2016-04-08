@@ -7,7 +7,8 @@ public enum ImageState {
 			"downloading"), RUNNING_F1("running_f1"), READY_FOR_PHASE_C(
 			"ready_for_phase_c"), RUNNING_C("running_c"), READY_FOR_PHASE_F2(
 			"ready_for_phase_f2"), RUNNING_F2("running_f2"), READY_FOR_R(
-			"ready_for_r"), RUNNING_R("running_r"), FINISHED("finished");
+			"ready_for_r"), RUNNING_R("running_r"), FINISHED("finished"), FETCHER_DOWNLOADING(
+			"fetcher_downloading"), FETCHER_DOWNLOADED("fetcher_downloaded");
 
 	private String value;
 
