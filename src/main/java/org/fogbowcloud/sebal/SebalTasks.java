@@ -272,9 +272,11 @@ public class SebalTasks {
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
-
+		
 		// adding epilogue command
-		String copyCommand = "cp -R "
+		
+		// the following probably wont be used in current implementation
+/*		String copyCommand = "cp -R "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
 				+ "/SEBAL/local_results/"
 				+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + " "
@@ -282,29 +284,28 @@ public class SebalTasks {
 				+ "/results";
 		String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
 		rTaskImpl.addCommand(new Command(remoteCopyCommand,
-				Command.Type.EPILOGUE));
+				Command.Type.EPILOGUE));*/
 
 		String cleanEnvironment = "rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
-		rTaskImpl
-				.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
+		rTaskImpl.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
 
 		String scpDownloadCommand = createSCPDownloadCommand(
-				rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER)
-						+ "/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
-				rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER)
-						+ "/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME)
-						+ "_out");
+				METADATA_RESULTS_LOCAL_PATH + "/"
+						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
+				METADATA_VOLUME_EXPORT_PATH + "/results/"
+						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "/"
+						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_out");
 		rTaskImpl.addCommand(new Command(scpDownloadCommand,
 				Command.Type.EPILOGUE));
 
 		scpDownloadCommand = createSCPDownloadCommand(
-				rTaskImpl.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER)
-						+ "/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
-				rTaskImpl.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER)
-						+ "/" + rTaskImpl.getMetadata(METADATA_IMAGE_NAME)
-						+ "_err");
+				METADATA_RESULTS_LOCAL_PATH + "/"
+						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
+				METADATA_VOLUME_EXPORT_PATH + "/results/"
+						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "/"
+						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_err");
 		rTaskImpl.addCommand(new Command(scpDownloadCommand,
 				Command.Type.EPILOGUE));
 

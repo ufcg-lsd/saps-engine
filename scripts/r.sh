@@ -45,7 +45,7 @@ Rscript AlgoritmoFinal.R $R_EXEC_DIR
 echo "Renaming dados file"
 mv dados.csv dados"-$IMAGE_NAME".csv
 
-rm -r /tmp/Rtmp*
+#rm -r /tmp/Rtmp*
 
 PROCESS_OUTPUT=$?
 
