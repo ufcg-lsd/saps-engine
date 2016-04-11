@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ExecutionMonitor;
@@ -41,7 +42,7 @@ public class SebalMain {
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 	
 	// Necessary for Crawler:
-	private static ScheduledExecutorService executor;
+	private static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
 	public static void main(String[] args) throws Exception {
 
@@ -66,13 +67,6 @@ public class SebalMain {
 		initializeCrawlerInstance(properties, blockWhileInitializing, isElastic, infraProvider, remoteRepositoryIP);
 
 		final Job job = new SebalJob(imageStore);
-
-		//blockWhileInitializing = new Boolean(
-		//		properties.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
-		//		.booleanValue();
-
-		//isElastic = new Boolean(
-		//		properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
 		
 		List<Specification> schedulerSpecs = getSchedulerSpecs(properties);
 
@@ -144,12 +138,12 @@ public class SebalMain {
 				Integer.parseInt(properties
 						.getProperty("execution_monitor_period")));
 
-		schedulerTimer.scheduleAtFixedRate(new Runnable() {
+		executor.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
 				crawler.init();
 			}
-		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
+		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")), TimeUnit.MILLISECONDS);
 	}
 
 /*	private static void addF1FakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
@@ -182,20 +176,11 @@ public class SebalMain {
 
 			for (ImageData imageData : completedImages) {
 				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
-
-				//List<Task> tasks = new ArrayList<Task>();
-
-				/*tasks = SebalTasks.createRTask(properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember(), imageData.getRemoteRepositoryIP());*/
 				
 				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 				
 				taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(), sebalSpec,
 						imageData.getFederationMember(), imageData.getRemoteRepositoryIP());
-
-/*				for (Task task : tasks) {
-					job.addFakeTask(task);
-				}*/
 				
 				job.addFakeTask(taskImpl);
 			}
@@ -260,18 +245,11 @@ public class SebalMain {
 
 				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
 				
-				//List<Task> tasks = new ArrayList<Task>();
-				
 				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 				
 				if (ImageState.RUNNING_R.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)
 						|| ImageState.READY_FOR_R.equals(imageState)) {
-					/*tasks = SebalTasks.createRTask(properties,
-							imageData.getName(), sebalSpec,
-							imageData.getFederationMember(),
-							imageData.getRemoteRepositoryIP());*/
-					
 					taskImpl = SebalTasks.createRTask(taskImpl, properties,
 							imageData.getName(), sebalSpec,
 							imageData.getFederationMember(),
@@ -279,10 +257,6 @@ public class SebalMain {
 					
 					imageData.setState(ImageState.RUNNING_R);
 				}
-
-/*				for (Task task : tasks) {
-					job.addTask(task);
-				}*/
 				
 				job.addTask(taskImpl);
 				
@@ -339,8 +313,7 @@ public class SebalMain {
 		String providerClassName = properties
 				.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
 
-		Object clazz = Class.forName(providerClassName).getConstructor(Properties.class)
-				.newInstance(properties);
+		Object clazz = Class.forName(providerClassName).getConstructor(Properties.class).newInstance(properties);
 		if (!(clazz instanceof InfrastructureProvider)) {
 			throw new Exception(
 					"Provider Class Name is not a InfrastructureProvider implementation");

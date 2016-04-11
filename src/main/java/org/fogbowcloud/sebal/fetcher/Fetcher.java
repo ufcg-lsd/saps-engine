@@ -37,7 +37,6 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
-import org.fogbowcloud.sebal.NASARepository;
 import org.fogbowcloud.sebal.crawler.Crawler;
 
 public class Fetcher {
@@ -251,12 +250,15 @@ public class Fetcher {
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
 		HttpResponse response = httpClient.execute(homeGet);
 
-		String imageDirPath = remoteRepositoryIP + ":" + properties.getProperty("result_repository_path") + "/"
+		//TODO: see where all images results will be stored by fetcher...in this case, there will be two paths:
+		// a remoteDirPath and a localDirPath (that might be a path to the VM, volume, storage, etc, that will
+		// store all these data
+		String imageDirPath = remoteRepositoryIP + ":" + properties.getProperty("sebal_export_path") + "/"
 				+ imageData.getName();
 		File imageDir = new File(imageDirPath);
 		if (!imageDir.exists() || !imageDir.isDirectory()) {
 			imageDir.mkdirs();
-		}	
+		}
 		
 		String localImageFilePath = imageDirPath + "/" + imageData.getName() + ".tar.gz";
 		
