@@ -33,6 +33,7 @@ public class SebalTasks {
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 	private static final String METADATA_ADDITIONAL_LIBRARY_PATH = "additonal_library_path";
 	private static final String METADATA_IMAGE_REMOTE_REP_IP = "site_ip";
+	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -40,13 +41,12 @@ public class SebalTasks {
 	public static final String METADATA_RIGHT_X = "right_x";
 	public static final String METADATA_LOWER_Y = "lower_y";
 	private static final String METADATA_REMOTE_BOUNDINGBOX_PATH = "remote_boundingbox_path";
-	private static final String METADATA_IMAGES_MOUNT_POINT = "images_mount_point";
-	public static final String METADATA_RESULTS_MOUNT_POINT = "results_mount_point";
+	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
+	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
 	private static final String METADATA_SEBAL_URL = "sebal_url";
 	private static final String METADATA_R_URL = "r_url";
 	private static final String METADATA_REPOS_USER = "repository_user";
-	private static final String METADATA_IMAGE_REPOSITORY = "image_repository";
-	private static final String METADATA_RESULT_REPOSITORY = "result_repository";
+	private static final String METADATA_MOUNT_POINT = "mount_point";
 	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
 
 	public static List<Task> createF1Tasks(Properties properties, String imageName, Specification spec, String location) {
@@ -152,7 +152,7 @@ public class SebalTasks {
 			
 			String copyCommand = "cp -R " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ "/SEBAL/local_results/" + f1Task.getMetadata(METADATA_IMAGE_NAME) + " "
-					+ f1Task.getMetadata(METADATA_RESULTS_MOUNT_POINT) + "/results";
+					+ f1Task.getMetadata(METADATA_RESULTS_LOCAL_PATH) + "/results";
 			String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
 			f1Task.addCommand(new Command(remoteCopyCommand, Command.Type.EPILOGUE));
 			
@@ -216,8 +216,12 @@ public class SebalTasks {
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
+		rTaskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
+				properties.getProperty("sebal_export_path"));
 		rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 				properties.getProperty("sebal_local_scripts_dir"));
+		rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
+				properties.getProperty("sebal_mount_point"));
 		rTaskImpl.putMetadata(METADATA_IMAGE_REMOTE_REP_IP, remoteRepositoryIP);
 		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 				rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_"
@@ -274,7 +278,7 @@ public class SebalTasks {
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
 				+ "/SEBAL/local_results/"
 				+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + " "
-				+ rTaskImpl.getMetadata(METADATA_RESULTS_MOUNT_POINT)
+				+ rTaskImpl.getMetadata(METADATA_RESULTS_LOCAL_PATH)
 				+ "/results";
 		String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
 		rTaskImpl.addCommand(new Command(remoteCopyCommand,
@@ -335,14 +339,12 @@ public class SebalTasks {
 		
 		// repository properties
 		task.putMetadata(METADATA_REPOS_USER, properties.getProperty("sebal_remote_user"));
-		task.putMetadata(METADATA_IMAGE_REPOSITORY,
-				properties.getProperty("sebal_image_repository"));
-		task.putMetadata(METADATA_RESULT_REPOSITORY,
-				properties.getProperty("sebal_result_repository"));
-		task.putMetadata(METADATA_IMAGES_MOUNT_POINT,
-				properties.getProperty("sebal_images_mount_point"));
-		task.putMetadata(METADATA_RESULTS_MOUNT_POINT,
-				properties.getProperty("sebal_results_mount_point"));
+		task.putMetadata(METADATA_MOUNT_POINT,
+				properties.getProperty("sebal_mount_point"));
+		task.putMetadata(METADATA_IMAGES_LOCAL_PATH,
+				properties.getProperty("sebal_images_local_path"));
+		task.putMetadata(METADATA_RESULTS_LOCAL_PATH,
+				properties.getProperty("sebal_results_local_path"));
 	}
 
 	private static String createRemoteScriptExecCommand(String remoteScript) {
@@ -392,19 +394,18 @@ public class SebalTasks {
 				task.getMetadata(METADATA_R_URL));
 
 		// repositories properties
+		command = command.replaceAll(Pattern.quote("${VOLUME_EXPORT_PATH}"),
+				task.getMetadata(METADATA_VOLUME_EXPORT_PATH));
 		command = command.replaceAll(Pattern.quote("${REMOTE_USER}"),
 				task.getMetadata(METADATA_REPOS_USER));
 		command = command.replaceAll(Pattern.quote("${USER_PRIVATE_KEY}"),
 				task.getMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH));
-		command = command.replaceAll(Pattern.quote("${IMAGES_MOUNT_POINT}"),
-				task.getMetadata(METADATA_IMAGES_MOUNT_POINT));
-		command = command.replaceAll(Pattern.quote("${RESULTS_MOUNT_POINT}"),
-				task.getMetadata(METADATA_RESULTS_MOUNT_POINT));
-		command = command.replaceAll(Pattern.quote("${SEBAL_IMAGE_REPOSITORY}"),
-				task.getMetadata(METADATA_IMAGE_REPOSITORY));
-		command = command.replaceAll(Pattern.quote("${SEBAL_RESULT_REPOSITORY}"),
-				task.getMetadata(METADATA_RESULT_REPOSITORY));
-		command = command.replaceAll(METADATA_IMAGE_REMOTE_REP_IP, "${IMAGE_REMOTE_REP_IP}");
+		command = command.replaceAll(Pattern.quote("${IMAGES_LOCAL_PATH}"),
+				task.getMetadata(METADATA_IMAGES_LOCAL_PATH));
+		command = command.replaceAll(Pattern.quote("${RESULTS_LOCAL_PATH}"),
+				task.getMetadata(METADATA_RESULTS_LOCAL_PATH));
+		command = command.replaceAll(Pattern.quote("${SEBAL_MOUNT_POINT}"),
+				task.getMetadata(METADATA_MOUNT_POINT));
 
 		// execution properties
 		if (task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH) != null) {

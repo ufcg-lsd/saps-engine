@@ -39,6 +39,7 @@ public class Crawler {
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	private static final int DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD = 1;
+	private static final int BUFFER_SIZE = 4096;
 
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 

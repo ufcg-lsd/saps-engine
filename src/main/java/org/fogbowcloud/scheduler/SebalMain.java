@@ -121,7 +121,6 @@ public class SebalMain {
 
 			
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
-
 		
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
