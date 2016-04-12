@@ -47,7 +47,7 @@ public class PrimesMain {
 		
 		loadConfigFromProperties();
 
-		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_SCHEDULER_SPECS_FILE_PATH);
+		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
 		List<Specification> initialSpecs = Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 
 		List<Specification> taskSpecs = Specification.getSpecificationsFromJSonFile(SPEC_FILE_PATH);

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ExecutionMonitor;
@@ -16,7 +17,6 @@ import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.SebalJob;
 import org.fogbowcloud.scheduler.core.model.Specification;
-import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.core.util.Constants;
@@ -28,6 +28,7 @@ import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
+import org.fogbowcloud.sebal.crawler.Crawler;
 import org.junit.Test;
 
 public class TestSebalMain {
@@ -35,30 +36,38 @@ public class TestSebalMain {
 	private static ManagerTimer executionMonitorTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private static ManagerTimer schedulerTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
+	private static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 	
 	private static ImageDataStore imageStore;
+	private static String remoteRepositoryIP;
 	private static final Logger LOGGER = Logger.getLogger(TestSebalMain.class);
 	
 	@Test
 	public void runTest() throws Exception {
 		final Properties properties = new Properties();
-		FileInputStream input = new FileInputStream("scheduler/scheduler.conf");
+		FileInputStream input = new FileInputStream("src/main/resources/sebal.conf");
 		properties.load(input);
 		
-		imageStore = new JDBCImageDataStore(properties);
+		imageStore = new JDBCImageDataStore(properties);			
+		
+		initializeCrawlerInstance(properties, remoteRepositoryIP);
 
 		final Job job = new SebalJob(imageStore);
-
+		
 		boolean blockWhileInitializing = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
+				properties
+						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
 				.booleanValue();
 
 		boolean isElastic = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC)).booleanValue();
-		List<Specification> initialSpecs = getInitialSpecs(properties);
+				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC))
+				.booleanValue();
 
-		InfrastructureProvider infraProvider = createInfraProvaiderInstance(properties);
-		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic,
+		List<Specification> schedulerSpecs = getInitialSpecs(properties);
+
+		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
+		
+		InfrastructureManager infraManager = new InfrastructureManager(schedulerSpecs, isElastic,
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 		
@@ -66,7 +75,7 @@ public class TestSebalMain {
 		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, job);
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
-
+		
 		addFakeRTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
 		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
 		
@@ -78,13 +87,49 @@ public class TestSebalMain {
 				
 		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
-			public void run() {
+			public void run() {				
 				addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
-			}
+			}	
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 		
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
+	}
+	
+	private static void initializeCrawlerInstance(Properties properties,
+			String remoteRepositoryIP) throws Exception {
+		boolean blockWhileInitializing = new Boolean(
+				properties
+						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
+				.booleanValue();
+
+		boolean isElastic = new Boolean(
+				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC))
+				.booleanValue();
+
+		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
+
+		List<Specification> crawlerSpecs = getCrawlerSpecs(properties);
+
+		InfrastructureManager infraManager = new InfrastructureManager(
+				crawlerSpecs, isElastic, infraProvider, properties);
+		infraManager.start(blockWhileInitializing);
+
+		final Crawler crawler = new Crawler(properties, imageStore, executor,
+				remoteRepositoryIP);
+		
+		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
+
+		executionMonitorTimer.scheduleAtFixedRate(execCrawlerMonitor, 0,
+				Integer.parseInt(properties
+						.getProperty("execution_monitor_period")));
+
+		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				crawler.init();
+			}
+		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
 	}
 	
 	private static void addFakeRTasks(Properties properties, Job job,
@@ -95,17 +140,11 @@ public class TestSebalMain {
 			for (ImageData imageData : completedImages) {
 
 				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
-
-				//List<Task> tasks = new ArrayList<Task>();
 				
 				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 
 				taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(), sebalSpec,
 						imageData.getFederationMember(), imageData.getRemoteRepositoryIP());
-
-/*				for (Task task : tasks) {
-					job.addFakeTask(task);
-				}*/
 				
 				job.addFakeTask(taskImpl);
 			}
@@ -126,8 +165,6 @@ public class TestSebalMain {
 
 				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
 				
-				//List<Task> tasks = new ArrayList<Task>();
-				
 				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 				
 				if (ImageState.RUNNING_R.equals(imageState)
@@ -136,10 +173,6 @@ public class TestSebalMain {
 							sebalSpec, imageData.getFederationMember(), imageData.getRemoteRepositoryIP());
 					imageData.setState(ImageState.RUNNING_R);					
 				}
-
-/*				for (Task task : tasks) {
-					job.addTask(task);
-				}*/
 				
 				job.addTask(taskImpl);
 				
@@ -167,25 +200,33 @@ public class TestSebalMain {
 	
 	private static List<Specification> getInitialSpecs(Properties properties)
 			throws IOException {
-		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_SCHEDULER_SPECS_FILE_PATH);		
+		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);		
 		LOGGER.info("Getting initial spec from file " + initialSpecsFilePath);
 		
 		return Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 	}
 	
-	private static InfrastructureProvider createInfraProvaiderInstance(Properties properties)
+	private static InfrastructureProvider createInfraProviderInstance(Properties properties)
 			throws Exception {
+
 		String providerClassName = properties
 				.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
 
-		Object clazz = Class.forName(providerClassName).getConstructor(Properties.class)
-				.newInstance(properties);
+		Object clazz = Class.forName(providerClassName).getConstructor(Properties.class).newInstance(properties);
 		if (!(clazz instanceof InfrastructureProvider)) {
 			throw new Exception(
 					"Provider Class Name is not a InfrastructureProvider implementation");
 		}
 
 		return (InfrastructureProvider) clazz;
+	}
+	
+	private static List<Specification> getCrawlerSpecs(Properties properties)
+			throws IOException {
+		String crawlerSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_CRAWLER_SPECS_FILE_PATH);		
+		LOGGER.info("Getting crawler spec from file " + crawlerSpecsFilePath);
+		
+		return Specification.getSpecificationsFromJSonFile(crawlerSpecsFilePath);
 	}
 	
 }
