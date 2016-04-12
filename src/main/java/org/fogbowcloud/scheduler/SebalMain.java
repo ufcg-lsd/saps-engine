@@ -23,6 +23,7 @@ import org.fogbowcloud.scheduler.core.util.Constants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
+import org.fogbowcloud.scheduler.storage.StorageInitializer;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
@@ -135,6 +136,8 @@ public class SebalMain {
 		final Crawler crawler = new Crawler(properties, imageStore, executor,
 				remoteRepositoryIP);
 		
+		final StorageInitializer storageInitializer = new StorageInitializer();
+		
 		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
 
 		executionMonitorTimer.scheduleAtFixedRate(execCrawlerMonitor, 0,
@@ -145,6 +148,11 @@ public class SebalMain {
 			@Override
 			public void run() {
 				crawler.init();
+				try {
+					storageInitializer.init();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
 	}
