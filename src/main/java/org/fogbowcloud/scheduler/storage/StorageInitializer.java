@@ -2,7 +2,6 @@ package org.fogbowcloud.scheduler.storage;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.LinkedList;
@@ -28,7 +27,6 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.manager.core.plugins.IdentityPlugin;
 import org.fogbowcloud.manager.occi.model.HeaderUtils;
 import org.fogbowcloud.manager.occi.model.OCCIHeaders;
 import org.fogbowcloud.manager.occi.order.OrderAttribute;
@@ -50,16 +48,9 @@ public class StorageInitializer {
 	
 	public void init() throws Exception {
 		final Properties properties = new Properties();
-		FileInputStream input;
-		try {
-			input = new FileInputStream("src/main/resources/sebal.conf");
-			properties.load(input);			
-			orderStorage(properties);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}		
+		FileInputStream input = new FileInputStream("src/main/resources/");
+		properties.load(input);
+		orderStorage(properties);
 	}
 	
 	private void orderStorage(Properties properties) throws Exception {
@@ -68,6 +59,9 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("Category", OrderConstants.TERM
 				+ "; scheme=\"" + OrderConstants.SCHEME + "\"; class=\""
 				+ OrderConstants.KIND_CLASS + "\""));
+		headers.add(new BasicHeader("X-OCCI-Attribute",
+				OrderAttribute.INSTANCE_ID.getValue() + "="
+						+ OrderConstants.DEVICE_ID_DEFAULT));
 		headers.add(new BasicHeader("X-OCCI-Attribute",
 				OrderAttribute.INSTANCE_COUNT.getValue() + "=" + 1));
 		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.TYPE
@@ -80,36 +74,34 @@ public class StorageInitializer {
 		String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
 				.getenv("FOGBOW_URL");
 		
-		//TODO: insert correct authFile and authToken
-		String authToken = normalizeTokenFile("authFile");
+		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 		if (authToken == null) {
-			authToken = normalizeToken("authToken");
+			authToken = normalizeToken(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 		}
 		
-		//TODO: insert correct orderId
 		doRequest("get", url + "/" + OrderConstants.TERM + "/" + OrderConstants.DEVICE_ID_DEFAULT, authToken);
 		
 		LOGGER.debug("Attaching storage to instance...");
-		attachStorage();
+		attachStorage(properties);
 		
 		LOGGER.debug("Process finished.");
 	}
 	
-	private void attachStorage() throws URISyntaxException, HttpException,
+	private void attachStorage(Properties properties) throws URISyntaxException, HttpException,
 			IOException {
 		String url = "attachment_url";
 
-		String authToken = normalizeTokenFile("attachment_authFile");
+		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 
 		List<Header> headers = new LinkedList<Header>();
 		headers.add(new BasicHeader("Category", OrderConstants.STORAGELINK_TERM
 				+ "; scheme=\"" + OrderConstants.INFRASTRUCTURE_OCCI_SCHEME
 				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
-		// TODO: insert correct computeId, storageId and mountPoint
+		// TODO: insert correct computeId and mountPoint
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.SOURCE
 				.getValue() + "=" + "computeId"));
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.TARGET
-				.getValue() + "=" + "storageId"));
+				.getValue() + "=" + StorageAttribute.DEVICE_ID));
 		headers.add(new BasicHeader("X-OCCI-Attribute",
 				StorageAttribute.DEVICE_ID.getValue() + "=" + "mountPoint"));
 
@@ -141,7 +133,9 @@ public class StorageInitializer {
 		return token.replace("\n", "");
 	}	
 
-	private static void doRequest(String method, String endpoint, String authToken) throws URISyntaxException, HttpException, IOException {
+	private static void doRequest(String method, String endpoint,
+			String authToken) throws URISyntaxException, HttpException,
+			IOException {
 		doRequest(method, endpoint, authToken, new LinkedList<Header>());
 	}
 
