@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.ExecutionMonitor;
@@ -34,11 +33,12 @@ public class SebalMain {
 	private static ManagerTimer executionMonitorTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private static ManagerTimer schedulerTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
-	private static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
 //	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
 	private static ImageDataStore imageStore;
-	private static String remoteRepositoryIP;
+	
+	private static String nfsServerIP;
+	private static String nfsServerPort;
 	
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 
@@ -48,8 +48,12 @@ public class SebalMain {
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		//TODO: insert crawler IP and port below
-		imageStore = new JDBCImageDataStore(properties, null, null);			
+		String imageStoreIP = args[1];
+		String imageStorePort = args[2];
+		nfsServerIP = args[3];
+		nfsServerPort = args[4];
+		
+		imageStore = new JDBCImageDataStore(properties, imageStoreIP, imageStorePort);			
 
 		final Job job = new SebalJob(imageStore);
 		
@@ -144,9 +148,8 @@ public class SebalMain {
 				
 				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 				
-				//TODO: insert crawler IP and port below
 				taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember(), "crawlerIP");
+						imageData.getFederationMember(), nfsServerIP, nfsServerPort);
 				
 				job.addFakeTask(taskImpl);
 			}
@@ -216,11 +219,10 @@ public class SebalMain {
 				if (ImageState.RUNNING_R.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)
 						|| ImageState.READY_FOR_R.equals(imageState)) {
-					//TODO: insert crawler IP and port below
 					taskImpl = SebalTasks.createRTask(taskImpl, properties,
 							imageData.getName(), sebalSpec,
 							imageData.getFederationMember(),
-							"crawlerIP");
+							nfsServerIP, nfsServerPort);
 					
 					imageData.setState(ImageState.RUNNING_R);
 				}
@@ -256,23 +258,6 @@ public class SebalMain {
 		
 		return Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 	}
-	
-	private static List<Specification> getCrawlerSpecs(Properties properties)
-			throws IOException {
-		String crawlerSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_CRAWLER_SPECS_FILE_PATH);		
-		LOGGER.info("Getting crawler spec from file " + crawlerSpecsFilePath);
-		
-		return Specification.getSpecificationsFromJSonFile(crawlerSpecsFilePath);
-	}
-	
-	//TODO: implement fetcher to use this
-/*	private static List<Specification> getFetcherSpecs(Properties properties)
-			throws IOException {
-		String fetcherSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_FETCHER_SPECS_FILE_PATH);		
-		LOGGER.info("Getting fetcher spec from file " + fetcherSpecsFilePath);
-		
-		return Specification.getSpecificationsFromJSonFile(fetcherSpecsFilePath);
-	}*/
 	
 	private static InfrastructureProvider createInfraProviderInstance(Properties properties)
 			throws Exception {

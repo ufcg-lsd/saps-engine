@@ -146,7 +146,7 @@ public class TestSebalMain {
 
 				//TODO:
 				taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember(), "setCrawlerIPHere");
+						imageData.getFederationMember(), "setCrawlerIPHere", "setCrawlerPortHere");
 				
 				job.addFakeTask(taskImpl);
 			}
@@ -172,7 +172,7 @@ public class TestSebalMain {
 				if (ImageState.RUNNING_R.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)) {
 					taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(),
-							sebalSpec, imageData.getFederationMember(), "setCrawlerIPHere");
+							sebalSpec, imageData.getFederationMember(), "setCrawlerIPHere", "setCrawlerPortHere");
 					imageData.setState(ImageState.RUNNING_R);					
 				}
 				

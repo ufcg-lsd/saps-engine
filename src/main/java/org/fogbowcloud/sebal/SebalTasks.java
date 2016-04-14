@@ -32,7 +32,8 @@ public class SebalTasks {
 	public static final String METADATA_PARTITION_INDEX = "partition_index";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 	private static final String METADATA_ADDITIONAL_LIBRARY_PATH = "additonal_library_path";
-	private static final String METADATA_IMAGE_REMOTE_REP_IP = "site_ip";
+	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
+	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
@@ -207,7 +208,7 @@ public class SebalTasks {
 	
 	public static TaskImpl createRTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
-			String location, String remoteRepositoryIP) {
+			String location, String nfsServerIP, String nfsServerPort) {
 		LOGGER.debug("Creating R task for image " + imageName);
 
 		settingCommonTaskMetadata(properties, rTaskImpl);
@@ -222,7 +223,8 @@ public class SebalTasks {
 				properties.getProperty("sebal_local_scripts_dir"));
 		rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
 				properties.getProperty("sebal_mount_point"));
-		rTaskImpl.putMetadata(METADATA_IMAGE_REMOTE_REP_IP, remoteRepositoryIP);
+		rTaskImpl.putMetadata(METADATA_NFS_SERVER_IP, nfsServerIP);
+		rTaskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
 		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 				rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_"
 						+ rTaskImpl.getId());
@@ -395,6 +397,10 @@ public class SebalTasks {
 				task.getMetadata(METADATA_R_URL));
 
 		// repositories properties
+		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
+				task.getMetadata(METADATA_NFS_SERVER_IP));
+		command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"),
+				task.getMetadata(METADATA_NFS_SERVER_PORT));
 		command = command.replaceAll(Pattern.quote("${VOLUME_EXPORT_PATH}"),
 				task.getMetadata(METADATA_VOLUME_EXPORT_PATH));
 		command = command.replaceAll(Pattern.quote("${REMOTE_USER}"),

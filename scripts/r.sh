@@ -12,7 +12,7 @@ sudo apt-get install nfs-common
 
 # mounting image repository
 # for nfs:
-mount -t nfs -o proto=ftp ${REMOTE_USER}@${IMAGE_REMOTE_REP_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
+mount -t nfs -o proto=ftp ${REMOTE_USER}@${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
 
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
 
