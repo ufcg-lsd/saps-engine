@@ -254,11 +254,35 @@ public class Fetcher {
 		});
 	}
 	
-	public void downloadResultsInFTPServer(String ftpServerIP) throws Exception {
-		//TODO: see how exactly this will be done
-		URL url = new URL ("ftp://username:password@www.superland.example/server");
+	public void downloadResultsFromFTPServer(Properties properties,
+			ImageData imageData, String ftpServerIP, String remoteRepositoryIP)
+			throws Exception {
+		// TODO: see how exactly this will be done
+		URL url = new URL("ftp://" + properties.getProperty("ftp_username")
+				+ ":" + properties.getProperty("ftp_password") + "@"
+				+ ftpServerIP + ":"
+				+ properties.getProperty("sebal_export_path") + "/"
+				+ imageData.getName());
 		URLConnection urlc = url.openConnection();
-		InputStream is = urlc.getInputStream();
+		
+		//TODO: see if this get all content from url
+		InputStream imputStream = urlc.getInputStream();
+
+		String resultsDirPath = remoteRepositoryIP + ":"
+				+ properties.getProperty("sebal_export_path") + "/"
+				+ imageData.getName();
+		File resultsDir = new File(resultsDirPath);
+		if (!resultsDir.exists() || !resultsDir.isDirectory()) {
+			resultsDir.mkdirs();
+		}
+
+		//TODO: see how exactly these files will be created
+		// the current way is wrong
+		LOGGER.info("Downloading image " + imageData.getName() + " results into "
+				+ resultsDirPath);
+		File file = new File(resultsDirPath);
+		OutputStream outStream = new FileOutputStream(file);
+		IOUtils.copy(imputStream, outStream);
 	}
 	
 	public void downloadResultsInRepository(final ImageData imageData, String ftpServerIP) throws Exception {
