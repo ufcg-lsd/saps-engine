@@ -6,9 +6,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +40,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
+import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.crawler.Crawler;
 
 public class Fetcher {
@@ -47,20 +51,28 @@ public class Fetcher {
 	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
 	private ScheduledExecutorService executor;
 	
+	private String ftpServerIP;
+	
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	private static final int DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD = 1;
 	
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 	
+	public Fetcher(Properties properties, String imageStoreIP, String imageStorePort, String ftpServerIP) {
+		this(properties, new JDBCImageDataStore(properties, imageStoreIP, imageStorePort), null, ftpServerIP);
+	}
+	
 	public Fetcher(Properties properties, ImageDataStore imageStore,
-			ScheduledExecutorService executor) {
+			ScheduledExecutorService executor, String ftpServerIP) {
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
 		}
 		this.properties = properties;
 		this.imageStore = imageStore;
+		this.ftpServerIP = ftpServerIP;
+		
 		if (executor == null) {
 			this.executor = Executors.newScheduledThreadPool(1);
 		} else {
@@ -106,7 +118,7 @@ public class Fetcher {
 						return;
 					}
 					
-					downloadImage(imageData);
+					downloadImage(imageData, ftpServerIP);
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
 				}
@@ -122,7 +134,7 @@ public class Fetcher {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is a previous download not finished.");
 				pendingImageDownload.put(imageData.getName(), imageData);
-				downloadImage(imageData);
+				downloadImage(imageData, ftpServerIP);
 			}
 		}
 	}
@@ -149,14 +161,13 @@ public class Fetcher {
 		return null;
 	}
 	
-	private void downloadImage(final ImageData imageData) {
+	private void downloadImage(final ImageData imageData, final String ftpServerIP) {
 		downloader.execute(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					//TODO:
-					downloadResultsInRepository(imageData, "setCrawlerIPHere");
+					downloadResultsInRepository(imageData, ftpServerIP);
 
 					//running Fmask					
 					int exitValue = runFmask(imageData);					
@@ -243,7 +254,14 @@ public class Fetcher {
 		});
 	}
 	
-	public void downloadResultsInRepository(final ImageData imageData, String remoteRepositoryIP) throws Exception {
+	public void downloadResultsInFTPServer(String ftpServerIP) throws Exception {
+		//TODO: see how exactly this will be done
+		URL url = new URL ("ftp://username:password@www.superland.example/server");
+		URLConnection urlc = url.openConnection();
+		InputStream is = urlc.getInputStream();
+	}
+	
+	public void downloadResultsInRepository(final ImageData imageData, String ftpServerIP) throws Exception {
 		HttpClient httpClient = initClient();
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
 		HttpResponse response = httpClient.execute(homeGet);
@@ -251,7 +269,7 @@ public class Fetcher {
 		//TODO: see where all images results will be stored by fetcher...in this case, there will be two paths:
 		// a remoteDirPath and a localDirPath (that might be a path to the VM, volume, storage, etc, that will
 		// store all these data
-		String imageDirPath = remoteRepositoryIP + ":" + properties.getProperty("sebal_export_path") + "/"
+		String imageDirPath = ftpServerIP + ":" + properties.getProperty("sebal_export_path") + "/"
 				+ imageData.getName();
 		File imageDir = new File(imageDirPath);
 		if (!imageDir.exists() || !imageDir.isDirectory()) {
