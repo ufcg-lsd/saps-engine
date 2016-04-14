@@ -46,7 +46,6 @@ public class Fetcher {
 	int maxSimultaneousDownload;
 	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
 	private ScheduledExecutorService executor;
-	private String remoteRepositoryIP;
 	
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
@@ -55,14 +54,13 @@ public class Fetcher {
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 	
 	public Fetcher(Properties properties, ImageDataStore imageStore,
-			ScheduledExecutorService executor, String remoteRepositoryIP) {
+			ScheduledExecutorService executor) {
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
 		}
 		this.properties = properties;
 		this.imageStore = imageStore;
-		this.remoteRepositoryIP = remoteRepositoryIP;
 		if (executor == null) {
 			this.executor = Executors.newScheduledThreadPool(1);
 		} else {
@@ -108,7 +106,7 @@ public class Fetcher {
 						return;
 					}
 					
-					downloadImage(imageData, remoteRepositoryIP);
+					downloadImage(imageData);
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
 				}
@@ -118,20 +116,20 @@ public class Fetcher {
 	}
 
 	private void schedulePreviousDownloadsNotFinished() throws SQLException {
-		List<ImageData> previousImagesDownloads = imageStore.getImageIn(ImageState.FETCHER_DOWNLOADING);
+		List<ImageData> previousImagesDownloads = imageStore.getIn(ImageState.FETCHER_DOWNLOADING);
 		for (ImageData imageData : previousImagesDownloads) {
 			if (imageData.getFederationMember().equals(properties.getProperty("federation_member"))) {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is a previous download not finished.");
 				pendingImageDownload.put(imageData.getName(), imageData);
-				downloadImage(imageData, remoteRepositoryIP);
+				downloadImage(imageData);
 			}
 		}
 	}
 	
 	private ImageData selectImageToDownload() throws SQLException {
 		LOGGER.debug("Searching for image to download.");
-		List<ImageData> imageDataList = imageStore.getImageIn(ImageState.FINISHED,
+		List<ImageData> imageDataList = imageStore.getIn(ImageState.FINISHED,
 				10);
 		
 		for (int i = 0; i < imageDataList.size(); i++) {
@@ -151,14 +149,14 @@ public class Fetcher {
 		return null;
 	}
 	
-	private void downloadImage(final ImageData imageData, final String remoteRepositoryIP) {
+	private void downloadImage(final ImageData imageData) {
 		downloader.execute(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					imageData.setRemoteRepositoryIP(remoteRepositoryIP);
-					downloadResultsInRepository(imageData, remoteRepositoryIP);
+					//TODO:
+					downloadResultsInRepository(imageData, "setCrawlerIPHere");
 
 					//running Fmask					
 					int exitValue = runFmask(imageData);					

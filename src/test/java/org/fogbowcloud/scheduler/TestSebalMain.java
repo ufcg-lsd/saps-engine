@@ -48,7 +48,7 @@ public class TestSebalMain {
 		FileInputStream input = new FileInputStream("src/main/resources/sebal.conf");
 		properties.load(input);
 		
-		imageStore = new JDBCImageDataStore(properties);			
+		imageStore = new JDBCImageDataStore(properties, null, null);			
 		
 		initializeCrawlerInstance(properties, remoteRepositoryIP);
 
@@ -115,8 +115,9 @@ public class TestSebalMain {
 				crawlerSpecs, isElastic, infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 
+		//TODO:
 		final Crawler crawler = new Crawler(properties, imageStore, executor,
-				remoteRepositoryIP);
+				remoteRepositoryIP, "imageStoreIP");
 		
 		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
 
@@ -135,7 +136,7 @@ public class TestSebalMain {
 	private static void addFakeRTasks(Properties properties, Job job,
 			Specification sebalSpec, ImageState imageState) {
 		try {
-			List<ImageData> completedImages = imageStore.getImageIn(imageState);
+			List<ImageData> completedImages = imageStore.getIn(imageState);
 
 			for (ImageData imageData : completedImages) {
 
@@ -143,8 +144,9 @@ public class TestSebalMain {
 				
 				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 
+				//TODO:
 				taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember(), imageData.getRemoteRepositoryIP());
+						imageData.getFederationMember(), "setCrawlerIPHere");
 				
 				job.addFakeTask(taskImpl);
 			}
@@ -157,7 +159,7 @@ public class TestSebalMain {
 	private static void addRTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
-			List<ImageData> imagesToExecute = imageStore.getImageIn(imageState, limit);				
+			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);				
 			
 			for (ImageData imageData : imagesToExecute) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
@@ -170,7 +172,7 @@ public class TestSebalMain {
 				if (ImageState.RUNNING_R.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)) {
 					taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(),
-							sebalSpec, imageData.getFederationMember(), imageData.getRemoteRepositoryIP());
+							sebalSpec, imageData.getFederationMember(), "setCrawlerIPHere");
 					imageData.setState(ImageState.RUNNING_R);					
 				}
 				

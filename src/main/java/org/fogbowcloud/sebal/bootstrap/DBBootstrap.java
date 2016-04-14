@@ -33,7 +33,8 @@ public class DBBootstrap {
 			throw new IllegalArgumentException("The properties must not bu null.");
 		}
 		this.properties = properties;
-		imageStore = new JDBCImageDataStore(properties);
+		//TODO: insert crawler IP and port below
+		imageStore = new JDBCImageDataStore(properties, null, null);
 		nasaRepository = new NASARepository(properties);
 	}
 
@@ -62,7 +63,7 @@ public class DBBootstrap {
 				for (String imageName : imageAndDownloadLink.keySet()) {
 					try {
 						//TODO: See how site IP will fit here
-						imageStore.addImage(imageName, imageAndDownloadLink.get(imageName), priority, "");
+						imageStore.addImage(imageName, imageAndDownloadLink.get(imageName), priority);
 					} catch (SQLException e) {
 						// TODO do we need to do something?
 						LOGGER.error("Error while adding image at data base.", e);

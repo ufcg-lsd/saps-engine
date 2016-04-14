@@ -11,7 +11,10 @@ public class CrawlerMain {
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		Crawler crawler = new Crawler(properties);
+		String imageStoreIP = args[1];
+		String imageStorePort = args[2];
+		
+		Crawler crawler = new Crawler(properties, imageStoreIP, imageStorePort);
 		
 		crawler.init();
 	}

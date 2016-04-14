@@ -69,7 +69,7 @@ public class BootstrapMain {
 				System.out.println(new ImageData(rs.getString("image_name"), rs
 						.getString("download_link"), ImageState.getStateFromStr(rs
 						.getString("state")), rs.getString("federation_member"), rs
-						.getInt("priority"), rs.getString("site_ip")));
+						.getInt("priority")));
 			}
 	         
 //			ImageDataStore imageStore = new JDBCImageDataStore(properties);

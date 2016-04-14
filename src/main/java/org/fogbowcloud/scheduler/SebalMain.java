@@ -23,13 +23,11 @@ import org.fogbowcloud.scheduler.core.util.Constants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
-import org.fogbowcloud.scheduler.storage.StorageInitializer;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
-import org.fogbowcloud.sebal.crawler.Crawler;
 
 public class SebalMain {
 	
@@ -50,9 +48,8 @@ public class SebalMain {
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		imageStore = new JDBCImageDataStore(properties);			
-		
-		initializeCrawlerInstance(properties, remoteRepositoryIP);
+		//TODO: insert crawler IP and port below
+		imageStore = new JDBCImageDataStore(properties, null, null);			
 
 		final Job job = new SebalJob(imageStore);
 		
@@ -65,11 +62,11 @@ public class SebalMain {
 				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC))
 				.booleanValue();
 
-		List<Specification> schedulerSpecs = getInitialSpecs(properties);
+		List<Specification> initialSpecs = getInitialSpecs(properties);
 
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 		
-		InfrastructureManager infraManager = new InfrastructureManager(schedulerSpecs, isElastic,
+		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic,
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 		
@@ -113,49 +110,6 @@ public class SebalMain {
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
 	}
-	
-	private static void initializeCrawlerInstance(Properties properties,
-			String remoteRepositoryIP) throws Exception {
-		boolean blockWhileInitializing = new Boolean(
-				properties
-						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
-				.booleanValue();
-
-		boolean isElastic = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC))
-				.booleanValue();
-
-		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
-
-		List<Specification> crawlerSpecs = getCrawlerSpecs(properties);
-
-		InfrastructureManager infraManager = new InfrastructureManager(
-				crawlerSpecs, isElastic, infraProvider, properties);
-		infraManager.start(blockWhileInitializing);
-
-		final Crawler crawler = new Crawler(properties, imageStore, executor,
-				remoteRepositoryIP);
-		
-		final StorageInitializer storageInitializer = new StorageInitializer();
-		
-		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
-
-		executionMonitorTimer.scheduleAtFixedRate(execCrawlerMonitor, 0,
-				Integer.parseInt(properties
-						.getProperty("execution_monitor_period")));
-
-		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				crawler.init();
-				try {
-					storageInitializer.init();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
-	}
 
 /*	private static void addF1FakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
 		try {
@@ -183,15 +137,16 @@ public class SebalMain {
 	private static void addFakeRTasks(Properties properties, Job job,
 			Specification sebalSpec, ImageState imageState) {
 		try {
-			List<ImageData> completedImages = imageStore.getImageIn(imageState);
+			List<ImageData> completedImages = imageStore.getIn(imageState);
 
 			for (ImageData imageData : completedImages) {
 				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
 				
 				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 				
+				//TODO: insert crawler IP and port below
 				taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember(), imageData.getRemoteRepositoryIP());
+						imageData.getFederationMember(), "crawlerIP");
 				
 				job.addFakeTask(taskImpl);
 			}
@@ -248,7 +203,7 @@ public class SebalMain {
 	private static void addRTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
-			List<ImageData> imagesToExecute = imageStore.getImageIn(imageState, limit);				
+			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);				
 			
 			for (ImageData imageData : imagesToExecute) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
@@ -261,10 +216,11 @@ public class SebalMain {
 				if (ImageState.RUNNING_R.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)
 						|| ImageState.READY_FOR_R.equals(imageState)) {
+					//TODO: insert crawler IP and port below
 					taskImpl = SebalTasks.createRTask(taskImpl, properties,
 							imageData.getName(), sebalSpec,
 							imageData.getFederationMember(),
-							imageData.getRemoteRepositoryIP());
+							"crawlerIP");
 					
 					imageData.setState(ImageState.RUNNING_R);
 				}

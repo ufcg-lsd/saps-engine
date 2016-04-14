@@ -8,7 +8,7 @@ public interface ImageDataStore {
 	public final static String NONE = "None";
 	public final static int UNLIMITED = -1;
 
-	public void addImage(String imageName, String downloadLink, int priority, String siteIP) throws SQLException;
+	public void addImage(String imageName, String downloadLink, int priority) throws SQLException;
 
 	public void updateImage(ImageData imageData) throws SQLException;
 
@@ -16,9 +16,9 @@ public interface ImageDataStore {
 	
 	public List<ImageData> getAllImages() throws SQLException;
 
-	public List<ImageData> getImageIn(ImageState state) throws SQLException;
+	public List<ImageData> getIn(ImageState state) throws SQLException;
 
-	public List<ImageData> getImageIn(ImageState state, int limit) throws SQLException;
+	public List<ImageData> getIn(ImageState state, int limit) throws SQLException;
 
 	public ImageData getImage(String imageName) throws SQLException;
 	

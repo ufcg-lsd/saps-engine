@@ -10,17 +10,15 @@ public class ImageData {
 	private ImageState state;
 	private String federationMember;
 	private int priority;
-	private String remoteRepositoryIP;
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 
 	public ImageData(String name, String downloadLink, ImageState state, String federationMember,
-			int priority, String siteIP) {
+			int priority) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
 		this.federationMember = federationMember;
 		this.priority = priority;
-		this.remoteRepositoryIP = siteIP;
 	}
 
 	public String getName() {
@@ -37,10 +35,6 @@ public class ImageData {
 
 	public String getFederationMember() {
 		return federationMember;
-	}
-	
-	public String getRemoteRepositoryIP() {
-		return remoteRepositoryIP;
 	}
 
 	public int getPriority() {
@@ -66,14 +60,10 @@ public class ImageData {
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
-	
-	public void setRemoteRepositoryIP(String remoteRepositoryIP) {
-		this.remoteRepositoryIP = remoteRepositoryIP;
-	}
 
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", " + federationMember
-				+ ", " + priority + ", " + remoteRepositoryIP;
+				+ ", " + priority;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -91,8 +81,7 @@ public class ImageData {
 			return getName().equals(other.getName())
 					&& getDownloadLink().equals(other.getDownloadLink())
 					&& getState().equals(other.getState()) && getPriority() == other.getPriority()
-					&& getFederationMember().equals(other.getFederationMember())
-					&& getRemoteRepositoryIP().equals(other.getRemoteRepositoryIP());
+					&& getFederationMember().equals(other.getFederationMember());
 		}
 		return false;
 	}

@@ -43,12 +43,12 @@ public class NASARepository {
 		this.properties = properties;
 	}
 
-	public void downloadImage(final ImageData imageData, String remoteRepositoryIP) throws Exception {
+	public void downloadImage(final ImageData imageData) throws Exception {
 		HttpClient httpClient = initClient();
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
 		HttpResponse response = httpClient.execute(homeGet);
 
-		String imageDirPath = remoteRepositoryIP + ":" + properties.getProperty("image_repository_path") + "/"
+		String imageDirPath = properties.getProperty("sebal_export_path") + "/images/"
 				+ imageData.getName();
 		File imageDir = new File(imageDirPath);
 		if (!imageDir.exists() || !imageDir.isDirectory()) {

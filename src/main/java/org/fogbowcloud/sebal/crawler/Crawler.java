@@ -34,21 +34,22 @@ public class Crawler {
 	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
 	private ScheduledExecutorService executor;
 	private NASARepository NASARepository;
-	private String remoteRepositoryIP;
 
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	private static final int DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD = 1;
-	private static final int BUFFER_SIZE = 4096;
 
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
-	public Crawler(Properties properties) {
-		this(properties, new JDBCImageDataStore(properties), null, null);
+	public Crawler(Properties properties, String imageStoreIP,
+			String imageStorePort) {
+		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
+				imageStorePort), null, imageStoreIP, imageStorePort);
 	}
 
 	public Crawler(Properties properties, ImageDataStore imageStore,
-			ScheduledExecutorService executor, String remoteRepositoryIP) {
+			ScheduledExecutorService executor, String imageStoreIP,
+			String imageStorePort) {
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
@@ -56,7 +57,6 @@ public class Crawler {
 		this.properties = properties;
 		this.imageStore = imageStore;
 		this.NASARepository = new NASARepository(properties);
-		this.remoteRepositoryIP = remoteRepositoryIP;
 		if (executor == null) {
 			this.executor = Executors.newScheduledThreadPool(1);
 		} else {
@@ -103,7 +103,7 @@ public class Crawler {
 						return;
 					}
 					
-					downloadImage(imageData, remoteRepositoryIP);
+					downloadImage(imageData);
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
 				}
@@ -113,20 +113,20 @@ public class Crawler {
 	}
 
 	private void schedulePreviousDownloadsNotFinished() throws SQLException {
-		List<ImageData> previousImagesDownloads = imageStore.getImageIn(ImageState.DOWNLOADING);
+		List<ImageData> previousImagesDownloads = imageStore.getIn(ImageState.DOWNLOADING);
 		for (ImageData imageData : previousImagesDownloads) {
 			if (imageData.getFederationMember().equals(properties.getProperty("federation_member"))) {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is a previous download not finished.");
 				pendingImageDownload.put(imageData.getName(), imageData);
-				downloadImage(imageData, remoteRepositoryIP);
+				downloadImage(imageData);
 			}
 		}
 	}
 
 	private ImageData selectImageToDownload() throws SQLException {
 		LOGGER.debug("Searching for image to download.");
-		List<ImageData> imageDataList = imageStore.getImageIn(ImageState.NOT_DOWNLOADED,
+		List<ImageData> imageDataList = imageStore.getIn(ImageState.NOT_DOWNLOADED,
 				10);
 		
 		for (int i = 0; i < imageDataList.size(); i++) {
@@ -146,14 +146,13 @@ public class Crawler {
 		return null;
 	}
 	
-	private void downloadImage(final ImageData imageData, final String remoteRepositoryIP) {
+	private void downloadImage(final ImageData imageData) {
 		downloader.execute(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					imageData.setRemoteRepositoryIP(remoteRepositoryIP);
-					NASARepository.downloadImage(imageData, remoteRepositoryIP);
+					NASARepository.downloadImage(imageData);
 
 					//running Fmask					
 					int exitValue = runFmask(imageData);					
