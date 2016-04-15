@@ -14,6 +14,7 @@ public class AppPropertiesConstants {
 	
 	public static final String INFRA_INITIAL_SPECS_FILE_PATH = "infra_initial_specs_file_path";
 	public static final String INFRA_CRAWLER_SPECS_FILE_PATH = "infra_crawler_specs_file_path";
+	public static final String INFRA_SCHEDULER_SPECS_FILE_PATH = "infra_scheduler_specs_file_path";
 	public static final String INFRA_FETCHER_SPECS_FILE_PATH = "infra_fetcher_specs_file_path";
 	public static final String INFRA_SPECS_BLOCK_CREATING = "infra_specs_block_creating";
 	
