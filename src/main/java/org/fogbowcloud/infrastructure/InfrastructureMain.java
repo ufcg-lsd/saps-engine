@@ -47,6 +47,11 @@ public class InfrastructureMain {
 		InfrastructureManager infraManager = new InfrastructureManager(
 				initialSpecs, isElastic, infraProvider, properties, infraType);
 		infraManager.start(blockWhileInitializing);
+		
+		if(infraType.equals(INFRA_CRAWLER)) {
+			StorageInitializer storageInitializer = new StorageInitializer();
+			storageInitializer.init();
+		}
 	}
 	
 	private static List<Specification> getSpecs(Properties properties,
@@ -90,5 +95,6 @@ public class InfrastructureMain {
 		}
 
 		return (InfrastructureProvider) clazz;
+		
 	}
 }

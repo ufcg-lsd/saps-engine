@@ -1,4 +1,4 @@
-package org.fogbowcloud.scheduler.storage;
+package org.fogbowcloud.infrastructure;
 
 import java.io.File;
 import java.io.FileInputStream;

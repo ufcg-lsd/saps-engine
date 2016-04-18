@@ -626,7 +626,6 @@ public class InfrastructureManager {
 	}
 
 	protected boolean isResourceAlive(Resource resource) {
-
 		return resource.checkConnectivity();
 	}
 
