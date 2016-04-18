@@ -6,27 +6,41 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
-import org.fogbowcloud.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 
 public class InfrastructureMain {
 	
+	private static String instanceIP;
+	
 	private static final String INFRA_CRAWLER = "crawler";
 	private static final String INFRA_SCHEDULER = "scheduler";
-	private static final String INFRA_FETCHER = "fetcher";
 	private static final Logger LOGGER = Logger.getLogger(InfrastructureMain.class);
+	
 
-	public static void main(String[] args) throws Exception {
+	public static String main(String[] args) throws Exception {
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		createInfrastrucute(properties, INFRA_CRAWLER);
-		createInfrastrucute(properties, INFRA_SCHEDULER);
-		createInfrastrucute(properties, INFRA_FETCHER);
+		String infraType = args[1];
+		
+		//TODO:
+		/* 
+		 * 
+		 * See how the tunneling will handle with IP address and port,
+		 * if the tunneling alredy does the job, there's no need for return
+		 * the IP address (or port)
+		 * 
+		 */
+		createInfrastrucute(properties, infraType);
+		//crawlerIP = createInfrastrucute(properties, INFRA_CRAWLER);
+		//schedulerIP = createInfrastrucute(properties, INFRA_SCHEDULER);
+		//fetcherIP = createInfrastrucute(properties, INFRA_FETCHER);
+		
+		//TODO: handle with this in a way that the method createInfrastructure returns the instance IP
+		return instanceIP;
 	}
 	
 	private static void createInfrastrucute(Properties properties,
@@ -41,21 +55,22 @@ public class InfrastructureMain {
 				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC))
 				.booleanValue();
 
-		List<Specification> initialSpecs = getSpecs(properties, infraType);
+		List<Specification> specs = getSpecs(properties, infraType);
 
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 
 		InfrastructureManager infraManager = new InfrastructureManager(
-				initialSpecs, isElastic, infraProvider, properties, infraType);
+				specs, isElastic, infraProvider, properties, infraType);
 		infraManager.start(blockWhileInitializing);
 		
 		//TODO: change this to be a return from previous methods
-		Resource resource = null;
+		String resourceId = null;
 		
 		if(infraType.equals(INFRA_CRAWLER)) {
-			StorageInitializer storageInitializer = new StorageInitializer(resource);
-			storageInitializer.init();
+			StorageInitializer storageInitializer = new StorageInitializer(resourceId);
+			storageInitializer.init();						
 		}
+		
 	}
 	
 	private static List<Specification> getSpecs(Properties properties,

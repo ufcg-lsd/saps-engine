@@ -121,6 +121,7 @@ public class InfrastructureManager {
 				Thread.sleep(2000);
 			}
 		}
+		
 		LOGGER.info("Starting Infrastructure Manager finished");
 	}
 
@@ -176,7 +177,7 @@ public class InfrastructureManager {
 		int qtyToRequest = resourceNumber - qtyOpenOrOrdered;
 
 		/*
-		 * If scheduler need less resources than existings Orders and Idles
+		 * If crawler need less resources than existings Orders and Idles
 		 * resources that matches with required specifications, then the surplus
 		 * orders related to this scheduler with this specs will be removed
 		 */
@@ -278,7 +279,7 @@ public class InfrastructureManager {
 		int qtyToRequest = resourceNumber - qtyOpenOrOrdered;
 
 		/*
-		 * If scheduler need less resources than existings Orders and Idles
+		 * If fetcher need less resources than existings Orders and Idles
 		 * resources that matches with required specifications, then the surplus
 		 * orders related to this scheduler with this specs will be removed
 		 */

@@ -48,8 +48,8 @@ public class StorageInitializer {
 	
 	private static final Logger LOGGER = Logger.getLogger(StorageInitializer.class);
 	
-	public StorageInitializer(Resource resource) {
-		this.resourceId = resource.getId();
+	public StorageInitializer(String resourceId) {
+		this.resourceId = resourceId;
 	}
 
 	public void init() throws Exception {
