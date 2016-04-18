@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.infrastructure.InfrastructureManager;
@@ -48,8 +49,11 @@ public class InfrastructureMain {
 				initialSpecs, isElastic, infraProvider, properties, infraType);
 		infraManager.start(blockWhileInitializing);
 		
+		//TODO: change this to be a return from previous methods
+		Resource resource = null;
+		
 		if(infraType.equals(INFRA_CRAWLER)) {
-			StorageInitializer storageInitializer = new StorageInitializer();
+			StorageInitializer storageInitializer = new StorageInitializer(resource);
 			storageInitializer.init();
 		}
 	}

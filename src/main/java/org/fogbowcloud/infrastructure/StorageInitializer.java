@@ -27,6 +27,7 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.manager.occi.model.HeaderUtils;
 import org.fogbowcloud.manager.occi.model.OCCIHeaders;
 import org.fogbowcloud.manager.occi.order.OrderAttribute;
@@ -42,10 +43,15 @@ public class StorageInitializer {
 	protected static final String DEFAULT_TYPE = OrderConstants.DEFAULT_TYPE;
 	protected static final String DEFAULT_IMAGE = "fogbow-linux-x86";
 
+	private String resourceId;
 	private static HttpClient client;
 	
 	private static final Logger LOGGER = Logger.getLogger(StorageInitializer.class);
 	
+	public StorageInitializer(Resource resource) {
+		this.resourceId = resource.getId();
+	}
+
 	public void init() throws Exception {
 		final Properties properties = new Properties();
 		FileInputStream input = new FileInputStream("src/main/resources/");
@@ -98,12 +104,14 @@ public class StorageInitializer {
 				+ "; scheme=\"" + OrderConstants.INFRASTRUCTURE_OCCI_SCHEME
 				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
 		// TODO: insert correct computeId and mountPoint
+		// TODO: see if computeId is resourceId
+		// TODO: see if mountPoint is the same as in properties
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.SOURCE
-				.getValue() + "=" + "computeId"));
+				.getValue() + "=" + resourceId));
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.TARGET
 				.getValue() + "=" + StorageAttribute.DEVICE_ID));
 		headers.add(new BasicHeader("X-OCCI-Attribute",
-				StorageAttribute.DEVICE_ID.getValue() + "=" + "mountPoint"));
+				StorageAttribute.DEVICE_ID.getValue() + "=" + properties.getProperty("sebal_mount_point")));
 
 		doRequest("post", url + "/" + OrderConstants.STORAGE_TERM + "/"
 				+ OrderConstants.STORAGE_LINK_TERM + "/", authToken, headers);

@@ -101,7 +101,6 @@ public class InfrastructureManager {
 	}
 
 	// --------- PUBLIC METHODS --------- //
-
 	public void start(boolean blockWhileInitializing) throws Exception {
 		LOGGER.info("Starting Infrastructure Manager");
 
