@@ -169,7 +169,7 @@ public class InfrastructureManager {
 				.getOrdersByStateAndCrawlerAndSpec(crawler, specification,
 						OrderState.OPEN);
 		existingOrdersMatches.addAll(this.getOrdersByStateAndCrawlerAndSpec(
-				crawler, specification, OrderState.ORDERED));
+				crawler, specification, OrderState.ORDERED));		
 
 		int qtyOpenOrOrdered = existingOrdersMatches.size();
 		// int qtyIdle = existingIdlesMatches.size();

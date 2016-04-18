@@ -28,11 +28,9 @@ public class InfrastructureMain {
 		
 		//TODO:
 		/* 
-		 * 
 		 * See how the tunneling will handle with IP address and port,
 		 * if the tunneling alredy does the job, there's no need for return
-		 * the IP address (or port)
-		 * 
+		 * the IP address (or port)		 
 		 */
 		createInfrastrucute(properties, infraType);
 		//crawlerIP = createInfrastrucute(properties, INFRA_CRAWLER);
