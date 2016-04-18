@@ -8,7 +8,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
-import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
+import org.fogbowcloud.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 
 public class InfrastructureMain {
@@ -45,7 +45,7 @@ public class InfrastructureMain {
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 
 		InfrastructureManager infraManager = new InfrastructureManager(
-				initialSpecs, isElastic, infraProvider, properties);
+				initialSpecs, isElastic, infraProvider, properties, infraType);
 		infraManager.start(blockWhileInitializing);
 	}
 	

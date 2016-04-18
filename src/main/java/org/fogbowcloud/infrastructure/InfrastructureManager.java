@@ -31,6 +31,11 @@ import org.fogbowcloud.sebal.crawler.Crawler;
 import org.fogbowcloud.sebal.fetcher.Fetcher;
 
 public class InfrastructureManager {
+	
+	private static final String INFRA_CRAWLER = "crawler";
+	private static final String INFRA_SCHEDULER = "scheduler";
+	private static final String INFRA_FETCHER = "fetcher";
+	
 	private static final Logger LOGGER = Logger
 			.getLogger(InfrastructureManager.class);
 
@@ -46,6 +51,7 @@ public class InfrastructureManager {
 	private Properties properties;
 	private DataStore ds;
 	private List<Specification> specs;
+	private String infraType;
 
 	private int maxResourceReuses = Integer.MAX_VALUE;
 
@@ -59,20 +65,21 @@ public class InfrastructureManager {
 	private Long noExpirationDate = new Long(0);
 
 	public InfrastructureManager(List<Specification> specs, boolean isElastic,
-			InfrastructureProvider infraProvider, Properties properties)
+			InfrastructureProvider infraProvider, Properties properties, String infraType)
 			throws InfrastructureException {
 		this(specs, isElastic, infraProvider, properties, Executors
-				.newCachedThreadPool());
+				.newCachedThreadPool(), infraType);
 	}
 
 	public InfrastructureManager(List<Specification> specs, boolean isElastic,
 			InfrastructureProvider infraProvider, Properties properties,
-			ExecutorService resourceConnectivityMonitor)
+			ExecutorService resourceConnectivityMonitor, String infraType)
 			throws InfrastructureException {
 
 		this.properties = properties;
 		this.specs = specs;
 		this.infraProvider = infraProvider;
+		this.infraType = infraType;
 
 		String resourceReuseTimesStr = this.properties
 				.getProperty(AppPropertiesConstants.INFRA_RESOURCE_REUSE_TIMES);
@@ -99,7 +106,7 @@ public class InfrastructureManager {
 		LOGGER.info("Starting Infrastructure Manager");
 
 		removePreviousResources();
-		this.createCrawlerOrders();
+		this.createOrders();
 		//this.createSchedulerOrders();
 		//this.createInitialOrders();
 		
@@ -365,44 +372,51 @@ public class InfrastructureManager {
 	}
 
 	// --------- PRIVATE OR PROTECTED METHODS --------- //
-	private void createCrawlerOrders() {
-		if (specs != null) {
-			LOGGER.info("Creating orders to crawler specs: \n" + specs);
-			
-			for (Specification spec : specs) {
-				// Initial specs must be Persistent
-				spec.addRequirement(
-						FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
-						OrderType.PERSISTENT.getValue());
-				orderCrawlerResource(spec, null, 1);
+	private void createOrders() {
+		if(infraType.equals(INFRA_CRAWLER)) {
+			if (specs != null) {
+				LOGGER.info("Creating orders to crawler specs: \n" + specs);
+				
+				for (Specification spec : specs) {
+					spec.addRequirement(
+							FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
+							OrderType.PERSISTENT.getValue());
+					orderCrawlerResource(spec, null, 1);
+				}
 			}
-		}
-	}
-	
-	private void createSchedulerOrders() {
-		if (specs != null) {
-			LOGGER.info("Creating orders to scheduler specs: \n" + specs);
-			
-			for (Specification spec : specs) {
-				// Initial specs must be Persistent
-				spec.addRequirement(
-						FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
-						OrderType.PERSISTENT.getValue());
-				orderSchedulerResource(spec, null, 1);
+		} else if(infraType.equals(INFRA_SCHEDULER)) {
+			if (specs != null) {
+				LOGGER.info("Creating orders to scheduler specs: \n" + specs);
+				
+				for (Specification spec : specs) {
+					spec.addRequirement(
+							FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
+							OrderType.PERSISTENT.getValue());
+					orderSchedulerResource(spec, null, 1);
+				}
 			}
-		}
-	}
+		} else if(infraType.equals(INFRA_FETCHER)) {
+			if (specs != null) {
+				LOGGER.info("Creating orders to fetcher specs: \n" + specs);
 
-	private void createInitialOrders() {
-		if (specs != null) {
-			LOGGER.info("Creating orders to initial specs: \n" + specs);
+				for (Specification spec : specs) {
+					spec.addRequirement(
+							FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
+							OrderType.PERSISTENT.getValue());
+					orderFetcherResource(spec, null, 1);
+				}
+			}
+		} else {
+			if (specs != null) {
+				LOGGER.info("Creating orders to initial specs: \n" + specs);
 
-			for (Specification spec : specs) {
-				// Initial specs must be Persistent
-				spec.addRequirement(
-						FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
-						OrderType.PERSISTENT.getValue());
-				orderSchedulerResource(spec, null, 1);
+				for (Specification spec : specs) {
+					// Initial specs must be Persistent
+					spec.addRequirement(
+							FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
+							OrderType.PERSISTENT.getValue());
+					orderSchedulerResource(spec, null, 1);
+				}
 			}
 		}
 	}
