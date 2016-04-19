@@ -27,7 +27,6 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.manager.occi.model.HeaderUtils;
 import org.fogbowcloud.manager.occi.model.OCCIHeaders;
 import org.fogbowcloud.manager.occi.order.OrderAttribute;
@@ -81,12 +80,11 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("X-OCCI-Attribute",
 				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 81920));
 		
-		// Used before:
-		//String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
-		//		.getenv("FOGBOW_URL");
+		String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
+				.getenv("FOGBOW_URL");
 		
 		//TODO: See if this url is correct
-		String url = "http://" + instanceIP + ":" + instanceExtraPort;
+		//String url = "http://" + instanceIP + ":" + instanceExtraPort;
 		
 		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 		if (authToken == null) {
@@ -96,31 +94,26 @@ public class StorageInitializer {
 		doRequest("get", url + "/" + OrderConstants.TERM + "/" + OrderConstants.DEVICE_ID_DEFAULT, authToken);
 		
 		LOGGER.debug("Attaching storage to instance...");
-		attachStorage(properties);
+		attachStorage(properties, url);
 		
 		LOGGER.debug("Process finished.");
 	}
 	
-	private void attachStorage(Properties properties) throws URISyntaxException, HttpException,
+	private void attachStorage(Properties properties, String url) throws URISyntaxException, HttpException,
 			IOException {
-		//TODO: see if this url is the same as before
-		String url = "attachment_url";
-
 		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 
 		List<Header> headers = new LinkedList<Header>();
 		headers.add(new BasicHeader("Category", OrderConstants.STORAGELINK_TERM
 				+ "; scheme=\"" + OrderConstants.INFRASTRUCTURE_OCCI_SCHEME
 				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
-		// TODO: insert correct computeId and mountPoint
-		// TODO: see if computeId is resourceId
+		// TODO: insert correct mountPoint
 		// TODO: see if mountPoint is the same as in properties
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.SOURCE
 				.getValue() + "=" + resourceId));
+		//TODO: include storageID
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.TARGET
-				.getValue() + "=" + StorageAttribute.DEVICE_ID));
-		headers.add(new BasicHeader("X-OCCI-Attribute",
-				StorageAttribute.DEVICE_ID.getValue() + "=" + properties.getProperty("sebal_export_path")));
+				.getValue() + "=" + "storageID"));
 
 		doRequest("post", url + "/" + OrderConstants.STORAGE_TERM + "/"
 				+ OrderConstants.STORAGE_LINK_TERM + "/", authToken, headers);

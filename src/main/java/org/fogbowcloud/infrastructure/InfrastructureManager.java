@@ -375,10 +375,10 @@ public class InfrastructureManager {
 
 	// --------- PRIVATE OR PROTECTED METHODS --------- //
 	private void createOrders() {
-		if(infraType.equals(INFRA_CRAWLER)) {
+		if (infraType.equals(INFRA_CRAWLER)) {
 			if (specs != null) {
 				LOGGER.info("Creating orders to crawler specs: \n" + specs);
-				
+
 				for (Specification spec : specs) {
 					spec.addRequirement(
 							FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
@@ -386,10 +386,10 @@ public class InfrastructureManager {
 					orderCrawlerResource(spec, null, 1);
 				}
 			}
-		} else if(infraType.equals(INFRA_SCHEDULER)) {
+		} else if (infraType.equals(INFRA_SCHEDULER)) {
 			if (specs != null) {
 				LOGGER.info("Creating orders to scheduler specs: \n" + specs);
-				
+
 				for (Specification spec : specs) {
 					spec.addRequirement(
 							FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
@@ -397,7 +397,7 @@ public class InfrastructureManager {
 					orderSchedulerResource(spec, null, 1);
 				}
 			}
-		} else if(infraType.equals(INFRA_FETCHER)) {
+		} else if (infraType.equals(INFRA_FETCHER)) {
 			if (specs != null) {
 				LOGGER.info("Creating orders to fetcher specs: \n" + specs);
 
