@@ -2,6 +2,7 @@ package org.fogbowcloud.infrastructure;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Properties;
 
@@ -16,33 +17,32 @@ public class InfrastructureMain {
 	private static String instanceUser;
 	private static String instanceIP;
 	private static String instancePort;
-	private static String instanceExtraPorts;
+	private static String instanceExtraPort;
 	
 	private static final String INFRA_CRAWLER = "crawler";
 	private static final String INFRA_SCHEDULER = "scheduler";
 	private static final Logger LOGGER = Logger.getLogger(InfrastructureMain.class);
 	
 
-	public static String main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {
+		LOGGER.debug("Starting infrastructure creation process...");
+
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
 		String infraType = args[1];
 		
-		//TODO:
-		/* 
-		 * See how the tunneling will handle with IP address and port,
-		 * if the tunneling alredy does the job, there's no need for return
-		 * the IP address (or port)		 
-		 */
 		createInfrastrucute(properties, infraType);
-		//crawlerIP = createInfrastrucute(properties, INFRA_CRAWLER);
-		//schedulerIP = createInfrastrucute(properties, INFRA_SCHEDULER);
-		//fetcherIP = createInfrastrucute(properties, INFRA_FETCHER);
 		
-		//TODO: handle with this in a way that the method createInfrastructure returns the instance IP
-		return instanceIP;
+		PrintWriter writer = new PrintWriter("infra_" + infraType + ".txt", "UTF-8");
+		writer.println(instanceUser);
+		writer.println(instanceIP);
+		writer.println(instancePort);
+		writer.println(instanceExtraPort);
+		writer.close();
+		
+		LOGGER.debug("Infrastructure created.");
 	}
 	
 	private static void createInfrastrucute(Properties properties,
@@ -70,11 +70,13 @@ public class InfrastructureMain {
 		instanceUser = resource.getMetadataValue(Resource.METADATA_SSH_USERNAME_ATT);
 		instanceIP = resource.getMetadataValue(Resource.METADATA_SSH_HOST);
 		instancePort = resource.getMetadataValue(Resource.METADATA_SSH_PORT);
-		instanceExtraPorts = resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT);
+		instanceExtraPort = resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT);
 		
+		//TODO: see if this will be here or in ssh access to the instance
 		if(infraType.equals(INFRA_SCHEDULER)) {
-			StorageInitializer storageInitializer = new StorageInitializer(resource.getId());
-			storageInitializer.init();						
+			StorageInitializer storageInitializer = new StorageInitializer(
+					resource.getId(), instanceIP, instanceExtraPort);
+			storageInitializer.init();
 		}
 	}
 	

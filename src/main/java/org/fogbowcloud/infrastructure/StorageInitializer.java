@@ -44,12 +44,16 @@ public class StorageInitializer {
 	protected static final String DEFAULT_IMAGE = "fogbow-linux-x86";
 
 	private String resourceId;
+	private String instanceIP;
+	private String instanceExtraPort;
 	private static HttpClient client;
 	
 	private static final Logger LOGGER = Logger.getLogger(StorageInitializer.class);
 	
-	public StorageInitializer(String resourceId) {
+	public StorageInitializer(String resourceId, String instanceIP, String instanceExtraPort) {
 		this.resourceId = resourceId;
+		this.instanceIP = instanceIP;
+		this.instanceExtraPort = instanceExtraPort;
 	}
 
 	public void init() throws Exception {
@@ -77,8 +81,12 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("X-OCCI-Attribute",
 				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 81920));
 		
-		String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
-				.getenv("FOGBOW_URL");
+		// Used before:
+		//String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
+		//		.getenv("FOGBOW_URL");
+		
+		//TODO: See if this url is correct
+		String url = "http://" + instanceIP + ":" + instanceExtraPort;
 		
 		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 		if (authToken == null) {
@@ -95,6 +103,7 @@ public class StorageInitializer {
 	
 	private void attachStorage(Properties properties) throws URISyntaxException, HttpException,
 			IOException {
+		//TODO: see if this url is the same as before
 		String url = "attachment_url";
 
 		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
