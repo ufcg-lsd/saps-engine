@@ -21,14 +21,17 @@ public class Specification {
 	String privateKeyFilePath;
 	String publicKey;
 	String contextScript;
+	String userDataFile;
 	
 	Map<String, String> requirements = new HashMap<String, String>();
 
-	public Specification(String image, String username, String publicKey, String privateKeyFilePath) {
+	public Specification(String image, String username, String publicKey,
+			String privateKeyFilePath, String userDataFile) {
 		this.image = image;
 		this.username = username;
 		this.publicKey = publicKey;
 		this.privateKeyFilePath = privateKeyFilePath;
+		this.userDataFile = userDataFile;
 	}
 	
 	public void addRequirement(String key, String value){
@@ -122,6 +125,14 @@ public class Specification {
 		this.contextScript = contextScript;
 	}
 	
+	public String getUserDataFile() {
+		return userDataFile;
+	}
+
+	public void setUserDataFile(String userDataFile) {
+		this.userDataFile = userDataFile;
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -129,6 +140,9 @@ public class Specification {
 		sb.append("- PublicKey: " + publicKey);
 		if (contextScript != null && !contextScript.isEmpty()) {
 			sb.append("\nContextScript: " + contextScript);
+		}
+		if(userDataFile != null && !userDataFile.isEmpty()) {
+			sb.append("\nUserData:" + userDataFile);
 		}
 		if (requirements != null && !requirements.isEmpty()) {
 			sb.append("\nRequiriments:{");
@@ -148,6 +162,7 @@ public class Specification {
 		result = prime * result + ((image == null) ? 0 : image.hashCode());
 		result = prime * result + ((privateKeyFilePath == null) ? 0 : privateKeyFilePath.hashCode());
 		result = prime * result + ((publicKey == null) ? 0 : publicKey.hashCode());
+		result = prime * result + ((userDataFile == null) ? 0 : userDataFile.hashCode());
 		result = prime * result + ((requirements == null) ? 0 : requirements.hashCode());
 		result = prime * result + ((username == null) ? 0 : username.hashCode());
 		return result;
@@ -181,6 +196,11 @@ public class Specification {
 			if (other.publicKey != null)
 				return false;
 		} else if (!publicKey.equals(other.publicKey))
+			return false;
+		if(userDataFile == null) {
+			if(other.userDataFile != null)
+				return false;
+		} else if(!userDataFile.equals(other.userDataFile))
 			return false;
 		if (requirements == null) {
 			if (other.requirements != null)

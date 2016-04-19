@@ -61,13 +61,14 @@ public class TestResource {
 		String publicKey = "publicKey";
 		String privateKey = "privateKey";
 		String fogbowRequirement = "Glue2vCPU >= 1 && Glue2RAM >= 1024 ";
+		String userDataFile = "scripts/lvl-user-data.sh";
 		
 		String coreSize = "1";
 		String menSize = "1024";
 		String diskSize = "20";
 		String location = "edu.ufcg.lsd.cloud_1s";
 		
-		Specification spec = new Specification(image, userName, publicKey, privateKey);
+		Specification spec = new Specification(image, userName, publicKey, privateKey, userDataFile);
 		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 		
 		resource.putMetadata(Resource.METADATA_IMAGE, image);
@@ -92,13 +93,14 @@ public class TestResource {
 		String publicKey = "publicKey";
 		String privateKey = "privateKey";
 		String fogbowRequirement = "Glue2vCPU > 1 || Glue2RAM = 1024 ";
+		String userDataFile = "scripts/lvl-user-data.sh";
 		
 		String coreSize = "1";
 		String menSize = "2048";
 		String diskSize = "20";
 		String location = "edu.ufcg.lsd.cloud_1s";
 		
-		Specification spec = new Specification(image, userName, publicKey, privateKey);
+		Specification spec = new Specification(image, userName, publicKey, privateKey, userDataFile);
 		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 		
 		resource.putMetadata(Resource.METADATA_IMAGE, image);
@@ -123,13 +125,14 @@ public class TestResource {
 		String publicKey = "publicKey";
 		String privateKey = "privateKey";
 		String fogbowRequirement = "Glue2vCPU >= 1 && Glue2RAM >= 1024 ";
+		String userDataFile = "scripts/lvl-user-data.sh";
 		
 		String coreSize = "1";
 		String menSize = "1024";
 		String diskSize = "20";
 		String location = "edu.ufcg.lsd.cloud_1s";
 		
-		Specification spec = new Specification(imageB, userName, publicKey, privateKey);
+		Specification spec = new Specification(imageB, userName, publicKey, privateKey, userDataFile);
 		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 		
 		resource.putMetadata(Resource.METADATA_IMAGE, imageA);
@@ -154,13 +157,14 @@ public class TestResource {
 		String publicKeyB = "publicKeyB";
 		String privateKey = "privateKey";
 		String fogbowRequirement = "Glue2vCPU >= 1 && Glue2RAM >= 1024 ";
+		String userDataFile = "scripts/lvl-user-data.sh";
 
 		String coreSize = "1";
 		String menSize = "1024";
 		String diskSize = "20";
 		String location = "edu.ufcg.lsd.cloud_1s";
 
-		Specification spec = new Specification(image, userName, publicKeyB, privateKey);
+		Specification spec = new Specification(image, userName, publicKeyB, privateKey, userDataFile);
 		spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS, fogbowRequirement);
 
 		resource.putMetadata(Resource.METADATA_IMAGE, image);
@@ -191,9 +195,10 @@ public class TestResource {
 		String privateKey = "privateKey";
 		String host = "10.100.0.1";
 		String port = "1091";
+		String userDataFile = "scripts/lvl-user-data.sh";
 		
 		Task task = prepareMockCommandsToExecute(commandsPrologue, commandsRemote, commandsEpilogue, envVariables,
-				image, userName, publicKey, privateKey, host, port);
+				image, userName, publicKey, privateKey, host, port, userDataFile);
 		
 		doReturn(TaskExecutionResult.OK).when(executionCommandHelperMock).execLocalCommands(Mockito.eq(commandsPrologue),
 				Mockito.eq(envVariables));
@@ -234,9 +239,10 @@ public class TestResource {
 		String privateKey = "privateKey";
 		String host = "10.100.0.1";
 		String port = "1091";
+		String userDataFile = "scripts/lvl-user-data.sh";
 		
 		Task task = prepareMockCommandsToExecute(commandsPrologue, commandsRemote, commandsEpilogue, envVariables,
-				image, userName, publicKey, privateKey, host, port);
+				image, userName, publicKey, privateKey, host, port, userDataFile);
 		
 		doReturn(TaskExecutionResult.OK).when(executionCommandHelperMock).execLocalCommands(Mockito.eq(commandsPrologue),
 				Mockito.eq(envVariables));
@@ -265,9 +271,9 @@ public class TestResource {
 
 	private Task prepareMockCommandsToExecute(List<Command> commandsPrologue, List<Command> commandsRemote,
 			List<Command> commandsEpilogue, Map<String, String> envVariables, String image, String userName,
-			String publicKey, String privateKey, String host, String port) {
+			String publicKey, String privateKey, String host, String port, String userDataFile) {
 		
-		Specification spec = new Specification(image, userName, publicKey, privateKey);
+		Specification spec = new Specification(image, userName, publicKey, privateKey, userDataFile);
 		
 		resource.putMetadata(Resource.METADATA_IMAGE, "image");
 		resource.putMetadata(Resource.METADATA_PUBLIC_KEY, "publicKey");

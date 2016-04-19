@@ -75,7 +75,7 @@ public class StorageInitializer {
 
 		//TODO: insert correct size
 		headers.add(new BasicHeader("X-OCCI-Attribute",
-				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 1024));
+				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 81920));
 		
 		String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
 				.getenv("FOGBOW_URL");
@@ -111,7 +111,7 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.TARGET
 				.getValue() + "=" + StorageAttribute.DEVICE_ID));
 		headers.add(new BasicHeader("X-OCCI-Attribute",
-				StorageAttribute.DEVICE_ID.getValue() + "=" + properties.getProperty("sebal_mount_point")));
+				StorageAttribute.DEVICE_ID.getValue() + "=" + properties.getProperty("sebal_export_path")));
 
 		doRequest("post", url + "/" + OrderConstants.STORAGE_TERM + "/"
 				+ OrderConstants.STORAGE_LINK_TERM + "/", authToken, headers);

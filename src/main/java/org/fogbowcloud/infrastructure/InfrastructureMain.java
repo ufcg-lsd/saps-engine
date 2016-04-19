@@ -6,13 +6,17 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 
 public class InfrastructureMain {
 	
+	private static String instanceUser;
 	private static String instanceIP;
+	private static String instancePort;
+	private static String instanceExtraPorts;
 	
 	private static final String INFRA_CRAWLER = "crawler";
 	private static final String INFRA_SCHEDULER = "scheduler";
@@ -61,14 +65,17 @@ public class InfrastructureMain {
 				specs, isElastic, infraProvider, properties, infraType);
 		infraManager.start(blockWhileInitializing);
 		
-		//TODO: change this to be a return from previous methods
-		String resourceId = null;
+		Resource resource = infraManager.getCurrentResource();
 		
-		if(infraType.equals(INFRA_CRAWLER)) {
-			StorageInitializer storageInitializer = new StorageInitializer(resourceId);
+		instanceUser = resource.getMetadataValue(Resource.METADATA_SSH_USERNAME_ATT);
+		instanceIP = resource.getMetadataValue(Resource.METADATA_SSH_HOST);
+		instancePort = resource.getMetadataValue(Resource.METADATA_SSH_PORT);
+		instanceExtraPorts = resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT);
+		
+		if(infraType.equals(INFRA_SCHEDULER)) {
+			StorageInitializer storageInitializer = new StorageInitializer(resource.getId());
 			storageInitializer.init();						
 		}
-		
 	}
 	
 	private static List<Specification> getSpecs(Properties properties,

@@ -210,7 +210,8 @@ public class TestInfrastructureManager {
 
 		String fakeRequestId = "requestId";
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.eq(specs));
@@ -227,7 +228,8 @@ public class TestInfrastructureManager {
 
 		String fakeRequestId = "requestId";
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.eq(specs));
@@ -359,7 +361,8 @@ public class TestInfrastructureManager {
 		String fakeRequestId01 = "requestId01";
 		String fakeRequestId02 = "requestId02";
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 		Resource fakeResource = mock(Resource.class);
 		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(fakeRequestId02).when(fakeResource).getId();
@@ -389,7 +392,8 @@ public class TestInfrastructureManager {
 		String fakeRequestId01 = "requestId01";
 		String fakeRequestId02 = "requestId02";
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 		Resource fakeResource = mock(Resource.class);
 		doReturn(false).when(fakeResource).checkConnectivity();
 		doReturn(fakeRequestId02).when(fakeResource).getId();
@@ -804,7 +808,8 @@ public class TestInfrastructureManager {
 		String diskSize = "";
 		String location = "";
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 
 		Map<String, String> resourceAMetadata = TestResourceHelper.generateResourceMetadata(hostA, port, userName,
 				extraPorts, OrderType.PERSISTENT, specs.getImage(), specs.getPublicKey(), cpuSize, menSize, diskSize,

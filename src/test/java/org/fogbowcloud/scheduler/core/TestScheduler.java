@@ -62,7 +62,8 @@ public class TestScheduler {
 		
 		int qty = 5;
 		
-		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath");
+		Specification spec = new Specification("image", "username",
+				"publicKey", "privateKeyFilePath", "userDataFile");
 		List<Task> tasks = this.generateMockTasks(qty,spec);
 		List<Task> tasks2 = this.generateMockTasks(qty, spec);		
 		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
@@ -78,8 +79,10 @@ public class TestScheduler {
 		
 		Resource resourceMock = mock(Resource.class);
 		
-		Specification specA = new Specification("image", "username", "publicKey", "privateKeyFilePath");
-		Specification specB = new Specification("image", "username", "publicKey", "privateKeyFilePath");
+		Specification specA = new Specification("image", "username",
+				"publicKey", "privateKeyFilePath", "userDataFile");
+		Specification specB = new Specification("image", "username",
+				"publicKey", "privateKeyFilePath", "userDataFile");
 		List<Task> tasks = this.generateMockTasks(qty,specA);
 		
 		Task tMatch = tasks.get(1);
@@ -102,8 +105,10 @@ public class TestScheduler {
 		
 		Resource resourceMock = mock(Resource.class);
 		
-		Specification specA = new Specification("image", "username", "publicKey", "privateKeyFilePath");
-		Specification specB = new Specification("image", "username", "publicKey", "privateKeyFilePath");
+		Specification specA = new Specification("image", "username",
+				"publicKey", "privateKeyFilePath", "userDataFile");
+		Specification specB = new Specification("image", "username",
+				"publicKey", "privateKeyFilePath", "userDataFile");
 		List<Task> tasks = this.generateMockTasks(qty,specA);
 		
 		doReturn(tasks).when(jobMock).getByState(TaskState.READY);

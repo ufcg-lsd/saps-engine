@@ -52,7 +52,8 @@ public class InfrastructureManager {
 	private DataStore ds;
 	private List<Specification> specs;
 	private String infraType;
-
+	private Resource returnedResource;
+	
 	private int maxResourceReuses = Integer.MAX_VALUE;
 
 	private List<Order> orders = new ArrayList<Order>();
@@ -80,6 +81,7 @@ public class InfrastructureManager {
 		this.specs = specs;
 		this.infraProvider = infraProvider;
 		this.infraType = infraType;
+		this.returnedResource = null;
 
 		String resourceReuseTimesStr = this.properties
 				.getProperty(AppPropertiesConstants.INFRA_RESOURCE_REUSE_TIMES);
@@ -498,10 +500,11 @@ public class InfrastructureManager {
 
 		// First verify if any idle resource can be resolve this order.
 		if (idleResources != null && !idleResources.isEmpty()
-				&& order.getScheduler() != null) {
+				&& order.getScheduler() != null && order.getCrawler() != null) {
 			for (Resource idleResource : idleResources.keySet()) {
 				if (idleResource.match(order.getSpecification())) {
 					resource = idleResource;
+					returnedResource = resource;
 					break;
 				}
 			}
@@ -523,29 +526,34 @@ public class InfrastructureManager {
 			}
 
 		}
-		if (!resolvedWithIdle) {
-			/*
-			 * Attempt to get resource from this order, even when a idle
-			 * resource was founded. If a new resource is returned and don't
-			 * exists any task to execute, this resource is move to idle by
-			 * scheduler.
-			 */
-			Resource newResource = infraProvider.getResource(order
-					.getRequestId());
-			if (newResource != null) {
+		if (!infraType.equals(INFRA_CRAWLER)
+				&& !infraType.equals(INFRA_SCHEDULER)
+				&& !infraType.equals(INFRA_FETCHER)) {
+			if (!resolvedWithIdle) {
+				/*
+				 * Attempt to get resource from this order, even when a idle
+				 * resource was founded. If a new resource is returned and don't
+				 * exists any task to execute, this resource is move to idle by
+				 * scheduler.
+				 */
+				Resource newResource = infraProvider.getResource(order
+						.getRequestId());
 
-				// if order is not related to initial spec
-				if (order.getScheduler() != null) {
+				if (newResource != null) {
 
-					this.relateResourceToOrder(newResource, order, false);
+					// if order is not related to initial spec
+					if (order.getScheduler() != null) {
 
-				} else {
+						this.relateResourceToOrder(newResource, order, false);
 
-					orders.remove(order);
-					moveResourceToIdle(newResource);
+					} else {
+
+						orders.remove(order);
+						moveResourceToIdle(newResource);
+					}
+
+					updateInfrastuctureState();
 				}
-
-				updateInfrastuctureState();
 			}
 		}
 	}
@@ -581,8 +589,11 @@ public class InfrastructureManager {
 			order.setRequestId(resource.getId());
 			order.setState(OrderState.FULFILLED);
 			updateInfrastuctureState();
-			order.getScheduler().resourceReady(resource);
-
+			if (!infraType.equals(INFRA_CRAWLER)
+					&& !infraType.equals(INFRA_SCHEDULER)
+					&& !infraType.equals(INFRA_FETCHER)) {
+				order.getScheduler().resourceReady(resource);
+			}
 		} else {
 			allocatedResources.remove(resource);
 			if (isIdle) {
@@ -829,6 +840,10 @@ public class InfrastructureManager {
 
 	public int getMaxResourceReuses() {
 		return this.maxResourceReuses;
+	}
+	
+	public Resource getCurrentResource() {
+		return this.returnedResource;
 	}
 
 	protected class OrderService implements Runnable {

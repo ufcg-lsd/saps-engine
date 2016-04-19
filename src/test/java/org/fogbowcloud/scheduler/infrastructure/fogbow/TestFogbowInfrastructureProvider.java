@@ -107,7 +107,8 @@ public class TestFogbowInfrastructureProvider {
 			//Create Mock behavior for httpWrapperMock
 			createDefaultRequestResponse(requestIdMokc);
 
-			Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+			Specification specs = new Specification("imageMock", "UserName",
+					"publicKeyMock", "privateKeyMock", "userDataMock");
 
 			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 
@@ -156,7 +157,8 @@ public class TestFogbowInfrastructureProvider {
 		String portMock = "8989";
 		String memberIdMock = "member01";
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 
 		//Create Mock behavior for httpWrapperMock
 		//Creating response for request for resource.
@@ -193,7 +195,8 @@ public class TestFogbowInfrastructureProvider {
 		String portMock = "8989";
 		String memberIdMock = "member01";
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 
 		//Create Mock behavior for httpWrapperMock
 		//Creating response for request for resource.
@@ -265,7 +268,8 @@ public class TestFogbowInfrastructureProvider {
 		//Creating response for request for Instance Attributes
 		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.requestResource(specs);
@@ -294,7 +298,8 @@ public class TestFogbowInfrastructureProvider {
 		//Creating response for request for Instance Attributes
 		createDefaulInstanceAttributesResponseNoShh(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock);
 
-		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock", "privateKeyMock");
+		Specification specs = new Specification("imageMock", "UserName",
+				"publicKeyMock", "privateKeyMock", "userDataMock");
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.requestResource(specs);
