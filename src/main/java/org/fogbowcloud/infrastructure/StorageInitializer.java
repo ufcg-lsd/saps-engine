@@ -45,6 +45,7 @@ public class StorageInitializer {
 	private String resourceId;
 	private String instanceIP;
 	private String instanceExtraPort;
+	private static String location;
 	private static HttpClient client;
 	
 	private static final Logger LOGGER = Logger.getLogger(StorageInitializer.class);
@@ -53,6 +54,7 @@ public class StorageInitializer {
 		this.resourceId = resourceId;
 		this.instanceIP = instanceIP;
 		this.instanceExtraPort = instanceExtraPort;
+		location = null;
 	}
 
 	public void init() throws Exception {
@@ -69,9 +71,6 @@ public class StorageInitializer {
 				+ "; scheme=\"" + OrderConstants.SCHEME + "\"; class=\""
 				+ OrderConstants.KIND_CLASS + "\""));
 		headers.add(new BasicHeader("X-OCCI-Attribute",
-				OrderAttribute.INSTANCE_ID.getValue() + "="
-						+ OrderConstants.DEVICE_ID_DEFAULT));
-		headers.add(new BasicHeader("X-OCCI-Attribute",
 				OrderAttribute.INSTANCE_COUNT.getValue() + "=" + 1));
 		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.TYPE
 				.getValue() + "=" + OrderConstants.DEFAULT_TYPE));
@@ -80,9 +79,21 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("X-OCCI-Attribute",
 				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 81920));
 		
-		String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
-				.getenv("FOGBOW_URL");
+		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.RESOURCE_KIND
+				.getValue() + "=" + "storage"));
 		
+		//TODO: this will receive crawler requirement
+		String requirements = new String();
+		if (requirements.isEmpty()) {
+			System.out.println("Requirements empty.");
+			return;
+		}
+		headers.add(new BasicHeader("X-OCCI-Attribute",
+				"org.fogbowcloud.request.requirements" + "=" + requirements));
+
+		String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
+				.getenv("FOGBOW_URL");		
+
 		//TODO: See if this url is correct
 		//String url = "http://" + instanceIP + ":" + instanceExtraPort;
 		
@@ -91,15 +102,52 @@ public class StorageInitializer {
 			authToken = normalizeToken(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 		}
 		
-		doRequest("get", url + "/" + OrderConstants.TERM + "/" + OrderConstants.DEVICE_ID_DEFAULT, authToken);
+		doRequest("post", url + "/" + OrderConstants.TERM, authToken, headers);
 		
-		LOGGER.debug("Attaching storage to instance...");
-		attachStorage(properties, url);
+		String requestID = getID();
+
+		doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
+
+		String storageID = getID();
+
+		do {
+			doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
+			storageID = getID();
+		} while (storageID == null);
+		
+		if(storageID != null) {
+			String instanceCloud = getRequestCloud(requestID);
+
+			LOGGER.debug("Attaching storage to instance...");
+			attachStorage(properties, url, instanceCloud);
+		}
 		
 		LOGGER.debug("Process finished.");
 	}
 	
-	private void attachStorage(Properties properties, String url) throws URISyntaxException, HttpException,
+
+	private String getID() {
+		String[] setOfLocationInfo = location.split("/");
+		
+		int count = 0;
+		for(String locationInfo : setOfLocationInfo) {
+			count++;
+			// Do nothing
+		}
+		
+		String id = setOfLocationInfo[count];
+		
+		return id;
+	}
+
+	private String getRequestCloud(String requestID) {
+		String[] requestIdInfo = requestID.split("@");
+		String requestCloud = requestIdInfo[2];
+		
+		return requestCloud;
+	}
+
+	private void attachStorage(Properties properties, String url, String instanceCloud) throws URISyntaxException, HttpException,
 			IOException {
 		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 
@@ -203,9 +251,14 @@ public class StorageInitializer {
 	protected static String generateLocationHeaderResponse(Header header) {
 		String[] locations = header.getValue().split(",");
 		String response = "";
+		
+		int count = 0;
 		for (String location : locations) {
 			response += HeaderUtils.X_OCCI_LOCATION_PREFIX + location + "\n";
+			count++;
 		}
+		
+		location = locations[count];
 		return response.trim();
 	}
 
