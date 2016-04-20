@@ -43,17 +43,15 @@ public class StorageInitializer {
 	protected static final String DEFAULT_IMAGE = "fogbow-linux-x86";
 
 	private String resourceId;
-	private String instanceIP;
-	private String instanceExtraPort;
+	private String requirementsCloud;
 	private static String location;
 	private static HttpClient client;
 	
 	private static final Logger LOGGER = Logger.getLogger(StorageInitializer.class);
 	
-	public StorageInitializer(String resourceId, String instanceIP, String instanceExtraPort) {
+	public StorageInitializer(String resourceId, String requirementsCloud) {
 		this.resourceId = resourceId;
-		this.instanceIP = instanceIP;
-		this.instanceExtraPort = instanceExtraPort;
+		this.requirementsCloud = requirementsCloud;
 		location = null;
 	}
 
@@ -82,20 +80,15 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.RESOURCE_KIND
 				.getValue() + "=" + "storage"));
 		
-		//TODO: this will receive crawler requirement
-		String requirements = new String();
-		if (requirements.isEmpty()) {
+		if (requirementsCloud.isEmpty()) {
 			System.out.println("Requirements empty.");
 			return;
 		}
 		headers.add(new BasicHeader("X-OCCI-Attribute",
-				"org.fogbowcloud.request.requirements" + "=" + requirements));
+				"org.fogbowcloud.request.requirements" + "=" + requirementsCloud));
 
 		String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
 				.getenv("FOGBOW_URL");		
-
-		//TODO: See if this url is correct
-		//String url = "http://" + instanceIP + ":" + instanceExtraPort;
 		
 		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 		if (authToken == null) {
@@ -113,14 +106,17 @@ public class StorageInitializer {
 		do {
 			doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
 			storageID = getID();
+			
+			if(storageID != null) {
+				String instanceCloud = getRequestCloud(requestID);
+				
+				LOGGER.debug("Attaching storage to instance...");
+				attachStorage(properties, url, storageID, instanceCloud);
+			} else {
+				LOGGER.debug("Order not yet fullfiled.");
+			}
 		} while (storageID == null);
 		
-		if(storageID != null) {
-			String instanceCloud = getRequestCloud(requestID);
-
-			LOGGER.debug("Attaching storage to instance...");
-			attachStorage(properties, url, instanceCloud);
-		}
 		
 		LOGGER.debug("Process finished.");
 	}
@@ -147,7 +143,7 @@ public class StorageInitializer {
 		return requestCloud;
 	}
 
-	private void attachStorage(Properties properties, String url, String instanceCloud) throws URISyntaxException, HttpException,
+	private void attachStorage(Properties properties, String url, String storageID, String instanceCloud) throws URISyntaxException, HttpException,
 			IOException {
 		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 
@@ -155,13 +151,10 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("Category", OrderConstants.STORAGELINK_TERM
 				+ "; scheme=\"" + OrderConstants.INFRASTRUCTURE_OCCI_SCHEME
 				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
-		// TODO: insert correct mountPoint
-		// TODO: see if mountPoint is the same as in properties
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.SOURCE
 				.getValue() + "=" + resourceId));
-		//TODO: include storageID
 		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.TARGET
-				.getValue() + "=" + "storageID"));
+				.getValue() + "=" + storageID));
 
 		doRequest("post", url + "/" + OrderConstants.STORAGE_TERM + "/"
 				+ OrderConstants.STORAGE_LINK_TERM + "/", authToken, headers);

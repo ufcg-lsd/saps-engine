@@ -39,7 +39,10 @@ public class InfrastructureMain {
 		writer.println(instanceUser);
 		writer.println(instanceIP);
 		writer.println(instancePort);
-		writer.println(instanceExtraPort);
+		
+		if(infraType.equals(INFRA_SCHEDULER))
+			writer.println(instanceExtraPort);
+		
 		writer.close();
 		
 		LOGGER.debug("Infrastructure created.");
@@ -72,12 +75,18 @@ public class InfrastructureMain {
 		instancePort = resource.getMetadataValue(Resource.METADATA_SSH_PORT);
 		instanceExtraPort = resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT);
 		
-		//TODO: see if this will be here or in ssh access to the instance
-		if(infraType.equals(INFRA_SCHEDULER)) {
+		if(infraType.equals(INFRA_CRAWLER)) {
+			String fogbowRequirements = specs.get(0).getRequirementValue("FogbowRequirements");
+			String[] cloudComputerManagerReq = fogbowRequirements.split("\"");
+			String requirementNotSplit = cloudComputerManagerReq[1];
+			String[] splitRequirement = requirementNotSplit.split("\\");
+			String requirement = splitRequirement[0];
+			
 			StorageInitializer storageInitializer = new StorageInitializer(
-					resource.getId(), instanceIP, instanceExtraPort);
+					resource.getId(), requirement);
 			storageInitializer.init();
 		}
+		
 	}
 	
 	private static List<Specification> getSpecs(Properties properties,
