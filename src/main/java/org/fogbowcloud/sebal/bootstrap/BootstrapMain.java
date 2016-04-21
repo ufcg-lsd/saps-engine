@@ -29,6 +29,9 @@ public class BootstrapMain {
 		final Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
+		
+		String sqlIP = args[1];
+		String sqlPort = args[2];
 //		
 //		DataBaseBootstrap dbBootstrap = new DataBaseBootstrap(properties);
 //		
@@ -42,7 +45,8 @@ public class BootstrapMain {
 		connectionPool.setUsername(properties.getProperty("datastore_username"));
 		connectionPool.setPassword(properties.getProperty("datastore_password"));
 		connectionPool.setDriverClassName(properties.getProperty("datastore_driver"));
-		connectionPool.setUrl(properties.getProperty("datastore_url"));
+		connectionPool.setUrl(properties.getProperty("datastore_url_prefix")
+				+ sqlIP + ":" + sqlPort);
 		connectionPool.setInitialSize(1);
 		
 		c = getConnection();

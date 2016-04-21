@@ -138,6 +138,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 		} catch (Exception e) {
 			LOGGER.error("Error while requesting resource on Fogbow", e);
+			e.printStackTrace();
 			throw new RequestResourceException("Request for Fogbow Resource has FAILED: " + e.getMessage(), e);
 		}
 		String requestId = getRequestId(requestInformation);

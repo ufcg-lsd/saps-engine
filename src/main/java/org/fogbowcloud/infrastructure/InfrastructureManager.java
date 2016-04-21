@@ -53,6 +53,7 @@ public class InfrastructureManager {
 	private List<Specification> specs;
 	private String infraType;
 	private Resource returnedResource;
+	private String requestID;
 	
 	private int maxResourceReuses = Integer.MAX_VALUE;
 
@@ -382,7 +383,7 @@ public class InfrastructureManager {
 				for (Specification spec : specs) {
 					spec.addRequirement(
 							FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
-							OrderType.PERSISTENT.getValue());
+							OrderType.ONE_TIME.getValue());
 					orderCrawlerResource(spec, null, 1);
 				}
 			}
@@ -404,7 +405,7 @@ public class InfrastructureManager {
 				for (Specification spec : specs) {
 					spec.addRequirement(
 							FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
-							OrderType.PERSISTENT.getValue());
+							OrderType.ONE_TIME.getValue());
 					orderFetcherResource(spec, null, 1);
 				}
 			}
@@ -448,11 +449,14 @@ public class InfrastructureManager {
 		 * ensure idleResources is not empty and order is not a initial spec
 		 * (initial spec does not have a scheduler)
 		 */
-		if (idleResources != null && !idleResources.isEmpty()
-				&& order.getScheduler() != null) {
+		if (idleResources != null
+				&& !idleResources.isEmpty()
+				&& (order.getCrawler() != null || order.getScheduler() != null || order
+						.getFetcher() != null)) {
 			for (Resource idleResource : idleResources.keySet()) {
 				if (idleResource.match(order.getSpecification())) {
 					resource = idleResource;
+					returnedResource = resource;
 					break;
 				}
 			}
@@ -474,6 +478,7 @@ public class InfrastructureManager {
 			try {
 				String requestId = infraProvider.requestResource(order
 						.getSpecification());
+				requestID = requestId;
 				order.setRequestId(requestId);
 				order.setState(OrderState.ORDERED);
 				updateInfrastuctureState();
@@ -586,6 +591,7 @@ public class InfrastructureManager {
 		if (resourceOK) {
 			LOGGER.debug("Resource related Order with Specifications: "
 					+ order.getSpecification().toString());
+			returnedResource = resource;
 			order.setRequestId(resource.getId());
 			order.setState(OrderState.FULFILLED);
 			updateInfrastuctureState();
@@ -844,6 +850,10 @@ public class InfrastructureManager {
 	
 	public Resource getCurrentResource() {
 		return this.returnedResource;
+	}
+	
+	public String getRequestID() {
+		return this.requestID;
 	}
 
 	protected class OrderService implements Runnable {
