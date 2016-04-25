@@ -92,7 +92,7 @@ public class TestScheduler {
 		doReturn("resource01").when(resourceMock).getId();
 		doReturn(true).when(resourceMock).match(specB);
 		
-		scheduler.workerResourceReady(resourceMock);
+		scheduler.resourceReady(resourceMock);
 		
 		verify(resourceMock, times(1)).match(specB);
 		assertEquals(1, scheduler.getRunningTasks().size());
@@ -115,7 +115,7 @@ public class TestScheduler {
 		doReturn("resource01").when(resourceMock).getId();
 		doReturn(false).when(resourceMock).match(specB);
 		
-		scheduler.workerResourceReady(resourceMock);
+		scheduler.resourceReady(resourceMock);
 		
 		verify(resourceMock, times(3)).match(specB);
 		assertEquals(0, scheduler.getRunningTasks().size());

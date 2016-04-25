@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.infrastructure.InfrastructureResource;
+import org.fogbowcloud.infrastructure.ResourceNotifier;
 import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
@@ -18,7 +18,7 @@ import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 
-public class Scheduler implements Runnable {
+public class Scheduler implements Runnable, ResourceNotifier {
 
 	private final String id;
 	private ArrayList<Job> jobList = new ArrayList<Job>();
@@ -69,7 +69,8 @@ public class Scheduler implements Runnable {
 		}
 	}
 
-	public void workerResourceReady(final Resource resource) {
+	@Override
+	public void resourceReady(final Resource resource) {
 		LOGGER.debug("Receiving resource ready [ID:"+resource.getId()+"]");
 		for (Job job : jobList) {
 			for (final Task task : job.getByState(TaskState.READY)) {

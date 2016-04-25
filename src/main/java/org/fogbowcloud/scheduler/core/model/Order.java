@@ -1,5 +1,7 @@
 package org.fogbowcloud.scheduler.core.model;
 
+import org.fogbowcloud.infrastructure.InfrastructureMain;
+import org.fogbowcloud.infrastructure.ResourceNotifier;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.sebal.crawler.Crawler;
 import org.fogbowcloud.sebal.fetcher.Fetcher;
@@ -10,6 +12,7 @@ public class Order{
 		OPEN,ORDERED,FULFILLED
 	}
 	
+	private ResourceNotifier resourceNotifier;
 	private Crawler crawler;
 	private Scheduler scheduler;
 	private Fetcher fetcher;
@@ -33,6 +36,16 @@ public class Order{
 		this.fetcher = fetcher;
 		this.specification = specification;
 		this.state = OrderState.OPEN;
+	}
+	
+	public Order(ResourceNotifier resourceNotifier, Specification specification) {
+		this.resourceNotifier = resourceNotifier;
+		this.specification = specification;
+		this.state = OrderState.OPEN;
+	}
+	
+	public ResourceNotifier getResourceNotifier() {
+		return resourceNotifier;
 	}
 	
 	public Crawler getCrawler() {

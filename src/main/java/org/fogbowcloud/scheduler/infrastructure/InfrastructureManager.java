@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.infrastructure.ResourceNotifier;
 import org.fogbowcloud.manager.occi.order.OrderType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
@@ -140,10 +141,10 @@ public class InfrastructureManager {
 		LOGGER.info("Removing previous resources finished");
 	}
 
-	public void orderResource(Specification specification, Scheduler scheduler, int resourceNumber) {
+	public void orderResource(Specification specification, ResourceNotifier resourceNotifier, int resourceNumber) {
 
-		List<Order> existingOrdersMatches = this.getOrdersByStateAndSchedulerAndSpec(scheduler, specification, OrderState.OPEN);
-		existingOrdersMatches.addAll(this.getOrdersByStateAndSchedulerAndSpec(scheduler, specification, OrderState.ORDERED));
+		List<Order> existingOrdersMatches = this.getOrdersByStateAndSchedulerAndSpec(resourceNotifier, specification, OrderState.OPEN);
+		existingOrdersMatches.addAll(this.getOrdersByStateAndSchedulerAndSpec(resourceNotifier, specification, OrderState.ORDERED));
 
 		int qtyOpenOrOrdered = existingOrdersMatches.size();
 		// int qtyIdle = existingIdlesMatches.size();
@@ -175,7 +176,7 @@ public class InfrastructureManager {
 			return;
 		} else {
 			for (int count = 0; count < qtyToRequest; count++) {
-				Order order = new Order(scheduler, specification);
+				Order order = new Order(resourceNotifier, specification);
 				orders.add(order);
 				resolveOpenOrder(order);
 			}
@@ -197,7 +198,7 @@ public class InfrastructureManager {
 				// Anticipating resource to Scheduler if it is needed
 				for (Order order : this.getOrdersByState(OrderState.OPEN, OrderState.ORDERED)) {
 
-					if (order.getScheduler() != null) {
+					if (order.getResourceNotifier() != null) {
 						if (resource.match(order.getSpecification())) {
 							try {
 								this.disposeRequest(order.getRequestId());
@@ -205,7 +206,7 @@ public class InfrastructureManager {
 								order.setState(OrderState.FULFILLED);
 								allocatedResources.put(resource, order);
 								this.updateInfrastuctureState();
-								order.getScheduler().workerResourceReady(resource);
+								order.getResourceNotifier().resourceReady(resource);
 								return;
 							} catch (Exception e) {
 								LOGGER.error("Error while trying to relate Idle Resource to Ordered request [RequestID: "
@@ -273,7 +274,7 @@ public class InfrastructureManager {
 		 * ensure idleResources is not empty and order is not a initial spec
 		 * (initial spec does not have a scheduler)
 		 */
-		if (idleResources != null && !idleResources.isEmpty() && order.getScheduler() != null) {
+		if (idleResources != null && !idleResources.isEmpty() && order.getResourceNotifier() != null) {
 			for (Resource idleResource : idleResources.keySet()) {
 				if (idleResource.match(order.getSpecification())) {
 					resource = idleResource;
@@ -292,7 +293,7 @@ public class InfrastructureManager {
 
 			// Else, requests a new resource from provider.
 		}
-		if (!resolvedWithIdle && (isElastic || order.getScheduler() == null)) {
+		if (!resolvedWithIdle && (isElastic || order.getResourceNotifier() == null)) {
 
 			try {
 				String requestId = infraProvider.requestResource(order.getSpecification());
@@ -318,7 +319,7 @@ public class InfrastructureManager {
 		Resource resource = null;
 
 		// First verify if any idle resource can be resolve this order.
-		if (idleResources != null && !idleResources.isEmpty() && order.getScheduler() != null) {
+		if (idleResources != null && !idleResources.isEmpty() && order.getResourceNotifier() != null) {
 			for (Resource idleResource : idleResources.keySet()) {
 				if (idleResource.match(order.getSpecification())) {
 					resource = idleResource;
@@ -353,7 +354,7 @@ public class InfrastructureManager {
 			if (newResource != null) {
 
 				// if order is not related to initial spec
-				if (order.getScheduler() != null) {
+				if (order.getResourceNotifier() != null) {
 
 					this.relateResourceToOrder(newResource, order, false);
 
@@ -395,7 +396,7 @@ public class InfrastructureManager {
 			order.setRequestId(resource.getId());
 			order.setState(OrderState.FULFILLED);
 			updateInfrastuctureState();
-			order.getScheduler().workerResourceReady(resource);
+			order.getResourceNotifier().resourceReady(resource);
 
 		} else {
 			allocatedResources.remove(resource);
@@ -510,14 +511,17 @@ public class InfrastructureManager {
 		return filtredOrders;
 	}
 
-	protected List<Order> getOrdersByStateAndSchedulerAndSpec(Scheduler scheduler, Specification spec, OrderState... states) {
+	protected List<Order> getOrdersByStateAndSchedulerAndSpec(
+			ResourceNotifier resourceNotifier, Specification spec,
+			OrderState... states) {
 
 		List<Order> filtredOrders = new ArrayList<Order>();
 		List<OrderState> filters = Arrays.asList(states);
 
 		for (Order o : orders) {
-			if (filters.contains(o.getState()) 
-					&& (scheduler == null || scheduler.equals(o.getScheduler()))
+			if (filters.contains(o.getState())
+					&& (resourceNotifier == null || resourceNotifier.equals(o
+							.getResourceNotifier()))
 					&& (spec == null || spec.equals(o.getSpecification()))) {
 				filtredOrders.add(o);
 			}

@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
-import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowInfrastructureProvider;
 
 public class InfrastructureHelper {
 	
@@ -46,7 +46,7 @@ public class InfrastructureHelper {
 				specs, isElastic, infraProvider, properties, infraType);
 		infraManager.start(blockWhileInitializing);
 		
-		Resource resource = infraProvider.getFogbowResource(infraManager.getRequestID());
+		Resource resource = infraManager.getMatchedResource();
 		
 		instanceUser = resource.getMetadataValue(Resource.METADATA_SSH_USERNAME_ATT);
 		instanceIP = resource.getMetadataValue(Resource.METADATA_SSH_HOST);
