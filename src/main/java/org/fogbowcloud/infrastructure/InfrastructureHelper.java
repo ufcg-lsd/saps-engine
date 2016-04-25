@@ -12,6 +12,7 @@ import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
+import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowInfrastructureProvider;
 
 public class InfrastructureHelper {
 	
@@ -45,23 +46,17 @@ public class InfrastructureHelper {
 				specs, isElastic, infraProvider, properties, infraType);
 		infraManager.start(blockWhileInitializing);
 		
-		Resource resource = infraManager.getCurrentResource();
+		Resource resource = infraProvider.getFogbowResource(infraManager.getRequestID());
 		
-/*		instanceUser = resource.getMetadataValue(Resource.METADATA_SSH_USERNAME_ATT);
+		instanceUser = resource.getMetadataValue(Resource.METADATA_SSH_USERNAME_ATT);
 		instanceIP = resource.getMetadataValue(Resource.METADATA_SSH_HOST);
 		instancePort = resource.getMetadataValue(Resource.METADATA_SSH_PORT);
-		instanceExtraPort = resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT);*/
+		instanceExtraPort = resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT);
 		
 		if(infraType.equals(INFRA_SCHEDULER)) {
 			String fogbowRequirements = specs.get(0).getRequirementValue("FogbowRequirements");
-			
-			
-			/*String[] cloudComputerManagerReq = fogbowRequirements.split("\"");
-			String requirementNotSplit = cloudComputerManagerReq[1];
-			String[] splitRequirement = requirementNotSplit.split("\\");
-			String requirement = splitRequirement[0];*/
-			
-			String requirement = getRequestId(fogbowRequirements);
+			String[] splitRequirements = fogbowRequirements.split("\"");
+			String requirement = splitRequirements[splitRequirements.length - 1];
 			
 			StorageInitializer storageInitializer = new StorageInitializer(
 					infraManager.getRequestID(), requirement);

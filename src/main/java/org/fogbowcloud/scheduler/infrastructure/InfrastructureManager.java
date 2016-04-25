@@ -205,7 +205,7 @@ public class InfrastructureManager {
 								order.setState(OrderState.FULFILLED);
 								allocatedResources.put(resource, order);
 								this.updateInfrastuctureState();
-								order.getScheduler().resourceReady(resource);
+								order.getScheduler().workerResourceReady(resource);
 								return;
 							} catch (Exception e) {
 								LOGGER.error("Error while trying to relate Idle Resource to Ordered request [RequestID: "
@@ -395,7 +395,7 @@ public class InfrastructureManager {
 			order.setRequestId(resource.getId());
 			order.setState(OrderState.FULFILLED);
 			updateInfrastuctureState();
-			order.getScheduler().resourceReady(resource);
+			order.getScheduler().workerResourceReady(resource);
 
 		} else {
 			allocatedResources.remove(resource);

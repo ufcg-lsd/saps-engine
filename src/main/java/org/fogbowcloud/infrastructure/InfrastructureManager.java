@@ -45,6 +45,7 @@ public class InfrastructureManager {
 	private ManagerTimer resourceTimer = new ManagerTimer(
 			Executors.newScheduledThreadPool(1));
 	private InfraIntegrityService infraIntegrityService = new InfraIntegrityService();
+	private InfrastructureResourceImpl infraResourceImpl = new InfrastructureResourceImpl();
 
 	private InfrastructureProvider infraProvider;
 	private boolean isElastic;
@@ -52,7 +53,6 @@ public class InfrastructureManager {
 	private DataStore ds;
 	private List<Specification> specs;
 	private String infraType;
-	private Resource returnedResource;
 	private String requestID;
 	
 	private int maxResourceReuses = Integer.MAX_VALUE;
@@ -82,7 +82,6 @@ public class InfrastructureManager {
 		this.specs = specs;
 		this.infraProvider = infraProvider;
 		this.infraType = infraType;
-		this.returnedResource = null;
 
 		String resourceReuseTimesStr = this.properties
 				.getProperty(AppPropertiesConstants.INFRA_RESOURCE_REUSE_TIMES);
@@ -340,7 +339,14 @@ public class InfrastructureManager {
 								order.setState(OrderState.FULFILLED);
 								allocatedResources.put(resource, order);
 								this.updateInfrastuctureState();
-								order.getScheduler().resourceReady(resource);
+								if(infraType.equals(INFRA_CRAWLER)) {
+									//TODO: see if this will continue here
+									//order.getScheduler().workerResourceReady(resource);
+									infraResourceImpl.crawlerResourceReady(resource);
+								} else if(infraType.equals(INFRA_SCHEDULER)){
+									infraResourceImpl.schedulerResourceReady(resource);
+								} else 
+									infraResourceImpl.fetcherResourceReady(resource);
 								return;
 							} catch (Exception e) {
 								LOGGER.error(
@@ -456,7 +462,6 @@ public class InfrastructureManager {
 			for (Resource idleResource : idleResources.keySet()) {
 				if (idleResource.match(order.getSpecification())) {
 					resource = idleResource;
-					returnedResource = resource;
 					break;
 				}
 			}
@@ -473,7 +478,9 @@ public class InfrastructureManager {
 
 			// Else, requests a new resource from provider.
 		}
-		if (!resolvedWithIdle && (isElastic || order.getScheduler() == null)) {
+		if (!resolvedWithIdle
+				&& (isElastic || (order.getScheduler() == null
+						&& order.getCrawler() == null && order.getFetcher() == null))) {
 
 			try {
 				String requestId = infraProvider.requestResource(order
@@ -509,7 +516,6 @@ public class InfrastructureManager {
 			for (Resource idleResource : idleResources.keySet()) {
 				if (idleResource.match(order.getSpecification())) {
 					resource = idleResource;
-					returnedResource = resource;
 					break;
 				}
 			}
@@ -591,14 +597,14 @@ public class InfrastructureManager {
 		if (resourceOK) {
 			LOGGER.debug("Resource related Order with Specifications: "
 					+ order.getSpecification().toString());
-			returnedResource = resource;
+			//returnedResource = resource;
 			order.setRequestId(resource.getId());
 			order.setState(OrderState.FULFILLED);
 			updateInfrastuctureState();
 			if (!infraType.equals(INFRA_CRAWLER)
 					&& !infraType.equals(INFRA_SCHEDULER)
 					&& !infraType.equals(INFRA_FETCHER)) {
-				order.getScheduler().resourceReady(resource);
+				order.getScheduler().workerResourceReady(resource);
 			}
 		} else {
 			allocatedResources.remove(resource);
@@ -848,8 +854,10 @@ public class InfrastructureManager {
 		return this.maxResourceReuses;
 	}
 	
-	public Resource getCurrentResource() {
-		return this.returnedResource;
+	public Resource getCurrentResource(String requestID) {
+		Resource resource = infraProvider.getResource(requestID);
+		
+		return resource;
 	}
 	
 	public String getRequestID() {

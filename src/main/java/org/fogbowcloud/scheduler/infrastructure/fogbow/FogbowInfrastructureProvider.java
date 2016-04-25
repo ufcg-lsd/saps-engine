@@ -172,7 +172,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 	}
 
-	protected Resource getFogbowResource(String requestID) {
+	@Override
+	public Resource getFogbowResource(String requestID) {
 
 		LOGGER.debug("Initiating Resource Instanciation - Request id: [" + requestID + "]");
 		String instanceId;
