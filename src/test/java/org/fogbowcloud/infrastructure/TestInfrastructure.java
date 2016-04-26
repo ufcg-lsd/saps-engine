@@ -24,10 +24,10 @@ public class TestInfrastructure {
 		String infraType = INFRA_SCHEDULER;
 		//String infraType = INFRA_CRAWLER;
 		//String infraType = INFRA_FETCHER;
-		
+/*		
 		InfrastructureHelper.createInfrastrucute(properties, infraType);
 		
-		InfrastructureHelper.writeInstanceDataFile(infraType);
+		InfrastructureHelper.writeInstanceDataFile(infraType);*/
 		
 		LOGGER.debug("Infrastructure created.");
 	}

@@ -59,6 +59,7 @@ public class StorageInitializer {
 		final Properties properties = new Properties();
 		FileInputStream input = new FileInputStream("src/main/resources/sebal.conf");
 		properties.load(input);
+		
 		orderStorage(properties);
 	}
 	
@@ -87,8 +88,7 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("X-OCCI-Attribute",
 				"org.fogbowcloud.request.requirements" + "=" + requirementsCloud));
 
-		String url = System.getenv("FOGBOW_URL") == null ? DEFAULT_URL : System
-				.getenv("FOGBOW_URL");		
+		String url = properties.getProperty("infra_fogbow_manager_base_url");
 		
 		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
 		if (authToken == null) {
@@ -108,10 +108,8 @@ public class StorageInitializer {
 			storageID = getID();
 			
 			if(storageID != null) {
-				String instanceCloud = getRequestCloud(requestID);
-				
 				LOGGER.debug("Attaching storage to instance...");
-				attachStorage(properties, url, storageID, instanceCloud);
+				attachStorage(properties, url, storageID, requirementsCloud);
 			} else {
 				LOGGER.debug("Order not yet fullfiled.");
 			}
@@ -122,7 +120,7 @@ public class StorageInitializer {
 	}
 	
 	private void attachStorage(Properties properties, String url,
-			String storageID, String instanceCloud) throws URISyntaxException,
+			String storageID, String requirementsCloud) throws URISyntaxException,
 			HttpException, IOException {
 		String authToken = normalizeTokenFile(properties
 				.getProperty("infra_fogbow_token_public_key_filepath"));
@@ -149,17 +147,17 @@ public class StorageInitializer {
 			// Do nothing
 		}
 		
-		String id = setOfLocationInfo[count];
+		String id = setOfLocationInfo[count - 1];
 		
 		return id;
 	}
 
-	private String getRequestCloud(String requestID) {
+/*	private String getRequestCloud(String requestID) {
 		String[] requestIdInfo = requestID.split("@");
-		String requestCloud = requestIdInfo[2];
+		String requestCloud = requestIdInfo[1];
 		
 		return requestCloud;
-	}
+	}*/
 	
 	protected static String normalizeToken(String token) {
 		if (token == null) {
@@ -252,7 +250,7 @@ public class StorageInitializer {
 			count++;
 		}
 		
-		location = locations[count];
+		location = locations[count - 1];
 		return response.trim();
 	}
 

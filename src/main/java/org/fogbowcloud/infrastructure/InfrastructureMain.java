@@ -54,13 +54,13 @@ public class InfrastructureMain implements ResourceNotifier {
 		
 		System.out.println(resourceStr);
 		
-/*		String fogbowRequirements = specs.get(0).getRequirementValue("FogbowRequirements");
+		String fogbowRequirements = specs.get(0).getRequirementValue("FogbowRequirements");
 		String[] splitRequirements = fogbowRequirements.split("\"");
 		String requirement = splitRequirements[splitRequirements.length - 1];
 		
 		StorageInitializer storageInitializer = new StorageInitializer(
-				resource.getId(), requirement);
-		storageInitializer.init();*/
+				infraMain.resource.getId(), requirement);
+		storageInitializer.init();
 
 		LOGGER.debug("Infrastructure created.");
 		
