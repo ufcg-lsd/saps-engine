@@ -44,6 +44,7 @@ public class StorageInitializer {
 
 	private String resourceId;
 	private String requirementsCloud;
+	private static String attribute;
 	private static String location;
 	private static HttpClient client;
 	
@@ -52,6 +53,7 @@ public class StorageInitializer {
 	public StorageInitializer(String resourceId, String requirementsCloud) {
 		this.resourceId = resourceId;
 		this.requirementsCloud = requirementsCloud;
+		attribute = null;
 		location = null;
 	}
 
@@ -97,24 +99,19 @@ public class StorageInitializer {
 		
 		doRequest("post", url + "/" + OrderConstants.TERM, authToken, headers);
 		
-		String requestID = getID();
+		String requestID = getLocationID();
 
-		doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
+		//doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
 
-		String storageID = getID();
+		String storageID = null;
 
-		do {
+		while (storageID == null || storageID.equals("null")) {
 			doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
-			storageID = getID();
-			
-			if(storageID != null) {
-				LOGGER.debug("Attaching storage to instance...");
-				attachStorage(properties, url, storageID, requirementsCloud);
-			} else {
-				LOGGER.debug("Order not yet fullfiled.");
-			}
-		} while (storageID == null);
+			storageID = getAttributeID();
+		}
 		
+		LOGGER.debug("Attaching storage to instance...");
+		attachStorage(properties, url, storageID, requirementsCloud);
 		
 		LOGGER.debug("Process finished.");
 	}
@@ -137,27 +134,6 @@ public class StorageInitializer {
 		doRequest("post", url + "/" + OrderConstants.STORAGE_TERM + "/"
 				+ OrderConstants.STORAGE_LINK_TERM + "/", authToken, headers);
 	}
-	
-	private String getID() {
-		String[] setOfLocationInfo = location.split("/");
-		
-		int count = 0;
-		for(String locationInfo : setOfLocationInfo) {
-			count++;
-			// Do nothing
-		}
-		
-		String id = setOfLocationInfo[count - 1];
-		
-		return id;
-	}
-
-/*	private String getRequestCloud(String requestID) {
-		String[] requestIdInfo = requestID.split("@");
-		String requestCloud = requestIdInfo[1];
-		
-		return requestCloud;
-	}*/
 	
 	protected static String normalizeToken(String token) {
 		if (token == null) {
@@ -226,6 +202,7 @@ public class StorageInitializer {
 				System.out.println(EntityUtils.toString(response.getEntity()));
 			}
 		} else {
+			attribute = response.getStatusLine().toString();
 			System.out.println(response.getStatusLine().toString());
 		}
 	}
@@ -252,6 +229,43 @@ public class StorageInitializer {
 		
 		location = locations[count - 1];
 		return response.trim();
+	}
+	
+	private String getLocationID() {
+		String[] setOfLocationInfo = location.split("/");
+		
+		int count = 0;
+		for(String locationInfo : setOfLocationInfo) {
+			count++;
+			// Do nothing
+		}
+		
+		String id = setOfLocationInfo[count - 1];
+		
+		return id;
+	}
+	
+	private String getAttributeID() {
+		String[] setOfAttributeInfo = attribute.split("\n");
+		
+		int count = 0;
+		for(String attributeInfo : setOfAttributeInfo) {
+			count++;
+			// Do nothing
+		}
+		
+		String attributeId = setOfAttributeInfo[count - 1];
+		String[] attributeIdSplit = attributeId.split("\"");
+		
+		count = 0;
+		for(int i = 0; i < attributeIdSplit.length; i++) {
+			// Do nothing
+			count = i;
+		}
+		
+		String id = attributeIdSplit[count - 1];
+		
+		return id;
 	}
 
 	public static void setClient(HttpClient client) {

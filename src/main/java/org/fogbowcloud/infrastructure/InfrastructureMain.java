@@ -16,7 +16,7 @@ public class InfrastructureMain implements ResourceNotifier {
 	
 	private Resource resource;
 	
-	private static final Logger LOGGER = Logger.getLogger(InfrastructureMain.class);	
+	private static final Logger LOGGER = Logger.getLogger(InfrastructureMain.class);
 
 	public static void main(String[] args) throws Exception {
 		LOGGER.debug("Starting infrastructure creation process...");
@@ -26,6 +26,8 @@ public class InfrastructureMain implements ResourceNotifier {
 		properties.load(input);
 		
 		String specsFilePath = args[1];
+		
+		String wantStorage = args[2];
 		
 		boolean blockWhileInitializing = new Boolean(
 				properties
@@ -54,13 +56,16 @@ public class InfrastructureMain implements ResourceNotifier {
 		
 		System.out.println(resourceStr);
 		
-		String fogbowRequirements = specs.get(0).getRequirementValue("FogbowRequirements");
-		String[] splitRequirements = fogbowRequirements.split("\"");
-		String requirement = splitRequirements[splitRequirements.length - 1];
-		
-		StorageInitializer storageInitializer = new StorageInitializer(
-				infraMain.resource.getId(), requirement);
-		storageInitializer.init();
+		if (wantStorage.equals("true")) {
+			String fogbowRequirements = specs.get(0).getRequirementValue(
+					"FogbowRequirements");
+			String[] splitRequirements = fogbowRequirements.split("\"");
+			String requirement = splitRequirements[splitRequirements.length - 1];
+
+			StorageInitializer storageInitializer = new StorageInitializer(
+					infraMain.resource.getId(), requirement);
+			storageInitializer.init();
+		}
 
 		LOGGER.debug("Infrastructure created.");
 		
