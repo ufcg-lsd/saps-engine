@@ -57,7 +57,7 @@ public class StorageInitializer {
 
 	public void init() throws Exception {
 		final Properties properties = new Properties();
-		FileInputStream input = new FileInputStream("src/main/resources/");
+		FileInputStream input = new FileInputStream("src/main/resources/sebal.conf");
 		properties.load(input);
 		orderStorage(properties);
 	}
@@ -75,7 +75,7 @@ public class StorageInitializer {
 
 		//TODO: insert correct size
 		headers.add(new BasicHeader("X-OCCI-Attribute",
-				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 81920));
+				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 10240));
 		
 		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.RESOURCE_KIND
 				.getValue() + "=" + "storage"));
@@ -121,7 +121,25 @@ public class StorageInitializer {
 		LOGGER.debug("Process finished.");
 	}
 	
+	private void attachStorage(Properties properties, String url,
+			String storageID, String instanceCloud) throws URISyntaxException,
+			HttpException, IOException {
+		String authToken = normalizeTokenFile(properties
+				.getProperty("infra_fogbow_token_public_key_filepath"));
 
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Category", OrderConstants.STORAGELINK_TERM
+				+ "; scheme=\"" + OrderConstants.INFRASTRUCTURE_OCCI_SCHEME
+				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
+		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.SOURCE
+				.getValue() + "=" + resourceId));
+		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.TARGET
+				.getValue() + "=" + storageID));
+
+		doRequest("post", url + "/" + OrderConstants.STORAGE_TERM + "/"
+				+ OrderConstants.STORAGE_LINK_TERM + "/", authToken, headers);
+	}
+	
 	private String getID() {
 		String[] setOfLocationInfo = location.split("/");
 		
@@ -141,23 +159,6 @@ public class StorageInitializer {
 		String requestCloud = requestIdInfo[2];
 		
 		return requestCloud;
-	}
-
-	private void attachStorage(Properties properties, String url, String storageID, String instanceCloud) throws URISyntaxException, HttpException,
-			IOException {
-		String authToken = normalizeTokenFile(properties.getProperty("infra_fogbow_token_public_key_filepath"));
-
-		List<Header> headers = new LinkedList<Header>();
-		headers.add(new BasicHeader("Category", OrderConstants.STORAGELINK_TERM
-				+ "; scheme=\"" + OrderConstants.INFRASTRUCTURE_OCCI_SCHEME
-				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
-		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.SOURCE
-				.getValue() + "=" + resourceId));
-		headers.add(new BasicHeader("X-OCCI-Attribute", StorageAttribute.TARGET
-				.getValue() + "=" + storageID));
-
-		doRequest("post", url + "/" + OrderConstants.STORAGE_TERM + "/"
-				+ OrderConstants.STORAGE_LINK_TERM + "/", authToken, headers);
 	}
 	
 	protected static String normalizeToken(String token) {

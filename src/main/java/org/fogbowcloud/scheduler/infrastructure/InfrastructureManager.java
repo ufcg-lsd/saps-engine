@@ -17,7 +17,6 @@ import org.fogbowcloud.infrastructure.ResourceNotifier;
 import org.fogbowcloud.manager.occi.order.OrderType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
-import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Order;
 import org.fogbowcloud.scheduler.core.model.Order.OrderState;
 import org.fogbowcloud.scheduler.core.model.Resource;
@@ -105,7 +104,7 @@ public class InfrastructureManager {
 		LOGGER.info("Starting Infrastructure Manager finished");
 	}
 
-	public void stop() throws Exception {
+	public void stop(boolean deleteResource) throws Exception {
 		LOGGER.info("Stoping Infrastructure Manager");
 
 		cancelOrderTimer();
@@ -114,14 +113,16 @@ public class InfrastructureManager {
 		for (Order o : getOrdersByState(OrderState.ORDERED)) {
 			infraProvider.deleteResource(o.getRequestId());
 		}
-
-		for (Resource r : getAllResources()) {
-			infraProvider.deleteResource(r.getId());
+			
+		if (deleteResource) {
+			for (Resource r : getAllResources()) {
+				infraProvider.deleteResource(r.getId());
+			}
+			allocatedResources.clear();
+			idleResources.clear();
 		}
 
 		orders.clear();
-		allocatedResources.clear();
-		idleResources.clear();
 		ds.dispose();
 		LOGGER.info("Stoping Infrastructure Manager finished");
 
@@ -301,7 +302,7 @@ public class InfrastructureManager {
 				order.setState(OrderState.ORDERED);
 				updateInfrastuctureState();
 				LOGGER.debug("Order [" + order.getRequestId() + "] update to Ordered with request [" + requestId + "]");
-
+				
 			} catch (RequestResourceException e) {
 				LOGGER.error("Error while resolving Order", e);
 				order.setState(OrderState.OPEN);

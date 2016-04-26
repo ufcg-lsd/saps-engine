@@ -78,7 +78,7 @@ public class TestInfrastructureManager {
 	@After
 	public void setDown() throws Exception {
 
-		infrastructureManager.stop();
+		infrastructureManager.stop(true);
 		infrastructureManager = null;
 		properties = null;
 		schedulerMock = null;
@@ -179,7 +179,7 @@ public class TestInfrastructureManager {
 		infrastructureManager.cancelResourceTimer();
 		assertEquals(specifications.size(), infrastructureManager.getIdleResources().size());
 
-		infrastructureManager.stop();
+		infrastructureManager.stop(true);
 		br.close();
 	}
 
@@ -202,7 +202,7 @@ public class TestInfrastructureManager {
 		verify(infrastructureProviderMock).deleteResource(requestIdFake1);
 		verify(infrastructureProviderMock).deleteResource(requestIdFake2);
 
-		infrastructureManager.stop();
+		infrastructureManager.stop(true);
 	}
 
 	@Test

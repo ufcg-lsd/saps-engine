@@ -26,6 +26,11 @@ public class InfrastructureMain implements ResourceNotifier {
 		properties.load(input);
 		
 		String specsFilePath = args[1];
+		
+		boolean blockWhileInitializing = new Boolean(
+				properties
+						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
+				.booleanValue();
 
 		List<Specification> specs = getSpecs(properties, specsFilePath);
 		
@@ -33,24 +38,35 @@ public class InfrastructureMain implements ResourceNotifier {
 		
 		InfrastructureManager infraManager = new InfrastructureManager(null, true,
 				infraProvider, properties);
+		infraManager.start(blockWhileInitializing);
 		
 		InfrastructureMain infraMain = new InfrastructureMain();
 		
 		infraManager.orderResource(specs.get(0), infraMain, 1);
 		
-		Resource resource = infraMain.resource;
-		while (resource == null) {
+		while (infraMain.resource == null) {
 			Thread.sleep(2000);
 		}
 		
-		String resourceStr = resourceAsString(resource);
+		infraManager.stop(false);
+		
+		String resourceStr = resourceAsString(infraMain.resource);
 		
 		System.out.println(resourceStr);
+		
+/*		String fogbowRequirements = specs.get(0).getRequirementValue("FogbowRequirements");
+		String[] splitRequirements = fogbowRequirements.split("\"");
+		String requirement = splitRequirements[splitRequirements.length - 1];
+		
+		StorageInitializer storageInitializer = new StorageInitializer(
+				resource.getId(), requirement);
+		storageInitializer.init();*/
 
 		LOGGER.debug("Infrastructure created.");
 		
 		//InfrastructureHelper.createInfrastrucute(properties, infraType);
 		//InfrastructureHelper.writeInstanceDataFile(infraType);
+		System.exit(0);
 	}
 	
 	private static List<Specification> getSpecs(Properties properties,
@@ -89,7 +105,16 @@ public class InfrastructureMain implements ResourceNotifier {
 
 	@Override
 	public void resourceReady(Resource resource) {
-		// TODO Auto-generated method stub
+		LOGGER.debug("Receiving new assigned resource...");
+		
+		if(resource == null) {
+			LOGGER.error("Received resource is null");
+			return;
+		}
+		
+		this.resource = resource;
+		
+		LOGGER.debug("Process finished.");
 	}
 	
 }

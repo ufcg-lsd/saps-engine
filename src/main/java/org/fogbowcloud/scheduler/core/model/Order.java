@@ -1,6 +1,5 @@
 package org.fogbowcloud.scheduler.core.model;
 
-import org.fogbowcloud.infrastructure.InfrastructureMain;
 import org.fogbowcloud.infrastructure.ResourceNotifier;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.sebal.crawler.Crawler;
