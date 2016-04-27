@@ -17,6 +17,7 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.NASARepository;
 
@@ -28,26 +29,27 @@ public class DBBootstrap {
 
 	private static final Logger LOGGER = Logger.getLogger(DBBootstrap.class);
 
-	public DBBootstrap(Properties properties) {
+	public DBBootstrap(Properties properties, String imageStoreIP, String imageStorePort) {
 		if (properties == null) {
 			throw new IllegalArgumentException("The properties must not bu null.");
 		}
 		this.properties = properties;
-		//TODO: insert crawler IP and port below
-		imageStore = new JDBCImageDataStore(properties, null, null);
+		imageStore = new JDBCImageDataStore(properties, imageStoreIP, imageStorePort);
 		nasaRepository = new NASARepository(properties);
 	}
 
-	public void fillDB() throws ClientProtocolException, UnsupportedEncodingException, IOException {
-		int firstYear = Integer.parseInt(properties.getProperty("first_year"));
-		int lastYear = Integer.parseInt(properties.getProperty("last_year"));
+	public void fillDB(String firstYear, String lastYear, String regionsFilePath)
+			throws ClientProtocolException, UnsupportedEncodingException,
+			IOException {
+		int fYear = Integer.parseInt(firstYear);
+		int lYear = Integer.parseInt(lastYear);
 
-		List<String> regions = getRegions(properties.getProperty("regions_file_path"));
+		List<String> regions = getRegions(regionsFilePath);
 		LOGGER.debug("Regions: " + regions);
 
 		int priority = 0;
 		for (String region : regions) {
-			for (int year = firstYear; year <= lastYear; year++) {
+			for (int year = fYear; year <= lYear; year++) {
 				String imageList = createImageList(region, year);
 
 //				System.out.println(imageList);
@@ -58,12 +60,16 @@ public class DBBootstrap {
 				Map<String, String> imageAndDownloadLink = nasaRepository
 						.checkExistingImages(imageListFile);
 				
+				System.out.println(imageList);
+				
 				imageListFile.delete();
 				
 				for (String imageName : imageAndDownloadLink.keySet()) {
 					try {
-						//TODO: See how site IP will fit here
 						imageStore.addImage(imageName, imageAndDownloadLink.get(imageName), priority);
+						ImageData imageDataOut = imageStore.getImage(imageName);
+						System.out.println("Image Data: \n");
+						imageDataOut.toString();
 					} catch (SQLException e) {
 						// TODO do we need to do something?
 						LOGGER.error("Error while adding image at data base.", e);

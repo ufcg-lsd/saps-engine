@@ -19,14 +19,18 @@ public class InfrastructureMain implements ResourceNotifier {
 	private static final Logger LOGGER = Logger.getLogger(InfrastructureMain.class);
 
 	public static void main(String[] args) throws Exception {
+		
+		//FIXME: mover para o objeto?
 		LOGGER.debug("Starting infrastructure creation process...");
 
+		//FIXME: block 1 parse args
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
 		String specsFilePath = args[1];
 		
+		// TODO optional?
 		String wantStorage = args[2];
 		
 		boolean blockWhileInitializing = new Boolean(
@@ -34,8 +38,11 @@ public class InfrastructureMain implements ResourceNotifier {
 						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
 				.booleanValue();
 
+		//TODO: block2 create spec
+		// TODO: Check later what need to be changed to support context-script
 		List<Specification> specs = getSpecs(properties, specsFilePath);
 		
+		//TODO: create manager
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 		
 		InfrastructureManager infraManager = new InfrastructureManager(null, true,
@@ -43,7 +50,8 @@ public class InfrastructureMain implements ResourceNotifier {
 		infraManager.start(blockWhileInitializing);
 		
 		InfrastructureMain infraMain = new InfrastructureMain();
-		
+
+		//TODO: create and wait for compute resource
 		infraManager.orderResource(specs.get(0), infraMain, 1);
 		
 		while (infraMain.resource == null) {
@@ -51,9 +59,11 @@ public class InfrastructureMain implements ResourceNotifier {
 		}
 		
 		infraManager.stop(false);
-		
+
+		//TODO: move to the end?
 		String resourceStr = resourceAsString(infraMain.resource);
 		
+		//TODO: attach storage
 		System.out.println(resourceStr);
 		
 		if (wantStorage.equals("true")) {
@@ -73,9 +83,8 @@ public class InfrastructureMain implements ResourceNotifier {
 		}
 
 		LOGGER.debug("Infrastructure created.");
-		
-		//InfrastructureHelper.createInfrastrucute(properties, infraType);
-		//InfrastructureHelper.writeInstanceDataFile(infraType);
+
+		//FIXME: parece que alguma thread to Infra estah pendurada. 
 		System.exit(0);
 	}
 	

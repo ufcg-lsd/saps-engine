@@ -33,7 +33,7 @@ public class BootstrapMain {
 		String sqlIP = args[1];
 		String sqlPort = args[2];
 //		
-//		DataBaseBootstrap dbBootstrap = new DataBaseBootstrap(properties);
+//		DBBootstrap dbBootstrap = new DBBootstrap(properties, sqlIP, sqlPort);
 //		
 //		dbBootstrap.fillDB();
 //			

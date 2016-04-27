@@ -110,7 +110,7 @@ public class NASARepository {
 		httpPost.setEntity(reqEntity);
 		HttpResponse httpPostResponse = httpClient.execute(httpPost);
 
-		Map<String, String> imageAndDownloadLink = new HashMap<String, String>(); 
+		Map<String, String> imageAndDownloadLink = new HashMap<String, String>();
 		if (httpPostResponse.getStatusLine().getStatusCode() == HttpStatus.SC_MOVED_TEMPORARILY) {
 			// selecting download option
 			String selectLocation = httpPostResponse.getFirstHeader("Location").getValue();

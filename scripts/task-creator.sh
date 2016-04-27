@@ -1,0 +1,11 @@
+#!/bin/sh
+DIRNAME=`dirname $0`
+NASA_URL=$1
+DB_ADDRESS=$2
+DB_PORT=$3
+DB_USER=$4
+DB_PASSWORD=$5
+
+
+
+
