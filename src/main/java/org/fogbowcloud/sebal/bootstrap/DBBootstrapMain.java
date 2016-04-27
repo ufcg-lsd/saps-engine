@@ -6,11 +6,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.fogbowcloud.sebal.ImageData;
+import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
+import org.fogbowcloud.sebal.JDBCImageDataStore;
 
 public class DBBootstrapMain {
 
@@ -51,7 +54,9 @@ public class DBBootstrapMain {
 			DBBootstrap dbBootstrap = new DBBootstrap(properties, sqlIP, sqlPort);
 			dbBootstrap.fillDB(firstYear, lastYear, regionsFilePath);
 			
-			listImagesInDB(c);
+			preparingStatement(c);
+			
+			listImagesInDB(properties, sqlIP, sqlPort);
 		} catch (Exception e) {
 			System.err.println(e.getClass().getName() + ": " + e.getMessage());
 			e.printStackTrace();
@@ -61,10 +66,10 @@ public class DBBootstrapMain {
 		System.out.println("Operation done successfully");
 
 	}
-	
+
 	private static final String UPDATE_STATE_SQL = "UPDATE nasa_images SET state = ? WHERE image_name = ?";
 	
-	public static void listImagesInDB(Connection c) throws SQLException {
+	public static void preparingStatement(Connection c) throws SQLException {
 		PreparedStatement selectStatement = null;
 
 		selectStatement = c.prepareStatement(SELECT_ALL_IMAGES_SQL);
@@ -111,6 +116,17 @@ public class DBBootstrapMain {
 			connection.close();
 		}
 		
+	}
+	
+	private static void listImagesInDB(Properties properties,
+			String imageStoreIP, String imageStorePort) throws SQLException {
+		ImageDataStore imageStore = imageStore = new JDBCImageDataStore(
+				properties, imageStoreIP, imageStorePort);
+
+		List<ImageData> allImageData = imageStore.getAllImages();
+		for(ImageData imageData : allImageData) {
+			imageData.toString();
+		}		
 	}
 	
 	public static Connection getConnection() throws SQLException {
