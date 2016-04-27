@@ -61,12 +61,14 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private Token token;
 	private Properties properties;
 	private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
+	private String resourceComputeId;
 	private ScheduledExecutorService handleTokenUpdateExecutor;
 	
 	
 	public FogbowInfrastructureProvider(Properties properties, ScheduledExecutorService handleTokeUpdateExecutor) throws FileNotFoundException, IOException{
 		httpWrapper = new HttpWrapper();
 		this.properties = properties;
+		this.resourceComputeId = null;
 		this.managerUrl = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL);
 		this.token = createNewTokenFromFile(
 				properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH));
@@ -230,6 +232,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 					// newResource.putMetadata(Resource.METADATA_DISK_SIZE,
 					// instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE));
 
+					if(resourceComputeId == null)
+						resourceComputeId = instanceId;
 					LOGGER.debug("New Fogbow Resource created - Instace ID: [" + instanceId + "]");
 				}else{
 					LOGGER.debug("Instance attributes not yet ready for instance: ["+instanceId+"]");
@@ -261,6 +265,10 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		} catch (Exception e) {
 			throw new InfrastructureException("Error when trying to delete resource id[" + resourceId + "]", e);
 		}
+	}
+	
+	public String getResourceComputeId() {
+		return resourceComputeId;
 	}
 
 	// ----------------------- Private methods ----------------------- //

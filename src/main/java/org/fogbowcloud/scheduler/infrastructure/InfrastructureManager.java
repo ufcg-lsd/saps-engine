@@ -41,6 +41,7 @@ public class InfrastructureManager {
 	private Properties properties;
 	private DataStore ds;
 	private List<Specification> initialSpec;
+	private String resourceComputeId;
 
 	private int maxResourceReuses = Integer.MAX_VALUE;
 
@@ -81,6 +82,7 @@ public class InfrastructureManager {
 
 		ds = new DataStore(properties);
 		this.isElastic = isElastic;
+		this.resourceComputeId = new String();
 	}
 
 	// --------- PUBLIC METHODS --------- //
@@ -594,6 +596,12 @@ public class InfrastructureManager {
 	
 	public int getMaxResourceReuses(){
 		return this.maxResourceReuses;
+	}
+	
+	public String getResourceComputeId(Resource resource) {
+		resourceComputeId = infraProvider.getResourceComputeId();
+		
+		return resourceComputeId;
 	}
 
 	protected class OrderService implements Runnable {

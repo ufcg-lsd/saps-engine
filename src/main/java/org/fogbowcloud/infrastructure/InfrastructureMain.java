@@ -59,11 +59,16 @@ public class InfrastructureMain implements ResourceNotifier {
 		if (wantStorage.equals("true")) {
 			String fogbowRequirements = specs.get(0).getRequirementValue(
 					"FogbowRequirements");
-			String[] splitRequirements = fogbowRequirements.split("\"");
+			String[] splitRequirements = fogbowRequirements.split("&&");
 			String requirement = splitRequirements[splitRequirements.length - 1];
+			requirement = requirement.substring(1);
+			
+			String resourceComputeIdUncut = infraManager.getResourceComputeId(infraMain.resource);
+			String[] splitResourceComputeId = resourceComputeIdUncut.split("@");
+			String resourceComputeId = splitResourceComputeId[0];
 
 			StorageInitializer storageInitializer = new StorageInitializer(
-					infraMain.resource.getId(), requirement);
+					resourceComputeId, requirement);
 			storageInitializer.init();
 		}
 

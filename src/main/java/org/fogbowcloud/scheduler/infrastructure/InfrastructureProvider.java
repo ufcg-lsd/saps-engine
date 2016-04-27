@@ -17,5 +17,7 @@ public interface InfrastructureProvider {
 	
 	public Resource getFogbowResource(String requestID);
 	
+	public String getResourceComputeId();
+	
 	public void deleteResource(String resourceId) throws Exception;
 }

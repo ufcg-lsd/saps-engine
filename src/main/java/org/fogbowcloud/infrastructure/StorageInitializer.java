@@ -53,8 +53,8 @@ public class StorageInitializer {
 	public StorageInitializer(String resourceId, String requirementsCloud) {
 		this.resourceId = resourceId;
 		this.requirementsCloud = requirementsCloud;
-		attribute = null;
-		location = null;
+		attribute = new String();
+		location = new String();
 	}
 
 	public void init() throws Exception {
@@ -78,7 +78,7 @@ public class StorageInitializer {
 
 		//TODO: insert correct size
 		headers.add(new BasicHeader("X-OCCI-Attribute",
-				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 10240));
+				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 1));
 		
 		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.RESOURCE_KIND
 				.getValue() + "=" + "storage"));
@@ -103,7 +103,10 @@ public class StorageInitializer {
 
 		//doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
 
-		String storageID = null;
+		String storageID = new String();
+		
+		doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
+		storageID = getAttributeID();
 
 		while (storageID == null || storageID.equals("null")) {
 			doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestID, authToken);
@@ -111,7 +114,9 @@ public class StorageInitializer {
 		}
 		
 		LOGGER.debug("Attaching storage to instance...");
-		attachStorage(properties, url, storageID, requirementsCloud);
+		String[] splitStorageId = storageID.split("@");
+		String splitedStorageId = splitStorageId[0];
+		attachStorage(properties, url, splitedStorageId, requirementsCloud);
 		
 		LOGGER.debug("Process finished.");
 	}
@@ -133,6 +138,14 @@ public class StorageInitializer {
 
 		doRequest("post", url + "/" + OrderConstants.STORAGE_TERM + "/"
 				+ OrderConstants.STORAGE_LINK_TERM + "/", authToken, headers);
+		
+		String requestAttachmentID = getLocationID();
+		
+		doRequest("get", url + "/" + OrderConstants.TERM + "/" + requestAttachmentID, authToken);
+		
+		String attachmentID = getAttributeID();
+		
+		System.out.println("Attachment ID: " + attachmentID);
 	}
 	
 	protected static String normalizeToken(String token) {
@@ -199,10 +212,10 @@ public class StorageInitializer {
 			if (locationHeader != null && locationHeader.getValue().contains(OrderConstants.TERM)) {
 				System.out.println(generateLocationHeaderResponse(locationHeader));
 			} else {
-				System.out.println(EntityUtils.toString(response.getEntity()));
+				attribute = EntityUtils.toString(response.getEntity());
+				System.out.println(attribute);
 			}
 		} else {
-			attribute = response.getStatusLine().toString();
 			System.out.println(response.getStatusLine().toString());
 		}
 	}
@@ -260,7 +273,7 @@ public class StorageInitializer {
 		count = 0;
 		for(int i = 0; i < attributeIdSplit.length; i++) {
 			// Do nothing
-			count = i;
+			count++;
 		}
 		
 		String id = attributeIdSplit[count - 1];
