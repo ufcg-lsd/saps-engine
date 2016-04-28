@@ -1,5 +1,7 @@
 package org.fogbowcloud.scheduler.core.model;
 
+import java.util.UUID;
+
 public class JDFJob extends Job{
 
 	public String jobId = "0";
@@ -7,6 +9,11 @@ public class JDFJob extends Job{
 	public String name;
 	
 	public String schedPath;
+	
+	public JDFJob(){
+		super();
+		setJobId(UUID.randomUUID().toString());
+	}
 	
 	public void setJobId(String jobId) {
 		this.jobId = jobId;

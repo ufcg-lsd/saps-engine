@@ -40,7 +40,7 @@ public class JDFMain {
 	 */
 	public static void main( String[ ] args ) throws Exception {
 		properties = new Properties();
-		FileInputStream input = new FileInputStream(args[2]);
+		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 
 		loadConfigFromProperties();
@@ -50,31 +50,18 @@ public class JDFMain {
 		InfrastructureManager infraManager = new InfrastructureManager(null, isElastic, infraProvider,
 				properties);
 		infraManager.start(blockWhileInitializing);
-
-		JDFJob job = new JDFJob();
 		
-		String jdfFilePath = args[0];
-		
-		String schedPath = args[1];
+		Scheduler scheduler = new Scheduler(infraManager);
 
-		List<Task> taskList = JDFTasks.getTasksFromJDFFile(job.getId(), jdfFilePath, schedPath, properties);
+		LOGGER.debug("Propertie: " +properties.getProperty("infra_initial_specs_file_path"));
 		
-		for (Task task : taskList) {
-			job.addTask(task);
-		}
-		
-		Scheduler scheduler = new Scheduler(infraManager, job);
-		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, job);
-
-
+		LOGGER.debug("Application to be started on port: " +properties.getProperty(AppPropertiesConstants.REST_SERVER_PORT));
+		JDFSchedulerApplication app = new JDFSchedulerApplication(scheduler, properties);
+		app.startServer();
 
 		LOGGER.debug("Starting Scheduler and Execution Monitor, execution monitor period: " + properties.getProperty("execution_monitor_period"));
-		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
-				Integer.parseInt(properties.getProperty("execution_monitor_period")));
 		schedulerTimer.scheduleAtFixedRate(scheduler, 0, 30000);
 		
-		JDFSchedulerApplication app = new JDFSchedulerApplication(scheduler, properties);
-		app.start();
 	}
 
 	private static void loadConfigFromProperties() {

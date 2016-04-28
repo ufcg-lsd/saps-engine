@@ -14,17 +14,21 @@ import java.net.ServerSocket;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.JDFJob;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
@@ -37,6 +41,8 @@ import org.junit.Test;
 
 
 public class TestJDFSchedulerAppClientSide {
+
+	private static final String FAKE_NAME = "fakeName";
 
 	private static final String FAKE_TASK_ID = "TaskId";
 
@@ -169,6 +175,53 @@ public class TestJDFSchedulerAppClientSide {
 	}
 
 	@Test
+	public void testGetSpecificJobByNameContent() throws ClientProtocolException, IOException {
+
+		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
+
+		JDFJob fakeJob = mock(JDFJob.class);
+		doReturn(FAKE_JOB_ID).when(fakeJob).getId();
+		
+		doReturn(FAKE_NAME).when(fakeJob).getName();
+
+		Task fakeTask = mock(Task.class);
+		doReturn(FAKE_TASK_ID).when(fakeTask).getId();
+
+		ArrayList<Task> fakeTaskList = new ArrayList<Task>();
+
+		ArrayList<Task> emptyList = new ArrayList<Task>();
+
+		fakeTaskList.add(fakeTask);
+
+		jobList.add(fakeJob);
+
+		doReturn(fakeTaskList).when(fakeJob).getByState(TaskState.READY);
+
+		doReturn(emptyList).when(fakeJob).getByState(TaskState.RUNNING);
+
+		doReturn(emptyList).when(fakeJob).getByState(TaskState.FAILED);
+
+		doReturn(emptyList).when(fakeJob).getByState(TaskState.COMPLETED);
+
+		doReturn(jobList).when(scheduler).getJobs();
+		
+		HttpGet get = new HttpGet(URI_JOB_REQUEST+fakeName);
+
+		HttpClient client = HttpClients.createMinimal();
+		HttpResponse response = client.execute(get);
+
+		Assert.assertTrue(response.getFirstHeader("Content-type").getValue()
+				.startsWith("text/plain"));
+
+		response.getEntity().writeTo(System.out);
+
+		Assert.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+
+	}
+	
+	
+	@Test
 	public void testPostNewJob() throws ClientProtocolException, IOException{
 
 		Task fakeTask = mock(Task.class);
@@ -180,8 +233,11 @@ public class TestJDFSchedulerAppClientSide {
 		doReturn(fakeTaskList).when(jdfApp).getTasksFromJDFFile(any(String.class), eq(jdfFile), eq(SCHED_PATH), eq(this.properties));
 
 
-		HttpPost post = new HttpPost(URI_JOB_REQUEST + jdfFile+fakeRoot);
-
+		HttpPost post = new HttpPost(URI_JOB_REQUEST);
+		List<NameValuePair> params = new ArrayList<NameValuePair>(2);
+		params.add(new BasicNameValuePair("jdffilepath", FAKE_FILEPATH));
+		params.add(new BasicNameValuePair("schedpath", SCHED_PATH));
+		post.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 		doNothing().when(scheduler).addJob(any(JDFJob.class));
 
 		HttpClient client = HttpClients.createMinimal();
@@ -202,8 +258,13 @@ public class TestJDFSchedulerAppClientSide {
 		doReturn(fakeTaskList).when(jdfApp).getTasksFromJDFFile(any(String.class), eq(FAKE_FILEPATH), eq(SCHED_PATH), eq(this.properties));
 
 
-		HttpPost post = new HttpPost(URI_JOB_REQUEST + jdfFile+fakeRoot+fakeName);
-
+		HttpPost post = new HttpPost(URI_JOB_REQUEST);
+		List<NameValuePair> params = new ArrayList<NameValuePair>(2);
+		params.add(new BasicNameValuePair("jdffilepath", FAKE_FILEPATH));
+		params.add(new BasicNameValuePair("schedpath", SCHED_PATH));
+		params.add(new BasicNameValuePair("friendly", FAKE_NAME));
+		post.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+		
 		doNothing().when(scheduler).addJob(any(JDFJob.class));
 
 		HttpClient client = HttpClients.createMinimal();

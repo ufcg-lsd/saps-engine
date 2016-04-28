@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.client.JDFMain;
 import org.fogbowcloud.scheduler.client.JDFTasks;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.JDFJob;
@@ -23,6 +25,8 @@ public class JDFSchedulerApplication extends Application {
 
 	private Properties properties;
 	private Scheduler scheduler;
+	
+	public static final Logger LOGGER = Logger.getLogger(JDFSchedulerApplication.class);
 
 	private Component c;
 
@@ -33,16 +37,19 @@ public class JDFSchedulerApplication extends Application {
 
 
 	public void startServer() throws Exception {
-
+		LOGGER.debug("Just Starting JDF Application");
 		ConnectorService corsService = new ConnectorService();         
 
 		this.getServices().add(corsService);
-
+		LOGGER.debug("Starting application on port: " + properties.getProperty(AppPropertiesConstants.REST_SERVER_PORT));
 		c = new Component();
 		int port = Integer.parseInt(properties.getProperty(AppPropertiesConstants.REST_SERVER_PORT));
 		c.getServers().add(Protocol.HTTP, port);
 		c.getDefaultHost().attach(this); 
+		LOGGER.debug("Starting JDF Application");
 		c.start();
+		
+		
 	}
 
 	public void stopServer() throws Exception{
@@ -55,8 +62,6 @@ public class JDFSchedulerApplication extends Application {
 		Router router = new Router(getContext());
 		router.attach("/sebal-scheduler/job", JobResource.class);
 		router.attach("/sebal-scheduler/job/{jobpath}", JobResource.class);
-		router.attach("/sebal-scheduler/job/{jobpath}/{schedPath}", JobResource.class);
-		router.attach("/sebal-scheduler/job/{jobpath}/{schedPath}/{jobName}", JobResource.class);
 		router.attach("/sebal-scheduler/task/{taskId}", TaskResource4JDF.class);
 		router.attach("/sebal-scheduler/task/{taskId}/{varName}", TaskResource4JDF.class);
 
@@ -139,7 +144,27 @@ public class JDFSchedulerApplication extends Application {
 
 
 	public String stopJob(String jobId) {
-		scheduler.removeJob(jobId);
+		Job jobToRemove = getJobByName(jobId);
+		if (jobToRemove != null){
+			return scheduler.removeJob(jobToRemove.getId()).getId();
+		} else {
+			jobToRemove = getJobById(jobId);
+			if (jobToRemove != null){
+				return scheduler.removeJob(jobToRemove.getId()).getId();
+			}
+		}
+		return null;
+	}
+	
+	public JDFJob getJobByName(String jobName) {
+		if (jobName == null) {
+			return null;
+		}
+		for (Job job : scheduler.getJobs()) {
+			if (jobName.equals(((JDFJob) job).getName())) {
+				return (JDFJob) job;
+			}
+		}
 		return null;
 	}
 

@@ -6,10 +6,10 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.model.JDFJob;
-import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.restlet.JDFSchedulerApplication;
+import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
@@ -22,26 +22,32 @@ import org.restlet.resource.ServerResource;
 import com.amazonaws.util.json.JSONObject;
 
 public class JobResource extends ServerResource {
+	private static final String FRIENDLY = "friendly";
+
+	private static final String SCHED_PATH = "schedpath";
+
+	private static final String JDF_FILE_PATH = "jdffilepath";
+
 	private static final Logger LOGGER = Logger.getLogger(JobResource.class);
 
 	Map<String, String> jobTasks = new HashMap<String, String>();
 
-	Map<String, Integer> jobsNumberOfTasks = new HashMap<String, Integer>();
+	Map<String, String> jobsNumberOfTasks = new HashMap<String, String>();
 
 	@Get
 	public Representation fetch() throws Exception {
 		LOGGER.info("Getting Jobs...");
-		String JobId = (String) getRequest().getAttributes().get("jobpath");
-		LOGGER.debug("JobId is " + JobId);
+		String jobId = (String) getRequest().getAttributes().get("jobpath");
+		LOGGER.debug("JobId is " + jobId);
 		JDFSchedulerApplication application = (JDFSchedulerApplication) getApplication();
 		JSONObject jsonJob = new JSONObject();
-
-		if (JobId == null) { 
+		
+		if (jobId == null) { 
 			for (JDFJob job : application.getAllJobs()){
 				if (job.getName() != null) {
-					jobsNumberOfTasks.put(job.getName(), job.getByState(TaskState.READY).size());
+					jobsNumberOfTasks.put(job.getId() ,  job.getName() +" "+ job.getByState(TaskState.READY).size());
 				} else {
-					jobsNumberOfTasks.put(job.getId(), job.getByState(TaskState.READY).size());
+					jobsNumberOfTasks.put(job.getId(), String.valueOf(job.getByState(TaskState.READY).size()));
 				}
 			}
 
@@ -56,11 +62,15 @@ public class JobResource extends ServerResource {
 			return result;
 		}
 
-		JDFJob job = application.getJobById(JobId);
+		JDFJob job = application.getJobById(jobId);
 		if (job == null) {
+			
+			job = application.getJobByName(jobId);
+			if (job == null) {
 			throw new ResourceException(404);
+			}
 		}
-		LOGGER.debug("JobID " + JobId + " is of job " + job);
+		LOGGER.debug("JobID " + jobId + " is of job " + job);
 
 
 		for (Task task : job.getByState(TaskState.READY)){
@@ -83,24 +93,30 @@ public class JobResource extends ServerResource {
 	}
 
 	@Post
-	public StringRepresentation addJob() throws IOException {
+	public StringRepresentation addJob(Representation entity) throws IOException {
 		JDFSchedulerApplication application = (JDFSchedulerApplication) getApplication();
+		final Form form = new Form(entity);
+	
+		String JDFFilePath = form.getFirstValue(JDF_FILE_PATH);
+		LOGGER.debug("all names: " +form.getNames());					
+		String schedPath = form.getFirstValue(SCHED_PATH);
+		
+		String friendlyName = form.getFirstValue(FRIENDLY);
+		
+		if (application.getJobByName(friendlyName) != null) {
+			throw new ResourceException(406, "Friendly name already in use" , "406", friendlyName);
+		}
+		
+		
+		LOGGER.debug("URL INFO" + JDFFilePath);
 
-		String JDFString = (String) getRequest().getAttributes().get("jobpath");
-
-		String schedPath = (String) getRequest().getAttributes().get("schedPath");
-
-		String friendlyName = (String) getRequest().getAttributes().get("jobName");
-
-		LOGGER.debug("Got JDF File: " + JDFString);
-
-		String jobId;
+		String jobId = "job";
 
 		if (friendlyName != null) {
 			LOGGER.debug("Job friendly name is: "+ friendlyName);
-			jobId = application.addJob(JDFString, schedPath, friendlyName);
+			jobId = application.addJob(JDFFilePath, schedPath, friendlyName);
 		} else {
-			jobId = application.addJob(JDFString, schedPath);
+			jobId = application.addJob(JDFFilePath, schedPath);
 		}
 		return new StringRepresentation(jobId, MediaType.TEXT_PLAIN);
 	}
@@ -114,6 +130,10 @@ public class JobResource extends ServerResource {
 		LOGGER.debug("Got JDF File: " + JDFString);
 
 		String jobId = application.stopJob(JDFString);
+		
+		if (jobId == null) {
+			throw new ResourceException(404);
+		}
 
 		return new StringRepresentation(jobId, MediaType.TEXT_PLAIN);
 	}
