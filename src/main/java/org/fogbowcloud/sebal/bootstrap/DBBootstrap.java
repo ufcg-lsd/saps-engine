@@ -17,7 +17,6 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.NASARepository;
 
@@ -60,15 +59,11 @@ public class DBBootstrap {
 				Map<String, String> imageAndDownloadLink = nasaRepository
 						.checkExistingImages(imageListFile);
 				
-				System.out.println(imageList);
-				
 				imageListFile.delete();
 				
 				for (String imageName : imageAndDownloadLink.keySet()) {
 					try {
 						imageStore.addImage(imageName, imageAndDownloadLink.get(imageName), priority);
-						ImageData imageDataOut = imageStore.getImage(imageName);
-						System.out.println("Image Data: \n" + imageDataOut.toString());						
 					} catch (SQLException e) {
 						// TODO do we need to do something?
 						LOGGER.error("Error while adding image at data base.", e);

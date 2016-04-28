@@ -28,7 +28,6 @@ public class DBBootstrapMain {
 	static String SELECT_UNLOCK_IMAGE_SQL_SQL = "SELECT pg_advisory_unlock(?)";
 
 	private static BasicDataSource connectionPool;
-	private static DBBootstrap dbBootstrap;
 	
 	private static final Logger LOGGER = Logger.getLogger(DBBootstrapMain.class);
 	
@@ -131,7 +130,7 @@ public class DBBootstrapMain {
 				
 		try {
 			LOGGER.debug("Filling DB...");
-			dbBootstrap = new DBBootstrap(properties, sqlIP, sqlPort);
+			DBBootstrap dbBootstrap = new DBBootstrap(properties, sqlIP, sqlPort);
 			dbBootstrap.fillDB(firstYear, lastYear, regionsFilePath);
 			
 			preparingStatement(c);

@@ -103,6 +103,9 @@ public class Crawler {
 						return;
 					}
 					
+					if(imageData.getState().equals(ImageState.FETCHED))
+						deleteImageFromVolume(properties, imageData);
+					
 					downloadImage(imageData);
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
@@ -237,6 +240,30 @@ public class Crawler {
 				return error;
 			}
 		});
+	}
+
+	// TODO: see if this is correct
+	private void deleteImageFromVolume(Properties properties,
+			ImageData imageData) throws IOException, InterruptedException {
+		String imageDirPath = properties.getProperty("sebal_export_path")
+				+ "/images/" + imageData.getName();
+		File imageDir = new File(imageDirPath);
+
+		if (!imageDir.exists() || !imageDir.isDirectory()) {
+			LOGGER.debug("This file does not exist!");
+			return;
+		}
+
+		try {
+			ProcessBuilder pb = new ProcessBuilder("rm -r " + imageDirPath);
+			Process p = pb.start();
+			p.waitFor();
+			
+			LOGGER.debug("Image files deleted successfully.");
+		} catch (InterruptedException e) {
+			LOGGER.error("Error while deleting files!");
+			e.printStackTrace();
+		}
 	}
 
 	protected String replaceVariables(String command, ImageData imageData) {

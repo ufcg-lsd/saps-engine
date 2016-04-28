@@ -124,7 +124,7 @@ public class Fetcher {
 	}
 
 	private void schedulePreviousDownloadsNotFinished() throws SQLException {
-		List<ImageData> previousImagesDownloads = imageStore.getIn(ImageState.FETCHER_DOWNLOADING);
+		List<ImageData> previousImagesDownloads = imageStore.getIn(ImageState.FETCHING);
 		for (ImageData imageData : previousImagesDownloads) {
 			if (imageData.getFederationMember().equals(properties.getProperty("federation_member"))) {
 				LOGGER.debug("The image " + imageData.getName()
@@ -144,7 +144,7 @@ public class Fetcher {
 			ImageData imageData = imageDataList.get(i);
 			
 			if (imageStore.lockImage(imageData.getName())) {
-				imageData.setState(ImageState.FETCHER_DOWNLOADING);
+				imageData.setState(ImageState.FETCHING);
 				imageData.setFederationMember(properties.getProperty("federation_member"));
 				
 				pendingImageDownload.put(imageData.getName(), imageData);
