@@ -6,10 +6,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
@@ -25,6 +29,8 @@ public class DBBootstrapMain {
 
 	private static BasicDataSource connectionPool;
 	
+	private static final Logger LOGGER = Logger.getLogger(DBBootstrapMain.class);
+	
 	public static void main(String[] args) throws IOException, SQLException {
 		final Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
@@ -36,33 +42,31 @@ public class DBBootstrapMain {
 		String dbUserPass = args[4];
 		String firstYear = args[5];
 		String lastYear = args[6];
-		String regionsFilePath = args[7];
-				
-		Connection c = null;
-				
-		connectionPool = new BasicDataSource();
-		connectionPool.setUsername(dbUserName);
-		connectionPool.setPassword(dbUserPass);
-		connectionPool.setDriverClassName(properties.getProperty("datastore_driver"));
-		connectionPool.setUrl(properties.getProperty("datastore_url_prefix")
-				+ sqlIP + ":" + sqlPort + "/" + properties.getProperty("datastore_name"));
-		connectionPool.setInitialSize(1);
+		String willBeSpecificRegion = args[7];
+		String dbUseType = args[9];
 		
-		c = getConnection();
-				
-		try {			
-			DBBootstrap dbBootstrap = new DBBootstrap(properties, sqlIP, sqlPort);
-			dbBootstrap.fillDB(firstYear, lastYear, regionsFilePath);
-			
-			preparingStatement(c);
-			
+		String specificRegion = new String();
+		String regionsFilePath = new String();
+		if(willBeSpecificRegion.equals("true")) {
+			specificRegion = args[8];
+		} else
+			regionsFilePath = regionsFilePath = properties.getProperty("regions_file_path");
+		
+		if (dbUseType.equals("add")) {
+			if (willBeSpecificRegion.equals("false")) {
+				addAllImages(properties, sqlIP, sqlPort, dbUserName,
+						dbUserPass, firstYear, lastYear, regionsFilePath);
+			} else {
+				// TODO:
+				addRegionImages();
+			}
+		} else if (dbUseType.equals("list")) {
 			listImagesInDB(properties, sqlIP, sqlPort);
-		} catch (Exception e) {
-			System.err.println(e.getClass().getName() + ": " + e.getMessage());
-			e.printStackTrace();
-			System.exit(0);
+		} else if (dbUseType.equals("get")) {
+			getRegionImages(properties, sqlIP, sqlPort, specificRegion,
+					firstYear, lastYear);
 		}
-		
+
 		System.out.println("Operation done successfully");
 
 	}
@@ -118,6 +122,42 @@ public class DBBootstrapMain {
 		
 	}
 	
+	public static void addAllImages(Properties properties, String sqlIP, String sqlPort,
+			String dbUserName, String dbUserPass, String firstYear,
+			String lastYear, String regionsFilePath) throws SQLException {
+		
+		LOGGER.debug("Establishing connection to database...");
+		Connection c = null;
+		
+		connectionPool = new BasicDataSource();
+		connectionPool.setUsername(dbUserName);
+		connectionPool.setPassword(dbUserPass);
+		connectionPool.setDriverClassName(properties.getProperty("datastore_driver"));
+		connectionPool.setUrl(properties.getProperty("datastore_url_prefix")
+				+ sqlIP + ":" + sqlPort + "/" + properties.getProperty("datastore_name"));
+		connectionPool.setInitialSize(1);
+		
+		c = getConnection();
+				
+		try {
+			LOGGER.debug("Filling DB...");
+			DBBootstrap dbBootstrap = new DBBootstrap(properties, sqlIP, sqlPort);
+			dbBootstrap.fillDB(firstYear, lastYear, regionsFilePath);
+			
+			preparingStatement(c);
+		} catch (Exception e) {
+			System.err.println(e.getClass().getName() + ": " + e.getMessage());
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		LOGGER.debug("Images added to " + dbUserName + " database");
+	}
+	
+	public static void addRegionImages() {
+		// TODO:
+	}
+	
 	private static void listImagesInDB(Properties properties,
 			String imageStoreIP, String imageStorePort) throws SQLException {
 		ImageDataStore imageStore = imageStore = new JDBCImageDataStore(
@@ -127,6 +167,27 @@ public class DBBootstrapMain {
 		for(ImageData imageData : allImageData) {
 			imageData.toString();
 		}		
+	}
+	
+	public static void getRegionImages(Properties properties, String imageStoreIP,
+			String imageStorePort, String region, String firstYear, String lastYear)
+			throws SQLException {
+		ImageDataStore imageStore = imageStore = new JDBCImageDataStore(
+				properties, imageStoreIP, imageStorePort);
+		
+		for (int year = Integer.parseInt(firstYear); year <= Integer.parseInt(lastYear); year++) {			
+			List<String> imageList = new ArrayList<String>();
+			
+			for (int day = 1; day < 366; day++) {
+				NumberFormat formatter = new DecimalFormat("000");
+				String imageName = "LT5" + region + year + formatter.format(day) + "CUB00";
+				imageList.add(imageName);
+				if(imageStore.getImage(imageName) != null) {
+					imageStore.getImage(imageName).toString();
+				}
+			}
+		}
+		
 	}
 	
 	public static Connection getConnection() throws SQLException {

@@ -68,8 +68,7 @@ public class DBBootstrap {
 					try {
 						imageStore.addImage(imageName, imageAndDownloadLink.get(imageName), priority);
 						ImageData imageDataOut = imageStore.getImage(imageName);
-						System.out.println("Image Data: \n");
-						imageDataOut.toString();
+						System.out.println("Image Data: \n" + imageDataOut.toString());						
 					} catch (SQLException e) {
 						// TODO do we need to do something?
 						LOGGER.error("Error while adding image at data base.", e);
@@ -80,7 +79,7 @@ public class DBBootstrap {
 		}
 	}
 
-	private String createImageList(String region, int year) {
+	protected String createImageList(String region, int year) {
 		StringBuilder imageList = new StringBuilder();
 		for (int day = 1; day < 366; day++) {
 			NumberFormat formatter = new DecimalFormat("000");
