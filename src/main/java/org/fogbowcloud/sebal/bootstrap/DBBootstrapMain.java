@@ -28,6 +28,7 @@ public class DBBootstrapMain {
 	static String SELECT_UNLOCK_IMAGE_SQL_SQL = "SELECT pg_advisory_unlock(?)";
 
 	private static BasicDataSource connectionPool;
+	private static DBBootstrap dbBootstrap;
 	
 	private static final Logger LOGGER = Logger.getLogger(DBBootstrapMain.class);
 	
@@ -40,26 +41,15 @@ public class DBBootstrapMain {
 		String sqlPort = args[2];
 		String dbUserName = args[3];
 		String dbUserPass = args[4];
-		String firstYear = args[5];
-		String lastYear = args[6];
-		String willBeSpecificRegion = args[7];
-		String dbUseType = args[9];
-		
-		String specificRegion = new String();
-		String regionsFilePath = new String();
-		if(willBeSpecificRegion.equals("true")) {
-			specificRegion = args[8];
-		} else
-			regionsFilePath = regionsFilePath = properties.getProperty("regions_file_path");
+		String dbUseType = args[5];
+		String firstYear = args[6];
+		String lastYear = args[7];
+		String regionsFilePath = args[8];
+		String specificRegion = args[9];
 		
 		if (dbUseType.equals("add")) {
-			if (willBeSpecificRegion.equals("false")) {
-				addAllImages(properties, sqlIP, sqlPort, dbUserName,
-						dbUserPass, firstYear, lastYear, regionsFilePath);
-			} else {
-				// TODO:
-				addRegionImages();
-			}
+			addImages(properties, sqlIP, sqlPort, dbUserName, dbUserPass,
+					firstYear, lastYear, regionsFilePath);
 		} else if (dbUseType.equals("list")) {
 			listImagesInDB(properties, sqlIP, sqlPort);
 		} else if (dbUseType.equals("get")) {
@@ -122,7 +112,7 @@ public class DBBootstrapMain {
 		
 	}
 	
-	public static void addAllImages(Properties properties, String sqlIP, String sqlPort,
+	public static void addImages(Properties properties, String sqlIP, String sqlPort,
 			String dbUserName, String dbUserPass, String firstYear,
 			String lastYear, String regionsFilePath) throws SQLException {
 		
@@ -141,7 +131,7 @@ public class DBBootstrapMain {
 				
 		try {
 			LOGGER.debug("Filling DB...");
-			DBBootstrap dbBootstrap = new DBBootstrap(properties, sqlIP, sqlPort);
+			dbBootstrap = new DBBootstrap(properties, sqlIP, sqlPort);
 			dbBootstrap.fillDB(firstYear, lastYear, regionsFilePath);
 			
 			preparingStatement(c);
@@ -152,10 +142,6 @@ public class DBBootstrapMain {
 		}
 		
 		LOGGER.debug("Images added to " + dbUserName + " database");
-	}
-	
-	public static void addRegionImages() {
-		// TODO:
 	}
 	
 	private static void listImagesInDB(Properties properties,

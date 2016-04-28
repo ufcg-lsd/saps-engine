@@ -79,7 +79,7 @@ public class DBBootstrap {
 		}
 	}
 
-	protected String createImageList(String region, int year) {
+	private String createImageList(String region, int year) {
 		StringBuilder imageList = new StringBuilder();
 		for (int day = 1; day < 366; day++) {
 			NumberFormat formatter = new DecimalFormat("000");
