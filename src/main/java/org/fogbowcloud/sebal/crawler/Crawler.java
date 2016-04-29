@@ -35,8 +35,10 @@ public class Crawler {
 	private NASARepository NASARepository;
 
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
+	private static final double DEFAULT_IMAGE_DIR_SIZE = 382304413.2864;
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	private static final int DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD = 1;
+	private static int allowedImagesToDownload;
 
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
@@ -56,6 +58,7 @@ public class Crawler {
 		this.properties = properties;
 		this.imageStore = imageStore;
 		this.NASARepository = new NASARepository(properties);
+		this.allowedImagesToDownload = 0;
 		if (executor == null) {
 			this.executor = Executors.newScheduledThreadPool(1);
 		} else {
@@ -132,41 +135,64 @@ public class Crawler {
 	}*/
 	
 	public void init() throws InterruptedException, IOException {
+		
 		LOGGER.info("Initializing crawler... ");
 
 		try {
-			int imagesCount = 0;
-			long exportDirSize = 0;
-			File exportDir = new File(
-					properties.getProperty("sebal_exports_path"));
-			
-			if (!(exportDir.exists() && exportDir.isDirectory())) {
-				LOGGER.error("This directory doesn't exist");
-				return;
-			}
-			
-			List<ImageData> setOfImageData = imageStore.getAllImages();
+			List<ImageData> setOfImageData = null;
 
 			do {
-				deleteFetchedImagesFromVolume(properties, setOfImageData);
+				setOfImageData = imageStore.getAllImages();
+				deleteFetchedResultsFromVolume(properties, setOfImageData);
+				
+				numberOfImagesToDownload();
 
-				exportDirSize = folderSize(exportDir);
+				if (allowedImagesToDownload != 0) {
+					ImageData imageData = selectImageToDownload();
 
-				// TODO: 400 MB
-				if (exportDirSize < 400 * setOfImageData.size()) {
-					downloadImage(setOfImageData.get(imagesCount));
-					imagesCount++;
+					if (imageData == null) {
+						LOGGER.debug("There is no image to download.");
+						return;
+					}
+
+					downloadImage(imageData);
+					setOfImageData = imageStore.getAllImages();
 				} else
-					Thread.sleep(300000);
+					Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
 
-			} while (!(allImagesNotDownloaded(setOfImageData)));
+			} while (existImagesNotDownloaded(setOfImageData));
 		} catch (Throwable e) {
 			LOGGER.error("Failed while download task.", e);
 		}
 
+		LOGGER.debug("All images downloaded.\nProcess finished.");
+		
 	}
 
-	private boolean allImagesNotDownloaded(List<ImageData> setOfImageData) {
+	private void numberOfImagesToDownload() {
+		// TODO Auto-generated method stub
+		double defaultVolumeSize = Double.parseDouble(properties
+				.getProperty("default_volume_size"));
+
+		double availableSize = 0;
+		double exportDirSize = 0;
+		File exportDir = new File(properties.getProperty("sebal_exports_path"));
+
+		if (!(exportDir.exists() && exportDir.isDirectory())) {
+			LOGGER.error("This directory doesn't exist or is not valid!");
+			return;
+		}
+
+		exportDirSize = folderSize(exportDir);
+
+		availableSize = defaultVolumeSize - exportDirSize;
+		
+		double numberOfImagesToDownload = availableSize/DEFAULT_IMAGE_DIR_SIZE;
+		
+		this.allowedImagesToDownload = (int) numberOfImagesToDownload;
+	}
+
+	private boolean existImagesNotDownloaded(List<ImageData> setOfImageData) {
 		int stateCount = 0;
 		
 		for(ImageData imageData : setOfImageData) {			
@@ -174,7 +200,7 @@ public class Crawler {
 				stateCount++;
 		}
 		
-		if(stateCount == setOfImageData.size()) {
+		if(stateCount != 0) {
 			return true;
 		} else
 			return false;
@@ -194,19 +220,20 @@ public class Crawler {
 
 	private ImageData selectImageToDownload() throws SQLException {
 		LOGGER.debug("Searching for image to download.");
-		List<ImageData> imageDataList = imageStore.getIn(ImageState.NOT_DOWNLOADED,
-				10);
-		
+		List<ImageData> imageDataList = imageStore.getIn(
+				ImageState.NOT_DOWNLOADED, allowedImagesToDownload);
+
 		for (int i = 0; i < imageDataList.size(); i++) {
 			ImageData imageData = imageDataList.get(i);
-			
+
 			if (imageStore.lockImage(imageData.getName())) {
 				imageData.setState(ImageState.DOWNLOADING);
-				imageData.setFederationMember(properties.getProperty("federation_member"));
-				
+				imageData.setFederationMember(properties
+						.getProperty("federation_member"));
+
 				pendingImageDownload.put(imageData.getName(), imageData);
 				imageStore.updateImage(imageData);
-				
+
 				imageStore.unlockImage(imageData.getName());
 				return imageData;
 			}
@@ -308,10 +335,10 @@ public class Crawler {
 	}
 
 	// TODO: see if this is correct
-	private void deleteFetchedImagesFromVolume(Properties properties, List<ImageData> setOfImageData)
+	private void deleteFetchedResultsFromVolume(Properties properties, List<ImageData> setOfImageData)
 			throws IOException, InterruptedException, SQLException {
 		String imagesDirPath = properties.getProperty("sebal_export_path")
-				+ "/images";
+				+ "/results";
 		File imagesDir = new File(imagesDirPath);
 
 		if (!imagesDir.exists() || !imagesDir.isDirectory()) {
@@ -336,8 +363,8 @@ public class Crawler {
 		}
 	}
 	
-	public static long folderSize(File directory) {
-	    long length = 0;
+	public static double folderSize(File directory) {
+	    double length = 0;
 	    for (File file : directory.listFiles()) {
 	        if (file.isFile())
 	            length += file.length();

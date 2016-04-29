@@ -215,6 +215,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
+	private static final String SELECT_LIMITED_IMAGES_IN_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
+			+ " ORDER BY priority, LIMIT ?";
+	
 	private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
 			+ " WHERE state = ? ORDER BY priority, image_name";
 	
