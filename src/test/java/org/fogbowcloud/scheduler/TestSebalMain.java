@@ -28,7 +28,6 @@ import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.SebalTasks;
-import org.fogbowcloud.sebal.crawler.Crawler;
 import org.junit.Test;
 
 public class TestSebalMain {
@@ -48,9 +47,7 @@ public class TestSebalMain {
 		FileInputStream input = new FileInputStream("src/main/resources/sebal.conf");
 		properties.load(input);
 		
-		imageStore = new JDBCImageDataStore(properties, null, null);			
-		
-		initializeCrawlerInstance(properties, remoteRepositoryIP);
+		imageStore = new JDBCImageDataStore(properties, null, null);
 
 		final Job job = new SebalJob(imageStore);
 		
@@ -94,43 +91,6 @@ public class TestSebalMain {
 		
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
-	}
-	
-	private static void initializeCrawlerInstance(Properties properties,
-			String remoteRepositoryIP) throws Exception {
-		boolean blockWhileInitializing = new Boolean(
-				properties
-						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
-				.booleanValue();
-
-		boolean isElastic = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC))
-				.booleanValue();
-
-		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
-
-		List<Specification> crawlerSpecs = getCrawlerSpecs(properties);
-
-		InfrastructureManager infraManager = new InfrastructureManager(
-				crawlerSpecs, isElastic, infraProvider, properties);
-		infraManager.start(blockWhileInitializing);
-
-		//TODO:
-		final Crawler crawler = new Crawler(properties, imageStore, executor,
-				remoteRepositoryIP, "imageStoreIP");
-		
-		ExecutionMonitor execCrawlerMonitor = new ExecutionMonitor(crawler);
-
-		executionMonitorTimer.scheduleAtFixedRate(execCrawlerMonitor, 0,
-				Integer.parseInt(properties
-						.getProperty("execution_monitor_period")));
-
-		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				crawler.init();
-			}
-		}, 0, Integer.parseInt(properties.getProperty("scheduler_period")));
 	}
 	
 	private static void addFakeRTasks(Properties properties, Job job,

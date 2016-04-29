@@ -15,7 +15,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
@@ -69,12 +68,13 @@ public class Crawler {
 				: Integer.parseInt(maxSimultaneousDownloadStr));
 	}
 
-	public void init() {
+/*	public void init() {
 		LOGGER.info("Initializing crawler... ");
 		
 		// scheduling possible previous image download not finished before
 		// process stopping
 		try {
+			// TODO: is necessary?
 			schedulePreviousDownloadsNotFinished();
 		} catch (SQLException e) {
 			LOGGER.error("Error while scheduling previous downloads not finished.", e);
@@ -90,22 +90,38 @@ public class Crawler {
 			@Override
 			public void run() {
 				try {
+					File exportDir = new File(properties
+							.getProperty("sebal_exports_path"));
+					long exportDirSize = 0;
+
+					deleteFetchedImagesFromVolume(properties,
+							imageStore.getIn(ImageState.FETCHED, -1));
+
 					if (pendingImageDownload.size() >= maxSimultaneousDownload) {
-						LOGGER.debug("Already downloading " + pendingImageDownload.size()
-								+ "images and max allowed is " + maxSimultaneousDownload);
+						LOGGER.debug("Already downloading "
+								+ pendingImageDownload.size()
+								+ "images and max allowed is "
+								+ maxSimultaneousDownload);
 						return;
 					}
 
 					ImageData imageData = selectImageToDownload();
-					
+
 					if (imageData == null) {
 						LOGGER.debug("There is not image to download.");
 						return;
 					}
-					
-					if(imageData.getState().equals(ImageState.FETCHED))
-						deleteImageFromVolume(properties, imageData);
-					
+
+					if (exportDir.exists() && exportDir.isDirectory()) {
+						exportDirSize = folderSize(exportDir);
+					}
+
+					// TODO: 
+					while (exportDirSize < 128) {
+						deleteFetchedImagesFromVolume(properties,
+								imageStore.getIn(ImageState.FETCHED, -1));
+					}
+
 					downloadImage(imageData);
 				} catch (Throwable e) {
 					LOGGER.error("Failed while download task.", e);
@@ -113,6 +129,55 @@ public class Crawler {
 			}
 
 		}, 0, schedulerPeriod, TimeUnit.MILLISECONDS);
+	}*/
+	
+	public void init() throws InterruptedException, IOException {
+		LOGGER.info("Initializing crawler... ");
+
+		try {
+			int imagesCount = 0;
+			long exportDirSize = 0;
+			File exportDir = new File(
+					properties.getProperty("sebal_exports_path"));
+			
+			if (!(exportDir.exists() && exportDir.isDirectory())) {
+				LOGGER.error("This directory doesn't exist");
+				return;
+			}
+			
+			List<ImageData> setOfImageData = imageStore.getAllImages();
+
+			do {
+				deleteFetchedImagesFromVolume(properties, setOfImageData);
+
+				exportDirSize = folderSize(exportDir);
+
+				// TODO: 400 MB
+				if (exportDirSize < 400 * setOfImageData.size()) {
+					downloadImage(setOfImageData.get(imagesCount));
+					imagesCount++;
+				} else
+					Thread.sleep(300000);
+
+			} while (!(allImagesNotDownloaded(setOfImageData)));
+		} catch (Throwable e) {
+			LOGGER.error("Failed while download task.", e);
+		}
+
+	}
+
+	private boolean allImagesNotDownloaded(List<ImageData> setOfImageData) {
+		int stateCount = 0;
+		
+		for(ImageData imageData : setOfImageData) {			
+			if(imageData.getState().equals(ImageState.NOT_DOWNLOADED))
+				stateCount++;
+		}
+		
+		if(stateCount == setOfImageData.size()) {
+			return true;
+		} else
+			return false;
 	}
 
 	private void schedulePreviousDownloadsNotFinished() throws SQLException {
@@ -203,7 +268,7 @@ public class Crawler {
 				
 				if (p.exitValue() != 0) {
 					LOGGER.error("Error while running chmod +x command. Message=" + getError(p));
-				} 
+				}
 				LOGGER.debug("chmod +x command output=" + getOutput(p));
 
 				builder = new ProcessBuilder("bash", tempFile.getAbsolutePath());
@@ -243,27 +308,43 @@ public class Crawler {
 	}
 
 	// TODO: see if this is correct
-	private void deleteImageFromVolume(Properties properties,
-			ImageData imageData) throws IOException, InterruptedException {
-		String imageDirPath = properties.getProperty("sebal_export_path")
-				+ "/images/" + imageData.getName();
-		File imageDir = new File(imageDirPath);
+	private void deleteFetchedImagesFromVolume(Properties properties, List<ImageData> setOfImageData)
+			throws IOException, InterruptedException, SQLException {
+		String imagesDirPath = properties.getProperty("sebal_export_path")
+				+ "/images";
+		File imagesDir = new File(imagesDirPath);
 
-		if (!imageDir.exists() || !imageDir.isDirectory()) {
+		if (!imagesDir.exists() || !imagesDir.isDirectory()) {
 			LOGGER.debug("This file does not exist!");
 			return;
 		}
+		
+		ProcessBuilder pb = null;
 
 		try {
-			ProcessBuilder pb = new ProcessBuilder("rm -r " + imageDirPath);
-			Process p = pb.start();
-			p.waitFor();
-			
+			for (ImageData imageData : setOfImageData) {
+				pb = new ProcessBuilder("rm -r " + imagesDirPath + "/"
+						+ imageData.getName());
+				Process p = pb.start();
+				p.waitFor();
+			}
+
 			LOGGER.debug("Image files deleted successfully.");
 		} catch (InterruptedException e) {
 			LOGGER.error("Error while deleting files!");
 			e.printStackTrace();
 		}
+	}
+	
+	public static long folderSize(File directory) {
+	    long length = 0;
+	    for (File file : directory.listFiles()) {
+	        if (file.isFile())
+	            length += file.length();
+	        else
+	            length += folderSize(file);
+	    }
+	    return length;
 	}
 
 	protected String replaceVariables(String command, ImageData imageData) {

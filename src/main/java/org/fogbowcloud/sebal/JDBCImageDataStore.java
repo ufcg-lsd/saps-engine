@@ -363,4 +363,5 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}	
 		return unlocked;
 	}
+	
 }
