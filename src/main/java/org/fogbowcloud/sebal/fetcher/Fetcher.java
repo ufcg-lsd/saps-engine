@@ -12,6 +12,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.FTPUtils;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
@@ -26,6 +27,7 @@ public class Fetcher {
 	private static int allowedImagesToFetch;
 	
 	private String ftpServerIP;
+	private String ftpServerPort;
 	
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
 	private static final double DEFAULT_IMAGE_DIR_SIZE = 382304413.2864;
@@ -34,12 +36,14 @@ public class Fetcher {
 	
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 	
-	public Fetcher(Properties properties, String imageStoreIP, String imageStorePort, String ftpServerIP) {
-		this(properties, new JDBCImageDataStore(properties, imageStoreIP, imageStorePort), null, ftpServerIP);
+	public Fetcher(Properties properties, String imageStoreIP,
+			String imageStorePort, String ftpServerIP, String ftpServerPort) {
+		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
+				imageStorePort), null, ftpServerIP, ftpServerPort);
 	}
 	
 	public Fetcher(Properties properties, ImageDataStore imageStore,
-			ScheduledExecutorService executor, String ftpServerIP) {
+			ScheduledExecutorService executor, String ftpServerIP, String ftpServerPort) {
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
@@ -47,6 +51,7 @@ public class Fetcher {
 		this.properties = properties;
 		this.imageStore = imageStore;
 		this.ftpServerIP = ftpServerIP;
+		this.ftpServerPort = ftpServerPort;
 		this.allowedImagesToFetch = 0;
 
 		String maxSimultaneousDownloadStr = properties
@@ -76,7 +81,7 @@ public class Fetcher {
 						return;
 					}
 
-					fetchImage(imageData, ftpServerIP);
+					fetchImage(imageData);
 					setOfImageData = imageStore.getAllImages();
 					imagesFetched++;
 				} else
@@ -160,13 +165,13 @@ public class Fetcher {
 		return null;
 	}
 	
-	private void fetchImage(final ImageData imageData, final String ftpServerIP) {
+	private void fetchImage(final ImageData imageData) {
 		downloader.execute(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					fetchResultsInStorage(imageData, ftpServerIP);
+					fetchResultsInStorage(imageData);
 
 					imageData.setState(ImageState.FETCHED);
 					imageStore.updateImage(imageData);					
@@ -187,12 +192,18 @@ public class Fetcher {
 					Fetcher.LOGGER.error("Error while updating image data.", e1);
 				}
 			}
+			
 		});
 	}
 	
 	// TODO: See if this is correct
-	public void fetchResultsInStorage(final ImageData imageData, String ftpServerIP) throws Exception {
-		String resultsDirPath = properties.getProperty("sebal_export_path")
+	public void fetchResultsInStorage(final ImageData imageData) throws Exception {
+		
+		FTPUtils ftpUtils = new FTPUtils(properties, ftpServerIP, ftpServerPort);
+		
+		ftpUtils.init(imageData);
+		
+		/*String resultsDirPath = properties.getProperty("sebal_export_path")
 				+ "/results/" + imageData.getName();
 		File resultsDir = new File(resultsDirPath);
 		if (!resultsDir.exists() || !resultsDir.isDirectory()) {
@@ -210,7 +221,7 @@ public class Fetcher {
 		Process p = builder.start();		
 		p.waitFor();
 		
-		LOGGER.info("Image " + imageData.getName() + " fetched into volume.");
+		LOGGER.info("Image " + imageData.getName() + " fetched into volume.");*/
 	}
 	
 	protected String replaceVariables(String command, ImageData imageData) {
