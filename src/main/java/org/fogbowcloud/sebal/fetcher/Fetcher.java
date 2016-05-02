@@ -60,6 +60,7 @@ public class Fetcher {
 		LOGGER.info("Initializing fetcher... ");
 		
 		try {
+			int imagesFetched = 0;
 			List<ImageData> setOfImageData = null;
 
 			do {
@@ -77,10 +78,11 @@ public class Fetcher {
 
 					fetchImage(imageData, ftpServerIP);
 					setOfImageData = imageStore.getAllImages();
+					imagesFetched++;
 				} else
 					Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
 
-			} while (existImagesNotFetched(setOfImageData));
+			} while (existImagesNotFetched(setOfImageData) || imagesFetched == 0);
 		} catch (Throwable e) {
 			LOGGER.error("Failed while download task.", e);
 		}
@@ -188,6 +190,7 @@ public class Fetcher {
 		});
 	}
 	
+	// TODO: See if this is correct
 	public void fetchResultsInStorage(final ImageData imageData, String ftpServerIP) throws Exception {
 		String resultsDirPath = properties.getProperty("sebal_export_path")
 				+ "/results/" + imageData.getName();
