@@ -1,15 +1,7 @@
 package org.fogbowcloud.sebal.fetcher;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,27 +9,13 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
-import org.fogbowcloud.sebal.crawler.Crawler;
 
 public class Fetcher {
 	
@@ -45,11 +23,12 @@ public class Fetcher {
 	public ImageDataStore imageStore;
 	int maxSimultaneousDownload;
 	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
-	private ScheduledExecutorService executor;
+	private static int allowedImagesToFetch;
 	
 	private String ftpServerIP;
 	
 	private ExecutorService downloader = Executors.newFixedThreadPool(5);
+	private static final double DEFAULT_IMAGE_DIR_SIZE = 382304413.2864;
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	private static final int DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD = 1;
 	
@@ -68,12 +47,7 @@ public class Fetcher {
 		this.properties = properties;
 		this.imageStore = imageStore;
 		this.ftpServerIP = ftpServerIP;
-		
-		if (executor == null) {
-			this.executor = Executors.newScheduledThreadPool(1);
-		} else {
-			this.executor = executor;
-		}
+		this.allowedImagesToFetch = 0;
 
 		String maxSimultaneousDownloadStr = properties
 				.getProperty("max_simultaneous_download");
@@ -82,63 +56,90 @@ public class Fetcher {
 	}
 	
 	public void init() {
+		
 		LOGGER.info("Initializing fetcher... ");
 		
-		// scheduling possible previous image download not finished before
-		// process stopping
 		try {
-			schedulePreviousDownloadsNotFinished();
-		} catch (SQLException e) {
-			LOGGER.error("Error while scheduling previous downloads not finished.", e);
-		}
-		
-		String schedulerPeriodStr = properties.getProperty("scheduler_period");
-		long schedulerPeriod = (schedulerPeriodStr == null ? DEFAULT_SCHEDULER_PERIOD : Long
-				.parseLong(schedulerPeriodStr));
+			List<ImageData> setOfImageData = null;
 
-		LOGGER.debug("scheduler period: " + schedulerPeriod);
-		executor.scheduleWithFixedDelay(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					if (pendingImageDownload.size() >= maxSimultaneousDownload) {
-						LOGGER.debug("Already downloading " + pendingImageDownload.size()
-								+ "images and max allowed is " + maxSimultaneousDownload);
-						return;
-					}
+			do {
+				setOfImageData = imageStore.getAllImages();
+				
+				numberOfImagesToDownload();
 
-					ImageData imageData = selectImageToDownload();
-					
+				if (allowedImagesToFetch != 0) {
+					ImageData imageData = selectImageToFetch();
+
 					if (imageData == null) {
-						LOGGER.debug("There is not image to download.");
+						LOGGER.debug("There is no image to download.");
 						return;
 					}
-					
-					downloadImage(imageData, ftpServerIP);
-				} catch (Throwable e) {
-					LOGGER.error("Failed while download task.", e);
-				}
-			}
 
-		}, 0, schedulerPeriod, TimeUnit.MILLISECONDS);
-	}
+					fetchImage(imageData, ftpServerIP);
+					setOfImageData = imageStore.getAllImages();
+				} else
+					Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
 
-	private void schedulePreviousDownloadsNotFinished() throws SQLException {
-		List<ImageData> previousImagesDownloads = imageStore.getIn(ImageState.FETCHING);
-		for (ImageData imageData : previousImagesDownloads) {
-			if (imageData.getFederationMember().equals(properties.getProperty("federation_member"))) {
-				LOGGER.debug("The image " + imageData.getName()
-						+ " is a previous download not finished.");
-				pendingImageDownload.put(imageData.getName(), imageData);
-				downloadImage(imageData, ftpServerIP);
-			}
+			} while (existImagesNotFetched(setOfImageData));
+		} catch (Throwable e) {
+			LOGGER.error("Failed while download task.", e);
 		}
+
+		LOGGER.debug("All images fetched.\nProcess finished.");
+		
 	}
 	
-	private ImageData selectImageToDownload() throws SQLException {
+	private void numberOfImagesToDownload() {
+		double fetcherVolumeSize = Double.parseDouble(properties
+				.getProperty("fetcher_volume_size"));
+
+		double availableSize = 0;
+		double exportDirSize = 0;
+		File exportDir = new File(properties.getProperty("sebal_exports_path"));
+
+		if (!(exportDir.exists() && exportDir.isDirectory())) {
+			LOGGER.error("This directory doesn't exist or is not valid!");
+			return;
+		}
+
+		exportDirSize = folderSize(exportDir);
+
+		availableSize = fetcherVolumeSize - exportDirSize;
+		
+		double numberOfImagesToDownload = availableSize/DEFAULT_IMAGE_DIR_SIZE;
+		
+		this.allowedImagesToFetch = (int) numberOfImagesToDownload;
+	}
+	
+	private boolean existImagesNotFetched(List<ImageData> setOfImageData) {
+		int stateCount = 0;
+		
+		for(ImageData imageData : setOfImageData) {			
+			if(imageData.getState().equals(ImageState.FINISHED))
+				stateCount++;
+		}
+		
+		if(stateCount != 0) {
+			return true;
+		} else
+			return false;
+	}
+	
+	public static double folderSize(File directory) {
+	    double length = 0;
+	    for (File file : directory.listFiles()) {
+	        if (file.isFile())
+	            length += file.length();
+	        else
+	            length += folderSize(file);
+	    }
+	    return length;
+	}
+	
+	private ImageData selectImageToFetch() throws SQLException {
 		LOGGER.debug("Searching for image to download.");
 		List<ImageData> imageDataList = imageStore.getIn(ImageState.FINISHED,
-				10);
+				allowedImagesToFetch);
 		
 		for (int i = 0; i < imageDataList.size(); i++) {
 			ImageData imageData = imageDataList.get(i);
@@ -157,19 +158,19 @@ public class Fetcher {
 		return null;
 	}
 	
-	private void downloadImage(final ImageData imageData, final String ftpServerIP) {
+	private void fetchImage(final ImageData imageData, final String ftpServerIP) {
 		downloader.execute(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					downloadResultsInRepository(imageData, ftpServerIP);
+					fetchResultsInStorage(imageData, ftpServerIP);
 
-					imageData.setState(ImageState.DOWNLOADED);
+					imageData.setState(ImageState.FETCHED);
 					imageStore.updateImage(imageData);					
 					pendingImageDownload.remove(imageData.getName());					
 				} catch (Exception e) {
-					LOGGER.error("Couldn't download image " + imageData.getName() + ".", e);
+					LOGGER.error("Couldn't fetch image " + imageData.getName() + ".", e);
 					removeFromPendingAndUpdateState(imageData);
 				}
 			}
@@ -178,98 +179,35 @@ public class Fetcher {
 				pendingImageDownload.remove(imageData.getName());
 				try {
 					imageData.setFederationMember(ImageDataStore.NONE);
-					imageData.setState(ImageState.NOT_DOWNLOADED);
+					imageData.setState(ImageState.FINISHED);
 					imageStore.updateImage(imageData);
 				} catch (SQLException e1) {
-					Crawler.LOGGER.error("Error while updating image data.", e1);
+					Fetcher.LOGGER.error("Error while updating image data.", e1);
 				}
 			}
 		});
 	}
 	
-	public void downloadResultsFromFTPServer(Properties properties,
-			ImageData imageData, String ftpServerIP, String remoteRepositoryIP)
-			throws Exception {
-		// TODO: see how exactly this will be done
-		URL url = new URL("ftp://" + properties.getProperty("ftp_username")
-				+ ":" + properties.getProperty("ftp_password") + "@"
-				+ ftpServerIP + ":"
-				+ properties.getProperty("sebal_export_path") + "/"
-				+ imageData.getName());
-		URLConnection urlc = url.openConnection();
-		
-		//TODO: see if this get all content from url
-		InputStream imputStream = urlc.getInputStream();
-
-		String resultsDirPath = remoteRepositoryIP + ":"
-				+ properties.getProperty("sebal_export_path") + "/"
-				+ imageData.getName();
+	public void fetchResultsInStorage(final ImageData imageData, String ftpServerIP) throws Exception {
+		String resultsDirPath = properties.getProperty("sebal_export_path")
+				+ "/results/" + imageData.getName();
 		File resultsDir = new File(resultsDirPath);
 		if (!resultsDir.exists() || !resultsDir.isDirectory()) {
 			resultsDir.mkdirs();
 		}
-
-		//TODO: see how exactly these files will be created
-		// the current way is wrong
-		LOGGER.info("Downloading image " + imageData.getName() + " results into "
-				+ resultsDirPath);
-		File file = new File(resultsDirPath);
-		OutputStream outStream = new FileOutputStream(file);
-		IOUtils.copy(imputStream, outStream);
-	}
-	
-	public void downloadResultsInRepository(final ImageData imageData, String ftpServerIP) throws Exception {
-		HttpClient httpClient = initClient();
-		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
-		HttpResponse response = httpClient.execute(homeGet);
-
-		//TODO: see where all images results will be stored by fetcher...in this case, there will be two paths:
-		// a remoteDirPath and a localDirPath (that might be a path to the VM, volume, storage, etc, that will
-		// store all these data
-		String imageDirPath = ftpServerIP + ":" + properties.getProperty("sebal_export_path") + "/"
-				+ imageData.getName();
-		File imageDir = new File(imageDirPath);
-		if (!imageDir.exists() || !imageDir.isDirectory()) {
-			imageDir.mkdirs();
-		}
 		
-		String localImageFilePath = imageDirPath + "/" + imageData.getName() + ".tar.gz";
+		ProcessBuilder builder = new ProcessBuilder();
+		builder.directory(resultsDir);
+		builder.command("wget -r ftp://"
+				+ properties.getProperty("ftp_server_user") + ":"
+				+ properties.getProperty("ftp_user_pass") + "@" + ftpServerIP
+				+ "/results/" + imageData.getName());
 		
-		File localImageFile = new File(localImageFilePath);
-		if (localImageFile.exists()) {
-			LOGGER.debug("The file for image " + imageData.getName()
-					+ " already exist, but may not be downloaded successfully. The file "
-					+ localImageFilePath + " will be download again.");
-			localImageFile.delete();			
-		}
+		LOGGER.info("Fetching image " + imageData.getName() + " into volume.");
+		Process p = builder.start();		
+		p.waitFor();
 		
-		LOGGER.info("Downloading image " + imageData.getName() + " into file " + localImageFilePath);
-		File file = new File(localImageFilePath);
-		OutputStream outStream = new FileOutputStream(file);
-		IOUtils.copy(response.getEntity().getContent(), outStream);
-	}
-
-	private HttpClient initClient() throws IOException, ClientProtocolException,
-			UnsupportedEncodingException {
-		BasicCookieStore cookieStore = new BasicCookieStore();
-		HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore)
-				.build();
-
-		HttpGet homeGet = new HttpGet(properties.getProperty("nasa_login_url"));
-		httpClient.execute(homeGet);
-
-		HttpPost homePost = new HttpPost(properties.getProperty("nasa_login_url"));
-
-		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-
-		nvps.add(new BasicNameValuePair("username", properties.getProperty("nasa_username")));
-		nvps.add(new BasicNameValuePair("password", properties.getProperty("nasa_password")));
-		nvps.add(new BasicNameValuePair("rememberMe", "0"));
-
-		homePost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
-		HttpResponse homePostResponse = httpClient.execute(homePost);
-		EntityUtils.toString(homePostResponse.getEntity());
-		return httpClient;
+		LOGGER.info("Image " + imageData.getName() + " fetched into volume.");
 	}
 	
 	protected String replaceVariables(String command, ImageData imageData) {
