@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.manager.occi.request.RequestType;
+import org.fogbowcloud.manager.occi.order.OrderType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
 import org.fogbowcloud.scheduler.core.Scheduler;
@@ -245,7 +245,7 @@ public class InfrastructureManager {
 			for (Specification spec : initialSpec) {
 				// Initial specs must be Persistent
 				spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
-						RequestType.PERSISTENT.getValue());
+						OrderType.PERSISTENT.getValue());
 				orderResource(spec, null, 1);
 			}
 		}
@@ -381,7 +381,7 @@ public class InfrastructureManager {
 		if (!isResourceAlive(resource)) {
 			resourceOK = false;
 			// If is a persistent resource, tries to recover it.
-			if (RequestType.PERSISTENT.getValue().equals(requestType)) {
+			if (OrderType.PERSISTENT.getValue().equals(requestType)) {
 				Resource retryResource = infraProvider.getResource(resource.getId());
 				if (retryResource != null && isResourceAlive(retryResource)) {
 					resource.copyInformations(retryResource);
@@ -415,7 +415,7 @@ public class InfrastructureManager {
 
 		Long expirationDate = noExpirationDate;
 
-		if (RequestType.ONE_TIME.getValue().equals(resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE))) {
+		if (OrderType.ONE_TIME.getValue().equals(resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE))) {
 			int idleLifeTime = Integer
 					.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));
 
@@ -625,7 +625,7 @@ public class InfrastructureManager {
 
 					String requestType = r.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
 					// Persistent resource can not be removed.
-					if (RequestType.ONE_TIME.getValue().equals(requestType)) {
+					if (OrderType.ONE_TIME.getValue().equals(requestType)) {
 
 						if (!isResourceAlive(r)) {
 							resourcesToRemove.add(r);

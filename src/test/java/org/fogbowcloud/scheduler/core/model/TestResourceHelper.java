@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.fogbowcloud.manager.occi.request.RequestType;
+import org.fogbowcloud.manager.occi.order.OrderType;
 import org.mockito.Mockito;
 
 public class TestResourceHelper {
@@ -50,7 +50,7 @@ public class TestResourceHelper {
 	}
 	
 	public static Map<String, String> generateResourceMetadata(String host, String port, String userName,
-			String extraPorts, RequestType requestType, String image, String publicKey, String cpuSize, String menSize,
+			String extraPorts, OrderType requestType, String image, String publicKey, String cpuSize, String menSize,
 			String diskSize, String location) {
 
 		Map<String, String> resourceMetadata = new HashMap<String, String>();

@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.fogbowcloud.manager.occi.model.Token;
-import org.fogbowcloud.manager.occi.request.RequestConstants;
-import org.fogbowcloud.manager.occi.request.RequestState;
+import org.fogbowcloud.manager.occi.order.OrderConstants;
+import org.fogbowcloud.manager.occi.order.OrderState;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Specification;
@@ -162,7 +162,7 @@ public class TestFogbowInfrastructureProvider {
 		//Creating response for request for resource.
 		createDefaultRequestResponse(requestIdMock);
 		//Creating response for request for Instance ID
-		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, RequestState.FULFILLED);
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, OrderState.FULFILLED);
 		//Creating response for request for Instance Attributes
 		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
 
@@ -199,7 +199,7 @@ public class TestFogbowInfrastructureProvider {
 		//Creating response for request for resource.
 		createDefaultRequestResponse(requestIdMock);
 		//Creating response for request for Instance ID
-		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, RequestState.FULFILLED);
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, OrderState.FULFILLED);
 		//Creating response for request for Instance Attributes
 		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
 
@@ -232,7 +232,7 @@ public class TestFogbowInfrastructureProvider {
 		//Creating response for request for resource.
 		createDefaultRequestResponse(requestIdMock);
 		//Creating response for request for Instance ID
-		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, RequestState.FAILED);
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, OrderState.FAILED);
 
 
 
@@ -290,7 +290,7 @@ public class TestFogbowInfrastructureProvider {
 		//Creating response for request for resource.
 		createDefaultRequestResponse(requestIdMock);
 		//Creating response for request for Instance ID
-		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, RequestState.FULFILLED);
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, OrderState.FULFILLED);
 		//Creating response for request for Instance Attributes
 		createDefaulInstanceAttributesResponseNoShh(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock);
 
@@ -317,7 +317,7 @@ public class TestFogbowInfrastructureProvider {
 
 		Resource resource = mock(Resource.class);
 		doReturn(requestIdMock).when(resource).getId();
-		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, RequestState.FULFILLED);
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, OrderState.FULFILLED);
 
 		doReturn("OK").when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
 				Mockito.any(String.class), Mockito.any(List.class));
@@ -340,7 +340,7 @@ public class TestFogbowInfrastructureProvider {
 
 		Resource resource = mock(Resource.class);
 		doReturn(requestIdMock).when(resource).getId();
-		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, RequestState.FULFILLED);
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, OrderState.FULFILLED);
 
 		doThrow(new Exception("Erro on request.")).when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
 				Mockito.any(String.class), Mockito.any(List.class));
@@ -356,7 +356,7 @@ public class TestFogbowInfrastructureProvider {
 			throws FileNotFoundException, IOException, Exception {
 
 		String urlEndpointNewInstance = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
-				+ "/" + RequestConstants.TERM;
+				+ "/" + OrderConstants.TERM;
 
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMokc);
@@ -366,11 +366,11 @@ public class TestFogbowInfrastructureProvider {
 				Mockito.any(String.class), Mockito.any(List.class));
 	}
 
-	private void createDefaulInstanceIdResponse(String requestIdMock, String instanceIdMock, String location, RequestState requestState) 
+	private void createDefaulInstanceIdResponse(String requestIdMock, String instanceIdMock, String location, OrderState requestState) 
 			throws FileNotFoundException, IOException, Exception {
 
 		String urlEndpointRequestInformations = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
-				+ "/" + RequestConstants.TERM + "/"+ requestIdMock;
+				+ "/" + OrderConstants.TERM + "/"+ requestIdMock;
 
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);
@@ -387,7 +387,7 @@ public class TestFogbowInfrastructureProvider {
 			throws FileNotFoundException, IOException, Exception {
 
 		String urlEndpointRequestInformations = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
-				+ "/" + RequestConstants.TERM + "/"+ requestIdMock;
+				+ "/" + OrderConstants.TERM + "/"+ requestIdMock;
 
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);

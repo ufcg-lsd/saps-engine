@@ -60,7 +60,7 @@ public class JDFSchedulerApplication extends Application {
 	public Restlet createInboundRoot() {
 
 		Router router = new Router(getContext());
-		router.attach("/sebal-scheduler/job/ui", UIInterface.class);
+		router.attach("/sebal-scheduler/job/ui", JobEndpoint.class);
 		router.attach("/sebal-scheduler/job", JobResource.class);
 		router.attach("/sebal-scheduler/job/{jobpath}", JobResource.class);
 		router.attach("/sebal-scheduler/task/{taskId}", TaskResource4JDF.class);

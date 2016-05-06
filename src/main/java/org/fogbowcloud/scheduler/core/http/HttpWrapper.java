@@ -15,7 +15,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.fogbowcloud.manager.occi.model.HeaderUtils;
 import org.fogbowcloud.manager.occi.model.OCCIHeaders;
-import org.fogbowcloud.manager.occi.request.RequestConstants;
+import org.fogbowcloud.manager.occi.order.OrderConstants;
 
 public class HttpWrapper {
 
@@ -46,7 +46,7 @@ public class HttpWrapper {
         request.addHeader(OCCIHeaders.CONTENT_TYPE, OCCIHeaders.OCCI_CONTENT_TYPE);
         
         if (authToken != null) {
-            request.addHeader(OCCIHeaders.X_FEDERATION_AUTH_TOKEN, authToken);
+            request.addHeader(OCCIHeaders.X_AUTH_TOKEN, authToken);
 //            request.addHeader(OCCIHeaders.X_LOCAL_AUTH_TOKEN, authToken);
         }
         for (Header header : additionalHeaders) {
@@ -66,7 +66,7 @@ public class HttpWrapper {
             	
                 Header locationHeader = getLocationHeader(response.getAllHeaders());
                 
-                if (locationHeader != null && locationHeader.getValue().contains(RequestConstants.TERM)) {
+                if (locationHeader != null && locationHeader.getValue().contains(OrderConstants.TERM)) {
                     return generateLocationHeaderResponse(locationHeader);
                 } else {
                     return EntityUtils.toString(response.getEntity());

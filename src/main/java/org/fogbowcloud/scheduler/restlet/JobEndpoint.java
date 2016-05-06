@@ -21,15 +21,12 @@ import org.restlet.resource.ServerResource;
 
 import org.json.JSONArray;
 
-public class UIInterface extends ServerResource {
+public class JobEndpoint extends ServerResource {
 
-	private static final Logger LOGGER = Logger.getLogger(UIInterface.class);
+	private static final Logger LOGGER = Logger.getLogger(JobEndpoint.class);
 
 	@Get
 	public Representation stopJob() throws IOException {
-		File htmlFile = new File("src/main/resources/treeExample.html");
-		FileInputStream input = new FileInputStream(htmlFile);
-		String htmlString = IOUtils.toString(input);
 
 		JDFSchedulerApplication application = (JDFSchedulerApplication) getApplication();
 
@@ -50,9 +47,7 @@ public class UIInterface extends ServerResource {
 		}
 		LOGGER.debug("Info:" + jArray.toString());
 
-		htmlString = htmlString.replace("[PlaceholderContent]", jArray.toString());
-
-		return new StringRepresentation(htmlString, MediaType.TEXT_HTML);
+		return new StringRepresentation(jArray.toString(), MediaType.TEXT_PLAIN);
 	}
 
 	private void fillTasks(JSONArray jArray, JDFJob job, int taskNumber) throws JSONException {
