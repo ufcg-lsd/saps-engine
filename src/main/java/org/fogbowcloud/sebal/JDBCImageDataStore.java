@@ -156,7 +156,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " "
 			+ "SET download_link = ?, state = ?, federation_member = ? "
-			+ ", priority = ?";
+			+ ", priority = ? WHERE image_name = ?";
 	
 	@Override
 	public void updateImage(ImageData imageData) throws SQLException {
@@ -214,9 +214,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(statement, conn);
 		}
 	}
-
-	private static final String SELECT_LIMITED_IMAGES_IN_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " ORDER BY priority, LIMIT ?";
 	
 	private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
 			+ " WHERE state = ? ORDER BY priority, image_name";

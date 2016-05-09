@@ -20,6 +20,10 @@ import org.fogbowcloud.sebal.JDBCImageDataStore;
 
 public class Fetcher {
 	
+	//FIXME: review code - 0 (FileUtils)
+	//FIXME: test - 1
+	//FIXME: FTP - 0
+	
 	private Properties properties;
 	public ImageDataStore imageStore;
 	int maxSimultaneousDownload;
@@ -174,7 +178,7 @@ public class Fetcher {
 					fetchResultsInStorage(imageData);
 
 					imageData.setState(ImageState.FETCHED);
-					imageStore.updateImage(imageData);					
+					imageStore.updateImage(imageData);
 					pendingImageDownload.remove(imageData.getName());					
 				} catch (Exception e) {
 					LOGGER.error("Couldn't fetch image " + imageData.getName() + ".", e);
@@ -201,7 +205,7 @@ public class Fetcher {
 		
 		FTPUtils ftpUtils = new FTPUtils(properties, ftpServerIP, ftpServerPort);
 		
-		ftpUtils.init(imageData);
+		FTPUtils.init(imageData);
 		
 		/*String resultsDirPath = properties.getProperty("sebal_export_path")
 				+ "/results/" + imageData.getName();

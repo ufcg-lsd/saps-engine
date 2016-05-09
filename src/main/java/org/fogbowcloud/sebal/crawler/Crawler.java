@@ -12,11 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.ImageData;
@@ -27,188 +25,74 @@ import org.fogbowcloud.sebal.NASARepository;
 
 public class Crawler {
 
-	public Properties properties;
-	public ImageDataStore imageStore;
-	int maxSimultaneousDownload;
-	public Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
-	private ScheduledExecutorService executor;
+	//FIXME: code pending again - 1
+	//FIXME: FTP - 0 (In infrastructure creation?)
+	//FIXME: test - 1
+	
+	private final Properties properties;
+	private final ImageDataStore imageStore;
 	private NASARepository NASARepository;
+	private Map<String, ImageData> pendingImageDownload = new HashMap<String, ImageData>();
+	private static int maxSimultaneousDownload;
+	private static String volumePath;
 
-	private ExecutorService downloader = Executors.newFixedThreadPool(5);
-	private static final double DEFAULT_IMAGE_DIR_SIZE = 382304413.2864;
+	private static final double DEFAULT_IMAGE_DIR_SIZE = 0.35604873;
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
-	private static final int DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD = 1;
-	private static int allowedImagesToDownload;
 
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
 	public Crawler(Properties properties, String imageStoreIP,
 			String imageStorePort) {
-		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
-				imageStorePort), null, imageStoreIP, imageStorePort);
-	}
 
-	public Crawler(Properties properties, ImageDataStore imageStore,
-			ScheduledExecutorService executor, String imageStoreIP,
-			String imageStorePort) {
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
 		}
-		this.properties = properties;
-		this.imageStore = imageStore;
-		this.NASARepository = new NASARepository(properties);
-		this.allowedImagesToDownload = 0;
-		if (executor == null) {
-			this.executor = Executors.newScheduledThreadPool(1);
-		} else {
-			this.executor = executor;
-		}
-
-		String maxSimultaneousDownloadStr = properties
-				.getProperty("max_simultaneous_download");
-		maxSimultaneousDownload = (maxSimultaneousDownloadStr == null ? DEFAULT_MAX_SIMULTANEOUS_DOWNLOAD
+		
+		String maxSimultaneousDownloadStr = properties.getProperty("max_simultaneous_download");
+		maxSimultaneousDownload = (maxSimultaneousDownloadStr == null ? 1
 				: Integer.parseInt(maxSimultaneousDownloadStr));
+
+		this.properties = properties;
+		this.imageStore = new JDBCImageDataStore(properties, imageStoreIP,
+				imageStorePort);
+		this.volumePath = properties.getProperty("sebal_export_path");
+		this.NASARepository = new NASARepository(properties);
 	}
 
-/*	public void init() {
-		LOGGER.info("Initializing crawler... ");
-		
-		// scheduling possible previous image download not finished before
-		// process stopping
-		try {
-			// TODO: is necessary?
-			schedulePreviousDownloadsNotFinished();
-		} catch (SQLException e) {
-			LOGGER.error("Error while scheduling previous downloads not finished.", e);
-		}
-		
-		String schedulerPeriodStr = properties.getProperty("scheduler_period");
-		long schedulerPeriod = (schedulerPeriodStr == null ? DEFAULT_SCHEDULER_PERIOD : Long
-				.parseLong(schedulerPeriodStr));
+	public void exec() throws InterruptedException, IOException {
 
-		LOGGER.debug("scheduler period: " + schedulerPeriod);
-		executor.scheduleWithFixedDelay(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					File exportDir = new File(properties
-							.getProperty("sebal_exports_path"));
-					long exportDirSize = 0;
-
-					deleteFetchedImagesFromVolume(properties,
-							imageStore.getIn(ImageState.FETCHED, -1));
-
-					if (pendingImageDownload.size() >= maxSimultaneousDownload) {
-						LOGGER.debug("Already downloading "
-								+ pendingImageDownload.size()
-								+ "images and max allowed is "
-								+ maxSimultaneousDownload);
-						return;
-					}
-
-					ImageData imageData = selectImageToDownload();
-
-					if (imageData == null) {
-						LOGGER.debug("There is not image to download.");
-						return;
-					}
-
-					if (exportDir.exists() && exportDir.isDirectory()) {
-						exportDirSize = folderSize(exportDir);
-					}
-
-					// TODO: 
-					while (exportDirSize < 128) {
-						deleteFetchedImagesFromVolume(properties,
-								imageStore.getIn(ImageState.FETCHED, -1));
-					}
-
-					downloadImage(imageData);
-				} catch (Throwable e) {
-					LOGGER.error("Failed while download task.", e);
-				}
-			}
-
-		}, 0, schedulerPeriod, TimeUnit.MILLISECONDS);
-	}*/
-	
-	public void init() throws InterruptedException, IOException {
-		
 		LOGGER.info("Initializing crawler... ");
 
 		try {
-			List<ImageData> setOfImageData = null;
-
 			do {
-				setOfImageData = imageStore.getAllImages();
-				deleteFetchedResultsFromVolume(properties, setOfImageData);
+				schedulePreviousDownloadsNotFinished();				
+				deleteFetchedResultsFromVolume(properties);
 				
-				numberOfImagesToDownload();
+				if (pendingImageDownload.size() >= maxSimultaneousDownload) {
+					LOGGER.debug("Already downloading " + pendingImageDownload.size()
+							+ "images and max allowed is " + maxSimultaneousDownload);
+					return;
+				}
 
-				if (allowedImagesToDownload != 0) {
-					ImageData imageData = selectImageToDownload();
-
-					if (imageData == null) {
-						LOGGER.debug("There is no image to download.");
-						return;
-					}
-
-					downloadImage(imageData);
-					setOfImageData = imageStore.getAllImages();
-				} else
+				int numToDownload = numberOfImagesToDownload();
+				if (numToDownload > 0) {
+					download(numToDownload);
+				} else {
 					Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
+				}
 
-			} while (existImagesNotDownloaded(setOfImageData));
+			} while (thereIsImageToDownload());
 		} catch (Throwable e) {
 			LOGGER.error("Failed while download task.", e);
 		}
 
 		LOGGER.debug("All images downloaded.\nProcess finished.");
-		
 	}
-
-	private void numberOfImagesToDownload() {
-		// TODO Auto-generated method stub
-		double defaultVolumeSize = Double.parseDouble(properties
-				.getProperty("default_volume_size"));
-
-		double availableSize = 0;
-		double exportDirSize = 0;
-		File exportDir = new File(properties.getProperty("sebal_exports_path"));
-
-		if (!(exportDir.exists() && exportDir.isDirectory())) {
-			LOGGER.error("This directory doesn't exist or is not valid!");
-			return;
-		}
-
-		exportDirSize = folderSize(exportDir);
-
-		availableSize = defaultVolumeSize - exportDirSize;
-		
-		double numberOfImagesToDownload = availableSize/DEFAULT_IMAGE_DIR_SIZE;
-		
-		this.allowedImagesToDownload = (int) numberOfImagesToDownload;
-	}
-
-	private boolean existImagesNotDownloaded(List<ImageData> setOfImageData) {
-		int stateCount = 0;
-		
-		for(ImageData imageData : setOfImageData) {			
-			if(imageData.getState().equals(ImageState.NOT_DOWNLOADED))
-				stateCount++;
-		}
-		
-		if(stateCount != 0) {
-			return true;
-		} else
-			return false;
-	}
-
+	
 	private void schedulePreviousDownloadsNotFinished() throws SQLException {
-		List<ImageData> previousImagesDownloads = imageStore.getIn(ImageState.DOWNLOADING);
-		for (ImageData imageData : previousImagesDownloads) {
+		List<ImageData> previousDownloads = imageStore.getIn(ImageState.DOWNLOADING);
+		for (ImageData imageData : previousDownloads) {
 			if (imageData.getFederationMember().equals(properties.getProperty("federation_member"))) {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is a previous download not finished.");
@@ -218,125 +102,158 @@ public class Crawler {
 		}
 	}
 
-	private ImageData selectImageToDownload() throws SQLException {
-		LOGGER.debug("Searching for image to download.");
+	private boolean thereIsImageToDownload() throws SQLException {
+		List<ImageData> imageData = imageStore.getIn(ImageState.NOT_DOWNLOADED);
+		return !imageData.isEmpty();
+	}
+
+	private void download(int maxImagesToDownload) throws SQLException {
+
 		List<ImageData> imageDataList = imageStore.getIn(
-				ImageState.NOT_DOWNLOADED, allowedImagesToDownload);
+				ImageState.NOT_DOWNLOADED, maxImagesToDownload);
 
-		for (int i = 0; i < imageDataList.size(); i++) {
-			ImageData imageData = imageDataList.get(i);
+		for (ImageData imageData : imageDataList) {
 
-			if (imageStore.lockImage(imageData.getName())) {
-				imageData.setState(ImageState.DOWNLOADING);
-				imageData.setFederationMember(properties
-						.getProperty("federation_member"));
+			if (imageData != null) {
 
-				pendingImageDownload.put(imageData.getName(), imageData);
-				imageStore.updateImage(imageData);
+				// FIXME: not good block
+				while (imageStore.lockImage(imageData.getName())) {
+					imageData.setState(ImageState.DOWNLOADING);
+					imageData.setFederationMember(properties
+							.getProperty("federation_member"));					
+					pendingImageDownload.put(imageData.getName(), imageData);
+					imageStore.updateImage(imageData);
+					imageStore.unlockImage(imageData.getName());
 
-				imageStore.unlockImage(imageData.getName());
-				return imageData;
+					downloadImage(imageData);
+				}
 			}
 		}
-		return null;
+	}
+
+	private int numberOfImagesToDownload() {
+		// FIXME: why not to calculate at execution time?
+		double totalVolumeSize = Double.parseDouble(properties
+				.getProperty("default_volume_size"));
+
+		double usedSpace = usedVolumeSpace();
+		double availableSize = totalVolumeSize - usedSpace;
+
+		double numberOfImagesToDownload = availableSize
+				/ DEFAULT_IMAGE_DIR_SIZE;
+
+		// FIXME: this cast ceil or floors the values?
+		return (int) numberOfImagesToDownload;
+	}
+
+	private void downloadImage(final ImageData imageData) {
+
+		try {
+			// FIXME: it blocks?
+			NASARepository.downloadImage(imageData);
+
+			// running Fmask
+			int exitValue = runFmask(imageData);
+			if (exitValue != 0) {
+				LOGGER.error("It was not possible run Fmask for image "
+						+ imageData.getName());
+				imageData.setFederationMember(ImageDataStore.NONE);
+			}
+
+			imageData.setState(ImageState.DOWNLOADED);
+			imageStore.updateImage(imageData);
+			pendingImageDownload.remove(imageData.getName());
+		} catch (Exception e) {
+			LOGGER.error(
+					"Couldn't download image " + imageData.getName() + ".", e);
+			removeFromPendingAndUpdateState(imageData);
+		}
 	}
 	
-	private void downloadImage(final ImageData imageData) {
-		downloader.execute(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					NASARepository.downloadImage(imageData);
+	private void removeFromPendingAndUpdateState(final ImageData imageData) {
+		pendingImageDownload.remove(imageData.getName());
+		try {
+			imageData.setFederationMember(ImageDataStore.NONE);
+			imageData.setState(ImageState.NOT_DOWNLOADED);
+			imageStore.updateImage(imageData);
+		} catch (SQLException e1) {
+			Crawler.LOGGER.error("Error while updating image data.", e1);
+		}
+	}
 
-					//running Fmask					
-					int exitValue = runFmask(imageData);					
-					if (exitValue != 0) {
-						LOGGER.error("It was not possible run Fmask for image " + imageData.getName());
-//						removeFromPendingAndUpdateState(imageData);
-//						return;
-						imageData.setFederationMember(ImageDataStore.NONE);
-					}
-					
-					imageData.setState(ImageState.DOWNLOADED);
-					imageStore.updateImage(imageData);					
-					pendingImageDownload.remove(imageData.getName());					
-				} catch (Exception e) {
-					LOGGER.error("Couldn't download image " + imageData.getName() + ".", e);
-					removeFromPendingAndUpdateState(imageData);
-				}
+	//FIXME: move to a class?
+	private int runFmask(final ImageData imageData) throws IOException,
+			FileNotFoundException, InterruptedException {
+
+		File tempFile = File.createTempFile("temp-" + imageData.getName(),
+				".sh");
+		FileOutputStream fos = new FileOutputStream(tempFile);
+
+		FileInputStream fis = new FileInputStream(
+				properties.getProperty("fmask_script_path"));
+		String origExec = IOUtils.toString(fis);
+
+		IOUtils.write(replaceVariables(origExec, imageData), fos);
+		fos.close();
+
+		ProcessBuilder builder = new ProcessBuilder("chmod", "+x",
+				tempFile.getAbsolutePath());
+		Process p = builder.start();
+		p.waitFor();
+
+		if (p.exitValue() != 0) {
+			LOGGER.error("Error while running chmod +x command. Message="
+					+ getError(p));
+		}
+		LOGGER.debug("chmod +x command output=" + getOutput(p));
+
+		builder = new ProcessBuilder("bash", tempFile.getAbsolutePath());
+		p = builder.start();
+		p.waitFor();
+
+		if (p.exitValue() != 0) {
+			LOGGER.error("Error while running fmask command. Message="
+					+ getError(p));
+		}
+		LOGGER.debug("run-fmask command output=" + getOutput(p));
+
+		return p.exitValue();
+	}
+
+	private static String getOutput(Process p) throws IOException {
+		BufferedReader r = new BufferedReader(new InputStreamReader(
+				p.getInputStream()));
+		String out = new String();
+		while (true) {
+			String line = r.readLine();
+			if (line == null) {
+				break;
 			}
+			out += line;
+		}
+		return out;
+	}
 
-			private void removeFromPendingAndUpdateState(final ImageData imageData) {
-				pendingImageDownload.remove(imageData.getName());
-				try {
-					imageData.setFederationMember(ImageDataStore.NONE);
-					imageData.setState(ImageState.NOT_DOWNLOADED);
-					imageStore.updateImage(imageData);
-				} catch (SQLException e1) {
-					Crawler.LOGGER.error("Error while updating image data.", e1);
-				}
+	private static String getError(Process p) throws IOException {
+		BufferedReader r = new BufferedReader(new InputStreamReader(
+				p.getErrorStream()));
+		String error = new String();
+		while (true) {
+			String line = r.readLine();
+			if (line == null) {
+				break;
 			}
-
-			private int runFmask(final ImageData imageData) throws IOException,
-					FileNotFoundException, InterruptedException {
-				File tempFile = File.createTempFile("temp-" + imageData.getName(), ".sh");
-				FileOutputStream fos = new FileOutputStream(tempFile);
-
-				FileInputStream fis = new FileInputStream(properties.getProperty("fmask_script_path"));
-				String origExec = IOUtils.toString(fis);
-
-				IOUtils.write(replaceVariables(origExec, imageData), fos);
-				fos.close();
-				
-				ProcessBuilder builder = new ProcessBuilder("chmod", "+x", tempFile.getAbsolutePath());
-				Process p = builder.start();
-				p.waitFor();
-				
-				if (p.exitValue() != 0) {
-					LOGGER.error("Error while running chmod +x command. Message=" + getError(p));
-				}
-				LOGGER.debug("chmod +x command output=" + getOutput(p));
-
-				builder = new ProcessBuilder("bash", tempFile.getAbsolutePath());
-				p = builder.start();
-				p.waitFor();
-				
-				if (p.exitValue() != 0) {
-					LOGGER.error("Error while running fmask command. Message=" + getError(p));
-				} 
-				LOGGER.debug("run-fmask command output=" + getOutput(p));
-				
-				return p.exitValue();
-			}
-
-			private String getOutput(Process p) throws IOException {
-				BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		        String out = new String();
-		        while (true) {
-		            String line = r.readLine();
-		            if (line == null) { break; }
-		            out += line;
-		        }
-		        return out;
-			}
-
-			private String getError(Process p) throws IOException {
-				BufferedReader r = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-		        String error = new String();
-		        while (true) {
-		            String line = r.readLine();
-		            if (line == null) { break; }
-		            error += line;
-		        }     
-				return error;
-			}
-		});
+			error += line;
+		}
+		return error;
 	}
 
 	// TODO: see if this is correct
-	private void deleteFetchedResultsFromVolume(Properties properties, List<ImageData> setOfImageData)
-			throws IOException, InterruptedException, SQLException {
+	private void deleteFetchedResultsFromVolume(Properties properties) throws IOException,
+			InterruptedException, SQLException {
+		
+		List<ImageData> setOfImageData = imageStore.getAllImages();
+
 		String imagesDirPath = properties.getProperty("sebal_export_path")
 				+ "/results";
 		File imagesDir = new File(imagesDirPath);
@@ -345,10 +262,11 @@ public class Crawler {
 			LOGGER.debug("This file does not exist!");
 			return;
 		}
-		
+
 		ProcessBuilder pb = null;
 
 		try {
+			// FIXME: replace by file utils call
 			for (ImageData imageData : setOfImageData) {
 				pb = new ProcessBuilder("rm -r " + imagesDirPath + "/"
 						+ imageData.getName());
@@ -362,41 +280,26 @@ public class Crawler {
 			e.printStackTrace();
 		}
 	}
-	
-	public static double folderSize(File directory) {
-	    double length = 0;
-	    for (File file : directory.listFiles()) {
-	        if (file.isFile())
-	            length += file.length();
-	        else
-	            length += folderSize(file);
-	    }
-	    return length;
+
+	private double usedVolumeSpace() {
+		File volumeDirectory = new File(volumePath);
+
+		if ((volumeDirectory.exists() && volumeDirectory.isDirectory())) {
+			return FileUtils.sizeOfDirectory(volumeDirectory);
+		} else {
+			throw new RuntimeException("VolumePath: " + volumePath
+					+ " is not a directory or does not exist");
+		}
 	}
 
-	protected String replaceVariables(String command, ImageData imageData) {
-		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"), imageData.getName());
+	private String replaceVariables(String command, ImageData imageData) {
+		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
+				imageData.getName());
 		command = command.replaceAll(Pattern.quote("${IMAGES_MOUNT_POINT}"),
 				properties.getProperty("image_repository"));
 		command = command.replaceAll(Pattern.quote("${FMASK_TOOL}"),
 				properties.getProperty("fmask_tool_path"));
 		return command;
-	}
-
-	/*
-	 * This method must be used only for testing
-	 */
-	protected void setNASARepository(NASARepository nasaRepository) {
-		this.NASARepository = nasaRepository;
-		
-	}
-	
-	/*
-	 * This method must be used only for testing
-	 */
-	protected void setImageDownloader(ExecutorService imageDownloader) {
-		this.downloader = imageDownloader;
-		
 	}
 
 }

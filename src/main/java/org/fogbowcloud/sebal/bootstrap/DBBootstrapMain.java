@@ -149,8 +149,8 @@ public class DBBootstrapMain {
 				properties, imageStoreIP, imageStorePort);
 
 		List<ImageData> allImageData = imageStore.getAllImages();
-		for(ImageData imageData : allImageData) {
-			imageData.toString();
+		for(int i = 0; i < allImageData.size(); i++) {
+			System.out.println(allImageData.get(i).toString());
 		}		
 	}
 	

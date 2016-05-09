@@ -90,7 +90,7 @@ public class InfrastructureManager {
 	public void start(boolean blockWhileInitializing) throws Exception {
 		LOGGER.info("Starting Infrastructure Manager");
 
-		removePreviousResources();
+		//removePreviousResources();
 		this.createInitialOrders();
 		// Start order service to monitor and resolve orders.
 		triggerOrderTimer();
