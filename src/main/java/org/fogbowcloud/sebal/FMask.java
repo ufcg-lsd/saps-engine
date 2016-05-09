@@ -13,9 +13,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
-public class FmaskUtils {
+public class FMask {
 	
-	public static final Logger LOGGER = Logger.getLogger(FmaskUtils.class);
+	public static final Logger LOGGER = Logger.getLogger(FMask.class);
 	
 	public int runFmask(final ImageData imageData, Properties properties) throws IOException,
 			FileNotFoundException, InterruptedException {

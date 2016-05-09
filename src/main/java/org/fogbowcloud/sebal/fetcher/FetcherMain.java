@@ -6,7 +6,7 @@ import java.util.Properties;
 
 public class FetcherMain {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
@@ -17,6 +17,6 @@ public class FetcherMain {
 		String ftpServerPort = args[4];
 		
 		Fetcher Fetcher = new Fetcher(properties, imageStoreIP, imageStorePort, ftpServerIP, ftpServerPort);
-		Fetcher.init();
+		Fetcher.exec();
 	}
 }
