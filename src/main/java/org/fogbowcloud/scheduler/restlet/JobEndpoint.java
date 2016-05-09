@@ -34,13 +34,14 @@ public class JobEndpoint extends ServerResource {
 
 		for (JDFJob job : application.getAllJobs()) {
 			JSONObject jobInfo = new JSONObject();
+			JSONArray taskArray = new JSONArray();
 			try {
 				jobInfo.put("id", job.getId());
-				jobInfo.put("parent", "#");
 				jobInfo.put("text", job.getName());
-				jArray.put(jobInfo);
 				int taskNumber = 1;
-				fillTasks(jArray, job, taskNumber);
+				fillTasks(taskArray, job, taskNumber);
+				jobInfo.put("tasks", taskArray);
+				jArray.put(jobInfo);
 			} catch (JSONException e) {
 				LOGGER.error(e.getMessage());
 			}
@@ -54,7 +55,6 @@ public class JobEndpoint extends ServerResource {
 		for (Task task : job.getByState(TaskState.READY)){
 			JSONObject taskInfo = new JSONObject();
 			taskInfo.put("id", task.getId());
-			taskInfo.put("parent", job.getId());
 			taskInfo.put("text", String.valueOf(taskNumber));
 			taskInfo.put("taskState", "READY");
 			jArray.put(taskInfo);
@@ -63,7 +63,6 @@ public class JobEndpoint extends ServerResource {
 		for (Task task : job.getByState(TaskState.RUNNING)){
 			JSONObject taskInfo = new JSONObject();
 			taskInfo.put("id", task.getId());
-			taskInfo.put("parent", job.getId());
 			taskInfo.put("text", String.valueOf(taskNumber));
 			taskInfo.put("taskState", "READY");
 			jArray.put(taskInfo);
@@ -72,7 +71,6 @@ public class JobEndpoint extends ServerResource {
 		for (Task task : job.getByState(TaskState.FAILED)){
 			JSONObject taskInfo = new JSONObject();
 			taskInfo.put("id", task.getId());
-			taskInfo.put("parent", job.getId());
 			taskInfo.put("text", String.valueOf(taskNumber));
 			taskInfo.put("taskState", "READY");
 			jArray.put(taskInfo);
@@ -81,7 +79,6 @@ public class JobEndpoint extends ServerResource {
 		for (Task task : job.getByState(TaskState.COMPLETED)){
 			JSONObject taskInfo = new JSONObject();
 			taskInfo.put("id", task.getId());
-			taskInfo.put("parent", job.getId());
 			taskInfo.put("text", String.valueOf(taskNumber));
 			taskInfo.put("taskState", "READY");
 			jArray.put(taskInfo);

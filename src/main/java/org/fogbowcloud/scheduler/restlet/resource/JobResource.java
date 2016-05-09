@@ -19,6 +19,7 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import com.amazonaws.util.json.JSONArray;
 import com.amazonaws.util.json.JSONObject;
 
 public class JobResource extends ServerResource {
@@ -30,10 +31,9 @@ public class JobResource extends ServerResource {
 
 	private static final Logger LOGGER = Logger.getLogger(JobResource.class);
 
-	Map<String, String> jobTasks = new HashMap<String, String>();
+	JSONArray jobTasks = new JSONArray();
 
-	Map<String, String> jobsNumberOfTasks = new HashMap<String, String>();
-
+	
 	@Get
 	public Representation fetch() throws Exception {
 		LOGGER.info("Getting Jobs...");
@@ -42,18 +42,23 @@ public class JobResource extends ServerResource {
 		JDFSchedulerApplication application = (JDFSchedulerApplication) getApplication();
 		JSONObject jsonJob = new JSONObject();
 		
+		JSONArray jobs = new JSONArray();
+		
 		if (jobId == null) { 
 			for (JDFJob job : application.getAllJobs()){
+				JSONObject jJob = new JSONObject();
 				if (job.getName() != null) {
-					jobsNumberOfTasks.put(job.getId() ,  job.getName() +" "+ job.getByState(TaskState.READY).size());
+					jJob.put("id: ", job.getId());
+					jJob.put("name", job.getName());
+					jJob.put("readytasks", job.getByState(TaskState.READY).size());
 				} else {
-					jobsNumberOfTasks.put(job.getId(), String.valueOf(job.getByState(TaskState.READY).size()));
+					jJob.put("id: ", job.getId());
+					jJob.put("readytasks", job.getByState(TaskState.READY).size());
 				}
+				jobs.put(jJob);
 			}
 
-			LOGGER.debug("Got all jobs, there are " + jobsNumberOfTasks.size());
-
-			jsonJob.put("Jobs", jobsNumberOfTasks);
+			jsonJob.put("Jobs", jobs);
 
 			LOGGER.debug("My info Is: " + jsonJob.toString());
 
@@ -75,19 +80,31 @@ public class JobResource extends ServerResource {
 
 		for (Task task : job.getByState(TaskState.READY)){
 			LOGGER.debug("Task Id is:" + task.getId());
-			jobTasks.put(task.getId(), TaskState.READY.toString());
+			JSONObject jTask = new JSONObject();
+			jTask.put("taskid", task.getId());
+			jTask.put("state", TaskState.READY);
+			jobTasks.put(jTask);
 		};
 		for (Task task : job.getByState(TaskState.RUNNING)){
-			jobTasks.put(task.getId(), TaskState.RUNNING.toString());
+			JSONObject jTask = new JSONObject();
+			jTask.put("taskid", task.getId());
+			jTask.put("state", TaskState.RUNNING);
+			jobTasks.put(jTask);
 		};
 		for (Task task : job.getByState(TaskState.COMPLETED)){
-			jobTasks.put(task.getId(), TaskState.COMPLETED.toString());
+			JSONObject jTask = new JSONObject();
+			jTask.put("taskid", task.getId());
+			jTask.put("state", TaskState.COMPLETED);
+			jobTasks.put(jTask);
 		};
 		for (Task task : job.getByState(TaskState.FAILED)){
-			jobTasks.put(task.getId(), TaskState.FAILED.toString());
+			JSONObject jTask = new JSONObject();
+			jTask.put("taskid", task.getId());
+			jTask.put("state", TaskState.FAILED);
+			jobTasks.put(jTask);
 		};
 
-
+		jsonJob.put("id", jobId);
 		jsonJob.put("Tasks", jobTasks);
 		return new StringRepresentation(jsonJob.toString(), MediaType.TEXT_PLAIN);
 	}
