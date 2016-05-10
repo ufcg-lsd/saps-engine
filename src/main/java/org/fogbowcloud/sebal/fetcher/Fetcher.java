@@ -1,6 +1,7 @@
 package org.fogbowcloud.sebal.fetcher;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -9,6 +10,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
@@ -144,16 +147,25 @@ public class Fetcher {
 	}
 
 	// TODO: See if this is correct
+	// FIXME: deal with failure
+	// FIXME: reduce code
 	public void fetch(final ImageData imageData) throws IOException,
 			InterruptedException {
 		// FIXME: checkSum
 
-		String remoteResultsPath = properties.getProperty("sebal_export_path")
-				+ "/results/" + imageData.getName();
+		String localVolumeResultsPath = properties
+				.getProperty("fetcher_volume_path") + "/results";
+		String localVolumeResultDir = localVolumeResultsPath + "/" + imageData;
+		String remoteVolumeResultsPath = properties
+				.getProperty("sebal_export_path")
+				+ "/results/"
+				+ imageData.getName();
 
-		File remoteResultsDir = new File(remoteResultsPath);
+		File localVolumeResultsDir = new File(localVolumeResultDir);
+		File remoteVolumeResultsDir = new File(remoteVolumeResultsPath);
 
-		if (!remoteResultsDir.exists() && !remoteResultsDir.isDirectory()) {
+		if (!remoteVolumeResultsDir.exists()
+				&& !remoteVolumeResultsDir.isDirectory()) {
 			LOGGER.error("This folder doesn't exist or is not a directory.");
 			return;
 		}
@@ -161,10 +173,26 @@ public class Fetcher {
 		ProcessBuilder builder = new ProcessBuilder();
 		builder.command("sftp -P " + ftpServerPort + " "
 				+ properties.getProperty("ftp_server_user") + "@" + ftpServerIP);
-		builder.command("get -r " + remoteResultsDir);
+		builder.command("get -r " + remoteVolumeResultsDir);
+		builder.command("quit");
+		builder.command("mv -r " + imageData.getName() + " "
+				+ localVolumeResultsPath);
 
 		Process p = builder.start();
 		p.waitFor();
+
+		try {
+			FileInputStream imageDataInputStream = new FileInputStream(
+					localVolumeResultsDir);
+			String imageDataCrunchifyValue = DigestUtils.md5Hex(IOUtils
+					.toByteArray(imageDataInputStream));
+			IOUtils.closeQuietly(imageDataInputStream);
+		} catch (IOException e) {
+			// FIXME: deal with this better
+			LOGGER.error("Fetched file is corrupted.", e);
+			builder.command("rm -r " + localVolumeResultDir);
+			fetch(imageData);
+		}
 	}
 	
 }
