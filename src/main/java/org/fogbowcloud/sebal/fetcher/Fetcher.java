@@ -1,6 +1,7 @@
 package org.fogbowcloud.sebal.fetcher;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,7 +10,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.FTPUtils;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
@@ -53,7 +53,7 @@ public class Fetcher {
 		this.ftpServerPort = ftpServerPort;
 	}
 
-	public void exec() throws InterruptedException {
+	public void exec() throws InterruptedException, IOException {
 
 		LOGGER.info("Initializing fetcher... ");
 
@@ -78,6 +78,8 @@ public class Fetcher {
 	private void removeFromPendingAndUpdateState(final ImageData imageData) {
 		// FIXME: add log
 		try {
+			// FIXME: see how federation member will be used
+			// FIXME: see if will be set to NONE or do nothing
 			imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.FINISHED);
 			imageStore.updateImage(imageData);
@@ -97,7 +99,7 @@ public class Fetcher {
 		return Collections.EMPTY_LIST;
 	}
 
-	private void fetchAndUpdateImage(ImageData imageData) {
+	private void fetchAndUpdateImage(ImageData imageData) throws IOException, InterruptedException {
 
 		try {
 			prepareFetch(imageData);
@@ -142,31 +144,27 @@ public class Fetcher {
 	}
 
 	// TODO: See if this is correct
-	// FIXME: replace by fetch
-	public void fetch(final ImageData imageData) {
+	public void fetch(final ImageData imageData) throws IOException,
+			InterruptedException {
 		// FIXME: checkSum
 
-		FTPUtils ftpUtils = new FTPUtils(properties, ftpServerIP, ftpServerPort);
-		FTPUtils.init(imageData);
+		String remoteResultsPath = properties.getProperty("sebal_export_path")
+				+ "/results/" + imageData.getName();
 
-		/*
-		 * String resultsDirPath = properties.getProperty("sebal_export_path") +
-		 * "/results/" + imageData.getName(); File resultsDir = new
-		 * File(resultsDirPath); if (!resultsDir.exists() ||
-		 * !resultsDir.isDirectory()) { resultsDir.mkdirs(); }
-		 * 
-		 * ProcessBuilder builder = new ProcessBuilder();
-		 * builder.directory(resultsDir); builder.command("wget -r ftp://" +
-		 * properties.getProperty("ftp_server_user") + ":" +
-		 * properties.getProperty("ftp_user_pass") + "@" + ftpServerIP +
-		 * "/results/" + imageData.getName());
-		 * 
-		 * LOGGER.info("Fetching image " + imageData.getName() +
-		 * " into volume."); Process p = builder.start(); p.waitFor();
-		 * 
-		 * LOGGER.info("Image " + imageData.getName() +
-		 * " fetched into volume.");
-		 */
+		File remoteResultsDir = new File(remoteResultsPath);
+
+		if (!remoteResultsDir.exists() && !remoteResultsDir.isDirectory()) {
+			LOGGER.error("This folder doesn't exist or is not a directory.");
+			return;
+		}
+
+		ProcessBuilder builder = new ProcessBuilder();
+		builder.command("sftp -P " + ftpServerPort + " "
+				+ properties.getProperty("ftp_server_user") + "@" + ftpServerIP);
+		builder.command("get -r " + remoteResultsDir);
+
+		Process p = builder.start();
+		p.waitFor();
 	}
-
+	
 }
