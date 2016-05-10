@@ -17,6 +17,7 @@ public class CheckSumMD5ForFile {
 		String localCheckSum = null;
 		FileInputStream fileInputStream = null;
 		try {
+			//FIXME: get the content
 			String checkSumPath = filesDir + imageData.getName() + "_checksum.md5";
 			FileInputStream remoteCheckSumInputStream = new FileInputStream(new File(checkSumPath));
 			String remoteCheckSum = DigestUtils.md2Hex(remoteCheckSumInputStream);
@@ -29,8 +30,6 @@ public class CheckSumMD5ForFile {
 				throw new IOException("Some file in " + filesDir
 						+ " is corrupted or present some error.");
 			}
-			// md5Hex converts an array of bytes into an array of characters representing the hexadecimal values of each byte in order.
-			// The returned array will be double the length of the passed array, as it takes two characters to represent any given byte.
 		} catch (IOException e) {
 			LOGGER.error(e);
 			return true;

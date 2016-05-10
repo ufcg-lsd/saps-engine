@@ -1,7 +1,6 @@
 package org.fogbowcloud.sebal.fetcher;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -10,9 +9,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.CheckSumMD5ForFile;
 import org.fogbowcloud.sebal.ImageData;
@@ -149,8 +145,18 @@ public class Fetcher {
 	}
 
 	// TODO: See if this is correct
-	// FIXME: deal with failure
 	// FIXME: reduce code
+	
+	//1. ftp fazer funcionar
+	
+	//2. decidir como pedar o output, por arquivo ou tarball
+	
+	//worker node
+	//	tar cvf (um unico arquivo)
+	//	md5sum (colocar no nome do output o valor do md5)
+	//fetcher
+	//	md5sum single file
+	//	compare with md5 from worker node
 	public void fetch(final ImageData imageData) throws IOException,
 			InterruptedException {
 		// FIXME: checkSum
