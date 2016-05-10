@@ -1,11 +1,10 @@
 package org.fogbowcloud.sebal.bootstrap;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -87,11 +86,15 @@ public class DBBootstrap {
 	private List<String> getRegions(String filePath) {
 		List<String> regions = new ArrayList<String>();
 		try {
-			for (String line : Files.readAllLines(Paths.get(filePath), Charset.defaultCharset())) {
+			BufferedReader br = new BufferedReader(new FileReader(filePath));
+			String line;
+			while ((line = br.readLine()) != null) {
 				regions.add(line);
 			}
+			br.close();
 		} catch (IOException e) {
-			LOGGER.error("Error while reading regions from file path " + filePath, e);
+			LOGGER.error("Error while reading regions from file path "
+					+ filePath, e);
 		}
 		return regions;
 	}
