@@ -28,7 +28,7 @@ cp ${SEBAL_IMAGE_REPOSITORY}/images/${IMAGE_NAME}".tar.gz" .
 tar -xvzf ${IMAGE_NAME}".tar.gz"
 
 echo "Creating image output directory"
-OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/${IMAGE_NAME}
+OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/results/${IMAGE_NAME}
 mkdir -p $OUTPUT_IMAGE_DIR
 
 echo "Creating dados.csv for image ${IMAGE_NAME}"
@@ -44,6 +44,10 @@ Rscript AlgoritmoFinal.R $R_EXEC_DIR
 
 echo "Renaming dados file"
 mv dados.csv dados"-$IMAGE_NAME".csv
+
+tar -cvzf $OUTPUT_IMAGE_DIR/${IMAGE_NAME}"_results.tar.gz" $OUTPUT_IMAGE_DIR/*
+
+md5sum $OUTPUT_IMAGE_DIR/${IMAGE_NAME}"_results.tar.gz" > ${IMAGE_NAME}"_checksum.md5"
 
 #rm -r /tmp/Rtmp*
 

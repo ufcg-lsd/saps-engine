@@ -11,8 +11,10 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.CheckSumMD5ForFile;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
@@ -161,7 +163,6 @@ public class Fetcher {
 				+ "/results/"
 				+ imageData.getName();
 
-		File localVolumeResultsDir = new File(localVolumeResultDir);
 		File remoteVolumeResultsDir = new File(remoteVolumeResultsPath);
 
 		if (!remoteVolumeResultsDir.exists()
@@ -175,22 +176,13 @@ public class Fetcher {
 				+ properties.getProperty("ftp_server_user") + "@" + ftpServerIP);
 		builder.command("get -r " + remoteVolumeResultsDir);
 		builder.command("quit");
-		builder.command("mv -r " + imageData.getName() + " "
+		builder.command("mv -rf " + imageData.getName() + " "
 				+ localVolumeResultsPath);
 
 		Process p = builder.start();
 		p.waitFor();
 
-		try {
-			FileInputStream imageDataInputStream = new FileInputStream(
-					localVolumeResultsDir);
-			String imageDataCrunchifyValue = DigestUtils.md5Hex(IOUtils
-					.toByteArray(imageDataInputStream));
-			IOUtils.closeQuietly(imageDataInputStream);
-		} catch (IOException e) {
-			// FIXME: deal with this better
-			LOGGER.error("Fetched file is corrupted.", e);
-			builder.command("rm -r " + localVolumeResultDir);
+		if(CheckSumMD5ForFile.isFileCorrupted(imageData, new File(localVolumeResultDir))) {
 			fetch(imageData);
 		}
 	}

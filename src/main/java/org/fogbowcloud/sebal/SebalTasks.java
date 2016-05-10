@@ -287,7 +287,11 @@ public class SebalTasks {
 		String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
 		rTaskImpl.addCommand(new Command(remoteCopyCommand,
 				Command.Type.EPILOGUE));*/
-
+		
+		// TODO: see if this will be used
+		/*String getChecukSumNameCommand = createCommandToRunRemotly("cat " + imageName + "_checksum.md5");
+		rTaskImpl.addCommand(new Command(getChecukSumNameCommand, Command.Type.EPILOGUE));*/
+		
 		String cleanEnvironment = "rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);

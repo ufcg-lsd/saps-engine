@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.FMask;
 import org.fogbowcloud.sebal.ImageData;
@@ -140,10 +142,10 @@ public class Crawler {
 				LOGGER.error("It was not possible run Fmask for image "
 						+ imageData.getName());
 				imageData.setFederationMember(ImageDataStore.NONE);
-			}
+			}			
 
 			imageData.setState(ImageState.DOWNLOADED);
-			imageStore.updateImage(imageData);
+			imageStore.updateImage(imageData);			
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (Exception e) {
 			LOGGER.error(

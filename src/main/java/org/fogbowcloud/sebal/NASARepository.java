@@ -1,6 +1,7 @@
 package org.fogbowcloud.sebal;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -68,6 +70,7 @@ public class NASARepository {
 		File file = new File(localImageFilePath);
 		OutputStream outStream = new FileOutputStream(file);
 		IOUtils.copy(response.getEntity().getContent(), outStream);
+		outStream.close();
 	}
 
 	private HttpClient initClient() throws IOException, ClientProtocolException,
