@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.FMask;
 import org.fogbowcloud.sebal.ImageData;
@@ -28,9 +26,9 @@ public class Crawler {
 	private final Properties properties;
 	private NASARepository NASARepository;
 	private final ImageDataStore imageStore;
-	private final File pendingImageDownloadFile = new File("pending-image-download.db");
-	private final DB pendingImageDownloadDB = DBMaker.newFileDB(pendingImageDownloadFile).make();
-	private ConcurrentMap<String, ImageData> pendingImageDownloadMap = pendingImageDownloadDB.createHashMap("map").make();
+	private final File pendingImageDownloadFile;
+	private final DB pendingImageDownloadDB;
+	private ConcurrentMap<String, ImageData> pendingImageDownloadMap;
 
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	// Image dir size in bytes
@@ -50,6 +48,9 @@ public class Crawler {
 		this.imageStore = new JDBCImageDataStore(properties, imageStoreIP,
 				imageStorePort);
 		this.NASARepository = new NASARepository(properties);
+		this.pendingImageDownloadFile = new File("pending-image-download.db");
+		this.pendingImageDownloadDB = DBMaker.newFileDB(pendingImageDownloadFile).make();
+		this.pendingImageDownloadMap = pendingImageDownloadDB.createHashMap("map").make();
 	}
 
 	public void exec() throws InterruptedException, IOException {
@@ -72,6 +73,7 @@ public class Crawler {
 			} while (thereIsImageToDownload());
 		} catch (Throwable e) {
 			LOGGER.error("Failed while download task.", e);
+			e.printStackTrace();
 		}
 
 		pendingImageDownloadDB.close();
@@ -100,7 +102,7 @@ public class Crawler {
 			if (imageData != null) {
 				
 				// FIXME: not good block
-				while (imageStore.lockImage(imageData.getName())) {
+				if (imageStore.lockImage(imageData.getName())) {
 					imageData.setState(ImageState.DOWNLOADING);
 					imageData.setFederationMember(properties
 							.getProperty("federation_member"));					
@@ -117,14 +119,13 @@ public class Crawler {
 	private long numberOfImagesToDownload() {
 		
 		//FIXME test
-		
 		String volumeDirPath = properties.getProperty("sebal_export_path");
 		File volumePath = new File(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
 			long availableVolumeSpace = volumePath.getFreeSpace();
 			long numberOfImagesToDownload = availableVolumeSpace / DEFAULT_IMAGE_DIR_SIZE;
 			//FIXME: ceil para o inteiro inferior
-			return numberOfImagesToDownload / FileUtils.ONE_GB;
+			return numberOfImagesToDownload;
 		} else {
 			throw new RuntimeException("VolumePath: " + volumeDirPath
 					+ " is not a directory or does not exist");
@@ -173,24 +174,27 @@ public class Crawler {
 
 		String exportPath = properties.getProperty("sebal_export_path");
 				
-		for (ImageData imageData : setOfImageData) {
-			if (!exportPath.isEmpty() && exportPath != null) {
-				String imageDirPath = exportPath + "/results/"
-						+ imageData.getName();
-				File imageDir = new File(imageDirPath);
+		if (!exportPath.isEmpty() && exportPath != null) {
+			for (ImageData imageData : setOfImageData) {
+				if (imageData.getState().equals(ImageState.FINISHED)) {
+					String imageDirPath = exportPath + "/results/"
+							+ imageData.getName();
+					File imageDir = new File(imageDirPath);
 
-				if (!imageDir.exists() || !imageDir.isDirectory()) {
-					LOGGER.debug("This file does not exist!");
-					return;
+					if (!imageDir.exists() || !imageDir.isDirectory()) {
+						LOGGER.debug("This file does not exist!");
+						return;
+					}
+					FileUtils.deleteDirectory(imageDir);
+					LOGGER.debug("Image " + imageData.getName() + " result files deleted successfully.");
+				} else {
+					continue;
 				}
-				FileUtils.deleteDirectory(imageDir);
-			} else {
-				// FIXME: Implement solution for this 
-				LOGGER.error("Volume directory path is null or empty!");
-			}				
+			}
+		} else {
+			// FIXME: Implement solution for this
+			LOGGER.error("Volume directory path is null or empty!");
 		}
-
-		LOGGER.debug("Image files deleted successfully.");
 	}
 
 }

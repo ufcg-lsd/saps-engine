@@ -50,7 +50,7 @@ public class NASARepository {
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
 		HttpResponse response = httpClient.execute(homeGet);
 
-		String imageDirPath = properties.getProperty("sebal_export_path") + imageData.getName();
+		String imageDirPath = properties.getProperty("sebal_export_path") + "/" + imageData.getName();
 		File imageDir = new File(imageDirPath);
 		if (!imageDir.exists() || !imageDir.isDirectory()) {
 			imageDir.mkdirs();

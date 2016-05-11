@@ -1,9 +1,10 @@
 package org.fogbowcloud.sebal;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ImageData {
+public class ImageData implements Serializable {
 
 	private String name;
 	private String downloadLink;
