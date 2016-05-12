@@ -18,6 +18,7 @@ import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.crawler.Crawler;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import com.amazonaws.services.ec2.model.Image;
 
 public class Fetcher {
 
@@ -35,6 +36,7 @@ public class Fetcher {
 	private String ftpServerIP;
 	private String ftpServerPort;
 
+	private static int MAX_FETCH_TRIES = 2;
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
@@ -104,8 +106,13 @@ public class Fetcher {
 
 		try {
 			prepareFetch(imageData);
-			fetch(imageData);
-			finishFetch(imageData);
+			fetch(imageData, 0);
+			
+			if(imageData.getState().equals(ImageState.CORRUPTED)) {
+				imageStore.updateImage(imageData);
+			} else {
+				finishFetch(imageData);			
+			}
 		} catch (SQLException e) {
 			LOGGER.error("Couldn't fetch image " + imageData.getName() + ".", e);
 			rollBackFetch(imageData);
@@ -126,7 +133,7 @@ public class Fetcher {
 		}
 	}
 
-	private void finishFetch(ImageData imageData) throws SQLException {
+	private void finishFetch(ImageData imageData) throws SQLException {		
 		imageData.setState(ImageState.FETCHED);
 		imageStore.updateImage(imageData);
 		pendingImageFetchMap.remove(imageData.getName());
@@ -136,6 +143,7 @@ public class Fetcher {
 
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
+			// FIXME: see if this will be set to NONE
 			imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.FINISHED);
 			imageStore.updateImage(imageData);
@@ -157,10 +165,15 @@ public class Fetcher {
 	//fetcher
 	//	md5sum single file
 	//	compare with md5 from worker node
-	public void fetch(final ImageData imageData) throws IOException,
-			InterruptedException {
-		// FIXME: checkSum
-
+	public void fetch(final ImageData imageData, int tries) throws IOException,
+			InterruptedException, SQLException {
+		
+		if(tries > MAX_FETCH_TRIES) {
+			LOGGER.debug("Max tries reached!\nFile is corrupted.");
+			imageData.setState(ImageState.CORRUPTED);
+			return;
+		}
+		
 		String localVolumeResultsPath = properties
 				.getProperty("fetcher_volume_path") + "/results";
 		String localVolumeResultDir = localVolumeResultsPath + "/" + imageData;
@@ -188,9 +201,8 @@ public class Fetcher {
 		Process p = builder.start();
 		p.waitFor();
 
-/*		if(CheckSumMD5ForFile.isFileCorrupted(imageData, new File(localVolumeResultDir))) {
-			fetch(imageData);
-		}*/
+		if(CheckSumMD5ForFile.isFileCorrupted(imageData, new File(localVolumeResultDir))) {
+			fetch(imageData, tries++);
+		}
 	}
-	
 }

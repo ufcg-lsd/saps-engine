@@ -12,23 +12,29 @@ public class CheckSumMD5ForFile {
 	
 	public static final Logger LOGGER = Logger.getLogger(CheckSumMD5ForFile.class);
 
-	// FIXME: see if this will be really with a tar.gz of results or with each file
-	public static boolean isFileCorrupted(ImageData imageData, File filesDir) {
-		String localCheckSum = null;
+	public static boolean isFileCorrupted(ImageData imageData, File localFilesDir) {
+		String localChecksum = null;
 		FileInputStream fileInputStream = null;
-		try {
-			//FIXME: get the content
-			String checkSumPath = filesDir + imageData.getName() + "_checksum.md5";
-			FileInputStream remoteCheckSumInputStream = new FileInputStream(new File(checkSumPath));
-			String remoteCheckSum = DigestUtils.md2Hex(remoteCheckSumInputStream);
-			
-			String compactedImagesPath = filesDir + "/" + imageData.getName() + "_results.tar.gz";
-			fileInputStream = new FileInputStream(new File(compactedImagesPath));
-			localCheckSum = DigestUtils.md5Hex(IOUtils
-					.toByteArray(fileInputStream));
-			if (!localCheckSum.equals(remoteCheckSum)) {
-				throw new IOException("Some file in " + filesDir
-						+ " is corrupted or present some error.");
+		try {			
+			for (File outputFile : localFilesDir.listFiles()) {
+				if(!outputFile.getName().endsWith(".md5")) {
+					fileInputStream = new FileInputStream(outputFile);
+					localChecksum = DigestUtils.md5Hex(IOUtils
+							.toByteArray(fileInputStream));
+				
+					String remoteChecksum = "";
+					for (File outputMd5File : localFilesDir.listFiles()) {
+						if (outputMd5File.getName().startsWith(outputFile.getName()) && outputMd5File.getName().endsWith(".md5") ) {
+							String[] pieces = outputMd5File.getName().split(".");
+							remoteChecksum = pieces[2];
+						}
+					}
+					
+					if (!localChecksum.equals(remoteChecksum)) {
+						throw new IOException("Some file in " + localFilesDir
+								+ " is corrupted or present some error.");
+					}
+				}
 			}
 		} catch (IOException e) {
 			LOGGER.error(e);

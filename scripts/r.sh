@@ -12,7 +12,7 @@ sudo apt-get install nfs-common
 
 # mounting image repository
 # for nfs:
-mount -t nfs -o proto=ftp,port=${NFS_SERVER_PORT} ${REMOTE_USER}@${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
+mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${REMOTE_USER}@${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
 
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
 
@@ -31,7 +31,9 @@ echo "Creating image output directory"
 OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/results/${IMAGE_NAME}
 mkdir -p $OUTPUT_IMAGE_DIR
 
-java -Xmx1G -Xss1G -Djava.library.path=/usr/local/lib -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/images/ ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/results/ 0 0 9000 9000 1 1 example/boundingbox_vertices sebal.conf ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
+cd ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}
+
+java -Xmx1G -Xss1G -Djava.library.path=/usr/local/lib -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/images/ ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/results 0 0 9000 9000 1 1 example/boundingbox_vertices sebal.conf ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
 
 echo "Creating dados.csv for image ${IMAGE_NAME}"
 
@@ -49,7 +51,11 @@ mv dados.csv dados"-$IMAGE_NAME".csv
 
 #tar -cvzf $OUTPUT_IMAGE_DIR/${IMAGE_NAME}"_results.tar.gz" $OUTPUT_IMAGE_DIR/*
 
-#md5sum $OUTPUT_IMAGE_DIR/${IMAGE_NAME}"_results.tar.gz" > ${IMAGE_NAME}"_checksum.md5"
+find ${SEBAL_MOUNT_POINT}/results/${IMAGE_NAME} -type f -iname "*.nc" | while read f
+do
+CHECK_SUM=$(echo | md5sum $f | cut -c1-32)
+touch $f.$CHECK_SUM.md5
+done
 
 #rm -r /tmp/Rtmp*
 

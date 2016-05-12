@@ -8,7 +8,7 @@ public enum ImageState {
 			"ready_for_phase_c"), RUNNING_C("running_c"), READY_FOR_PHASE_F2(
 			"ready_for_phase_f2"), RUNNING_F2("running_f2"), READY_FOR_R(
 			"ready_for_r"), RUNNING_R("running_r"), FINISHED("finished"), FETCHING(
-			"fetching"), FETCHED("fetched");
+			"fetching"), FETCHED("fetched"), CORRUPTED("corrupted");
 
 	private String value;
 
