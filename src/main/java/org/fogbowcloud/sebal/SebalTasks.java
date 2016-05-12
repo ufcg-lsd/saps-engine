@@ -214,6 +214,7 @@ public class SebalTasks {
 		settingCommonTaskMetadata(properties, rTaskImpl);
 
 		// setting image R execution properties
+		rTaskImpl.putMetadata(METADATA_SEBAL_URL, properties.getProperty("sebal_url"));
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
@@ -253,8 +254,6 @@ public class SebalTasks {
 					Command.Type.PROLOGUE));
 		}
 
-		// TODO: check if the following have to change to support new script
-
 		// creating r script for this image
 		File localScriptFile = createScriptFile(properties, rTaskImpl);
 		String remoteScriptPath = rTaskImpl
@@ -276,22 +275,6 @@ public class SebalTasks {
 				Command.Type.REMOTE));
 		
 		// adding epilogue command
-		
-		// the following probably wont be used in current implementation
-/*		String copyCommand = "cp -R "
-				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
-				+ "/SEBAL/local_results/"
-				+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + " "
-				+ rTaskImpl.getMetadata(METADATA_RESULTS_LOCAL_PATH)
-				+ "/results";
-		String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
-		rTaskImpl.addCommand(new Command(remoteCopyCommand,
-				Command.Type.EPILOGUE));*/
-		
-		// TODO: see if this will be used
-		/*String getChecukSumNameCommand = createCommandToRunRemotly("cat " + imageName + "_checksum.md5");
-		rTaskImpl.addCommand(new Command(getChecukSumNameCommand, Command.Type.EPILOGUE));*/
-		
 		String cleanEnvironment = "rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);

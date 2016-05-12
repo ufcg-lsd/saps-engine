@@ -18,7 +18,6 @@ import org.fogbowcloud.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.crawler.Crawler;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-import com.amazonaws.services.ec2.model.Image;
 
 public class Fetcher {
 
@@ -108,15 +107,22 @@ public class Fetcher {
 			prepareFetch(imageData);
 			fetch(imageData, 0);
 			
-			if(imageData.getState().equals(ImageState.CORRUPTED)) {
-				imageStore.updateImage(imageData);
-			} else {
+			if(!isFileCorrupted(imageData)) {
 				finishFetch(imageData);			
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Couldn't fetch image " + imageData.getName() + ".", e);
 			rollBackFetch(imageData);
 		}
+	}
+	
+	private boolean isFileCorrupted(ImageData imageData) throws SQLException {
+		if(imageData.getState().equals(ImageState.CORRUPTED)) {
+			pendingImageFetchMap.remove(imageData.getName());
+			imageStore.updateImage(imageData);
+			return true;
+		}
+		return false;
 	}
 
 	private void prepareFetch(ImageData imageData) throws SQLException {

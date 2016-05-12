@@ -87,7 +87,7 @@ public class SebalMain {
 		//addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
 		//addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
 		
-		addFakeRTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
+		//addFakeRTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
 		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
 		
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
