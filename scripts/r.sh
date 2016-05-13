@@ -9,7 +9,7 @@ tar -zxvf SEBAL-project.tar.gz
 
 #download R
 wget -nc ${R_URL}
-tar -zxvf R.tar.gz
+tar -zxvf R-project.tar.gz
 
 sudo apt-get update
 sudo apt-get install nfs-common

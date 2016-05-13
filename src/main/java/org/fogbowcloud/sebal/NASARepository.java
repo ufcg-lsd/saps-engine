@@ -1,7 +1,6 @@
 package org.fogbowcloud.sebal;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -50,11 +48,11 @@ public class NASARepository {
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
 		HttpResponse response = httpClient.execute(homeGet);
 
-		String imageDirPath = properties.getProperty("sebal_export_path") + "/" + imageData.getName();
+		String imageDirPath = properties.getProperty("sebal_export_path") + "/images/" + imageData.getName();
 		File imageDir = new File(imageDirPath);
 		if (!imageDir.exists() || !imageDir.isDirectory()) {
 			imageDir.mkdirs();
-		}	
+		}
 		
 		String localImageFilePath = imageDirPath + "/" + imageData.getName() + ".tar.gz";
 		
