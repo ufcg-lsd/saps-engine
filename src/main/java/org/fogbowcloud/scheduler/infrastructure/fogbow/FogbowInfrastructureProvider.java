@@ -333,10 +333,15 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
 		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.INSTANCE_COUNT.getValue() + "=" + 1));
 		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.TYPE.getValue() + "=" + fogbowRequestType));
+		
+		headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\""
+				+ OrderConstants.TEMPLATE_OS_SCHEME + "\"; class=\""
+				+ OrderConstants.MIXIN_CLASS + "\""));
+		
 		headers.add(
 				new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.REQUIREMENTS.getValue() + "=" + fogbowRequirements));
-		headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\"" + OrderConstants.TEMPLATE_OS_SCHEME
-				+ "\"; class=\"" + OrderConstants.MIXIN_CLASS + "\""));
+/*		headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\"" + OrderConstants.TEMPLATE_OS_SCHEME
+				+ "\"; class=\"" + OrderConstants.MIXIN_CLASS + "\""));*/
 		if (specs.getPublicKey() != null && !specs.getPublicKey().isEmpty()) {
 			headers.add(
 					new BasicHeader(CATEGORY,
@@ -346,6 +351,9 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,
 					OrderAttribute.DATA_PUBLIC_KEY.getValue() + "=" + specs.getPublicKey()));
 		}
+		
+		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.RESOURCE_KIND
+				.getValue() + "=" + FogbowRequirementsHelper.METADATA_FOGBOW_RESOURCE_KIND));
 		return headers;
 
 	}

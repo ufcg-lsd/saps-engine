@@ -20,6 +20,7 @@ public class FogbowRequirementsHelper {
 	// ------------------ CONSTANTS ------------------//
 	protected static final String ZERO = "0";
 
+	public static final String METADATA_FOGBOW_RESOURCE_KIND = "compute";
 	public static final String METADATA_FOGBOW_REQUIREMENTS = "FogbowRequirements";
 	public static final String METADATA_FOGBOW_REQUIREMENTS_Glue2vCPU = "Glue2vCPU";
 	public static final String METADATA_FOGBOW_REQUIREMENTS_Glue2RAM = "Glue2RAM";
