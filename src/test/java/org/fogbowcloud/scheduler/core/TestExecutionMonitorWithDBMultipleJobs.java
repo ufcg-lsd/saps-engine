@@ -7,10 +7,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.eq;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 
+import org.fogbowcloud.scheduler.core.model.JDFJob;
 import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
@@ -23,13 +26,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestExecutionMonitorMultipleJobs {
+public class TestExecutionMonitorWithDBMultipleJobs {
 
 	public Task task;
 	public Task task2;
 	public Scheduler scheduler;
-	public Job job;
-	public Job job2;
+	public JDFJob job;
+	public JDFJob job2;
 	public InfrastructureManager IM;
 	public Resource resource;
 	public Resource resource2;
@@ -37,6 +40,8 @@ public class TestExecutionMonitorMultipleJobs {
 	public String FAKE_TASK_ID2 = "FAKE_TASK_ID2";
 	public ImageDataStore imageStore;
 	private CurrentThreadExecutorService executorService;
+	
+	private ConcurrentMap<String, JDFJob> db;	
 
 	@Before
 	public void setUp(){
@@ -46,15 +51,16 @@ public class TestExecutionMonitorMultipleJobs {
 		resource = mock(Resource.class);
 		resource2 = mock(Resource.class);
 		imageStore = mock(ImageDataStore.class);
-		job = mock(Job.class);
-		job2 = mock(Job.class);
+		job = mock(JDFJob.class);
+		job2 = mock(JDFJob.class);
+		db = mock(ConcurrentMap.class);
 		executorService = new CurrentThreadExecutorService();
 		scheduler = spy(new Scheduler(IM, job, job2));
 	}
 
 	@Test
-	public void testExecutionMonitor() throws InfrastructureException, InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job, job2);
+	public void testExecutionMonitorWithDB() throws InfrastructureException, InterruptedException{
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(runningTasks).when(job).getByState(TaskState.RUNNING);
@@ -75,7 +81,17 @@ public class TestExecutionMonitorMultipleJobs {
 		doReturn(false).when(task2).checkTimeOuted();
 		doNothing().when(scheduler).taskCompleted(task2);
 		doNothing().when(job2).finish(task2);
-		executionMonitor.run();
+		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
+		doReturn("FAKE_JOB_ID1").when(job).getId();
+		doReturn("FAKE_JOB_ID2").when(job2).getId();
+		jobList.add(job);
+		jobList.add(job2);
+		
+		doReturn(jobList).when(scheduler).getJobs();
+		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		
+		ExecutionMonitorWithDB.run();
 		Thread.sleep(500);
 		verify(task, times(2)).isFinished();
 		verify(job).finish(task);
@@ -84,8 +100,8 @@ public class TestExecutionMonitorMultipleJobs {
 	}
 
 	@Test
-	public void testExecutionMonitorTaskFails() throws InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job, job2);
+	public void testExecutionMonitorWithDBTaskFails() throws InterruptedException{
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(resource).when(scheduler).getAssociateResource(task);
@@ -104,9 +120,18 @@ public class TestExecutionMonitorMultipleJobs {
 		doReturn(false).when(task2).checkTimeOuted();
 		doNothing().when(scheduler).taskCompleted(task2);
 		doReturn(runningTasks2).when(job2).getByState(TaskState.RUNNING);
+		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
+		doReturn("FAKE_JOB_ID1").when(job).getId();
+		doReturn("FAKE_JOB_ID2").when(job2).getId();
+		jobList.add(job);
+		jobList.add(job2);
+		
+		doReturn(jobList).when(scheduler).getJobs();
+		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		
 
-
-		executionMonitor.run();
+		ExecutionMonitorWithDB.run();
 		Thread.sleep(500);
 		verify(task, times(2)).isFailed();
 		verify(job).fail(task);
@@ -116,7 +141,7 @@ public class TestExecutionMonitorMultipleJobs {
 
 	@Test
 	public void testConnectionFails() throws InfrastructureException, InterruptedException {
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job, job2);
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();
@@ -133,7 +158,17 @@ public class TestExecutionMonitorMultipleJobs {
 		doReturn(false).when(resource2).checkConnectivity();
 		doNothing().when(scheduler).taskFailed(task2);
 		doNothing().when(job2).fail(task2);
-		executionMonitor.run();
+		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
+		doReturn("FAKE_JOB_ID1").when(job).getId();
+		doReturn("FAKE_JOB_ID2").when(job2).getId();
+		jobList.add(job);
+		jobList.add(job2);
+		
+		doReturn(jobList).when(scheduler).getJobs();
+		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		
+		ExecutionMonitorWithDB.run();
 		verify(job).fail(task);
 		verify(scheduler).taskFailed(task);
 		verify(job2).fail(task2);
@@ -142,7 +177,7 @@ public class TestExecutionMonitorMultipleJobs {
 
 	@Test
 	public void testExecutionIsNotOver() throws InfrastructureException, InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job, job2);
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();
@@ -161,7 +196,17 @@ public class TestExecutionMonitorMultipleJobs {
 		doReturn(false).when(task2).isFinished();
 		doReturn(false).when(task2).checkTimeOuted();
 		doNothing().when(scheduler).taskCompleted(task2);
-		executionMonitor.run();
+		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
+		doReturn("FAKE_JOB_ID1").when(job).getId();
+		doReturn("FAKE_JOB_ID2").when(job2).getId();
+		jobList.add(job);
+		jobList.add(job2);
+		
+		doReturn(jobList).when(scheduler).getJobs();
+		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		
+		ExecutionMonitorWithDB.run();
 		verify(task, times(2)).isFinished();
 		verify(job, never()).finish(task);;
 		verify(scheduler).getAssociateResource(task);
@@ -174,7 +219,7 @@ public class TestExecutionMonitorMultipleJobs {
 
 	@Test
 	public void testExecutionTimedOut() throws InfrastructureException, InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService, job, job2);
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();
@@ -191,7 +236,17 @@ public class TestExecutionMonitorMultipleJobs {
 		doReturn(false).when(task2).isFinished();
 		doReturn(true).when(task2).checkTimeOuted();
 		doNothing().when(scheduler).taskFailed(task2);
-		executionMonitor.run();
+		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
+		doReturn("FAKE_JOB_ID1").when(job).getId();
+		doReturn("FAKE_JOB_ID2").when(job2).getId();
+		jobList.add(job);
+		jobList.add(job2);
+		
+		doReturn(jobList).when(scheduler).getJobs();
+		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		
+		ExecutionMonitorWithDB.run();
 		verify(task).checkTimeOuted();
 		verify(job, never()).finish(task);;
 		verify(scheduler, never()).taskCompleted(task);
@@ -206,7 +261,7 @@ public class TestExecutionMonitorMultipleJobs {
 
 	@Test
 	public void testTaskRetry() throws InfrastructureException, InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService, job, job2);
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(FAKE_TASK_ID).when(task).getId();
@@ -226,8 +281,17 @@ public class TestExecutionMonitorMultipleJobs {
 		doReturn(false).when(task2).isFinished();
 		doReturn(false).when(task2).checkTimeOuted();
 
+		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
+		doReturn("FAKE_JOB_ID1").when(job).getId();
+		doReturn("FAKE_JOB_ID2").when(job2).getId();
+		jobList.add(job);
+		jobList.add(job2);
+		
+		doReturn(jobList).when(scheduler).getJobs();
+		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
 		//first retry
-		executionMonitor.run();
+		ExecutionMonitorWithDB.run();
 		verify(task).checkTimeOuted();
 		verify(job, never()).finish(task);;
 		verify(scheduler).getAssociateResource(task);
@@ -242,7 +306,7 @@ public class TestExecutionMonitorMultipleJobs {
 		Assert.assertEquals(1, task2.getRetries());
 
 		//second retry
-		executionMonitor.run();
+		ExecutionMonitorWithDB.run();
 		verify(task, times(2)).checkTimeOuted();
 		verify(job, never()).finish(task);;
 		verify(scheduler, times(2)).getAssociateResource(task);
@@ -257,7 +321,7 @@ public class TestExecutionMonitorMultipleJobs {
 		Assert.assertEquals(2, task2.getRetries());
 
 		//third retry
-		executionMonitor.run();
+		ExecutionMonitorWithDB.run();
 		verify(task, times(3)).checkTimeOuted();
 		verify(job, never()).finish(task);;
 		verify(scheduler, times(3)).getAssociateResource(task);
@@ -274,7 +338,7 @@ public class TestExecutionMonitorMultipleJobs {
 		//setting retry to 0 again
 		doReturn(true).when(resource).checkConnectivity();
 		doReturn(true).when(resource2).checkConnectivity();
-		executionMonitor.run();
+		ExecutionMonitorWithDB.run();
 		verify(task, times(4)).checkTimeOuted();
 		verify(job, never()).finish(task);;
 		verify(scheduler, times(4)).getAssociateResource(task);
@@ -291,7 +355,7 @@ public class TestExecutionMonitorMultipleJobs {
 	
 	@Test
 	public void testOneFailsOtherCompletes() throws InterruptedException{
-		ExecutionMonitor executionMonitor = new ExecutionMonitor(scheduler, executorService,job, job2);
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		doReturn(resource).when(scheduler).getAssociateResource(task);
@@ -312,8 +376,17 @@ public class TestExecutionMonitorMultipleJobs {
 		doReturn(false).when(task2).checkTimeOuted();
 		doNothing().when(scheduler).taskCompleted(task2);
 		doNothing().when(job2).finish(task2);
+		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
+		doReturn("FAKE_JOB_ID1").when(job).getId();
+		doReturn("FAKE_JOB_ID2").when(job2).getId();
+		jobList.add(job);
+		jobList.add(job2);
 		
-		executionMonitor.run();
+		doReturn(jobList).when(scheduler).getJobs();
+		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		
+		ExecutionMonitorWithDB.run();
 		Thread.sleep(500);
 		verify(task, times(2)).isFailed();
 		verify(job).fail(task);

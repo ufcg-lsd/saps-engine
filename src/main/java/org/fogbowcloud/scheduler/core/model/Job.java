@@ -1,12 +1,19 @@
 package org.fogbowcloud.scheduler.core.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.http.entity.SerializableEntity;
 import org.apache.log4j.Logger;
 
-public abstract class Job {
+public abstract class Job implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6111900503095749695L;
 
 	public static enum TaskState{
 		READY,RUNNING,COMPLETED,FAILED

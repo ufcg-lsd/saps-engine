@@ -22,18 +22,20 @@ import org.restlet.data.Protocol;
 import org.restlet.routing.Router;
 import org.restlet.service.ConnectorService;
 
-public class JDFSchedulerApplication extends Application {
+public class JDFSchedulerApplicationWithPersistence extends Application {
 
 	private Properties properties;
 	private Scheduler scheduler;
+	private ConcurrentMap<String, JDFJob> db;
 	
-	public static final Logger LOGGER = Logger.getLogger(JDFSchedulerApplication.class);
+	public static final Logger LOGGER = Logger.getLogger(JDFSchedulerApplicationWithPersistence.class);
 
 	private Component c;
 
-	public JDFSchedulerApplication(Scheduler scheduler, Properties properties){
+	public JDFSchedulerApplicationWithPersistence(Scheduler scheduler, Properties properties, ConcurrentMap<String, JDFJob> db){
 		this.properties = properties;
 		this.scheduler = scheduler;
+		this.db = db;
 	}
 
 
@@ -117,6 +119,7 @@ public class JDFSchedulerApplication extends Application {
 		ArrayList<JDFJob> jobList = new ArrayList<JDFJob>();
 		for (Job job : this.scheduler.getJobs()){
 			jobList.add((JDFJob) job);
+			updateJob((JDFJob) job);
 		}
 		return jobList;
 	}
@@ -132,6 +135,10 @@ public class JDFSchedulerApplication extends Application {
 		return null;
 	}
 
+	public void updateJob(JDFJob job) {
+		this.db.put(job.getId(), job);
+	}
+	
 
 	public TaskState getTaskState(String taskId) {
 		for (Job job : getAllJobs()){

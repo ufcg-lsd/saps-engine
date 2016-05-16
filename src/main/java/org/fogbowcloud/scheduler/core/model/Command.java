@@ -1,6 +1,10 @@
 package org.fogbowcloud.scheduler.core.model;
 
-public class Command {
+import java.io.Serializable;
+
+public class Command implements Serializable{
+
+	private static final long serialVersionUID = 5281647552435522413L;
 
 	public enum Type {
 		PROLOGUE, REMOTE, EPILOGUE

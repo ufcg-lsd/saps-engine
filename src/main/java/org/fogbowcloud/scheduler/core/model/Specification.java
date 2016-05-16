@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,8 +15,12 @@ import java.util.Map.Entry;
 
 import com.google.gson.Gson;
 
-public class Specification {
+public class Specification implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5255295548723927267L;
 	String image;
 	String username;
 	String privateKeyFilePath;
