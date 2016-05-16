@@ -108,7 +108,7 @@ public class TestFogbowInfrastructureProvider {
 			createDefaultRequestResponse(requestIdMokc);
 
 			Specification specs = new Specification("imageMock", "UserName",
-					"publicKeyMock", "privateKeyMock", "userDataMock");
+					"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 
 			fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 
@@ -158,7 +158,7 @@ public class TestFogbowInfrastructureProvider {
 		String memberIdMock = "member01";
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 
 		//Create Mock behavior for httpWrapperMock
 		//Creating response for request for resource.
@@ -196,7 +196,7 @@ public class TestFogbowInfrastructureProvider {
 		String memberIdMock = "member01";
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 
 		//Create Mock behavior for httpWrapperMock
 		//Creating response for request for resource.
@@ -269,7 +269,7 @@ public class TestFogbowInfrastructureProvider {
 		createDefaulInstanceAttributesResponse(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock, hostMock, portMock);
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.requestResource(specs);
@@ -299,7 +299,7 @@ public class TestFogbowInfrastructureProvider {
 		createDefaulInstanceAttributesResponseNoShh(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock);
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.requestResource(specs);

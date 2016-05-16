@@ -1,5 +1,5 @@
 [
-{"image":"Sebal-R-Image",
+{"image":"fogbow-sebal-image",
  "username":"fogbow",
  "publicKey":"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDSi6pFPCKWO6ntdBgjxsPUCJ7Hi1dSCDNCJvLiMbrcnU8qrgI0xX1a7RglSRn/fvcILS8bLxPjgQptke8s5zx3uCWaO8RXUiks6Ii23wDf9tErt2PEtiiBTzjL8hPr8VCdS8RRObvBs6OIpuF53ru1y4EFlY2fb7bCCt43gz7lSJgNYUrrrTWNauYbJbYf3PEbBmi5C7Nh0PQaqp0oNhOUEXrOXwKjH55zumSG1Z0PMCEfLyhNEOh88wm7R8iOo9LTetJNlSuiXoITfC0vgBlU3baYxnispEVKPq2kmw7KMHoCYsUE/sPnRYrYCiOJrIErD9fxqjrJQEv2pA0EOsy3 esdras@piaba",
  "privateKeyFilePath":"/home/esdras/.ssh/id_rsa",

@@ -211,7 +211,7 @@ public class TestInfrastructureManager {
 		String fakeRequestId = "requestId";
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.eq(specs));
@@ -229,7 +229,7 @@ public class TestInfrastructureManager {
 		String fakeRequestId = "requestId";
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 
 		// Creating mocks behaviors
 		doReturn(fakeRequestId).when(infrastructureProviderMock).requestResource(Mockito.eq(specs));
@@ -362,7 +362,7 @@ public class TestInfrastructureManager {
 		String fakeRequestId02 = "requestId02";
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 		Resource fakeResource = mock(Resource.class);
 		doReturn(true).when(fakeResource).checkConnectivity();
 		doReturn(fakeRequestId02).when(fakeResource).getId();
@@ -393,7 +393,7 @@ public class TestInfrastructureManager {
 		String fakeRequestId02 = "requestId02";
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 		Resource fakeResource = mock(Resource.class);
 		doReturn(false).when(fakeResource).checkConnectivity();
 		doReturn(fakeRequestId02).when(fakeResource).getId();
@@ -809,7 +809,7 @@ public class TestInfrastructureManager {
 		String location = "";
 
 		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", "userDataMock");
+				"publicKeyMock", "privateKeyMock", "userDataMock", "userDataType");
 
 		Map<String, String> resourceAMetadata = TestResourceHelper.generateResourceMetadata(hostA, port, userName,
 				extraPorts, OrderType.PERSISTENT, specs.getImage(), specs.getPublicKey(), cpuSize, menSize, diskSize,

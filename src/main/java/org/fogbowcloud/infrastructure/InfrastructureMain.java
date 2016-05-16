@@ -30,8 +30,8 @@ public class InfrastructureMain implements ResourceNotifier {
 		
 		String specsFilePath = args[1];
 		
-		// TODO optional?
-		String wantStorage = args[2];
+		// Optional
+		String volumeSize = args[2];
 		
 		boolean blockWhileInitializing = new Boolean(
 				properties
@@ -66,7 +66,7 @@ public class InfrastructureMain implements ResourceNotifier {
 		//TODO: attach storage
 		System.out.println(resourceStr);
 		
-		if (wantStorage.equals("true")) {
+		if (volumeSize != null) {
 			String fogbowRequirements = specs.get(0).getRequirementValue(
 					"FogbowRequirements");
 			String[] splitRequirements = fogbowRequirements.split("&&");
@@ -78,7 +78,7 @@ public class InfrastructureMain implements ResourceNotifier {
 			String resourceComputeId = splitResourceComputeId[0];
 
 			StorageInitializer storageInitializer = new StorageInitializer(
-					resourceComputeId, requirement);
+					resourceComputeId, requirement, volumeSize);
 			storageInitializer.init();
 		}
 
