@@ -95,7 +95,5 @@ public class TestDBBootstrap {
 		verify(fakeImageStore, times(4)).addImage(eq(fakeImageName2), eq(fakeImageLink2), anyInt());
 		
 	}
-	
-	
 
 }
