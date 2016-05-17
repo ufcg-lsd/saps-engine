@@ -115,11 +115,11 @@ public class Crawler {
 		}
 	}
 
-	private long numberOfImagesToDownload() {
+	protected long numberOfImagesToDownload() {
 		
 		//FIXME test
 		String volumeDirPath = properties.getProperty("sebal_export_path");
-		File volumePath = new File(volumeDirPath);
+		File volumePath = getExportDirPath(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
 			long availableVolumeSpace = volumePath.getFreeSpace();
 			long numberOfImagesToDownload = availableVolumeSpace / DEFAULT_IMAGE_DIR_SIZE;
@@ -129,6 +129,10 @@ public class Crawler {
 			throw new RuntimeException("VolumePath: " + volumeDirPath
 					+ " is not a directory or does not exist");
 		}
+	}
+
+	protected File getExportDirPath(String volumeDirPath) {
+		return new File(volumeDirPath);
 	}
 
 	private void downloadImage(final ImageData imageData) {

@@ -3,15 +3,15 @@ package org.fogbowcloud.sebal.crawler;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.eq;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.sebal.ImageData;
@@ -27,16 +27,18 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.HTreeMap;
 import org.mockito.Mockito;
 
 public class TestCrawler {
 	
+	private Crawler crawler;
 	private Properties properties;
 	private DB pendingImageDownloadDBMock;
 	private ImageDataStore imageStoreMock;
 	private String imageStoreIPMock = "fake-image-store-ip";
 	private String imageStorePortMock = "fake-image-store-port";
-	private ConcurrentMap<String, ImageData> pendingImageDownloadMapMock;
+	private HTreeMap<String, ImageData> pendingImageDownloadMapMock;
 	
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -47,9 +49,11 @@ public class TestCrawler {
 	@Before
 	public void setUp() {
 		properties = new Properties();
-		imageStoreMock = mock(JDBCImageDataStore.class);
-		pendingImageDownloadDBMock = mock(DB.class);
-		pendingImageDownloadMapMock = mock(ConcurrentMap.class);
+		properties.setProperty("sebal_export_path", "export-path-mock");
+		properties.setProperty("nasa_login_url", "nasa-url-mock");
+		properties.setProperty("nasa_username", "nasa-username-mock");
+		properties.setProperty("nasa_password", "nasa-password-mock");
+		crawler = spy(new Crawler(properties, imageStoreIPMock, imageStorePortMock));
 	}
 	
 	@Test
@@ -80,9 +84,12 @@ public class TestCrawler {
 		
 		ImageData imageData1 = mock(ImageData.class);
 		ImageData imageData2 = mock(ImageData.class);
+		
+		doReturn(imageData1).when(pendingImageDownloadMapMock).put(eq("key1"), eq(imageData1));
+		doReturn(imageData2).when(pendingImageDownloadMapMock).put(eq("key2"), eq(imageData2));
 				
-		verify(pendingImageDownloadMapMock, times(4)).put("key1", imageData1);
-		verify(pendingImageDownloadMapMock, times(4)).put("key2", imageData2);
+		verify(pendingImageDownloadMapMock, times(4)).put(eq("key1"), imageData1);
+		verify(pendingImageDownloadMapMock, times(4)).put(eq("key2"), imageData2);
 	}
 	
 	@Test
@@ -123,14 +130,17 @@ public class TestCrawler {
 	}
 	
 	@Test
-	public void testNumberOfImagesToDownload() {
+	public void testNumberOfImagesToDownload() throws IOException {
+		String exportPath = "export-path-mock";
 		File exportFileMock = mock(File.class);
 		
-		long freeSpace = doReturn((long)524288000).when(exportFileMock).getFreeSpace();
-		Assert.assertNotNull(freeSpace);
+		doReturn(true).when(exportFileMock).exists();
+		doReturn(true).when(exportFileMock).isDirectory();
 		
-		long numOfImagesToDownload = freeSpace / 356 * FileUtils.ONE_MB;
-		Assert.assertNotNull(numOfImagesToDownload);
+		doReturn((long)524288000).when(exportFileMock).getFreeSpace();
+		doReturn(exportFileMock).when(crawler).getExportDirPath(exportPath);
+		
+		crawler.numberOfImagesToDownload();
 	}
 	
 	@Test

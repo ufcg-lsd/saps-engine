@@ -159,17 +159,6 @@ public class Fetcher {
 
 	// TODO: See if this is correct
 	// FIXME: reduce code
-	
-	//1. ftp fazer funcionar
-	
-	//2. decidir como pedar o output, por arquivo ou tarball
-	
-	//worker node
-	//	tar cvf (um unico arquivo)
-	//	md5sum (colocar no nome do output o valor do md5)
-	//fetcher
-	//	md5sum single file
-	//	compare with md5 from worker node
 	public void fetch(final ImageData imageData, int tries) throws IOException,
 			InterruptedException, SQLException {
 		
