@@ -11,19 +11,21 @@ import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
 
 import org.fogbowcloud.scheduler.core.model.JDFJob;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mapdb.DB;
+import org.mapdb.HTreeMap;
 
 public class TestExecutionMonitorWithDB {
 
@@ -35,7 +37,8 @@ public class TestExecutionMonitorWithDB {
 	public String FAKE_TASK_ID = "FAKE_TASK_ID";
 	public ImageDataStore imageStore;
 	private CurrentThreadExecutorService executorService;
-	private ConcurrentMap<String, JDFJob> jobDB;
+	private DB db;
+	private HTreeMap<String, JDFJob> jobDB;
 
 	@Before
 	public void setUp(){
@@ -43,7 +46,9 @@ public class TestExecutionMonitorWithDB {
 		IM = mock(InfrastructureManager.class);
 		resource = mock(Resource.class);
 		imageStore = mock(ImageDataStore.class);
-		jobDB = mock(ConcurrentMap.class);
+		db = mock(DB.class);
+		jobDB = mock(HTreeMap.class);
+
 		job = mock(JDFJob.class);
 		executorService = new CurrentThreadExecutorService();
 		scheduler = spy(new Scheduler(IM, job));
@@ -51,7 +56,9 @@ public class TestExecutionMonitorWithDB {
 
 	@Test
 	public void testExecutionMonitorWithDB() throws InfrastructureException, InterruptedException{
-		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, jobDB);
+		doReturn(jobDB).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		List<JDFJob> jobList = new ArrayList<JDFJob>();
 
@@ -68,6 +75,7 @@ public class TestExecutionMonitorWithDB {
 		doNothing().when(job).finish(task);
 		doReturn("FAKE_JOB_ID").when(job).getId();
 		doReturn(job).when(jobDB).put(eq("FAKE_JOB_ID"), eq(job));
+
 		ExecutionMonitorWithDB.run();
 		Thread.sleep(500);
 		verify(task, times(2)).isFinished();
@@ -76,7 +84,10 @@ public class TestExecutionMonitorWithDB {
 
 	@Test
 	public void testExecutionMonitorWithDBTaskFails() throws InterruptedException{
-		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,jobDB);
+		doReturn(jobDB).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
+		
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		List<JDFJob> jobList = new ArrayList<JDFJob>();
@@ -94,7 +105,6 @@ public class TestExecutionMonitorWithDB {
 		doNothing().when(job).finish(task);
 		doReturn("FAKE_JOB_ID").when(job).getId();
 		doReturn(job).when(jobDB).put(eq("FAKE_JOB_ID"), eq(job));
-
 		ExecutionMonitorWithDB.run();
 		Thread.sleep(500);
 		verify(task, times(2)).isFailed();
@@ -103,7 +113,9 @@ public class TestExecutionMonitorWithDB {
 
 	@Test
 	public void testConnectionFails() throws InfrastructureException, InterruptedException {
-		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,jobDB);
+		doReturn(jobDB).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		List<JDFJob> jobList = new ArrayList<JDFJob>();
@@ -119,7 +131,6 @@ public class TestExecutionMonitorWithDB {
 		doReturn("FAKE_JOB_ID").when(job).getId();
 		doReturn(job).when(jobDB).put(eq("FAKE_JOB_ID"), eq(job));
 
-
 		ExecutionMonitorWithDB.run();
 		verify(job).fail(task);
 		verify(scheduler).taskFailed(task);
@@ -127,7 +138,10 @@ public class TestExecutionMonitorWithDB {
 
 	@Test
 	public void testExecutionIsNotOver() throws InfrastructureException, InterruptedException{
-		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,jobDB);
+		doReturn(jobDB).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
+		
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		List<JDFJob> jobList = new ArrayList<JDFJob>();
@@ -143,7 +157,6 @@ public class TestExecutionMonitorWithDB {
 		doNothing().when(scheduler).taskCompleted(task);
 		doReturn("FAKE_JOB_ID").when(job).getId();
 		doReturn(job).when(jobDB).put(eq("FAKE_JOB_ID"), eq(job));
-
 		ExecutionMonitorWithDB.run();
 		verify(task, times(2)).isFinished();
 		verify(job, never()).finish(task);;
@@ -153,7 +166,10 @@ public class TestExecutionMonitorWithDB {
 
 	@Test
 	public void testExecutionTimedOut() throws InfrastructureException, InterruptedException{
-		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,jobDB);
+		doReturn(jobDB).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
+		
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		List<JDFJob> jobList = new ArrayList<JDFJob>();
@@ -179,7 +195,10 @@ public class TestExecutionMonitorWithDB {
 
 	@Test
 	public void testTaskRetry() throws InfrastructureException, InterruptedException{
-		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,jobDB);
+		doReturn(jobDB).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
+		
+		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
 		List<JDFJob> jobList = new ArrayList<JDFJob>();
@@ -195,7 +214,6 @@ public class TestExecutionMonitorWithDB {
 		doReturn(false).when(task).checkTimeOuted();
 		doReturn("FAKE_JOB_ID").when(job).getId();
 		doReturn(job).when(jobDB).put(eq("FAKE_JOB_ID"), eq(job));
-
 		//first retry
 		ExecutionMonitorWithDB.run();
 		verify(task).checkTimeOuted();

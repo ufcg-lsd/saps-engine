@@ -1,5 +1,6 @@
 package org.fogbowcloud.scheduler.core;
 
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -7,24 +8,24 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.eq;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
 
 import org.fogbowcloud.scheduler.core.model.JDFJob;
-import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mapdb.DB;
+import org.mapdb.HTreeMap;
 
 public class TestExecutionMonitorWithDBMultipleJobs {
 
@@ -40,8 +41,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 	public String FAKE_TASK_ID2 = "FAKE_TASK_ID2";
 	public ImageDataStore imageStore;
 	private CurrentThreadExecutorService executorService;
-	
-	private ConcurrentMap<String, JDFJob> db;	
+	private DB db;
+	private HTreeMap<String, JDFJob> jobMap;	
 
 	@Before
 	public void setUp(){
@@ -53,13 +54,16 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 		imageStore = mock(ImageDataStore.class);
 		job = mock(JDFJob.class);
 		job2 = mock(JDFJob.class);
-		db = mock(ConcurrentMap.class);
+		db = mock(DB.class);
+		jobMap = mock(HTreeMap.class);
 		executorService = new CurrentThreadExecutorService();
 		scheduler = spy(new Scheduler(IM, job, job2));
 	}
 
 	@Test
 	public void testExecutionMonitorWithDB() throws InfrastructureException, InterruptedException{
+		doReturn(jobMap).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
 		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
@@ -88,8 +92,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 		jobList.add(job2);
 		
 		doReturn(jobList).when(scheduler).getJobs();
-		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
-		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		doReturn(job).when(jobMap).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(jobMap).put(eq("FAKE_JOB_ID2"), eq(job2));
 		
 		ExecutionMonitorWithDB.run();
 		Thread.sleep(500);
@@ -101,6 +105,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 
 	@Test
 	public void testExecutionMonitorWithDBTaskFails() throws InterruptedException{
+		doReturn(jobMap).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
 		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService,db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
@@ -127,8 +133,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 		jobList.add(job2);
 		
 		doReturn(jobList).when(scheduler).getJobs();
-		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
-		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		doReturn(job).when(jobMap).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(jobMap).put(eq("FAKE_JOB_ID2"), eq(job2));
 		
 
 		ExecutionMonitorWithDB.run();
@@ -141,6 +147,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 
 	@Test
 	public void testConnectionFails() throws InfrastructureException, InterruptedException {
+		doReturn(jobMap).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
 		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
@@ -165,8 +173,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 		jobList.add(job2);
 		
 		doReturn(jobList).when(scheduler).getJobs();
-		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
-		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		doReturn(job).when(jobMap).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(jobMap).put(eq("FAKE_JOB_ID2"), eq(job2));
 		
 		ExecutionMonitorWithDB.run();
 		verify(job).fail(task);
@@ -177,6 +185,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 
 	@Test
 	public void testExecutionIsNotOver() throws InfrastructureException, InterruptedException{
+		doReturn(jobMap).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
 		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
@@ -203,8 +213,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 		jobList.add(job2);
 		
 		doReturn(jobList).when(scheduler).getJobs();
-		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
-		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		doReturn(job).when(jobMap).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(jobMap).put(eq("FAKE_JOB_ID2"), eq(job2));
 		
 		ExecutionMonitorWithDB.run();
 		verify(task, times(2)).isFinished();
@@ -219,6 +229,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 
 	@Test
 	public void testExecutionTimedOut() throws InfrastructureException, InterruptedException{
+		doReturn(jobMap).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
 		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
@@ -243,8 +255,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 		jobList.add(job2);
 		
 		doReturn(jobList).when(scheduler).getJobs();
-		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
-		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		doReturn(job).when(jobMap).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(jobMap).put(eq("FAKE_JOB_ID2"), eq(job2));
 		
 		ExecutionMonitorWithDB.run();
 		verify(task).checkTimeOuted();
@@ -261,6 +273,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 
 	@Test
 	public void testTaskRetry() throws InfrastructureException, InterruptedException{
+		doReturn(jobMap).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
 		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
@@ -288,8 +302,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 		jobList.add(job2);
 		
 		doReturn(jobList).when(scheduler).getJobs();
-		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
-		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		doReturn(job).when(jobMap).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(jobMap).put(eq("FAKE_JOB_ID2"), eq(job2));
 		//first retry
 		ExecutionMonitorWithDB.run();
 		verify(task).checkTimeOuted();
@@ -355,6 +369,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 	
 	@Test
 	public void testOneFailsOtherCompletes() throws InterruptedException{
+		doReturn(jobMap).when(db).getHashMap(AppPropertiesConstants.DB_MAP_NAME);
+		doNothing().when(db).commit();
 		ExecutionMonitorWithDB ExecutionMonitorWithDB = new ExecutionMonitorWithDB(scheduler, executorService, db);
 		List<Task> runningTasks = new ArrayList<Task>();
 		runningTasks.add(task);
@@ -383,8 +399,8 @@ public class TestExecutionMonitorWithDBMultipleJobs {
 		jobList.add(job2);
 		
 		doReturn(jobList).when(scheduler).getJobs();
-		doReturn(job).when(db).put(eq("FAKE_JOB_ID1"), eq(job));
-		doReturn(job2).when(db).put(eq("FAKE_JOB_ID2"), eq(job2));
+		doReturn(job).when(jobMap).put(eq("FAKE_JOB_ID1"), eq(job));
+		doReturn(job2).when(jobMap).put(eq("FAKE_JOB_ID2"), eq(job2));
 		
 		ExecutionMonitorWithDB.run();
 		Thread.sleep(500);

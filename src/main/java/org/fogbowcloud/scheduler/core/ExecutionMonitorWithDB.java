@@ -10,20 +10,23 @@ import org.fogbowcloud.scheduler.core.model.Job;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Task;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
+import org.mapdb.DB;
 
 public class ExecutionMonitorWithDB implements Runnable {
 
 	private Scheduler scheduler;
 	private static final Logger LOGGER = Logger.getLogger(ExecutionMonitorWithDB.class);
 	private ExecutorService service;
-	private ConcurrentMap<String, JDFJob> db;
+	private DB db;
+	private ConcurrentMap<String, JDFJob> jobMap;
 
-	public ExecutionMonitorWithDB(Scheduler scheduler,ConcurrentMap<String, JDFJob> db) {
-		this(scheduler, Executors.newFixedThreadPool(3),db);
+	public ExecutionMonitorWithDB(Scheduler scheduler,DB pendingImageDownloadDB) {
+		this(scheduler, Executors.newFixedThreadPool(3),pendingImageDownloadDB);
 	}
 
-	public ExecutionMonitorWithDB(Scheduler scheduler, ExecutorService service, ConcurrentMap<String, JDFJob> db) {
+	public ExecutionMonitorWithDB(Scheduler scheduler, ExecutorService service, DB db) {
 		this.scheduler = scheduler;
 		if(service == null){
 			this.service = Executors.newFixedThreadPool(3);
@@ -31,6 +34,7 @@ public class ExecutionMonitorWithDB implements Runnable {
 			this.service = service;
 		}
 		this.db = db;
+		this.jobMap =db.getHashMap(AppPropertiesConstants.DB_MAP_NAME);
 	}
 
 	@Override
@@ -42,7 +46,8 @@ public class ExecutionMonitorWithDB implements Runnable {
 			for (Task task : aJDFJob.getByState(TaskState.RUNNING)) {
 				service.submit(new TaskExecutionChecker(task, this.scheduler, aJDFJob));
 			}
-			this.db.put(aJDFJob.getId(), aJDFJob);
+			this.jobMap.put(aJDFJob.getId(), aJDFJob);
+			this.db.commit();
 		}
 	}
 

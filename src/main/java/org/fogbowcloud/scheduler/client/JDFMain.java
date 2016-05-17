@@ -17,6 +17,7 @@ import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.scheduler.restlet.JDFSchedulerApplication;
+import org.fogbowcloud.scheduler.restlet.JDFSchedulerApplicationWithPersistence;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 /**
@@ -25,6 +26,9 @@ import org.mapdb.DBMaker;
  * @author Ricardo Araujo Santos - ricardo@lsd.ufcg.edu.br
  */
 public class JDFMain {
+
+
+	
 
 	public static final Logger LOGGER = Logger.getLogger(JDFMain.class);
 
@@ -50,9 +54,10 @@ public class JDFMain {
 		loadConfigFromProperties();
 
 		// Initialize a MapDB database
-		final File pendingImageDownloadFile = new File("legacyJobs.db");
+		final File pendingImageDownloadFile = new File(AppPropertiesConstants.DB_FILE_NAME);
 		final DB pendingImageDownloadDB = DBMaker.newFileDB(pendingImageDownloadFile).make();
-		jobMapDB = pendingImageDownloadDB.createHashMap("jobMap").make();
+		pendingImageDownloadDB.checkShouldCreate(AppPropertiesConstants.DB_MAP_NAME);
+		jobMapDB = pendingImageDownloadDB.getHashMap(AppPropertiesConstants.DB_MAP_NAME);
 		
 		InfrastructureProvider infraProvider = createInfraProvaiderInstance();
 		InfrastructureManager infraManager = new InfrastructureManager(null, isElastic, infraProvider,
@@ -67,16 +72,16 @@ public class JDFMain {
 			
 		Scheduler scheduler = new Scheduler(infraManager, legacyJobs.toArray(new JDFJob[legacyJobs.size()]));
 
-		LOGGER.debug("Propertie: " +properties.getProperty("infra_initial_specs_file_path"));
+		LOGGER.debug("Propertie: " +properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH));
 		
 		LOGGER.debug("Application to be started on port: " +properties.getProperty(AppPropertiesConstants.REST_SERVER_PORT));
-		ExecutionMonitorWithDB executionMonitor = new ExecutionMonitorWithDB(scheduler, jobMapDB);
-		JDFSchedulerApplication app = new JDFSchedulerApplication(scheduler, properties);
+		ExecutionMonitorWithDB executionMonitor = new ExecutionMonitorWithDB(scheduler, pendingImageDownloadDB);
+		JDFSchedulerApplicationWithPersistence app = new JDFSchedulerApplicationWithPersistence(scheduler, properties, pendingImageDownloadDB);
 		app.startServer();
 
 		
-		
-		LOGGER.debug("Starting Scheduler and Execution Monitor, execution monitor period: " + properties.getProperty("execution_monitor_period"));
+
+		LOGGER.debug("Starting Scheduler and Execution Monitor, execution monitor period: " + properties.getProperty(AppPropertiesConstants.EXECUTION_MONITOR_PERIOD));
 		schedulerTimer.scheduleAtFixedRate(scheduler, 0, 30000);
 		executionMonitorTimer.scheduleAtFixedRate(executionMonitor, 0, 30000);
 	}

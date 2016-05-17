@@ -15,6 +15,7 @@ import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.restlet.resource.JobResource;
 import org.fogbowcloud.scheduler.restlet.resource.TaskResource4JDF;
+import org.mapdb.DB;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Restlet;
@@ -26,16 +27,18 @@ public class JDFSchedulerApplicationWithPersistence extends Application {
 
 	private Properties properties;
 	private Scheduler scheduler;
-	private ConcurrentMap<String, JDFJob> db;
+	private DB db;
+	private ConcurrentMap<String, JDFJob> jobMap;
 	
 	public static final Logger LOGGER = Logger.getLogger(JDFSchedulerApplicationWithPersistence.class);
 
 	private Component c;
 
-	public JDFSchedulerApplicationWithPersistence(Scheduler scheduler, Properties properties, ConcurrentMap<String, JDFJob> db){
+	public JDFSchedulerApplicationWithPersistence(Scheduler scheduler, Properties properties, DB pendingImageDownloadDB){
 		this.properties = properties;
 		this.scheduler = scheduler;
-		this.db = db;
+		this.db = pendingImageDownloadDB;
+		this.jobMap = db.getHashMap(AppPropertiesConstants.DB_MAP_NAME);
 	}
 
 
@@ -136,7 +139,8 @@ public class JDFSchedulerApplicationWithPersistence extends Application {
 	}
 
 	public void updateJob(JDFJob job) {
-		this.db.put(job.getId(), job);
+		this.jobMap.put(job.getId(), job);
+		this.db.commit();
 	}
 	
 

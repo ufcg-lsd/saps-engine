@@ -9,6 +9,7 @@ import org.fogbowcloud.scheduler.core.model.JDFJob;
 import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.restlet.JDFSchedulerApplication;
+import org.fogbowcloud.scheduler.restlet.JDFSchedulerApplicationWithPersistence;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
@@ -23,6 +24,18 @@ import com.amazonaws.util.json.JSONArray;
 import com.amazonaws.util.json.JSONObject;
 
 public class JobResource extends ServerResource {
+	private static final String JOB_LIST = "Jobs";
+
+	private static final String JOB_TASKS = "Tasks";
+
+	private static final String JOB_ID = "id";
+
+	private static final String STATE = "state";
+
+	private static final String TASK_ID = "taskid";
+
+	private static final String JOBPATH = "jobpath";
+
 	private static final String FRIENDLY = "friendly";
 
 	private static final String SCHED_PATH = "schedpath";
@@ -37,9 +50,9 @@ public class JobResource extends ServerResource {
 	@Get
 	public Representation fetch() throws Exception {
 		LOGGER.info("Getting Jobs...");
-		String jobId = (String) getRequest().getAttributes().get("jobpath");
+		String jobId = (String) getRequest().getAttributes().get(JOBPATH);
 		LOGGER.debug("JobId is " + jobId);
-		JDFSchedulerApplication application = (JDFSchedulerApplication) getApplication();
+		JDFSchedulerApplicationWithPersistence application = (JDFSchedulerApplicationWithPersistence) getApplication();
 		JSONObject jsonJob = new JSONObject();
 		
 		JSONArray jobs = new JSONArray();
@@ -58,7 +71,7 @@ public class JobResource extends ServerResource {
 				jobs.put(jJob);
 			}
 
-			jsonJob.put("Jobs", jobs);
+			jsonJob.put(JOB_LIST, jobs);
 
 			LOGGER.debug("My info Is: " + jsonJob.toString());
 
@@ -81,37 +94,37 @@ public class JobResource extends ServerResource {
 		for (Task task : job.getByState(TaskState.READY)){
 			LOGGER.debug("Task Id is:" + task.getId());
 			JSONObject jTask = new JSONObject();
-			jTask.put("taskid", task.getId());
-			jTask.put("state", TaskState.READY);
+			jTask.put(TASK_ID, task.getId());
+			jTask.put(STATE, TaskState.READY);
 			jobTasks.put(jTask);
 		};
 		for (Task task : job.getByState(TaskState.RUNNING)){
 			JSONObject jTask = new JSONObject();
-			jTask.put("taskid", task.getId());
-			jTask.put("state", TaskState.RUNNING);
+			jTask.put(TASK_ID, task.getId());
+			jTask.put(STATE, TaskState.RUNNING);
 			jobTasks.put(jTask);
 		};
 		for (Task task : job.getByState(TaskState.COMPLETED)){
 			JSONObject jTask = new JSONObject();
-			jTask.put("taskid", task.getId());
-			jTask.put("state", TaskState.COMPLETED);
+			jTask.put(TASK_ID, task.getId());
+			jTask.put(STATE, TaskState.COMPLETED);
 			jobTasks.put(jTask);
 		};
 		for (Task task : job.getByState(TaskState.FAILED)){
 			JSONObject jTask = new JSONObject();
-			jTask.put("taskid", task.getId());
-			jTask.put("state", TaskState.FAILED);
+			jTask.put(TASK_ID, task.getId());
+			jTask.put(STATE, TaskState.FAILED);
 			jobTasks.put(jTask);
 		};
 
-		jsonJob.put("id", jobId);
-		jsonJob.put("Tasks", jobTasks);
+		jsonJob.put(JOB_ID, jobId);
+		jsonJob.put(JOB_TASKS, jobTasks);
 		return new StringRepresentation(jsonJob.toString(), MediaType.TEXT_PLAIN);
 	}
 
 	@Post
 	public StringRepresentation addJob(Representation entity) throws IOException {
-		JDFSchedulerApplication application = (JDFSchedulerApplication) getApplication();
+		JDFSchedulerApplicationWithPersistence application = (JDFSchedulerApplicationWithPersistence) getApplication();
 		final Form form = new Form(entity);
 	
 		String JDFFilePath = form.getFirstValue(JDF_FILE_PATH);
@@ -140,9 +153,9 @@ public class JobResource extends ServerResource {
 
 	@Delete
 	public StringRepresentation stopJob() {
-		JDFSchedulerApplication application = (JDFSchedulerApplication) getApplication();
+		JDFSchedulerApplicationWithPersistence application = (JDFSchedulerApplicationWithPersistence) getApplication();
 
-		String JDFString = (String) getRequest().getAttributes().get("jobpath");
+		String JDFString = (String) getRequest().getAttributes().get(JOBPATH);
 
 		LOGGER.debug("Got JDF File: " + JDFString);
 
