@@ -99,9 +99,7 @@ public class Crawler {
 				ImageState.NOT_DOWNLOADED, (int) maxImagesToDownload);
 
 		for (ImageData imageData : imageDataList) {
-			if (imageData != null) {
-				
-				// FIXME: not good block
+			if (imageData != null) {				
 				if (imageStore.lockImage(imageData.getName())) {
 					imageData.setState(ImageState.DOWNLOADING);
 					imageData.setFederationMember(properties
