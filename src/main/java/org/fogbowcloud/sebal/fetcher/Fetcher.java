@@ -128,7 +128,6 @@ public class Fetcher {
 	private void prepareFetch(ImageData imageData) throws SQLException {
 
 		if (imageStore.lockImage(imageData.getName())) {
-
 			imageData.setState(ImageState.FETCHING);
 			imageData.setFederationMember(properties
 					.getProperty("federation_member"));
@@ -150,7 +149,7 @@ public class Fetcher {
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
 			// FIXME: see if this will be set to NONE
-			imageData.setFederationMember(ImageDataStore.NONE);
+			//imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.FINISHED);
 			imageStore.updateImage(imageData);
 		} catch (SQLException e1) {

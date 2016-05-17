@@ -105,6 +105,7 @@ public class Crawler {
 					imageData.setFederationMember(properties
 							.getProperty("federation_member"));					
 					pendingImageDownloadMap.put(imageData.getName(), imageData);
+					pendingImageDownloadDB.commit();
 					imageStore.updateImage(imageData);
 					imageStore.unlockImage(imageData.getName());
 
