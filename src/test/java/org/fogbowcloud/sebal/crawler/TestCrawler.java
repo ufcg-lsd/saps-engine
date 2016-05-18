@@ -112,7 +112,6 @@ public class TestCrawler {
 		imageStoreMock.updateImage(imageData2);
 		doReturn(imageData2).when(pendingImageDownloadMapMock).remove(imageData2);
 		verify(pendingImageDownloadMapMock, times(4)).remove(imageData2);
-		doNothing().when(pendingImageDownloadDBMock).commit();
 	}
 	
 	@Test
