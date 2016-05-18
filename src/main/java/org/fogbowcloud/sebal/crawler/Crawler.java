@@ -92,7 +92,7 @@ public class Crawler {
 		return !imageData.isEmpty();
 	}
 
-	private void download(long maxImagesToDownload) throws SQLException {
+	protected void download(long maxImagesToDownload) throws SQLException {
 
 		// FIXME: check the implications of this cast
 		List<ImageData> imageDataList = imageStore.getIn(

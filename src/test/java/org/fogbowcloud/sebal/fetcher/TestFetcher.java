@@ -1,11 +1,15 @@
 package org.fogbowcloud.sebal.fetcher;
 
-import static org.junit.Assert.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentMap;
 
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
@@ -17,17 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mapdb.DB;
-import org.mockito.Mockito;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.spy;
+import org.mapdb.HTreeMap;
 
 public class TestFetcher {
 	
@@ -36,9 +30,7 @@ public class TestFetcher {
 	private ImageDataStore imageStoreMock;
 	private String imageStoreIPMock = "fake-store-IP";
 	private String imageStorePortMock = "fake-store-Port";
-	private String ftpServerIPMock = "fake-ftp-IP";
-	private String ftpServerPortMock = "fake-ftp-Port";
-	private ConcurrentMap<String, ImageData> pendingImageFetchMapMock;
+	private HTreeMap<String, ImageData> pendingImageFetchMapMock;
 	
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -47,7 +39,7 @@ public class TestFetcher {
 	public void setUp() {
 		properties = new Properties();
 		pendingImageFetchDBMock = mock(DB.class);
-		pendingImageFetchMapMock = mock(ConcurrentMap.class);
+		pendingImageFetchMapMock = mock(HTreeMap.class);
 	}
 	
 	@Test
@@ -70,68 +62,91 @@ public class TestFetcher {
 	public void testCleanUnfinishedFetchedData() throws SQLException {
 		exception.expect(Exception.class);
 		
-		ImageData imageDataMock = mock(ImageData.class);
-		ImageData imageDataMock2 = mock(ImageData.class);
+		imageStoreMock = mock(JDBCImageDataStore.class);
 		
-		doNothing().when(pendingImageFetchMapMock).put("image-data-1", imageDataMock);
-		doNothing().when(pendingImageFetchMapMock).put("image-data-2", imageDataMock2);
+		ImageData imageData1 = mock(ImageData.class);
+		ImageData imageData2 = mock(ImageData.class);
+		
+		doNothing().when(pendingImageFetchMapMock).put(eq("image-data-1"), eq(imageData1));
+		doNothing().when(pendingImageFetchMapMock).put(eq("image-data-2"), eq(imageData2));
+		doNothing().when(pendingImageFetchDBMock).commit();
 
-		imageDataMock.setState(ImageState.FINISHED);
-		imageStoreMock.updateImage(imageDataMock);
-		verify(pendingImageFetchMapMock, times(4)).remove(imageDataMock);
+		imageData1.setState(ImageState.FINISHED);
+		imageStoreMock.updateImage(imageData1);
+		verify(pendingImageFetchMapMock, times(4)).remove(imageData1);
+		doNothing().when(pendingImageFetchDBMock).commit();
 		
-		imageDataMock2.setState(ImageState.FINISHED);
-		imageStoreMock.updateImage(imageDataMock2);
-		verify(pendingImageFetchMapMock, times(4)).remove(imageDataMock2);
+		imageData2.setState(ImageState.FINISHED);
+		imageStoreMock.updateImage(imageData2);
+		verify(pendingImageFetchMapMock, times(4)).remove(imageData2);
+		doNothing().when(pendingImageFetchDBMock).commit();
 	}
 	
 	@Test
 	public void testPrepareFetch() throws SQLException {
+		exception.expect(Exception.class);
+		
+		imageStoreMock = mock(JDBCImageDataStore.class);
+
 		ImageData imageDataMock = mock(ImageData.class);
 		ImageData imageDataMock2 = mock(ImageData.class);
 		
-		Mockito.when(imageStoreMock.lockImage(imageDataMock.getName())).thenReturn(true);
+		doReturn(true).when(imageStoreMock).lockImage(imageDataMock.getName());
 		doNothing().when(imageDataMock).setState(ImageState.FETCHING);
 		doNothing().when(imageDataMock).setFederationMember("fake-federation-member-1");
-		pendingImageFetchMapMock.put(imageDataMock.getName(), imageDataMock);
+		doReturn(imageDataMock).when(pendingImageFetchMapMock).put(imageDataMock.getName(), imageDataMock);
+		doNothing().when(pendingImageFetchDBMock).commit();
 
 		imageStoreMock.updateImage(imageDataMock);
 		imageStoreMock.unlockImage(imageDataMock.getName());
 		
-		Mockito.when(imageStoreMock.lockImage(imageDataMock2.getName())).thenReturn(true);
+		doReturn(true).when(imageStoreMock).lockImage(imageDataMock2.getName());
 		doNothing().when(imageDataMock2).setState(ImageState.FETCHING);
 		doNothing().when(imageDataMock2).setFederationMember("fake-federation-member-2");
-		pendingImageFetchMapMock.put(imageDataMock2.getName(), imageDataMock2);
-
+		doReturn(imageDataMock2).when(pendingImageFetchMapMock).put(imageDataMock2.getName(), imageDataMock2);
+		doNothing().when(pendingImageFetchDBMock).commit();
+		
 		imageStoreMock.updateImage(imageDataMock2);
 		imageStoreMock.unlockImage(imageDataMock2.getName());
 	}
 	
 	@Test
 	public void testFinishFetch() throws SQLException {
+		exception.expect(Exception.class);
+		
+		imageStoreMock = mock(JDBCImageDataStore.class);
+		
 		ImageData imageDataMock = mock(ImageData.class);
 		ImageData imageDataMock2 = mock(ImageData.class);
 		
 		doNothing().when(imageDataMock).setState(ImageState.FETCHED);
-		imageStoreMock.updateImage(imageDataMock);
-		pendingImageFetchMapMock.remove(imageDataMock.getName(), imageDataMock);
+		doNothing().when(imageStoreMock).updateImage(imageDataMock);
+		doReturn(imageDataMock).when(pendingImageFetchMapMock).remove(imageDataMock.getName(), imageDataMock);
+		doNothing().when(pendingImageFetchDBMock).commit();
 		
 		doNothing().when(imageDataMock2).setState(ImageState.FETCHED);
-		imageStoreMock.updateImage(imageDataMock2);
-		pendingImageFetchMapMock.remove(imageDataMock2.getName(), imageDataMock2);
+		doNothing().when(imageStoreMock).updateImage(imageDataMock2);
+		doReturn(imageDataMock2).when(pendingImageFetchMapMock).remove(imageDataMock2.getName(), imageDataMock2);
+		doNothing().when(pendingImageFetchDBMock).commit();
 	}
 	
 	@Test
 	public void testRollBackFetch() throws SQLException {
+		exception.expect(Exception.class);
+		
+		imageStoreMock = mock(JDBCImageDataStore.class);
+		
 		ImageData imageDataMock = mock(ImageData.class);
 		ImageData imageDataMock2 = mock(ImageData.class);
 		
-		pendingImageFetchMapMock.remove(imageDataMock.getName(), imageDataMock);
-		imageDataMock.setState(ImageState.FINISHED);
-		imageStoreMock.updateImage(imageDataMock);
+		doReturn(imageDataMock).when(pendingImageFetchMapMock).remove(imageDataMock.getName(), imageDataMock);
+		doNothing().when(pendingImageFetchDBMock).commit();
+		doNothing().when(imageDataMock).setState(ImageState.FINISHED);
+		doNothing().when(imageStoreMock).updateImage(imageDataMock);
 		
-		pendingImageFetchMapMock.remove(imageDataMock2.getName(), imageDataMock2);
-		imageDataMock2.setState(ImageState.FINISHED);
-		imageStoreMock.updateImage(imageDataMock2);
+		doReturn(imageDataMock2).when(pendingImageFetchMapMock).remove(imageDataMock2.getName(), imageDataMock2);
+		doNothing().when(pendingImageFetchDBMock).commit();
+		doNothing().when(imageDataMock2).setState(ImageState.FINISHED);
+		doNothing().when(imageStoreMock).updateImage(imageDataMock2);
 	}
 }
