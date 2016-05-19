@@ -37,7 +37,7 @@ mkdir -p $OUTPUT_IMAGE_DIR
 
 cd ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}
 
-java -Xmx1G -Xss1G -Djava.library.path=/usr/local/lib -cp ${SANDBOX}/SEBAL/target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/images/ ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/results 0 0 9000 9000 1 1 example/boundingbox_vertices sebal.conf ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
+java -Xmx1G -Xss1G -Djava.library.path=/usr/local/lib -cp ${SANDBOX}/SEBAL/target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/images/ ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/results/ 0 0 9000 9000 1 1 example/boundingbox_vertices sebal.conf ${SEBAL_MOUNT_POINT}/images/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
 
 echo "Creating dados.csv for image ${IMAGE_NAME}"
 

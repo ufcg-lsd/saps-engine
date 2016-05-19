@@ -24,7 +24,7 @@ public class CheckSumMD5ForFile {
 				
 					String remoteChecksum = "";
 					for (File outputMd5File : localFilesDir.listFiles()) {
-						if (outputMd5File.getName().startsWith(outputFile.getName()) && outputMd5File.getName().endsWith(".md5") ) {
+						if (outputMd5File.getName().startsWith(outputFile.getName()) && outputMd5File.getName().endsWith(".md5")) {
 							String[] pieces = outputMd5File.getName().split(".");
 							remoteChecksum = pieces[2];
 						}
