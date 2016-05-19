@@ -1,13 +1,16 @@
 package org.fogbowcloud.sebal;
 
-import static org.junit.Assert.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.Assert;
@@ -15,14 +18,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 public class TestJDBCImageDataStore {
 	
@@ -38,6 +33,9 @@ public class TestJDBCImageDataStore {
 	private Map<String, Connection> lockedImages;
 	private BasicDataSource connectionPool;
 	private JDBCImageDataStore imageDataStore;
+	
+	private String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
+			+ " VALUES(?, ?, ?, ?, ?)";
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -64,14 +62,11 @@ public class TestJDBCImageDataStore {
 	}
 	
 	@Test
-	public void testGetConnection() throws SQLException {
-		exception.expect(Exception.class);
-		Connection connection = mock(Connection.class);
-		
+	public void testGetConnection() throws SQLException {		
+		Connection connection = mock(Connection.class);		
 		connectionPool = mock(BasicDataSource.class);
 		
-		doReturn(connection).when(connectionPool).getConnection();
-		verify(connectionPool, times(1)).getConnection();
+		doReturn(connection).when(imageDataStore).getConnection();
 	}
 	
 	@Test
@@ -83,8 +78,26 @@ public class TestJDBCImageDataStore {
 	}
 	
 	@Test
-	public void testAddImage() {
+	public void testAddImage() throws SQLException {		
+		String fakeImageName = "fake-image-name";
+		String fakeDownloadLink = "fake-download-link";
+		int fakePriority = 0;
 		
+		Connection connection = mock(Connection.class);
+		PreparedStatement preparedStatement = mock(PreparedStatement.class);
+		
+		doReturn(connection).when(imageDataStore).getConnection();
+		
+		doReturn(preparedStatement).when(connection).prepareStatement(eq(INSERT_IMAGE_SQL));
+		doNothing().when(preparedStatement).setString(eq(1), eq(fakeImageName));
+		doNothing().when(preparedStatement).setString(eq(2), eq(fakeDownloadLink));
+		doNothing().when(preparedStatement).setString(eq(3), eq(ImageState.NOT_DOWNLOADED.getValue()));
+		doNothing().when(preparedStatement).setString(eq(4), eq(ImageDataStore.NONE));
+		doNothing().when(preparedStatement).setInt(eq(5), eq(fakePriority));
+		
+		doReturn(true).when(preparedStatement).execute();
+		
+		doNothing().when(imageDataStore).close(preparedStatement, connection);
 	}
 
 }
