@@ -70,7 +70,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private void close(Statement statement, Connection conn) {
+	protected void close(Statement statement, Connection conn) {
 		close(statement);
 
 		if (conn != null) {

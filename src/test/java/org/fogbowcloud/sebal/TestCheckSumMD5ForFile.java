@@ -33,6 +33,8 @@ public class TestCheckSumMD5ForFile {
 	
 	@Test
 	public void testIsFileCorrupted() throws IOException {
+		exception.expect(Exception.class);
+		
 		File localFileMock = mock(File.class);
 		String localChecksum = "fake-local-checksum";
 		
