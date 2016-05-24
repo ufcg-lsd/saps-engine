@@ -66,7 +66,7 @@ public class InfrastructureMain implements ResourceNotifier {
 		//TODO: attach storage
 		System.out.println(resourceStr);
 		
-		if (volumeSize != null) {
+		if (!volumeSize.equals("null")) {
 			String fogbowRequirements = specs.get(0).getRequirementValue(
 					"FogbowRequirements");
 			String[] splitRequirements = fogbowRequirements.split("&&");

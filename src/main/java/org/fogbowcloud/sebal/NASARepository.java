@@ -44,15 +44,20 @@ public class NASARepository {
 	}
 
 	public void downloadImage(final ImageData imageData) throws Exception {
+		System.out.println("Downloading...");
 		HttpClient httpClient = initClient();
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
 		HttpResponse response = httpClient.execute(homeGet);
 
+		System.out.println("Getting dir...");
+		
 		String imageDirPath = properties.getProperty("sebal_export_path") + "/images/" + imageData.getName();
 		File imageDir = new File(imageDirPath);
 		if (!imageDir.exists() || !imageDir.isDirectory()) {
 			imageDir.mkdirs();
 		}
+		
+		System.out.println("Getting file name...");
 		
 		String localImageFilePath = imageDirPath + "/" + imageData.getName() + ".tar.gz";
 		
@@ -64,11 +69,13 @@ public class NASARepository {
 			localImageFile.delete();			
 		}
 		
+		System.out.println("Downloading image " + imageData.getName() + " into file " + localImageFilePath);
+		
 		LOGGER.info("Downloading image " + imageData.getName() + " into file " + localImageFilePath);
 		File file = new File(localImageFilePath);
 		OutputStream outStream = new FileOutputStream(file);
 		IOUtils.copy(response.getEntity().getContent(), outStream);
-		outStream.close();
+		//outStream.close();
 	}
 
 	private HttpClient initClient() throws IOException, ClientProtocolException,

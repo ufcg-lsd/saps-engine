@@ -1,6 +1,8 @@
 package org.fogbowcloud.sebal.fetcher;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -138,10 +140,25 @@ public class Fetcher {
 		}
 	}
 
-	private void finishFetch(ImageData imageData) throws SQLException {		
+	private void finishFetch(ImageData imageData) throws SQLException, IOException {		
 		imageData.setState(ImageState.FETCHED);
+		imageData.setStationId(getStationId(imageData));
+		imageData.setSebalVersion(properties.getProperty("sebal_version"));
 		imageStore.updateImage(imageData);
 		pendingImageFetchMap.remove(imageData.getName());
+	}
+	
+	private String getStationId(ImageData imageData) throws IOException {
+		String stationFilePath = properties.getProperty("sebal_export_path")
+				+ "/results/" + imageData.getName() + "/" + imageData.getName()
+				+ "_station.csv";
+		
+		BufferedReader reader = new BufferedReader(new FileReader(stationFilePath));
+		String lineOne = reader.readLine();
+		String[] stationAtt = lineOne.split(";");
+		
+		String stationId = stationAtt[0];
+		return stationId;
 	}
 
 	private void rollBackFetch(ImageData imageData) {

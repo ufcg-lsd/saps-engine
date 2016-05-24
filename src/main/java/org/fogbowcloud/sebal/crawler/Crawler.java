@@ -26,8 +26,8 @@ public class Crawler {
 	private final Properties properties;
 	private NASARepository NASARepository;
 	private final ImageDataStore imageStore;
-	private final File pendingImageDownloadFile;
-	private final DB pendingImageDownloadDB;
+	private File pendingImageDownloadFile;
+	private DB pendingImageDownloadDB;
 	private ConcurrentMap<String, ImageData> pendingImageDownloadMap;
 
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
@@ -48,9 +48,15 @@ public class Crawler {
 		this.imageStore = new JDBCImageDataStore(properties, imageStoreIP,
 				imageStorePort);
 		this.NASARepository = new NASARepository(properties);
+		
 		this.pendingImageDownloadFile = new File("pending-image-download.db");
 		this.pendingImageDownloadDB = DBMaker.newFileDB(pendingImageDownloadFile).make();
-		this.pendingImageDownloadMap = pendingImageDownloadDB.createHashMap("map").make();
+		
+		if(!pendingImageDownloadFile.exists() || !pendingImageDownloadFile.isFile()) {			
+			this.pendingImageDownloadMap = pendingImageDownloadDB.createHashMap("map").make();
+		} else {
+			this.pendingImageDownloadMap = pendingImageDownloadDB.getHashMap("map");
+		}
 	}
 
 	public void exec() throws InterruptedException, IOException {
@@ -99,7 +105,7 @@ public class Crawler {
 				ImageState.NOT_DOWNLOADED, (int) maxImagesToDownload);
 
 		for (ImageData imageData : imageDataList) {
-			if (imageData != null) {				
+			if (imageData != null) {	
 				if (imageStore.lockImage(imageData.getName())) {
 					imageData.setState(ImageState.DOWNLOADING);
 					imageData.setFederationMember(properties
@@ -139,6 +145,7 @@ public class Crawler {
 		try {
 			// FIXME: it blocks?
 			NASARepository.downloadImage(imageData);
+			
 
 			// running Fmask
 			int exitValue = new FMask().runFmask(imageData, properties);
@@ -149,7 +156,7 @@ public class Crawler {
 			}			
 
 			imageData.setState(ImageState.DOWNLOADED);
-			imageStore.updateImage(imageData);			
+			imageStore.updateImage(imageData);
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (Exception e) {
 			LOGGER.error(
@@ -167,6 +174,7 @@ public class Crawler {
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (SQLException e1) {
 			Crawler.LOGGER.error("Error while updating image data: " + imageData.getName(), e1);
+			System.out.println("Error while updating image data: " + imageData.getName() + "\n" + e1);
 		}
 	}
 

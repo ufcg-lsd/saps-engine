@@ -11,8 +11,10 @@ public interface ImageDataStore {
 	public void addImage(String imageName, String downloadLink, int priority) throws SQLException;
 
 	public void updateImage(ImageData imageData) throws SQLException;
-
+	
 	public void updateImageState(String imageName, ImageState state) throws SQLException;
+	
+	public void updateImageMetadata(String imageName, String stationId, String sebalVersion) throws SQLException;
 	
 	public List<ImageData> getAllImages() throws SQLException;
 
