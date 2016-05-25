@@ -29,6 +29,7 @@ public class Crawler {
 	private File pendingImageDownloadFile;
 	private DB pendingImageDownloadDB;
 	private ConcurrentMap<String, ImageData> pendingImageDownloadMap;
+	private String federationMember;
 
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	// Image dir size in bytes
@@ -37,7 +38,7 @@ public class Crawler {
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
 	public Crawler(Properties properties, String imageStoreIP,
-			String imageStorePort) {
+			String imageStorePort, String federationMember) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
@@ -48,6 +49,13 @@ public class Crawler {
 		this.imageStore = new JDBCImageDataStore(properties, imageStoreIP,
 				imageStorePort);
 		this.NASARepository = new NASARepository(properties);
+		
+		this.federationMember = federationMember;
+
+		if(federationMember == null || federationMember.isEmpty()) {			
+			LOGGER.error("Federation member field is empty!");
+			return;
+		}
 		
 		this.pendingImageDownloadFile = new File("pending-image-download.db");
 		this.pendingImageDownloadDB = DBMaker.newFileDB(pendingImageDownloadFile).make();
@@ -108,8 +116,7 @@ public class Crawler {
 			if (imageData != null) {	
 				if (imageStore.lockImage(imageData.getName())) {
 					imageData.setState(ImageState.DOWNLOADING);
-					imageData.setFederationMember(properties
-							.getProperty("federation_member"));					
+					imageData.setFederationMember(federationMember);					
 					pendingImageDownloadMap.put(imageData.getName(), imageData);
 					pendingImageDownloadDB.commit();
 					imageStore.updateImage(imageData);

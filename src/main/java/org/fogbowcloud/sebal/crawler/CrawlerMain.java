@@ -19,8 +19,9 @@ public class CrawlerMain {
 		try {
 			String imageStoreIP = args[1];
 			String imageStorePort = args[2];
+			String federationMember = args[3];
 
-			Crawler crawler = new Crawler(properties, imageStoreIP, imageStorePort);
+			Crawler crawler = new Crawler(properties, imageStoreIP, imageStorePort, federationMember);
 			crawler.exec();
 		} catch(NullPointerException e) {
 			LOGGER.error("Data store IP/PORT is null!");

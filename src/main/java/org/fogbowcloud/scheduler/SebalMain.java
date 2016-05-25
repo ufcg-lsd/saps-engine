@@ -4,7 +4,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -36,9 +38,9 @@ public class SebalMain {
 
 //	private static Map<String, ImageData> pendingImageExecution = new ConcurrentHashMap<String, ImageData>();
 	private static ImageDataStore imageStore;
-	
 	private static String nfsServerIP;
 	private static String nfsServerPort;
+	private Map<String, Integer> allocationMap = new HashMap<String, Integer>();
 	
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 
@@ -114,105 +116,26 @@ public class SebalMain {
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
 	}
-
-/*	private static void addF1FakeTasks(Properties properties, Job job, Specification sebalSpec, ImageState imageState) {
-		try {
-			List<ImageData> completedImages = imageStore.getImageIn(imageState);
-
-			for (ImageData imageData : completedImages) {
-
-				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
-
-				List<Task> tasks = new ArrayList<Task>();
-
-				tasks = SebalTasks.createF1Tasks(properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember());
-
-				for (Task task : tasks) {
-					job.addFakeTask(task);
-				}
-			}
-
-		} catch (SQLException e) {
-			LOGGER.error("Error while getting image.", e);
-		}
-	}*/
 	
-	private static void addFakeRTasks(Properties properties, Job job,
-			Specification sebalSpec, ImageState imageState) {
-		try {
-			List<ImageData> completedImages = imageStore.getIn(imageState);
-
-			for (ImageData imageData : completedImages) {
-				LOGGER.info("Adding fake Completed Tasks for image " + imageData.getName());
-				
-				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
-				
-				taskImpl = SebalTasks.createRTask(taskImpl, properties, imageData.getName(), sebalSpec,
-						imageData.getFederationMember(), nfsServerIP, nfsServerPort);
-				
-				job.addFakeTask(taskImpl);
-			}
-
-		} catch (SQLException e) {
-			LOGGER.error("Error while getting image.", e);
-		}
+	private static void setFederationMemberIntoSpec(Specification spec, String federationMember) {
+		String fogbowRequirements = spec.getRequirementValue(
+				"FogbowRequirements");
+		String newRequirements = fogbowRequirements + " && Glue2CloudComputeManagerID==\"" + federationMember + "\"";
+		spec.addRequirement("FogbowRequirements", newRequirements);
 	}
-	
-/*	private static void addF1CF2Tasks(final Properties properties, final Job job,
-			final Specification sebalSpec, ImageState imageState, int limit) {
-		try {
-			List<ImageData> imagesToExecute = imageStore.getImageIn(imageState, limit);				
-			
-			for (ImageData imageData : imagesToExecute) {
-				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
-						+ imageData.getState().getValue() + " (not finished).");
-//				pendingImageExecution.put(imageData.getName(), imageData);
-
-				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
-				
-				List<Task> tasks = new ArrayList<Task>();
-				
-				if (ImageState.RUNNING_F1.equals(imageState)
-						|| ImageState.DOWNLOADED.equals(imageState)) {
-					tasks = SebalTasks.createF1Tasks(properties, imageData.getName(),
-							sebalSpec, imageData.getFederationMember());
-					imageData.setState(ImageState.RUNNING_F1);
-				} else if (ImageState.RUNNING_C.equals(imageState)
-						|| ImageState.READY_FOR_PHASE_C.equals(imageState)) {
-					tasks = SebalTasks.createCTasks(properties, imageData.getName(),
-							sebalSpec);
-					imageData.setState(ImageState.RUNNING_C);
-				} else if (ImageState.RUNNING_F2.equals(imageState)
-						|| ImageState.READY_FOR_PHASE_F2.equals(imageState)) {
-					tasks = SebalTasks.createF2Tasks(properties, imageData.getName(),
-							sebalSpec);
-					imageData.setState(ImageState.RUNNING_F2);
-				}
-
-				for (Task task : tasks) {
-					job.addTask(task);
-				}
-				
-				imageStore.updateImage(imageData);
-			}
-			
-			
-		} catch (SQLException e) {
-			LOGGER.error("Error while getting image.", e);
-		}
-	}*/
 	
 	private static void addRTasks(final Properties properties, final Job job,
 			final Specification sebalSpec, ImageState imageState, int limit) {
 		try {
-			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);				
+			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);
 			
 			for (ImageData imageData : imagesToExecute) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
 
 				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
+				
+				setFederationMemberIntoSpec(sebalSpec, imageData.getFederationMember());
 				
 				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
 				

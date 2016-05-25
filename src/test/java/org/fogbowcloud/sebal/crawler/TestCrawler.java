@@ -36,6 +36,7 @@ public class TestCrawler {
 	private ImageDataStore imageStoreMock;
 	private String imageStoreIPMock = "fake-image-store-ip";
 	private String imageStorePortMock = "fake-image-store-port";
+	private String federationMemberMock = "fake-federation-member";
 	private HTreeMap<String, ImageData> pendingImageDownloadMapMock;
 	
 	@Rule
@@ -53,7 +54,7 @@ public class TestCrawler {
 		properties.setProperty("nasa_password", "nasa-password-mock");
 		pendingImageDownloadDBMock = mock(DB.class);
 		pendingImageDownloadMapMock = mock(HTreeMap.class);		
-		crawler = spy(new Crawler(properties, imageStoreIPMock, imageStorePortMock));
+		crawler = spy(new Crawler(properties, imageStoreIPMock, imageStorePortMock, federationMemberMock));
 	}
 	
 	@Test

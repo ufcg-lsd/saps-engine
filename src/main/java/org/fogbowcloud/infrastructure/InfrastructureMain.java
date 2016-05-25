@@ -15,6 +15,7 @@ import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 public class InfrastructureMain implements ResourceNotifier {
 	
 	private Resource resource;
+	private static String managerID;
 	
 	private static final Logger LOGGER = Logger.getLogger(InfrastructureMain.class);
 
@@ -58,29 +59,25 @@ public class InfrastructureMain implements ResourceNotifier {
 			Thread.sleep(2000);
 		}
 		
-		infraManager.stop(false);
-
-		//TODO: move to the end?
-		String resourceStr = resourceAsString(infraMain.resource);
-		
-		//TODO: attach storage
-		System.out.println(resourceStr);
+		infraManager.stop(false);		
 		
 		if (!volumeSize.equals("null")) {
 			String fogbowRequirements = specs.get(0).getRequirementValue(
 					"FogbowRequirements");
 			String[] splitRequirements = fogbowRequirements.split("&&");
 			String requirement = splitRequirements[splitRequirements.length - 1];
-			requirement = requirement.substring(1);
+			managerID = requirement.substring(1);
 			
 			String resourceComputeIdUncut = infraManager.getResourceComputeId(infraMain.resource);
 			String[] splitResourceComputeId = resourceComputeIdUncut.split("@");
 			String resourceComputeId = splitResourceComputeId[0];
 
 			StorageInitializer storageInitializer = new StorageInitializer(
-					resourceComputeId, requirement, volumeSize);
+					resourceComputeId, managerID, volumeSize);
 			storageInitializer.init();
 		}
+
+		String resourceStr = resourceAsString(infraMain.resource, managerID);
 
 		LOGGER.debug("Infrastructure created.");
 
@@ -111,15 +108,17 @@ public class InfrastructureMain implements ResourceNotifier {
 		return (InfrastructureProvider) clazz;
 	}
 	
-	private static String resourceAsString(Resource resource) {
+	private static String resourceAsString(Resource resource, String managerID) {
 		return "USER NAME: "
 				+ resource.getMetadataValue(Resource.METADATA_SSH_USERNAME_ATT)
 				+ "\nSSH HOST: "
 				+ resource.getMetadataValue(Resource.METADATA_SSH_HOST)
 				+ "\nSSH PORT: "
 				+ resource.getMetadataValue(Resource.METADATA_SSH_PORT)
-				+ "\nEXTRA PORT: "
-				+ resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT);
+/*				+ "\nEXTRA PORT: "
+				+ resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT)*/
+				+ "\nFEDERATION MEMBER: "
+				+ managerID;
 	}
 
 	@Override

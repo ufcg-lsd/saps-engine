@@ -82,9 +82,6 @@ public class Fetcher {
 	private void removeFromPendingAndUpdateState(final ImageData imageData) {
 		// FIXME: add log
 		try {
-			// FIXME: see how federation member will be used
-			// FIXME: see if will be set to NONE or do nothing
-			//imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.FINISHED);
 			imageStore.updateImage(imageData);
 			pendingImageFetchMap.remove(imageData.getName());
