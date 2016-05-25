@@ -551,7 +551,7 @@ public class InfrastructureManager {
 		return idleResources;
 	}
 
-	protected List<Resource> getAllResources() {
+	public List<Resource> getAllResources() {
 		List<Resource> resources = new ArrayList<Resource>();
 		resources.addAll(this.getAllocatedResources());
 		resources.addAll(this.getIdleResources());

@@ -4,7 +4,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -16,6 +18,7 @@ import org.fogbowcloud.scheduler.core.ExecutionMonitor;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
 import org.fogbowcloud.scheduler.core.Scheduler;
 import org.fogbowcloud.scheduler.core.model.Job;
+import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.SebalJob;
 import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
@@ -40,7 +43,9 @@ public class SebalMain {
 	private static ImageDataStore imageStore;
 	private static String nfsServerIP;
 	private static String nfsServerPort;
-	private Map<String, Integer> allocationMap = new HashMap<String, Integer>();
+	private static InfrastructureManager infraManager;
+	//TODO: change this later
+	private static int maxAllowedResources = 5;
 	
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 
@@ -72,7 +77,7 @@ public class SebalMain {
 
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 		
-		InfrastructureManager infraManager = new InfrastructureManager(initialSpecs, isElastic,
+		infraManager = new InfrastructureManager(initialSpecs, isElastic,
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 		
@@ -81,15 +86,6 @@ public class SebalMain {
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 		
-		// scheduling previous image executions
-//		addTasks(properties, job, sebalSpec, ImageState.RUNNING_F2);
-//		addTasks(properties, job, sebalSpec, ImageState.RUNNING_C);
-		
-		//Used before:
-		//addFakeTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
-		//addTasks(properties, job, sebalSpec, ImageState.RUNNING_F1, ImageDataStore.UNLIMITED);
-		
-		//addFakeRTasks(properties, job, sebalSpec, ImageState.READY_FOR_R);
 		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R, ImageDataStore.UNLIMITED);
 		
 		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
@@ -101,15 +97,13 @@ public class SebalMain {
 		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-			
-				// TODO develop throughput and negation of task addition 
-//				addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_F2);
-				//addTasks(properties, job, sebalSpec, ImageState.READY_FOR_PHASE_C);
 				
-				//Used before:
-				//addTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
-				
-				addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
+				try {
+					addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}	
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 		
@@ -124,35 +118,72 @@ public class SebalMain {
 		spec.addRequirement("FogbowRequirements", newRequirements);
 	}
 	
+	private static Map<String, Collection<Resource>> allocationMap() {
+		
+		List<Resource> allResources = infraManager.getAllResources();
+		
+		Map<String, Collection<Resource>> allocMap = new HashMap<String, Collection<Resource>>();
+		for(Resource resource : allResources) {						
+			String location = resource.getMetadataValue(Resource.METADATA_LOCATION);
+			if (!allocMap.containsKey(location)) {
+				allocMap.put(location, new LinkedList<Resource>());
+			}
+			allocMap.get(location).add(resource);			
+		}
+		return allocMap;
+	}
+	
+	private static boolean isQuotaAvailable(String federationMemberId, 
+			Map<String, Collection<Resource>> allocationMap, 
+			int maxAllowedResources) {
+		
+		if (allocationMap.containsKey(federationMemberId)) {
+			//debug
+			int numAllocationPerFederationMember = allocationMap.get(federationMemberId).size();
+			return numAllocationPerFederationMember < maxAllowedResources; 
+		}
+		return false;
+	}
+	
 	private static void addRTasks(final Properties properties, final Job job,
-			final Specification sebalSpec, ImageState imageState, int limit) {
+			final Specification sebalSpec, ImageState imageState, int limit) throws InterruptedException {
+		
 		try {
+			
 			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);
 			
 			for (ImageData imageData : imagesToExecute) {
+				
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
 
 				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
+
+				//FIXME: isso nao garante que temos uma novo objeto. preciso de um clone
+				Specification tempSpec = sebalSpec;
+				setFederationMemberIntoSpec(tempSpec, imageData.getFederationMember());
 				
-				setFederationMemberIntoSpec(sebalSpec, imageData.getFederationMember());
-				
-				TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), sebalSpec);
-				
-				if (ImageState.RUNNING_R.equals(imageState)
-						|| ImageState.DOWNLOADED.equals(imageState)
-						|| ImageState.READY_FOR_R.equals(imageState)) {
-					taskImpl = SebalTasks.createRTask(taskImpl, properties,
-							imageData.getName(), sebalSpec,
-							imageData.getFederationMember(),
-							nfsServerIP, nfsServerPort);
+				Map<String, Collection<Resource>> allocationMap = allocationMap();
+								
+				if(isQuotaAvailable(imageData.getFederationMember(), allocationMap, maxAllowedResources)) {
 					
-					imageData.setState(ImageState.RUNNING_R);
+					if (ImageState.RUNNING_R.equals(imageState)
+							|| ImageState.DOWNLOADED.equals(imageState)
+							|| ImageState.READY_FOR_R.equals(imageState)) {
+						
+						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), tempSpec);
+						taskImpl = SebalTasks.createRTask(taskImpl, properties,
+								imageData.getName(), tempSpec,
+								imageData.getFederationMember(),
+								nfsServerIP, nfsServerPort);
+						imageData.setState(ImageState.RUNNING_R);
+						job.addTask(taskImpl);
+						imageStore.updateImage(imageData);	
+					}					
+				} else {
+					LOGGER.info("Not enough quota to allocate instance for <" + imageData.getName() + "> " +
+								"in federationMember <" + 	imageData.getFederationMember() + ">");
 				}
-				
-				job.addTask(taskImpl);
-				
-				imageStore.updateImage(imageData);
 			}
 			
 		} catch (SQLException e) {
