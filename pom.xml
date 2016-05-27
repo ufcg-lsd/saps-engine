@@ -162,6 +162,13 @@
 			<version>1.0.9</version>
 		</dependency>
 		
+		<dependency>
+	        <groupId>org.ourgrid</groupId>
+	        <artifactId>ourgrid</artifactId>
+	        <version>4.4.2</version>
+	        <scope>system</scope>
+	        <systemPath>/path/to/jar/ourgrid-4.4.2.jar</systemPath>
+      	</dependency>
 		
 	</dependencies>
 </project>
