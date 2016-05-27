@@ -131,7 +131,7 @@ public class Specification implements Serializable{
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Image: " + image);
-		sb.append("- PublicKey: " + publicKey);
+		sb.append(" PublicKey: " + publicKey);
 		if (contextScript != null && !contextScript.isEmpty()) {
 			sb.append("\nContextScript: " + contextScript);
 		}

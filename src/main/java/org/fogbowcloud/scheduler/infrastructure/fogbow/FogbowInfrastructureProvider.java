@@ -327,6 +327,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 				new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.REQUIREMENTS.getValue() + "=" + fogbowRequirements));
 		headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\"" + OrderConstants.TEMPLATE_OS_SCHEME
 				+ "\"; class=\"" + OrderConstants.MIXIN_CLASS + "\""));
+		headers.add(
+				new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.RESOURCE_KIND.getValue() + "=" + "compute"));
 		if (specs.getPublicKey() != null && !specs.getPublicKey().isEmpty()) {
 			headers.add(
 					new BasicHeader(CATEGORY,
