@@ -23,6 +23,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String PRIORITY_COL = "priority";
 	private static final String FEDERATION_MEMBER_COL = "federation_member";
 	private static final String STATE_COL = "state";
+	private static final String STATION_ID_COL = "station_id";
+	private static final String SEBAL_VERSION_COL = "sebal_version";
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
 	private BasicDataSource connectionPool;
 
@@ -48,10 +50,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 			
 			connection = getConnection();
 			statement = connection.createStatement();
-			statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME + "("
-					+ IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, " + DOWNLOAD_LINK_COL
-					+ " VARCHAR(255), " + STATE_COL + " VARCHAR(100), " + FEDERATION_MEMBER_COL
-					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER)");			
+			statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME
+					+ "(" + IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, "
+					+ DOWNLOAD_LINK_COL + " VARCHAR(255), " + STATE_COL
+					+ " VARCHAR(100), " + FEDERATION_MEMBER_COL
+					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
+					+ STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
+					+ " VARCHAR(255)");
 			statement.close();
 
 		} catch (Exception e) {
@@ -70,7 +75,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private void close(Statement statement, Connection conn) {
+	protected void close(Statement statement, Connection conn) {
 		close(statement);
 
 		if (conn != null) {
@@ -97,7 +102,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?)";
 
 	@Override
 	public void addImage(String imageName, String downloadLink, int priority) throws SQLException {
@@ -121,6 +126,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
 			insertStatement.setString(4, ImageDataStore.NONE);
 			insertStatement.setInt(5, priority);
+			insertStatement.setString(6, "NE");
+			insertStatement.setString(7, "NE");
 
 			insertStatement.execute();
 		} finally {
@@ -156,7 +163,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " "
 			+ "SET download_link = ?, state = ?, federation_member = ? "
-			+ ", priority = ? WHERE image_name = ?";
+			+ ", priority = ?, station_id = ?, sebal_version = ? WHERE image_name = ?";
 	
 	@Override
 	public void updateImage(ImageData imageData) throws SQLException {
@@ -177,7 +184,37 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(3, imageData.getFederationMember());
 			updateStatement.setInt(4, imageData.getPriority());
 			updateStatement.setString(5, imageData.getName());
+			updateStatement.setString(6, imageData.getStationId());
+			updateStatement.setString(7, imageData.getSebalVersion());
 
+			updateStatement.execute();
+		} finally {
+			close(updateStatement, connection);
+		}
+	}
+	
+	private static final String UPDATE_IMAGE_METADATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
+			+ " SET station_id = ?, sebal_version = ? WHERE image_name = ?";
+	
+	@Override
+	public void updateImageMetadata(String imageName, String stationId, String sebalVersion) throws SQLException {
+		if (imageName == null || imageName.isEmpty() || stationId == null
+				|| stationId.isEmpty() || sebalVersion == null
+				|| sebalVersion.isEmpty()) {
+			LOGGER.error("Invalid image name " + imageName + ", station ID " + stationId + " or sebal version " + sebalVersion);
+			throw new IllegalArgumentException("Invalid image name " + imageName + ", station ID "
+					+ stationId + " or sebal version " + sebalVersion);
+		}
+		PreparedStatement updateStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			updateStatement = connection.prepareStatement(UPDATE_IMAGE_METADATA_SQL);
+			updateStatement.setString(1, stationId);
+			updateStatement.setString(2, sebalVersion);
+			updateStatement.setString(3, imageName);
 			updateStatement.execute();
 		} finally {
 			close(updateStatement, connection);

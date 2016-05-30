@@ -37,9 +37,10 @@ public class TestFogbowRequirementsHelper {
 		String publicKey = "key01";
 		String privateKey = "privKey01";
 		String userData = "scripts/lvl-user-data.sh";
+		String userDataType = "text/x-shellscript";
 
 		requirements = new HashMap<String, String>();
-		spec = new Specification(image, userName, publicKey, privateKey, userData);
+		spec = new Specification(image, userName, publicKey, privateKey, userData, userDataType);
 		suitableResource = mock(Resource.class);
 		doReturn("resquest_01").when(suitableResource).getId();
 		when(suitableResource.match(Mockito.any(Specification.class))).thenCallRealMethod();

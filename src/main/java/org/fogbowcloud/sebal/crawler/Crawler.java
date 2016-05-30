@@ -26,9 +26,10 @@ public class Crawler {
 	private final Properties properties;
 	private NASARepository NASARepository;
 	private final ImageDataStore imageStore;
-	private final File pendingImageDownloadFile;
-	private final DB pendingImageDownloadDB;
+	private File pendingImageDownloadFile;
+	private DB pendingImageDownloadDB;
 	private ConcurrentMap<String, ImageData> pendingImageDownloadMap;
+	private String federationMember;
 
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	// Image dir size in bytes
@@ -37,7 +38,7 @@ public class Crawler {
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
 	public Crawler(Properties properties, String imageStoreIP,
-			String imageStorePort) {
+			String imageStorePort, String federationMember) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
@@ -48,9 +49,22 @@ public class Crawler {
 		this.imageStore = new JDBCImageDataStore(properties, imageStoreIP,
 				imageStorePort);
 		this.NASARepository = new NASARepository(properties);
+		
+		this.federationMember = federationMember;
+
+		if(federationMember == null || federationMember.isEmpty()) {			
+			LOGGER.error("Federation member field is empty!");
+			return;
+		}
+		
 		this.pendingImageDownloadFile = new File("pending-image-download.db");
 		this.pendingImageDownloadDB = DBMaker.newFileDB(pendingImageDownloadFile).make();
-		this.pendingImageDownloadMap = pendingImageDownloadDB.createHashMap("map").make();
+		
+		if(!pendingImageDownloadFile.exists() || !pendingImageDownloadFile.isFile()) {			
+			this.pendingImageDownloadMap = pendingImageDownloadDB.createHashMap("map").make();
+		} else {
+			this.pendingImageDownloadMap = pendingImageDownloadDB.getHashMap("map");
+		}
 	}
 
 	public void exec() throws InterruptedException, IOException {
@@ -92,21 +106,19 @@ public class Crawler {
 		return !imageData.isEmpty();
 	}
 
-	private void download(long maxImagesToDownload) throws SQLException {
+	protected void download(long maxImagesToDownload) throws SQLException {
 
 		// FIXME: check the implications of this cast
 		List<ImageData> imageDataList = imageStore.getIn(
 				ImageState.NOT_DOWNLOADED, (int) maxImagesToDownload);
 
 		for (ImageData imageData : imageDataList) {
-			if (imageData != null) {
-				
-				// FIXME: not good block
+			if (imageData != null) {	
 				if (imageStore.lockImage(imageData.getName())) {
 					imageData.setState(ImageState.DOWNLOADING);
-					imageData.setFederationMember(properties
-							.getProperty("federation_member"));					
+					imageData.setFederationMember(federationMember);					
 					pendingImageDownloadMap.put(imageData.getName(), imageData);
+					pendingImageDownloadDB.commit();
 					imageStore.updateImage(imageData);
 					imageStore.unlockImage(imageData.getName());
 
@@ -116,11 +128,11 @@ public class Crawler {
 		}
 	}
 
-	private long numberOfImagesToDownload() {
+	protected long numberOfImagesToDownload() {
 		
 		//FIXME test
 		String volumeDirPath = properties.getProperty("sebal_export_path");
-		File volumePath = new File(volumeDirPath);
+		File volumePath = getExportDirPath(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
 			long availableVolumeSpace = volumePath.getFreeSpace();
 			long numberOfImagesToDownload = availableVolumeSpace / DEFAULT_IMAGE_DIR_SIZE;
@@ -132,10 +144,15 @@ public class Crawler {
 		}
 	}
 
+	protected File getExportDirPath(String volumeDirPath) {
+		return new File(volumeDirPath);
+	}
+
 	private void downloadImage(final ImageData imageData) {
 		try {
 			// FIXME: it blocks?
 			NASARepository.downloadImage(imageData);
+			
 
 			// running Fmask
 			int exitValue = new FMask().runFmask(imageData, properties);
@@ -146,7 +163,7 @@ public class Crawler {
 			}			
 
 			imageData.setState(ImageState.DOWNLOADED);
-			imageStore.updateImage(imageData);			
+			imageStore.updateImage(imageData);
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (Exception e) {
 			LOGGER.error(
@@ -164,6 +181,7 @@ public class Crawler {
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (SQLException e1) {
 			Crawler.LOGGER.error("Error while updating image data: " + imageData.getName(), e1);
+			System.out.println("Error while updating image data: " + imageData.getName() + "\n" + e1);
 		}
 	}
 

@@ -44,15 +44,17 @@ public class StorageInitializer {
 
 	private String resourceId;
 	private String requirementsCloud;
+	private String volumeSize;
 	private static String attribute;
 	private static String location;
 	private static HttpClient client;
 	
 	private static final Logger LOGGER = Logger.getLogger(StorageInitializer.class);
 	
-	public StorageInitializer(String resourceId, String requirementsCloud) {
+	public StorageInitializer(String resourceId, String requirementsCloud, String volumeSize) {
 		this.resourceId = resourceId;
 		this.requirementsCloud = requirementsCloud;
+		this.volumeSize = volumeSize;
 		attribute = new String();
 		location = new String();
 	}
@@ -76,9 +78,13 @@ public class StorageInitializer {
 		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.TYPE
 				.getValue() + "=" + OrderConstants.DEFAULT_TYPE));
 
-		//TODO: insert correct size
-		headers.add(new BasicHeader("X-OCCI-Attribute",
-				OrderAttribute.STORAGE_SIZE.getValue() + "=" + 1));
+		if (volumeSize != null || !volumeSize.isEmpty()) {
+			headers.add(new BasicHeader("X-OCCI-Attribute",
+					OrderAttribute.STORAGE_SIZE.getValue() + "=" + Integer.parseInt(volumeSize)));
+		} else {
+			LOGGER.error("Volume size not specified!");
+			return;
+		}
 		
 		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.RESOURCE_KIND
 				.getValue() + "=" + "storage"));

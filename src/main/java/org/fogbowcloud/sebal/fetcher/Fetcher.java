@@ -1,6 +1,8 @@
 package org.fogbowcloud.sebal.fetcher;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -80,9 +82,6 @@ public class Fetcher {
 	private void removeFromPendingAndUpdateState(final ImageData imageData) {
 		// FIXME: add log
 		try {
-			// FIXME: see how federation member will be used
-			// FIXME: see if will be set to NONE or do nothing
-			//imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.FINISHED);
 			imageStore.updateImage(imageData);
 			pendingImageFetchMap.remove(imageData.getName());
@@ -128,7 +127,6 @@ public class Fetcher {
 	private void prepareFetch(ImageData imageData) throws SQLException {
 
 		if (imageStore.lockImage(imageData.getName())) {
-
 			imageData.setState(ImageState.FETCHING);
 			imageData.setFederationMember(properties
 					.getProperty("federation_member"));
@@ -139,10 +137,25 @@ public class Fetcher {
 		}
 	}
 
-	private void finishFetch(ImageData imageData) throws SQLException {		
+	private void finishFetch(ImageData imageData) throws SQLException, IOException {		
 		imageData.setState(ImageState.FETCHED);
+		imageData.setStationId(getStationId(imageData));
+		imageData.setSebalVersion(properties.getProperty("sebal_version"));
 		imageStore.updateImage(imageData);
 		pendingImageFetchMap.remove(imageData.getName());
+	}
+	
+	private String getStationId(ImageData imageData) throws IOException {
+		String stationFilePath = properties.getProperty("sebal_export_path")
+				+ "/results/" + imageData.getName() + "/" + imageData.getName()
+				+ "_station.csv";
+		
+		BufferedReader reader = new BufferedReader(new FileReader(stationFilePath));
+		String lineOne = reader.readLine();
+		String[] stationAtt = lineOne.split(";");
+		
+		String stationId = stationAtt[0];
+		return stationId;
 	}
 
 	private void rollBackFetch(ImageData imageData) {
@@ -150,7 +163,7 @@ public class Fetcher {
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
 			// FIXME: see if this will be set to NONE
-			imageData.setFederationMember(ImageDataStore.NONE);
+			//imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.FINISHED);
 			imageStore.updateImage(imageData);
 		} catch (SQLException e1) {
@@ -160,17 +173,6 @@ public class Fetcher {
 
 	// TODO: See if this is correct
 	// FIXME: reduce code
-	
-	//1. ftp fazer funcionar
-	
-	//2. decidir como pedar o output, por arquivo ou tarball
-	
-	//worker node
-	//	tar cvf (um unico arquivo)
-	//	md5sum (colocar no nome do output o valor do md5)
-	//fetcher
-	//	md5sum single file
-	//	compare with md5 from worker node
 	public void fetch(final ImageData imageData, int tries) throws IOException,
 			InterruptedException, SQLException {
 		

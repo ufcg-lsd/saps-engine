@@ -11,6 +11,8 @@ public class ImageData implements Serializable {
 	private ImageState state;
 	private String federationMember;
 	private int priority;
+	private String stationId;
+	private String sebalVersion;
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 
 	public ImageData(String name, String downloadLink, ImageState state, String federationMember,
@@ -42,6 +44,14 @@ public class ImageData implements Serializable {
 		return priority;
 	}
 	
+	public String getStationId() {
+		return stationId;
+	}
+	
+	public String getSebalVersion() {
+		return sebalVersion;
+	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -61,10 +71,19 @@ public class ImageData implements Serializable {
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
+	
+	public void setStationId(String stationId) {
+		this.stationId = stationId;
+	}
+	
+	public void setSebalVersion(String sebalVersion) {
+		this.sebalVersion = sebalVersion;
+	}
 
 	public String toString() {
-		return name + ", " + downloadLink + ", " + state.getValue() + ", " + federationMember
-				+ ", " + priority;
+		return name + ", " + downloadLink + ", " + state.getValue() + ", "
+				+ federationMember + ", " + priority + ", " + stationId + ", "
+				+ sebalVersion;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -82,7 +101,9 @@ public class ImageData implements Serializable {
 			return getName().equals(other.getName())
 					&& getDownloadLink().equals(other.getDownloadLink())
 					&& getState().equals(other.getState()) && getPriority() == other.getPriority()
-					&& getFederationMember().equals(other.getFederationMember());
+					&& getFederationMember().equals(other.getFederationMember())
+					&& getStationId().equals(other.getStationId())
+					&& getSebalVersion().equals(other.getSebalVersion());
 		}
 		return false;
 	}

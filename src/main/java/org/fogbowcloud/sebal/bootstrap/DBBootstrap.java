@@ -55,14 +55,14 @@ public class DBBootstrap {
 				File imageListFile = new File("images-" + year + ".txt");
 				FileUtils.write(imageListFile, imageList);
 
-				Map<String, String> imageAndDownloadLink = nasaRepository
+				Map<String, String> imageAndDownloadLink = getNasaRepository()
 						.checkExistingImages(imageListFile);
 				
 				imageListFile.delete();
 				
 				for (String imageName : imageAndDownloadLink.keySet()) {
 					try {
-						imageStore.addImage(imageName, imageAndDownloadLink.get(imageName), priority);
+						getImageStore().addImage(imageName, imageAndDownloadLink.get(imageName), priority);
 					} catch (SQLException e) {
 						// TODO do we need to do something?
 						LOGGER.error("Error while adding image at data base.", e);
@@ -73,7 +73,7 @@ public class DBBootstrap {
 		}
 	}
 
-	private String createImageList(String region, int year) {
+	protected String createImageList(String region, int year) {
 		StringBuilder imageList = new StringBuilder();
 		for (int day = 1; day < 366; day++) {
 			NumberFormat formatter = new DecimalFormat("000");
@@ -83,7 +83,7 @@ public class DBBootstrap {
 		return imageList.toString().trim();
 	}
 
-	private List<String> getRegions(String filePath) {
+	protected List<String> getRegions(String filePath) {
 		List<String> regions = new ArrayList<String>();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(filePath));
@@ -106,6 +106,10 @@ public class DBBootstrap {
 	
 	protected void setNasaRepository(NASARepository nasaRepository) {
 		this.nasaRepository = nasaRepository;
+	}
+	
+	protected NASARepository getNasaRepository() {
+		return nasaRepository;
 	}
 
 	public static String getImageRegionFromName(String imageName) {

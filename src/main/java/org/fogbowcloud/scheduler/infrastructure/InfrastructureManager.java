@@ -28,6 +28,8 @@ import org.fogbowcloud.scheduler.infrastructure.exceptions.RequestResourceExcept
 import org.fogbowcloud.scheduler.infrastructure.fogbow.FogbowRequirementsHelper;
 
 public class InfrastructureManager {
+	
+	//TODO: see if number of VMs in each site will be stored in a map
 
 	private static final Logger LOGGER = Logger.getLogger(InfrastructureManager.class);
 
@@ -549,7 +551,7 @@ public class InfrastructureManager {
 		return idleResources;
 	}
 
-	protected List<Resource> getAllResources() {
+	public List<Resource> getAllResources() {
 		List<Resource> resources = new ArrayList<Resource>();
 		resources.addAll(this.getAllocatedResources());
 		resources.addAll(this.getIdleResources());

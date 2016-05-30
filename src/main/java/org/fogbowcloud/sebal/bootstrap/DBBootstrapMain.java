@@ -42,7 +42,6 @@ public class DBBootstrapMain {
 		}
 
 		LOGGER.info("Operation done successfully");
-
 	}
 
 }

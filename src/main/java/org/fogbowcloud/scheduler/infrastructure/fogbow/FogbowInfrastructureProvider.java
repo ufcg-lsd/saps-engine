@@ -1,7 +1,9 @@
 package org.fogbowcloud.scheduler.infrastructure.fogbow;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,10 +16,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.manager.core.UserdataUtils;
 import org.fogbowcloud.manager.core.plugins.identity.voms.VomsIdentityPlugin;
 import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.order.OrderAttribute;
@@ -323,7 +327,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	}
 
 	private List<Header> requestNewInstanceHeaders(Specification specs) {
-
 		String fogbowImage = specs.getImage();
 		String fogbowRequirements = specs.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS);
 		String fogbowRequestType = specs.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE);
@@ -333,10 +336,37 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 				+ "\"; class=\"" + OrderConstants.KIND_CLASS + "\""));
 		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.INSTANCE_COUNT.getValue() + "=" + 1));
 		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.TYPE.getValue() + "=" + fogbowRequestType));
-		headers.add(
-				new BasicHeader(X_OCCI_ATTRIBUTE, OrderAttribute.REQUIREMENTS.getValue() + "=" + fogbowRequirements));
-		headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\"" + OrderConstants.TEMPLATE_OS_SCHEME
-				+ "\"; class=\"" + OrderConstants.MIXIN_CLASS + "\""));
+		
+		headers.add(new BasicHeader(CATEGORY, fogbowImage + "; scheme=\""
+				+ OrderConstants.TEMPLATE_OS_SCHEME + "\"; class=\""
+				+ OrderConstants.MIXIN_CLASS + "\""));
+		
+		headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,
+				OrderAttribute.REQUIREMENTS.getValue() + "="
+						+ fogbowRequirements));
+		
+		if (specs.getUserDataFile() != null && !specs.getUserDataFile().isEmpty()) {
+			if (specs.getUserDataType() == null 
+					|| specs.getUserDataType().isEmpty()) {
+				System.out.println("Content type of user data file cannot be empty.");
+				return null;
+			}
+			try {
+				String userDataContent = getFileContent(specs.getUserDataFile());
+				String userData = userDataContent.replace("\n",
+						UserdataUtils.USER_DATA_LINE_BREAKER);
+				userData = new String(Base64.encodeBase64(userData.getBytes()));
+				headers.add(new BasicHeader("X-OCCI-Attribute", 
+						OrderAttribute.EXTRA_USER_DATA_ATT.getValue() + "=" + userData));
+				headers.add(new BasicHeader("X-OCCI-Attribute", 
+						OrderAttribute.EXTRA_USER_DATA_CONTENT_TYPE_ATT.getValue() 
+						+ "=" + specs.getUserDataType()));
+			} catch (IOException e) {
+				System.out.println("User data file not found.");
+				return null;
+			}
+		}
+
 		if (specs.getPublicKey() != null && !specs.getPublicKey().isEmpty()) {
 			headers.add(
 					new BasicHeader(CATEGORY,
@@ -346,8 +376,26 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			headers.add(new BasicHeader(X_OCCI_ATTRIBUTE,
 					OrderAttribute.DATA_PUBLIC_KEY.getValue() + "=" + specs.getPublicKey()));
 		}
+		
+		headers.add(new BasicHeader("X-OCCI-Attribute", OrderAttribute.RESOURCE_KIND
+				.getValue() + "=" + FogbowRequirementsHelper.METADATA_FOGBOW_RESOURCE_KIND));
 		return headers;
 
+	}
+	
+	@SuppressWarnings("resource")
+	private static String getFileContent(String path) throws IOException {		
+		FileReader reader = new FileReader(path);
+		BufferedReader leitor = new BufferedReader(reader);
+		String fileContent = "";
+		String linha = "";
+		while (true) {
+			linha = leitor.readLine();
+			if (linha == null)
+				break;
+			fileContent += linha + "\n";
+		}
+		return fileContent.trim();
 	}
 
 	private String doRequest(String method, String endpoint, List<Header> headers) throws Exception {

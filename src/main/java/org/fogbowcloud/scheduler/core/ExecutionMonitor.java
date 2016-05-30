@@ -9,36 +9,21 @@ import org.fogbowcloud.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.scheduler.core.model.Resource;
 import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.infrastructure.exceptions.InfrastructureException;
-import org.fogbowcloud.sebal.crawler.Crawler;
 
 public class ExecutionMonitor implements Runnable {
 
 	private Job[] job;
 	private Scheduler scheduler;
-	private Crawler crawler;
 	private static final Logger LOGGER = Logger.getLogger(ExecutionMonitor.class);
 	private ExecutorService service;
 
 	public ExecutionMonitor(Scheduler scheduler, Job... job) {
 		this(scheduler, Executors.newFixedThreadPool(3), job);
 	}
-	
-	public ExecutionMonitor(Crawler crawler) {
-		this(crawler, Executors.newFixedThreadPool(3));
-	}
 
 	public ExecutionMonitor(Scheduler scheduler, ExecutorService service, Job... job) {
 		this.job = job;
 		this.scheduler = scheduler;
-		if(service == null){
-			this.service = Executors.newFixedThreadPool(3);
-		}else{
-			this.service = service;
-		}
-	}
-	
-	public ExecutionMonitor(Crawler crawler, ExecutorService service) {
-		this.crawler = crawler;
 		if(service == null){
 			this.service = Executors.newFixedThreadPool(3);
 		}else{
@@ -114,8 +99,5 @@ public class ExecutionMonitor implements Runnable {
 			return resource.checkConnectivity();
 		}
 	}
-
-	public Crawler getCrawler() {
-		return crawler;
-	}
+	
 }
