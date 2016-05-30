@@ -162,8 +162,6 @@ public class Fetcher {
 
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
-			// FIXME: see if this will be set to NONE
-			//imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.FINISHED);
 			imageStore.updateImage(imageData);
 		} catch (SQLException e1) {

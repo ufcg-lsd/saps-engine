@@ -122,7 +122,6 @@ public class TestCrawler {
 		imageStoreMock = mock(JDBCImageDataStore.class);
 		ImageData imageDataMock = mock(ImageData.class);
 		
-		
 		doNothing().when(imageStoreMock).addImage(eq(imageDataMock.getName()), eq(imageDataMock.getDownloadLink()), eq(imageDataMock.getPriority()));
 		verify(imageStoreMock, times(1)).addImage(eq(imageDataMock.getName()), eq(imageDataMock.getDownloadLink()), eq(imageDataMock.getPriority()));
 		

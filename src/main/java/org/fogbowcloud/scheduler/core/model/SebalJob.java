@@ -31,7 +31,6 @@ public class SebalJob extends Job {
 		this.tasksRunning.remove(task);
 		this.tasksCompleted.add(task);
 		
-		//TODO: Change this to support R
 		// check if all R tasks already ran for the image
 		if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.R_SCRIPT_PHASE)){
 			List<Task> readyOrRunningTasks = getTasksOfImageByState(
@@ -88,6 +87,7 @@ public class SebalJob extends Job {
 	protected void udpateDB(String imageName, ImageState imageState) {
 		LOGGER.debug("Updating image " + imageName + " to state " + imageState.getValue());
 		try {
+			//FIXME: see if this will be changed to support timestamp or not
 			imageStore.updateImageState(imageName, imageState);
 
 			// updating previous images not updated yet because of any connection problem

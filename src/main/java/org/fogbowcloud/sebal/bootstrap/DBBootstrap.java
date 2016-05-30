@@ -22,8 +22,8 @@ import org.fogbowcloud.sebal.NASARepository;
 public class DBBootstrap {
 
 	private JDBCImageDataStore imageStore;
-	Properties properties;
 	private NASARepository nasaRepository;
+	Properties properties;
 
 	private static final Logger LOGGER = Logger.getLogger(DBBootstrap.class);
 
@@ -62,7 +62,8 @@ public class DBBootstrap {
 				
 				for (String imageName : imageAndDownloadLink.keySet()) {
 					try {
-						getImageStore().addImage(imageName, imageAndDownloadLink.get(imageName), priority);
+						getImageStore().addImage(imageName,
+								imageAndDownloadLink.get(imageName), priority);
 					} catch (SQLException e) {
 						// TODO do we need to do something?
 						LOGGER.error("Error while adding image at data base.", e);
