@@ -101,7 +101,6 @@ public class SebalMain {
 				try {
 					addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}	
@@ -159,8 +158,12 @@ public class SebalMain {
 
 				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
 
-				//FIXME: isso nao garante que temos uma novo objeto. preciso de um clone
-				Specification tempSpec = sebalSpec;
+				Specification tempSpec = new Specification(
+						sebalSpec.getImage(), sebalSpec.getUsername(),
+						sebalSpec.getPublicKey(),
+						sebalSpec.getPrivateKeyFilePath(),
+						sebalSpec.getUserDataFile(),
+						sebalSpec.getUserDataType());
 				setFederationMemberIntoSpec(tempSpec, imageData.getFederationMember());
 				
 				Map<String, Collection<Resource>> allocationMap = allocationMap();
