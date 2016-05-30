@@ -131,8 +131,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setInt(5, priority);
 			insertStatement.setString(6, "NE");
 			insertStatement.setString(7, "NE");
-			insertStatement.setString(8, String.valueOf(System.currentTimeMillis()));
-			insertStatement.setString(9, String.valueOf(System.currentTimeMillis()));
+			insertStatement.setString(8, "NE");
+			insertStatement.setString(9, "NE");
 
 			insertStatement.execute();
 		} finally {
@@ -192,7 +192,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(5, imageData.getName());
 			updateStatement.setString(6, imageData.getStationId());
 			updateStatement.setString(7, imageData.getSebalVersion());
-			updateStatement.setString(8, String.valueOf(System.currentTimeMillis()));
+			updateStatement.setString(8, imageData.getCreationTime());
+			updateStatement.setString(9, imageData.getUpdateTime());
 
 			updateStatement.execute();
 		} finally {
@@ -308,9 +309,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 		List<ImageData> imageDatas = new ArrayList<ImageData>();
 		while (rs.next()) {
 			imageDatas.add(new ImageData(rs.getString(IMAGE_NAME_COL), rs
-					.getString(DOWNLOAD_LINK_COL), ImageState.getStateFromStr(rs
-					.getString(STATE_COL)), rs.getString(FEDERATION_MEMBER_COL), rs
-					.getInt(PRIORITY_COL), rs.getString(STATION_ID_COL), rs.getString(SEBAL_VERSION_COL)));
+					.getString(DOWNLOAD_LINK_COL), ImageState
+					.getStateFromStr(rs.getString(STATE_COL)), rs
+					.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
+					rs.getString(STATION_ID_COL), rs
+							.getString(SEBAL_VERSION_COL), rs
+							.getString(CREATION_TIME_COL), rs
+							.getString(UPDATED_TIME_COL)));
 		}
 		return imageDatas;
 	}

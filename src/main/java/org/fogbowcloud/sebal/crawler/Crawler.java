@@ -119,6 +119,7 @@ public class Crawler {
 					imageData.setFederationMember(federationMember);					
 					pendingImageDownloadMap.put(imageData.getName(), imageData);
 					pendingImageDownloadDB.commit();
+					imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 					imageStore.updateImage(imageData);
 					imageStore.unlockImage(imageData.getName());
 
@@ -163,6 +164,8 @@ public class Crawler {
 			}			
 
 			imageData.setState(ImageState.DOWNLOADED);
+			imageData.setCreationTime(String.valueOf(System.currentTimeMillis()));
+			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (Exception e) {
@@ -177,6 +180,7 @@ public class Crawler {
 		try {
 			imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.NOT_DOWNLOADED);
+			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (SQLException e1) {

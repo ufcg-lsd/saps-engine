@@ -39,6 +39,8 @@ public class DBBootstrapMain {
 			dbUtilsImpl.listCorruptedImages();
 		} else if (dbUseType.equals("get")) {
 			dbUtilsImpl.getRegionImages();
+		} else if(dbUseType.equals("purge")) {
+			
 		}
 
 		LOGGER.info("Operation done successfully");

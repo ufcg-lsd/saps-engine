@@ -13,10 +13,12 @@ public class ImageData implements Serializable {
 	private int priority;
 	private String stationId;
 	private String sebalVersion;
+	private String creationTime;
+	private String updateTime;
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 
 	public ImageData(String name, String downloadLink, ImageState state, String federationMember,
-			int priority, String stationId, String sebalVersion) {
+			int priority, String stationId, String sebalVersion, String creationTime, String updateTime) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -24,6 +26,8 @@ public class ImageData implements Serializable {
 		this.priority = priority;
 		this.stationId = stationId;
 		this.sebalVersion = sebalVersion;
+		this.creationTime = creationTime;
+		this.updateTime = updateTime;
 	}
 
 	public String getName() {
@@ -54,6 +58,14 @@ public class ImageData implements Serializable {
 		return sebalVersion;
 	}
 	
+	public String getCreationTime() {
+		return creationTime;
+	}
+	
+	public String getUpdateTime() {
+		return updateTime;
+	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -81,6 +93,14 @@ public class ImageData implements Serializable {
 	public void setSebalVersion(String sebalVersion) {
 		this.sebalVersion = sebalVersion;
 	}
+	
+	public void setCreationTime(String creationTime) {
+		this.creationTime = creationTime;
+	}
+	
+	public void setUpdateTime(String updateTime) {
+		this.updateTime = updateTime;
+	}
 
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", "
@@ -105,7 +125,9 @@ public class ImageData implements Serializable {
 					&& getState().equals(other.getState()) && getPriority() == other.getPriority()
 					&& getFederationMember().equals(other.getFederationMember())
 					&& getStationId().equals(other.getStationId())
-					&& getSebalVersion().equals(other.getSebalVersion());
+					&& getSebalVersion().equals(other.getSebalVersion())
+					&& getCreationTime().equals(other.getCreationTime())
+					&& getUpdateTime().equals(other.getUpdateTime());
 		}
 		return false;
 	}

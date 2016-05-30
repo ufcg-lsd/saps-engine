@@ -7,12 +7,16 @@ import org.fogbowcloud.sebal.ImageState;
 
 public interface DBUtils {
 
+	public final static int UNLIMITED = -1;
+	
 	public Connection getConnection() throws SQLException;
 
 	public void preparingStatement(Connection c) throws SQLException;
 
 	public void updateState(String imageName, ImageState state)
 			throws SQLException;
+
+	public void setImagesToPurge(String day) throws SQLException;
 
 	public void addImages() throws SQLException;
 
