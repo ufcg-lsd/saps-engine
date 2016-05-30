@@ -88,6 +88,8 @@ public class TestJDBCImageDataStore {
 		int fakePriority = 0;
 		String fakeStationId = "fake-station-id";
 		String fakeSebalVersion = "fake-sebal-version";
+		long fakeCreationTime = 0;
+		long fakeUpdatedTime = 0;
 		
 		Connection connection = mock(Connection.class);
 		PreparedStatement preparedStatement = mock(PreparedStatement.class);
@@ -102,6 +104,8 @@ public class TestJDBCImageDataStore {
 		doNothing().when(preparedStatement).setInt(eq(5), eq(fakePriority));
 		doNothing().when(preparedStatement).setString(eq(6), eq(fakeStationId));
 		doNothing().when(preparedStatement).setString(eq(7), eq(fakeSebalVersion));
+		doNothing().when(preparedStatement).setString(eq(8), eq(String.valueOf(fakeCreationTime)));
+		doNothing().when(preparedStatement).setString(eq(9), eq(String.valueOf(fakeUpdatedTime)));
 		
 		doReturn(true).when(preparedStatement).execute();
 		
