@@ -26,6 +26,8 @@ public class DBBootstrapMain {
 		String lastYear = args[7];
 		String regionsFilePath = args[8];
 		String specificRegion = args[9];
+		String day = args[10];
+		String dayOpt = args[11];
 
 		DBUtilsImpl dbUtilsImpl = new DBUtilsImpl(properties, sqlIP, sqlPort,
 				dbUserName, dbUserPass, firstYear, lastYear, regionsFilePath,
@@ -39,8 +41,8 @@ public class DBBootstrapMain {
 			dbUtilsImpl.listCorruptedImages();
 		} else if (dbUseType.equals("get")) {
 			dbUtilsImpl.getRegionImages();
-		} else if(dbUseType.equals("purge")) {
-			
+		} else if(dbUseType.equals("purge")) {				
+			dbUtilsImpl.setImagesToPurge(day, dayOpt);
 		}
 
 		LOGGER.info("Operation done successfully");

@@ -16,7 +16,7 @@ public interface DBUtils {
 	public void updateState(String imageName, ImageState state)
 			throws SQLException;
 
-	public void setImagesToPurge(String day) throws SQLException;
+	public void setImagesToPurge(String day, String dayOpt) throws SQLException;
 
 	public void addImages() throws SQLException;
 

@@ -116,11 +116,17 @@ public class DBUtilsImpl implements DBUtils {
 	}
 	
 	@Override
-	public void setImagesToPurge(String day) throws SQLException {		
+	public void setImagesToPurge(String day, String dayOpt) throws SQLException {		
 		ImageDataStore imageStore = new JDBCImageDataStore(properties,
 				imageStoreIP, imageStorePort);
 		
-		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.FETCHED);
+		List<ImageData> imagesToPurge = new ArrayList<ImageData>();
+		
+		if(dayOpt.equals("-f")) {
+			imagesToPurge = imageStore.getAllImages();
+		} else {			
+			imagesToPurge = imageStore.getIn(ImageState.FETCHED);
+		}
 		
 		for(ImageData imageData : imagesToPurge) {
 			int imageDataDay = (int) (Long.valueOf(imageData.getUpdateTime()).longValue() / (1000*60*60*24));

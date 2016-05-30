@@ -75,6 +75,7 @@ public class Crawler {
 
 		try {
 			do {
+				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
 				long numToDownload = numberOfImagesToDownload();
@@ -212,6 +213,44 @@ public class Crawler {
 				} else {
 					continue;
 				}
+			}
+		} else {
+			// FIXME: Implement solution for this
+			LOGGER.error("Volume directory path is null or empty!");
+		}
+	}
+	
+	private void purgeImagesFromVolume(Properties properties)
+			throws IOException, InterruptedException, SQLException {
+		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.TO_PURGE);
+
+		String exportPath = properties.getProperty("sebal_export_path");
+
+		if (!exportPath.isEmpty() && exportPath != null) {
+			for (ImageData imageData : imagesToPurge) {
+				String imageDirPath = exportPath + "/images/"
+						+ imageData.getName();
+				File imageDir = new File(imageDirPath);
+
+				if (!imageDir.exists() || !imageDir.isDirectory()) {
+					LOGGER.debug("This file does not exist!");
+					return;
+				}
+				FileUtils.deleteDirectory(imageDir);
+				LOGGER.debug("Image " + imageData.getName()
+						+ " image files deleted successfully.");
+
+				String resultsDirPath = exportPath + "/results/"
+						+ imageData.getName();
+				File resultsDir = new File(resultsDirPath);
+
+				if (!resultsDir.exists() || !resultsDir.isDirectory()) {
+					LOGGER.debug("This file does not exist!");
+					return;
+				}
+				FileUtils.deleteDirectory(resultsDir);
+				LOGGER.debug("Image " + imageData.getName()
+						+ " results files deleted successfully.");
 			}
 		} else {
 			// FIXME: Implement solution for this
