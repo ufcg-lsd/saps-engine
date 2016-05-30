@@ -44,7 +44,7 @@ public class SebalMain {
 	private static String nfsServerIP;
 	private static String nfsServerPort;
 	private static InfrastructureManager infraManager;
-	//TODO: change this later
+	//FIXME: change this later
 	private static int maxAllowedResources = 5;
 	
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
