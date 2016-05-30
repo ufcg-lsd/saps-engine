@@ -16,12 +16,14 @@ public class ImageData implements Serializable {
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 
 	public ImageData(String name, String downloadLink, ImageState state, String federationMember,
-			int priority) {
+			int priority, String stationId, String sebalVersion) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
 		this.federationMember = federationMember;
 		this.priority = priority;
+		this.stationId = stationId;
+		this.sebalVersion = sebalVersion;
 	}
 
 	public String getName() {

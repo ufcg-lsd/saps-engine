@@ -5,10 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -28,8 +25,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String STATE_COL = "state";
 	private static final String STATION_ID_COL = "station_id";
 	private static final String SEBAL_VERSION_COL = "sebal_version";
-	private static final String CREATED_COL = "created";
-	private static final String LAST_UPDATED_COL = "last_updated";
+	private static final String CREATION_TIME_COL = "ctime";
+	private static final String UPDATED_TIME_COL = "utime";
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
 	private BasicDataSource connectionPool;
 
@@ -61,8 +58,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ " VARCHAR(100), " + FEDERATION_MEMBER_COL
 					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
 					+ STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
-					+ " VARCHAR(255), " + CREATED_COL + "VARCHAR(255), "
-					+ LAST_UPDATED_COL + "VARCHAR(255)");
+					+ " VARCHAR(255), " + CREATION_TIME_COL + "VARCHAR(255), "
+					+ UPDATED_TIME_COL + "VARCHAR(255)");
 			statement.close();
 
 		} catch (Exception e) {
@@ -134,8 +131,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setInt(5, priority);
 			insertStatement.setString(6, "NE");
 			insertStatement.setString(7, "NE");
-			insertStatement.setString(8, getCurrentTime());
-			insertStatement.setString(9, getCurrentTime());
+			insertStatement.setString(8, String.valueOf(System.currentTimeMillis()));
+			insertStatement.setString(9, String.valueOf(System.currentTimeMillis()));
 
 			insertStatement.execute();
 		} finally {
@@ -144,7 +141,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET state = ?, last_updated = ? WHERE image_name = ?";
+			+ " SET state = ?, utime = ? WHERE image_name = ?";
 
 	@Override
 	public void updateImageState(String imageName, ImageState state) throws SQLException {
@@ -162,7 +159,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			updateStatement = connection.prepareStatement(UPDATE_IMAGE_STATE_SQL);
 			updateStatement.setString(1, state.getValue());
-			updateStatement.setString(2, getCurrentTime());
+			updateStatement.setString(2, String.valueOf(System.currentTimeMillis()));
 			updateStatement.setString(3, imageName);
 			updateStatement.execute();
 		} finally {
@@ -172,7 +169,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " "
 			+ "SET download_link = ?, state = ?, federation_member = ? "
-			+ ", priority = ?, station_id = ?, sebal_version = ?, last_updated = ? WHERE image_name = ?";
+			+ ", priority = ?, station_id = ?, sebal_version = ?, utime = ? WHERE image_name = ?";
 	
 	@Override
 	public void updateImage(ImageData imageData) throws SQLException {
@@ -195,7 +192,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(5, imageData.getName());
 			updateStatement.setString(6, imageData.getStationId());
 			updateStatement.setString(7, imageData.getSebalVersion());
-			updateStatement.setString(8, getCurrentTime());
+			updateStatement.setString(8, String.valueOf(System.currentTimeMillis()));
 
 			updateStatement.execute();
 		} finally {
@@ -204,7 +201,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 	
 	private static final String UPDATE_IMAGE_METADATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET station_id = ?, sebal_version = ?, last_updated = ? WHERE image_name = ?";
+			+ " SET station_id = ?, sebal_version = ?, utime = ? WHERE image_name = ?";
 	
 	@Override
 	public void updateImageMetadata(String imageName, String stationId,
@@ -225,7 +222,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement = connection.prepareStatement(UPDATE_IMAGE_METADATA_SQL);
 			updateStatement.setString(1, stationId);
 			updateStatement.setString(2, sebalVersion);
-			updateStatement.setString(3, getCurrentTime());
+			updateStatement.setString(3, String.valueOf(System.currentTimeMillis()));
 			updateStatement.setString(4, imageName);
 			updateStatement.execute();
 		} finally {
@@ -313,7 +310,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			imageDatas.add(new ImageData(rs.getString(IMAGE_NAME_COL), rs
 					.getString(DOWNLOAD_LINK_COL), ImageState.getStateFromStr(rs
 					.getString(STATE_COL)), rs.getString(FEDERATION_MEMBER_COL), rs
-					.getInt(PRIORITY_COL)));
+					.getInt(PRIORITY_COL), rs.getString(STATION_ID_COL), rs.getString(SEBAL_VERSION_COL)));
 		}
 		return imageDatas;
 	}
@@ -411,12 +408,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			}
 		}	
 		return unlocked;
-	}
-	
-	public String getCurrentTime() {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		return dateFormat.format(date);
 	}
 	
 }

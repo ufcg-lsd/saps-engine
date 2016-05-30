@@ -27,6 +27,10 @@ public class TestJDBCImageDataStore {
 	private String PRIORITY_COL = "fake-priority";
 	private String FEDERATION_MEMBER_COL = "fake-federation_member";
 	private String STATE_COL = "fake-state";
+	private String STATION_ID_COL = "fake-station_id";
+	private String SEBAL_VERSION_COL = "fake-sebal_version";
+	private String CREATED_COL = "fake-created";
+	private String LAST_UPDATED_COL = "fake-last_updated";
 	private String fakeImageStoreIP = "fake-IP";
 	private String fakeImageStorePort = "fake-Port";
 	private Properties properties;
@@ -35,7 +39,7 @@ public class TestJDBCImageDataStore {
 	private JDBCImageDataStore imageDataStore;
 	
 	private String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -82,6 +86,8 @@ public class TestJDBCImageDataStore {
 		String fakeImageName = "fake-image-name";
 		String fakeDownloadLink = "fake-download-link";
 		int fakePriority = 0;
+		String fakeStationId = "fake-station-id";
+		String fakeSebalVersion = "fake-sebal-version";
 		
 		Connection connection = mock(Connection.class);
 		PreparedStatement preparedStatement = mock(PreparedStatement.class);
@@ -94,6 +100,8 @@ public class TestJDBCImageDataStore {
 		doNothing().when(preparedStatement).setString(eq(3), eq(ImageState.NOT_DOWNLOADED.getValue()));
 		doNothing().when(preparedStatement).setString(eq(4), eq(ImageDataStore.NONE));
 		doNothing().when(preparedStatement).setInt(eq(5), eq(fakePriority));
+		doNothing().when(preparedStatement).setString(eq(6), eq(fakeStationId));
+		doNothing().when(preparedStatement).setString(eq(7), eq(fakeSebalVersion));
 		
 		doReturn(true).when(preparedStatement).execute();
 		
