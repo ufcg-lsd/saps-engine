@@ -83,6 +83,7 @@ public class Fetcher {
 		// FIXME: add log
 		try {
 			imageData.setState(ImageState.FINISHED);
+			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
 			pendingImageFetchMap.remove(imageData.getName());
 		} catch (SQLException e1) {
@@ -117,6 +118,7 @@ public class Fetcher {
 	
 	private boolean isFileCorrupted(ImageData imageData) throws SQLException {
 		if(imageData.getState().equals(ImageState.CORRUPTED)) {
+			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			pendingImageFetchMap.remove(imageData.getName());
 			imageStore.updateImage(imageData);
 			return true;
@@ -132,6 +134,7 @@ public class Fetcher {
 					.getProperty("federation_member"));
 			pendingImageFetchMap.put(imageData.getName(), imageData);
 
+			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
 			imageStore.unlockImage(imageData.getName());
 		}
@@ -141,6 +144,7 @@ public class Fetcher {
 		imageData.setState(ImageState.FETCHED);
 		imageData.setStationId(getStationId(imageData));
 		imageData.setSebalVersion(properties.getProperty("sebal_version"));
+		imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 		imageStore.updateImage(imageData);
 		pendingImageFetchMap.remove(imageData.getName());
 	}
@@ -163,6 +167,7 @@ public class Fetcher {
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
 			imageData.setState(ImageState.FINISHED);
+			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
 		} catch (SQLException e1) {
 			Fetcher.LOGGER.error("Error while updating image data.", e1);

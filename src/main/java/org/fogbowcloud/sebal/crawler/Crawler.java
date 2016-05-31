@@ -75,6 +75,7 @@ public class Crawler {
 
 		try {
 			do {
+				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
 				long numToDownload = numberOfImagesToDownload();
@@ -121,6 +122,7 @@ public class Crawler {
 					imageData.setFederationMember(federationMember);					
 					pendingImageDownloadMap.put(imageData.getName(), imageData);
 					pendingImageDownloadDB.commit();
+					imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 					imageStore.updateImage(imageData);
 					imageStore.unlockImage(imageData.getName());
 
@@ -165,6 +167,8 @@ public class Crawler {
 			}			
 
 			imageData.setState(ImageState.DOWNLOADED);
+			imageData.setCreationTime(String.valueOf(System.currentTimeMillis()));
+			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (Exception e) {
@@ -180,6 +184,7 @@ public class Crawler {
 		try {
 			imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.NOT_DOWNLOADED);
+			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (SQLException e1) {
@@ -211,6 +216,46 @@ public class Crawler {
 				} else {
 					continue;
 				}
+			}
+		} else {
+			// FIXME: Implement solution for this
+			LOGGER.error("Volume directory path is null or empty!");
+		}
+	}
+	
+	private void purgeImagesFromVolume(Properties properties)
+			throws IOException, InterruptedException, SQLException {
+		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.TO_PURGE);
+
+		String exportPath = properties.getProperty("sebal_export_path");
+
+		if (!exportPath.isEmpty() && exportPath != null) {
+			for (ImageData imageData : imagesToPurge) {
+				String imageDirPath = exportPath + "/images/"
+						+ imageData.getName();
+				String resultsDirPath = exportPath + "/results/"
+						+ imageData.getName();
+
+				File imageDir = new File(imageDirPath);
+				File resultsDir = new File(resultsDirPath);
+
+				if (!imageDir.exists() || !imageDir.isDirectory()) {
+					LOGGER.debug("Directory " + imageDirPath + " does not exist!");
+					return;
+				}				
+				if (!resultsDir.exists() || !resultsDir.isDirectory()) {
+					LOGGER.debug("Directory " + resultsDirPath + " does not exist!");
+					return;
+				}
+				
+				FileUtils.deleteDirectory(imageDir);
+				LOGGER.debug("Image " + imageData.getName()
+						+ " image files deleted successfully.");
+				FileUtils.deleteDirectory(resultsDir);
+				LOGGER.debug("Image " + imageData.getName()
+						+ " results files deleted successfully.");
+				
+				imageStore.updateImageState(imageData.getName(), ImageState.PURGED);
 			}
 		} else {
 			// FIXME: Implement solution for this
