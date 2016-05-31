@@ -230,27 +230,29 @@ public class Crawler {
 			for (ImageData imageData : imagesToPurge) {
 				String imageDirPath = exportPath + "/images/"
 						+ imageData.getName();
+				String resultsDirPath = exportPath + "/results/"
+						+ imageData.getName();
+
 				File imageDir = new File(imageDirPath);
+				File resultsDir = new File(resultsDirPath);
 
 				if (!imageDir.exists() || !imageDir.isDirectory()) {
-					LOGGER.debug("This file does not exist!");
+					LOGGER.debug("Directory " + imageDirPath + " does not exist!");
+					return;
+				}				
+				if (!resultsDir.exists() || !resultsDir.isDirectory()) {
+					LOGGER.debug("Directory " + resultsDirPath + " does not exist!");
 					return;
 				}
+				
 				FileUtils.deleteDirectory(imageDir);
 				LOGGER.debug("Image " + imageData.getName()
 						+ " image files deleted successfully.");
-
-				String resultsDirPath = exportPath + "/results/"
-						+ imageData.getName();
-				File resultsDir = new File(resultsDirPath);
-
-				if (!resultsDir.exists() || !resultsDir.isDirectory()) {
-					LOGGER.debug("This file does not exist!");
-					return;
-				}
 				FileUtils.deleteDirectory(resultsDir);
 				LOGGER.debug("Image " + imageData.getName()
 						+ " results files deleted successfully.");
+				
+				imageStore.updateImageState(imageData.getName(), ImageState.PURGED);
 			}
 		} else {
 			// FIXME: Implement solution for this
