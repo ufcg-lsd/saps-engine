@@ -129,9 +129,9 @@ public class DBUtilsImpl implements DBUtils {
 		}
 		
 		for(ImageData imageData : imagesToPurge) {
-			int imageDataDay = (int) (Long.valueOf(imageData.getUpdateTime()).longValue() / (1000*60*60*24));
+			int imageDataDay = (int) (Long.valueOf(imageData.getUpdateTime()).longValue() / (1000*60*60*24));			
 			
-			if(imageDataDay < Integer.valueOf(day).intValue()) {
+			if(imageDataDay <= Integer.valueOf(day).intValue()) {
 				imageData.setState(ImageState.TO_PURGE);
 				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 				imageStore.updateImage(imageData);
