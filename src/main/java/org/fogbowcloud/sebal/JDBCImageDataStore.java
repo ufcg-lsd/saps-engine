@@ -314,8 +314,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " WHERE " + STATE_COL + " = ? AND " + FEDERATION_MEMBER_COL + " = ?";
 	
 	/**
-	 * If in future versions the crawlers starts to use a multithread approach
-	 * this methods needs to be reviewed to avoid concurrency between its threads
 	 * This method selects and locks all images marked as NOT_DOWNLOADED and updates to DOWNLOADING
 	 * and changes the federation member to the crawler ID and then selects and returns the updated images
 	 * based on the state and federation member. 
@@ -323,6 +321,14 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public List<ImageData> getImagesToDownload(String federationMember,
 			int limit) throws SQLException {
+		/* 
+		 * In future versions, if the crawler starts to use a multithread approach
+		 * this method needs to be reviewed to avoid concurrency problems between its threads.
+		 * As the crawler selects images where the state is DOWNLOADING and federation member 
+		 * is equal to its ID, new threads could start to download an image that is already 
+		 * been downloaded by the another thread.
+		 */
+		
 		if (federationMember == null) {
 			LOGGER.error("Invalid federation member " + federationMember);
 			throw new IllegalArgumentException("Invalid federation member " + federationMember);
