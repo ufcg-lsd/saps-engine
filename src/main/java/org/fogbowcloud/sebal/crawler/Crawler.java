@@ -113,17 +113,12 @@ public class Crawler {
 		// This updates images in NOT_DOWNLOADED state to DOWNLOADING 
 		// and sets this federation member as owner, and then gets all images marked as DOWNLOADING
 		
-		// FIXME: only get not purged images
 		List<ImageData> imageDataList = imageStore.getImagesToDownload(
 				federationMember, (int) maxImagesToDownload); 
 
 		for (ImageData imageData : imageDataList) {
-			if (imageData != null
-					&& !imageData.getImageStatus().equals(ImageData.PURGED)) {
+			if (imageData != null) {
 				// Updating pending dataBase and imageData
-				// FIXME: put in SQL
-				imageData.setUpdateTime(String.valueOf(System
-						.currentTimeMillis()));
 				pendingImageDownloadMap.put(imageData.getName(), imageData);
 				pendingImageDownloadDB.commit();
 
@@ -179,27 +174,29 @@ public class Crawler {
 	
 	private void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties) throws IOException {
 		//FIXME: add log
-		//FIXME: clean up garbage data from volumes
 		try {
-			if(!imageData.getImageStatus().equals(ImageData.PURGED)) {				
-				imageData.setFederationMember(ImageDataStore.NONE);
-				imageData.setState(ImageState.NOT_DOWNLOADED);
-				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
-				imageStore.updateImage(imageData);
-			}
-			
-			String exportPath = properties.getProperty("sebal_export_path");
-			String imageDirPath = exportPath + "/images/"
-					+ imageData.getName();
-			File imageDir = new File(imageDirPath);
+			if (imageData.getFederationMember().equals(federationMember)) {
+				if (!imageData.getImageStatus().equals(ImageData.PURGED)) {
+					imageData.setFederationMember(ImageDataStore.NONE);
+					imageData.setState(ImageState.NOT_DOWNLOADED);
+					imageData.setUpdateTime(String.valueOf(System
+							.currentTimeMillis()));
+					imageStore.updateImage(imageData);
+				}
 
-			if (!imageDir.exists() || !imageDir.isDirectory()) {
-				LOGGER.debug("This file does not exist!");
-				return;
+				String exportPath = properties.getProperty("sebal_export_path");
+				String imageDirPath = exportPath + "/images/"
+						+ imageData.getName();
+				File imageDir = new File(imageDirPath);
+
+				if (!imageDir.exists() || !imageDir.isDirectory()) {
+					LOGGER.debug("This file does not exist!");
+					return;
+				}
+
+				FileUtils.deleteDirectory(imageDir);
+				pendingImageDownloadMap.remove(imageData.getName());
 			}
-			
-			FileUtils.deleteDirectory(imageDir);
-			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (SQLException e1) {
 			Crawler.LOGGER.error("Error while updating image data: " + imageData.getName(), e1);
 			System.out.println("Error while updating image data: " + imageData.getName() + "\n" + e1);

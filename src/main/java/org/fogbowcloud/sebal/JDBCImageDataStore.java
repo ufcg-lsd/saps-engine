@@ -336,18 +336,18 @@ public class JDBCImageDataStore implements ImageDataStore {
 	
 	private static final String SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME 
 			+ " it SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ? FROM (SELECT * FROM " 
-			+ IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ? LIMIT ? FOR UPDATE) filter WHERE it." 
+			+ IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ?, " + IMAGE_STATUS_COL + " = ?, " 
+			+ UPDATED_TIME_COL + " = ? LIMIT ? FOR UPDATE) filter WHERE it." 
 			+ IMAGE_NAME_COL + " = filter." + IMAGE_NAME_COL;
 	
 	private static final String SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER = "SELECT * FROM " + IMAGE_TABLE_NAME 
-			+ " WHERE " + STATE_COL + " = ? AND " + FEDERATION_MEMBER_COL + " = ?";
+			+ " WHERE " + STATE_COL + " = ?, " + IMAGE_STATUS_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
 	
 	/**
 	 * This method selects and locks all images marked as NOT_DOWNLOADED and updates to DOWNLOADING
 	 * and changes the federation member to the crawler ID and then selects and returns the updated images
 	 * based on the state and federation member. 
 	 */
-	//FIXME: change this to get only not purged images
 	@Override
 	public List<ImageData> getImagesToDownload(String federationMember,
 			int limit) throws SQLException {
@@ -370,16 +370,22 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			connection = getConnection();
 			
+			//TODO: see if the changes made here are corrects (purge and timeMillis)
 			lockAndUpdateStatement = connection.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
 			lockAndUpdateStatement.setString(1, ImageState.DOWNLOADING.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);
 			lockAndUpdateStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
-			lockAndUpdateStatement.setInt(4, limit);
+			lockAndUpdateStatement.setString(4, ImageData.AVAILABLE);
+			lockAndUpdateStatement.setString(5, String.valueOf(System.currentTimeMillis()));
+			lockAndUpdateStatement.setInt(6, limit);
 			lockAndUpdateStatement.execute();
-			
+
+			//TODO: see if the changes made here are corrects (purge and timeMillis)
 			selectStatement = connection.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
 			selectStatement.setString(1, ImageState.DOWNLOADING.getValue());
-			selectStatement.setString(2, federationMember);
+			selectStatement.setString(2, ImageData.AVAILABLE);
+			selectStatement.setString(3, federationMember);
+			selectStatement.setString(4, String.valueOf(System.currentTimeMillis()));
 			selectStatement.execute();
 			
 			ResultSet rs = selectStatement.getResultSet();

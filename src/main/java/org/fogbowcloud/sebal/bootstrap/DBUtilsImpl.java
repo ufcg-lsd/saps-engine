@@ -133,7 +133,6 @@ public class DBUtilsImpl implements DBUtils {
 		}
 		
 		for(ImageData imageData : imagesToPurge) {
-			//FIXME: extract a method to test
 			int imageDataDay = (int) convertMilliToDays(Long.valueOf(imageData.getUpdateTime()).longValue());
 			
 			if(isBeforeDay(day, imageDataDay)) {
