@@ -71,7 +71,7 @@ public class Crawler {
 
 		LOGGER.info("Initializing crawler... ");
 		
-		cleanUnfinishedDownloadedData();
+		cleanUnfinishedDownloadedData(properties);
 
 		try {
 			do {
@@ -95,10 +95,10 @@ public class Crawler {
 		LOGGER.debug("All images downloaded.\nProcess finished.");
 	}
 	
-	private void cleanUnfinishedDownloadedData() {
+	private void cleanUnfinishedDownloadedData(Properties properties) throws IOException {
 		Collection<ImageData> data = pendingImageDownloadMap.values();
-		for(ImageData iData : data) {
-			removeFromPendingAndUpdateState(iData);
+		for(ImageData imageData : data) {
+			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}
 
@@ -107,14 +107,14 @@ public class Crawler {
 		return !imageData.isEmpty();
 	}
 
-	protected void download(long maxImagesToDownload) throws SQLException {
+	protected void download(long maxImagesToDownload) throws SQLException, IOException {
 
 		// FIXME: check the implications of this cast
 		List<ImageData> imageDataList = imageStore.getIn(
 				ImageState.NOT_DOWNLOADED, (int) maxImagesToDownload);
 
 		for (ImageData imageData : imageDataList) {
-			if (imageData != null) {	
+			if (imageData != null && !imageData.getImageStatus().equals(ImageData.PURGED)) {	
 				if (imageStore.lockImage(imageData.getName())) {
 					imageData.setState(ImageState.DOWNLOADING);
 					imageData.setFederationMember(federationMember);					
@@ -150,11 +150,10 @@ public class Crawler {
 		return new File(volumeDirPath);
 	}
 
-	private void downloadImage(final ImageData imageData) {
+	private void downloadImage(final ImageData imageData) throws IOException {
 		try {
 			// FIXME: it blocks?
 			NASARepository.downloadImage(imageData);
-			
 
 			// running Fmask
 			int exitValue = new FMask().runFmask(imageData, properties);
@@ -172,17 +171,31 @@ public class Crawler {
 		} catch (Exception e) {
 			LOGGER.error(
 					"Couldn't download image " + imageData.getName() + ".", e);
-			removeFromPendingAndUpdateState(imageData);
+			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}
 	
-	private void removeFromPendingAndUpdateState(final ImageData imageData) {
+	private void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties) throws IOException {
 		//FIXME: add log
 		try {
-			imageData.setFederationMember(ImageDataStore.NONE);
-			imageData.setState(ImageState.NOT_DOWNLOADED);
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
-			imageStore.updateImage(imageData);
+			if(!imageData.getImageStatus().equals(ImageData.PURGED)) {				
+				imageData.setFederationMember(ImageDataStore.NONE);
+				imageData.setState(ImageState.NOT_DOWNLOADED);
+				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+				imageStore.updateImage(imageData);
+			}
+			
+			String exportPath = properties.getProperty("sebal_export_path");
+			String imageDirPath = exportPath + "/images/"
+					+ imageData.getName();
+			File imageDir = new File(imageDirPath);
+
+			if (!imageDir.exists() || !imageDir.isDirectory()) {
+				LOGGER.debug("This file does not exist!");
+				return;
+			}
+			
+			FileUtils.deleteDirectory(imageDir);
 			pendingImageDownloadMap.remove(imageData.getName());
 		} catch (SQLException e1) {
 			Crawler.LOGGER.error("Error while updating image data: " + imageData.getName(), e1);
@@ -199,16 +212,16 @@ public class Crawler {
 				
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : setOfImageData) {
-				if (imageData.getState().equals(ImageState.FINISHED)) {
-					String imageDirPath = exportPath + "/results/"
+				if (imageData.getState().equals(ImageState.FETCHED)) {
+					String resultsDirPath = exportPath + "/results/"
 							+ imageData.getName();
-					File imageDir = new File(imageDirPath);
+					File resultsDir = new File(resultsDirPath);
 
-					if (!imageDir.exists() || !imageDir.isDirectory()) {
+					if (!resultsDir.exists() || !resultsDir.isDirectory()) {
 						LOGGER.debug("This file does not exist!");
 						return;
 					}
-					FileUtils.deleteDirectory(imageDir);
+					FileUtils.deleteDirectory(resultsDir);
 					LOGGER.debug("Image " + imageData.getName() + " result files deleted successfully.");
 				} else {
 					continue;
@@ -222,37 +235,39 @@ public class Crawler {
 	
 	private void purgeImagesFromVolume(Properties properties)
 			throws IOException, InterruptedException, SQLException {
-		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.TO_PURGE);
+		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.FINISHED);
 
 		String exportPath = properties.getProperty("sebal_export_path");
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : imagesToPurge) {
-				String imageDirPath = exportPath + "/images/"
-						+ imageData.getName();
-				String resultsDirPath = exportPath + "/results/"
-						+ imageData.getName();
+				if (imageData.getImageStatus().equals(ImageData.PURGED)) {
+					String imageDirPath = exportPath + "/images/"
+							+ imageData.getName();
+					String resultsDirPath = exportPath + "/results/"
+							+ imageData.getName();
 
-				File imageDir = new File(imageDirPath);
-				File resultsDir = new File(resultsDirPath);
+					File imageDir = new File(imageDirPath);
+					File resultsDir = new File(resultsDirPath);
 
-				if (!imageDir.exists() || !imageDir.isDirectory()) {
-					LOGGER.debug("Directory " + imageDirPath + " does not exist!");
-					return;
-				}				
-				if (!resultsDir.exists() || !resultsDir.isDirectory()) {
-					LOGGER.debug("Directory " + resultsDirPath + " does not exist!");
-					return;
+					if (!imageDir.exists() || !imageDir.isDirectory()) {
+						LOGGER.debug("Directory " + imageDirPath
+								+ " does not exist!");
+						return;
+					}
+					if (!resultsDir.exists() || !resultsDir.isDirectory()) {
+						LOGGER.debug("Directory " + resultsDirPath
+								+ " does not exist!");
+						return;
+					}
+
+					FileUtils.deleteDirectory(imageDir);
+					LOGGER.debug("Image " + imageData.getName()
+							+ " image files deleted successfully.");
+					FileUtils.deleteDirectory(resultsDir);
+					LOGGER.debug("Image " + imageData.getName()
+							+ " results files deleted successfully.");
 				}
-				
-				FileUtils.deleteDirectory(imageDir);
-				LOGGER.debug("Image " + imageData.getName()
-						+ " image files deleted successfully.");
-				FileUtils.deleteDirectory(resultsDir);
-				LOGGER.debug("Image " + imageData.getName()
-						+ " results files deleted successfully.");
-				
-				imageStore.updateImageState(imageData.getName(), ImageState.PURGED);
 			}
 		} else {
 			// FIXME: Implement solution for this

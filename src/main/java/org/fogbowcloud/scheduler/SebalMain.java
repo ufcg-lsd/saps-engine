@@ -152,43 +152,42 @@ public class SebalMain {
 			List<ImageData> imagesToExecute = imageStore.getIn(imageState, limit);
 			
 			for (ImageData imageData : imagesToExecute) {
-				
-				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
-						+ imageData.getState().getValue() + " (not finished).");
-
-				LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
-
-				Specification tempSpec = new Specification(
-						sebalSpec.getImage(), sebalSpec.getUsername(),
-						sebalSpec.getPublicKey(),
-						sebalSpec.getPrivateKeyFilePath(),
-						sebalSpec.getUserDataFile(),
-						sebalSpec.getUserDataType());
-				setFederationMemberIntoSpec(tempSpec, imageData.getFederationMember());
-				
-				Map<String, Collection<Resource>> allocationMap = allocationMap();
-								
-				if(isQuotaAvailable(imageData.getFederationMember(), allocationMap, maxAllowedResources)) {
+				if(!imageData.getImageStatus().equals(ImageData.PURGED)) {					
+					LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
+							+ imageData.getState().getValue() + " (not finished).");
 					
-					if (ImageState.RUNNING_R.equals(imageState)
-							|| ImageState.DOWNLOADED.equals(imageState)
-							|| ImageState.READY_FOR_R.equals(imageState)) {
+					LOGGER.info("Adding " + imageState + " tasks for image " + imageData.getName());
+					
+					Specification tempSpec = new Specification(
+							sebalSpec.getImage(), sebalSpec.getUsername(),
+							sebalSpec.getPublicKey(),
+							sebalSpec.getPrivateKeyFilePath(),
+							sebalSpec.getUserDataFile(),
+							sebalSpec.getUserDataType());
+					setFederationMemberIntoSpec(tempSpec, imageData.getFederationMember());
+					
+					Map<String, Collection<Resource>> allocationMap = allocationMap();
+					
+					if(isQuotaAvailable(imageData.getFederationMember(), allocationMap, maxAllowedResources)) {
 						
-						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), tempSpec);
-						taskImpl = SebalTasks.createRTask(taskImpl, properties,
-								imageData.getName(), tempSpec,
-								imageData.getFederationMember(),
-								nfsServerIP, nfsServerPort);
-						imageData.setState(ImageState.RUNNING_R);
-						job.addTask(taskImpl);
-						imageStore.updateImage(imageData);	
-					}					
-				} else {
-					LOGGER.info("Not enough quota to allocate instance for <" + imageData.getName() + "> " +
+						if (ImageState.RUNNING_R.equals(imageState)
+								|| ImageState.DOWNLOADED.equals(imageState)) {
+							
+							TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(), tempSpec);
+							taskImpl = SebalTasks.createRTask(taskImpl, properties,
+									imageData.getName(), tempSpec,
+									imageData.getFederationMember(),
+									nfsServerIP, nfsServerPort);
+							imageData.setState(ImageState.RUNNING_R);
+							job.addTask(taskImpl);
+							imageStore.updateImage(imageData);	
+						}					
+					} else {
+						LOGGER.info("Not enough quota to allocate instance for <" + imageData.getName() + "> " +
 								"in federationMember <" + 	imageData.getFederationMember() + ">");
+					}
 				}
 			}
-			
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}

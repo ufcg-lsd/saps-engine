@@ -27,6 +27,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SEBAL_VERSION_COL = "sebal_version";
 	private static final String CREATION_TIME_COL = "ctime";
 	private static final String UPDATED_TIME_COL = "utime";
+	private static final String IMAGE_STATUS_COL = "status";
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
 	private BasicDataSource connectionPool;
 
@@ -59,7 +60,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
 					+ STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
 					+ " VARCHAR(255), " + CREATION_TIME_COL + "VARCHAR(255), "
-					+ UPDATED_TIME_COL + "VARCHAR(255)");
+					+ UPDATED_TIME_COL + " VARCHAR(255), " + IMAGE_STATUS_COL
+					+ " VARCHAR(255)");
 			statement.close();
 
 		} catch (Exception e) {
@@ -105,7 +107,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	@Override
 	public void addImage(String imageName, String downloadLink, int priority) throws SQLException {
@@ -133,6 +135,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(7, "NE");
 			insertStatement.setString(8, "NE");
 			insertStatement.setString(9, "NE");
+			insertStatement.setString(10, ImageData.AVAILABLE);
 
 			insertStatement.execute();
 		} finally {
@@ -169,7 +172,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " "
 			+ "SET download_link = ?, state = ?, federation_member = ? "
-			+ ", priority = ?, station_id = ?, sebal_version = ?, utime = ? WHERE image_name = ?";
+			+ ", priority = ?, station_id = ?, sebal_version = ?, utime = ?, status = ? WHERE image_name = ?";
 	
 	@Override
 	public void updateImage(ImageData imageData) throws SQLException {
@@ -194,6 +197,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(7, imageData.getSebalVersion());
 			updateStatement.setString(8, imageData.getCreationTime());
 			updateStatement.setString(9, imageData.getUpdateTime());
+			updateStatement.setString(10, imageData.getImageStatus());
 
 			updateStatement.execute();
 		} finally {
@@ -303,6 +307,31 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public List<ImageData> getIn(ImageState state) throws SQLException {
 		return getIn(state, UNLIMITED);
+	}
+	
+	private static final String SELECT_PURGED_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
+			+ " WHERE status = ? ORDER BY priority, image_name";
+	
+	@Override
+	public List<ImageData> getPurgedImages() throws SQLException {
+		PreparedStatement selectStatement = null;
+		Connection connection = null;
+		
+		try {
+			connection = getConnection();
+			
+			selectStatement = connection
+					.prepareStatement(SELECT_PURGED_IMAGES_SQL);
+			selectStatement.setString(1, ImageData.PURGED);
+			selectStatement.execute();
+			
+			ResultSet rs = selectStatement.getResultSet();
+			List<ImageData> imageDatas = extractImageDataFrom(rs);
+			rs.close();
+			return imageDatas;
+		} finally {
+			close(selectStatement, connection);
+		}
 	}
 
 	private static List<ImageData> extractImageDataFrom(ResultSet rs) throws SQLException {

@@ -21,6 +21,8 @@ public interface ImageDataStore {
 	public List<ImageData> getIn(ImageState state) throws SQLException;
 
 	public List<ImageData> getIn(ImageState state, int limit) throws SQLException;
+	
+	public List<ImageData> getPurgedImages() throws SQLException;
 
 	public ImageData getImage(String imageName) throws SQLException;
 	

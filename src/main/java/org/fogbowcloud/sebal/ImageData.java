@@ -15,7 +15,11 @@ public class ImageData implements Serializable {
 	private String sebalVersion;
 	private String creationTime;
 	private String updateTime;
+	private String status;
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
+	
+	public static final String AVAILABLE = "available";
+	public static final String PURGED = "purged";
 
 	public ImageData(String name, String downloadLink, ImageState state, String federationMember,
 			int priority, String stationId, String sebalVersion, String creationTime, String updateTime) {
@@ -28,6 +32,7 @@ public class ImageData implements Serializable {
 		this.sebalVersion = sebalVersion;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
+		this.status = "available";
 	}
 
 	public String getName() {
@@ -66,6 +71,10 @@ public class ImageData implements Serializable {
 		return updateTime;
 	}
 	
+	public String getImageStatus() {
+		return status;
+	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -101,11 +110,16 @@ public class ImageData implements Serializable {
 	public void setUpdateTime(String updateTime) {
 		this.updateTime = updateTime;
 	}
+	
+	public void setImageStatus(String status) {
+		this.status = status;
+	}
 
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", "
 				+ federationMember + ", " + priority + ", " + stationId + ", "
-				+ sebalVersion;
+				+ sebalVersion + ", " + creationTime + ", " + updateTime + ", "
+				+ status;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -127,7 +141,8 @@ public class ImageData implements Serializable {
 					&& getStationId().equals(other.getStationId())
 					&& getSebalVersion().equals(other.getSebalVersion())
 					&& getCreationTime().equals(other.getCreationTime())
-					&& getUpdateTime().equals(other.getUpdateTime());
+					&& getUpdateTime().equals(other.getUpdateTime())
+					&& getImageStatus().equals(other.getImageStatus());
 		}
 		return false;
 	}

@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.CheckSumMD5ForFile;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
-import org.fogbowcloud.sebal.crawler.Crawler;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -28,11 +28,9 @@ public class Fetcher {
 
 	private final Properties properties;
 	private final ImageDataStore imageStore;
-	private final File pendingImageFetchFile = new File("pending-image-f.db");
-	private final DB pendingImageFetchDB = DBMaker.newFileDB(
-			pendingImageFetchFile).make();
-	private ConcurrentMap<String, ImageData> pendingImageFetchMap = pendingImageFetchDB
-			.createHashMap("map").make();
+	private File pendingImageFetchFile;
+	private DB pendingImageFetchDB;
+	private ConcurrentMap<String, ImageData> pendingImageFetchMap;
 
 	private String ftpServerIP;
 	private String ftpServerPort;
@@ -55,39 +53,64 @@ public class Fetcher {
 				imageStorePort);
 		this.ftpServerIP = ftpServerIP;
 		this.ftpServerPort = ftpServerPort;
+		
+		this.pendingImageFetchFile = new File("pending-image-fetch.db");
+		this.pendingImageFetchDB = DBMaker.newFileDB(pendingImageFetchFile).make();
+		
+		if(!pendingImageFetchFile.exists() || !pendingImageFetchFile.isFile()) {			
+			this.pendingImageFetchMap = pendingImageFetchDB.createHashMap("map").make();
+		} else {
+			this.pendingImageFetchMap = pendingImageFetchDB.getHashMap("map");
+		}
 	}
 
 	public void exec() throws InterruptedException, IOException {
 
 		LOGGER.info("Initializing fetcher... ");
 
-		cleanUnfinishedFetchedData();
+		cleanUnfinishedFetchedData(properties);
 
 		while (true) {
 			List<ImageData> imagesToFetch = imagesToFetch();
-			for (ImageData iData : imagesToFetch) {
-				fetchAndUpdateImage(iData);
+			for (ImageData imageData : imagesToFetch) {
+				if(!imageData.getImageStatus().equals(ImageData.PURGED)) {
+					fetchAndUpdateImage(imageData);
+				}
 			}
 			Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
 		}
 	}
 
-	private void cleanUnfinishedFetchedData() {
+	private void cleanUnfinishedFetchedData(Properties properties) throws IOException {
 		Collection<ImageData> data = pendingImageFetchMap.values();
-		for (ImageData iData : data) {
-			removeFromPendingAndUpdateState(iData);
+		for (ImageData imageData : data) {
+			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}
 
-	private void removeFromPendingAndUpdateState(final ImageData imageData) {
+	private void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties) throws IOException {
 		// FIXME: add log
 		try {
-			imageData.setState(ImageState.FINISHED);
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
-			imageStore.updateImage(imageData);
+			if(!imageData.getImageStatus().equals(ImageData.PURGED)) {				
+				imageData.setState(ImageState.FINISHED);
+				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+				imageStore.updateImage(imageData);
+			}
+			
+			String exportPath = properties.getProperty("sebal_export_path");
+			String resultsDirPath = exportPath + "/results/"
+					+ imageData.getName();
+			File resultsDir = new File(resultsDirPath);
+
+			if (!resultsDir.exists() || !resultsDir.isDirectory()) {
+				LOGGER.debug("This file does not exist!");
+				return;
+			}
+			
+			FileUtils.deleteDirectory(resultsDir);			
 			pendingImageFetchMap.remove(imageData.getName());
 		} catch (SQLException e1) {
-			Crawler.LOGGER.error("Error while updating image data: "
+			Fetcher.LOGGER.error("Error while updating image data: "
 					+ imageData.getName(), e1);
 		}
 	}
@@ -128,15 +151,17 @@ public class Fetcher {
 
 	private void prepareFetch(ImageData imageData) throws SQLException {
 
-		if (imageStore.lockImage(imageData.getName())) {
-			imageData.setState(ImageState.FETCHING);
-			imageData.setFederationMember(properties
-					.getProperty("federation_member"));
-			pendingImageFetchMap.put(imageData.getName(), imageData);
-
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
-			imageStore.updateImage(imageData);
-			imageStore.unlockImage(imageData.getName());
+		if(!imageData.getImageStatus().equals(ImageData.PURGED)) {			
+			if (imageStore.lockImage(imageData.getName())) {
+				imageData.setState(ImageState.FETCHING);
+				imageData.setFederationMember(properties
+						.getProperty("federation_member"));
+				pendingImageFetchMap.put(imageData.getName(), imageData);
+				
+				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+				imageStore.updateImage(imageData);
+				imageStore.unlockImage(imageData.getName());
+			}
 		}
 	}
 
@@ -159,6 +184,7 @@ public class Fetcher {
 		String[] stationAtt = lineOne.split(";");
 		
 		String stationId = stationAtt[0];
+		reader.close();
 		return stationId;
 	}
 
@@ -166,9 +192,11 @@ public class Fetcher {
 
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
-			imageData.setState(ImageState.FINISHED);
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
-			imageStore.updateImage(imageData);
+			if(!imageData.getImageStatus().equals(ImageData.PURGED)) {
+				imageData.setState(ImageState.FINISHED);
+				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+				imageStore.updateImage(imageData);				
+			}
 		} catch (SQLException e1) {
 			Fetcher.LOGGER.error("Error while updating image data.", e1);
 		}
@@ -178,42 +206,47 @@ public class Fetcher {
 	// FIXME: reduce code
 	public void fetch(final ImageData imageData, int tries) throws IOException,
 			InterruptedException, SQLException {
-		
-		if(tries > MAX_FETCH_TRIES) {
-			LOGGER.debug("Max tries reached!\nFile is corrupted.");
-			imageData.setState(ImageState.CORRUPTED);
-			return;
-		}
-		
-		String localVolumeResultsPath = properties
-				.getProperty("fetcher_volume_path") + "/results";
-		String localVolumeResultDir = localVolumeResultsPath + "/" + imageData;
-		String remoteVolumeResultsPath = properties
-				.getProperty("sebal_export_path")
-				+ "/results/"
-				+ imageData.getName();
 
-		File remoteVolumeResultsDir = new File(remoteVolumeResultsPath);
+		if (!imageData.getImageStatus().equals(ImageData.PURGED)) {
+			if (tries > MAX_FETCH_TRIES) {
+				LOGGER.debug("Max tries reached!\nFile is corrupted.");
+				imageData.setState(ImageState.CORRUPTED);
+				return;
+			}
 
-		if (!remoteVolumeResultsDir.exists()
-				&& !remoteVolumeResultsDir.isDirectory()) {
-			LOGGER.error("This folder doesn't exist or is not a directory.");
-			return;
-		}
+			String localVolumeResultsPath = properties
+					.getProperty("fetcher_volume_path") + "/results";
+			String localVolumeResultDir = localVolumeResultsPath + "/"
+					+ imageData;
+			String remoteVolumeResultsPath = properties
+					.getProperty("sebal_export_path")
+					+ "/results/"
+					+ imageData.getName();
 
-		ProcessBuilder builder = new ProcessBuilder();
-		builder.command("sftp -P " + ftpServerPort + " "
-				+ properties.getProperty("ftp_server_user") + "@" + ftpServerIP);
-		builder.command("get -r " + remoteVolumeResultsDir);
-		builder.command("quit");
-		builder.command("mv -rf " + imageData.getName() + " "
-				+ localVolumeResultsPath);
+			File remoteVolumeResultsDir = new File(remoteVolumeResultsPath);
 
-		Process p = builder.start();
-		p.waitFor();
+			if (!remoteVolumeResultsDir.exists()
+					&& !remoteVolumeResultsDir.isDirectory()) {
+				LOGGER.error("This folder doesn't exist or is not a directory.");
+				return;
+			}
 
-		if(CheckSumMD5ForFile.isFileCorrupted(imageData, new File(localVolumeResultDir))) {
-			fetch(imageData, tries++);
+			ProcessBuilder builder = new ProcessBuilder();
+			builder.command("sftp -P " + ftpServerPort + " "
+					+ properties.getProperty("ftp_server_user") + "@"
+					+ ftpServerIP);
+			builder.command("get -r " + remoteVolumeResultsDir);
+			builder.command("quit");
+			builder.command("mv -rf " + imageData.getName() + " "
+					+ localVolumeResultsPath);
+
+			Process p = builder.start();
+			p.waitFor();
+
+			if (CheckSumMD5ForFile.isFileCorrupted(imageData, new File(
+					localVolumeResultDir))) {
+				fetch(imageData, tries++);
+			}
 		}
 	}
 }
