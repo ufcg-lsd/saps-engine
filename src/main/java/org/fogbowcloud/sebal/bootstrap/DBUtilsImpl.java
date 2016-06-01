@@ -120,7 +120,7 @@ public class DBUtilsImpl implements DBUtils {
 	}
 	
 	@Override
-	public void setImagesToPurge(String day, String dayOpt) throws SQLException {	
+	public void setImagesToPurge(String day, String dayOpt) throws SQLException {
 		ImageDataStore imageStore = new JDBCImageDataStore(properties,
 				imageStoreIP, imageStorePort);
 		
@@ -128,7 +128,7 @@ public class DBUtilsImpl implements DBUtils {
 		
 		if(!dayOpt.equals("-f")) {
 			imagesToPurge = imageStore.getIn(ImageState.NOT_DOWNLOADED);
-		} else {			
+		} else {
 			imagesToPurge = imageStore.getIn(ImageState.FETCHED);
 		}
 		
@@ -142,15 +142,15 @@ public class DBUtilsImpl implements DBUtils {
 			}
 		}
 	}
-	
-	protected boolean isBeforeDay(String day, int imageDataDay) {
-		return (imageDataDay <= Integer.valueOf(day).intValue());
-	}
-	
+		
 	protected long convertMilliToDays(long millisseconds) {
 		return Long.valueOf(millisseconds / (1000*60*60*24));
 	}
 
+	protected boolean isBeforeDay(String day, int imageDataDay) {
+		return (imageDataDay <= Integer.valueOf(day).intValue());
+	}
+	
 	@Override
 	public void addImages() throws SQLException {
 		LOGGER.debug("Establishing connection to database...");
