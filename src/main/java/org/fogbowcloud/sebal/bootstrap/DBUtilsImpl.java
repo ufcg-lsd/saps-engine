@@ -4,10 +4,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -127,28 +132,36 @@ public class DBUtilsImpl implements DBUtils {
 		List<ImageData> imagesToPurge = new ArrayList<ImageData>();
 		
 		if(!dayOpt.equals("-f")) {
-			imagesToPurge = imageStore.getIn(ImageState.NOT_DOWNLOADED);
+			imagesToPurge = imageStore.getAllImages();
 		} else {
 			imagesToPurge = imageStore.getIn(ImageState.FETCHED);
 		}
 		
-		for(ImageData imageData : imagesToPurge) {
-			int imageDataDay = (int) convertMilliToDays(Long.valueOf(imageData.getUpdateTime()).longValue());
-			
-			if(isBeforeDay(day, imageDataDay)) {
+		for(ImageData imageData : imagesToPurge) {			
+			long date = 0;
+			// FIXME: deal with this better
+			try {
+				date = parseStringToDate(day).getTime();
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(isBeforeDay(date, Long.valueOf(imageData.getUpdateTime()).longValue())) {
 				imageData.setImageStatus(ImageData.PURGED);
 				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 				imageStore.updateImage(imageData);
 			}
 		}
 	}
-		
-	protected long convertMilliToDays(long millisseconds) {
-		return Long.valueOf(millisseconds / (1000*60*60*24));
+	
+	protected Date parseStringToDate(String day) throws ParseException {
+		DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
+		Date date = format.parse(day);
+		return date;
 	}
 
-	protected boolean isBeforeDay(String day, int imageDataDay) {
-		return (imageDataDay <= Integer.valueOf(day).intValue());
+	protected boolean isBeforeDay(long date, long imageDataDay) {
+		return (imageDataDay <= date);
 	}
 	
 	@Override
