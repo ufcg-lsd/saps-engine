@@ -120,7 +120,7 @@ public class DBUtilsImpl implements DBUtils {
 	}
 	
 	@Override
-	public void setImagesToPurge(String day, String dayOpt) throws SQLException {		
+	public void setImagesToPurge(String day, String dayOpt) throws SQLException {	
 		ImageDataStore imageStore = new JDBCImageDataStore(properties,
 				imageStoreIP, imageStorePort);
 		
@@ -134,14 +134,22 @@ public class DBUtilsImpl implements DBUtils {
 		
 		for(ImageData imageData : imagesToPurge) {
 			//FIXME: extract a method to test
-			int imageDataDay = (int) (Long.valueOf(imageData.getUpdateTime()).longValue() / (1000*60*60*24));
+			int imageDataDay = (int) convertMilliToDays(Long.valueOf(imageData.getUpdateTime()).longValue());
 			
-			if(imageDataDay <= Integer.valueOf(day).intValue()) {
+			if(isBeforeDay(day, imageDataDay)) {
 				imageData.setImageStatus(ImageData.PURGED);
 				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 				imageStore.updateImage(imageData);
 			}
 		}
+	}
+	
+	protected boolean isBeforeDay(String day, int imageDataDay) {
+		return (imageDataDay <= Integer.valueOf(day).intValue());
+	}
+	
+	protected long convertMilliToDays(long millisseconds) {
+		return Long.valueOf(millisseconds / (1000*60*60*24));
 	}
 
 	@Override
