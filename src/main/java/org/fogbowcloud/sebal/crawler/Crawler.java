@@ -176,13 +176,11 @@ public class Crawler {
 		//FIXME: add log
 		try {
 			if (imageData.getFederationMember().equals(federationMember)) {
-				if (!imageData.getImageStatus().equals(ImageData.PURGED)) {
-					imageData.setFederationMember(ImageDataStore.NONE);
-					imageData.setState(ImageState.NOT_DOWNLOADED);
-					imageData.setUpdateTime(String.valueOf(System
-							.currentTimeMillis()));
-					imageStore.updateImage(imageData);
-				}
+				imageData.setFederationMember(ImageDataStore.NONE);
+				imageData.setState(ImageState.NOT_DOWNLOADED);
+				imageData.setUpdateTime(String.valueOf(System
+						.currentTimeMillis()));
+				imageStore.updateImage(imageData);
 
 				String exportPath = properties.getProperty("sebal_export_path");
 				String imageDirPath = exportPath + "/images/"

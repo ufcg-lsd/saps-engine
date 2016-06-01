@@ -126,8 +126,8 @@ public class DBUtilsImpl implements DBUtils {
 		
 		List<ImageData> imagesToPurge = new ArrayList<ImageData>();
 		
-		if(dayOpt.equals("-f")) {
-			imagesToPurge = imageStore.getAllImages();
+		if(!dayOpt.equals("-f")) {
+			imagesToPurge = imageStore.getIn(ImageState.NOT_DOWNLOADED);
 		} else {			
 			imagesToPurge = imageStore.getIn(ImageState.FETCHED);
 		}
