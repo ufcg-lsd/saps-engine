@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.fogbowcloud.sebal.ImageData;
@@ -25,23 +24,20 @@ import org.junit.rules.ExpectedException;
 
 public class TestDBUtilsImpl {
 	
-	private Properties properties;
 	private DBUtilsImpl dbUtilsImpl;
 	private JDBCImageDataStore imageStore;
 	private BasicDataSource connectionPool;
 	private String imageStoreIPMock = "fake-store-IP";
 	private String imageStorePortMock = "fake-store-Port";
-	private String imageStoreUserNameMock = "fake-store-User";
-	private String imageStoreUserPassMock = "fake-store-pass";
 	
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 	
 	@Before
 	public void setUp() {
-		properties = new Properties();
-		imageStore = mock(JDBCImageDataStore.class);
 		dbUtilsImpl = mock(DBUtilsImpl.class);
+		imageStore = mock(JDBCImageDataStore.class);
+		connectionPool = mock(BasicDataSource.class);
 	}
 	
 	@Test
@@ -53,7 +49,7 @@ public class TestDBUtilsImpl {
 	
 	@Test
 	public void testGetConnection() throws SQLException {		
-		Connection connection = mock(Connection.class);		
+		Connection connection = mock(Connection.class);
 		connectionPool = mock(BasicDataSource.class);
 		
 		doReturn(connection).when(imageStore).getConnection();

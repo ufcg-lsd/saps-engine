@@ -73,7 +73,9 @@ public class Fetcher {
 		while (true) {
 			List<ImageData> imagesToFetch = imagesToFetch();
 			for (ImageData imageData : imagesToFetch) {
-				fetchAndUpdateImage(imageData);
+				if(!imageData.getImageStatus().equals(ImageData.PURGED)) {					
+					fetchAndUpdateImage(imageData);
+				}
 			}
 			Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
 		}
