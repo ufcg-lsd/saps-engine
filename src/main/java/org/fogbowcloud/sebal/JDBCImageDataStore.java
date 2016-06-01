@@ -347,6 +347,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	 * and changes the federation member to the crawler ID and then selects and returns the updated images
 	 * based on the state and federation member. 
 	 */
+	//FIXME: change this to get only not purged images
 	@Override
 	public List<ImageData> getImagesToDownload(String federationMember,
 			int limit) throws SQLException {

@@ -112,22 +112,22 @@ public class Crawler {
 		// FIXME: check the implications of this cast
 		// This updates images in NOT_DOWNLOADED state to DOWNLOADING 
 		// and sets this federation member as owner, and then gets all images marked as DOWNLOADING
+		
+		// FIXME: only get not purged images
 		List<ImageData> imageDataList = imageStore.getImagesToDownload(
 				federationMember, (int) maxImagesToDownload); 
 
 		for (ImageData imageData : imageDataList) {
-			if (imageData != null && !imageData.getImageStatus().equals(ImageData.PURGED)) {	
-				if (imageStore.lockImage(imageData.getName())) {
-					imageData.setState(ImageState.DOWNLOADING);
-					imageData.setFederationMember(federationMember);					
-					pendingImageDownloadMap.put(imageData.getName(), imageData);
-					pendingImageDownloadDB.commit();
-					imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
-					imageStore.updateImage(imageData);
-					imageStore.unlockImage(imageData.getName());
+			if (imageData != null
+					&& !imageData.getImageStatus().equals(ImageData.PURGED)) {
+				// Updating pending dataBase and imageData
+				// FIXME: put in SQL
+				imageData.setUpdateTime(String.valueOf(System
+						.currentTimeMillis()));
+				pendingImageDownloadMap.put(imageData.getName(), imageData);
+				pendingImageDownloadDB.commit();
 
-					downloadImage(imageData);
-				}
+				downloadImage(imageData);
 			}
 		}
 	}
@@ -242,8 +242,9 @@ public class Crawler {
 
 		String exportPath = properties.getProperty("sebal_export_path");
 
-		if (!exportPath.isEmpty() && exportPath != null) {
+		if (!exportPath.isEmpty() && exportPath != null) {			
 			for (ImageData imageData : imagesToPurge) {
+				//FIXME: compare federation member...if not, continue to another image
 				if (imageData.getImageStatus().equals(ImageData.PURGED)) {
 					String imageDirPath = exportPath + "/images/"
 							+ imageData.getName();

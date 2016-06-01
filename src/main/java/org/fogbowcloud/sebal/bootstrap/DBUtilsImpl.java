@@ -40,19 +40,23 @@ public class DBUtilsImpl implements DBUtils {
 
 	private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
 
-	public DBUtilsImpl(Properties properties, String imageStoreIP,
-			String imageStorePort, String dbUserName, String dbUserPass,
-			String firstYear, String lastYear, String regionsFilePath,
-			String specificRegion) {
+	public DBUtilsImpl(Properties properties, String firstYear,
+			String lastYear, String regionsFilePath) {
 		DBUtilsImpl.properties = properties;
-		DBUtilsImpl.imageStoreIP = imageStoreIP;
-		DBUtilsImpl.imageStorePort = imageStorePort;
-		DBUtilsImpl.dbUserName = dbUserName;
-		DBUtilsImpl.dbUserPass = dbUserPass;
+
+		if (properties == null) {
+			throw new IllegalArgumentException(
+					"Properties arg must not be null.");
+		}
+
+		DBUtilsImpl.imageStoreIP = properties.getProperty("datastore_ip");
+		DBUtilsImpl.imageStorePort = properties.getProperty("datastore_port");
+		DBUtilsImpl.dbUserName = properties.getProperty("datastore_username");
+		DBUtilsImpl.dbUserPass = properties.getProperty("datastore_password");
+
 		DBUtilsImpl.firstYear = firstYear;
 		DBUtilsImpl.lastYear = lastYear;
 		DBUtilsImpl.regionsFilePath = regionsFilePath;
-		DBUtilsImpl.specificRegion = specificRegion;
 	}
 
 	@Override
@@ -129,6 +133,7 @@ public class DBUtilsImpl implements DBUtils {
 		}
 		
 		for(ImageData imageData : imagesToPurge) {
+			//FIXME: extract a method to test
 			int imageDataDay = (int) (Long.valueOf(imageData.getUpdateTime()).longValue() / (1000*60*60*24));
 			
 			if(imageDataDay <= Integer.valueOf(day).intValue()) {

@@ -7,31 +7,25 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-public class DBBootstrapMain {
+public class DBMain {
 
+	private static final String CONF_PATH = "src/main/resources/sebal.conf";
 	private static final Logger LOGGER = Logger
-			.getLogger(DBBootstrapMain.class);
+			.getLogger(DBMain.class);
 
 	public static void main(String[] args) throws IOException, SQLException {
 		final Properties properties = new Properties();
-		FileInputStream input = new FileInputStream(args[0]);
+		FileInputStream input = new FileInputStream(CONF_PATH);
 		properties.load(input);
+		
+		String dbUseType = args[0];
+		String regionsFilePath = args[1];
+		String firstYear = args[2];
+		String lastYear = args[3];
+		String day = args[4];
+		String dayOption = args[5];
 
-		String sqlIP = args[1];
-		String sqlPort = args[2];
-		String dbUserName = args[3];
-		String dbUserPass = args[4];
-		String dbUseType = args[5];
-		String firstYear = args[6];
-		String lastYear = args[7];
-		String regionsFilePath = args[8];
-		String specificRegion = args[9];
-		String day = args[10];
-		String dayOpt = args[11];
-
-		DBUtilsImpl dbUtilsImpl = new DBUtilsImpl(properties, sqlIP, sqlPort,
-				dbUserName, dbUserPass, firstYear, lastYear, regionsFilePath,
-				specificRegion);
+		DBUtilsImpl dbUtilsImpl = new DBUtilsImpl(properties, firstYear, lastYear, regionsFilePath);
 
 		if (dbUseType.equals("add")) {
 			dbUtilsImpl.addImages();
@@ -41,8 +35,8 @@ public class DBBootstrapMain {
 			dbUtilsImpl.listCorruptedImages();
 		} else if (dbUseType.equals("get")) {
 			dbUtilsImpl.getRegionImages();
-		} else if(dbUseType.equals("purge")) {				
-			dbUtilsImpl.setImagesToPurge(day, dayOpt);
+		} else if(dbUseType.equals("purge")) {
+			dbUtilsImpl.setImagesToPurge(day, dayOption);
 		}
 
 		LOGGER.info("Operation done successfully");
