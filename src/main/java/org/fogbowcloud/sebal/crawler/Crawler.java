@@ -110,8 +110,10 @@ public class Crawler {
 	protected void download(long maxImagesToDownload) throws SQLException, IOException {
 
 		// FIXME: check the implications of this cast
-		List<ImageData> imageDataList = imageStore.getIn(
-				ImageState.NOT_DOWNLOADED, (int) maxImagesToDownload);
+		// This updates images in NOT_DOWNLOADED state to DOWNLOADING 
+		// and sets this federation member as owner, and then gets all images marked as DOWNLOADING
+		List<ImageData> imageDataList = imageStore.getImagesToDownload(
+				federationMember, (int) maxImagesToDownload); 
 
 		for (ImageData imageData : imageDataList) {
 			if (imageData != null && !imageData.getImageStatus().equals(ImageData.PURGED)) {	
@@ -177,6 +179,7 @@ public class Crawler {
 	
 	private void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties) throws IOException {
 		//FIXME: add log
+		//FIXME: clean up garbage data from volumes
 		try {
 			if(!imageData.getImageStatus().equals(ImageData.PURGED)) {				
 				imageData.setFederationMember(ImageDataStore.NONE);

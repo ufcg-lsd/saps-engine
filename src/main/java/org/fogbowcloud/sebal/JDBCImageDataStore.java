@@ -320,8 +320,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			connection = getConnection();
 			
-			selectStatement = connection
-					.prepareStatement(SELECT_PURGED_IMAGES_SQL);
+			selectStatement = connection.prepareStatement(SELECT_PURGED_IMAGES_SQL);
 			selectStatement.setString(1, ImageData.PURGED);
 			selectStatement.execute();
 			
@@ -332,8 +331,66 @@ public class JDBCImageDataStore implements ImageDataStore {
 		} finally {
 			close(selectStatement, connection);
 		}
+			
 	}
-
+	
+	private static final String SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME 
+			+ " it SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ? FROM (SELECT * FROM " 
+			+ IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ? LIMIT ? FOR UPDATE) filter WHERE it." 
+			+ IMAGE_NAME_COL + " = filter." + IMAGE_NAME_COL;
+	
+	private static final String SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER = "SELECT * FROM " + IMAGE_TABLE_NAME 
+			+ " WHERE " + STATE_COL + " = ? AND " + FEDERATION_MEMBER_COL + " = ?";
+	
+	/**
+	 * This method selects and locks all images marked as NOT_DOWNLOADED and updates to DOWNLOADING
+	 * and changes the federation member to the crawler ID and then selects and returns the updated images
+	 * based on the state and federation member. 
+	 */
+	@Override
+	public List<ImageData> getImagesToDownload(String federationMember,
+			int limit) throws SQLException {
+		/* 
+		 * In future versions, if the crawler starts to use a multithread approach
+		 * this method needs to be reviewed to avoid concurrency problems between its threads.
+		 * As the crawler selects images where the state is DOWNLOADING and federation member 
+		 * is equal to its ID, new threads could start to download an image that is already 
+		 * been downloaded by the another thread.
+		 */
+		
+		if (federationMember == null) {
+			LOGGER.error("Invalid federation member " + federationMember);
+			throw new IllegalArgumentException("Invalid federation member " + federationMember);
+		}
+		PreparedStatement lockAndUpdateStatement = null;
+		PreparedStatement selectStatement = null;
+		Connection connection = null;
+		
+		try {
+			connection = getConnection();
+			
+			lockAndUpdateStatement = connection.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
+			lockAndUpdateStatement.setString(1, ImageState.DOWNLOADING.getValue());
+			lockAndUpdateStatement.setString(2, federationMember);
+			lockAndUpdateStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
+			lockAndUpdateStatement.setInt(4, limit);
+			lockAndUpdateStatement.execute();
+			
+			selectStatement = connection.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
+			selectStatement.setString(1, ImageState.DOWNLOADING.getValue());
+			selectStatement.setString(2, federationMember);
+			selectStatement.execute();
+			
+			ResultSet rs = selectStatement.getResultSet();
+			List<ImageData> imageDatas = extractImageDataFrom(rs);
+			rs.close();
+			return imageDatas;
+		} finally {
+			close(selectStatement, null);
+			close(lockAndUpdateStatement, connection);
+		}
+	}
+	
 	private static List<ImageData> extractImageDataFrom(ResultSet rs) throws SQLException {
 		List<ImageData> imageDatas = new ArrayList<ImageData>();
 		while (rs.next()) {
@@ -443,5 +500,5 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}	
 		return unlocked;
 	}
-	
+
 }

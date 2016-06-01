@@ -24,6 +24,8 @@ public interface ImageDataStore {
 	
 	public List<ImageData> getPurgedImages() throws SQLException;
 
+	public List<ImageData> getImagesToDownload(String federationMember, int limit) throws SQLException;
+	
 	public ImageData getImage(String imageName) throws SQLException;
 	
 	public void dispose();
