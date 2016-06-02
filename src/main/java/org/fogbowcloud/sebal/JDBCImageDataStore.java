@@ -370,23 +370,19 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			connection = getConnection();
 			
-			//TODO: see if the changes made here are corrects (purge and timeMillis)
 			lockAndUpdateStatement = connection.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
 			lockAndUpdateStatement.setString(1, ImageState.DOWNLOADING.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);
 			lockAndUpdateStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
 			lockAndUpdateStatement.setString(4, ImageData.AVAILABLE);
-			// FIXME: is this really gonna be here?
 			lockAndUpdateStatement.setString(5, String.valueOf(System.currentTimeMillis()));
 			lockAndUpdateStatement.setInt(6, limit);
 			lockAndUpdateStatement.execute();
 
-			//TODO: see if the changes made here are corrects (purge and timeMillis)
 			selectStatement = connection.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
 			selectStatement.setString(1, ImageState.DOWNLOADING.getValue());
 			selectStatement.setString(2, ImageData.AVAILABLE);
 			selectStatement.setString(3, federationMember);
-			// FIXME: is this really gonna be here?
 			selectStatement.setString(4, String.valueOf(System.currentTimeMillis()));
 			selectStatement.execute();
 			
