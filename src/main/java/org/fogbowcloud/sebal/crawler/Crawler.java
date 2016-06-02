@@ -119,6 +119,12 @@ public class Crawler {
 		for (ImageData imageData : imageDataList) {
 			if (imageData != null) {
 				// Updating pending dataBase and imageData
+				
+				// FIXME: see if this will be here or in getImagesToDownload--------				
+				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+				imageStore.updateImage(imageData);
+				// -----------------------------------------------------------------
+				
 				pendingImageDownloadMap.put(imageData.getName(), imageData);
 				pendingImageDownloadDB.commit();
 

@@ -376,6 +376,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			lockAndUpdateStatement.setString(2, federationMember);
 			lockAndUpdateStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
 			lockAndUpdateStatement.setString(4, ImageData.AVAILABLE);
+			// FIXME: is this really gonna be here?
 			lockAndUpdateStatement.setString(5, String.valueOf(System.currentTimeMillis()));
 			lockAndUpdateStatement.setInt(6, limit);
 			lockAndUpdateStatement.execute();
@@ -385,6 +386,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.setString(1, ImageState.DOWNLOADING.getValue());
 			selectStatement.setString(2, ImageData.AVAILABLE);
 			selectStatement.setString(3, federationMember);
+			// FIXME: is this really gonna be here?
 			selectStatement.setString(4, String.valueOf(System.currentTimeMillis()));
 			selectStatement.execute();
 			
