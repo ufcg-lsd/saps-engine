@@ -31,7 +31,18 @@ public class AppPropertiesConstants {
 
 	public static final String DB_MAP_NAME = "jobMap";
 
+	public static final String DB_MAP_USERS = "users";
+	
 	public static final String DB_FILE_NAME = "legacyJobs.db";
+	
+	public static final String DB_FILE_USERS = "usersmap.db";
+	
+	
+	//___________ APPLICATION HEADERS  ____//
+	
+	public static final String X_AUTH_NONCE = "X-auth-nonce";
+	public static final String X_AUTH_USER = "X-auth-username";
+	public static final String X_AUTH_HASH = "X-auth-hash";
 
 
 }
