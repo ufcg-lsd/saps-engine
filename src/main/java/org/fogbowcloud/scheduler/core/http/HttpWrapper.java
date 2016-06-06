@@ -65,7 +65,7 @@ public class HttpWrapper {
             	
                 Header locationHeader = getLocationHeader(response.getAllHeaders());
                 
-                if (locationHeader != null && locationHeader.getValue().contains(OrderConstants.TERM)) {
+                if (locationHeader != null) {
                     return generateLocationHeaderResponse(locationHeader);
                 } else {
                     return EntityUtils.toString(response.getEntity());

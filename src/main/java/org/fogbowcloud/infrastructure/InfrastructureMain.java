@@ -14,70 +14,134 @@ import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
 
 public class InfrastructureMain implements ResourceNotifier {
 	
+	//Commands
+	private static final String COMPUTE = "compute";
+	private static final String TEST_COMPUTE = "test-compute";
+	private static final String STORAGE = "storage";
+	private static final String TEST_STORAGE = "test-storage";
+	private static final String STORAGE_ATTACHMENT = "attachment";
+	
+	//Constants
+	private static final String EXTRA_PORT = "EXTRA_PORT=";
+	private static final String SSH_PORT = "SSH_PORT=";
+	private static final String SSH_HOST = "SSH_HOST=";
+	private static final String USER_NAME = "USER_NAME=";
+	private static final String INSTANCE_ID = "INSTANCE_ID=";
+	private static final String STORAGE_ID = "STORAGE_ID=";
+	private static final String ATTACHMENT_ID = "ATTACHMENT_ID=";
+	private static final String STORAGE_STATUS = "STORAGE_STATUS=";
+	private static final String DELIMITER = ";";
+
 	private Resource resource;
-	private static String managerID;
+	
+	//Global variables:
+	private static String command;
+	private static String confgFilePath;
+	private static String specsFilePath;
+	private static String storageSize;
+	private static String instanceId;
+	private static String storageId;
+	
 	
 	private static final Logger LOGGER = Logger.getLogger(InfrastructureMain.class);
 
+	//TODO colocar o primeiro parametro como opção de criação de VM, Storage ou LinkStorage
 	public static void main(String[] args) throws Exception {
 		
 		//FIXME: mover para o objeto?
 		LOGGER.debug("Starting infrastructure creation process...");
 
+		try {
+			validateArgs(args);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			printUsage();
+			System.exit(1);
+		}
+		
 		//FIXME: block 1 parse args
 		Properties properties = new Properties();
-		FileInputStream input = new FileInputStream(args[0]);
+		FileInputStream input = new FileInputStream(confgFilePath);
 		properties.load(input);
-		
-		String specsFilePath = args[1];
-		
-		// Optional
-		String volumeSize = args[2];
 		
 		boolean blockWhileInitializing = new Boolean(
 				properties
 						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
 				.booleanValue();
-
-		//TODO: block2 create spec
-		// TODO: Check later what need to be changed to support context-script
-		List<Specification> specs = getSpecs(properties, specsFilePath);
 		
 		//TODO: create manager
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
-		
+
 		InfrastructureManager infraManager = new InfrastructureManager(null, true,
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
 		
 		InfrastructureMain infraMain = new InfrastructureMain();
-
-		//TODO: create and wait for compute resource
-		infraManager.orderResource(specs.get(0), infraMain, 1);
 		
-		while (infraMain.resource == null) {
-			Thread.sleep(2000);
-		}
+		//TODO Verificar qual o tipo de comando e seguir fluxos especificos por comando.
+		if(COMPUTE.equals(command)){
 		
-		infraManager.stop(false);		
-		
-		if (!volumeSize.equals("null")) {
+			List<Specification> specs = getSpecs(properties, specsFilePath);
+			
+			infraManager.orderResource(specs.get(0), infraMain, 1);
+			
+			while (infraMain.resource == null) {
+				Thread.sleep(2000);
+			}
+			
+			String globalResourceId = infraManager.getResourceComputeId(infraMain.resource);
+			String[] splitResourceId = globalResourceId.split("@");
+			
+			String resourceStr = resourceAsString(splitResourceId[0], infraMain.resource);
+			System.out.println(resourceStr);
+			
+			infraManager.stop(false);
+			
+		}else if(TEST_COMPUTE.equals(command)){
+			
+			StorageInitializer storageInitializer = new StorageInitializer(properties);
+			
+			List<Specification> specs = getSpecs(properties, specsFilePath);
 			String fogbowRequirements = specs.get(0).getRequirementValue(
 					"FogbowRequirements");
 			String[] splitRequirements = fogbowRequirements.split("&&");
 			String requirement = splitRequirements[splitRequirements.length - 1];
-			managerID = requirement.substring(1);
+			requirement = requirement.substring(1);
 			
-			String resourceComputeIdUncut = infraManager.getResourceComputeId(infraMain.resource);
-			String[] splitResourceComputeId = resourceComputeIdUncut.split("@");
-			String resourceComputeId = splitResourceComputeId[0];
-
-			StorageInitializer storageInitializer = new StorageInitializer(
-					resourceComputeId, managerID, volumeSize);
-			storageInitializer.init();
+			String storageId = storageInitializer.orderStorage(Integer.parseInt(storageSize), requirement);
+			System.out.println(STORAGE_ID+storageId);
+			
+		}else if(STORAGE.equals(command)){
+			
+			StorageInitializer storageInitializer = new StorageInitializer(properties);
+			
+			List<Specification> specs = getSpecs(properties, specsFilePath);
+			String fogbowRequirements = specs.get(0).getRequirementValue(
+					"FogbowRequirements");
+			String[] splitRequirements = fogbowRequirements.split("&&");
+			String requirement = splitRequirements[splitRequirements.length - 1];
+			requirement = requirement.substring(1);
+			
+			String globalStorageId = storageInitializer.orderStorage(Integer.parseInt(storageSize), requirement);
+			String[] splitStorageId = globalStorageId.split("@");
+			
+			System.out.println(STORAGE_ID+splitStorageId[0]);
+			
+		}else if(TEST_STORAGE.equals(command)){
+			
+			StorageInitializer storageInitializer = new StorageInitializer(properties);
+			
+			String status = storageInitializer.testStorage(storageId);
+			System.out.println(STORAGE_STATUS+status);
+			
+		}else if(STORAGE_ATTACHMENT.equals(command)){
+			
+			StorageInitializer storageInitializer = new StorageInitializer(properties);
+			String attachmentId = storageInitializer.attachStorage(instanceId, storageId);
+			
+			System.out.println(ATTACHMENT_ID+attachmentId);
+			
 		}
-
-		String resourceStr = resourceAsString(infraMain.resource, managerID);
 
 		LOGGER.debug("Infrastructure created.");
 
@@ -108,17 +172,86 @@ public class InfrastructureMain implements ResourceNotifier {
 		return (InfrastructureProvider) clazz;
 	}
 	
-	private static String resourceAsString(Resource resource, String managerID) {
-		return "USER NAME: "
-				+ resource.getMetadataValue(Resource.METADATA_SSH_USERNAME_ATT)
-				+ "\nSSH HOST: "
-				+ resource.getMetadataValue(Resource.METADATA_SSH_HOST)
-				+ "\nSSH PORT: "
-				+ resource.getMetadataValue(Resource.METADATA_SSH_PORT)
-/*				+ "\nEXTRA PORT: "
-				+ resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT)*/
-				+ "\nFEDERATION MEMBER: "
-				+ managerID;
+	private static void validateArgs(String [] args) throws IllegalArgumentException{
+		if(args == null || args.length < 1){
+			throw new IllegalArgumentException("Wrong usage. At least one argument command must be informed.");
+		}
+		command = args[0];
+		if(COMPUTE.equals(command)){
+			if(args.length < 3){
+				throw new IllegalArgumentException("Wrong usage for compute command. Configuration and specification files must be informed.");
+			}
+			confgFilePath = args[1];
+			specsFilePath = args[2];
+		}else if(TEST_COMPUTE.equals(command)){
+			if(args.length < 2){
+				throw new IllegalArgumentException("Wrong usage for teste compute command. Instance Id must be informed.");
+			}
+			instanceId = args[1];
+			
+		}else if(STORAGE.equals(command)){
+			if(args.length < 4){
+				throw new IllegalArgumentException("Wrong usage for storage command. Storage size must be informed.");
+			}
+			storageSize = args[1];
+			confgFilePath = args[2];
+			specsFilePath = args[3];
+			try {
+				Integer.parseInt(storageSize);
+			} catch (Exception e) {
+				throw new IllegalArgumentException("Illegal storage size format. Storage size must be integer value.");
+			}
+			
+		}else if(TEST_STORAGE.equals(command)){
+			if(args.length < 3){
+				throw new IllegalArgumentException("Wrong usage for test storage command. Storage Id must be informed.");
+			}
+			storageId = args[1];
+			confgFilePath = args[2];
+			
+		}else if(STORAGE_ATTACHMENT.equals(command)){
+			if(args.length < 4){
+				throw new IllegalArgumentException("Wrong usage for attachment command. Instance id and Storage id must be passed.");
+			}
+			instanceId = args[1];
+			storageId = args[2];
+			confgFilePath = args[3];
+			
+		}else{
+			throw new IllegalArgumentException("Invalid command argument usage.");
+		}
+
+	}
+	
+	private static String resourceAsString(String resourceId, Resource resource) {
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(INSTANCE_ID).append(resourceId);
+		sb.append(DELIMITER);
+		sb.append(USER_NAME).append(resource.getMetadataValue(Resource.METADATA_SSH_USERNAME_ATT));
+		sb.append(DELIMITER);
+		sb.append(SSH_HOST).append(resource.getMetadataValue(Resource.METADATA_SSH_HOST));
+		sb.append(DELIMITER);
+		sb.append(SSH_PORT).append(resource.getMetadataValue(Resource.METADATA_SSH_PORT));
+		sb.append(DELIMITER);
+		sb.append(EXTRA_PORT).append(resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT));
+		
+		return sb.toString();
+	}
+	
+	private static void printUsage(){
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("Usage of Infrastrucutre : ");
+		sb.append("\nCommand "+COMPUTE+":\n");
+		sb.append("[1]"+COMPUTE);
+		sb.append(" [2]Config_File_Path (String required) [3]Specs_File_Path (String required)");
+		sb.append("\nCommand "+STORAGE+":\n");
+		sb.append("[1]"+STORAGE);
+		sb.append(" [2]Storage Size (Integer required)");
+		sb.append("\nCommand "+ATTACHMENT_ID+":\n");
+		sb.append("[1]"+ATTACHMENT_ID);
+		sb.append(" [2]Instance Id (String required) [3]Storage Id (String required)");
 	}
 
 	@Override
