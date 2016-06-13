@@ -107,14 +107,12 @@ public class StorageInitializer {
 	public String testStorage(String globalStorageId) throws Exception {
 		
 		String url = properties.getProperty("infra_fogbow_manager_base_url");
-		String[] splitStorageId = globalStorageId.split("@");
-		String storageID = splitStorageId[0];
 		
 		String authToken = normalizeTokenFile(properties
 				.getProperty("infra_fogbow_token_public_key_filepath"));
 		
 		try {
-			String getStorageResponse = doRequest("get", url + "/" + OrderConstants.STORAGE_TERM + "/" + storageID, authToken);
+			String getStorageResponse = doRequest("get", url + "/" + OrderConstants.STORAGE_TERM + "/" + globalStorageId, authToken);
 			
 			Map<String, String> storageAttributes = parseAttributes(getStorageResponse);
 			String status = storageAttributes.get(X_OCCI_ATTRIBUTE_STORAGE_STATUS);

@@ -90,9 +90,9 @@ public class InfrastructureMain implements ResourceNotifier {
 			}
 			
 			String globalResourceId = infraManager.getResourceComputeId(infraMain.resource);
-			String[] splitResourceId = globalResourceId.split("@");
+			//String[] splitResourceId = globalResourceId.split("@");
 			
-			String resourceStr = resourceAsString(splitResourceId[0], infraMain.resource);
+			String resourceStr = resourceAsString(globalResourceId, infraMain.resource);
 			System.out.println(resourceStr);
 			
 			infraManager.stop(false);
@@ -123,15 +123,15 @@ public class InfrastructureMain implements ResourceNotifier {
 			requirement = requirement.substring(1);
 			
 			String globalStorageId = storageInitializer.orderStorage(Integer.parseInt(storageSize), requirement);
-			String[] splitStorageId = globalStorageId.split("@");
+			//String[] splitStorageId = globalStorageId.split("@");
 			
-			System.out.println(STORAGE_ID+splitStorageId[0]);
+			System.out.println(STORAGE_ID+globalStorageId);
 			
 		}else if(TEST_STORAGE.equals(command)){
 			
 			StorageInitializer storageInitializer = new StorageInitializer(properties);
 			
-			String status = storageInitializer.testStorage(storageId);
+			String status = storageInitializer.testStorage(storageId.trim());
 			System.out.println(STORAGE_STATUS+status);
 			
 		}else if(STORAGE_ATTACHMENT.equals(command)){
