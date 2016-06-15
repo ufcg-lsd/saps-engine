@@ -2,6 +2,7 @@ package org.fogbowcloud.scheduler.core.model;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -69,6 +70,22 @@ public class Specification {
 			Gson gson = new Gson();
 			specifications = Arrays.asList(gson.fromJson(br, Specification[].class));
 			br.close();
+			
+			for(Specification spec : specifications){
+				
+				File file = new File(spec.getPublicKey());
+				if(file.exists()){
+					StringBuilder sb = new StringBuilder();
+					BufferedReader brSpec = new BufferedReader(new FileReader(file));
+					String line = "";
+					while((line = brSpec.readLine()) != null && !line.isEmpty()){
+						sb.append(line);
+					}
+					spec.setPublicKey(sb.toString());
+				}
+			}
+			
+			
 		}
 		return specifications;
 	}
@@ -118,6 +135,10 @@ public class Specification {
 	public String getPublicKey() {
 		return publicKey;
 	}
+	
+	public void setPublicKey(String publicKey) {
+		this.publicKey = publicKey;
+	}
 
 	public String getContextScript() {
 		return contextScript;
@@ -147,7 +168,7 @@ public class Specification {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Image: " + image);
-		sb.append("- PublicKey: " + publicKey);
+		sb.append("\nPublicKey: " + publicKey);
 		if (contextScript != null && !contextScript.isEmpty()) {
 			sb.append("\nContextScript: " + contextScript);
 		}
@@ -233,6 +254,5 @@ public class Specification {
 			return false;
 		return true;
 	}
-	
 	
 }
