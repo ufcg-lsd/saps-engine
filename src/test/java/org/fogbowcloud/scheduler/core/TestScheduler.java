@@ -1,13 +1,12 @@
 package org.fogbowcloud.scheduler.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +26,19 @@ import org.mockito.Mockito;
 
 public class TestScheduler {
 
+	private static final String JOB_ID3 = "jodId3";
+
+	private static final String JOB_ID2 = "jodId2";
+
+	private static final String JOB_ID1 = "jodId1";
+
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 	
 	private Scheduler scheduler;
 	private Job jobMock;
 	private Job jobMock2;
+	private Job jobMock3;
 	private InfrastructureManager infraManagerMock;
 	private CurrentThreadExecutorService executorService;
 	
@@ -42,6 +48,7 @@ public class TestScheduler {
 		executorService = new CurrentThreadExecutorService();
 		jobMock = mock(Job.class);
 		jobMock2 = mock(Job.class);
+		jobMock3 = mock(Job.class);
 		infraManagerMock = mock(InfrastructureManager.class);
 		scheduler = spy(new Scheduler(infraManagerMock, executorService, jobMock, jobMock2));
 		
@@ -175,4 +182,50 @@ public class TestScheduler {
 		return tasks;
 		
 	}
+	
+	@Test
+	public void testAddJob(){
+		
+		int qty = 5;
+		
+		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath");
+		List<Task> tasks = this.generateMockTasks(qty,spec);
+		List<Task> tasks2 = this.generateMockTasks(qty, spec);		
+		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
+		doReturn(tasks2).when(jobMock2).getByState(TaskState.READY);
+		scheduler.run();
+		verify(infraManagerMock).orderResource(Mockito.eq(spec), Mockito.eq(scheduler), Mockito.anyInt());
+		doReturn(new ArrayList<Task>()).when(jobMock3).getByState(TaskState.READY);
+		scheduler.addJob(jobMock3);
+		scheduler.run();
+		verify(jobMock3).getByState(TaskState.READY);
+	}
+	@Test
+	public void testRemoveJob(){
+		
+		int qty = 5;
+		
+		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath");
+		List<Task> tasks = this.generateMockTasks(qty,spec);
+		List<Task> tasks2 = this.generateMockTasks(qty, spec);		
+		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
+		doReturn(tasks2).when(jobMock2).getByState(TaskState.READY);
+		doReturn(JOB_ID1).when(jobMock).getId();
+		doReturn(JOB_ID2).when(jobMock2).getId();
+		doReturn(JOB_ID3).when(jobMock3).getId();
+		scheduler.run();
+		verify(infraManagerMock).orderResource(Mockito.eq(spec), Mockito.eq(scheduler), Mockito.anyInt());
+		doReturn(new ArrayList<Task>()).when(jobMock3).getByState(TaskState.READY);
+		scheduler.addJob(jobMock3);
+		scheduler.run();
+		verify(jobMock3).getByState(TaskState.READY);
+		scheduler.removeJob(JOB_ID1);
+		assertEquals(2, scheduler.getJobs().size());
+		assertTrue(scheduler.getJobs().contains(jobMock2));
+		assertTrue(scheduler.getJobs().contains(jobMock3));
+		assertFalse(scheduler.getJobs().contains(jobMock));
+		
+	}
+	
+	
 }

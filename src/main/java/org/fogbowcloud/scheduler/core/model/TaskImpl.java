@@ -12,6 +12,8 @@ import org.apache.log4j.Logger;
 
 public class TaskImpl implements Task {
 
+	private static final long serialVersionUID = -8068456932331499162L;
+
 	private static final Logger LOGGER = Logger.getLogger(TaskImpl.class);
 	
 	//Environment variables related to task

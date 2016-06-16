@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>JSTree</title>
+        <link rel="stylesheet" href="https://static.jstree.com/3.3.0/assets/dist/themes/default/style.min.css" />
+	<script src="https://static.jstree.com/3.3.0/assets/jquery-1.10.2.min.js"></script>
+  
+ 	<script src="https://static.jstree.com/3.3.0/assets/dist/jstree.min.js"></script>
+        <script>
+            var arrayCollection;
+            $(function() {
+                arrayCollection = [PlaceholderContent];
+                $('#jstree').jstree({
+                    'core': {
+                        'data': arrayCollection
+                    },
+                    "plugins": ["wholerow"]
+                });
+            });
+            function resfreshJSTree() {
+                $('#jstree').jstree(true).settings.core.data = arrayCollection;
+                $('#jstree').jstree(true).refresh();
+            }
+        </script>
+    </head>
+    <body>
+        <div id="jstree"></div>
+    </body>
+</html>

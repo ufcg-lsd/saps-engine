@@ -1,11 +1,12 @@
 package org.fogbowcloud.scheduler.core.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 import org.fogbowcloud.scheduler.core.model.Command.Type;
 
-public interface Task {
+public interface Task extends Serializable{
 
 	public Specification getSpecification();
 

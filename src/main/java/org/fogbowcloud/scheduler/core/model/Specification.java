@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,8 +16,12 @@ import java.util.Map.Entry;
 
 import com.google.gson.Gson;
 
-public class Specification {
+public class Specification implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5255295548723927267L;
 	String image;
 	String username;
 	String privateKeyFilePath;
@@ -168,7 +173,7 @@ public class Specification {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Image: " + image);
-		sb.append("\nPublicKey: " + publicKey);
+		sb.append(" PublicKey: " + publicKey);
 		if (contextScript != null && !contextScript.isEmpty()) {
 			sb.append("\nContextScript: " + contextScript);
 		}
@@ -179,7 +184,7 @@ public class Specification {
 			sb.append("\nUserDataType:" + userDataType);
 		}
 		if (requirements != null && !requirements.isEmpty()) {
-			sb.append("\nRequiriments:{");
+			sb.append("\nRequirements:{");
 			for (Entry<String, String> entry : requirements.entrySet()) {
 				sb.append("\n\t" + entry.getKey() + ": " + entry.getValue());
 			}
@@ -255,4 +260,9 @@ public class Specification {
 		return true;
 	}
 	
+	public Specification clone() {
+		Specification cloneSpec = new Specification(this.image, this.username, this.publicKey, this.privateKeyFilePath);
+		cloneSpec.putAllRequirements(this.getAllRequirements());
+		return cloneSpec;
+	}
 }

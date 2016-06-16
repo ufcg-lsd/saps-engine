@@ -21,7 +21,7 @@ import org.restlet.Component;
 import org.restlet.Restlet;
 import org.restlet.data.Protocol;
 import org.restlet.routing.Router;
-import org.restlet.service.CorsService;
+import org.restlet.service.ConnectorService;
 
 public class SebalScheduleApplication extends Application {
 	
@@ -38,9 +38,7 @@ public class SebalScheduleApplication extends Application {
 
 	public void startServer() throws Exception {
 		
-		CorsService corsService = new CorsService();         
-		corsService.setAllowedOrigins(new HashSet(Arrays.asList("*")));
-		corsService.setAllowedCredentials(true);
+		ConnectorService corsService = new ConnectorService();         
 		
 		this.getServices().add(corsService);
 		

@@ -32,8 +32,10 @@ public class ExecutionMonitor implements Runnable {
 	}
 
 	@Override
-	public void run() {		
+	public void run() {
+		LOGGER.debug("Submitting monitoring tasks");
 		for (Job aJob : job){
+			LOGGER.debug("Tasks for job: "+ aJob.toString() );
 			for (Task task : aJob.getByState(TaskState.RUNNING)) {
 				service.submit(new TaskExecutionChecker(task, this.scheduler, aJob));
 			}

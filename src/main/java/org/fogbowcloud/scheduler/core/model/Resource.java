@@ -167,13 +167,17 @@ public class Resource {
 	protected Map<String, String> getAdditionalEnvVariables() {
 		Map<String, String> additionalEnvVar = new HashMap<String, String>();
 		additionalEnvVar.put(ENV_HOST, getMetadataValue(METADATA_SSH_HOST));
+		LOGGER.debug("Env_host:" + getMetadataValue(METADATA_SSH_HOST));
 		additionalEnvVar.put(ENV_SSH_PORT, getMetadataValue(METADATA_SSH_PORT));
 		if (task.getSpecification().getUsername() != null && !task.getSpecification().getUsername().isEmpty()) {
 			additionalEnvVar.put(ENV_SSH_USER, task.getSpecification().getUsername());
+			LOGGER.debug("Env_ssh_user:" + task.getSpecification().getUsername());
 		} else {
 			additionalEnvVar.put(ENV_SSH_USER, getMetadataValue(ENV_SSH_USER));
+			LOGGER.debug("Env_ssh_user:" + getMetadataValue(ENV_SSH_USER));
 		}
 		additionalEnvVar.put(ENV_PRIVATE_KEY_FILE, task.getSpecification().getPrivateKeyFilePath());
+		LOGGER.debug("Env_private_key_file:" + task.getSpecification().getPrivateKeyFilePath());
 		// TODO getEnvVariables from task
 
 		return additionalEnvVar;
