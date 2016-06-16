@@ -261,7 +261,7 @@ public class Specification implements Serializable{
 	}
 	
 	public Specification clone() {
-		Specification cloneSpec = new Specification(this.image, this.username, this.publicKey, this.privateKeyFilePath);
+		Specification cloneSpec = new Specification(this.image, this.username, this.publicKey, this.privateKeyFilePath, this.userDataFile, this.userDataType);
 		cloneSpec.putAllRequirements(this.getAllRequirements());
 		return cloneSpec;
 	}

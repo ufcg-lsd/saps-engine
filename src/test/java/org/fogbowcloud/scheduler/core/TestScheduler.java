@@ -188,7 +188,7 @@ public class TestScheduler {
 		
 		int qty = 5;
 		
-		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath");
+		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath", "userDataFile", "userDataType");
 		List<Task> tasks = this.generateMockTasks(qty,spec);
 		List<Task> tasks2 = this.generateMockTasks(qty, spec);		
 		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
@@ -205,7 +205,7 @@ public class TestScheduler {
 		
 		int qty = 5;
 		
-		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath");
+		Specification spec = new Specification("image", "username", "publicKey", "privateKeyFilePath", "userDataFile", "userDataType");
 		List<Task> tasks = this.generateMockTasks(qty,spec);
 		List<Task> tasks2 = this.generateMockTasks(qty, spec);		
 		doReturn(tasks).when(jobMock).getByState(TaskState.READY);
