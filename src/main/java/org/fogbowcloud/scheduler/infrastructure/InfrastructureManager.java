@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.infrastructure.ResourceNotifier;
+import org.fogbowcloud.infrastructure.plugin.TokenUpdatePluginInterface;
 import org.fogbowcloud.manager.occi.order.OrderType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.ManagerTimer;
@@ -92,7 +93,7 @@ public class InfrastructureManager {
 	public void start(boolean blockWhileInitializing) throws Exception {
 		LOGGER.info("Starting Infrastructure Manager");
 
-		//removePreviousResources();
+		removePreviousResources();
 		this.createInitialOrders();
 		// Start order service to monitor and resolve orders.
 		triggerOrderTimer();
@@ -686,5 +687,6 @@ public class InfrastructureManager {
 			}
 		}
 	}
+	
 
 }

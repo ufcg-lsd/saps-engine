@@ -45,7 +45,7 @@ import com.google.gson.Gson;
 public class TestInfrastructureManager {
 
 	private static final Long NO_EXPIRATION_TIME = new Long(0);
-	private String DATASTORE_PATH = "src/test/resources/persistance/";
+	private String DATASTORE_FULL_PATH = "jdbc:h2:mem:" + new File("src/test/resources/persistance/").getAbsolutePath() + "orders";
 	private Scheduler schedulerMock;
 	private InfrastructureProvider infrastructureProviderMock;
 	private InfrastructureManager infrastructureManager;
@@ -59,6 +59,9 @@ public class TestInfrastructureManager {
 	public void setUp() throws Exception {
 
 		// Initiating properties file.
+		
+		File file = new File(DATASTORE_FULL_PATH);
+		
 		generateDefaulProperties();
 
 		dsMock = mock(DataStore.class);
@@ -198,11 +201,12 @@ public class TestInfrastructureManager {
 		infrastructureManager.start(true);
 		infrastructureManager.cancelOrderTimer();
 		infrastructureManager.cancelResourceTimer();
-
+		
 		verify(infrastructureProviderMock).deleteResource(requestIdFake1);
 		verify(infrastructureProviderMock).deleteResource(requestIdFake2);
-
+		
 		infrastructureManager.stop(true);
+
 	}
 
 	@Test
@@ -916,8 +920,7 @@ public class TestInfrastructureManager {
 		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL, "100_02_01_01:8098");
 		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH,
 				"src/test/resources/publickey_file");
-		properties.put("accounting_datastore_url",
-				"jdbc:h2:mem:" + new File(DATASTORE_PATH).getAbsolutePath() + "orders");
+		properties.put("accounting_datastore_url", DATASTORE_FULL_PATH);
 
 	}
 

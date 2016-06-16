@@ -12,30 +12,10 @@ public class Order{
 	}
 	
 	private ResourceNotifier resourceNotifier;
-	private Crawler crawler;
-	private Scheduler scheduler;
-	private Fetcher fetcher;
 	private Specification specification;
 	private OrderState state;
 	private String requestId;
 	
-	public Order(Crawler crawler, Specification specification) {
-		this.crawler = crawler;
-		this.specification = specification;
-		this.state = OrderState.OPEN;
-	}
-	
-	public Order(Scheduler scheduler, Specification specification) {
-		this.scheduler = scheduler;
-		this.specification = specification;
-		this.state = OrderState.OPEN;
-	}
-	
-	public Order(Fetcher fetcher, Specification specification) {
-		this.fetcher = fetcher;
-		this.specification = specification;
-		this.state = OrderState.OPEN;
-	}
 	
 	public Order(ResourceNotifier resourceNotifier, Specification specification) {
 		this.resourceNotifier = resourceNotifier;
@@ -45,18 +25,6 @@ public class Order{
 	
 	public ResourceNotifier getResourceNotifier() {
 		return resourceNotifier;
-	}
-	
-	public Crawler getCrawler() {
-		return crawler;
-	}
-
-	public Scheduler getScheduler() {
-		return scheduler;
-	}
-	
-	public Fetcher getFetcher() {
-		return fetcher;
 	}
 
 	public Specification getSpecification() {

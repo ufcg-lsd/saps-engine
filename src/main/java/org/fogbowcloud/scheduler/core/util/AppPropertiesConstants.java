@@ -25,6 +25,9 @@ public class AppPropertiesConstants {
 	public static final String INFRA_FOGBOW_MANAGER_BASE_URL = "infra_fogbow_manager_base_url";
 	public static final String INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH = "infra_fogbow_token_public_key_filepath";
 	public static final String INFRA_FOGBOW_USERNAME = "fogbow_username";
+	public static final String INFRA_FOGBOW_TOKEN_UPDATE_PLUGIN = "infra_fogbow_token_update_plugin";
+	public static final String TOKEN_UPDATE_TIME = "token_update.time";
+	public static final String TOKEN_UPDATE_TIME_UNIT = "token_update.time.unit";
 
 	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
 

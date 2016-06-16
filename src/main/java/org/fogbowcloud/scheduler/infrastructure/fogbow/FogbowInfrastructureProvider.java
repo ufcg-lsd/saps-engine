@@ -14,15 +14,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.infrastructure.plugin.TokenUpdatePluginInterface;
 import org.fogbowcloud.manager.core.UserdataUtils;
-import org.fogbowcloud.manager.core.plugins.identity.voms.VomsIdentityPlugin;
 import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.order.OrderAttribute;
 import org.fogbowcloud.manager.occi.order.OrderConstants;
@@ -67,60 +66,42 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 	private Map<String, Specification> pendingRequestsMap = new HashMap<String, Specification>();
 	private String resourceComputeId;
 	private ScheduledExecutorService handleTokenUpdateExecutor;
+	private TokenUpdatePluginInterface tokenUpdatePlugin;
 	
+	public FogbowInfrastructureProvider(Properties properties, ScheduledExecutorService handleTokeUpdateExecutor) throws Exception{
+		this(properties, handleTokeUpdateExecutor, createTokenUpdatePlugin(properties));
+	}
 	
-	public FogbowInfrastructureProvider(Properties properties, ScheduledExecutorService handleTokeUpdateExecutor) throws FileNotFoundException, IOException{
+	protected FogbowInfrastructureProvider(Properties properties, ScheduledExecutorService handleTokeUpdateExecutor, 
+			TokenUpdatePluginInterface tokenUpdatePlugin) throws Exception{
 		httpWrapper = new HttpWrapper();
 		this.properties = properties;
 		this.resourceComputeId = null;
 		this.managerUrl = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL);
-		this.token = createNewTokenFromFile(
-				properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH));
+		this.tokenUpdatePlugin = tokenUpdatePlugin;
+		
+		this.token = tokenUpdatePlugin.generateToken();
 		
 		ScheduledExecutorService handleTokenUpdateExecutor = handleTokeUpdateExecutor;
-		handleTokenUpdate(handleTokenUpdateExecutor, properties.getProperty("fogbow.voms.server"),  properties.getProperty("fogbow.voms.certificate.password") );
+		handleTokenUpdate(handleTokenUpdateExecutor);
 	}
+	
 	public FogbowInfrastructureProvider(Properties properties) throws Exception {
 		this(properties, Executors.newScheduledThreadPool(1));
 	}
 	
 	
-	protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor,
-			final String vomsServer, final String password) {
+	protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
 		LOGGER.debug("Turning on handle token update.");
+		
 		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					setToken(createToken(vomsServer, password));
-				} catch (Throwable e) {
-					LOGGER.error("Error while setting token.", e);
-					try {
-						setToken(createNewTokenFromFile(
-								properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_PUBLIC_KEY_FILEPATH)));
-					} catch (IOException e1) {
-						LOGGER.error("Error while getting token from file.", e);
-					}
-				}
+				setToken(tokenUpdatePlugin.generateToken());
 			}
-		}, 6, 6, TimeUnit.HOURS);
+		}, tokenUpdatePlugin.getUpdateTime(), tokenUpdatePlugin.getUpdateTime(), tokenUpdatePlugin.getUpdateTimeUnits());
 	}
 
-	protected Token createToken(final String vomsServer, final String password) {
-		VomsIdentityPlugin vomsIdentityPlugin = new VomsIdentityPlugin(new Properties());
-
-		HashMap<String, String> credentials = new HashMap<String, String>();
-		credentials.put("password", password);
-		credentials.put("serverName", vomsServer);
-		LOGGER.debug("Creating token update with serverName="
-				+ vomsServer + " and password="
-				+ password);
-
-		Token token = vomsIdentityPlugin.createToken(credentials);
-		LOGGER.debug("VOMS proxy updated. New proxy is " + token.toString());
-
-		return token;
-	}
 
 	protected void setToken(Token token) {
 		LOGGER.debug("Setting token to " + token);
@@ -477,6 +458,21 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			}
 		}
 		return atts;
+	}
+	
+	private static TokenUpdatePluginInterface createTokenUpdatePlugin(Properties properties)
+			throws Exception {
+
+		String providerClassName = properties
+				.getProperty(AppPropertiesConstants.INFRA_FOGBOW_TOKEN_UPDATE_PLUGIN);
+
+		Object clazz = Class.forName(providerClassName).getConstructor(Properties.class).newInstance(properties);
+		if (!(clazz instanceof TokenUpdatePluginInterface)) {
+			throw new Exception(
+					"Provider Class Name is not a TokenUpdatePluginInterface implementation");
+		}
+
+		return (TokenUpdatePluginInterface) clazz;
 	}
 
 	private OrderState getRequestState(String requestValue) {
