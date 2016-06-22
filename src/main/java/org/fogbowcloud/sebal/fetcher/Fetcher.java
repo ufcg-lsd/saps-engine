@@ -265,5 +265,19 @@ public class Fetcher {
 		for(File actualFile : imageDirectory.listFiles()){
 			swiftClient.uploadFile(containerName, actualFile, pseudFolder);
 		}
+		
+		//TODO
+		/*
+		 * Get each image on localVolumeResultsPath+imageData.getName() directory and upload this image to Swift on:
+		 * 
+		 * {container/results/imageData.getName()/acutalFileName}
+		 */
+		File imageDirectory =  new File(localVolumeResultsPath+imageData.getName());
+		String pseudFolder = "/results/"+imageDirectory.getName()+"/";
+		String containerName = properties.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+		
+		for(File actualFile : imageDirectory.listFiles()){
+			swiftClient.uploadFile(containerName, actualFile, pseudFolder);
+		}
 	}
 }
