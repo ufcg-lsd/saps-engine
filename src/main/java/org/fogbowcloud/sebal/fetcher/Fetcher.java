@@ -248,9 +248,9 @@ public class Fetcher {
 		Process p = builder.start();
 		p.waitFor();
 
-/*		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
+		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
 			fetch(imageData, tries++);
-		}*/
+		}
 		
 		//TODO
 		/*
