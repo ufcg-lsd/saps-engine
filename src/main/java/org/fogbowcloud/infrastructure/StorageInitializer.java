@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
@@ -16,7 +17,6 @@ import org.fogbowcloud.manager.occi.order.OrderAttribute;
 import org.fogbowcloud.manager.occi.order.OrderConstants;
 import org.fogbowcloud.manager.occi.storage.StorageAttribute;
 import org.fogbowcloud.scheduler.core.http.HttpWrapper;
-import org.apache.commons.io.IOUtils;
 
 public class StorageInitializer {
 	

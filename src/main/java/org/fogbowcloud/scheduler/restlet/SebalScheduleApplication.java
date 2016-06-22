@@ -1,8 +1,6 @@
 package org.fogbowcloud.scheduler.restlet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -15,7 +13,6 @@ import org.fogbowcloud.scheduler.restlet.resource.ImageResource;
 import org.fogbowcloud.scheduler.restlet.resource.TaskResource;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
-import org.fogbowcloud.sebal.SebalTasks;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Restlet;

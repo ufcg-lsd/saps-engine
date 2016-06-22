@@ -22,7 +22,6 @@ import org.fogbowcloud.sebal.ImageDataStore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.verification.VerificationMode;
 
 public class TestExecutionMonitor {
 

@@ -158,7 +158,7 @@ public class Crawler {
 				LOGGER.error("It was not possible run Fmask for image "
 						+ imageData.getName());
 				imageData.setFederationMember(ImageDataStore.NONE);
-			}			
+			}
 
 			imageData.setState(ImageState.DOWNLOADED);
 			imageData.setCreationTime(String.valueOf(System.currentTimeMillis()));
@@ -168,6 +168,7 @@ public class Crawler {
 		} catch (Exception e) {
 			LOGGER.error(
 					"Couldn't download image " + imageData.getName() + ".", e);
+			e.printStackTrace();
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}

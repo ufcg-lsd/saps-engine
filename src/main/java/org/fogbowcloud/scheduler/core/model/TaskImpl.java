@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.fogbowcloud.scheduler.core.model.Command.Type;
-
 import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.core.model.Command.Type;
 
 public class TaskImpl implements Task {
 

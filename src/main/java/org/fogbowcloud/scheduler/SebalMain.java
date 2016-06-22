@@ -2,6 +2,8 @@ package org.fogbowcloud.scheduler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -110,11 +112,13 @@ public class SebalMain {
 		restletServer.startServer();
 	}
 	
-	private static void setFederationMemberIntoSpec(Specification spec, String federationMember) {
+	private static void setFederationMemberIntoSpec(Specification spec, Specification tempSpec, String federationMember) {
 		String fogbowRequirements = spec.getRequirementValue(
 				"FogbowRequirements");
+		String requestType = spec.getRequirementValue("RequestType");
 		String newRequirements = fogbowRequirements + " && Glue2CloudComputeManagerID==\"" + federationMember + "\"";
-		spec.addRequirement("FogbowRequirements", newRequirements);
+		tempSpec.addRequirement("FogbowRequirements", newRequirements);
+		tempSpec.addRequirement("RequestType", requestType);
 	}
 	
 	private static Map<String, Collection<Resource>> allocationMap() {
@@ -122,12 +126,12 @@ public class SebalMain {
 		List<Resource> allResources = infraManager.getAllResources();
 		
 		Map<String, Collection<Resource>> allocMap = new HashMap<String, Collection<Resource>>();
-		for(Resource resource : allResources) {						
+		for(Resource resource : allResources) {
 			String location = resource.getMetadataValue(Resource.METADATA_LOCATION);
 			if (!allocMap.containsKey(location)) {
 				allocMap.put(location, new LinkedList<Resource>());
 			}
-			allocMap.get(location).add(resource);			
+			allocMap.get(location).add(resource);
 		}
 		return allocMap;
 	}
@@ -139,9 +143,9 @@ public class SebalMain {
 		if (allocationMap.containsKey(federationMemberId)) {
 			//debug
 			int numAllocationPerFederationMember = allocationMap.get(federationMemberId).size();
-			return numAllocationPerFederationMember < maxAllowedResources; 
+			return numAllocationPerFederationMember < maxAllowedResources;
 		}
-		return false;
+		return true;
 	}
 	
 	private static void addRTasks(final Properties properties, final Job job,
@@ -165,7 +169,8 @@ public class SebalMain {
 						sebalSpec.getPrivateKeyFilePath(),
 						sebalSpec.getUserDataFile(),
 						sebalSpec.getUserDataType());
-				setFederationMemberIntoSpec(tempSpec,
+				tempSpec.putAllRequirements(sebalSpec.getAllRequirements());
+				setFederationMemberIntoSpec(sebalSpec, tempSpec,
 						imageData.getFederationMember());
 
 				Map<String, Collection<Resource>> allocationMap = allocationMap();
@@ -183,6 +188,7 @@ public class SebalMain {
 								imageData.getFederationMember(), nfsServerIP,
 								nfsServerPort);
 						imageData.setState(ImageState.RUNNING_R);
+						imageData.setSebalVersion(getSebalVersionFromURL(properties));
 						job.addTask(taskImpl);
 						imageStore.updateImage(imageData);
 					}
@@ -195,11 +201,23 @@ public class SebalMain {
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
+			StringWriter errors = new StringWriter();
+			e.printStackTrace(new PrintWriter(errors));
+			System.out.println(errors.toString());
 		}
 	}
 	
+	private static String getSebalVersionFromURL(Properties properties) {
+		String sebalURL = properties.getProperty("sebal_url");
+		String[] splitSebalURL = sebalURL.split("/");
+		
+		String sebalVersion = splitSebalURL[splitSebalURL.length - 1];
+		
+		return sebalVersion;
+	}
+	
 	private static Specification getSebalSpecFromFile(Properties properties) {
-		String sebalSpecFile = properties.getProperty("sebal_task_spec_path");
+		String sebalSpecFile = properties.getProperty("infra_initial_specs_file_path");
 		List<Specification> specs = new ArrayList<Specification>();
 		try {
 			specs = Specification.getSpecificationsFromJSonFile(sebalSpecFile);

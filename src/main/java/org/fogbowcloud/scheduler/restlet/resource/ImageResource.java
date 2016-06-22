@@ -11,7 +11,6 @@ import org.fogbowcloud.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.ImageData;
-import org.fogbowcloud.sebal.ImageState;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.restlet.data.MediaType;

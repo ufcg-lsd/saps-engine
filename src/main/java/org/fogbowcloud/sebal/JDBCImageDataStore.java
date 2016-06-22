@@ -59,9 +59,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ " VARCHAR(100), " + FEDERATION_MEMBER_COL
 					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
 					+ STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
-					+ " VARCHAR(255), " + CREATION_TIME_COL + "VARCHAR(255), "
+					+ " VARCHAR(255), " + CREATION_TIME_COL + " VARCHAR(255), "
 					+ UPDATED_TIME_COL + " VARCHAR(255), " + IMAGE_STATUS_COL
-					+ " VARCHAR(255)");
+					+ " VARCHAR(255))");
 			statement.close();
 
 		} catch (Exception e) {
@@ -172,7 +172,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " "
 			+ "SET download_link = ?, state = ?, federation_member = ? "
-			+ ", priority = ?, station_id = ?, sebal_version = ?, utime = ?, status = ? WHERE image_name = ?";
+			+ ", priority = ?, station_id = ?, sebal_version = ?, ctime = ?, utime = ?, status = ? WHERE image_name = ?";
 	
 	@Override
 	public void updateImage(ImageData imageData) throws SQLException {
@@ -192,12 +192,12 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(2, imageData.getState().getValue());
 			updateStatement.setString(3, imageData.getFederationMember());
 			updateStatement.setInt(4, imageData.getPriority());
-			updateStatement.setString(5, imageData.getName());
-			updateStatement.setString(6, imageData.getStationId());
-			updateStatement.setString(7, imageData.getSebalVersion());
-			updateStatement.setString(8, imageData.getCreationTime());
-			updateStatement.setString(9, imageData.getUpdateTime());
-			updateStatement.setString(10, imageData.getImageStatus());
+			updateStatement.setString(5, imageData.getStationId());
+			updateStatement.setString(6, imageData.getSebalVersion());
+			updateStatement.setString(7, imageData.getCreationTime());
+			updateStatement.setString(8, imageData.getUpdateTime());
+			updateStatement.setString(9, imageData.getImageStatus());
+			updateStatement.setString(10, imageData.getName());
 
 			updateStatement.execute();
 		} finally {
@@ -335,13 +335,12 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 	
 	private static final String SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME 
-			+ " it SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ? FROM (SELECT * FROM " 
-			+ IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ?, " + IMAGE_STATUS_COL + " = ?, " 
-			+ UPDATED_TIME_COL + " = ? LIMIT ? FOR UPDATE) filter WHERE it." 
+			+ " it SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ?, " + UPDATED_TIME_COL + " = ? FROM (SELECT * FROM " 
+			+ IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL + " = ? LIMIT ? FOR UPDATE) filter WHERE it." 
 			+ IMAGE_NAME_COL + " = filter." + IMAGE_NAME_COL;
 	
 	private static final String SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER = "SELECT * FROM " + IMAGE_TABLE_NAME 
-			+ " WHERE " + STATE_COL + " = ?, " + IMAGE_STATUS_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
+			+ " WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL + " = ? AND " + FEDERATION_MEMBER_COL + " = ?";
 	
 	/**
 	 * This method selects and locks all images marked as NOT_DOWNLOADED and updates to DOWNLOADING
@@ -373,9 +372,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 			lockAndUpdateStatement = connection.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
 			lockAndUpdateStatement.setString(1, ImageState.DOWNLOADING.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);
-			lockAndUpdateStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
-			lockAndUpdateStatement.setString(4, ImageData.AVAILABLE);
-			lockAndUpdateStatement.setString(5, String.valueOf(System.currentTimeMillis()));
+			lockAndUpdateStatement.setString(3, String.valueOf(System.currentTimeMillis()));
+			lockAndUpdateStatement.setString(4, ImageState.NOT_DOWNLOADED.getValue());
+			lockAndUpdateStatement.setString(5, ImageData.AVAILABLE);
 			lockAndUpdateStatement.setInt(6, limit);
 			lockAndUpdateStatement.execute();
 
@@ -383,7 +382,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.setString(1, ImageState.DOWNLOADING.getValue());
 			selectStatement.setString(2, ImageData.AVAILABLE);
 			selectStatement.setString(3, federationMember);
-			selectStatement.setString(4, String.valueOf(System.currentTimeMillis()));
 			selectStatement.execute();
 			
 			ResultSet rs = selectStatement.getResultSet();

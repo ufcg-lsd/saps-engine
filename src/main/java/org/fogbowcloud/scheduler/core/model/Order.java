@@ -1,9 +1,6 @@
 package org.fogbowcloud.scheduler.core.model;
 
 import org.fogbowcloud.infrastructure.ResourceNotifier;
-import org.fogbowcloud.scheduler.core.Scheduler;
-import org.fogbowcloud.sebal.crawler.Crawler;
-import org.fogbowcloud.sebal.fetcher.Fetcher;
 
 public class Order{
 
