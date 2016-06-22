@@ -13,11 +13,13 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.sebal.CheckSumMD5ForFile;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
+import org.fogbowcloud.swift.SwiftClient;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -28,6 +30,7 @@ public class Fetcher {
 
 	private final Properties properties;
 	private final ImageDataStore imageStore;
+	private final SwiftClient swiftClient;
 	private File pendingImageFetchFile;
 	private DB pendingImageFetchDB;
 	private ConcurrentMap<String, ImageData> pendingImageFetchMap;
@@ -53,6 +56,7 @@ public class Fetcher {
 				imageStorePort);
 		this.ftpServerIP = ftpServerIP;
 		this.ftpServerPort = ftpServerPort;
+		this.swiftClient = new SwiftClient(properties);
 		
 		this.pendingImageFetchFile = new File("pending-image-fetch.db");
 		this.pendingImageFetchDB = DBMaker.newFileDB(pendingImageFetchFile).make();
@@ -141,7 +145,7 @@ public class Fetcher {
 			if(!isFileCorrupted(imageData)) {
 				finishFetch(imageData);			
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			LOGGER.error("Couldn't fetch image " + imageData.getName() + ".", e);
 			rollBackFetch(imageData);
 		}
@@ -214,8 +218,7 @@ public class Fetcher {
 
 	// TODO: See if this is correct
 	// FIXME: reduce code
-	public void fetch(final ImageData imageData, int tries) throws IOException,
-			InterruptedException, SQLException {
+	public void fetch(final ImageData imageData, int tries) throws Exception {
 
 		if (tries > MAX_FETCH_TRIES) {
 			LOGGER.debug("Max tries reached!\nFile is corrupted.");
@@ -248,5 +251,19 @@ public class Fetcher {
 /*		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
 			fetch(imageData, tries++);
 		}*/
+		
+		//TODO
+		/*
+		 * Get each image on localVolumeResultsPath+imageData.getName() directory and upload this image to Swift on:
+		 * 
+		 * {container/results/imageData.getName()/acutalFileName}
+		 */
+		File imageDirectory =  new File(localVolumeResultsPath+imageData.getName());
+		String pseudFolder = "/results/"+imageDirectory.getName()+"/";
+		String containerName = properties.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+		
+		for(File actualFile : imageDirectory.listFiles()){
+			swiftClient.uploadFile(containerName, actualFile, pseudFolder);
+		}
 	}
 }
