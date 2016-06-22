@@ -178,5 +178,10 @@
 			<artifactId>mapdb</artifactId>
 			<version>1.0.9</version>
 		</dependency>
+		<dependency>
+            		<groupId>org.javaswift</groupId>
+            		<artifactId>joss</artifactId>
+            		<version>0.9.7</version>
+        	</dependency>
 	</dependencies>
 </project>
