@@ -1,6 +1,7 @@
 package org.fogbowcloud.sebal;
 
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
 public interface ImageDataStore {
@@ -33,4 +34,7 @@ public interface ImageDataStore {
 	public boolean lockImage(String imageName) throws SQLException;
 
 	public boolean unlockImage(String imageName) throws SQLException;
+
+	public List<ImageData> getImagesByFilter(ImageState state, String name, long processDateInit, long processDateEnd)
+			throws SQLException;
 }

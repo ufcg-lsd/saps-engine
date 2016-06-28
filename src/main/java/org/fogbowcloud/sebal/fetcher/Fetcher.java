@@ -259,11 +259,12 @@ public class Fetcher {
 		 * {container/results/imageData.getName()/acutalFileName}
 		 */
 		File imageDirectory =  new File(localImageResultsPath+imageData.getName());
-		String pseudFolder = "/results/"+imageDirectory.getName()+"/";
+		String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)+imageDirectory.getName()+"/";
 		String containerName = properties.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
 		
 		for(File actualFile : imageDirectory.listFiles()){
 			swiftClient.uploadFile(containerName, actualFile, pseudFolder);
+			actualFile.delete();
 		}
 	}
 }

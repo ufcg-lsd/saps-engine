@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -294,6 +295,86 @@ public class JDBCImageDataStore implements ImageDataStore {
 				selectStatement.setInt(2, limit);
 				selectStatement.execute();
 			}
+			
+			ResultSet rs = selectStatement.getResultSet();
+			List<ImageData> imageDatas = extractImageDataFrom(rs);
+			rs.close();
+			return imageDatas;
+		} finally {
+			close(selectStatement, connection);
+		}
+	}
+
+	private static final String SELECT_IMAGES_BY_FILTERS_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_WHERE_SQL = " WHERE ";
+	private static final String SELECT_IMAGES_BY_FILTERS_STATE_SQL = " state = ? " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " name = ? " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " ctime BETWEEN ? AND ? ";
+	
+	@Override
+	public List<ImageData> getImagesByFilter(ImageState state, String name, 
+			long processDateInit, long processDateEnd) throws SQLException {
+		
+		if (state == null) {
+			LOGGER.error("Invalid state " + state);
+			throw new IllegalArgumentException("Invalid state " + state);
+		}
+		PreparedStatement selectStatement = null;
+		Connection connection = null;
+		
+		int paramtersCount = 0; 
+		int paramtersInsertCount = 0;
+		
+		StringBuilder finalQuery = new StringBuilder();
+		finalQuery.append(SELECT_IMAGES_BY_FILTERS_SQL);
+		if(state != null){
+			if(paramtersCount == 0){
+				finalQuery.append(SELECT_IMAGES_BY_FILTERS_WHERE_SQL);
+			}
+			finalQuery.append(SELECT_IMAGES_BY_FILTERS_STATE_SQL);
+			paramtersCount++;
+		}
+		
+		if(name != null){
+			if(paramtersCount == 0){
+				finalQuery.append(SELECT_IMAGES_BY_FILTERS_WHERE_SQL);
+			}else{
+				finalQuery.append(" AND ");
+			}
+			finalQuery.append(SELECT_IMAGES_BY_FILTERS_NAME_SQL);
+			paramtersCount++;
+		}
+		
+		if(processDateInit > 0 && processDateEnd > 0){
+			if(paramtersCount == 0){
+				finalQuery.append(SELECT_IMAGES_BY_FILTERS_WHERE_SQL);
+			}else{
+				finalQuery.append(" AND ");
+			}
+			finalQuery.append(SELECT_IMAGES_BY_FILTERS_PERIOD);
+			paramtersCount++;
+			paramtersCount++;//Has tow parameters (processDateInit and processDateEnd)
+		}
+		
+		try {
+			connection = getConnection();
+			
+			selectStatement = connection.prepareStatement(finalQuery.toString());
+			
+			if(state != null){
+				selectStatement.setString(++paramtersInsertCount, state.getValue());
+			}
+			
+			if(name != null){
+				selectStatement.setString(++paramtersInsertCount, name);
+			}
+			
+			if(processDateInit > 0 && processDateEnd > 0){
+				selectStatement.setLong(++paramtersInsertCount, processDateInit);
+				selectStatement.setLong(++paramtersInsertCount, processDateEnd);
+			}
+			
+			selectStatement.execute();
 			
 			ResultSet rs = selectStatement.getResultSet();
 			List<ImageData> imageDatas = extractImageDataFrom(rs);

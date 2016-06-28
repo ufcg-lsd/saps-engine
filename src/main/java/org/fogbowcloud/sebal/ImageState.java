@@ -1,5 +1,7 @@
 package org.fogbowcloud.sebal;
 
+import java.util.ArrayList;
+import java.util.List;
 
 public enum ImageState {
 
@@ -32,10 +34,23 @@ public enum ImageState {
 	public static ImageState getStateFromStr(String stateStr) {
 		ImageState[] elements = values();
 		for (ImageState currentState : elements) {
-			if (currentState.getValue().equals(stateStr)) {
+			if (currentState.getValue().equals(stateStr) ||
+					currentState.name().equals(stateStr)) {
 				return currentState;
 			}
 		}
 		return null;
 	}
+	
+	public static List<String> getAllValues(){
+		
+		List<String> values = new ArrayList<String>();
+		
+		for (ImageState currentState : values()) {
+			values.add(currentState.name());
+		}
+		
+		return values;
+	}
+	
 }
