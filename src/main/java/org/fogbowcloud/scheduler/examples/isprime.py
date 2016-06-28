@@ -1,6 +1,8 @@
 import math
 import sys
 import time
+import random
+
 
 def is_prime(n):
     if n % 2 == 0 and n > 2: 
@@ -20,7 +22,11 @@ def find_primes(i, f):
 	f.write(str(primes))
 	f.close()
 
+def failjob(c):
+	if (random.randint(0,100) > c:
+		return 1 / 0;
 
-time.sleep(300000000)
+
+failjob(sys.argv[3])
 find_primes(int(sys.argv[1]), int(sys.argv[2]))
 
