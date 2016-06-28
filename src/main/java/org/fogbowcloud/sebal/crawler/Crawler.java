@@ -70,6 +70,7 @@ public class Crawler {
 	public void exec() throws InterruptedException, IOException {
 
 		LOGGER.info("Initializing crawler... ");
+		long now = System.currentTimeMillis();
 		
 		cleanUnfinishedDownloadedData(properties);
 
@@ -92,14 +93,17 @@ public class Crawler {
 		}
 
 		pendingImageDownloadDB.close();
-		LOGGER.debug("All images downloaded.\nProcess finished.");
+		LOGGER.debug("All images downloaded.\nProcess finished...Execution time = " + (System.currentTimeMillis() - now));
 	}
 	
 	private void cleanUnfinishedDownloadedData(Properties properties) throws IOException {
+		LOGGER.info("Starting garbage collector...");
+		long now = System.currentTimeMillis();
 		Collection<ImageData> data = pendingImageDownloadMap.values();
 		for(ImageData imageData : data) {
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
+		LOGGER.info("Garbage collect finished...Execution time = " + (System.currentTimeMillis() - now));
 	}
 
 	private boolean thereIsImageToDownload() throws SQLException {
@@ -108,13 +112,16 @@ public class Crawler {
 	}
 
 	protected void download(long maxImagesToDownload) throws SQLException, IOException {
+		
+		LOGGER.info("Starting download process...");
+		long now = System.currentTimeMillis();
 
 		// FIXME: check the implications of this cast
 		// This updates images in NOT_DOWNLOADED state to DOWNLOADING 
 		// and sets this federation member as owner, and then gets all images marked as DOWNLOADING
 		
 		List<ImageData> imageDataList = imageStore.getImagesToDownload(
-				federationMember, (int) maxImagesToDownload); 
+				federationMember, (int) maxImagesToDownload);
 
 		for (ImageData imageData : imageDataList) {
 			if (imageData != null) {
@@ -125,6 +132,8 @@ public class Crawler {
 				downloadImage(imageData);
 			}
 		}
+		
+		LOGGER.info("Images downloaded...Execution time = " + (System.currentTimeMillis() - now));
 	}
 
 	protected long numberOfImagesToDownload() {
@@ -153,12 +162,13 @@ public class Crawler {
 			NASARepository.downloadImage(imageData);
 
 			// running Fmask
+			// TODO: insert source .profile before fmask execution
 			int exitValue = new FMask().runFmask(imageData, properties);
 			if (exitValue != 0) {
 				LOGGER.error("It was not possible run Fmask for image "
 						+ imageData.getName());
 				imageData.setFederationMember(ImageDataStore.NONE);
-			}			
+			}
 
 			imageData.setState(ImageState.DOWNLOADED);
 			imageData.setCreationTime(String.valueOf(System.currentTimeMillis()));
@@ -168,19 +178,27 @@ public class Crawler {
 		} catch (Exception e) {
 			LOGGER.error(
 					"Couldn't download image " + imageData.getName() + ".", e);
+			e.printStackTrace();
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}
 	
 	private void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties) throws IOException {
-		//FIXME: add log
 		try {
+			long now = System.currentTimeMillis();
+			
 			if (imageData.getFederationMember().equals(federationMember)) {
+				LOGGER.debug("Setting image " + imageData.getName()
+						+ " with federation member "
+						+ imageData.getFederationMember() + " back to "
+						+ ImageState.NOT_DOWNLOADED);
 				imageData.setFederationMember(ImageDataStore.NONE);
 				imageData.setState(ImageState.NOT_DOWNLOADED);
 				imageData.setUpdateTime(String.valueOf(System
 						.currentTimeMillis()));
 				imageStore.updateImage(imageData);
+				
+				LOGGER.debug("Removing image register from disk...");
 
 				String exportPath = properties.getProperty("sebal_export_path");
 				String imageDirPath = exportPath + "/images/"
@@ -193,8 +211,12 @@ public class Crawler {
 				}
 
 				FileUtils.deleteDirectory(imageDir);
+				
+				LOGGER.debug("Removing image " + imageData.getName() + " from pending map.");
 				pendingImageDownloadMap.remove(imageData.getName());
 			}
+			
+			LOGGER.debug("Image " + imageData.getName() + " rolled back...Execution time = " + (System.currentTimeMillis() - now));
 		} catch (SQLException e1) {
 			Crawler.LOGGER.error("Error while updating image data: " + imageData.getName(), e1);
 			System.out.println("Error while updating image data: " + imageData.getName() + "\n" + e1);
@@ -203,6 +225,8 @@ public class Crawler {
 
 	private void deleteFetchedResultsFromVolume(Properties properties) throws IOException,
 			InterruptedException, SQLException {
+		LOGGER.info("Deleting fetched images from volume...");
+		long now = System.currentTimeMillis();
 		
 		List<ImageData> setOfImageData = imageStore.getAllImages();
 
@@ -229,10 +253,16 @@ public class Crawler {
 			// FIXME: Implement solution for this
 			LOGGER.error("Volume directory path is null or empty!");
 		}
+		
+		LOGGER.info("Images Deleted...Execution time = " + (System.currentTimeMillis() - now));
 	}
 	
 	private void purgeImagesFromVolume(Properties properties)
 			throws IOException, InterruptedException, SQLException {
+		//FIXME: add log
+		LOGGER.info("Starting purge process...");
+		long now = System.currentTimeMillis();
+		
 		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.FINISHED);
 
 		String exportPath = properties.getProperty("sebal_export_path");
@@ -267,11 +297,12 @@ public class Crawler {
 					LOGGER.debug("Image " + imageData.getName()
 							+ " results files deleted successfully.");
 				}
-			}
+			}			
 		} else {
 			// FIXME: Implement solution for this
 			LOGGER.error("Volume directory path is null or empty!");
 		}
+		LOGGER.debug("Images purged...Execution time = " + (System.currentTimeMillis() - now));
 	}
 
 }

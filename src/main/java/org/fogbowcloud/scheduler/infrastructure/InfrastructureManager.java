@@ -14,7 +14,6 @@ import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.infrastructure.ResourceNotifier;
-import org.fogbowcloud.infrastructure.plugin.TokenUpdatePluginInterface;
 import org.fogbowcloud.manager.occi.order.OrderType;
 import org.fogbowcloud.scheduler.core.DataStore;
 import org.fogbowcloud.scheduler.core.ManagerTimer;

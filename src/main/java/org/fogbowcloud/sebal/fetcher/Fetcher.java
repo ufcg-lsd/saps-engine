@@ -13,11 +13,13 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.sebal.CheckSumMD5ForFile;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
+import org.fogbowcloud.swift.SwiftClient;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -28,6 +30,7 @@ public class Fetcher {
 
 	private final Properties properties;
 	private final ImageDataStore imageStore;
+	private final SwiftClient swiftClient;
 	private File pendingImageFetchFile;
 	private DB pendingImageFetchDB;
 	private ConcurrentMap<String, ImageData> pendingImageFetchMap;
@@ -53,6 +56,7 @@ public class Fetcher {
 				imageStorePort);
 		this.ftpServerIP = ftpServerIP;
 		this.ftpServerPort = ftpServerPort;
+		this.swiftClient = new SwiftClient(properties);
 		
 		this.pendingImageFetchFile = new File("pending-image-fetch.db");
 		this.pendingImageFetchDB = DBMaker.newFileDB(pendingImageFetchFile).make();
@@ -64,24 +68,34 @@ public class Fetcher {
 		}
 	}
 
-	public void exec() throws InterruptedException, IOException {
+	public void exec() {
 
 		LOGGER.info("Initializing fetcher... ");
 
-		cleanUnfinishedFetchedData(properties);
+		try {
+			cleanUnfinishedFetchedData(properties);
 
-		while (true) {
-			List<ImageData> imagesToFetch = imagesToFetch();
-			for (ImageData imageData : imagesToFetch) {
-				if(!imageData.getImageStatus().equals(ImageData.PURGED)) {					
-					fetchAndUpdateImage(imageData);
+			while (true) {
+				List<ImageData> imagesToFetch = imagesToFetch();
+				for (ImageData imageData : imagesToFetch) {
+					if (!imageData.getImageStatus().equals(ImageData.PURGED)) {
+						fetchAndUpdateImage(imageData);
+					}
 				}
+				Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
 			}
-			Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
+		} catch (InterruptedException e) {
+			LOGGER.error("Execution interrupted!\n" + e);
+			e.printStackTrace();
+		} catch (IOException e) {
+			LOGGER.error("Failed I/O operation!\n" + e);
+			e.printStackTrace();
 		}
+		
+		pendingImageFetchDB.close();
 	}
 
-	private void cleanUnfinishedFetchedData(Properties properties) throws IOException {
+	private void cleanUnfinishedFetchedData(Properties properties) throws InterruptedException, IOException {
 		Collection<ImageData> data = pendingImageFetchMap.values();
 		for (ImageData imageData : data) {
 			removeFromPendingAndUpdateState(imageData, properties);
@@ -90,7 +104,7 @@ public class Fetcher {
 
 	private void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties) throws IOException {
 		// FIXME: add log
-		try {		
+		try {
 			imageData.setState(ImageState.FINISHED);
 			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
@@ -131,7 +145,7 @@ public class Fetcher {
 			if(!isFileCorrupted(imageData)) {
 				finishFetch(imageData);			
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			LOGGER.error("Couldn't fetch image " + imageData.getName() + ".", e);
 			rollBackFetch(imageData);
 		}
@@ -151,9 +165,8 @@ public class Fetcher {
 
 		if (imageStore.lockImage(imageData.getName())) {
 			imageData.setState(ImageState.FETCHING);
-			imageData.setFederationMember(properties
-					.getProperty("federation_member"));
 			pendingImageFetchMap.put(imageData.getName(), imageData);
+			pendingImageFetchDB.commit();
 
 			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
 			imageStore.updateImage(imageData);
@@ -171,17 +184,24 @@ public class Fetcher {
 	}
 	
 	private String getStationId(ImageData imageData) throws IOException {
-		String stationFilePath = properties.getProperty("sebal_export_path")
+		String stationFilePath = properties.getProperty("fetcher_volume_path")
 				+ "/results/" + imageData.getName() + "/" + imageData.getName()
 				+ "_station.csv";
+		File stationFile = new File(stationFilePath);
 		
-		BufferedReader reader = new BufferedReader(new FileReader(stationFilePath));
-		String lineOne = reader.readLine();
-		String[] stationAtt = lineOne.split(";");
-		
-		String stationId = stationAtt[0];
-		reader.close();
-		return stationId;
+		if(stationFile.exists() && stationFile.isFile()) {
+			BufferedReader reader = new BufferedReader(new FileReader(stationFile));
+			String lineOne = reader.readLine();
+			String[] stationAtt = lineOne.split(";");
+			
+			String stationId = stationAtt[0];
+			reader.close();
+			return stationId;
+		} else {
+			LOGGER.error("Station file for image " + imageData.getName()
+					+ " does not exist or is not a file!");
+			return null;
+		}
 	}
 
 	private void rollBackFetch(ImageData imageData) {
@@ -198,45 +218,53 @@ public class Fetcher {
 
 	// TODO: See if this is correct
 	// FIXME: reduce code
-	public void fetch(final ImageData imageData, int tries) throws IOException,
-			InterruptedException, SQLException {
+	public void fetch(final ImageData imageData, int tries) throws Exception {
 
 		if (tries > MAX_FETCH_TRIES) {
 			LOGGER.debug("Max tries reached!\nFile is corrupted.");
 			imageData.setState(ImageState.CORRUPTED);
 			return;
 		}
-
-		String localVolumeResultsPath = properties
-				.getProperty("fetcher_volume_path") + "/results";
-		String localVolumeResultDir = localVolumeResultsPath + "/" + imageData;
-		String remoteVolumeResultsPath = properties
+		
+		String remoteImageResultsPath = properties
 				.getProperty("sebal_export_path")
 				+ "/results/"
 				+ imageData.getName();
 
-		File remoteVolumeResultsDir = new File(remoteVolumeResultsPath);
+		String localImageResultsPath = properties
+				.getProperty("fetcher_volume_path") + "/results/" + imageData.getName();
+		
+		File localImageResultsDir = new File(localImageResultsPath);
 
-		if (!remoteVolumeResultsDir.exists()
-				&& !remoteVolumeResultsDir.isDirectory()) {
-			LOGGER.error("This folder doesn't exist or is not a directory.");
-			return;
+		if (!localImageResultsDir.exists()
+				&& !localImageResultsDir.isDirectory()) {
+			LOGGER.debug("This folder doesn't exist or is not a directory...Creating a new one.");
+			localImageResultsDir.mkdirs();
 		}
 
-		ProcessBuilder builder = new ProcessBuilder();
-		builder.command("sftp -P " + ftpServerPort + " "
-				+ properties.getProperty("ftp_server_user") + "@" + ftpServerIP);
-		builder.command("get -r " + remoteVolumeResultsDir);
-		builder.command("quit");
-		builder.command("mv -rf " + imageData.getName() + " "
-				+ localVolumeResultsPath);
+		ProcessBuilder builder = new ProcessBuilder("bash", "scripts/sftp-access.sh", properties.getProperty("ftp_server_user"), ftpServerIP, ftpServerPort, 
+				remoteImageResultsPath, localImageResultsPath, imageData.getName());
 
 		Process p = builder.start();
 		p.waitFor();
 
-		if (CheckSumMD5ForFile.isFileCorrupted(imageData, new File(
-				localVolumeResultDir))) {
+		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
 			fetch(imageData, tries++);
+		}
+		
+		//TODO
+		/*
+		 * Get each image on localVolumeResultsPath+imageData.getName() directory and upload this image to Swift on:
+		 * 
+		 * {container/results/imageData.getName()/acutalFileName}
+		 */
+		File imageDirectory =  new File(localImageResultsPath+imageData.getName());
+		String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)+imageDirectory.getName()+"/";
+		String containerName = properties.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+		
+		for(File actualFile : imageDirectory.listFiles()){
+			swiftClient.uploadFile(containerName, actualFile, pseudFolder);
+			actualFile.delete();
 		}
 	}
 }

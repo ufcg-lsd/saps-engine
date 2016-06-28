@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.http.entity.SerializableEntity;
 import org.apache.log4j.Logger;
 
 public abstract class Job implements Serializable {

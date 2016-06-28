@@ -21,19 +21,24 @@ public class CheckSumMD5ForFile {
 					fileInputStream = new FileInputStream(outputFile);
 					localChecksum = DigestUtils.md5Hex(IOUtils
 							.toByteArray(fileInputStream));
+					
+					String outputFileName = outputFile.getName();
+					String[] outputFileSplit = outputFileName.split("\\.");
+					String outputFileInitial = outputFileSplit[0];
 				
 					String remoteChecksum = "";
 					for (File outputMd5File : localFilesDir.listFiles()) {
-						if (outputMd5File.getName().startsWith(outputFile.getName()) && outputMd5File.getName().endsWith(".md5")) {
-							String[] pieces = outputMd5File.getName().split(".");
+						if (outputMd5File.getName().startsWith(outputFileInitial) && outputMd5File.getName().endsWith(".md5")) {
+							String outputMd5FileName = outputMd5File.getName();
+							String[] pieces = outputMd5FileName.split("\\.");
 							remoteChecksum = pieces[2];
+
+							if (!localChecksum.equals(remoteChecksum)) {
+								throw new IOException("Some file in " + localFilesDir
+										+ " is corrupted or present some error.");
+							}
 						}
-					}
-					
-					if (!localChecksum.equals(remoteChecksum)) {
-						throw new IOException("Some file in " + localFilesDir
-								+ " is corrupted or present some error.");
-					}
+					}					
 				}
 			}
 		} catch (IOException e) {
@@ -43,6 +48,7 @@ public class CheckSumMD5ForFile {
 			IOUtils.closeQuietly(fileInputStream);
 		}
 		
+		LOGGER.info("Files are not corrupted!");		
 		return false;
 	}
 

@@ -31,6 +31,11 @@ public class Specification implements Serializable{
 	String userDataType;
 	
 	Map<String, String> requirements = new HashMap<String, String>();
+	
+	public Specification(String image, String username, String publicKey,
+			String privateKeyFilePath) {
+		this(image, username, publicKey, privateKeyFilePath, null, null);
+	}
 
 	public Specification(String image, String username, String publicKey,
 			String privateKeyFilePath, String userDataFile, String userDataType) {

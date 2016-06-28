@@ -1,7 +1,9 @@
 package org.fogbowcloud.infrastructure;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
@@ -11,6 +13,12 @@ import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
+import org.javaswift.joss.client.factory.AccountConfig;
+import org.javaswift.joss.client.factory.AccountFactory;
+import org.javaswift.joss.client.factory.AuthenticationMethod;
+import org.javaswift.joss.model.Account;
+import org.javaswift.joss.model.Container;
+import org.javaswift.joss.model.StoredObject;
 
 public class InfrastructureMain implements ResourceNotifier {
 	
@@ -47,6 +55,30 @@ public class InfrastructureMain implements ResourceNotifier {
 
 	//TODO colocar o primeiro parametro como opção de criação de VM, Storage ou LinkStorage
 	public static void main(String[] args) throws Exception {
+		
+//		if(true){
+//			try {
+//				AccountConfig config = new AccountConfig();
+//				config.setUsername("fogbow");
+//				config.setPassword("nc3SRPS2");
+//				config.setTenantName("Fogbow");
+//				config.setAuthUrl("http://10.5.0.14:5000/v2.0/tokens");
+//				config.setAuthenticationMethod(AuthenticationMethod.KEYSTONE);
+//				Account account = new AccountFactory(config).createAccount();
+//
+//				Collection<Container> containers = account.list();
+//				for (Container currentContainer : containers) {
+//					System.out.println(currentContainer.getName());
+//					StoredObject storedObject = currentContainer.getObject("images/id001/teste_path2.txt");
+//					storedObject.uploadObject(new File("sebal.conf"));
+//				}
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//			
+//			
+//			System.exit(0);
+//		}
 		
 		//FIXME: mover para o objeto?
 		LOGGER.debug("Starting infrastructure creation process...");
