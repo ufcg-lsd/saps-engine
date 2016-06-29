@@ -61,8 +61,8 @@ public class SebalImagensResource extends ServerResource {
 		String filter = (String) getRequest().getAttributes().get("filter");
 		String state = getQuery().getValues("state");
 		String name = getQuery().getValues("name");
-		String periodInit = getQuery().getValues("periodInit");
-		String periodEnd = getQuery().getValues("periodEnd");
+		String periodInitFilter = getQuery().getValues("periodInit");
+		String periodEndFilter = getQuery().getValues("periodEnd");
 		
 		application = (SebalScheduleApplication) getApplication();
 		
@@ -81,16 +81,18 @@ public class SebalImagensResource extends ServerResource {
 		if(varName==null || varName.isEmpty()){
 			//TODO list all fetched images
 			
-			List<ImageData> allImages = application.getImagesByFilters(ImageState.getStateFromStr(state), name, 
-					Long.parseLong(periodInit), Long.parseLong(periodEnd));
-
-			int count = 2;
-			while(count < 303){
-				ImageData id = new ImageData("name"+count, "", ImageState.NOT_DOWNLOADED, null,
-						0, "0", "0", "0", "0");
-				allImages.add(id);
-				count++;
+			long periodInit = 0;
+			long periodEnd = 0;
+			
+			if(periodInitFilter!=null){
+				periodInit = Long.parseLong(periodInitFilter);
 			}
+			if(periodEndFilter!=null){
+				periodEnd = Long.parseLong(periodEndFilter);
+			}
+			
+			List<ImageData> allImages = application.getImagesByFilters(ImageState.getStateFromStr(state), name, 
+					periodInit, periodEnd);
 			
 			JSONArray jsonImagesArray = new JSONArray();
 			for (ImageData imageData : allImages) {
@@ -142,13 +144,12 @@ public class SebalImagensResource extends ServerResource {
 	}
 	
 	private void fillValidVariables() {
-		validVariables.add("ndvi");
-		validVariables.add("evi");
-		validVariables.add("iaf");
-		validVariables.add("ts");
-		validVariables.add("alpha");
-		validVariables.add("rn");
-		validVariables.add("g");
-		validVariables.add(".jpg");
+		validVariables.add("NDVI");
+		validVariables.add("EVI");
+		validVariables.add("LAI");
+		validVariables.add("TS");
+		validVariables.add("alb");
+		validVariables.add("Rn");
+		validVariables.add("G");
 	}
 }

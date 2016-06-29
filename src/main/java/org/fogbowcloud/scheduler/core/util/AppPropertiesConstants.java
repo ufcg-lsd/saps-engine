@@ -59,5 +59,6 @@ public class AppPropertiesConstants {
 	public static final String SWIFT_PASSWORD = "swift_password";
 	public static final String SWIFT_TENANT_NAME = "swift_tenant_name";
 	public static final String SWIFT_AUTH_URL = "swift_auth_url";
+	public static final String SWIFT_IMAGE_EXTENSION = "swift_image_extension";
 
 }

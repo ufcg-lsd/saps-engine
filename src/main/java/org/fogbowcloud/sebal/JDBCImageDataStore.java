@@ -315,10 +315,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	public List<ImageData> getImagesByFilter(ImageState state, String name, 
 			long processDateInit, long processDateEnd) throws SQLException {
 		
-		if (state == null) {
-			LOGGER.error("Invalid state " + state);
-			throw new IllegalArgumentException("Invalid state " + state);
-		}
+		
 		PreparedStatement selectStatement = null;
 		Connection connection = null;
 		
@@ -335,7 +332,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			paramtersCount++;
 		}
 		
-		if(name != null){
+		if(name != null && !name.trim().isEmpty()){
 			if(paramtersCount == 0){
 				finalQuery.append(SELECT_IMAGES_BY_FILTERS_WHERE_SQL);
 			}else{
@@ -365,7 +362,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 				selectStatement.setString(++paramtersInsertCount, state.getValue());
 			}
 			
-			if(name != null){
+			if(name != null && !name.trim().isEmpty()){
 				selectStatement.setString(++paramtersInsertCount, name);
 			}
 			

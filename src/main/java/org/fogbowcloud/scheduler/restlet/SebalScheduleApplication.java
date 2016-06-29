@@ -107,9 +107,9 @@ public class SebalScheduleApplication extends Application {
 	public byte[] getImageFromSwift(String imageName, String imageVar){
 		
 		String containerName = properties.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
-		//String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)+imageName+"/";
-		String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX);
-		String fileName = imageName+imageVar;
+		String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)+imageName+"/";
+		String imageExtension = properties.getProperty(AppPropertiesConstants.SWIFT_IMAGE_EXTENSION);
+		String fileName = imageName+"_new_"+imageVar+"."+imageExtension;
 		
 		return swiftClient.downloadFile(containerName, fileName, pseudFolder);
 	}
@@ -134,8 +134,8 @@ public class SebalScheduleApplication extends Application {
 		FileInputStream input = new FileInputStream("sebal.conf");
 		properties.load(input);
 		
-		String imageStoreIP = "loclahost";
-		String imageStorePort = "8080";
+		String imageStoreIP = "127.0.0.1";
+		String imageStorePort = "5432";
 		
 		ImageDataStore imageStore = new JDBCImageDataStore(properties, imageStoreIP, imageStorePort);
 		
