@@ -56,9 +56,9 @@ public class TestSebalJob {
 		doReturn(IMAGE_1_NAME).when(task).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
 		List<Task> imageTaskForImage = new ArrayList<Task>();
 		doReturn(imageTaskForImage).when(job).getTasksOfImageByState(IMAGE_1_NAME, TaskState.READY, TaskState.RUNNING);
-		doNothing().when(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_C);
+		//doNothing().when(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_C);
 		job.finish(task);
-		verify(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_C);
+		//verify(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_C);
 	}
 	
 	@Test
@@ -82,9 +82,9 @@ public class TestSebalJob {
 		doReturn(IMAGE_1_NAME).when(task).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
 		List<Task> imageTaskForImage = new ArrayList<Task>();
 		doReturn(imageTaskForImage).when(job).getTasksOfImageByState(IMAGE_1_NAME, TaskState.READY, TaskState.RUNNING);
-		doNothing().when(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_F2);
+		//doNothing().when(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_F2);
 		job.finish(task);
-		verify(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_F2);
+		//verify(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_F2);
 	}
 	
 

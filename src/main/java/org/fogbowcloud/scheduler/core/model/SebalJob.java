@@ -44,7 +44,7 @@ public class SebalJob extends Job {
 						ImageState.FINISHED);
 			}
 			// check if all F1 tasks already ran for the image
-		} else if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.F1_PHASE)){
+		} /*else if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.F1_PHASE)){
 			List<Task> readyOrRunningTasks = getTasksOfImageByState(
 					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME), TaskState.READY, TaskState.RUNNING);
 			
@@ -81,7 +81,7 @@ public class SebalJob extends Job {
 				udpateDB(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME),
 						ImageState.FINISHED);
 			}
-		}
+		}*/
 	}
 
 	protected void udpateDB(String imageName, ImageState imageState) {
