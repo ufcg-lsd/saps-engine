@@ -1,9 +1,7 @@
 package org.fogbowcloud.infrastructure;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
@@ -13,12 +11,6 @@ import org.fogbowcloud.scheduler.core.model.Specification;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
-import org.javaswift.joss.client.factory.AccountConfig;
-import org.javaswift.joss.client.factory.AccountFactory;
-import org.javaswift.joss.client.factory.AuthenticationMethod;
-import org.javaswift.joss.model.Account;
-import org.javaswift.joss.model.Container;
-import org.javaswift.joss.model.StoredObject;
 
 public class InfrastructureMain implements ResourceNotifier {
 	

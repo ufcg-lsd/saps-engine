@@ -31,6 +31,13 @@ public class TestJDBCImageDataStore {
 	private String SEBAL_VERSION_COL = "fake-sebal_version";
 	private String CREATED_COL = "fake-created";
 	private String LAST_UPDATED_COL = "fake-last_updated";
+	private String DOWNLOADING_UPDATED_COL = "fake-downloading_updated";
+	private String DOWNLOADED_UPDATED_COL = "fake-downloaded_updated";
+	private String RUNNING_R_UPDATED_COL = "fake-running_r_updated";
+	private String FINISHED_UPDATED_COL = "fake-finished_updated";
+	private String FETCHING_UPDATED_COL = "fake-fetching_updated";
+	private String FETCHED_UPDATED_COL = "fake-fetched_updated";
+	private String CORRUPTED_UPDATED_COL = "fake-corrupted_updated";
 	private String fakeImageStoreIP = "fake-IP";
 	private String fakeImageStorePort = "fake-Port";
 	private Properties properties;
@@ -39,7 +46,7 @@ public class TestJDBCImageDataStore {
 	private JDBCImageDataStore imageDataStore;
 	
 	private String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -90,6 +97,13 @@ public class TestJDBCImageDataStore {
 		String fakeSebalVersion = "fake-sebal-version";
 		long fakeCreationTime = 0;
 		long fakeUpdatedTime = 0;
+		long downloadingUpdatedTime = 0;
+		long downloadedUpdatedTime = 0;
+		long runningRUpdatedTime = 0;
+		long finishedUpdatedTime = 0;
+		long fetchingUpdatedTime = 0;
+		long fetchedUpdatedTime = 0;
+		long corruptedUpdatedTime = 0;
 		
 		Connection connection = mock(Connection.class);
 		PreparedStatement preparedStatement = mock(PreparedStatement.class);
@@ -106,6 +120,13 @@ public class TestJDBCImageDataStore {
 		doNothing().when(preparedStatement).setString(eq(7), eq(fakeSebalVersion));
 		doNothing().when(preparedStatement).setString(eq(8), eq(String.valueOf(fakeCreationTime)));
 		doNothing().when(preparedStatement).setString(eq(9), eq(String.valueOf(fakeUpdatedTime)));
+		doNothing().when(preparedStatement).setString(eq(10), eq(String.valueOf(downloadingUpdatedTime)));
+		doNothing().when(preparedStatement).setString(eq(11), eq(String.valueOf(downloadedUpdatedTime)));
+		doNothing().when(preparedStatement).setString(eq(12), eq(String.valueOf(runningRUpdatedTime)));
+		doNothing().when(preparedStatement).setString(eq(13), eq(String.valueOf(finishedUpdatedTime)));
+		doNothing().when(preparedStatement).setString(eq(14), eq(String.valueOf(fetchingUpdatedTime)));
+		doNothing().when(preparedStatement).setString(eq(15), eq(String.valueOf(fetchedUpdatedTime)));
+		doNothing().when(preparedStatement).setString(eq(16), eq(String.valueOf(corruptedUpdatedTime)));
 		
 		doReturn(true).when(preparedStatement).execute();
 		

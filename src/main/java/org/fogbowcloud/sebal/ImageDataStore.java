@@ -1,7 +1,6 @@
 package org.fogbowcloud.sebal;
 
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.List;
 
 public interface ImageDataStore {
