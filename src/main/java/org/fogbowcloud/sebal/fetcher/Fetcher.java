@@ -36,7 +36,7 @@ public class Fetcher {
 	private String ftpServerPort;
 
 	private static int MAX_FETCH_TRIES = 2;
-	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
+	private static final long DEFAULT_SCHEDULER_PERIOD = 60000; // 5 minutes
 
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 
@@ -283,7 +283,7 @@ public class Fetcher {
 		LOGGER.debug("Getting " + remoteImageResultsPath + " in FTPserver"
 				+ ftpServerIP + ":" + ftpServerPort + " to "
 				+ localImageResultsPath + " in localhost");
-		ProcessBuilder builder = new ProcessBuilder("bash", "scripts/sftp-access.sh", properties.getProperty("ftp_server_user"), ftpServerIP, ftpServerPort, 
+		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "scripts/sftp-access.sh", properties.getProperty("ftp_server_user"), ftpServerIP, ftpServerPort, 
 				remoteImageResultsPath, localImageResultsPath, imageData.getName());
 
 		Process p = builder.start();
@@ -292,20 +292,18 @@ public class Fetcher {
 		LOGGER.debug("Checksum of " + imageData + " result files");
 		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
 			fetch(imageData, tries++);
+		}else{
+			
+			String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)+localImageResultsDir.getName()+"/";
+			String containerName = properties.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+			
+			for(File actualFile : localImageResultsDir.listFiles()){
+				swiftClient.uploadFile(containerName, actualFile, pseudFolder);
+				actualFile.delete();
+			}
 		}
 		
-		//TODO
-		/*
-		 * Get each image on localVolumeResultsPath+imageData.getName() directory and upload this image to Swift on:
-		 * 
-		 * {container/results/imageData.getName()/acutalFileName}
-		 */
-		File imageDirectory =  new File(localImageResultsPath+imageData.getName());
-		String pseudFolder = "/results/"+imageDirectory.getName()+"/";
-		String containerName = properties.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
 		
-		for(File actualFile : imageDirectory.listFiles()){
-			swiftClient.uploadFile(containerName, actualFile, pseudFolder);
-		}
+		
 	}
 }

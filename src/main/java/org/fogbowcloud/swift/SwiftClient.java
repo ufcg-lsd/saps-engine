@@ -1,9 +1,7 @@
 package org.fogbowcloud.swift;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Properties;
 
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
@@ -50,16 +48,16 @@ public class SwiftClient {
 		}
 	}
 	
-	public byte[] downloadFile(String containerName, File file, String pseudFolder){
+	public byte[] downloadFile(String containerName, String fileName, String pseudFolder){
 		
 		Container container = account.getContainer(containerName);
 		
 		String completeFileName;
 		if(pseudFolder != null && !pseudFolder.isEmpty()){
 			pseudFolder = this.normalizePseudFolder(pseudFolder);
-			completeFileName = pseudFolder+file.getName();
+			completeFileName = pseudFolder+fileName;
 		}else{
-			completeFileName = file.getName();
+			completeFileName = fileName;
 		}
 		
 		StoredObject storedObject = container.getObject(completeFileName);
@@ -98,6 +96,6 @@ public class SwiftClient {
 		
 		File downloadFile = new File("temp_"+file.getName());
 		FileOutputStream fos = new FileOutputStream(downloadFile);
-		fos.write(sc.downloadFile("sebal_container", file, "images/fogbow"));
+		fos.write(sc.downloadFile("sebal_container", file.getName(), "images/fogbow"));
 	}
 }

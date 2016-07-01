@@ -53,10 +53,12 @@ public class AppPropertiesConstants {
 	public static final String X_AUTH_HASH = "X-auth-hash";
 	
 	//___________ SWIFT PROPERTIES ___________//
-	public static final String SWIFT_CONTAINER_NAME = "swift_container_name"; 
+	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
+	public static final String SWIFT_PSEUD_FOLDER_PREFIX = "swift_pseud_folder_prefix";
 	public static final String SWIFT_USERNAME = "swift_username";
 	public static final String SWIFT_PASSWORD = "swift_password";
 	public static final String SWIFT_TENANT_NAME = "swift_tenant_name";
 	public static final String SWIFT_AUTH_URL = "swift_auth_url";
+	public static final String SWIFT_IMAGE_EXTENSION = "swift_image_extension";
 
 }

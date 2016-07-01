@@ -115,8 +115,10 @@ public class Scheduler implements Runnable, ResourceNotifier {
 
 	private Job getJobOfFailedTask(Task task) {
 		for(Job job : jobList) {
-			job.getByState(TaskState.FAILED).contains(task);
-			return job;
+			if (job.getByState(TaskState.FAILED).contains(task)){
+				LOGGER.debug("Failed task " + task.getId() + " is from job " + job.getId());
+				return job; 
+			}
 		}
 		return null;
 	}
@@ -165,7 +167,7 @@ public class Scheduler implements Runnable, ResourceNotifier {
 		return this.jobList;
 	}
 
-	
+
 	public Job getJobById(String jobId) {
 		if (jobId == null) {
 			return null;
@@ -177,10 +179,10 @@ public class Scheduler implements Runnable, ResourceNotifier {
 		}
 		return null;
 	}
-	
+
 	public Job removeJob(String jobId) {
 		Job toBeRemoved = getJobById(jobId);
-		
+
 		this.jobList.remove(toBeRemoved);
 		for (Task task : toBeRemoved.getByState(TaskState.RUNNING)) {
 			this.taskFailed(task);

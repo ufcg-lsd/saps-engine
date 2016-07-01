@@ -14,10 +14,10 @@ public class TaskImpl implements Task {
 	private static final long serialVersionUID = -8068456932331499162L;
 
 	private static final Logger LOGGER = Logger.getLogger(TaskImpl.class);
-	
+
 	//Environment variables related to task
 	public static final String ENV_LOCAL_OUT_DIR = "";
-	
+
 	public static final String METADATA_REMOTE_OUTPUT_FOLDER = "remote_output_folder";
 	public static final String METADATA_LOCAL_OUTPUT_FOLDER = "local_output_folder";
 	public static final String METADATA_SANDBOX = "sandbox";
@@ -25,7 +25,7 @@ public class TaskImpl implements Task {
 	public static final String METADATA_RESOURCE_ID = "resource_id";
 	public static final String METADATA_TASK_TIMEOUT = "task_timeout";
 	public static final String METADATA_MAX_RESOURCE_CONN_RETRIES = "max_conn_retries";
-		
+
 	private boolean isFinished = false;
 	private String id;
 	private Specification spec;
@@ -33,14 +33,15 @@ public class TaskImpl implements Task {
 	private Map<String, String> metadata = new HashMap<String, String>();
 	private boolean isFailed = false;
 	private int retries = 0;
-	
+
 	private long startedRunningAt = Long.MAX_VALUE;
-	
+
 	public TaskImpl(String id, Specification spec) {
 		this.id = id;
 		this.spec = spec;
 	}
-	
+
+
 	@Override
 	public void putMetadata(String attributeName, String value) {
 		metadata.put(attributeName, value);
@@ -50,7 +51,7 @@ public class TaskImpl implements Task {
 	public String getMetadata(String attributeName) {
 		return metadata.get(attributeName);
 	}
-	
+
 	@Override
 	public Specification getSpecification() {
 		return this.spec;
@@ -86,7 +87,7 @@ public class TaskImpl implements Task {
 	public String getId() {
 		return this.id;
 	}
-	
+
 	@Override
 	public void finish(){
 		this.isFinished = true;
@@ -131,7 +132,7 @@ public class TaskImpl implements Task {
 		}
 		long timeOut;
 		try {
-		timeOut = Long.parseLong(timeOutRaw);
+			timeOut = Long.parseLong(timeOutRaw);
 		} catch (NumberFormatException e){
 			LOGGER.error("Timeout badly formated, ignoring it: ", e);
 			return false;
@@ -141,13 +142,13 @@ public class TaskImpl implements Task {
 		} else {
 			return false;
 		}
-		
+
 	}
 
 	@Override
 	public void startedRunning() {
 		this.startedRunningAt = System.currentTimeMillis();
-		
+
 	}
 
 	@Override
@@ -167,4 +168,36 @@ public class TaskImpl implements Task {
 	public void setRetries(int retries) {
 		this.retries = retries;		
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((spec == null) ? 0 : spec.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TaskImpl other = (TaskImpl) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (spec == null) {
+			if (other.spec != null)
+				return false;
+		} else if (!spec.equals(other.spec))
+			return false;
+		return true;
+	}
+
 }
