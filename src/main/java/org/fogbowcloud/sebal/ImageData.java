@@ -21,14 +21,19 @@ public class ImageData implements Serializable {
 	private String finishedUpdateTime;
 	private String fetchingUpdateTime;
 	private String fetchedUpdateTime;
+	private String corruptedUpdateTime;
 	private String status;
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 	
 	public static final String AVAILABLE = "available";
 	public static final String PURGED = "purged";
 
-	public ImageData(String name, String downloadLink, ImageState state, String federationMember,
-			int priority, String stationId, String sebalVersion, String creationTime, String updateTime) {
+	public ImageData(String name, String downloadLink, ImageState state,
+			String federationMember, int priority, String stationId,
+			String sebalVersion, String creationTime, String updateTime,
+			String downloadingTime, String downloadedTime, String runningRTime,
+			String finishedTime, String fetchingTime, String fetchedTime,
+			String corruptedTime) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -38,6 +43,13 @@ public class ImageData implements Serializable {
 		this.sebalVersion = sebalVersion;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
+		this.downloadingUpdateTime = downloadedTime;
+		this.downloadedUpdateTime = downloadedTime;
+		this.runningRUpdateTime = runningRTime;
+		this.finishedUpdateTime = finishedTime;
+		this.fetchingUpdateTime = fetchingTime;
+		this.fetchedUpdateTime = fetchedTime;
+		this.corruptedUpdateTime = corruptedTime;
 		this.status = "available";
 	}
 
@@ -105,6 +117,10 @@ public class ImageData implements Serializable {
 		return fetchedUpdateTime;
 	}
 	
+	public String getCorruptedUpdateTime() {
+		return corruptedUpdateTime;
+	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -168,6 +184,10 @@ public class ImageData implements Serializable {
 	public void setFetchedUpdateTime(String fetchedUpdateTime) {
 		this.fetchedUpdateTime = fetchedUpdateTime;
 	}
+	
+	public void setCorruptedUpdateTime(String corruptedUpdateTime) {
+		this.corruptedUpdateTime = corruptedUpdateTime;
+	}
 
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", "
@@ -175,7 +195,8 @@ public class ImageData implements Serializable {
 				+ sebalVersion + ", " + creationTime + ", " + updateTime + ", "
 				+ status + ", " + downloadingUpdateTime + ", "
 				+ downloadedUpdateTime + ", " + runningRUpdateTime + ", "
-				+ finishedUpdateTime + ", " + fetchingUpdateTime + ", " + fetchedUpdateTime;
+				+ finishedUpdateTime + ", " + fetchingUpdateTime + ", "
+				+ fetchedUpdateTime + ", " + corruptedUpdateTime;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -204,7 +225,8 @@ public class ImageData implements Serializable {
 					&& getRunningRUpdateTime().equals(other.getRunningRUpdateTime())
 					&& getFinishedUpdateTime().equals(other.getFinishedUpdateTime())
 					&& getFetchingUpdateTime().equals(other.getFetchingUpdateTime())
-					&& getFetchedUpdateTime().equals(other.getFetchedUpdateTime());
+					&& getFetchedUpdateTime().equals(other.getFetchedUpdateTime())
+					&& getCorruptedUpdateTime().equals(other.getCorruptedUpdateTime());
 		}
 		return false;
 	}

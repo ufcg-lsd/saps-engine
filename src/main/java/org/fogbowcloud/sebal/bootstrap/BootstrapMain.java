@@ -71,12 +71,17 @@ public class BootstrapMain {
 	         
 			while (rs.next()) {
 				System.out.println(new ImageData(rs.getString("image_name"), rs
-						.getString("download_link"), ImageState
-						.getStateFromStr(rs.getString("state")), rs
-						.getString("federation_member"), rs.getInt("priority"),
-						rs.getString("station_id"), rs
-								.getString("sebal_version"), rs
-								.getString("ctime"), rs.getString("utime")));
+						.getString("download_link"), ImageState.getStateFromStr(rs
+						.getString("state")), rs.getString("federation_member"), rs
+						.getInt("priority"), rs.getString("station_id"), rs
+						.getString("sebal_version"), rs.getString("ctime"), rs
+						.getString("utime"), rs.getString("utime_downloading"), rs
+						.getString("utime_downloaded"), rs
+						.getString("utime_running_r"), rs
+						.getString("utime_finished"), rs
+						.getString("utime_fetching"),
+						rs.getString("utime_fetched"), rs
+								.getString("utime_corrupted")));
 			}
 	         
 //			ImageDataStore imageStore = new JDBCImageDataStore(properties);

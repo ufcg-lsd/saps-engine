@@ -88,7 +88,13 @@ public class DBUtilsImpl implements DBUtils {
 					.getString("state")), rs.getString("federation_member"), rs
 					.getInt("priority"), rs.getString("station_id"), rs
 					.getString("sebal_version"), rs.getString("ctime"), rs
-					.getString("utime")));
+					.getString("utime"), rs.getString("utime_downloading"), rs
+					.getString("utime_downloaded"), rs
+					.getString("utime_running_r"), rs
+					.getString("utime_finished"), rs
+					.getString("utime_fetching"),
+					rs.getString("utime_fetched"), rs
+							.getString("utime_corrupted")));
 		}
 	}
 

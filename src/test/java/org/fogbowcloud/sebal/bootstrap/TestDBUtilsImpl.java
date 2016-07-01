@@ -62,16 +62,18 @@ public class TestDBUtilsImpl {
 		
 		doReturn(rsMock).when(selectStatementMock).executeQuery();
 		
-		ImageData imageData = new ImageData(
-				rsMock.getString("image_name"),
-				rsMock.getString("download_link"),
-				ImageState.getStateFromStr(rsMock.getString("state")),
-				rsMock.getString("federation_member"),
-				rsMock.getInt("priority"),
-				rsMock.getString("station_id"),
-				rsMock.getString("sebal_version"),
-				rsMock.getString("ctime"),
-				rsMock.getString("utime"));
+		ImageData imageData = new ImageData(rsMock.getString("image_name"), rsMock
+				.getString("download_link"), ImageState.getStateFromStr(rsMock
+				.getString("state")), rsMock.getString("federation_member"), rsMock
+				.getInt("priority"), rsMock.getString("station_id"), rsMock
+				.getString("sebal_version"), rsMock.getString("ctime"), rsMock
+				.getString("utime"), rsMock.getString("utime_downloading"), rsMock
+				.getString("utime_downloaded"), rsMock
+				.getString("utime_running_r"), rsMock
+				.getString("utime_finished"), rsMock
+				.getString("utime_fetching"),
+				rsMock.getString("utime_fetched"), rsMock
+						.getString("utime_corrupted"));
 	}
 	
 	private static final String UPDATE_STATE_SQL = "UPDATE nasa_images SET state = ? WHERE image_name = ?";
