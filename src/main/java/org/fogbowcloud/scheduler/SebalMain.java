@@ -2,8 +2,6 @@ package org.fogbowcloud.scheduler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,17 +50,18 @@ public class SebalMain {
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 
 	public static void main(String[] args) throws Exception {
-
 		final Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
-		
+				
 		String imageStoreIP = args[1];
 		String imageStorePort = args[2];
 		nfsServerIP = args[3];
 		nfsServerPort = args[4];
 		
-		imageStore = new JDBCImageDataStore(properties, imageStoreIP, imageStorePort);			
+		LOGGER.debug("imagestore " + imageStoreIP + ":" + imageStorePort);
+		
+		imageStore = new JDBCImageDataStore(properties, imageStoreIP, imageStorePort);		
 
 		final Job job = new SebalJob(imageStore);
 		
@@ -79,6 +78,7 @@ public class SebalMain {
 
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 		
+		LOGGER.info("Calling infrastructure manager");
 		infraManager = new InfrastructureManager(initialSpecs, isElastic,
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing);
@@ -103,13 +103,15 @@ public class SebalMain {
 				try {
 					addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 				}
 			}	
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 		
 		SebalScheduleApplication restletServer = new SebalScheduleApplication((SebalJob)job, imageStore, properties);
 		restletServer.startServer();
+		
+		LOGGER.info("Scheduler working");
 	}
 	
 	private static void setFederationMemberIntoSpec(Specification spec, Specification tempSpec, String federationMember) {
@@ -122,15 +124,17 @@ public class SebalMain {
 	}
 	
 	private static Map<String, Collection<Resource>> allocationMap() {
-		
 		List<Resource> allResources = infraManager.getAllResources();
 		
 		Map<String, Collection<Resource>> allocMap = new HashMap<String, Collection<Resource>>();
 		for(Resource resource : allResources) {
 			String location = resource.getMetadataValue(Resource.METADATA_LOCATION);
+			LOGGER.debug("Resource location " + location);
 			if (!allocMap.containsKey(location)) {
+				LOGGER.debug("Adding " + location + " to location map");
 				allocMap.put(location, new LinkedList<Resource>());
 			}
+			LOGGER.debug("Associating resource" + resource.getId() + " to location " + location);
 			allocMap.get(location).add(resource);
 		}
 		return allocMap;
@@ -139,12 +143,13 @@ public class SebalMain {
 	private static boolean isQuotaAvailable(String federationMemberId, 
 			Map<String, Collection<Resource>> allocationMap, 
 			int maxAllowedResources) {
-		
-		if (allocationMap.containsKey(federationMemberId)) {
-			//debug
+		LOGGER.debug("maxAllowedResources per location is " + maxAllowedResources);
+		if (allocationMap.containsKey(federationMemberId)) {			
 			int numAllocationPerFederationMember = allocationMap.get(federationMemberId).size();
+			LOGGER.debug(numAllocationPerFederationMember + " allocated resources to " + federationMemberId);			
 			return numAllocationPerFederationMember < maxAllowedResources;
 		}
+		// TODO: see if this will be default true or false
 		return true;
 	}
 	
@@ -160,7 +165,7 @@ public class SebalMain {
 						+ " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
 
-				LOGGER.info("Adding " + imageState + " tasks for image "
+				LOGGER.info("Adding " + imageState + " task for image "
 						+ imageData.getName());
 
 				Specification tempSpec = new Specification(
@@ -175,14 +180,18 @@ public class SebalMain {
 
 				Map<String, Collection<Resource>> allocationMap = allocationMap();
 
+				LOGGER.info("Checking resource quota");
 				if (isQuotaAvailable(imageData.getFederationMember(),
 						allocationMap, maxAllowedResources)) {
 
 					if (ImageState.RUNNING_R.equals(imageState)
-							|| ImageState.DOWNLOADED.equals(imageState)) {
+							|| ImageState.DOWNLOADED.equals(imageState)) {						
 
 						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
 								.toString(), tempSpec);
+						
+						LOGGER.info("Creating R task " + taskImpl.getId());
+						
 						taskImpl = SebalTasks.createRTask(taskImpl, properties,
 								imageData.getName(), tempSpec,
 								imageData.getFederationMember(), nfsServerIP,
@@ -201,9 +210,6 @@ public class SebalMain {
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
-			StringWriter errors = new StringWriter();
-			e.printStackTrace(new PrintWriter(errors));
-			System.out.println(errors.toString());
 		}
 	}
 	
@@ -212,6 +218,8 @@ public class SebalMain {
 		String[] splitSebalURL = sebalURL.split("/");
 		
 		String sebalVersion = splitSebalURL[splitSebalURL.length - 1];
+		
+		LOGGER.debug("SEBAL version " + sebalVersion);
 		
 		return sebalVersion;
 	}
@@ -226,6 +234,7 @@ public class SebalMain {
 			}
 			return null;
 		} catch (IOException e) {
+			LOGGER.error(e);
 			return null;
 		}
 	}
@@ -233,15 +242,13 @@ public class SebalMain {
 	private static List<Specification> getInitialSpecs(Properties properties)
 			throws IOException {
 		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);		
-		LOGGER.info("Getting initial spec from file " + initialSpecsFilePath);
-		System.out.println("Getting initial spec from file " + initialSpecsFilePath);
+		LOGGER.info("Getting initial spec from " + initialSpecsFilePath);
 		
 		return Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 	}
 	
 	private static InfrastructureProvider createInfraProviderInstance(Properties properties)
 			throws Exception {
-
 		String providerClassName = properties
 				.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
 

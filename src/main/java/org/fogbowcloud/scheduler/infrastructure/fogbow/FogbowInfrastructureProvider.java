@@ -237,6 +237,8 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
 	@Override
 	public void deleteResource(String resourceId) throws InfrastructureException {
+		LOGGER.debug("Deleting resource with ID = " + resourceId);
+		
 		try {
 			Map<String, String> requestAttributes = getFogbowRequestAttributes(resourceId);
 
@@ -246,7 +248,7 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			}
 			this.doRequest("delete", managerUrl + "/" + OrderConstants.TERM + "/" + resourceId,
 					new ArrayList<Header>());
-
+			LOGGER.debug("Resource " + resourceId + " deleted successfully");
 		} catch (Exception e) {
 			throw new InfrastructureException("Error when trying to delete resource id[" + resourceId + "]", e);
 		}

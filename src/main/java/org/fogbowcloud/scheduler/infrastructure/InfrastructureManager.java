@@ -105,7 +105,7 @@ public class InfrastructureManager {
 				Thread.sleep(2000);
 			}
 		}
-		LOGGER.info("Starting Infrastructure Manager finished");
+		LOGGER.info("Infrastructure manager started");
 	}
 
 	public void stop(boolean deleteResource) throws Exception {
@@ -133,8 +133,9 @@ public class InfrastructureManager {
 	}
 
 	private void removePreviousResources() {
-		LOGGER.info("Removing previous resources...");
+		LOGGER.info("Removing previous resources");
 
+		LOGGER.info("Getting list of existing resources IDs");
 		List<String> recoveredRequests = ds.getRequesId();
 		for (String requestId : recoveredRequests) {
 			try {
@@ -143,10 +144,11 @@ public class InfrastructureManager {
 				LOGGER.error("Error while trying to delete Resource with request id [" + requestId + "]", e);
 			}
 		}
-		LOGGER.info("Removing previous resources finished");
+		LOGGER.info("Previous resources removal finished");
 	}
 
 	public void orderResource(Specification specification, ResourceNotifier resourceNotifier, int resourceNumber) {
+		LOGGER.debug("Ordering resource with spec " + specification.toString());
 
 		List<Order> existingOrdersMatches = this.getOrdersByStateAndSchedulerAndSpec(resourceNotifier, specification, OrderState.OPEN);
 		existingOrdersMatches.addAll(this.getOrdersByStateAndSchedulerAndSpec(resourceNotifier, specification, OrderState.ORDERED));
@@ -168,6 +170,7 @@ public class InfrastructureManager {
 				Order toDispose = existingOrdersMatches.get(count);
 				try {
 					orders.remove(toDispose);
+					LOGGER.debug("Disposing request " + existingOrdersMatches.get(count).getRequestId());
 					disposeRequest(existingOrdersMatches.get(count).getRequestId());
 				} catch (Exception e) {
 					LOGGER.error("ERROR While trying to dispose order [RequestID: " + toDispose.getRequestId(), e);
@@ -180,10 +183,12 @@ public class InfrastructureManager {
 			 */
 			return;
 		} else {
-			for (int count = 0; count < qtyToRequest; count++) {
+			for (int count = 0; count < qtyToRequest; count++) {				
 				Order order = new Order(resourceNotifier, specification);
-				orders.add(order);
+				LOGGER.info("Adding to orders list");
+				orders.add(order);				
 				resolveOpenOrder(order);
+				LOGGER.debug("Order request " + order.getRequestId() + " solved");
 			}
 		}
 
@@ -246,12 +251,12 @@ public class InfrastructureManager {
 
 	private void createInitialOrders() {
 		if(initialSpec!=null){
-			LOGGER.info("Creating orders to initial specs: \n" + initialSpec);
+			LOGGER.info("Creating orders to initial specs \n" + initialSpec);
 
 			for (Specification spec : initialSpec) {
-				// Initial specs must be Persistent
+				// Must initial spec be Persistent ?
 				spec.addRequirement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUEST_TYPE,
-						OrderType.PERSISTENT.getValue());
+						OrderType.PERSISTENT.getValue());				
 				orderResource(spec, null, 1);
 			}
 		}
@@ -327,6 +332,7 @@ public class InfrastructureManager {
 		if (idleResources != null && !idleResources.isEmpty() && order.getResourceNotifier() != null) {
 			for (Resource idleResource : idleResources.keySet()) {
 				if (idleResource.match(order.getSpecification())) {
+					LOGGER.debug("Order spec" + order.getSpecification() + "match with resource " + idleResource);					
 					resource = idleResource;
 					break;
 				}
@@ -341,15 +347,18 @@ public class InfrastructureManager {
 				String oldRequest = order.getRequestId();
 				resolvedWithIdle = relateResourceToOrder(resource, order, true);
 				if(resolvedWithIdle){
+					LOGGER.debug("Disposing old order request " + oldRequest);
 					this.disposeRequest(oldRequest);
 				}
 			} catch (Exception e) {
 				LOGGER.error("Error while trying to relate Idle Resource to Ordered request [RequestID: "
 						+ order.getRequestId() + "]");
 			}
-
 		}
+		
 		if (!resolvedWithIdle){
+			LOGGER.debug("Could not resolve order" + order.getRequestId() + " with idle resource");
+			
 			/*
 			 * Attempt to get resource from this order, even when a idle resource
 			 * was founded. If a new resource is returned and don't exists any task
@@ -357,15 +366,16 @@ public class InfrastructureManager {
 			 */
 			Resource newResource = infraProvider.getResource(order.getRequestId());
 			if (newResource != null) {
+				LOGGER.info("Getting new resource " + newResource.getId());
 
 				// if order is not related to initial spec
 				if (order.getResourceNotifier() != null) {
-
+					
 					this.relateResourceToOrder(newResource, order, false);
-
 				} else {
-
+					LOGGER.debug("Removing order " + order.getRequestId());
 					orders.remove(order);
+					LOGGER.debug("Moving resource " + resource.getId() + " to idle");
 					moveResourceToIdle(newResource);
 				}
 
@@ -382,6 +392,7 @@ public class InfrastructureManager {
 		allocatedResources.put(resource, order);
 
 		String requestType = resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE);
+		LOGGER.debug("Order request "  + order.getRequestId() + " type is " + requestType);
 		boolean resourceOK = true;
 
 		if (!isResourceAlive(resource)) {
@@ -397,7 +408,7 @@ public class InfrastructureManager {
 			}
 		}
 		if (resourceOK) {
-			LOGGER.debug("Resource related Order with Specifications: " + order.getSpecification().toString());
+			LOGGER.debug("Resource " + resource.getId() + " related Order with Specifications " + order.getSpecification().toString());
 			order.setRequestId(resource.getId());
 			order.setState(OrderState.FULFILLED);
 			updateInfrastuctureState();
@@ -419,8 +430,9 @@ public class InfrastructureManager {
 
 	protected void moveResourceToIdle(Resource resource) {
 
+		LOGGER.debug("Moving resource " + resource.getId() + " to idle");
 		Long expirationDate = noExpirationDate;
-
+		
 		if (OrderType.ONE_TIME.getValue().equals(resource.getMetadataValue(Resource.METADATA_REQUEST_TYPE))) {
 			int idleLifeTime = Integer
 					.parseInt(properties.getProperty(AppPropertiesConstants.INFRA_RESOURCE_IDLE_LIFETIME));

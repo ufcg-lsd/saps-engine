@@ -87,7 +87,7 @@ public class FMask {
 		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
 				imageData.getName());
 		command = command.replaceAll(Pattern.quote("${IMAGES_MOUNT_POINT}"),
-				properties.getProperty("sebal_mount_point") + "/images");
+				properties.getProperty("sebal_export_path"));
 		command = command.replaceAll(Pattern.quote("${FMASK_TOOL}"),
 				properties.getProperty("fmask_tool_path"));
 		return command;
