@@ -185,7 +185,9 @@ public class Fetcher {
 			pendingImageFetchMap.put(imageData.getName(), imageData);
 			pendingImageFetchDB.commit();
 
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+			String lastUpdateTime = String.valueOf(System.currentTimeMillis());
+			imageData.setUpdateTime(lastUpdateTime);
+			imageData.setFetchingUpdateTime(lastUpdateTime);
 			
 			LOGGER.debug("Updating image data in DB");
 			imageStore.updateImage(imageData);
@@ -205,6 +207,7 @@ public class Fetcher {
 		
 		String lastUpdateTime = String.valueOf(System.currentTimeMillis());
 		imageData.setUpdateTime(lastUpdateTime);
+		imageData.setFetchedUpdateTime(lastUpdateTime);
 		
 		LOGGER.info("IMAGE = " + imageData.getName());
 		LOGGER.info("STATION ID = " +  stationId);

@@ -117,6 +117,7 @@ public class SebalMain {
 	private static void setFederationMemberIntoSpec(Specification spec, Specification tempSpec, String federationMember) {
 		String fogbowRequirements = spec.getRequirementValue(
 				"FogbowRequirements");
+		LOGGER.debug("Setting federationmember " + federationMember + " into FogbowRequirements");
 		String requestType = spec.getRequirementValue("RequestType");
 		String newRequirements = fogbowRequirements + " && Glue2CloudComputeManagerID==\"" + federationMember + "\"";
 		tempSpec.addRequirement("FogbowRequirements", newRequirements);
@@ -197,6 +198,9 @@ public class SebalMain {
 								imageData.getFederationMember(), nfsServerIP,
 								nfsServerPort);
 						imageData.setState(ImageState.RUNNING_R);
+						String lastUpdateTime = String.valueOf(System.currentTimeMillis());
+						imageData.setUpdateTime(lastUpdateTime);
+						imageData.setRunningRUpdateTime(lastUpdateTime);
 						imageData.setSebalVersion(getSebalVersionFromURL(properties));
 						job.addTask(taskImpl);
 						imageStore.updateImage(imageData);

@@ -197,9 +197,11 @@ public class Crawler {
 			// FIXME: should we continue if fmask terminates in error?
 
 			imageData.setState(ImageState.DOWNLOADED);
-			imageData
-					.setCreationTime(String.valueOf(System.currentTimeMillis()));
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+			imageData.setCreationTime(String.valueOf(System.currentTimeMillis()));
+			
+			String lastUpdateTime = String.valueOf(System.currentTimeMillis());
+			imageData.setUpdateTime(lastUpdateTime);
+			imageData.setDownloadedUpdateTime(lastUpdateTime);
 			imageStore.updateImage(imageData);
 			pendingImageDownloadMap.remove(imageData.getName());
 
@@ -225,6 +227,7 @@ public class Crawler {
 				imageData.setState(ImageState.NOT_DOWNLOADED);
 				imageData.setUpdateTime(String.valueOf(System
 						.currentTimeMillis()));
+				imageData.setDownloadingUpdateTime("NE");
 				imageStore.updateImage(imageData);
 
 				deleteImageFromDisk(imageData, properties);

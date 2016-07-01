@@ -15,6 +15,12 @@ public class ImageData implements Serializable {
 	private String sebalVersion;
 	private String creationTime;
 	private String updateTime;
+	private String downloadingUpdateTime;
+	private String downloadedUpdateTime;
+	private String runningRUpdateTime;
+	private String finishedUpdateTime;
+	private String fetchingUpdateTime;
+	private String fetchedUpdateTime;
 	private String status;
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 	
@@ -75,6 +81,30 @@ public class ImageData implements Serializable {
 		return status;
 	}
 	
+	public String getDownloadingUpdateTime() {
+		return downloadingUpdateTime;
+	}
+	
+	public String getDownloadedUpdateTime() {
+		return downloadedUpdateTime;
+	}
+	
+	public String getRunningRUpdateTime() {
+		return runningRUpdateTime;
+	}
+	
+	public String getFinishedUpdateTime() {
+		return finishedUpdateTime;
+	}
+	
+	public String getFetchingUpdateTime() {
+		return fetchingUpdateTime;
+	}
+	
+	public String getFetchedUpdateTime() {
+		return fetchedUpdateTime;
+	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -114,12 +144,38 @@ public class ImageData implements Serializable {
 	public void setImageStatus(String status) {
 		this.status = status;
 	}
+	
+	public void setDownloadingUpdateTime(String downloadingUpdateTime) {
+		this.downloadingUpdateTime = downloadingUpdateTime;
+	}
+	
+	public void setDownloadedUpdateTime(String downloadedUpdateTime) {
+		this.downloadedUpdateTime = downloadedUpdateTime;
+	}
+	
+	public void setRunningRUpdateTime(String runningRUpdateTime) {
+		this.runningRUpdateTime = runningRUpdateTime;
+	}
+	
+	public void setFinishedUpdateTime(String finishedUpdateTime) {
+		this.finishedUpdateTime = finishedUpdateTime;
+	}
+	
+	public void setFetchingUpdateTime(String fetchingUpdateTime) {
+		this.fetchingUpdateTime = fetchingUpdateTime;
+	}
+	
+	public void setFetchedUpdateTime(String fetchedUpdateTime) {
+		this.fetchedUpdateTime = fetchedUpdateTime;
+	}
 
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", "
 				+ federationMember + ", " + priority + ", " + stationId + ", "
 				+ sebalVersion + ", " + creationTime + ", " + updateTime + ", "
-				+ status;
+				+ status + ", " + downloadingUpdateTime + ", "
+				+ downloadedUpdateTime + ", " + runningRUpdateTime + ", "
+				+ finishedUpdateTime + ", " + fetchingUpdateTime + ", " + fetchedUpdateTime;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -142,7 +198,13 @@ public class ImageData implements Serializable {
 					&& getSebalVersion().equals(other.getSebalVersion())
 					&& getCreationTime().equals(other.getCreationTime())
 					&& getUpdateTime().equals(other.getUpdateTime())
-					&& getImageStatus().equals(other.getImageStatus());
+					&& getImageStatus().equals(other.getImageStatus())
+					&& getDownloadingUpdateTime().equals(other.getDownloadingUpdateTime())
+					&& getDownloadedUpdateTime().equals(other.getDownloadedUpdateTime())
+					&& getRunningRUpdateTime().equals(other.getRunningRUpdateTime())
+					&& getFinishedUpdateTime().equals(other.getFinishedUpdateTime())
+					&& getFetchingUpdateTime().equals(other.getFetchingUpdateTime())
+					&& getFetchedUpdateTime().equals(other.getFetchedUpdateTime());
 		}
 		return false;
 	}
