@@ -10,16 +10,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.fogbowcloud.sebal.FMask;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
 import org.fogbowcloud.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.NASARepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -212,5 +215,36 @@ public class TestCrawler {
 		doNothing().when(crawler).download(2);
 		verify(crawler).download(2);
 	}
+	
+	@Test
+	public void testRunFmaskFileNotFound() throws Exception {
+		exception.expect(FileNotFoundException.class);
+		
+		NASARepository nasaRepositoryMock = mock(NASARepository.class);
+		ImageData imageDataMock = mock(ImageData.class);
+		
+		doNothing().when(nasaRepositoryMock).downloadImage(imageDataMock);
+		
+		int exitValue = new FMask().runFmask(imageDataMock, "", "", "");
+		fail("Error while running Fmask");
+	}
+	
+/*	@Test
+	public void testRunFmaskIOException() throws Exception {
+		// FIXME
+		NASARepository nasaRepositoryMock = mock(NASARepository.class);
+		ImageData imageDataMock = mock(ImageData.class);
+		
+		doNothing().when(nasaRepositoryMock).downloadImage(imageDataMock);
+		
+		try {
+			int exitValue = new FMask().runFmask(imageDataMock,
+					"fake-fmask-script-path", "fake-fmask-tools-path",
+					"fake-sebal-export-path");
+			fail("Error while running Fmask");
+		} catch (IOException e) {
+			throw e;
+		}
+	}*/
 
 }

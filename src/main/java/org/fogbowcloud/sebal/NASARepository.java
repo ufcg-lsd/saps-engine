@@ -43,7 +43,7 @@ public class NASARepository {
 		this.properties = properties;
 	}
 
-	public void downloadImage(final ImageData imageData) throws Exception {
+	public void downloadImage(final ImageData imageData) throws IOException {
 		HttpClient httpClient = initClient();
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
 		HttpResponse response = httpClient.execute(homeGet);

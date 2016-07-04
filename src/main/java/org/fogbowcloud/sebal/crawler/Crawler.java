@@ -187,14 +187,17 @@ public class Crawler {
 			// TODO: insert source .profile before fmask execution
 			LOGGER.debug("Running Fmask for image " + imageData.getName());
 
-			int exitValue = new FMask().runFmask(imageData, properties);
+			int exitValue = new FMask().runFmask(imageData,
+					properties.getProperty("fmask_script_path"),
+					properties.getProperty("fmask_tool_path"),
+					properties.getProperty("sebal_export_path"));
 			if (exitValue != 0) {
 				LOGGER.error("It was not possible run Fmask for image "
-						+ imageData.getName());
+						+ imageData);
 				//imageData.setFederationMember(ImageDataStore.NONE);
 				// TODO: see if this is correct
-				removeFromPendingAndUpdateState(imageData, properties);
-				return;
+/*				removeFromPendingAndUpdateState(imageData, properties);
+				return;*/
 			}
 
 			imageData.setState(ImageState.DOWNLOADED);

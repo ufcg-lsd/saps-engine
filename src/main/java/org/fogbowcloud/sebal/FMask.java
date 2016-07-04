@@ -17,18 +17,17 @@ public class FMask {
 	
 	public static final Logger LOGGER = Logger.getLogger(FMask.class);
 	
-	public int runFmask(final ImageData imageData, Properties properties) throws IOException,
+	public int runFmask(final ImageData imageData, String fmaskScriptPath, String fmaskToolsPath, String sebalExportPath) throws IOException,
 			FileNotFoundException, InterruptedException {
 
 		File tempFile = File.createTempFile("temp-" + imageData.getName(),
 				".sh");
 		FileOutputStream fos = new FileOutputStream(tempFile);
 
-		FileInputStream fis = new FileInputStream(
-				properties.getProperty("fmask_script_path"));
+		FileInputStream fis = new FileInputStream(fmaskScriptPath);
 		String origExec = IOUtils.toString(fis);
 
-		IOUtils.write(replaceVariables(origExec, imageData, properties), fos);
+		IOUtils.write(replaceVariables(origExec, imageData, fmaskToolsPath, sebalExportPath), fos);
 		fos.close();
 
 		ProcessBuilder builder = new ProcessBuilder("chmod", "+x",
@@ -83,13 +82,13 @@ public class FMask {
 		return error;
 	}
 	
-	private String replaceVariables(String command, ImageData imageData, Properties properties) {
+	private String replaceVariables(String command, ImageData imageData, String fmaskToolsPath, String sebalExportPath) {
 		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
 				imageData.getName());
 		command = command.replaceAll(Pattern.quote("${IMAGES_MOUNT_POINT}"),
-				properties.getProperty("sebal_export_path"));
+				sebalExportPath);
 		command = command.replaceAll(Pattern.quote("${FMASK_TOOL}"),
-				properties.getProperty("fmask_tool_path"));
+				fmaskToolsPath);
 		return command;
 	}
 
