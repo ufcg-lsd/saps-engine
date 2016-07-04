@@ -1,5 +1,6 @@
 package org.fogbowcloud.sebal.crawler;
 
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
@@ -36,11 +38,11 @@ public class TestCrawler {
 	private ImageDataStore imageStoreMock;
 	private String imageStoreIPMock = "fake-image-store-ip";
 	private String imageStorePortMock = "fake-image-store-port";
-	private String federationMemberMock = "fake-federation-member";
+	private String fakeFederationMember = "fake-federation-member";
 	private HTreeMap<String, ImageData> pendingImageDownloadMapMock;
 	
 	@Rule
-	public final ExpectedException exception = ExpectedException.none();
+	public ExpectedException exception = ExpectedException.none();
 	
 	@Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -54,7 +56,7 @@ public class TestCrawler {
 		properties.setProperty("nasa_password", "nasa-password-mock");
 		pendingImageDownloadDBMock = mock(DB.class);
 		pendingImageDownloadMapMock = mock(HTreeMap.class);		
-		crawler = spy(new Crawler(properties, imageStoreIPMock, imageStorePortMock, federationMemberMock));
+		crawler = spy(new Crawler(properties, imageStoreIPMock, imageStorePortMock, fakeFederationMember));
 	}
 	
 	@Test
@@ -74,6 +76,20 @@ public class TestCrawler {
 	}
 	
 	@Test
+	public void testImageStoreSQLException() {
+		imageStoreMock = new JDBCImageDataStore(properties, "diff-imagestore-ip",
+				imageStorePortMock);
+		
+		try {
+			List<ImageData> fakeList = imageStoreMock.getImagesToDownload(
+					"diff-federation-member", 10);
+			fail("Imagestore IP does not match");
+		} catch (SQLException expectedException) {
+			// do nothing
+		}
+	}
+	
+	@Test
 	public void testMapDB() {
 		exception.expect(Exception.class);
 		
@@ -87,6 +103,33 @@ public class TestCrawler {
 		doNothing().when(pendingImageDownloadDBMock).commit();
 		verify(pendingImageDownloadMapMock, times(4)).put(eq("key2"), imageData2);
 		doNothing().when(pendingImageDownloadDBMock).commit();
+	}
+	
+	@Test
+	public void testMapDBNull() {
+		try {
+			pendingImageDownloadMapMock = null;
+			pendingImageDownloadMapMock.values();
+
+			fail("Pending image map null");
+		} catch (NullPointerException expectedNull) {
+			// do nothing
+		}
+	}
+	
+	@Test
+	public void testMapDBWrongKey() {
+		ImageData imageDataMock = mock(ImageData.class);
+		pendingImageDownloadMapMock.put("key1", imageDataMock);
+		Object fakeVailure = 200;
+		
+		try {
+			pendingImageDownloadMapMock.get((String)fakeVailure);
+
+			fail("Failure due to wrong key");
+		} catch (ClassCastException expectedClassCast) {
+			// do nothing
+		}
 	}
 	
 	@Test
@@ -115,6 +158,12 @@ public class TestCrawler {
 		verify(pendingImageDownloadMapMock, times(4)).remove(imageData2);
 	}
 	
+/*	@Test(expected=IOException.class)
+	public void testDeleteFromDiskIOException() throws IOException {
+		ImageData imageDataMock = mock(ImageData.class);
+		crawler.deleteImageFromDisk(imageDataMock, "");
+	}*/
+	
 	@Test
 	public void testDeleteFetchedResultsFromVolume() throws SQLException, IOException {
 		exception.expect(Exception.class);
@@ -132,7 +181,7 @@ public class TestCrawler {
 	}
 	
 	@Test
-	public void testNumberOfImagesToDownload() {
+	public void testNumberOfImagesToDownload() throws NumberFormatException, InterruptedException, IOException, SQLException {
 		String exportPath = "export-path-mock";
 		File exportFileMock = mock(File.class);
 		
@@ -142,8 +191,7 @@ public class TestCrawler {
 		Mockito.when(exportFileMock.getFreeSpace()).thenReturn((long)524288000);
 		Mockito.when(crawler.getExportDirPath(exportPath)).thenReturn(exportFileMock);
 		
-		Mockito.when(crawler.numberOfImagesToDownload()).thenReturn((long)1);
-		verify(crawler, times(1)).numberOfImagesToDownload();
+		doReturn((long)1).when(crawler).numberOfImagesToDownload();
 	}
 	
 	@Test

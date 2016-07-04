@@ -90,7 +90,7 @@ public class Crawler {
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
-				long numToDownload = numberOfImagesToDownload();
+				long numToDownload = numberOfImagesToDownload();				
 				if (numToDownload > 0) {
 					download(numToDownload);
 				} else {
@@ -151,8 +151,8 @@ public class Crawler {
 		LOGGER.info("Download finished");
 	}
 
-	protected long numberOfImagesToDownload() {
-
+	protected long numberOfImagesToDownload() throws NumberFormatException, InterruptedException, IOException, SQLException {
+		
 		String volumeDirPath = properties.getProperty("sebal_export_path");
 		File volumePath = getExportDirPath(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
@@ -170,14 +170,14 @@ public class Crawler {
 		} else {
 			throw new RuntimeException("VolumePath: " + volumeDirPath
 					+ " is not a directory or does not exist");
-		}
+		}		
 	}
 
 	protected File getExportDirPath(String volumeDirPath) {
 		return new File(volumeDirPath);
 	}
 
-	private void downloadImage(final ImageData imageData) throws IOException {
+	private void downloadImage(final ImageData imageData) throws SQLException, IOException {
 		
 		try {
 			// FIXME: it blocks?
@@ -191,10 +191,11 @@ public class Crawler {
 			if (exitValue != 0) {
 				LOGGER.error("It was not possible run Fmask for image "
 						+ imageData.getName());
-				imageData.setFederationMember(ImageDataStore.NONE);
+				//imageData.setFederationMember(ImageDataStore.NONE);
+				// TODO: see if this is correct
+				removeFromPendingAndUpdateState(imageData, properties);
+				return;
 			}
-
-			// FIXME: should we continue if fmask terminates in error?
 
 			imageData.setState(ImageState.DOWNLOADED);
 			imageData.setCreationTime(String.valueOf(System.currentTimeMillis()));
@@ -207,6 +208,8 @@ public class Crawler {
 
 			LOGGER.info("Image " + imageData + " was downloaded");
 
+		} catch(SQLException e) {
+			// TODO
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageData, e);
 			removeFromPendingAndUpdateState(imageData, properties);
@@ -230,7 +233,7 @@ public class Crawler {
 				imageData.setDownloadingUpdateTime("NE");
 				imageStore.updateImage(imageData);
 
-				deleteImageFromDisk(imageData, properties);
+				deleteImageFromDisk(imageData, properties.getProperty("sebal_export_path"));
 
 				LOGGER.debug("Removing image " + imageData
 						+ " from pending image map");
@@ -244,10 +247,9 @@ public class Crawler {
 		}
 	}
 
-	private void deleteImageFromDisk(final ImageData imageData,
-			Properties properties) throws IOException {
+	protected void deleteImageFromDisk(final ImageData imageData,
+			String exportPath) throws IOException {
 		
-		String exportPath = properties.getProperty("sebal_export_path");
 		String imageDirPath = exportPath + "/images/" + imageData.getName();
 		File imageDir = new File(imageDirPath);
 
@@ -325,7 +327,7 @@ public class Crawler {
 					LOGGER.debug("Purging image " + imageData);
 
 					try {
-						deleteImageFromDisk(imageData, properties);
+						deleteImageFromDisk(imageData, properties.getProperty("sebal_export_path"));
 						deleteResultsFromDisk(imageData, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageData, e);
