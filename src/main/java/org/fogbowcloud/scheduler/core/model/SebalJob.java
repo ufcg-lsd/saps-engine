@@ -1,7 +1,9 @@
 package org.fogbowcloud.scheduler.core.model;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -87,12 +89,15 @@ public class SebalJob extends Job {
 	protected void udpateDB(String imageName, ImageState imageState) {
 		LOGGER.debug("Updating image " + imageName + " to state " + imageState.getValue());
 		try {
-			//FIXME: see if this will be changed to support timestamp or not
 			imageStore.updateImageState(imageName, imageState);
+			imageStore.addStateStamp(imageName, imageState, new Date(Calendar
+					.getInstance().getTimeInMillis()));
 
 			// updating previous images not updated yet because of any connection problem
 			for (String pendingImage : new ArrayList<String>(getPendingUpdates().keySet())) {
 				imageStore.updateImageState(pendingImage, getPendingUpdates().get(pendingImage));
+				imageStore.addStateStamp(pendingImage, getPendingUpdates().get(pendingImage), new Date(Calendar
+						.getInstance().getTimeInMillis()));
 				getPendingUpdates().remove(pendingImage);
 			}
 		} catch (SQLException e) {

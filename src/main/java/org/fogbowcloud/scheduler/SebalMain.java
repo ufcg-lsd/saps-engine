@@ -2,8 +2,10 @@ package org.fogbowcloud.scheduler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -198,12 +200,12 @@ public class SebalMain {
 								imageData.getFederationMember(), nfsServerIP,
 								nfsServerPort);
 						imageData.setState(ImageState.RUNNING_R);
-						String lastUpdateTime = String.valueOf(System.currentTimeMillis());
-						imageData.setUpdateTime(lastUpdateTime);
-						imageData.setRunningRUpdateTime(lastUpdateTime);
+						imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 						imageData.setSebalVersion(getSebalVersionFromURL(properties));
 						job.addTask(taskImpl);
 						imageStore.updateImage(imageData);
+						imageStore.addStateStamp(imageData.getName(), 
+								imageData.getState(), imageData.getUpdateTime());
 					}
 				} else {
 					LOGGER.info("Not enough quota to allocate instance for <"

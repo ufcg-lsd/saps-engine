@@ -10,7 +10,8 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
+import java.sql.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -87,14 +88,8 @@ public class DBUtilsImpl implements DBUtils {
 					.getString("download_link"), ImageState.getStateFromStr(rs
 					.getString("state")), rs.getString("federation_member"), rs
 					.getInt("priority"), rs.getString("station_id"), rs
-					.getString("sebal_version"), rs.getString("ctime"), rs
-					.getString("utime"), rs.getString("utime_downloading"), rs
-					.getString("utime_downloaded"), rs
-					.getString("utime_running_r"), rs
-					.getString("utime_finished"), rs
-					.getString("utime_fetching"),
-					rs.getString("utime_fetched"), rs
-							.getString("utime_corrupted")));
+					.getString("sebal_version"), rs.getDate("ctime"), rs
+					.getDate("utime")));
 		}
 	}
 
@@ -152,9 +147,9 @@ public class DBUtilsImpl implements DBUtils {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			if(isBeforeDay(date, Long.valueOf(imageData.getUpdateTime()).longValue())) {
+			if(isBeforeDay(date, imageData.getUpdateTime())) {
 				imageData.setImageStatus(ImageData.PURGED);
-				imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+				imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 				imageStore.updateImage(imageData);
 			}
 		}
@@ -162,12 +157,13 @@ public class DBUtilsImpl implements DBUtils {
 	
 	protected Date parseStringToDate(String day) throws ParseException {
 		DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
-		Date date = format.parse(day);
-		return date;
+		java.util.Date date = format.parse(day);
+		java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+		return sqlDate;
 	}
 
-	protected boolean isBeforeDay(long date, long imageDataDay) {
-		return (imageDataDay <= date);
+	protected boolean isBeforeDay(long date, Date imageDataDay) {
+		return (imageDataDay.getTime() <= date);
 	}
 	
 	@Override

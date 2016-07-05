@@ -6,10 +6,12 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -66,14 +68,8 @@ public class TestDBUtilsImpl {
 				.getString("download_link"), ImageState.getStateFromStr(rsMock
 				.getString("state")), rsMock.getString("federation_member"), rsMock
 				.getInt("priority"), rsMock.getString("station_id"), rsMock
-				.getString("sebal_version"), rsMock.getString("ctime"), rsMock
-				.getString("utime"), rsMock.getString("utime_downloading"), rsMock
-				.getString("utime_downloaded"), rsMock
-				.getString("utime_running_r"), rsMock
-				.getString("utime_finished"), rsMock
-				.getString("utime_fetching"),
-				rsMock.getString("utime_fetched"), rsMock
-						.getString("utime_corrupted"));
+				.getString("sebal_version"), rsMock.getDate("ctime"), rsMock
+				.getDate("utime"));
 	}
 	
 	private static final String UPDATE_STATE_SQL = "UPDATE nasa_images SET state = ? WHERE image_name = ?";
@@ -124,7 +120,7 @@ public class TestDBUtilsImpl {
 		doReturn(true).when(dbUtilsImpl).isBeforeDay(eq(fakeDay), eq(Integer.valueOf(fakeImageDataDay2)));*/
 		
 		doNothing().when(imageDataMock).setImageStatus(eq(ImageData.PURGED));
-		doNothing().when(imageDataMock).setUpdateTime(eq(String.valueOf(System.currentTimeMillis())));
+		doNothing().when(imageDataMock).setUpdateTime(eq(new Date(Calendar.getInstance().getTimeInMillis())));
 	}
 
 }

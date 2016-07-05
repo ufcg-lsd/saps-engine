@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -107,7 +109,7 @@ public class Fetcher {
 					+ ImageState.FINISHED);
 			
 			imageData.setState(ImageState.FINISHED);
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+			imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 			imageStore.updateImage(imageData);
 			
 			LOGGER.info("Deleting image " + imageData);
@@ -168,7 +170,7 @@ public class Fetcher {
 	
 	private boolean isFileCorrupted(ImageData imageData) throws SQLException {
 		if(imageData.getState().equals(ImageState.CORRUPTED)) {
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+			imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 			pendingImageFetchMap.remove(imageData.getName());
 			imageStore.updateImage(imageData);
 			return true;
@@ -185,12 +187,13 @@ public class Fetcher {
 			pendingImageFetchMap.put(imageData.getName(), imageData);
 			pendingImageFetchDB.commit();
 
-			String lastUpdateTime = String.valueOf(System.currentTimeMillis());
+			Date lastUpdateTime = new Date(Calendar.getInstance().getTimeInMillis());
 			imageData.setUpdateTime(lastUpdateTime);
-			imageData.setFetchingUpdateTime(lastUpdateTime);
 			
 			LOGGER.debug("Updating image data in DB");
 			imageStore.updateImage(imageData);
+			imageStore.addStateStamp(imageData.getName(),
+					imageData.getState(), imageData.getUpdateTime());
 			imageStore.unlockImage(imageData.getName());
 			
 			LOGGER.debug("Image " + imageData.getName() + " ready to fetch");
@@ -205,9 +208,8 @@ public class Fetcher {
 		imageData.setStationId(stationId);
 		imageData.setSebalVersion(properties.getProperty("sebal_version"));
 		
-		String lastUpdateTime = String.valueOf(System.currentTimeMillis());
+		Date lastUpdateTime = new Date(Calendar.getInstance().getTimeInMillis());
 		imageData.setUpdateTime(lastUpdateTime);
-		imageData.setFetchedUpdateTime(lastUpdateTime);
 		
 		LOGGER.info("IMAGE = " + imageData.getName());
 		LOGGER.info("STATION ID = " +  stationId);
@@ -216,6 +218,8 @@ public class Fetcher {
 		
 		LOGGER.info("Updating image data in DB");
 		imageStore.updateImage(imageData);
+		imageStore.addStateStamp(imageData.getName(),
+				imageData.getState(), imageData.getUpdateTime());
 		
 		LOGGER.info("Removing image from pending map.");
 		pendingImageFetchMap.remove(imageData.getName());
@@ -248,7 +252,7 @@ public class Fetcher {
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
 			imageData.setState(ImageState.FINISHED);
-			imageData.setUpdateTime(String.valueOf(System.currentTimeMillis()));
+			imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 			imageStore.updateImage(imageData);
 		} catch (SQLException e1) {
 			Fetcher.LOGGER.error("Error while updating image data.", e1);
@@ -297,7 +301,8 @@ public class Fetcher {
 			fetch(imageData, tries++);
 		}else{
 			
-			String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)+localImageResultsDir.getName()+"/";
+			String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) 
+					+ localImageResultsDir.getName() + "/";
 			String containerName = properties.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
 			
 			for(File actualFile : localImageResultsDir.listFiles()){
@@ -305,8 +310,5 @@ public class Fetcher {
 				actualFile.delete();
 			}
 		}
-		
-		
-		
 	}
 }

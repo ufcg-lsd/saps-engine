@@ -2,7 +2,9 @@ package org.fogbowcloud.sebal.crawler;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -138,7 +140,17 @@ public class Crawler {
 
 		for (ImageData imageData : imageDataList) {
 			if (imageData != null) {
-				// Updating pending dataBase and imageData
+				
+				try {
+					imageStore.addStateStamp(imageData.getName(),
+							imageData.getState(), imageData.getUpdateTime());
+				} catch (SQLException e) {
+					// TODO: deal with this better
+					LOGGER.error("Error while adding image " + imageData.getName() + " state "
+							+ imageData.getState().getValue() + " timestamp "
+							+ imageData.getUpdateTime() + " into states table");
+				}
+				
 				LOGGER.debug("Adding image " + imageData.getName()
 						+ " to pending database");
 				pendingImageDownloadMap.put(imageData.getName(), imageData);
@@ -201,12 +213,14 @@ public class Crawler {
 			}
 
 			imageData.setState(ImageState.DOWNLOADED);
-			imageData.setCreationTime(String.valueOf(System.currentTimeMillis()));
+			Date updateTime = new Date(Calendar.getInstance().getTimeInMillis());
 			
-			String lastUpdateTime = String.valueOf(System.currentTimeMillis());
-			imageData.setUpdateTime(lastUpdateTime);
-			imageData.setDownloadedUpdateTime(lastUpdateTime);
+			imageData.setCreationTime(updateTime);
+			imageData.setUpdateTime(updateTime);
 			imageStore.updateImage(imageData);
+			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
+					imageData.getUpdateTime());
+			
 			pendingImageDownloadMap.remove(imageData.getName());
 
 			LOGGER.info("Image " + imageData + " was downloaded");
@@ -231,9 +245,7 @@ public class Crawler {
 						+ ImageState.NOT_DOWNLOADED);
 				imageData.setFederationMember(ImageDataStore.NONE);
 				imageData.setState(ImageState.NOT_DOWNLOADED);
-				imageData.setUpdateTime(String.valueOf(System
-						.currentTimeMillis()));
-				imageData.setDownloadingUpdateTime("NE");
+				imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 				imageStore.updateImage(imageData);
 
 				deleteImageFromDisk(imageData, properties.getProperty("sebal_export_path"));
