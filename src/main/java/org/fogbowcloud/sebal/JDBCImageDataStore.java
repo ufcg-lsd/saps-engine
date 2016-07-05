@@ -151,7 +151,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 	
-	private static final String INSERT_STATE_SQL = "INSERT INTO " + STATES_TABLE_NAME
+	private static final String INSERT_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
 			+ " VALUES(?, ?, ?)";
 	
 	@Override
@@ -168,7 +168,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			connection = getConnection();
 
-			insertStatement = connection.prepareStatement(INSERT_STATE_SQL);
+			insertStatement = connection.prepareStatement(INSERT_STATE_TIMESTAMP_SQL);
 			insertStatement.setString(1, imageName);
 			insertStatement.setString(2, state.getValue());
 			insertStatement.setString(3, String.valueOf(timestamp));
