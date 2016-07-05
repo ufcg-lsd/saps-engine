@@ -620,9 +620,32 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return unlocked;
 	}
 	
+	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME
+			+ " WHERE image_name = ? AND state = ? AND utime = ?";
+	
 	@Override
-	public void removeStateStamp(String imageName, ImageState state) throws SQLException {
-		// TODO
+	public void removeStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException {
+		LOGGER.info("Removing image " + imageName + " state " + state.getValue() + " with timestamp " + timestamp);
+		if (imageName == null || imageName.isEmpty() || state == null) {
+			LOGGER.error("Invalid image " + imageName + " or state " + state.getValue());
+			throw new IllegalArgumentException("Invalid image " + imageName);
+		}
+
+		PreparedStatement removeStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			removeStatement = connection.prepareStatement(REMOVE_STATE_SQL);
+			removeStatement.setString(1, imageName);
+			removeStatement.setString(2, state.getValue());
+			removeStatement.setString(3, String.valueOf(timestamp));
+
+			removeStatement.execute();
+		} finally {
+			close(removeStatement, connection);
+		}
 	}
 
 }

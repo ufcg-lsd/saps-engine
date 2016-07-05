@@ -37,7 +37,7 @@ public interface ImageDataStore {
 
 	public boolean unlockImage(String imageName) throws SQLException;
 	
-	public void removeStateStamp(String imageName, ImageState state) throws SQLException;
+	public void removeStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException;
 
 	public List<ImageData> getImagesByFilter(ImageState state, String name, long processDateInit, long processDateEnd)
 			throws SQLException;

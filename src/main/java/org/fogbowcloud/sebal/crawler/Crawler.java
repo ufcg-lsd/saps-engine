@@ -243,6 +243,7 @@ public class Crawler {
 
 				LOGGER.debug("Rolling back " + imageData + " to "
 						+ ImageState.NOT_DOWNLOADED);
+				imageStore.removeStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 				imageData.setFederationMember(ImageDataStore.NONE);
 				imageData.setState(ImageState.NOT_DOWNLOADED);
 				imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));

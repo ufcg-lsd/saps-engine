@@ -107,7 +107,7 @@ public class Fetcher {
 		try {
 			LOGGER.debug("Bringing " + imageData + " back to "
 					+ ImageState.FINISHED);
-			
+			imageStore.removeStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 			imageData.setState(ImageState.FINISHED);
 			imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 			imageStore.updateImage(imageData);
@@ -251,6 +251,7 @@ public class Fetcher {
 	private void rollBackFetch(ImageData imageData) {
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
+			imageStore.removeStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 			imageData.setState(ImageState.FINISHED);
 			imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 			imageStore.updateImage(imageData);
