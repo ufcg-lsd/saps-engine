@@ -150,13 +150,13 @@ public class Crawler {
 
 		LOGGER.info("maxImagesToDownload " + maxImagesToDownload);
 
-		// FIXME: check the implications of this cast
-		// This updates images in NOT_DOWNLOADED state to DOWNLOADING
-		// and sets this federation member as owner, and then gets all images
-		// marked as DOWNLOADING
 		List<ImageData> imageDataList = new ArrayList<ImageData>();
 
 		try {
+			// FIXME: check the implications of this cast
+			// This updates images in NOT_DOWNLOADED state to DOWNLOADING
+			// and sets this federation member as owner, and then gets all images
+			// marked as DOWNLOADING
 			imageDataList = imageStore.getImagesToDownload(federationMember,
 					(int) maxImagesToDownload);
 		} catch (SQLException e) {
@@ -355,7 +355,7 @@ public class Crawler {
 		return true;
 	}
 
-	private void deleteFetchedResultsFromVolume(Properties properties)
+	protected void deleteFetchedResultsFromVolume(Properties properties)
 			throws IOException, InterruptedException, SQLException {
 
 		List<ImageData> setOfImageData = imageStore.getAllImages();
@@ -364,7 +364,9 @@ public class Crawler {
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : setOfImageData) {
-				if (imageData.getState().equals(ImageState.FETCHED)) {
+				if (imageData.getState().equals(ImageState.FETCHED)
+						&& imageData.getFederationMember().equals(
+								federationMember)) {
 					LOGGER.debug("Image " + imageData.getName() + " fetched");
 					LOGGER.info("Removing" + imageData);
 
