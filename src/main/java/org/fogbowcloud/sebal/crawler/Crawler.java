@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
@@ -146,12 +147,6 @@ public class Crawler {
 		LOGGER.info("Garbage collect finished");
 	}
 
-	private boolean thereIsImageToDownload() throws SQLException {
-
-		List<ImageData> imageData = imageStore.getIn(ImageState.NOT_DOWNLOADED);
-		return !imageData.isEmpty();
-	}
-
 	protected void download(long maxImagesToDownload) throws SQLException,
 			IOException {
 
@@ -161,23 +156,27 @@ public class Crawler {
 		// This updates images in NOT_DOWNLOADED state to DOWNLOADING
 		// and sets this federation member as owner, and then gets all images
 		// marked as DOWNLOADING
+		List<ImageData> imageDataList = new ArrayList<ImageData>();
 
-		List<ImageData> imageDataList = imageStore.getImagesToDownload(
-				federationMember, (int) maxImagesToDownload);
+		try {
+			imageDataList = imageStore.getImagesToDownload(federationMember,
+					(int) maxImagesToDownload);
+		} catch (SQLException e) {
+			// TODO: deal with this better
+			LOGGER.error("Error while accessing not downloaded images in DB");
+		}
 
 		for (ImageData imageData : imageDataList) {
 			if (imageData != null) {
-				
 				try {
 					imageStore.addStateStamp(imageData.getName(),
 							imageData.getState(), imageData.getUpdateTime());
 				} catch (SQLException e) {
-					// TODO: deal with this better
-					LOGGER.error("Error while adding image " + imageData.getName() + " state "
-							+ imageData.getState().getValue() + " timestamp "
-							+ imageData.getUpdateTime() + " into states table");
+					LOGGER.error("Error while adding state "
+							+ imageData.getState() + " timestamp "
+							+ imageData.getUpdateTime() + " in DB");
+					continue;
 				}
-				
 				LOGGER.debug("Adding image " + imageData.getName()
 						+ " to pending database");
 				pendingImageDownloadMap.put(imageData.getName(), imageData);
@@ -243,8 +242,14 @@ public class Crawler {
 			imageData.setCreationTime(updateTime);
 			imageData.setUpdateTime(updateTime);
 			imageStore.updateImage(imageData);
-			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-					imageData.getUpdateTime());
+			
+			try {
+				imageStore.addStateStamp(imageData.getName(),
+						imageData.getState(), imageData.getUpdateTime());
+			} catch (SQLException e) {
+				LOGGER.error("Error while adding state " + imageData.getState()
+						+ " timestamp " + imageData.getUpdateTime() + " in DB");
+			}
 			
 			pendingImageDownloadMap.remove(imageData.getName());
 
@@ -305,9 +310,11 @@ public class Crawler {
 				LOGGER.info("Image " + imageData + " rolled back");
 			}
 
-		} catch (SQLException e1) {
+		} catch (SQLException e) {
 			Crawler.LOGGER.error("Error while updating image data: "
-					+ imageData.getName(), e1);
+					+ imageData.getName(), e);
+			imageData.setFederationMember(federationMember);
+			imageData.setState(ImageState.DOWNLOADING);
 		}
 	}
 

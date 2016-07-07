@@ -192,8 +192,14 @@ public class Fetcher {
 			
 			LOGGER.debug("Updating image data in DB");
 			imageStore.updateImage(imageData);
-			imageStore.addStateStamp(imageData.getName(),
-					imageData.getState(), imageData.getUpdateTime());
+			try {
+				imageStore.addStateStamp(imageData.getName(),
+						imageData.getState(), imageData.getUpdateTime());
+			} catch (SQLException e) {
+				LOGGER.error("Error while adding state "
+						+ imageData.getState() + " timestamp "
+						+ imageData.getUpdateTime() + " in DB");
+			}
 			imageStore.unlockImage(imageData.getName());
 			
 			LOGGER.debug("Image " + imageData.getName() + " ready to fetch");
@@ -218,8 +224,13 @@ public class Fetcher {
 		
 		LOGGER.info("Updating image data in DB");
 		imageStore.updateImage(imageData);
-		imageStore.addStateStamp(imageData.getName(),
-				imageData.getState(), imageData.getUpdateTime());
+		try {
+			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
+					imageData.getUpdateTime());
+		} catch (SQLException e) {
+			LOGGER.error("Error while adding state " + imageData.getState()
+					+ " timestamp " + imageData.getUpdateTime() + " in DB");
+		}
 		
 		LOGGER.info("Removing image from pending map.");
 		pendingImageFetchMap.remove(imageData.getName());

@@ -204,8 +204,16 @@ public class SebalMain {
 						imageData.setSebalVersion(getSebalVersionFromURL(properties));
 						job.addTask(taskImpl);
 						imageStore.updateImage(imageData);
-						imageStore.addStateStamp(imageData.getName(), 
-								imageData.getState(), imageData.getUpdateTime());
+						try {
+							imageStore.addStateStamp(imageData.getName(),
+									imageData.getState(),
+									imageData.getUpdateTime());
+						} catch (SQLException e) {
+							LOGGER.error("Error while adding state "
+									+ imageData.getState() + " timestamp "
+									+ imageData.getUpdateTime() + " in DB");
+							continue;
+						}
 					}
 				} else {
 					LOGGER.info("Not enough quota to allocate instance for <"
