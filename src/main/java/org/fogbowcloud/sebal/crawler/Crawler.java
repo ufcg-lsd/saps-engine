@@ -117,7 +117,7 @@ public class Crawler {
 		cleanUnfinishedDownloadedData(properties);
 
 		try {
-			do {
+			while(true) {
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
@@ -127,9 +127,7 @@ public class Crawler {
 				} else {
 					Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
 				}
-
-			} while (thereIsImageToDownload());
-			LOGGER.info("All images downloaded");
+			}
 		} catch (Throwable e) {
 			LOGGER.error("Failed while downloading task.", e);
 		} finally {
