@@ -23,14 +23,19 @@ import org.mapdb.DBMaker;
 
 public class Crawler {
 
+	//FIXME: replace sebal export path constant in other places
+	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
+	protected static final String FMASK_TOOL_PATH = "fmask_tool_path";
+	protected static final String FMASK_SCRIPT_PATH = "fmask_script_path";
 	// FIXME: FTP - 0 (In infrastructure creation?)
 	private final Properties properties;
-	private NASARepository NASARepository;
+	private NASARepository nasaRepository;
 	private final ImageDataStore imageStore;
 	private File pendingImageDownloadFile;
-	private DB pendingImageDownloadDB;
-	private ConcurrentMap<String, ImageData> pendingImageDownloadMap;
+	protected DB pendingImageDownloadDB;
+	protected ConcurrentMap<String, ImageData> pendingImageDownloadMap;
 	private String federationMember;
+	private FMask fmask;
 
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	// Image dir size in bytes
@@ -40,23 +45,36 @@ public class Crawler {
 
 	public Crawler(Properties properties, String imageStoreIP,
 			String imageStorePort, String federationMember) {
-
-		LOGGER.info("Creating crawler");
-		LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort
-				+ " federationmember " + federationMember);
+		
+		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
+				imageStorePort), new NASARepository(properties),
+				federationMember, new FMask());
+	}
+	
+	protected Crawler(Properties properties, ImageDataStore imageStore,
+			NASARepository nasaRepository, String federationMember,
+			FMask fmask) {
+		
+		//FIXME: move this log to the class that builds this object
+//		LOGGER.info("Creating crawler");
+//		LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort
+//				+ " federationmember " + federationMember);
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
 		}
-
-		this.properties = properties;
-		this.imageStore = new JDBCImageDataStore(properties, imageStoreIP,
-				imageStorePort);
-		this.NASARepository = new NASARepository(properties);
-
-		this.federationMember = federationMember;
-
+		
+		if(imageStore == null) {
+			throw new IllegalArgumentException(
+					"Imagestore arg must not be null.");
+		}
+		
+		if(nasaRepository == null) {
+			throw new IllegalArgumentException(
+					"NASARepository arg must not be null.");
+		}
+		
 		if (federationMember == null) {
 			throw new IllegalArgumentException(
 					"Federation member arg must not be null.");
@@ -66,7 +84,18 @@ public class Crawler {
 			throw new IllegalArgumentException(
 					"Federation member arg must not be empty.");
 		}
+		
+		if (fmask == null) {
+			throw new IllegalArgumentException(
+					"Fmask arg must not be empty.");
+		}
 
+		this.properties = properties;
+		this.imageStore = imageStore;
+		this.nasaRepository = nasaRepository;
+		this.federationMember = federationMember;
+		this.fmask = fmask;
+		
 		this.pendingImageDownloadFile = new File("pending-image-download.db");
 		this.pendingImageDownloadDB = DBMaker.newFileDB(
 				pendingImageDownloadFile).make();
@@ -108,7 +137,7 @@ public class Crawler {
 		}
 	}
 
-	private void cleanUnfinishedDownloadedData(Properties properties)
+	protected void cleanUnfinishedDownloadedData(Properties properties)
 			throws IOException {
 
 		LOGGER.info("Starting garbage collector");
@@ -165,7 +194,7 @@ public class Crawler {
 
 	protected long numberOfImagesToDownload() throws NumberFormatException, InterruptedException, IOException, SQLException {
 		
-		String volumeDirPath = properties.getProperty("sebal_export_path");
+		String volumeDirPath = properties.getProperty(SEBAL_EXPORT_PATH);
 		File volumePath = getExportDirPath(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
 			long availableVolumeSpace = volumePath.getFreeSpace();
@@ -189,27 +218,25 @@ public class Crawler {
 		return new File(volumeDirPath);
 	}
 
-	private void downloadImage(final ImageData imageData) throws SQLException, IOException {
+	protected void downloadImage(final ImageData imageData) throws SQLException, IOException {
 		
 		try {
 			// FIXME: it blocks?
-			NASARepository.downloadImage(imageData);
+			nasaRepository.downloadImage(imageData);
 
 			// running Fmask
 			// TODO: insert source .profile before fmask execution
 			LOGGER.debug("Running Fmask for image " + imageData.getName());
 
-			int exitValue = new FMask().runFmask(imageData,
-					properties.getProperty("fmask_script_path"),
-					properties.getProperty("fmask_tool_path"),
-					properties.getProperty("sebal_export_path"));
+			int exitValue = fmask.runFmask(imageData,
+					properties.getProperty(FMASK_SCRIPT_PATH),
+					properties.getProperty(FMASK_TOOL_PATH),
+					properties.getProperty(SEBAL_EXPORT_PATH));
 			if (exitValue != 0) {
 				LOGGER.error("It was not possible run Fmask for image "
 						+ imageData);
-				//imageData.setFederationMember(ImageDataStore.NONE);
-				// TODO: see if this is correct
-/*				removeFromPendingAndUpdateState(imageData, properties);
-				return;*/
+				markImageWithErrorAndUpdateState(imageData, properties);
+				return;
 			}
 
 			imageData.setState(ImageState.DOWNLOADED);
@@ -225,12 +252,35 @@ public class Crawler {
 
 			LOGGER.info("Image " + imageData + " was downloaded");
 
-		} catch(SQLException e) {
-			// TODO
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageData, e);
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
+	}
+
+	private void markImageWithErrorAndUpdateState(ImageData imageData,
+			Properties properties) throws IOException {
+		
+		try {
+			if (imageData.getFederationMember().equals(federationMember)) {
+				imageData.setState(ImageState.ERROR);
+				imageData
+						.setImageError("It was not possible run Fmask for image");
+				imageData.setUpdateTime(new Date(Calendar.getInstance()
+						.getTimeInMillis()));
+				imageStore.updateImage(imageData);
+
+				deleteImageFromDisk(imageData,
+						properties.getProperty(SEBAL_EXPORT_PATH));
+
+				LOGGER.debug("Removing image " + imageData
+						+ " from pending image map");
+				pendingImageDownloadMap.remove(imageData.getName());
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Error while updating image data: "
+					+ imageData.getName(), e);
+		}		
 	}
 
 	private void removeFromPendingAndUpdateState(final ImageData imageData,
@@ -249,7 +299,7 @@ public class Crawler {
 				imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 				imageStore.updateImage(imageData);
 
-				deleteImageFromDisk(imageData, properties.getProperty("sebal_export_path"));
+				deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
 
 				LOGGER.debug("Removing image " + imageData
 						+ " from pending image map");
@@ -272,12 +322,17 @@ public class Crawler {
 		LOGGER.info("Removing image " + imageData + " data under path "
 				+ imageDirPath);
 
+		if(isImageOnDisk(imageDirPath, imageDir)) {
+			FileUtils.deleteDirectory(imageDir);			
+		}
+	}
+
+	protected boolean isImageOnDisk(String imageDirPath, File imageDir) {
 		if (!imageDir.exists() || !imageDir.isDirectory()) {
 			LOGGER.info("path " + imageDirPath + " does not exist");
-			return;
+			return false;
 		}
-
-		FileUtils.deleteDirectory(imageDir);
+		return true;
 	}
 
 	private void deleteFetchedResultsFromVolume(Properties properties)
@@ -285,7 +340,7 @@ public class Crawler {
 
 		List<ImageData> setOfImageData = imageStore.getAllImages();
 
-		String exportPath = properties.getProperty("sebal_export_path");
+		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : setOfImageData) {
@@ -333,7 +388,7 @@ public class Crawler {
 
 		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.FINISHED);
 
-		String exportPath = properties.getProperty("sebal_export_path");
+		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : imagesToPurge) {
@@ -343,7 +398,7 @@ public class Crawler {
 					LOGGER.debug("Purging image " + imageData);
 
 					try {
-						deleteImageFromDisk(imageData, properties.getProperty("sebal_export_path"));
+						deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
 						deleteResultsFromDisk(imageData, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageData, e);

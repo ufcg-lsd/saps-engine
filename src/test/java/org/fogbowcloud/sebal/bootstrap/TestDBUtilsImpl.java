@@ -69,7 +69,7 @@ public class TestDBUtilsImpl {
 				.getString("state")), rsMock.getString("federation_member"), rsMock
 				.getInt("priority"), rsMock.getString("station_id"), rsMock
 				.getString("sebal_version"), rsMock.getDate("ctime"), rsMock
-				.getDate("utime"));
+				.getDate("utime"), rsMock.getString("error_msg"));
 	}
 	
 	private static final String UPDATE_STATE_SQL = "UPDATE nasa_images SET state = ? WHERE image_name = ?";

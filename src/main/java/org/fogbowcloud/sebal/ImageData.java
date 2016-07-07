@@ -17,6 +17,7 @@ public class ImageData implements Serializable {
 	private Date creationTime;
 	private Date updateTime;
 	private String status;
+	private String error;
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 	
 	public static final String AVAILABLE = "available";
@@ -24,7 +25,7 @@ public class ImageData implements Serializable {
 
 	public ImageData(String name, String downloadLink, ImageState state,
 			String federationMember, int priority, String stationId,
-			String sebalVersion, Date creationTime, Date updateTime) {
+			String sebalVersion, Date creationTime, Date updateTime, String error) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -35,6 +36,7 @@ public class ImageData implements Serializable {
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
 		this.status = "available";
+		this.error = error;
 	}
 
 	public String getName() {
@@ -77,6 +79,10 @@ public class ImageData implements Serializable {
 		return status;
 	}
 	
+	public String getImageError() {
+		return error;
+	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -116,12 +122,16 @@ public class ImageData implements Serializable {
 	public void setImageStatus(String status) {
 		this.status = status;
 	}
+	
+	public void setImageError(String error) {
+		this.error = error;
+	}
 
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", "
 				+ federationMember + ", " + priority + ", " + stationId + ", "
 				+ sebalVersion + ", " + creationTime + ", " + updateTime + ", "
-				+ status;
+				+ status + ", " + error;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -144,7 +154,8 @@ public class ImageData implements Serializable {
 					&& getSebalVersion().equals(other.getSebalVersion())
 					&& getCreationTime().equals(other.getCreationTime())
 					&& getUpdateTime().equals(other.getUpdateTime())
-					&& getImageStatus().equals(other.getImageStatus());
+					&& getImageStatus().equals(other.getImageStatus())
+					&& getImageError().equals(other.getImageError());
 		}
 		return false;
 	}

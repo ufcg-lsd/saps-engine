@@ -1,6 +1,7 @@
 package org.fogbowcloud.sebal.bootstrap;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,7 +12,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.sql.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -89,7 +89,7 @@ public class DBUtilsImpl implements DBUtils {
 					.getString("state")), rs.getString("federation_member"), rs
 					.getInt("priority"), rs.getString("station_id"), rs
 					.getString("sebal_version"), rs.getDate("ctime"), rs
-					.getDate("utime")));
+					.getDate("utime"), rs.getString("error_msg")));
 		}
 	}
 

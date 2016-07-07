@@ -31,6 +31,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String CREATION_TIME_COL = "ctime";
 	private static final String UPDATED_TIME_COL = "utime";
 	private static final String IMAGE_STATUS_COL = "status";
+	private static final String ERROR_MSG_COL = "error_msg";
 	
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
 	private BasicDataSource connectionPool;
@@ -69,7 +70,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME
 					+ "(" + IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, "
 					+ STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL
-					+ " VARCHAR(255))");
+					+ " VARCHAR(255), " + ERROR_MSG_COL + "VARCHAR(255))");
 			statement.close();
 
 		} catch (Exception e) {
@@ -115,7 +116,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	@Override
 	public void addImage(String imageName, String downloadLink, int priority) throws SQLException {
@@ -144,6 +145,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(8, "NE");
 			insertStatement.setString(9, "NE");
 			insertStatement.setString(10, ImageData.AVAILABLE);
+			insertStatement.setString(11, "");
 
 			insertStatement.execute();
 		} finally {
@@ -210,7 +212,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 	
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET download_link = ?, state = ?, federation_member = ?,"
-			+ " priority = ?, station_id = ?, sebal_version = ?, ctime = ?, utime = ?, status = ? WHERE image_name = ?";
+			+ " priority = ?, station_id = ?, sebal_version = ?, ctime = ?, utime = ?, status = ?, error_msg = ? WHERE image_name = ?";
 	
 	@Override
 	public void updateImage(ImageData imageData) throws SQLException {
@@ -235,7 +237,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setDate(7, imageData.getCreationTime());
 			updateStatement.setDate(8, imageData.getUpdateTime());
 			updateStatement.setString(9, imageData.getImageStatus());
-			updateStatement.setString(10, imageData.getName());
+			updateStatement.setString(10, imageData.getImageError());
+			updateStatement.setString(11, imageData.getName());
 
 			updateStatement.execute();
 		} finally {
@@ -520,7 +523,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					rs.getString(STATION_ID_COL), rs
 							.getString(SEBAL_VERSION_COL), rs
 							.getDate(CREATION_TIME_COL), rs
-							.getDate(UPDATED_TIME_COL)));
+							.getDate(UPDATED_TIME_COL), rs
+							.getString(ERROR_MSG_COL)));
 		}
 		return imageDatas;
 	}
