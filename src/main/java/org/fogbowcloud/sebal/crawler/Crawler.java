@@ -241,7 +241,13 @@ public class Crawler {
 			
 			imageData.setCreationTime(updateTime);
 			imageData.setUpdateTime(updateTime);
-			imageStore.updateImage(imageData);
+			
+			try {				
+				imageStore.updateImage(imageData);
+			} catch(SQLException e) {
+				LOGGER.error("Error while updating image " + imageData + " to DB");
+				removeFromPendingAndUpdateState(imageData, properties);
+			}
 			
 			try {
 				imageStore.addStateStamp(imageData.getName(),
@@ -283,39 +289,52 @@ public class Crawler {
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image data: "
 					+ imageData.getName(), e);
+			removeFromPendingAndUpdateState(imageData, properties);
 		}		
 	}
 
 	private void removeFromPendingAndUpdateState(final ImageData imageData,
 			Properties properties) throws IOException {
-		
+
 		// FIXME: test exceptions
-		try {
 
-			if (imageData.getFederationMember().equals(federationMember)) {
+		if (imageData.getFederationMember().equals(federationMember)) {
 
-				LOGGER.debug("Rolling back " + imageData + " to "
-						+ ImageState.NOT_DOWNLOADED);
-				imageStore.removeStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
-				imageData.setFederationMember(ImageDataStore.NONE);
-				imageData.setState(ImageState.NOT_DOWNLOADED);
-				imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
-				imageStore.updateImage(imageData);
+			LOGGER.debug("Rolling back " + imageData + " to "
+					+ ImageState.NOT_DOWNLOADED);
 
-				deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
-
-				LOGGER.debug("Removing image " + imageData
-						+ " from pending image map");
-				pendingImageDownloadMap.remove(imageData.getName());
-				LOGGER.info("Image " + imageData + " rolled back");
+			try {
+				imageStore.removeStateStamp(imageData.getName(),
+						imageData.getState(), imageData.getUpdateTime());
+			} catch (SQLException e) {
+				LOGGER.error("Error while removing state "
+						+ imageData.getState() + " timestamp "
+						+ imageData.getUpdateTime() + " from DB");
 			}
 
-		} catch (SQLException e) {
-			Crawler.LOGGER.error("Error while updating image data: "
-					+ imageData.getName(), e);
-			imageData.setFederationMember(federationMember);
-			imageData.setState(ImageState.DOWNLOADING);
+			imageData.setFederationMember(ImageDataStore.NONE);
+			imageData.setState(ImageState.NOT_DOWNLOADED);
+			imageData.setUpdateTime(new Date(Calendar.getInstance()
+					.getTimeInMillis()));
+			
+			try {
+				imageStore.updateImage(imageData);
+			} catch (SQLException e) {
+				Crawler.LOGGER.error("Error while updating image data: "
+						+ imageData.getName(), e);
+				imageData.setFederationMember(federationMember);
+				imageData.setState(ImageState.DOWNLOADING);
+			}
+
+			deleteImageFromDisk(imageData,
+					properties.getProperty(SEBAL_EXPORT_PATH));
+
+			LOGGER.debug("Removing image " + imageData
+					+ " from pending image map");
+			pendingImageDownloadMap.remove(imageData.getName());
+			LOGGER.info("Image " + imageData + " rolled back");
 		}
+
 	}
 
 	protected void deleteImageFromDisk(final ImageData imageData,
