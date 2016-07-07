@@ -28,7 +28,6 @@ public class Crawler {
 	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 	protected static final String FMASK_TOOL_PATH = "fmask_tool_path";
 	protected static final String FMASK_SCRIPT_PATH = "fmask_script_path";
-	// FIXME: FTP - 0 (In infrastructure creation?)
 	private final Properties properties;
 	private NASARepository nasaRepository;
 	private final ImageDataStore imageStore;
@@ -50,16 +49,15 @@ public class Crawler {
 		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
 				imageStorePort), new NASARepository(properties),
 				federationMember, new FMask());
+		
+		LOGGER.info("Creating crawler");
+		LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort
+				+ " federationmember " + federationMember);
 	}
 	
 	protected Crawler(Properties properties, ImageDataStore imageStore,
 			NASARepository nasaRepository, String federationMember,
 			FMask fmask) {
-		
-		//FIXME: move this log to the class that builds this object
-//		LOGGER.info("Creating crawler");
-//		LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort
-//				+ " federationmember " + federationMember);
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
@@ -296,8 +294,6 @@ public class Crawler {
 	private void removeFromPendingAndUpdateState(final ImageData imageData,
 			Properties properties) throws IOException {
 
-		// FIXME: test exceptions
-
 		if (imageData.getFederationMember().equals(federationMember)) {
 
 			LOGGER.debug("Rolling back " + imageData + " to "
@@ -405,7 +401,7 @@ public class Crawler {
 		FileUtils.deleteDirectory(resultsDir);
 	}
 
-	private void purgeImagesFromVolume(Properties properties)
+	protected void purgeImagesFromVolume(Properties properties)
 			throws IOException, InterruptedException, SQLException {
 		
 		LOGGER.info("Starting purge");

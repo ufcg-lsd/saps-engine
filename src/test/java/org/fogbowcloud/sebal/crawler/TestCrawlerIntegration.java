@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.sebal.FMask;
@@ -245,5 +246,43 @@ public class TestCrawlerIntegration {
 		// expect
 		Assert.assertEquals(ImageState.DOWNLOADING, image1.getState());
 		Assert.assertEquals(ImageState.DOWNLOADED, image2.getState());
+	}
+	
+	@Test
+	public void testPurgeImagesFromVolume() throws SQLException, IOException, InterruptedException {
+		// setup
+		Properties properties = Mockito.mock(Properties.class);
+		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
+		NASARepository nasaRepository = Mockito.mock(NASARepository.class);
+		FMask fmask = Mockito.mock(FMask.class);
+		String federationMember = "fake-fed-member";
+		String sebalExportPath = "fake-export-path";
+		int maxImagesToDownload = 5;
+
+		Date date = new Date(10000854);
+
+		List<ImageData> imageList = new ArrayList<ImageData>();
+		ImageData image1 = new ImageData("image1", "link1",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE",
+				date, date, "");
+		image1.setImageStatus(ImageData.PURGED);
+		ImageData image2 = new ImageData("image2", "link2",
+				ImageState.FINISHED, federationMember, 1, "NE", "NE",
+				date, date, "");
+
+		imageList.add(image1);
+		imageList.add(image2);
+
+		Mockito.doReturn(imageList).when(imageStore)
+				.getIn(ImageState.FINISHED);
+		
+		Mockito.doReturn(sebalExportPath).when(properties)
+				.getProperty(Crawler.SEBAL_EXPORT_PATH);
+		
+		Crawler crawler = new Crawler(properties, imageStore, nasaRepository,
+				federationMember, fmask);
+
+		// exercise
+		crawler.purgeImagesFromVolume(properties);
 	}
 }
