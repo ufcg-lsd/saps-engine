@@ -53,7 +53,7 @@ public class Fetcher {
 				+ " FTPServer " + ftpServerIP + ":" + ftpServerPort);
 	}
 	
-	public Fetcher(Properties properties, ImageDataStore imageStore, String ftpServerIP, String ftpServerPort) {
+	protected Fetcher(Properties properties, ImageDataStore imageStore, String ftpServerIP, String ftpServerPort) {
 		
 		if (properties == null) {
 			throw new IllegalArgumentException(
@@ -105,7 +105,7 @@ public class Fetcher {
 		pendingImageFetchDB.close();
 	}
 
-	private void cleanUnfinishedFetchedData(Properties properties) throws InterruptedException, IOException {
+	protected void cleanUnfinishedFetchedData(Properties properties) throws InterruptedException, IOException {
 		LOGGER.info("Starting garbage collector");
 		Collection<ImageData> data = pendingImageFetchMap.values();
 		for (ImageData imageData : data) {
@@ -114,7 +114,7 @@ public class Fetcher {
 		LOGGER.info("Garbage collect finished");
 	}
 
-	private void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties) throws IOException {		
+	protected void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties) throws IOException {		
 		try {
 			LOGGER.debug("Bringing " + imageData + " back to "
 					+ ImageState.FINISHED);
@@ -141,7 +141,7 @@ public class Fetcher {
 		}		
 	}
 
-	private void delelteResultsFromDisk(final ImageData imageData,
+	protected void delelteResultsFromDisk(final ImageData imageData,
 			Properties properties) throws IOException {
 		String exportPath = properties.getProperty("sebal_export_path");
 		String resultsDirPath = exportPath + "/results/"
@@ -156,7 +156,7 @@ public class Fetcher {
 		FileUtils.deleteDirectory(resultsDir);
 	}
 
-	private List<ImageData> imagesToFetch() {
+	protected List<ImageData> imagesToFetch() {
 		try {
 			return imageStore.getIn(ImageState.FINISHED);
 		} catch (SQLException e) {
@@ -165,7 +165,7 @@ public class Fetcher {
 		return Collections.EMPTY_LIST;
 	}
 
-	private void fetchAndUpdateImage(ImageData imageData) throws IOException, InterruptedException {
+	protected void fetchAndUpdateImage(ImageData imageData) throws IOException, InterruptedException {
 		try {
 			prepareFetch(imageData);
 			fetch(imageData, 0);
@@ -179,7 +179,8 @@ public class Fetcher {
 		}
 	}
 	
-	private boolean isFileCorrupted(ImageData imageData) throws SQLException {
+	// TODO: see how to deal with this exception
+	protected boolean isFileCorrupted(ImageData imageData) throws SQLException {
 		if(imageData.getState().equals(ImageState.CORRUPTED)) {
 			imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 			pendingImageFetchMap.remove(imageData.getName());
@@ -189,7 +190,7 @@ public class Fetcher {
 		return false;
 	}
 
-	private void prepareFetch(ImageData imageData) throws SQLException {
+	protected void prepareFetch(ImageData imageData) throws SQLException, IOException {
 		LOGGER.debug("Preparing image " + imageData.getName() + " to fetch");
 		if (imageStore.lockImage(imageData.getName())) {
 			imageData.setState(ImageState.FETCHING);
@@ -201,8 +202,15 @@ public class Fetcher {
 			Date lastUpdateTime = new Date(Calendar.getInstance().getTimeInMillis());
 			imageData.setUpdateTime(lastUpdateTime);
 			
-			LOGGER.debug("Updating image data in DB");
-			imageStore.updateImage(imageData);
+			try {
+				LOGGER.info("Updating image data in DB");
+				imageStore.updateImage(imageData);
+			} catch (SQLException e) {
+				LOGGER.error("Error while updating image " + imageData + " in DB",
+						e);
+				removeFromPendingAndUpdateState(imageData, properties);
+			}
+			
 			try {
 				imageStore.addStateStamp(imageData.getName(),
 						imageData.getState(), imageData.getUpdateTime());
@@ -217,7 +225,7 @@ public class Fetcher {
 		}
 	}
 
-	private void finishFetch(ImageData imageData) throws SQLException, IOException {
+	protected void finishFetch(ImageData imageData) throws IOException {
 		LOGGER.debug("Finishing fetch for image " + imageData.getName());
 		imageData.setState(ImageState.FETCHED);
 		
@@ -233,8 +241,15 @@ public class Fetcher {
 		LOGGER.info("UPDATE TIME = " + lastUpdateTime);
 		LOGGER.info("SEBAL VERSION = " + properties.getProperty("sebal_version"));
 		
-		LOGGER.info("Updating image data in DB");
-		imageStore.updateImage(imageData);
+		try {
+			LOGGER.info("Updating image data in DB");
+			imageStore.updateImage(imageData);
+		} catch (SQLException e) {
+			LOGGER.error("Error while updating image " + imageData + " in DB",
+					e);
+			removeFromPendingAndUpdateState(imageData, properties);
+		}
+		
 		try {
 			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
 					imageData.getUpdateTime());
@@ -249,7 +264,7 @@ public class Fetcher {
 		LOGGER.debug("Image " + imageData.getName() + " fetched!");
 	}
 	
-	private String getStationId(ImageData imageData) throws IOException {
+	protected String getStationId(ImageData imageData) throws IOException {
 		String stationFilePath = properties.getProperty("fetcher_volume_path")
 				+ "/results/" + imageData.getName() + "/" + imageData.getName()
 				+ "_station.csv";
@@ -270,20 +285,30 @@ public class Fetcher {
 		}
 	}
 
-	private void rollBackFetch(ImageData imageData) {
+	protected void rollBackFetch(ImageData imageData) {
+		
 		pendingImageFetchMap.remove(imageData.getName());
 		try {
-			imageStore.removeStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
-			imageData.setState(ImageState.FINISHED);
-			imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
+			imageStore.removeStateStamp(imageData.getName(),
+					imageData.getState(), imageData.getUpdateTime());
+		} catch (SQLException e) {
+			LOGGER.error("Error while removing state " + imageData.getState()
+					+ " timestamp", e);
+		}
+		imageData.setState(ImageState.FINISHED);
+		imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
+		
+		try {
 			imageStore.updateImage(imageData);
-		} catch (SQLException e1) {
-			Fetcher.LOGGER.error("Error while updating image data.", e1);
+		} catch (SQLException e) {
+			LOGGER.error("Error while updating image data.", e);
+			imageData.setState(ImageState.FETCHING);
+			pendingImageFetchMap.put(imageData.getName(), imageData);
 		}
 	}
 
 	// FIXME: reduce code
-	public void fetch(final ImageData imageData, int tries) throws Exception {
+	protected void fetch(final ImageData imageData, int tries) throws Exception {
 		
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 		if (tries > MAX_FETCH_TRIES) {
@@ -315,14 +340,29 @@ public class Fetcher {
 				+ localImageResultsPath + " in localhost");
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "scripts/sftp-access.sh", properties.getProperty("ftp_server_user"), ftpServerIP, ftpServerPort, 
 				remoteImageResultsPath, localImageResultsPath, imageData.getName());
+		
+		try {
+			Process p = builder.start();
+			p.waitFor();
+		} catch (InterruptedException e) {
+			LOGGER.error("Could not get image " + imageData
+					+ " results from FTP server", e);
+			fetch(imageData, tries++);
+		} catch (IOException e) {
+			LOGGER.error("Could not get image " + imageData
+					+ " results from FTP server", e);
+			fetch(imageData, tries++);
+		}
 
-		Process p = builder.start();
-		p.waitFor();
+		resultsChecksum(imageData, tries, localImageResultsDir);
+	}
 
+	protected void resultsChecksum(final ImageData imageData, int tries,
+			File localImageResultsDir) throws Exception {
 		LOGGER.debug("Checksum of " + imageData + " result files");
 		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
 			fetch(imageData, tries++);
-		}else{
+		} else{
 			
 			String pseudFolder = properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) 
 					+ localImageResultsDir.getName() + "/";
