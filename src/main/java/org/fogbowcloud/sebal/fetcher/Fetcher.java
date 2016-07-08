@@ -1,8 +1,6 @@
 package org.fogbowcloud.sebal.fetcher;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -36,6 +34,7 @@ public class Fetcher {
 	private DB pendingImageFetchDB;
 	private ConcurrentMap<String, ImageData> pendingImageFetchMap;
 	private FTPIntegrationImpl ftpImpl;
+	private FetcherHelper fetcherHelper;
 
 	private String ftpServerIP;
 	private String ftpServerPort;
@@ -50,7 +49,7 @@ public class Fetcher {
 
 		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
 				imageStorePort), ftpServerIP, ftpServerPort, new SwiftClient(
-				properties), new FTPIntegrationImpl());
+				properties), new FTPIntegrationImpl(), new FetcherHelper());
 
 		LOGGER.debug("Creating fetcher");
 		LOGGER.debug("Imagestore " + imageStoreIP + ":" + imageStorePort
@@ -59,7 +58,7 @@ public class Fetcher {
 
 	protected Fetcher(Properties properties, ImageDataStore imageStore,
 			String ftpServerIP, String ftpServerPort, SwiftClient swiftClient,
-			FTPIntegrationImpl ftpImpl) {
+			FTPIntegrationImpl ftpImpl, FetcherHelper fetcherHelper) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
@@ -77,6 +76,7 @@ public class Fetcher {
 		this.ftpServerPort = ftpServerPort;
 		this.swiftClient = swiftClient;
 		this.ftpImpl = ftpImpl;
+		this.fetcherHelper = fetcherHelper;
 
 		this.pendingImageFetchFile = new File("pending-image-fetch.db");
 		this.pendingImageFetchDB = DBMaker.newFileDB(pendingImageFetchFile)
@@ -193,25 +193,13 @@ public class Fetcher {
 			prepareFetch(imageData);
 			fetch(imageData, 0);
 
-			if (!isFileCorrupted(imageData)) {
+			if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap, imageStore)) {
 				finishFetch(imageData);
 			}
 		} catch (Exception e) {
 			LOGGER.error("Couldn't fetch image " + imageData.getName() + ".", e);
 			rollBackFetch(imageData);
 		}
-	}
-
-	// TODO: see how to deal with this exception
-	protected boolean isFileCorrupted(ImageData imageData) throws SQLException {
-		if (imageData.getState().equals(ImageState.CORRUPTED)) {
-			imageData.setUpdateTime(new Date(Calendar.getInstance()
-					.getTimeInMillis()));
-			pendingImageFetchMap.remove(imageData.getName());
-			imageStore.updateImage(imageData);
-			return true;
-		}
-		return false;
 	}
 
 	protected void prepareFetch(ImageData imageData) throws SQLException,
@@ -252,64 +240,52 @@ public class Fetcher {
 
 	protected void finishFetch(ImageData imageData) throws IOException,
 			SQLException {
-		LOGGER.debug("Finishing fetch for image " + imageData.getName());
-		imageData.setState(ImageState.FETCHED);
+		
+		String localImageResultsPath = fetcherHelper.getLocalImageResultsPath(imageData, properties);
+		
+		if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
 
-		String stationId = getStationId(imageData);
-		imageData.setStationId(stationId);
-		imageData.setSebalVersion(properties.getProperty("sebal_version"));
+			LOGGER.debug("Finishing fetch for image " + imageData.getName());
+			imageData.setState(ImageState.FETCHED);
 
-		Date lastUpdateTime = new Date(Calendar.getInstance().getTimeInMillis());
-		imageData.setUpdateTime(lastUpdateTime);
+			String stationId = fetcherHelper.getStationId(imageData, properties);
+			imageData.setStationId(stationId);
+			imageData.setSebalVersion(properties.getProperty("sebal_version"));
 
-		LOGGER.info("IMAGE = " + imageData.getName());
-		LOGGER.info("STATION ID = " + stationId);
-		LOGGER.info("UPDATE TIME = " + lastUpdateTime);
-		LOGGER.info("SEBAL VERSION = "
-				+ properties.getProperty("sebal_version"));
+			Date lastUpdateTime = new Date(Calendar.getInstance()
+					.getTimeInMillis());
+			imageData.setUpdateTime(lastUpdateTime);
 
-		try {
-			LOGGER.info("Updating image data in DB");
-			imageStore.updateImage(imageData);
-		} catch (SQLException e) {
-			LOGGER.error("Error while updating image " + imageData + " in DB",
-					e);
-			removeFromPendingAndUpdateState(imageData, properties);
-		}
+			LOGGER.info("IMAGE = " + imageData.getName());
+			LOGGER.info("STATION ID = " + stationId);
+			LOGGER.info("UPDATE TIME = " + lastUpdateTime);
+			LOGGER.info("SEBAL VERSION = "
+					+ properties.getProperty("sebal_version"));
 
-		try {
-			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-					imageData.getUpdateTime());
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding state " + imageData.getState()
-					+ " timestamp " + imageData.getUpdateTime() + " in DB");
-		}
+			try {
+				LOGGER.info("Updating image data in DB");
+				imageStore.updateImage(imageData);
+			} catch (SQLException e) {
+				LOGGER.error("Error while updating image " + imageData
+						+ " in DB", e);
+				removeFromPendingAndUpdateState(imageData, properties);
+			}
 
-		LOGGER.info("Removing image from pending map.");
-		pendingImageFetchMap.remove(imageData.getName());
+			try {
+				imageStore.addStateStamp(imageData.getName(),
+						imageData.getState(), imageData.getUpdateTime());
+			} catch (SQLException e) {
+				LOGGER.error("Error while adding state " + imageData.getState()
+						+ " timestamp " + imageData.getUpdateTime() + " in DB");
+			}
 
-		LOGGER.debug("Image " + imageData.getName() + " fetched!");
-	}
+			LOGGER.info("Removing image from pending map.");
+			pendingImageFetchMap.remove(imageData.getName());
 
-	protected String getStationId(ImageData imageData) throws IOException {
-		String stationFilePath = properties.getProperty(FETCHER_VOLUME_PATH)
-				+ "/results/" + imageData.getName() + "/" + imageData.getName()
-				+ "_station.csv";
-		File stationFile = new File(stationFilePath);
-
-		if (stationFile.exists() && stationFile.isFile()) {
-			BufferedReader reader = new BufferedReader(new FileReader(
-					stationFile));
-			String lineOne = reader.readLine();
-			String[] stationAtt = lineOne.split(";");
-
-			String stationId = stationAtt[0];
-			reader.close();
-			return stationId;
+			LOGGER.debug("Image " + imageData.getName() + " fetched!");
 		} else {
-			LOGGER.error("Station file for image " + imageData.getName()
-					+ " does not exist or is not a file!");
-			return null;
+			LOGGER.error("No " + imageData + " result files fetched");
+			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}
 
@@ -344,15 +320,9 @@ public class Fetcher {
 		if (tries <= MAX_FETCH_TRIES) {
 
 			// FIXME: to use file separator instead of /
-			String remoteImageResultsPath = properties
-					.getProperty(SEBAL_EXPORT_PATH)
-					+ "/results/"
-					+ imageData.getName();
+			String remoteImageResultsPath = fetcherHelper.getRemoteImageResultsPath(imageData, properties);
 
-			String localImageResultsPath = properties
-					.getProperty(FETCHER_VOLUME_PATH)
-					+ "/results/"
-					+ imageData.getName();
+			String localImageResultsPath = fetcherHelper.getLocalImageResultsPath(imageData, properties);
 
 			File localImageResultsDir = new File(localImageResultsPath);
 
@@ -367,9 +337,6 @@ public class Fetcher {
 
 			// FIXME: we should test for two different errors cases: i)
 			// exception; an ii) error code
-			// user@ftpp:port
-			// ftpFacace.get(user, ftpAddress, ftPort, src, dst)
-
 			int exitValue = ftpImpl.getFiles(properties, ftpServerIP,
 					ftpServerPort, remoteImageResultsPath,
 					localImageResultsPath, imageData);
