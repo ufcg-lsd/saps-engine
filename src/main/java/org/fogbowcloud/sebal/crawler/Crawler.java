@@ -113,10 +113,9 @@ public class Crawler {
 
 	public void exec() throws InterruptedException, IOException {
 
-		cleanUnfinishedDownloadedData(properties);
-
 		try {
 			while(true) {
+				cleanUnfinishedDownloadedData(properties);
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 

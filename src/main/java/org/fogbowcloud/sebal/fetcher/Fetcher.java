@@ -43,18 +43,30 @@ public class Fetcher {
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 
 	public Fetcher(Properties properties, String imageStoreIP,
-			String imageStorePort, String ftpServerIP, String ftpServerPort) {		
+			String imageStorePort, String ftpServerIP, String ftpServerPort) {
+		
+		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
+				imageStorePort), ftpServerIP, ftpServerPort);
+		
 		LOGGER.debug("Creating fetcher"); 
 		LOGGER.debug("Imagestore " + imageStoreIP + ":" + imageStorePort
 				+ " FTPServer " + ftpServerIP + ":" + ftpServerPort);
+	}
+	
+	public Fetcher(Properties properties, ImageDataStore imageStore, String ftpServerIP, String ftpServerPort) {
+		
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
 		}
+		
+		if(imageStore == null) {
+			throw new IllegalArgumentException(
+					"Imagestore arg must not be null.");
+		}
 
 		this.properties = properties;
-		this.imageStore = new JDBCImageDataStore(properties, imageStoreIP,
-				imageStorePort);
+		this.imageStore = imageStore;
 		this.ftpServerIP = ftpServerIP;
 		this.ftpServerPort = ftpServerPort;
 		this.swiftClient = new SwiftClient(properties);
@@ -74,9 +86,8 @@ public class Fetcher {
 	public void exec() {
 
 		try {
-			cleanUnfinishedFetchedData(properties);
-
 			while (true) {
+				cleanUnfinishedFetchedData(properties);
 				List<ImageData> imagesToFetch = imagesToFetch();
 				for (ImageData imageData : imagesToFetch) {
 					if (!imageData.getImageStatus().equals(ImageData.PURGED)) {
