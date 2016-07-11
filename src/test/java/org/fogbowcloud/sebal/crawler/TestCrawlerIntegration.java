@@ -224,18 +224,24 @@ public class TestCrawlerIntegration {
 		imageList.add(image1);
 		imageList.add(image2);
 
-		Mockito.doReturn(imageList).when(imageStore).getImagesToDownload(federationMember, maxImagesToDownload);
-		
+		Mockito.doReturn(imageList).when(imageStore)
+				.getImagesToDownload(federationMember, maxImagesToDownload);
+
 		Mockito.doNothing().when(nasaRepository).downloadImage(image1);
-		Mockito.doReturn(0).when(fmask).runFmask(image1, fmaskScriptPath, fmaskToolsPath,
+		Mockito.doReturn(0)
+				.when(fmask)
+				.runFmask(image1, fmaskScriptPath, fmaskToolsPath,
 						sebalExportPath);
-		Mockito.doThrow(new SQLException()).when(imageStore).updateImage(image1);
-		
-		Mockito.doNothing().when(nasaRepository).downloadImage(image1);		
-		Mockito.doReturn(0).when(fmask).runFmask(image2, fmaskScriptPath, fmaskToolsPath,
-				sebalExportPath);
+		Mockito.doThrow(new SQLException()).when(imageStore)
+				.updateImage(image1);
+
+		Mockito.doNothing().when(nasaRepository).downloadImage(image1);
+		Mockito.doReturn(0)
+				.when(fmask)
+				.runFmask(image2, fmaskScriptPath, fmaskToolsPath,
+						sebalExportPath);
 		Mockito.doNothing().when(imageStore).updateImage(image2);
-		
+
 		Crawler crawler = new Crawler(properties, imageStore, nasaRepository,
 				federationMember, fmask);
 
@@ -246,9 +252,10 @@ public class TestCrawlerIntegration {
 		Assert.assertEquals(ImageState.DOWNLOADING, image1.getState());
 		Assert.assertEquals(ImageState.DOWNLOADED, image2.getState());
 	}
-	
+
 	@Test
-	public void testPurgeImagesFromVolume() throws SQLException, IOException, InterruptedException {
+	public void testPurgeImagesFromVolume() throws SQLException, IOException,
+			InterruptedException {
 		// setup
 		Properties properties = Mockito.mock(Properties.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
@@ -261,31 +268,31 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE",
-				date, date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				date, "");
 		image1.setImageStatus(ImageData.PURGED);
 		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 1, "NE", "NE",
-				date, date, "");
+				ImageState.FINISHED, federationMember, 1, "NE", "NE", date,
+				date, "");
 
 		imageList.add(image1);
 		imageList.add(image2);
 
-		Mockito.doReturn(imageList).when(imageStore)
-				.getIn(ImageState.FINISHED);
-		
+		Mockito.doReturn(imageList).when(imageStore).getIn(ImageState.FINISHED);
+
 		Mockito.doReturn(sebalExportPath).when(properties)
 				.getProperty(Crawler.SEBAL_EXPORT_PATH);
-		
+
 		Crawler crawler = new Crawler(properties, imageStore, nasaRepository,
 				federationMember, fmask);
 
 		// exercise
 		crawler.purgeImagesFromVolume(properties);
 	}
-	
+
 	@Test
-	public void testFederationMemberCheck() throws SQLException, IOException, InterruptedException {
+	public void testFederationMemberCheck() throws SQLException, IOException,
+			InterruptedException {
 		// setup
 		Properties properties = Mockito.mock(Properties.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
@@ -298,21 +305,19 @@ public class TestCrawlerIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
-		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.FETCHED, federationMember1, 0, "NE", "NE",
-				date, date, "");
-		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.FETCHED, federationMember2, 0, "NE", "NE",
-				date, date, "");
-		
+		ImageData image1 = new ImageData("image1", "link1", ImageState.FETCHED,
+				federationMember1, 0, "NE", "NE", date, date, "");
+		ImageData image2 = new ImageData("image2", "link2", ImageState.FETCHED,
+				federationMember2, 0, "NE", "NE", date, date, "");
+
 		imageList.add(image1);
 		imageList.add(image2);
-		
+
 		Mockito.doReturn(sebalExportPath).when(properties)
 				.getProperty(Crawler.SEBAL_EXPORT_PATH);
-		
+
 		Mockito.doReturn(imageList).when(imageStore).getAllImages();
-		
+
 		Crawler crawler = new Crawler(properties, imageStore, nasaRepository,
 				federationMember1, fmask);
 
@@ -320,6 +325,7 @@ public class TestCrawlerIntegration {
 		crawler.deleteFetchedResultsFromVolume(properties);
 
 		// expect
-		Assert.assertNotEquals(image1.getFederationMember(), image2.getFederationMember());
+		Assert.assertNotEquals(image1.getFederationMember(),
+				image2.getFederationMember());
 	}
 }

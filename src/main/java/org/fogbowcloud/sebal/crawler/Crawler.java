@@ -24,7 +24,6 @@ import org.mapdb.DBMaker;
 
 public class Crawler {
 
-	//FIXME: replace sebal export path constant in other places
 	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 	protected static final String FMASK_TOOL_PATH = "fmask_tool_path";
 	protected static final String FMASK_SCRIPT_PATH = "fmask_script_path";
@@ -45,35 +44,34 @@ public class Crawler {
 
 	public Crawler(Properties properties, String imageStoreIP,
 			String imageStorePort, String federationMember) {
-		
+
 		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
 				imageStorePort), new NASARepository(properties),
 				federationMember, new FMask());
-		
+
 		LOGGER.info("Creating crawler");
 		LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort
 				+ " federationmember " + federationMember);
 	}
-	
+
 	protected Crawler(Properties properties, ImageDataStore imageStore,
-			NASARepository nasaRepository, String federationMember,
-			FMask fmask) {
+			NASARepository nasaRepository, String federationMember, FMask fmask) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
 		}
-		
-		if(imageStore == null) {
+
+		if (imageStore == null) {
 			throw new IllegalArgumentException(
 					"Imagestore arg must not be null.");
 		}
-		
-		if(nasaRepository == null) {
+
+		if (nasaRepository == null) {
 			throw new IllegalArgumentException(
 					"NASARepository arg must not be null.");
 		}
-		
+
 		if (federationMember == null) {
 			throw new IllegalArgumentException(
 					"Federation member arg must not be null.");
@@ -83,10 +81,9 @@ public class Crawler {
 			throw new IllegalArgumentException(
 					"Federation member arg must not be empty.");
 		}
-		
+
 		if (fmask == null) {
-			throw new IllegalArgumentException(
-					"Fmask arg must not be empty.");
+			throw new IllegalArgumentException("Fmask arg must not be empty.");
 		}
 
 		this.properties = properties;
@@ -94,7 +91,7 @@ public class Crawler {
 		this.nasaRepository = nasaRepository;
 		this.federationMember = federationMember;
 		this.fmask = fmask;
-		
+
 		this.pendingImageDownloadFile = new File("pending-image-download.db");
 		this.pendingImageDownloadDB = DBMaker.newFileDB(
 				pendingImageDownloadFile).make();
@@ -114,12 +111,12 @@ public class Crawler {
 	public void exec() throws InterruptedException, IOException {
 
 		try {
-			while(true) {
+			while (true) {
 				cleanUnfinishedDownloadedData(properties);
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
-				long numToDownload = numberOfImagesToDownload();				
+				long numToDownload = numberOfImagesToDownload();
 				if (numToDownload > 0) {
 					download(numToDownload);
 				} else {
@@ -154,7 +151,8 @@ public class Crawler {
 		try {
 			// FIXME: check the implications of this cast
 			// This updates images in NOT_DOWNLOADED state to DOWNLOADING
-			// and sets this federation member as owner, and then gets all images
+			// and sets this federation member as owner, and then gets all
+			// images
 			// marked as DOWNLOADING
 			imageDataList = imageStore.getImagesToDownload(federationMember,
 					(int) maxImagesToDownload);
@@ -186,8 +184,9 @@ public class Crawler {
 		LOGGER.info("Download finished");
 	}
 
-	protected long numberOfImagesToDownload() throws NumberFormatException, InterruptedException, IOException, SQLException {
-		
+	protected long numberOfImagesToDownload() throws NumberFormatException,
+			InterruptedException, IOException, SQLException {
+
 		String volumeDirPath = properties.getProperty(SEBAL_EXPORT_PATH);
 		File volumePath = getExportDirPath(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
@@ -205,15 +204,16 @@ public class Crawler {
 		} else {
 			throw new RuntimeException("VolumePath: " + volumeDirPath
 					+ " is not a directory or does not exist");
-		}		
+		}
 	}
 
 	protected File getExportDirPath(String volumeDirPath) {
 		return new File(volumeDirPath);
 	}
 
-	protected void downloadImage(final ImageData imageData) throws SQLException, IOException {
-		
+	protected void downloadImage(final ImageData imageData)
+			throws SQLException, IOException {
+
 		try {
 			// FIXME: it blocks?
 			nasaRepository.downloadImage(imageData);
@@ -235,17 +235,18 @@ public class Crawler {
 
 			imageData.setState(ImageState.DOWNLOADED);
 			Date updateTime = new Date(Calendar.getInstance().getTimeInMillis());
-			
+
 			imageData.setCreationTime(updateTime);
 			imageData.setUpdateTime(updateTime);
-			
-			try {				
+
+			try {
 				imageStore.updateImage(imageData);
-			} catch(SQLException e) {
-				LOGGER.error("Error while updating image " + imageData + " to DB");
+			} catch (SQLException e) {
+				LOGGER.error("Error while updating image " + imageData
+						+ " to DB");
 				removeFromPendingAndUpdateState(imageData, properties);
 			}
-			
+
 			try {
 				imageStore.addStateStamp(imageData.getName(),
 						imageData.getState(), imageData.getUpdateTime());
@@ -253,7 +254,7 @@ public class Crawler {
 				LOGGER.error("Error while adding state " + imageData.getState()
 						+ " timestamp " + imageData.getUpdateTime() + " in DB");
 			}
-			
+
 			pendingImageDownloadMap.remove(imageData.getName());
 
 			LOGGER.info("Image " + imageData + " was downloaded");
@@ -266,7 +267,7 @@ public class Crawler {
 
 	private void markImageWithErrorAndUpdateState(ImageData imageData,
 			Properties properties) throws IOException {
-		
+
 		try {
 			if (imageData.getFederationMember().equals(federationMember)) {
 				imageData.setState(ImageState.ERROR);
@@ -284,10 +285,11 @@ public class Crawler {
 				pendingImageDownloadMap.remove(imageData.getName());
 			}
 		} catch (SQLException e) {
-			LOGGER.error("Error while updating image data: "
-					+ imageData.getName(), e);
+			LOGGER.error(
+					"Error while updating image data: " + imageData.getName(),
+					e);
 			removeFromPendingAndUpdateState(imageData, properties);
-		}		
+		}
 	}
 
 	private void removeFromPendingAndUpdateState(final ImageData imageData,
@@ -311,7 +313,7 @@ public class Crawler {
 			imageData.setState(ImageState.NOT_DOWNLOADED);
 			imageData.setUpdateTime(new Date(Calendar.getInstance()
 					.getTimeInMillis()));
-			
+
 			try {
 				imageStore.updateImage(imageData);
 			} catch (SQLException e) {
@@ -334,15 +336,15 @@ public class Crawler {
 
 	protected void deleteImageFromDisk(final ImageData imageData,
 			String exportPath) throws IOException {
-		
+
 		String imageDirPath = exportPath + "/images/" + imageData.getName();
 		File imageDir = new File(imageDirPath);
 
 		LOGGER.info("Removing image " + imageData + " data under path "
 				+ imageDirPath);
 
-		if(isImageOnDisk(imageDirPath, imageDir)) {
-			FileUtils.deleteDirectory(imageDir);			
+		if (isImageOnDisk(imageDirPath, imageDir)) {
+			FileUtils.deleteDirectory(imageDir);
 		}
 	}
 
@@ -404,7 +406,7 @@ public class Crawler {
 
 	protected void purgeImagesFromVolume(Properties properties)
 			throws IOException, InterruptedException, SQLException {
-		
+
 		LOGGER.info("Starting purge");
 
 		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.FINISHED);
@@ -419,7 +421,8 @@ public class Crawler {
 					LOGGER.debug("Purging image " + imageData);
 
 					try {
-						deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
+						deleteImageFromDisk(imageData,
+								properties.getProperty(SEBAL_EXPORT_PATH));
 						deleteResultsFromDisk(imageData, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageData, e);

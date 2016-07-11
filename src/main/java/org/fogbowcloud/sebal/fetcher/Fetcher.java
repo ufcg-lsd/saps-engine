@@ -25,7 +25,6 @@ import org.mapdb.DBMaker;
 
 public class Fetcher {
 
-	protected static final String FETCHER_VOLUME_PATH = "fetcher_volume_path";
 	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 	private final Properties properties;
 	private final ImageDataStore imageStore;
@@ -144,8 +143,6 @@ public class Fetcher {
 			LOGGER.error(
 					"Error while updating image data " + imageData.getName(), e);
 			imageData.setState(ImageState.FETCHING);
-			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-					imageData.getUpdateTime());
 			return;
 		}
 
@@ -193,7 +190,8 @@ public class Fetcher {
 			prepareFetch(imageData);
 			fetch(imageData, 0);
 
-			if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap, imageStore)) {
+			if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap,
+					imageStore)) {
 				finishFetch(imageData);
 			}
 		} catch (Exception e) {
@@ -206,15 +204,14 @@ public class Fetcher {
 			IOException {
 		LOGGER.debug("Preparing image " + imageData.getName() + " to fetch");
 		if (imageStore.lockImage(imageData.getName())) {
+			
 			imageData.setState(ImageState.FETCHING);
-
-			LOGGER.debug("Adding image" + imageData + " to pending database");
-			pendingImageFetchMap.put(imageData.getName(), imageData);
-			pendingImageFetchDB.commit();
-
 			Date lastUpdateTime = new Date(Calendar.getInstance()
 					.getTimeInMillis());
 			imageData.setUpdateTime(lastUpdateTime);
+			
+			fetcherHelper.updatePendingMapAndDB(imageData,
+					pendingImageFetchDB, pendingImageFetchMap);
 
 			try {
 				LOGGER.info("Updating image data in DB");
@@ -240,15 +237,17 @@ public class Fetcher {
 
 	protected void finishFetch(ImageData imageData) throws IOException,
 			SQLException {
-		
-		String localImageResultsPath = fetcherHelper.getLocalImageResultsPath(imageData, properties);
-		
+
+		String localImageResultsPath = fetcherHelper.getLocalImageResultsPath(
+				imageData, properties);
+
 		if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
 
 			LOGGER.debug("Finishing fetch for image " + imageData.getName());
 			imageData.setState(ImageState.FETCHED);
 
-			String stationId = fetcherHelper.getStationId(imageData, properties);
+			String stationId = fetcherHelper
+					.getStationId(imageData, properties);
 			imageData.setStationId(stationId);
 			imageData.setSebalVersion(properties.getProperty("sebal_version"));
 
@@ -317,12 +316,14 @@ public class Fetcher {
 
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 
-		if (tries <= MAX_FETCH_TRIES) {
+		if (!maxTriesReached(tries)) {
 
 			// FIXME: to use file separator instead of /
-			String remoteImageResultsPath = fetcherHelper.getRemoteImageResultsPath(imageData, properties);
+			String remoteImageResultsPath = fetcherHelper
+					.getRemoteImageResultsPath(imageData, properties);
 
-			String localImageResultsPath = fetcherHelper.getLocalImageResultsPath(imageData, properties);
+			String localImageResultsPath = fetcherHelper
+					.getLocalImageResultsPath(imageData, properties);
 
 			File localImageResultsDir = new File(localImageResultsPath);
 
@@ -353,23 +354,30 @@ public class Fetcher {
 		}
 	}
 
+	protected boolean maxTriesReached(int tries) {
+		return tries <= MAX_FETCH_TRIES;
+	}
+
 	protected void resultsChecksum(final ImageData imageData, int tries,
 			File localImageResultsDir) throws Exception {
 		LOGGER.debug("Checksum of " + imageData + " result files");
 		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
 			fetch(imageData, tries++);
 		} else {
+			uploadFilesToSwift(localImageResultsDir);
+		}
+	}
 
-			String pseudFolder = properties
-					.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)
-					+ localImageResultsDir.getName() + "/";
-			String containerName = properties
-					.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+	protected void uploadFilesToSwift(File localImageResultsDir) throws Exception {
+		String pseudFolder = properties
+				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)
+				+ localImageResultsDir.getName() + "/";
+		String containerName = properties
+				.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
 
-			for (File actualFile : localImageResultsDir.listFiles()) {
-				swiftClient.uploadFile(containerName, actualFile, pseudFolder);
-				actualFile.delete();
-			}
+		for (File actualFile : localImageResultsDir.listFiles()) {
+			swiftClient.uploadFile(containerName, actualFile, pseudFolder);
+			actualFile.delete();
 		}
 	}
 }
