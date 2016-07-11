@@ -13,6 +13,10 @@ public class FTPIntegrationImpl implements FTPIntegration{
 	public int getFiles(Properties properties, String ftpServerIP,
 			String ftpServerPort, String remoteImageResultsPath,
 			String localImageResultsPath, ImageData imageData) {
+		if(localImageResultsPath == null || remoteImageResultsPath == null) {
+			return 1;
+		}
+		
 		LOGGER.info("Getting " + remoteImageResultsPath + " in FTPserver"
 				+ ftpServerIP + ":" + ftpServerPort + " to "
 				+ localImageResultsPath + " in localhost");

@@ -18,8 +18,7 @@ import org.mapdb.DB;
 
 public class FetcherHelper {
 
-	protected static final String FETCHER_VOLUME_PATH = "fetcher_volume_path";
-	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
+	protected static final int NUMBER_OF_RESULT_FILES = 7;
 
 	public static final Logger LOGGER = Logger.getLogger(FetcherHelper.class);
 	
@@ -31,10 +30,17 @@ public class FetcherHelper {
 		pendingImageFetchMap.put(imageData.getName(), imageData);
 		pendingImageFetchDB.commit();
 	}
+	
+	protected void removeImageFromPendingMap(ImageData imageData,
+			DB pendingImageFetchDB,
+			ConcurrentMap<String, ImageData> pendingImageFetchMap) {
+		LOGGER.info("Removing image from pending map.");
+		pendingImageFetchMap.remove(imageData.getName());
+	}
 
 	protected String getStationId(ImageData imageData, Properties properties)
 			throws IOException {
-		String stationFilePath = properties.getProperty(FETCHER_VOLUME_PATH)
+		String stationFilePath = properties.getProperty(Fetcher.FETCHER_RESULTS_PATH)
 				+ "/results/" + imageData.getName() + "/" + imageData.getName()
 				+ "_station.csv";
 		File stationFile = new File(stationFilePath);
@@ -57,14 +63,14 @@ public class FetcherHelper {
 
 	protected String getRemoteImageResultsPath(final ImageData imageData,
 			Properties properties) {
-		return properties.getProperty(SEBAL_EXPORT_PATH) + "/results/"
+		return properties.getProperty(Fetcher.SEBAL_EXPORT_PATH) + "/results/"
 				+ imageData.getName();
 	}
 
 	protected String getLocalImageResultsPath(ImageData imageData,
 			Properties properties) {
 		String localImageResultsPath = properties
-				.getProperty(FETCHER_VOLUME_PATH)
+				.getProperty(Fetcher.FETCHER_RESULTS_PATH)
 				+ "/results/"
 				+ imageData.getName();
 		return localImageResultsPath;
@@ -87,9 +93,8 @@ public class FetcherHelper {
 	protected boolean isThereFetchedFiles(String localImageResultsPath) {
 		File localImageResultsDir = new File(localImageResultsPath);
 
-		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {
-			// FIXME: length must be bigger or equal to NUMBER_OF_OUTPUT_FILES
-			if (localImageResultsDir.list().length > 0) {
+		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {		
+			if (localImageResultsDir.list().length >= NUMBER_OF_RESULT_FILES) {
 				return true;
 			} else {
 				return false;

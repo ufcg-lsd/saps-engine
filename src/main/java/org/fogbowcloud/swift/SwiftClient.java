@@ -29,22 +29,24 @@ public class SwiftClient {
 		
 	}
 
-	public void uploadFile(String containerName, File file, String pseudFolder) throws Exception{
-		try{
+	public void uploadFile(String containerName, File file, String pseudFolder)
+			throws Exception {
+		try {
 			Container container = account.getContainer(containerName);
 
 			String completeFileName;
-			if(pseudFolder != null && !pseudFolder.isEmpty()){
+			if (pseudFolder != null && !pseudFolder.isEmpty()) {
 				pseudFolder = this.normalizePseudFolder(pseudFolder);
-				completeFileName = pseudFolder+file.getName();
-			}else{
+				completeFileName = pseudFolder + file.getName();
+			} else {
 				completeFileName = file.getName();
 			}
 
 			StoredObject storedObject = container.getObject(completeFileName);
 			storedObject.uploadObject(file);
-		}catch (Exception e){
-			throw new Exception("Error while trying to upload file "+file.getAbsolutePath(), e);
+		} catch (Exception e) {
+			throw new Exception("Error while trying to upload file "
+					+ file.getAbsolutePath(), e);
 		}
 	}
 	

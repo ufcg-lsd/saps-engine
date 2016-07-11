@@ -26,6 +26,7 @@ import org.mapdb.DBMaker;
 public class Fetcher {
 
 	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
+	protected static final String FETCHER_RESULTS_PATH = "fetcher_volume_path";
 	private final Properties properties;
 	private final ImageDataStore imageStore;
 	private final SwiftClient swiftClient;
@@ -118,12 +119,15 @@ public class Fetcher {
 		LOGGER.info("Starting garbage collector");
 		Collection<ImageData> data = pendingImageFetchMap.values();
 		for (ImageData imageData : data) {
-			removeFromPendingAndUpdateState(imageData, properties);
+			//removeFromPendingAndUpdateState(imageData, properties);
+			rollBackFetch(imageData);
+			delelteResultsFromDisk(imageData, properties);
 		}
 		LOGGER.info("Garbage collect finished");
 	}
 
-	protected void removeFromPendingAndUpdateState(final ImageData imageData,
+	// FIXME: see if this method will change
+	/*protected void removeFromPendingAndUpdateState(final ImageData imageData,
 			Properties properties) throws IOException, SQLException {
 		LOGGER.debug("Bringing " + imageData + " back to "
 				+ ImageState.FINISHED);
@@ -158,7 +162,7 @@ public class Fetcher {
 		pendingImageFetchMap.remove(imageData.getName());
 
 		LOGGER.info("Image " + imageData.getName() + " deleted");
-	}
+	}*/
 
 	protected void delelteResultsFromDisk(final ImageData imageData,
 			Properties properties) throws IOException {
@@ -187,20 +191,25 @@ public class Fetcher {
 	protected void fetchAndUpdateImage(ImageData imageData) throws IOException,
 			InterruptedException {
 		try {
-			prepareFetch(imageData);
-			fetch(imageData, 0);
-
-			if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap,
-					imageStore)) {
-				finishFetch(imageData);
+			if(prepareFetch(imageData)) {				
+				fetch(imageData, 0);
+				if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap,
+						imageStore)) {
+					finishFetch(imageData);
+				}
+			} else {
+				LOGGER.error("Could not prepare image " + imageData + " to fetch");
 			}
 		} catch (Exception e) {
-			LOGGER.error("Couldn't fetch image " + imageData.getName() + ".", e);
+			LOGGER.error("Could not fetch image " + imageData.getName() + ".", e);
 			rollBackFetch(imageData);
+			if(fetcherHelper.isThereFetchedFiles(properties.getProperty(FETCHER_RESULTS_PATH))) {
+				delelteResultsFromDisk(imageData, properties);
+			}
 		}
 	}
 
-	protected void prepareFetch(ImageData imageData) throws SQLException,
+	protected boolean prepareFetch(ImageData imageData) throws SQLException,
 			IOException {
 		LOGGER.debug("Preparing image " + imageData.getName() + " to fetch");
 		if (imageStore.lockImage(imageData.getName())) {
@@ -219,7 +228,8 @@ public class Fetcher {
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image " + imageData
 						+ " in DB", e);
-				removeFromPendingAndUpdateState(imageData, properties);
+				rollBackFetch(imageData);
+				return false;
 			}
 
 			try {
@@ -233,6 +243,7 @@ public class Fetcher {
 
 			LOGGER.debug("Image " + imageData.getName() + " ready to fetch");
 		}
+		return true;
 	}
 
 	protected void finishFetch(ImageData imageData) throws IOException,
@@ -267,7 +278,8 @@ public class Fetcher {
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image " + imageData
 						+ " in DB", e);
-				removeFromPendingAndUpdateState(imageData, properties);
+				rollBackFetch(imageData);
+				delelteResultsFromDisk(imageData, properties);
 			}
 
 			try {
@@ -278,13 +290,12 @@ public class Fetcher {
 						+ " timestamp " + imageData.getUpdateTime() + " in DB");
 			}
 
-			LOGGER.info("Removing image from pending map.");
-			pendingImageFetchMap.remove(imageData.getName());
+			fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB, pendingImageFetchMap);
 
-			LOGGER.debug("Image " + imageData.getName() + " fetched!");
+			LOGGER.debug("Image " + imageData.getName() + " fetched");
 		} else {
 			LOGGER.error("No " + imageData + " result files fetched");
-			removeFromPendingAndUpdateState(imageData, properties);
+			rollBackFetch(imageData);
 		}
 	}
 
@@ -307,7 +318,7 @@ public class Fetcher {
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image data.", e);
 			imageData.setState(ImageState.FETCHING);
-			pendingImageFetchMap.put(imageData.getName(), imageData);
+			fetcherHelper.updatePendingMapAndDB(imageData, pendingImageFetchDB, pendingImageFetchMap);
 		}
 	}
 
@@ -327,12 +338,15 @@ public class Fetcher {
 
 			File localImageResultsDir = new File(localImageResultsPath);
 
-			// FIXME: test it; what happens if it is a file
-			if (!localImageResultsDir.exists()
-					&& !localImageResultsDir.isDirectory()) {
+			if (!localImageResultsDir.exists()) {
 				LOGGER.info("Path " + localImageResultsPath
 						+ " not valid or nonexistent. Creating "
 						+ localImageResultsPath);
+				localImageResultsDir.mkdirs();
+			} else if (!localImageResultsDir.isDirectory()) {
+				LOGGER.info(localImageResultsPath
+						+ " is a file, not a directory. Deleting it and creating a actual directory");
+				localImageResultsDir.delete();
 				localImageResultsDir.mkdirs();
 			}
 
@@ -345,7 +359,10 @@ public class Fetcher {
 			if (exitValue == 0) {
 				resultsChecksum(imageData, tries, localImageResultsDir);
 			} else {
-				removeFromPendingAndUpdateState(imageData, properties);
+				rollBackFetch(imageData);
+				if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
+					delelteResultsFromDisk(imageData, properties);
+				}
 			}
 		} else {
 			LOGGER.info("Max tries was reached. Marking " + imageData
@@ -355,7 +372,7 @@ public class Fetcher {
 	}
 
 	protected boolean maxTriesReached(int tries) {
-		return tries <= MAX_FETCH_TRIES;
+		return tries >= MAX_FETCH_TRIES;
 	}
 
 	protected void resultsChecksum(final ImageData imageData, int tries,
