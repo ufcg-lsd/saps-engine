@@ -40,6 +40,7 @@ public class Fetcher {
 	private String ftpServerPort;
 
 	private static int MAX_FETCH_TRIES = 2;
+	private static int MAX_SWIFT_UPLOAD_TRIES = 2;
 	private static final long DEFAULT_SCHEDULER_PERIOD = 60000; // 5 minutes
 
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
@@ -119,7 +120,6 @@ public class Fetcher {
 		LOGGER.info("Starting garbage collector");
 		Collection<ImageData> data = pendingImageFetchMap.values();
 		for (ImageData imageData : data) {
-			//removeFromPendingAndUpdateState(imageData, properties);
 			rollBackFetch(imageData);
 			delelteResultsFromDisk(imageData, properties);
 		}
@@ -194,7 +194,7 @@ public class Fetcher {
 			if(prepareFetch(imageData)) {				
 				fetch(imageData, 0);
 				if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap,
-						imageStore)) {
+						imageStore) && !fetcherHelper.isImageRolledBack(imageData)) {
 					finishFetch(imageData);
 				}
 			} else {
@@ -254,7 +254,7 @@ public class Fetcher {
 
 		if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
 
-			LOGGER.debug("Finishing fetch for image " + imageData.getName());
+			LOGGER.debug("Finishing fetch for image " + imageData);
 			imageData.setState(ImageState.FETCHED);
 
 			String stationId = fetcherHelper
@@ -265,12 +265,6 @@ public class Fetcher {
 			Date lastUpdateTime = new Date(Calendar.getInstance()
 					.getTimeInMillis());
 			imageData.setUpdateTime(lastUpdateTime);
-
-			LOGGER.info("IMAGE = " + imageData.getName());
-			LOGGER.info("STATION ID = " + stationId);
-			LOGGER.info("UPDATE TIME = " + lastUpdateTime);
-			LOGGER.info("SEBAL VERSION = "
-					+ properties.getProperty("sebal_version"));
 
 			try {
 				LOGGER.info("Updating image data in DB");
@@ -322,14 +316,12 @@ public class Fetcher {
 		}
 	}
 
-	// FIXME: reduce code
 	protected void fetch(final ImageData imageData, int tries) throws Exception {
-
+		// FIXME: doc-it (we want to know the max tries logic)
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 
-		if (!maxTriesReached(tries)) {
+		while (!maxTriesReached(tries)) {
 
-			// FIXME: to use file separator instead of /
 			String remoteImageResultsPath = fetcherHelper
 					.getRemoteImageResultsPath(imageData, properties);
 
@@ -350,24 +342,35 @@ public class Fetcher {
 				localImageResultsDir.mkdirs();
 			}
 
-			// FIXME: we should test for two different errors cases: i)
-			// exception; an ii) error code
+			// FIXME: we should test for two different errors cases:
+			// i)exception - done
+			// ii)error code;
 			int exitValue = ftpImpl.getFiles(properties, ftpServerIP,
 					ftpServerPort, remoteImageResultsPath,
 					localImageResultsPath, imageData);
 
 			if (exitValue == 0) {
-				resultsChecksum(imageData, tries, localImageResultsDir);
+				if (resultsChecksumOK(imageData, tries, localImageResultsDir)) {
+					uploadFilesToSwift(imageData, localImageResultsDir);
+				} else {
+					delelteResultsFromDisk(imageData, properties);
+				}
 			} else {
 				rollBackFetch(imageData);
 				if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
 					delelteResultsFromDisk(imageData, properties);
 				}
 			}
-		} else {
+		}
+		
+		if (maxTriesReached(tries)) {
 			LOGGER.info("Max tries was reached. Marking " + imageData
 					+ " as corrupted.");
 			imageData.setState(ImageState.CORRUPTED);
+			fetcherHelper.removeImageFromPendingMap(imageData,
+					pendingImageFetchDB, pendingImageFetchMap);
+			// TODO: see if this have to be in try-catch
+			imageStore.updateImage(imageData);
 		}
 	}
 
@@ -375,17 +378,18 @@ public class Fetcher {
 		return tries >= MAX_FETCH_TRIES;
 	}
 
-	protected void resultsChecksum(final ImageData imageData, int tries,
+	protected boolean resultsChecksumOK(final ImageData imageData, int tries,
 			File localImageResultsDir) throws Exception {
 		LOGGER.debug("Checksum of " + imageData + " result files");
 		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
-			fetch(imageData, tries++);
-		} else {
-			uploadFilesToSwift(localImageResultsDir);
+			tries++;
+			return false;
 		}
+		
+		return true;
 	}
 
-	protected void uploadFilesToSwift(File localImageResultsDir) throws Exception {
+	protected void uploadFilesToSwift(ImageData imageData, File localImageResultsDir) throws Exception {		
 		String pseudFolder = properties
 				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)
 				+ localImageResultsDir.getName() + "/";
@@ -393,8 +397,23 @@ public class Fetcher {
 				.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
 
 		for (File actualFile : localImageResultsDir.listFiles()) {
-			swiftClient.uploadFile(containerName, actualFile, pseudFolder);
-			actualFile.delete();
+			int uploadFileTries = 0;
+			while (uploadFileTries < MAX_SWIFT_UPLOAD_TRIES) {
+				try {
+					swiftClient.uploadFile(containerName, actualFile,
+							pseudFolder);
+				} catch (Exception e) {
+					LOGGER.error("Error while uploading "
+							+ actualFile.getAbsolutePath() + " to swift");
+					uploadFileTries++;
+				}
+			}
+			
+			if(uploadFileTries >= MAX_SWIFT_UPLOAD_TRIES) {
+				rollBackFetch(imageData);
+				delelteResultsFromDisk(imageData, properties);
+				break;
+			}
 		}
 	}
 }

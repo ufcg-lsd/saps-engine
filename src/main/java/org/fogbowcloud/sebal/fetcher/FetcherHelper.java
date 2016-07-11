@@ -89,6 +89,13 @@ public class FetcherHelper {
 		}
 		return false;
 	}
+	
+	protected boolean isImageRolledBack(ImageData imageData) {
+		if(imageData.getState().equals(ImageState.FINISHED)){
+			return true;
+		}
+		return false;
+	}
 
 	protected boolean isThereFetchedFiles(String localImageResultsPath) {
 		File localImageResultsDir = new File(localImageResultsPath);

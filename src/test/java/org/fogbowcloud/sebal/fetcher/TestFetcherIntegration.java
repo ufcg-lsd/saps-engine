@@ -33,6 +33,11 @@ public class TestFetcherIntegration {
 
 	@Test
 	public void testFailFetch() throws Exception {
+		// When sftp file transfer fail 
+		// then
+		// rollback of image data from FETCHING to FINISHED
+		// and (if exists) delete fetched result files
+		
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
@@ -73,6 +78,8 @@ public class TestFetcherIntegration {
 
 	@Test
 	public void testNoResultFilesToFetch() throws Exception {
+		// FIXME: describe
+		
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
@@ -254,5 +261,43 @@ public class TestFetcherIntegration {
 
 		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
 		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
+	}
+	
+	@Test
+	public void testMaxTriesReached() throws Exception {
+		// FIXME: describe
+		
+		// setup
+		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
+		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
+		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
+		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		Properties properties = Mockito.mock(Properties.class);
+		String ftpServerIP = "fake-IP";
+		String ftpServerPort = "fake-PORT";
+		String sebalExportPath = "fake-export-path";
+		String federationMember = "fake-federation-member";
+		String fetcherVolumePath = "fake-fetcher-volume-path";
+
+		Date date = Mockito.mock(Date.class);
+
+		ImageData imageData = new ImageData("image1", "link1",
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", date,
+				date, "");
+
+		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
+				.getRemoteImageResultsPath(imageData, properties);
+		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
+				.getLocalImageResultsPath(imageData, properties);
+
+		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
+				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+
+		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
+
+		// exercise
+		fetcher.fetch(imageData, 3);
+
+		Assert.assertEquals(ImageState.CORRUPTED, imageData.getState());
 	}
 }
