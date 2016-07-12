@@ -120,12 +120,12 @@ public class Fetcher {
 		Collection<ImageData> data = pendingImageFetchMap.values();
 		for (ImageData imageData : data) {
 			rollBackFetch(imageData);
-			delelteResultsFromDisk(imageData, properties);
+			deleteResultsFromDisk(imageData, properties);
 		}
 		LOGGER.info("Garbage collect finished");
 	}
 
-	protected void delelteResultsFromDisk(final ImageData imageData,
+	protected void deleteResultsFromDisk(final ImageData imageData,
 			Properties properties) throws IOException {
 		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
 		String resultsDirPath = exportPath + "/results/" + imageData.getName();
@@ -165,7 +165,7 @@ public class Fetcher {
 			LOGGER.error("Could not fetch image " + imageData.getName() + ".", e);
 			rollBackFetch(imageData);
 			if(fetcherHelper.isThereFetchedFiles(properties.getProperty(FETCHER_RESULTS_PATH))) {
-				delelteResultsFromDisk(imageData, properties);
+				deleteResultsFromDisk(imageData, properties);
 			}
 		}
 	}
@@ -234,7 +234,7 @@ public class Fetcher {
 				LOGGER.error("Error while updating image " + imageData
 						+ " in DB", e);
 				rollBackFetch(imageData);
-				delelteResultsFromDisk(imageData, properties);
+				deleteResultsFromDisk(imageData, properties);
 			}
 
 			try {
@@ -320,13 +320,13 @@ public class Fetcher {
 					}
 				} else {
 					if(fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
-						delelteResultsFromDisk(imageData, properties);
+						deleteResultsFromDisk(imageData, properties);
 					}
 				}
 			} else {
 				rollBackFetch(imageData);
 				if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
-					delelteResultsFromDisk(imageData, properties);
+					deleteResultsFromDisk(imageData, properties);
 				}
 				break;
 			}
@@ -362,7 +362,7 @@ public class Fetcher {
 			
 			if(uploadFileTries >= MAX_SWIFT_UPLOAD_TRIES) {
 				rollBackFetch(imageData);
-				delelteResultsFromDisk(imageData, properties);
+				deleteResultsFromDisk(imageData, properties);
 				return false;
 			}
 		}

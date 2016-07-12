@@ -79,7 +79,9 @@ public class TestFetcherIntegration {
 
 	@Test
 	public void testNoResultFilesToFetch() throws Exception {
-		// FIXME: describe
+		// When there is no file to fetch in finishFetch
+		// then
+		// finishFetch must roll back image from FETCHING to FINISHED
 		
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
@@ -121,7 +123,11 @@ public class TestFetcherIntegration {
 	
 	@Test
 	public void testFetcherErrorWhileGettingImagesToFetch() throws SQLException, IOException {
-		// FIXME: describe
+		// When no image is returned in getImageToFetch call
+		// then
+		// will be returned an empty list of images
+		// no image will be set to FETCHING
+		// the two images (that were not able to be in list) will remain as FINISHED
 		
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
@@ -218,7 +224,10 @@ public class TestFetcherIntegration {
 	
 	@Test
 	public void testAddStateStampFail() throws SQLException, IOException {
-		// FIXME: describe
+		// When the update of image state and stamp into DB fail
+		// then
+		// prepareToFetch must try to roll back image from FETCHING to FINISHED
+		// (if it not succeed) prepareToFetch must leave image state as FETCHING for posterity
 		
 		// setup
 		ConcurrentMap<String, ImageData> pendingImageFetchMap = Mockito
@@ -271,7 +280,10 @@ public class TestFetcherIntegration {
 	
 	@Test
 	public void testMaxTriesReached() throws Exception {
-		// FIXME: describe
+		// When Fetcher reaches maximum fetch tries for an image
+		// then
+		// it must set image state from FETCHING to CORRUPTED
+		// delete all result files from disk
 		
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
@@ -310,11 +322,14 @@ public class TestFetcherIntegration {
 		// expect
 		Assert.assertEquals(ImageState.CORRUPTED, imageData.getState());
 	}
-		
-	// FIXME: test not corresponding what expected yet
+	
 	@Test
-	public void testUploadToSwiftFail() throws Exception {
-		// FIXME: describe
+	public void testFailWhileUploadingToSwift() throws Exception {
+		// When Fetcher fails to upload image results to swift
+		// then
+		// it must try again for MAX_SWIFT_UPLOAD_TRIES
+		// (if not succeed) roll back image from FETCHING to FINISHED
+		// delete results from disk
 		
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
@@ -383,7 +398,11 @@ public class TestFetcherIntegration {
 	
 	@Test
 	public void testCheckSumFail() throws Exception {
-		// FIXME: describe
+		// When checksum does not match for a given image result file
+		// then
+		// it must try again for MAX_FETCH_TRIES
+		// (if not succeed) roll back image from FETCHING to FINISHED
+		// delete results from disk
 
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
