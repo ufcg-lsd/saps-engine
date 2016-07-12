@@ -8,6 +8,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
+import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
@@ -70,7 +71,7 @@ public class TestFetcherIntegration {
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 
 		// exercise
-		fetcher.fetch(imageData, 0);
+		fetcher.fetch(imageData, 3);
 
 		// expect
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
@@ -120,6 +121,8 @@ public class TestFetcherIntegration {
 	
 	@Test
 	public void testFetcherErrorWhileGettingImagesToFetch() throws SQLException, IOException {
+		// FIXME: describe
+		
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
@@ -155,6 +158,7 @@ public class TestFetcherIntegration {
 		// exercise
 		fetcher.imagesToFetch();
 		
+		// expect
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
 	}
@@ -212,9 +216,10 @@ public class TestFetcherIntegration {
 		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
 	}
 	
-	// FIXME: addStateStamp is not throwing error
 	@Test
 	public void testAddStateStampFail() throws SQLException, IOException {
+		// FIXME: describe
+		
 		// setup
 		ConcurrentMap<String, ImageData> pendingImageFetchMap = Mockito
 				.mock(ConcurrentMap.class);
@@ -259,6 +264,7 @@ public class TestFetcherIntegration {
 		fetcher.prepareFetch(imageData);
 		fetcher.prepareFetch(imageData2);
 
+		// expect
 		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
 		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
 	}
@@ -273,6 +279,7 @@ public class TestFetcherIntegration {
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
 		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
 		Properties properties = Mockito.mock(Properties.class);
+		
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
 		String sebalExportPath = "fake-export-path";
@@ -294,10 +301,83 @@ public class TestFetcherIntegration {
 				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
 
 		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
+		
+		Mockito.doReturn(false).when(fetcherHelper).resultsChecksumOK(imageData, new File(fetcherVolumePath));
 
 		// exercise
 		fetcher.fetch(imageData, 3);
 
+		// expect
 		Assert.assertEquals(ImageState.CORRUPTED, imageData.getState());
+	}
+		
+	// FIXME: test not corresponding what expected yet
+	@Test
+	public void testUploadToSwiftFail() throws Exception {
+		// FIXME: describe
+		
+		// setup
+		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
+		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
+		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
+		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		Properties properties = Mockito.mock(Properties.class);
+		String ftpServerIP = "fake-IP";
+		String ftpServerPort = "fake-PORT";
+		String sebalExportPath = "fake-export-path";
+		String containerName = "fake-container-name";
+		String federationMember = "fake-federation-member";
+		String fetcherVolumePath = "fake-fetcher-volume-path";
+		String pseudFolder = "fake-pseudo-file";
+
+		Date date = Mockito.mock(Date.class);
+
+		ImageData imageData = new ImageData("image1", "link1",
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", date,
+				date, "");
+		ImageData imageData2 = new ImageData("image2", "link2",
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", date,
+				date, "");
+
+		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
+				.getRemoteImageResultsPath(imageData, properties);
+		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
+				.getLocalImageResultsPath(imageData, properties);
+		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
+				.getRemoteImageResultsPath(imageData2, properties);
+		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
+				.getLocalImageResultsPath(imageData2, properties);
+		Mockito.doReturn(0)
+				.when(ftpImpl)
+				.getFiles(properties, ftpServerIP, ftpServerPort,
+						sebalExportPath, fetcherVolumePath, imageData);
+		File fetcherVolumeResultsDir = new File(fetcherVolumePath);
+		Mockito.doReturn(true).when(fetcherHelper)
+				.resultsChecksumOK(imageData, fetcherVolumeResultsDir);
+		
+		Mockito.doReturn(0)
+				.when(ftpImpl)
+				.getFiles(properties, ftpServerIP, ftpServerPort,
+						sebalExportPath, fetcherVolumePath, imageData2);
+		Mockito.doReturn(true).when(fetcherHelper)
+				.resultsChecksumOK(imageData2, fetcherVolumeResultsDir);
+		
+		Mockito.doReturn(pseudFolder).when(properties).getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX);
+		Mockito.doReturn(containerName).when(properties).getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+
+		String foo = pseudFolder + File.separator + fetcherVolumePath + File.separator;
+		Mockito.doThrow(new Exception()).when(swiftClient).uploadFile(Mockito.eq(containerName), Mockito.any(File.class),
+						Mockito.eq(foo));
+		
+		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
+				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+		
+		// exercise
+		fetcher.fetch(imageData, 3);
+		fetcher.fetch(imageData2, 3);
+		
+		// expect
+		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
+		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
 	}
 }

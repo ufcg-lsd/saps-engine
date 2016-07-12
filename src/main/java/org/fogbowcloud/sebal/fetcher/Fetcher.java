@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
-import org.fogbowcloud.sebal.CheckSumMD5ForFile;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
@@ -126,51 +125,13 @@ public class Fetcher {
 		LOGGER.info("Garbage collect finished");
 	}
 
-	// FIXME: see if this method will change
-	/*protected void removeFromPendingAndUpdateState(final ImageData imageData,
-			Properties properties) throws IOException, SQLException {
-		LOGGER.debug("Bringing " + imageData + " back to "
-				+ ImageState.FINISHED);
-		try {
-			imageStore.removeStateStamp(imageData.getName(),
-					imageData.getState(), imageData.getUpdateTime());
-		} catch (SQLException e) {
-			LOGGER.error("Error while updating timestamp for image "
-					+ imageData + " state " + imageData.getState());
-		}
-		imageData.setState(ImageState.FINISHED);
-		imageData.setUpdateTime(new Date(Calendar.getInstance()
-				.getTimeInMillis()));
-		try {
-			imageStore.updateImage(imageData);
-		} catch (SQLException e) {
-			LOGGER.error(
-					"Error while updating image data " + imageData.getName(), e);
-			imageData.setState(ImageState.FETCHING);
-			return;
-		}
-
-		LOGGER.info("Deleting image " + imageData);
-
-		try {
-			delelteResultsFromDisk(imageData, properties);
-		} catch (IOException e) {
-			LOGGER.error("Error while deleting " + imageData, e);
-		}
-
-		LOGGER.debug("Removing image " + imageData + " from pending image map");
-		pendingImageFetchMap.remove(imageData.getName());
-
-		LOGGER.info("Image " + imageData.getName() + " deleted");
-	}*/
-
 	protected void delelteResultsFromDisk(final ImageData imageData,
 			Properties properties) throws IOException {
 		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
 		String resultsDirPath = exportPath + "/results/" + imageData.getName();
 		File resultsDir = new File(resultsDirPath);
 
-		if (resultsDir.exists() || resultsDir.isDirectory()) {
+		if (resultsDir.exists() && resultsDir.isDirectory()) {
 			FileUtils.deleteDirectory(resultsDir);
 		} else {
 			LOGGER.info(resultsDirPath
@@ -192,7 +153,7 @@ public class Fetcher {
 			InterruptedException {
 		try {
 			if(prepareFetch(imageData)) {				
-				fetch(imageData, 0);
+				fetch(imageData, MAX_FETCH_TRIES);
 				if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap,
 						imageStore) && !fetcherHelper.isImageRolledBack(imageData)) {
 					finishFetch(imageData);
@@ -316,11 +277,12 @@ public class Fetcher {
 		}
 	}
 
-	protected void fetch(final ImageData imageData, int tries) throws Exception {
+	protected void fetch(final ImageData imageData, int maxTries) throws Exception {
 		// FIXME: doc-it (we want to know the max tries logic)
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 
-		while (!maxTriesReached(tries)) {
+		int i;
+		for (i = 0; i < maxTries; i++) {
 
 			String remoteImageResultsPath = fetcherHelper
 					.getRemoteImageResultsPath(imageData, properties);
@@ -350,8 +312,12 @@ public class Fetcher {
 					localImageResultsPath, imageData);
 
 			if (exitValue == 0) {
-				if (resultsChecksumOK(imageData, tries, localImageResultsDir)) {
-					uploadFilesToSwift(imageData, localImageResultsDir);
+				if (fetcherHelper.resultsChecksumOK(imageData, localImageResultsDir)) {
+					if(uploadFilesToSwift(imageData, localImageResultsDir)) {						
+						break;
+					} else {
+						return;
+					}
 				} else {
 					delelteResultsFromDisk(imageData, properties);
 				}
@@ -360,10 +326,11 @@ public class Fetcher {
 				if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
 					delelteResultsFromDisk(imageData, properties);
 				}
+				break;
 			}
 		}
 		
-		if (maxTriesReached(tries)) {
+		if (i >= maxTries) {
 			LOGGER.info("Max tries was reached. Marking " + imageData
 					+ " as corrupted.");
 			imageData.setState(ImageState.CORRUPTED);
@@ -374,46 +341,41 @@ public class Fetcher {
 		}
 	}
 
-	protected boolean maxTriesReached(int tries) {
-		return tries >= MAX_FETCH_TRIES;
-	}
-
-	protected boolean resultsChecksumOK(final ImageData imageData, int tries,
-			File localImageResultsDir) throws Exception {
-		LOGGER.debug("Checksum of " + imageData + " result files");
-		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
-			tries++;
-			return false;
-		}
+	protected boolean uploadFilesToSwift(ImageData imageData, File localImageResultsDir) throws Exception {
+		String pseudoFolder = getPseudoFolder(localImageResultsDir);
 		
-		return true;
-	}
-
-	protected void uploadFilesToSwift(ImageData imageData, File localImageResultsDir) throws Exception {		
-		String pseudFolder = properties
-				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)
-				+ localImageResultsDir.getName() + "/";
-		String containerName = properties
-				.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+		String containerName = getContainerName();
 
 		for (File actualFile : localImageResultsDir.listFiles()) {
-			int uploadFileTries = 0;
-			while (uploadFileTries < MAX_SWIFT_UPLOAD_TRIES) {
+			int uploadFileTries;
+			for (uploadFileTries = 0; uploadFileTries < MAX_SWIFT_UPLOAD_TRIES; uploadFileTries++) {
 				try {
 					swiftClient.uploadFile(containerName, actualFile,
-							pseudFolder);
+							pseudoFolder);
+					break;
 				} catch (Exception e) {
-					LOGGER.error("Error while uploading "
-							+ actualFile.getAbsolutePath() + " to swift");
-					uploadFileTries++;
+					continue;
 				}
 			}
 			
 			if(uploadFileTries >= MAX_SWIFT_UPLOAD_TRIES) {
 				rollBackFetch(imageData);
 				delelteResultsFromDisk(imageData, properties);
-				break;
+				return false;
 			}
 		}
+		
+		return true;
+	}
+
+	private String getContainerName() {
+		return properties
+				.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+	}
+
+	private String getPseudoFolder(File localImageResultsDir) {
+		return properties
+				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) + 
+				File.separator + localImageResultsDir.getName() + File.separator;
 	}
 }

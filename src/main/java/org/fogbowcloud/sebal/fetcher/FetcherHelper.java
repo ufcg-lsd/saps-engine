@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.CheckSumMD5ForFile;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
@@ -110,5 +111,14 @@ public class FetcherHelper {
 
 		return false;
 	}
-
+	
+	protected boolean resultsChecksumOK(ImageData imageData,
+			File localImageResultsDir) throws Exception {
+		LOGGER.info("Checksum of " + imageData + " result files");
+		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
+			return false;
+		}
+		
+		return true;
+	}
 }

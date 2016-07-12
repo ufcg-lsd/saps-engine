@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.javaswift.joss.client.factory.AccountConfig;
 import org.javaswift.joss.client.factory.AccountFactory;
@@ -17,6 +18,8 @@ public class SwiftClient {
 	private static final String URL_PATH_SEPARATOR = "/";
 	private Account account;
 	
+	public static final Logger LOGGER = Logger.getLogger(SwiftClient.class);
+	
 	public SwiftClient(Properties properties){
 	
 		AccountConfig config = new AccountConfig();
@@ -29,15 +32,15 @@ public class SwiftClient {
 		
 	}
 
-	public void uploadFile(String containerName, File file, String pseudFolder)
+	public void uploadFile(String containerName, File file, String pseudoFolder)
 			throws Exception {
 		try {
 			Container container = account.getContainer(containerName);
 
 			String completeFileName;
-			if (pseudFolder != null && !pseudFolder.isEmpty()) {
-				pseudFolder = this.normalizePseudFolder(pseudFolder);
-				completeFileName = pseudFolder + file.getName();
+			if (pseudoFolder != null && !pseudoFolder.isEmpty()) {
+				pseudoFolder = this.normalizePseudFolder(pseudoFolder);
+				completeFileName = pseudoFolder + file.getName();
 			} else {
 				completeFileName = file.getName();
 			}
