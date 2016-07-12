@@ -319,7 +319,9 @@ public class Fetcher {
 						return;
 					}
 				} else {
-					delelteResultsFromDisk(imageData, properties);
+					if(fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
+						delelteResultsFromDisk(imageData, properties);
+					}
 				}
 			} else {
 				rollBackFetch(imageData);

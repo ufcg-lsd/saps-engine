@@ -115,7 +115,12 @@ public class FetcherHelper {
 	protected boolean resultsChecksumOK(ImageData imageData,
 			File localImageResultsDir) throws Exception {
 		LOGGER.info("Checksum of " + imageData + " result files");
-		if (CheckSumMD5ForFile.isFileCorrupted(imageData, localImageResultsDir)) {
+		if(isThereFetchedFiles(localImageResultsDir.getAbsolutePath())) {
+			if (CheckSumMD5ForFile.isFileCorrupted(imageData,
+					localImageResultsDir)) {
+				return false;
+			}
+		} else {
 			return false;
 		}
 		
