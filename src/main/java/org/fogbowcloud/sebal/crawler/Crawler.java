@@ -334,7 +334,6 @@ public class Crawler {
 			pendingImageDownloadDB.commit();
 			LOGGER.info("Image " + imageData + " rolled back");
 		}
-
 	}
 
 	protected void deleteImageFromDisk(final ImageData imageData,
@@ -374,7 +373,6 @@ public class Crawler {
 					LOGGER.debug("Image " + imageData.getName() + " fetched");
 					LOGGER.info("Removing" + imageData);
 
-					// TODO: review this
 					try {
 						deleteResultsFromDisk(imageData, exportPath);
 					} catch (IOException e) {
@@ -387,7 +385,6 @@ public class Crawler {
 				}
 			}
 		} else {
-			// FIXME: Implement solution for this
 			LOGGER.error("Volume directory path is null or empty");
 		}
 	}
@@ -435,7 +432,6 @@ public class Crawler {
 				}
 			}
 		} else {
-			// FIXME: Implement solution for this
 			LOGGER.error("Volume directory path is null or empty!");
 		}
 	}

@@ -36,86 +36,6 @@ public class TestSebalJob {
 	}
 	
 	@Test
-	public void testFinishPhaseF1(){
-		Task task = mock(TaskImpl.class);
-		doReturn(FAKE_TASK_ID).when(task).getId();
-		doReturn(SebalTasks.F1_PHASE).when(task).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn(IMAGE_1_NAME).when(task).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
-		List<Task> imageTaskForImage = new ArrayList<Task>();
-		imageTaskForImage.add(task);
-		doReturn(imageTaskForImage).when(job).getTasksOfImageByState(IMAGE_1_NAME, TaskState.READY, TaskState.RUNNING);
-		job.finish(task);
-		verify(job).filterTaskByPhase(imageTaskForImage, SebalTasks.F1_PHASE);
-	}
-	
-	@Test
-	public void testFinishPhaseF1TasksFinished(){
-		Task task = mock(TaskImpl.class);
-		doReturn(FAKE_TASK_ID).when(task).getId();
-		doReturn(SebalTasks.F1_PHASE).when(task).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn(IMAGE_1_NAME).when(task).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
-		List<Task> imageTaskForImage = new ArrayList<Task>();
-		doReturn(imageTaskForImage).when(job).getTasksOfImageByState(IMAGE_1_NAME, TaskState.READY, TaskState.RUNNING);
-		//doNothing().when(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_C);
-		job.finish(task);
-		//verify(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_C);
-	}
-	
-	@Test
-	public void testFinishPhaseC(){
-		Task task = mock(TaskImpl.class);
-		doReturn(FAKE_TASK_ID).when(task).getId();
-		doReturn(SebalTasks.C_PHASE).when(task).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn(IMAGE_1_NAME).when(task).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
-		List<Task> imageTaskForImage = new ArrayList<Task>();
-		imageTaskForImage.add(task);
-		doReturn(imageTaskForImage).when(job).getTasksOfImageByState(IMAGE_1_NAME, TaskState.READY, TaskState.RUNNING);
-		job.finish(task);
-		verify(job).filterTaskByPhase(imageTaskForImage, SebalTasks.C_PHASE);
-	}
-	
-	@Test
-	public void testFinishPhaseCTasksFinished(){
-		Task task = mock(TaskImpl.class);
-		doReturn(FAKE_TASK_ID).when(task).getId();
-		doReturn(SebalTasks.C_PHASE).when(task).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn(IMAGE_1_NAME).when(task).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
-		List<Task> imageTaskForImage = new ArrayList<Task>();
-		doReturn(imageTaskForImage).when(job).getTasksOfImageByState(IMAGE_1_NAME, TaskState.READY, TaskState.RUNNING);
-		//doNothing().when(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_F2);
-		job.finish(task);
-		//verify(job).udpateDB(IMAGE_1_NAME, ImageState.READY_FOR_PHASE_F2);
-	}
-	
-
-	@Test
-	public void testFinishPhaseF2(){
-		Task task = mock(TaskImpl.class);
-		doReturn(FAKE_TASK_ID).when(task).getId();
-		doReturn(SebalTasks.F2_PHASE).when(task).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn(IMAGE_1_NAME).when(task).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
-		List<Task> imageTaskForImage = new ArrayList<Task>();
-		imageTaskForImage.add(task);
-		doReturn(imageTaskForImage).when(job).getTasksOfImageByState(IMAGE_1_NAME, TaskState.READY, TaskState.RUNNING);
-		job.finish(task);
-		verify(job).filterTaskByPhase(imageTaskForImage, SebalTasks.F2_PHASE);
-	}
-	
-	
-	@Test
-	public void testFinishPhaseF2TasksFinished(){
-		Task task = mock(TaskImpl.class);
-		doReturn(FAKE_TASK_ID).when(task).getId();
-		doReturn(SebalTasks.F2_PHASE).when(task).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn(IMAGE_1_NAME).when(task).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
-		List<Task> imageTaskForImage = new ArrayList<Task>();
-		doReturn(imageTaskForImage).when(job).getTasksOfImageByState(IMAGE_1_NAME, TaskState.READY, TaskState.RUNNING);
-		doNothing().when(job).udpateDB(IMAGE_1_NAME, ImageState.FINISHED);
-		job.finish(task);
-		verify(job).udpateDB(IMAGE_1_NAME, ImageState.FINISHED);
-	}
-	
-	@Test
 	public void testUpdateDBOnlyOneValue() throws SQLException{
 		String fakeImageName = "fakeimagename";
 		doNothing().when(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
@@ -161,36 +81,11 @@ public class TestSebalJob {
 	@Test
 	public void testFilterTaskByPhase(){
 		Task task1 = mock(Task.class);
-		doReturn(SebalTasks.F1_PHASE).when(task1).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn("FakeId1").when(task1).getId();
-		Task task2 = mock(Task.class);
-		doReturn(SebalTasks.F1_PHASE).when(task2).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn("FakeId2").when(task2).getId();
-		Task task3 = mock(Task.class);
-		doReturn(SebalTasks.C_PHASE).when(task3).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn("FakeId3").when(task3).getId();
-		Task task4 = mock(Task.class);
-		doReturn(SebalTasks.F2_PHASE).when(task4).getMetadata(SebalTasks.METADATA_PHASE);
-		doReturn("FakeId4").when(task4).getId();
 		
 		List<Task> taskList = new ArrayList<Task>();
 		taskList.add(task1);
-		taskList.add(task2);
-		taskList.add(task3);
-		taskList.add(task4);
 		
-		List<Task> f1List = (ArrayList<Task>) job.filterTaskByPhase(taskList, SebalTasks.F1_PHASE);
-		assert(f1List.contains(task1));
-		assert(f1List.contains(task2));
-		assertEquals(2, f1List.size());
-		
-		List<Task> f2List = (ArrayList<Task>) job.filterTaskByPhase(taskList, SebalTasks.F2_PHASE);
-		assert(f2List.contains(task4));
-		assertEquals(1, f2List.size());
-		
-		List<Task> f3List = (ArrayList<Task>) job.filterTaskByPhase(taskList, SebalTasks.C_PHASE);
-		assert(f3List.contains(task3));
-		assertEquals(1, f3List.size());
+		// FIXME: add tests to R tasks
 	}
 	
 }

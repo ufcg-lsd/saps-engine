@@ -92,38 +92,6 @@ public class TestDBUtilsImpl {
 		doReturn(true).when(updateStatementMock).execute();
 	}
 
-	@Test
-	public void testSetImagesToPurge() throws SQLException {
-		String fakeDay = "152376";
-		String fakeImageDataMillis1 = "13345678214504";
-		String fakeImageDataMillis2 = "12238643677504";
-		String fakeImageDataDay1 = "151463";
-		String fakeImageDataDay2 = "141650";
-		
-		List<ImageData> imagesToPurgeMock = mock(ArrayList.class);
-		
-		doReturn(imagesToPurgeMock).when(imageStore).getAllImages();
-		doReturn(imagesToPurgeMock).when(imageStore).getIn(eq(ImageState.FETCHED));
-		
-		ImageData imageDataMock = mock(ImageData.class);
-		ImageData imageDataMock2 = mock(ImageData.class);
-		
-		doReturn(fakeImageDataMillis1).when(imageDataMock).getUpdateTime();
-		doReturn(fakeImageDataMillis2).when(imageDataMock2).getUpdateTime();
-		
-		// FIXME: update test
-/*		doReturn(Long.valueOf(fakeImageDataDay1).longValue()).when(dbUtilsImpl)
-				.convertMilliToDays(
-						eq(Long.valueOf(fakeImageDataMillis1).longValue()));
-		doReturn(Long.valueOf(fakeImageDataDay2).longValue()).when(dbUtilsImpl)
-				.convertMilliToDays(
-						eq(Long.valueOf(fakeImageDataMillis2).longValue()));
-		
-		doReturn(true).when(dbUtilsImpl).isBeforeDay(eq(fakeDay), eq(Integer.valueOf(fakeImageDataDay1)));
-		doReturn(true).when(dbUtilsImpl).isBeforeDay(eq(fakeDay), eq(Integer.valueOf(fakeImageDataDay2)));*/
-		
-		doNothing().when(imageDataMock).setImageStatus(eq(ImageData.PURGED));
-		doNothing().when(imageDataMock).setUpdateTime(eq(new Date(Calendar.getInstance().getTimeInMillis())));
-	}
+	// FIXME: testSetImagesToPurge
 
 }
