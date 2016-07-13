@@ -37,6 +37,7 @@ public class FetcherHelper {
 			ConcurrentMap<String, ImageData> pendingImageFetchMap) {
 		LOGGER.info("Removing image from pending map.");
 		pendingImageFetchMap.remove(imageData.getName());
+		pendingImageFetchDB.commit();
 	}
 
 	protected String getStationId(ImageData imageData, Properties properties)

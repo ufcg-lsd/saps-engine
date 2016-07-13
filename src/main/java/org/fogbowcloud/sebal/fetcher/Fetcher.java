@@ -256,7 +256,7 @@ public class Fetcher {
 
 	protected void rollBackFetch(ImageData imageData) {
 
-		pendingImageFetchMap.remove(imageData.getName());
+		fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB, pendingImageFetchMap);
 		try {
 			imageStore.removeStateStamp(imageData.getName(),
 					imageData.getState(), imageData.getUpdateTime());

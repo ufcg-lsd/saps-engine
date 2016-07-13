@@ -256,6 +256,7 @@ public class Crawler {
 			}
 
 			pendingImageDownloadMap.remove(imageData.getName());
+			pendingImageDownloadDB.commit();
 
 			LOGGER.info("Image " + imageData + " was downloaded");
 
@@ -283,6 +284,7 @@ public class Crawler {
 				LOGGER.debug("Removing image " + imageData
 						+ " from pending image map");
 				pendingImageDownloadMap.remove(imageData.getName());
+				pendingImageDownloadDB.commit();
 			}
 		} catch (SQLException e) {
 			LOGGER.error(
@@ -329,6 +331,7 @@ public class Crawler {
 			LOGGER.debug("Removing image " + imageData
 					+ " from pending image map");
 			pendingImageDownloadMap.remove(imageData.getName());
+			pendingImageDownloadDB.commit();
 			LOGGER.info("Image " + imageData + " rolled back");
 		}
 
