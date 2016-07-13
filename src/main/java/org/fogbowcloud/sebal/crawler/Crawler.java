@@ -235,8 +235,8 @@ public class Crawler {
 
 			imageData.setState(ImageState.DOWNLOADED);
 			Date updateTime = new Date(Calendar.getInstance().getTimeInMillis());
-
 			imageData.setCreationTime(updateTime);
+			imageData.setSebalEngineVersion(getSebalEngineVersion());
 			imageData.setUpdateTime(updateTime);
 
 			try {
@@ -439,5 +439,8 @@ public class Crawler {
 			LOGGER.error("Volume directory path is null or empty!");
 		}
 	}
-
+	
+	protected String getSebalEngineVersion() {
+		return properties.getProperty("sebal_engine_version");
+	}
 }

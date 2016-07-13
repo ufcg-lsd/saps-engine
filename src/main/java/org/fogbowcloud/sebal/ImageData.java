@@ -14,6 +14,8 @@ public class ImageData implements Serializable {
 	private int priority;
 	private String stationId;
 	private String sebalVersion;
+	private String sebalEngineVersion;
+	private String blowoutVersion;
 	private Date creationTime;
 	private Date updateTime;
 	private String status;
@@ -25,7 +27,9 @@ public class ImageData implements Serializable {
 
 	public ImageData(String name, String downloadLink, ImageState state,
 			String federationMember, int priority, String stationId,
-			String sebalVersion, Date creationTime, Date updateTime, String error) {
+			String sebalVersion, String sebalEngineVersion,
+			String blowoutVersion, Date creationTime, Date updateTime,
+			String error) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -33,6 +37,8 @@ public class ImageData implements Serializable {
 		this.priority = priority;
 		this.stationId = stationId;
 		this.sebalVersion = sebalVersion;
+		this.sebalEngineVersion = sebalEngineVersion;
+		this.blowoutVersion = blowoutVersion;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
 		this.status = "available";
@@ -65,6 +71,14 @@ public class ImageData implements Serializable {
 	
 	public String getSebalVersion() {
 		return sebalVersion;
+	}
+	
+	public String getSebalEngineVersion() {
+		return sebalEngineVersion;
+	}
+	
+	public String getBlowoutVersion() {
+		return blowoutVersion;
 	}
 	
 	public Date getCreationTime() {
@@ -111,6 +125,14 @@ public class ImageData implements Serializable {
 		this.sebalVersion = sebalVersion;
 	}
 	
+	public void setSebalEngineVersion(String sebalEngineVersion) {
+		this.sebalEngineVersion = sebalEngineVersion;
+	}
+	
+	public void setBlowoutVersion(String blowoutVersion) {
+		this.blowoutVersion = blowoutVersion;
+	}
+	
 	public void setCreationTime(Date creationTime) {
 		this.creationTime = creationTime;
 	}
@@ -130,8 +152,9 @@ public class ImageData implements Serializable {
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", "
 				+ federationMember + ", " + priority + ", " + stationId + ", "
-				+ sebalVersion + ", " + creationTime + ", " + updateTime + ", "
-				+ status + ", " + error;
+				+ sebalVersion + ", " + sebalEngineVersion + ", "
+				+ blowoutVersion + ", " + creationTime + ", " + updateTime
+				+ ", " + status + ", " + error;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -152,6 +175,8 @@ public class ImageData implements Serializable {
 					&& getFederationMember().equals(other.getFederationMember())
 					&& getStationId().equals(other.getStationId())
 					&& getSebalVersion().equals(other.getSebalVersion())
+					&& getSebalEngineVersion().equals(other.getSebalEngineVersion())
+					&& getBlowoutVersion().equals(other.getBlowoutVersion())
 					&& getCreationTime().equals(other.getCreationTime())
 					&& getUpdateTime().equals(other.getUpdateTime())
 					&& getImageStatus().equals(other.getImageStatus())

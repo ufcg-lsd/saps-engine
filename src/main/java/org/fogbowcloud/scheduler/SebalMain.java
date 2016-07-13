@@ -202,6 +202,7 @@ public class SebalMain {
 						imageData.setState(ImageState.RUNNING_R);
 						imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
 						imageData.setSebalVersion(getSebalVersionFromURL(properties));
+						imageData.setBlowoutVersion(getBlowoutVersion(properties));
 						job.addTask(taskImpl);
 						imageStore.updateImage(imageData);
 						try {
@@ -227,6 +228,7 @@ public class SebalMain {
 		}
 	}
 	
+	// FIXME: now this might be in git
 	private static String getSebalVersionFromURL(Properties properties) {
 		String sebalURL = properties.getProperty("sebal_url");
 		String[] splitSebalURL = sebalURL.split("/");
@@ -236,6 +238,10 @@ public class SebalMain {
 		LOGGER.debug("SEBAL version " + sebalVersion);
 		
 		return sebalVersion;
+	}
+	
+	private static String getBlowoutVersion(Properties properties) {
+		return properties.getProperty("blowout_version");
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {

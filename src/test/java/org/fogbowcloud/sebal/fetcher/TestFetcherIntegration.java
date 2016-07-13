@@ -54,7 +54,7 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
@@ -98,7 +98,7 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
@@ -144,10 +144,10 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
@@ -192,10 +192,10 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
@@ -245,10 +245,10 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
@@ -301,7 +301,7 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", date,
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
@@ -348,10 +348,10 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", date,
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", date,
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
@@ -419,10 +419,10 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", date,
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", date,
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper)

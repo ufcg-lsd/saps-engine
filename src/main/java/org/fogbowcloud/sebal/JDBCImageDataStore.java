@@ -28,6 +28,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String STATE_COL = "state";
 	private static final String STATION_ID_COL = "station_id";
 	private static final String SEBAL_VERSION_COL = "sebal_version";
+	private static final String SEBAL_ENGINE_VERSION_COL = "sebal_engine_version";
+	private static final String BLOWOUT_VERSION_COL = "blowout_version";
 	private static final String CREATION_TIME_COL = "ctime";
 	private static final String UPDATED_TIME_COL = "utime";
 	private static final String IMAGE_STATUS_COL = "status";
@@ -64,6 +66,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ " VARCHAR(100), " + FEDERATION_MEMBER_COL
 					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
 					+ STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
+					+ " VARCHAR(255), " + SEBAL_ENGINE_VERSION_COL
+					+ " VARCHAR(255), " + BLOWOUT_VERSION_COL
 					+ " VARCHAR(255), " + CREATION_TIME_COL + " VARCHAR(255), "
 					+ UPDATED_TIME_COL + " VARCHAR(255), " + IMAGE_STATUS_COL
 					+ " VARCHAR(255))");
@@ -116,7 +120,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	@Override
 	public void addImage(String imageName, String downloadLink, int priority) throws SQLException {
@@ -144,8 +148,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(7, "NE");
 			insertStatement.setString(8, "NE");
 			insertStatement.setString(9, "NE");
-			insertStatement.setString(10, ImageData.AVAILABLE);
-			insertStatement.setString(11, "");
+			insertStatement.setString(10, "NE");
+			insertStatement.setString(11, "NE");
+			insertStatement.setString(12, ImageData.AVAILABLE);
+			insertStatement.setString(13, "");
 
 			insertStatement.execute();
 		} finally {
@@ -234,11 +240,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setInt(4, imageData.getPriority());
 			updateStatement.setString(5, imageData.getStationId());
 			updateStatement.setString(6, imageData.getSebalVersion());
-			updateStatement.setDate(7, imageData.getCreationTime());
-			updateStatement.setDate(8, imageData.getUpdateTime());
-			updateStatement.setString(9, imageData.getImageStatus());
-			updateStatement.setString(10, imageData.getImageError());
-			updateStatement.setString(11, imageData.getName());
+			updateStatement.setString(7, imageData.getSebalEngineVersion());
+			updateStatement.setString(8, imageData.getBlowoutVersion());
+			updateStatement.setDate(9, imageData.getCreationTime());
+			updateStatement.setDate(10, imageData.getUpdateTime());
+			updateStatement.setString(11, imageData.getImageStatus());
+			updateStatement.setString(12, imageData.getImageError());
+			updateStatement.setString(13, imageData.getName());
 
 			updateStatement.execute();
 		} finally {
@@ -513,7 +521,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 	
-	private static List<ImageData> extractImageDataFrom(ResultSet rs) throws SQLException {
+	private static List<ImageData> extractImageDataFrom(ResultSet rs)
+			throws SQLException {
 		List<ImageData> imageDatas = new ArrayList<ImageData>();
 		while (rs.next()) {
 			imageDatas.add(new ImageData(rs.getString(IMAGE_NAME_COL), rs
@@ -522,6 +531,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
 					rs.getString(STATION_ID_COL), rs
 							.getString(SEBAL_VERSION_COL), rs
+							.getString(SEBAL_ENGINE_VERSION_COL), rs
+							.getString(BLOWOUT_VERSION_COL), rs
 							.getDate(CREATION_TIME_COL), rs
 							.getDate(UPDATED_TIME_COL), rs
 							.getString(ERROR_MSG_COL)));

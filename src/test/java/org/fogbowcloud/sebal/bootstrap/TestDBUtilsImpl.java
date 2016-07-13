@@ -61,15 +61,18 @@ public class TestDBUtilsImpl {
 	public void preparingStatement() throws SQLException {
 		PreparedStatement selectStatementMock = mock(PreparedStatement.class);
 		ResultSet rsMock = mock(ResultSet.class);
-		
+
 		doReturn(rsMock).when(selectStatementMock).executeQuery();
-		
-		ImageData imageData = new ImageData(rsMock.getString("image_name"), rsMock
-				.getString("download_link"), ImageState.getStateFromStr(rsMock
-				.getString("state")), rsMock.getString("federation_member"), rsMock
-				.getInt("priority"), rsMock.getString("station_id"), rsMock
-				.getString("sebal_version"), rsMock.getDate("ctime"), rsMock
-				.getDate("utime"), rsMock.getString("error_msg"));
+
+		ImageData imageData = new ImageData(rsMock.getString("image_name"),
+				rsMock.getString("download_link"),
+				ImageState.getStateFromStr(rsMock.getString("state")),
+				rsMock.getString("federation_member"),
+				rsMock.getInt("priority"), rsMock.getString("station_id"),
+				rsMock.getString("sebal_version"),
+				rsMock.getString("sebal_engine_version"),
+				rsMock.getString("blowout_version"), rsMock.getDate("ctime"),
+				rsMock.getDate("utime"), rsMock.getString("error_msg"));
 	}
 	
 	private static final String UPDATE_STATE_SQL = "UPDATE nasa_images SET state = ? WHERE image_name = ?";

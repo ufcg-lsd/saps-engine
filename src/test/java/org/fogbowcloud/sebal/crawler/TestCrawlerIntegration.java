@@ -57,10 +57,10 @@ public class TestCrawlerIntegration {
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
 				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
-				date, date, "");
+				"NE", "NE", date, date, "");
 		ImageData image2 = new ImageData("image2", "link2",
 				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
-				date, date, "");
+				"NE", "NE", date, date, "");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -112,10 +112,10 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
+				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE", "NE", "NE",
 				date, date, "");
 		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
+				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE", "NE", "NE",
 				date, date, "");
 
 		imageList.add(image1);
@@ -172,10 +172,10 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
+				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE", "NE", "NE",
 				date, date, "");
 		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
+				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE", "NE", "NE",
 				date, date, "");
 
 		imageList.add(image1);
@@ -215,10 +215,10 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
+				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE", "NE", "NE",
 				date, date, "");
 		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
+				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE", "NE", "NE",
 				date, date, "");
 
 		imageList.add(image1);
@@ -268,11 +268,11 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
 				date, "");
 		image1.setImageStatus(ImageData.PURGED);
 		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 1, "NE", "NE", date,
+				ImageState.FINISHED, federationMember, 1, "NE", "NE", "NE", "NE", date,
 				date, "");
 
 		imageList.add(image1);
@@ -306,9 +306,9 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1", ImageState.FETCHED,
-				federationMember1, 0, "NE", "NE", date, date, "");
+				federationMember1, 0, "NE", "NE", "NE", "NE", date, date, "");
 		ImageData image2 = new ImageData("image2", "link2", ImageState.FETCHED,
-				federationMember2, 0, "NE", "NE", date, date, "");
+				federationMember2, 0, "NE", "NE", "NE", "NE", date, date, "");
 
 		imageList.add(image1);
 		imageList.add(image2);

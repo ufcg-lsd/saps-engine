@@ -9,6 +9,7 @@ OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
 R_EXEC_DIR=${SANDBOX}/R/
 R_ALGORITHM_VERSION=AlgoritmoFinal-v2_01042016.R
+SEBAL_VERSION=
 
 # This function downloads all projects and dependencies
 function prepareDependencies {
@@ -16,16 +17,26 @@ function prepareDependencies {
   cd ${SANDBOX}
   mkdir -p ${OUTPUT_FOLDER}
 
+  #installing git
+  sudo apt-get update
+  echo -e "Y\n" | sudo apt-get install git-all
+
   #download SEBAL
+  #this will change to be repository clone instead of download from public html
   wget -nc ${SEBAL_URL}
   tar -zxvf SEBAL-project.tar.gz
 
+  cd SEBAL/
+  SEBAL_VERSION=$(git rev-parse HEAD)
+  echo "SEBAL version is $SEBAL_VERSION"
+
+  cd $SANDBOX
+	
   #download R
   wget -nc ${R_URL}
   tar -zxvf R-project.tar.gz
 
   # TODO: install in image
-  sudo apt-get update
   sudo apt-get install nfs-common
 }
 
