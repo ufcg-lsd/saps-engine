@@ -1,0 +1,11 @@
+#!/bin/bash
+
+LOCAL_IMAGE_PATH=$1
+SANDBOX=/tmp
+
+cd $SANDBOX/sebal-engine
+SEBAL_ENGINE_VERSION=$(git rev-parse HEAD)
+
+cd $LOCAL_IMAGE_PATH
+echo "$SEBAL_ENGINE_VERSION" > SEBAL-engine-$SEBAL_ENGINE_VERSION-version
+cd $SANDBOX

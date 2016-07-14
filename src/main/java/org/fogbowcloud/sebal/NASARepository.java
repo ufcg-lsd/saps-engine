@@ -43,7 +43,7 @@ public class NASARepository {
 		this.properties = properties;
 	}
 
-	public void downloadImage(final ImageData imageData) throws IOException {
+	public void downloadImage(final ImageData imageData) throws IOException, InterruptedException {
 		HttpClient httpClient = initClient();
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
 		HttpResponse response = httpClient.execute(homeGet);
@@ -69,6 +69,11 @@ public class NASARepository {
 		OutputStream outStream = new FileOutputStream(file);
 		IOUtils.copy(response.getEntity().getContent(), outStream);
 		outStream.close();
+		
+		// saving SEBAL-engine version
+		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "scripts/sebal-engine-version.sh", localImageFilePath);
+		Process p = builder.start();
+		p.waitFor();
 	}
 
 	private HttpClient initClient() throws IOException, ClientProtocolException,

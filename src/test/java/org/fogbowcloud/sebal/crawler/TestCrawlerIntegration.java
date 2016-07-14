@@ -34,7 +34,7 @@ public class TestCrawlerIntegration {
 
 	@Test
 	public void testStepOverImageWhenDownloadFails() throws SQLException,
-			IOException {
+			IOException, InterruptedException {
 
 		// 1. we have 2 NOT_DOWNLOADED images, pendingDB is empty
 		// 2. we proceed to download them
