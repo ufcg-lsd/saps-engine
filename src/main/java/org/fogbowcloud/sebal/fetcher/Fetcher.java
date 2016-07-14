@@ -380,17 +380,4 @@ public class Fetcher {
 				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) + 
 				File.separator + localImageResultsDir.getName() + File.separator;
 	}
-	
-	private String getSebalVersion(String localImageResultsPath) {
-		File localImageResultsDir = new File(localImageResultsPath);
-		
-		for(File file : localImageResultsDir.listFiles()) {
-			if(file.getName().endsWith("-version")) {
-				String[] versionFileSplit = file.getName().split("-");
-				return versionFileSplit[1];
-			}
-		}
-		
-		return null;
-	}
 }

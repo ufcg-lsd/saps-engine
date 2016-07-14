@@ -22,26 +22,21 @@ function prepareDependencies {
 
   cd $SANDBOX
 
-  #download SEBAL
-  #this will change to be repository clone instead of download from public html
-  #wget -nc ${SEBAL_URL}
-  #tar -zxvf SEBAL-project.tar.gz
+  # cloning SEBAL project
   git clone ${SEBAL_URL}
 
-  #download R
-  #wget -nc ${R_URL}
-  #tar -zxvf R-project.tar.gz
+  # cloning R project
   git clone ${R_URL}
 
   # TODO: install in image
-  sudo apt-get install nfs-common
+  echo -e "Y\n" | sudo apt-get install nfs-common
 }
 
 # This function mounts exports dir from NFS server
 function mountExportsDir {
-  # TODO: step 1 - write in fstab; step 2 - mount -a
-  sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
+  #sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
   sudo echo "${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT} nfs proto=tcp,port=${NFS_SERVER_PORT}" >> /etc/fstab
+  sudo mount -a
 }
 
 # This function untare image and creates an output dir into mounted dir
@@ -63,8 +58,9 @@ function untarImageAndPrepareDirs {
 function preProcessImage {
   cd ${SANDBOX}/SEBAL/
 
-  # see if the memory options will be necessary
   sudo java -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/ 0 0 9000 9000 1 1 $BOUNDING_BOX_PATH $CONF_FILE ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
+  sudo chmod 777 ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv"
+  echo -e "\n" >> ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv"
 }
 
 # This function prepare a dados.csv file and calls R script to begin image execution
