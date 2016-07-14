@@ -127,4 +127,17 @@ public class FetcherHelper {
 		
 		return true;
 	}
+	
+	protected String getSebalVersion(String localImageResultsPath) {
+		File localImageResultsDir = new File(localImageResultsPath);
+		
+		for(File file : localImageResultsDir.listFiles()) {
+			if(file.getName().endsWith("-version")) {
+				String[] versionFileSplit = file.getName().split("-");
+				return versionFileSplit[1];
+			}
+		}
+		
+		return "";
+	}
 }

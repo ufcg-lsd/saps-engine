@@ -8,8 +8,7 @@ RESULTS_DIR_NAME=results
 OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
 R_EXEC_DIR=${SANDBOX}/R/
-R_ALGORITHM_VERSION=AlgoritmoFinal-v2_01042016.R
-SEBAL_VERSION=
+R_ALGORITHM_VERSION=AlgoritmoFinal-v2_01072016.R
 
 # This function downloads all projects and dependencies
 function prepareDependencies {
@@ -21,20 +20,18 @@ function prepareDependencies {
   sudo apt-get update
   echo -e "Y\n" | sudo apt-get install git-all
 
+  cd $SANDBOX
+
   #download SEBAL
   #this will change to be repository clone instead of download from public html
-  wget -nc ${SEBAL_URL}
-  tar -zxvf SEBAL-project.tar.gz
+  #wget -nc ${SEBAL_URL}
+  #tar -zxvf SEBAL-project.tar.gz
+  git clone ${SEBAL_URL}
 
-  cd SEBAL/
-  SEBAL_VERSION=$(git rev-parse HEAD)
-  echo "SEBAL version is $SEBAL_VERSION"
-
-  cd $SANDBOX
-	
   #download R
-  wget -nc ${R_URL}
-  tar -zxvf R-project.tar.gz
+  #wget -nc ${R_URL}
+  #tar -zxvf R-project.tar.gz
+  git clone ${R_URL}
 
   # TODO: install in image
   sudo apt-get install nfs-common
@@ -84,6 +81,10 @@ function executeRScript {
 
   echo "Renaming dados file"
   mv dados.csv dados"-${IMAGE_NAME}".csv
+
+  cd ${SANDBOX}/SEBAL
+  SEBAL_VERSION=$(git rev-parse HEAD)
+  echo "$SEBAL_VERSION" > SEBAL-$SEBAL_VERSION-version
 }
 
 # This function do a checksum of all output files in image dir
