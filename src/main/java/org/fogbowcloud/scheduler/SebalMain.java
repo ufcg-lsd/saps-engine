@@ -201,7 +201,6 @@ public class SebalMain {
 								nfsServerPort);
 						imageData.setState(ImageState.RUNNING_R);
 						imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
-						imageData.setSebalVersion(getSebalVersionFromURL(properties));
 						imageData.setBlowoutVersion(getBlowoutVersion(properties));
 						job.addTask(taskImpl);
 						imageStore.updateImage(imageData);
@@ -226,18 +225,6 @@ public class SebalMain {
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
-	}
-	
-	// FIXME: now this might be in git
-	private static String getSebalVersionFromURL(Properties properties) {
-		String sebalURL = properties.getProperty("sebal_url");
-		String[] splitSebalURL = sebalURL.split("/");
-		
-		String sebalVersion = splitSebalURL[splitSebalURL.length - 1];
-		
-		LOGGER.debug("SEBAL version " + sebalVersion);
-		
-		return sebalVersion;
 	}
 	
 	private static String getBlowoutVersion(Properties properties) {

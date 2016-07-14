@@ -149,7 +149,6 @@ public class Crawler {
 		List<ImageData> imageDataList = new ArrayList<ImageData>();
 
 		try {
-			// FIXME: check the implications of this cast
 			// This updates images in NOT_DOWNLOADED state to DOWNLOADING
 			// and sets this federation member as owner, and then gets all
 			// images
@@ -215,7 +214,6 @@ public class Crawler {
 			throws SQLException, IOException {
 
 		try {
-			// FIXME: it blocks?
 			nasaRepository.downloadImage(imageData);
 
 			// running Fmask
