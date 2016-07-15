@@ -134,9 +134,9 @@ public class FetcherHelper {
 		
 		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {
 			for (File file : localImageResultsDir.listFiles()) {
-				if (file.getName().endsWith("-version")) {
-					String[] versionFileSplit = file.getName().split("-");
-					return versionFileSplit[1];
+				if (file.getName().startsWith("SEBAL.version.")) {
+					String[] versionFileSplit = file.getName().split("\\.");
+					return versionFileSplit[2];
 				}
 			}
 		}

@@ -237,7 +237,7 @@ public class SebalMain {
 			for (File file : blowoutDir.listFiles()) {
 				if (file.getName().startsWith("blowout.version.")) {
 					String[] blowoutVersionFileSplit = file.getName()
-							.split("-");
+							.split("\\.");
 					return blowoutVersionFileSplit[2];
 				}
 			}

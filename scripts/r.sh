@@ -80,7 +80,7 @@ function executeRScript {
 
   cd ${SANDBOX}/SEBAL
   SEBAL_VERSION=$(git rev-parse HEAD)
-  echo "$SEBAL_VERSION" > SEBAL-$SEBAL_VERSION-version
+  echo "$SEBAL_VERSION" > $OUTPUT_IMAGE_DIR/SEBAL.version.$SEBAL_VERSION
 }
 
 # This function do a checksum of all output files in image dir
