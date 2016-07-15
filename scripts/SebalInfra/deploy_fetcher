@@ -256,13 +256,13 @@ function main() {
   echo "Upload private key"
   #scp_to_fetcher $PRIVATE_KEY $REMOTE_FILE_PATH
   
-  #Putting informations on Crawler execution info.
+  #Putting informations on Fetcher execution info.
   sed -i "/FETCHER_INSTANCE_ID=/ s/=.*/=$INSTANCE_ID/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_USER_NAME=/ s/=.*/=$USER_NAME/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_INSTANCE_IP=/ s/=.*/=$INSTANCE_IP/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_INSTANCE_PORT=/ s/=.*/=$INSTANCE_PORT/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_EXTRA_PORT=/ s/=.*/=$EXTRA_PORT/" $FETCHER_EXECUTION_INFO
-  #Update  DB INFO FILE with the new attachment id.
+  #Update STORAGE INFO FILE with the new attachment id.
   sed -i "/FETCHER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$FETCHER_STORAGE_ATTACHMENT_ID/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_STORAGE_ID=/ s/=.*/=$FETCHER_STORAGE_ID/" $FETCHER_EXECUTION_INFO
 }
