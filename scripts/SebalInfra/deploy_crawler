@@ -1,7 +1,12 @@
 #!/bin/bash
+#
+# Deploy of the crawler component
+
+#FIXME: check args
 PRIVATE_KEY_FILE=$1
 STORAGE_SIZE=$2
 
+#FIXME: indent
 LOG4J=target/classe/log4j.properties
 if [ -f $LOG4J ]; then
 CONF_LOG=-Dlog4j.configuration=file:$LOG4J
@@ -9,6 +14,7 @@ else
 CONF_LOG=
 fi
 
+#FIXME: not sure if we should keep these declarations here or to load from a config file
 #GLOBAL CONSTANTS
 APP_FILE=sebal-scheduler-project.tar.gz
 APP_FILE_LOCAL_DIR=baseapp
@@ -37,6 +43,7 @@ fi
 
 source $CRAWLER_EXECUTION_INFO
 
+#FIXME: add some doc. i did not understand the purpose of below code
 STORAGE_COMMAND="FORMAT";
 
 if [ "$CRAWLER_STORAGE_FORMATED" = "YES" ]; then
@@ -46,6 +53,8 @@ fi
 echo "Storage command: $STORAGE_COMMAND";
 
 ########### CRAWLER INFRASTRUCTURE ##############
+
+#FIXME: extract to a function
 
 #Starting infrastructure for Crawler.
 #Verify the rigths paths for crawler.conf and crawlerSpec
@@ -78,6 +87,7 @@ echo $CRAWLER_STORAGE_PORT;
 
 #Request Storage for Crawler
 
+#FIXME: extract to a method
 #Verify if storage info exists. If true, the storage for Crawler already exists and dont need to create new one.
 echo "Previous Storage ID: $CRAWLER_STORAGE_ID";
 if [ -n "$CRAWLER_STORAGE_ID" ]; then
@@ -92,6 +102,7 @@ if [ -n "$CRAWLER_STORAGE_ID" ]; then
   	fi
 fi
 
+#FIXME: ident, extract to a method
 if [ -z "$CRAWLER_STORAGE_ID" ]; then
 
 echo "Creating new Storage with size $STORAGE_SIZE"
@@ -110,6 +121,7 @@ echo "New storage created: "$CRAWLER_STORAGE_ID;
 
 fi
 
+#FIXME: extract to a method
 #Attach the storage to the VM.
 echo "Attaching $CRAWLER_STORAGE_ID to $INSTANCE_ID";
 CRAWLER_STORAGE_ATTACHMENT_INFO="$(java $CONF_LOG -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.infrastructure.InfrastructureMain attachment $INSTANCE_ID $CRAWLER_STORAGE_ID $CONFIG_FILE $SPEC_FILE 2>&1)";
@@ -129,19 +141,25 @@ echo "Attach ID: $CRAWLER_STORAGE_ATTACHMENT_ID";
 #Update Storage INFO FILE with the new attachment id.
 sed -i "/CRAWLER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$CRAWLER_STORAGE_ATTACHMENT_ID/" $CRAWLER_EXECUTION_INFO
 
+#FIXME: no need to echo the remove command
+
+#FIXME: extract to a method
 #Coping scripts to mount disk.
 LOCAL_FILE_PATH="sebal_scripts"
 REMOTE_FILE_PATH="$REMOTE_BASE_DIR";
 
+#FIXME: extract to a method
 echo "UPLOAD SCRIPTS..."
 echo "scp -r -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $INSTANCE_PORT -i $PRIVATE_KEY_FILE $LOCAL_FILE_PATH/ $USER_NAME@$INSTANCE_IP:/$REMOTE_FILE_PATH"
 scp -r -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $INSTANCE_PORT -i $PRIVATE_KEY_FILE $LOCAL_FILE_PATH/ $USER_NAME@$INSTANCE_IP:/$REMOTE_FILE_PATH
 
+#FIXME: extract to a method
 echo "ALTER PERMISSION FOR SCRIPTS..."
 REMOTE_COMMAND="sudo chmod -R 777 /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH";
 echo "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $REMOTE_COMMAND"
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $REMOTE_COMMAND
 
+#FIXME: extract to a method
 #Preparing storage
 echo "PREPARING STORAGE..."
 REMOTE_COMMAND="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/mount_partition.sh $STORAGE_COMMAND";
@@ -149,12 +167,14 @@ echo  "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTA
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $REMOTE_COMMAND
 sed -i "/CRAWLER_STORAGE_FORMATED=/ s/=.*/=YES/" $CRAWLER_EXECUTION_INFO
 
+#FIXME: extract to a method
 #Installing git
 echo "INSTALLING GIT..."
 REMOTE_COMMAND="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/install_git.sh";
 echo "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $REMOTE_COMMAND"
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $REMOTE_COMMAND
 
+#FIXME: extract to a method
 # see if the name of the project will change
 #Coping SEBAL-Scheduler App file to Crawler VM
 echo "UPLOAD CRAWLER PACKAGE..."
@@ -163,12 +183,14 @@ REMOTE_FILE_PATH="$APP_FILE"
 echo "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $INSTANCE_PORT -i $PRIVATE_KEY_FILE $LOCAL_FILE_PATH $USER_NAME@$INSTANCE_IP:$REMOTE_FILE_PATH"
 scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $INSTANCE_PORT -i $PRIVATE_KEY_FILE $LOCAL_FILE_PATH $USER_NAME@$INSTANCE_IP:$REMOTE_FILE_PATH
 
+#FIXME: extract to a method
 #UNTAR APP FILE
 echo "EXTRACTING SEBAL-Scheduler..."
 REMOTE_COMMAND="tar -vzxf $REMOTE_FILE_PATH";
 echo "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $REMOTE_COMMAND"
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $REMOTE_COMMAND
 
+#FIXME: extract to a method
 #PREPARING CERT FILE SCP COMMAND
 echo "UPLOAD CERTIFICATES..."
 LOCAL_FILE_PATH="/$VOMS_CERT_FOLDER/$VOMS_CERT_FILE";
@@ -177,6 +199,8 @@ FILE_PATH="/$REMOTE_VOMS_CERT_FOLDER/$VOMS_CERT_FILE";
 echo "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $INSTANCE_PORT -i $PRIVATE_KEY_FILE $LOCAL_FILE_PATH $USER_NAME@$INSTANCE_IP:$REMOTE_FILE_PATH"
 scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $INSTANCE_PORT -i $PRIVATE_KEY_FILE $LOCAL_FILE_PATH $USER_NAME@$INSTANCE_IP:$REMOTE_FILE_PATH
 
+#FIXME: syntax error
+#FIXME: extract to a method
 # see what have to change to use this
 IFS=',' read -r -a extraPortsArray <<< $EXTRA_PORT
 arrayLength=${#extraPortsArray[@]};
