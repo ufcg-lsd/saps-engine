@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Deploy the crawler component
+# Deploy the fetcher component
 
 #FIXME add classpath and class names to constants
 
@@ -41,34 +41,33 @@ VOMS_CERT_FILE=x509up_u1210
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
 
 #Execution INFO
-CRAWLER_EXECUTION_INFO=crawler-info/crawler-exec.info
-if [ ! -e "$CRAWLER_EXECUTION_INFO" ]; then
+FETCHER_EXECUTION_INFO=fetcher-info/fetcher-exec.info
+if [ ! -e "$FETCHER_EXECUTION_INFO" ]; then
 	echo "Creating execution info file"
-	touch $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_INSTANCE_ID=" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_USER_NAME=" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_INSTANCE_IP=" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_INSTANCE_PORT=" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_EXTRA_PORT=" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_STORAGE_ID=" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_STORAGE_ATTACHMENT_ID=" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_STORAGE_PORT=" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_STORAGE_FORMATED=NO" >> $CRAWLER_EXECUTION_INFO
-	echo "CRAWLER_NFS_PORT=" >> $CRAWLER_EXECUTION_INFO
+	touch $FETCHER_EXECUTION_INFO
+	echo "FETCHER_INSTANCE_ID=" >> $FETCHER_EXECUTION_INFO
+	echo "FETCHER_USER_NAME=" >> $FETCHER_EXECUTION_INFO
+	echo "FETCHER_INSTANCE_IP=" >> $FETCHER_EXECUTION_INFO
+	echo "FETCHER_INSTANCE_PORT=" >> $FETCHER_EXECUTION_INFO
+	echo "FETCHER_EXTRA_PORT=" >> $FETCHER_EXECUTION_INFO
+	echo "FETCHER_STORAGE_ID=" >> $FETCHER_EXECUTION_INFO
+	echo "FETCHER_STORAGE_ATTACHMENT_ID=" >> $FETCHER_EXECUTION_INFO
+	echo "FETCHER_STORAGE_PORT=" >> $FETCHER_EXECUTION_INFO
+	echo "FETCHER_STORAGE_FORMATED=NO" >> $FETCHER_EXECUTION_INFO
 fi
 
-source $CRAWLER_EXECUTION_INFO
+source $FETCHER_EXECUTION_INFO
 
 #FIXME add some doc. i did not understand the purpose of below code
 STORAGE_COMMAND="FORMAT";
 
-if [ "$CRAWLER_STORAGE_FORMATED" = "YES" ]; then
+if [ "$FETCHER_STORAGE_FORMATED" = "YES" ]; then
 	STORAGE_COMMAND="RETRIEVE";
 fi
 
 echo "Storage command: $STORAGE_COMMAND";
 
-########### CRAWLER INFRASTRUCTURE ##############
+########### FETCHER INFRASTRUCTURE ##############
 
 # It wrapps the java call to the Infrastructure main
 # Globals
@@ -85,59 +84,58 @@ function infra_call() {
 #FIXME remove vars from inside the function. should be global
 #FIXME improve contains test
 
-# It starts crawler VM
+# It starts fetcher VM
 # Globals
 #   CONFIG_FILE
 #   SPEC_FILE
 # Returns
 #   infrastructure description
-function create_crawler_vm() {
+function create_fetcher_vm() {
   #CONFIG_FILE=target/classes/sebal.conf
-  #SPEC_FILE=target/classes/crawlerSpec
+  #SPEC_FILE=target/classes/fetcherSpec
 
   create_arsg="compute $CONFIG_FILE $SPEC_FILE"
-  VM_CRAWLER_INFO=`infra_call ${create_args}`
+  VM_FETCHER_INFO=`infra_call ${create_args}`
 
-  if [[ ! $VM_CRAWLER_INFO == *"INSTANCE_ID"* ]]; then
-    echo $VM_CRAWLER_INFO
-    echo "There is no resource available for deploy Crawler App." >&2
+  if [[ ! $VM_FETCHER_INFO == *"INSTANCE_ID"* ]]; then
+    echo $VM_FETCHER_INFO
+    echo "There is no resource available for deploy Fetcher App." >&2
     exit 1
   fi
 
-  echo $VM_CRAWLER_INFO
+  echo $VM_FETCHER_INFO
 }
 
 #PREPARING VARIABLES FOR SSH/SCP
 #Sample return USER_NAME=fogbow;SSH_HOST=192.168.0.1;SSH_HOST=9000;SSH_HOST=
-INSTANCE_ID=$(echo $VM_CRAWLER_INFO | cut -d";" -f1 | cut -d"=" -f2)
-USER_NAME=$(echo $VM_CRAWLER_INFO | cut -d";" -f2 | cut -d"=" -f2)
-INSTANCE_IP=$(echo $VM_CRAWLER_INFO | cut -d";" -f3 | cut -d"=" -f2)
-INSTANCE_PORT=$(echo $VM_CRAWLER_INFO | cut -d";" -f4 | cut -d"=" -f2)
-EXTRA_PORT=$(echo $VM_CRAWLER_INFO | cut -d";" -f5 | cut -d"=" -f2)
+INSTANCE_ID=$(echo $VM_FETCHER_INFO | cut -d";" -f1 | cut -d"=" -f2)
+USER_NAME=$(echo $VM_FETCHER_INFO | cut -d";" -f2 | cut -d"=" -f2)
+INSTANCE_IP=$(echo $VM_FETCHER_INFO | cut -d";" -f3 | cut -d"=" -f2)
+INSTANCE_PORT=$(echo $VM_FETCHER_INFO | cut -d";" -f4 | cut -d"=" -f2)
+EXTRA_PORT=$(echo $VM_FETCHER_INFO | cut -d";" -f5 | cut -d"=" -f2)
 
 echo $INSTANCE_ID;
 echo $USER_NAME;
 echo $INSTANCE_IP;
 echo $INSTANCE_PORT;
 echo $EXTRA_PORT;
-echo $CRAWLER_STORAGE_PORT;
 
 #FIXME improve function. we need return values
 # It Verifies if storage info exists.
 # Globals
-#   CRAWLER_STORAGE_ID
+#   FETCHER_STORAGE_ID
 #   CONFIG_FILE
 #   SPEC_FILE
 # Args
-#  CRAWLER_STORAGE_ID
+#  FETCHER_STORAGE_ID
 function storage_exists() {
-  if [ -n "$CRAWLER_STORAGE_ID" ]; then
-    check_exits_args="test-storage $CRAWLER_STORAGE_ID $CONFIG_FILE $SPEC_FILE";
+  if [ -n "$FETCHER_STORAGE_ID" ]; then
+    check_exits_args="test-storage $FETCHER_STORAGE_ID $CONFIG_FILE $SPEC_FILE";
     STORAGE_STATUS=`infra_call $check_exits_args`
     STORAGE_STATUS=$(echo $STORAGE_STATUS | cut -d";" -f1 | cut -d"=" -f2)
     echo "Storage status: $STORAGE_STATUS";
     if [ ! $STORAGE_STATUS = "active" ]; then
-      CRAWLER_STORAGE_ID="";
+      FETCHER_STORAGE_ID="";
     fi
   fi
 }
@@ -149,16 +147,16 @@ function storage_exists() {
 function create_volume() {
   #FIXME check args
   STORAGE_COMMAND="FORMAT";
-  sed -i "/CRAWLER_STORAGE_FORMATED=/ s/=.*/=NO/" $CRAWLER_EXECUTION_INFO
+  sed -i "/FETCHER_STORAGE_FORMATED=/ s/=.*/=NO/" $FETCHER_EXECUTION_INFO
 
   #This tow variables indicates if a new storage is been used. For new storage, the disk must be formated and the database must be created.
   create_vol_args="storage $STORAGE_SIZE $CONFIG_FILE $SPEC_FILE"
   STORAGE_INFO=`infra_call $create_vol_args`
   echo $STORAGE_INFO
 
-  CRAWLER_STORAGE_ID=$(echo $STORAGE_INFO | cut -d";" -f1 | cut -d"=" -f2)
+  FETCHER_STORAGE_ID=$(echo $STORAGE_INFO | cut -d";" -f1 | cut -d"=" -f2)
 
-  echo "New storage created: "$CRAWLER_STORAGE_ID
+  echo "New storage created: "$FETCHER_STORAGE_ID
 }
 
 # it attaches the volume to the VM
@@ -168,21 +166,21 @@ function create_volume() {
 function attach_volume() {
 #FIXME check vars
 #FIXME add proper return
-  echo "Attaching $CRAWLER_STORAGE_ID to $INSTANCE_ID"
-  attach_arg="attachment $INSTANCE_ID $CRAWLER_STORAGE_ID $CONFIG_FILE $SPEC_FILE"
-  CRAWLER_STORAGE_ATTACHMENT_INFO=`infra_call $attach_args`
+  echo "Attaching $FETCHER_STORAGE_ID to $INSTANCE_ID"
+  attach_arg="attachment $INSTANCE_ID $FETCHER_STORAGE_ID $CONFIG_FILE $SPEC_FILE"
+  FETCHER_STORAGE_ATTACHMENT_INFO=`infra_call $attach_args`
 
-  if [[ ! $CRAWLER_STORAGE_ATTACHMENT_INFO == *"ATTACHMENT_ID"* ]]; then
-    echo $CRAWLER_STORAGE_ATTACHMENT_INFO
-    echo "Error while attaching $CRAWLER_STORAGE_ID to $INSTANCE_ID."
+  if [[ ! $FETCHER_STORAGE_ATTACHMENT_INFO == *"ATTACHMENT_ID"* ]]; then
+    echo $FETCHER_STORAGE_ATTACHMENT_INFO
+    echo "Error while attaching $FETCHER_STORAGE_ID to $INSTANCE_ID."
     exit
   fi
 
-  echo $CRAWLER_STORAGE_ATTACHMENT_INFO;
-  CRAWLER_STORAGE_ATTACHMENT_ID=$(echo $CRAWLER_STORAGE_ATTACHMENT_INFO | cut -d";" -f1 | cut -d"=" -f2)
-  echo "Attach ID: $CRAWLER_STORAGE_ATTACHMENT_ID"
+  echo $FETCHER_STORAGE_ATTACHMENT_INFO;
+  FETCHER_STORAGE_ATTACHMENT_ID=$(echo $FETCHER_STORAGE_ATTACHMENT_INFO | cut -d";" -f1 | cut -d"=" -f2)
+  echo "Attach ID: $FETCHER_STORAGE_ATTACHMENT_ID"
   #Update Storage INFO FILE with the new attachment id.
-  sed -i "/CRAWLER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$CRAWLER_STORAGE_ATTACHMENT_ID/" $CRAWLER_EXECUTION_INFO
+  sed -i "/FETCHER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$FETCHER_STORAGE_ATTACHMENT_ID/" $FETCHER_EXECUTION_INFO
 }
 
 #FIXME extract to a method
@@ -190,7 +188,7 @@ function attach_volume() {
 LOCAL_FILE_PATH="sebal_scripts"
 REMOTE_FILE_PATH="$REMOTE_BASE_DIR";
 
-# SSH to crawler VM
+# SSH to fetcher VM
 # Globals
 #   INSTANCE_PORT
 #   PRIVATE_KEY_FILE
@@ -199,7 +197,7 @@ REMOTE_FILE_PATH="$REMOTE_BASE_DIR";
 # Args
 #   remote_command
 # Returns
-function ssh_to_crawler() {
+function ssh_to_fetcher() {
   #FIXME check remote_command?
   local remote_command=$1
   ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $remote_command
@@ -214,78 +212,57 @@ function ssh_to_crawler() {
 #   src_path
 #   dst_path
 # Returns
-function scp_to_crawler() {
+function scp_to_fetcher() {
   #FIXME how about the -r modified?
   local src_path=$1
   local dst_path=$2
   scp -r -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $INSTANCE_PORT -i $PRIVATE_KEY_FILE $src_path $USER_NAME@$INSTANCE_IP:/$dst_path
 }
 
-# Globals
-#   EXTRA_PORT
-# Args
-# Returns
-#  nfs_port
-function parse_nfs_port() {
-  IFS=',' read -r -a extraPortsArray <<< $EXTRA_PORT
-  arrayLength=${#extraPortsArray[@]};
-  for (( i=0; i<${arrayLength}; i++ ));
-  do
-    actualPort=${extraPortsArray[$i]};
-    if [[ $actualPort == *"nfs"* ]]; then
-      nfs_port=`$actualPort | cut -d":" -f3 | tr -d`
-      echo $nfs_port
-    fi
-  done
-}
-
 function main() {
   echo "Uploading scripts"
-  scp_to_crawler $LOCAL_FILE_PATH/ $REMOVE_FILE_PATH
+  scp_to_fetcher $LOCAL_FILE_PATH/ $REMOVE_FILE_PATH
 
   echo "Change script dir permission"
   chmod_cmd="sudo chmod -R 777 /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH"
-  ssh_to_crawler $chmod_cmd
+  ssh_to_fetcher $chmod_cmd
 
   echo "Mounting volume"
   mount_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/mount_partition.sh $STORAGE_COMMAND"
-  ssh_to_crawler $cmd_cmd
-  sed -i "/CRAWLER_STORAGE_FORMATED=/ s/=.*/=YES/" $CRAWLER_EXECUTION_INFO
+  ssh_to_fetcher $cmd_cmd
+  sed -i "/FETCHER_STORAGE_FORMATED=/ s/=.*/=YES/" $FETCHER_EXECUTION_INFO
 
   #do we need it here?
   echo "Installing git"
   install_git_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/install_git.sh"
-  ssh_to_crawler $install_git_cmd
+  ssh_to_fetcher $install_git_cmd
 
   # see if the name of the project will change
-  echo "Upload crawler package"
-  scp_to_crawler $APP_FILE_LOCAL_DIR/$APP_FILE $APP_FILE
+  echo "Upload fetcher package"
+  scp_to_fetcher $APP_FILE_LOCAL_DIR/$APP_FILE $APP_FILE
 
   echo "Extracting SEBAL-engine"
   extract_cmd="tar -vzxf $REMOTE_FILE_PATH"
-  ssh_to_crawler $extract_cmd
+  ssh_to_fetcher $extract_cmd
 
   echo "Upload certificates"
   LOCAL_FILE_PATH="/$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
   FILE_PATH="/$REMOTE_VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
-  scp_to_crawler $LOCAL_FILE_PATH $FILE_PATH
+  scp_to_fetcher $LOCAL_FILE_PATH $FILE_PATH
 
   #FIXME dst dir of private key?
   echo "Upload private key"
-  #scp_to_crawler $PRIVATE_KEY $REMOTE_FILE_PATH
-
-  CRAWLER_NFS_PORT=`parse_nfs_port`
-
+  #scp_to_fetcher $PRIVATE_KEY $REMOTE_FILE_PATH
+  
   #Putting informations on Crawler execution info.
-  sed -i "/CRAWLER_INSTANCE_ID=/ s/=.*/=$INSTANCE_ID/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_USER_NAME=/ s/=.*/=$USER_NAME/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_INSTANCE_IP=/ s/=.*/=$INSTANCE_IP/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_INSTANCE_PORT=/ s/=.*/=$INSTANCE_PORT/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_EXTRA_PORT=/ s/=.*/=$EXTRA_PORT/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_NFS_PORT=/ s/=.*/=$CRAWLER_NFS_PORT/" $CRAWLER_EXECUTION_INFO
+  sed -i "/FETCHER_INSTANCE_ID=/ s/=.*/=$INSTANCE_ID/" $FETCHER_EXECUTION_INFO
+  sed -i "/FETCHER_USER_NAME=/ s/=.*/=$USER_NAME/" $FETCHER_EXECUTION_INFO
+  sed -i "/FETCHER_INSTANCE_IP=/ s/=.*/=$INSTANCE_IP/" $FETCHER_EXECUTION_INFO
+  sed -i "/FETCHER_INSTANCE_PORT=/ s/=.*/=$INSTANCE_PORT/" $FETCHER_EXECUTION_INFO
+  sed -i "/FETCHER_EXTRA_PORT=/ s/=.*/=$EXTRA_PORT/" $FETCHER_EXECUTION_INFO
   #Update  DB INFO FILE with the new attachment id.
-  sed -i "/CRAWLER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$CRAWLER_STORAGE_ATTACHMENT_ID/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_STORAGE_ID=/ s/=.*/=$CRAWLER_STORAGE_ID/" $CRAWLER_EXECUTION_INFO
+  sed -i "/FETCHER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$FETCHER_STORAGE_ATTACHMENT_ID/" $FETCHER_EXECUTION_INFO
+  sed -i "/FETCHER_STORAGE_ID=/ s/=.*/=$FETCHER_STORAGE_ID/" $FETCHER_EXECUTION_INFO
 }
 
 #do deploy
