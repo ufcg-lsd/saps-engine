@@ -243,9 +243,9 @@ function main() {
   pkg_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/pack_sebal_engine_repository.sh"
   ssh_to_fetcher $pkg_cmd
 
-  echo "Extracting SEBAL-engine"
-  extract_cmd="tar -vzxf $REMOTE_FILE_PATH"
-  ssh_to_fetcher $extract_cmd
+  #echo "Extracting SEBAL-engine"
+  #extract_cmd="tar -vzxf $REMOTE_FILE_PATH"
+  #ssh_to_fetcher $extract_cmd
 
   echo "Upload certificates"
   LOCAL_FILE_PATH="/$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
