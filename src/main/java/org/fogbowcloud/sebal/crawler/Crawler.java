@@ -234,8 +234,7 @@ public class Crawler {
 			imageData.setState(ImageState.DOWNLOADED);
 			Date updateTime = new Date(Calendar.getInstance().getTimeInMillis());
 			imageData.setCreationTime(updateTime);
-			String localImageFilePath = properties.getProperty("sebal_export_path") + File.separator + imageData.getName();
-			imageData.setSebalEngineVersion(getSebalEngineVersion(localImageFilePath));
+			imageData.setSebalEngineVersion(getSebalEngineVersion());
 			imageData.setUpdateTime(updateTime);
 
 			try {
@@ -435,15 +434,16 @@ public class Crawler {
 		}
 	}
 	
-	protected String getSebalEngineVersion(String localImageFilePath) {
+	protected String getSebalEngineVersion() {
 		
-		File localImageFileDir = new File(localImageFilePath);
+		String sebalEngineDirPath = System.getProperty("user.dir");
+		File sebalEngineDir = new File(sebalEngineDirPath);
 		
-		if (localImageFileDir.exists() && localImageFileDir.isDirectory()) {
-			for (File file : localImageFileDir.listFiles()) {
-				if (file.getName().endsWith("-version")) {
+		if (sebalEngineDir.exists() && sebalEngineDir.isDirectory()) {
+			for (File file : sebalEngineDir.listFiles()) {
+				if (file.getName().startsWith("sebal-engine.version.")) {
 					String[] sebalEngineVersionFileSplit = file.getName()
-							.split("-");
+							.split("\\.");
 					return sebalEngineVersionFileSplit[2];
 				}
 			}

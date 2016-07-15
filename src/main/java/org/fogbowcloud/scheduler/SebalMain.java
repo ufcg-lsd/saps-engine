@@ -1,5 +1,6 @@
 package org.fogbowcloud.scheduler;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
@@ -228,7 +229,21 @@ public class SebalMain {
 	}
 	
 	private static String getBlowoutVersion(Properties properties) {
-		return properties.getProperty("blowout_version");
+		
+		String blowoutDirPath = System.getProperty("user.dir");
+		File blowoutDir = new File(blowoutDirPath);
+		
+		if (blowoutDir.exists() && blowoutDir.isDirectory()) {
+			for (File file : blowoutDir.listFiles()) {
+				if (file.getName().startsWith("blowout.version.")) {
+					String[] blowoutVersionFileSplit = file.getName()
+							.split("\\.");
+					return blowoutVersionFileSplit[2];
+				}
+			}
+		}
+		
+		return "";
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {
