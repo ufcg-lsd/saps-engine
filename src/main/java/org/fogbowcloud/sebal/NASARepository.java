@@ -70,10 +70,10 @@ public class NASARepository {
 		IOUtils.copy(response.getEntity().getContent(), outStream);
 		outStream.close();
 		
-		// saving SEBAL-engine version
+		/*// saving SEBAL-engine version
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash", "scripts/sebal-engine-version.sh", localImageFilePath);
 		Process p = builder.start();
-		p.waitFor();
+		p.waitFor();*/
 	}
 
 	private HttpClient initClient() throws IOException, ClientProtocolException,
