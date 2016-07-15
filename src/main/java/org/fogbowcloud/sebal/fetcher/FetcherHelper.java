@@ -19,7 +19,7 @@ import org.mapdb.DB;
 
 public class FetcherHelper {
 
-	protected static final int NUMBER_OF_RESULT_FILES = 7;
+	protected static final int NUMBER_OF_RESULT_FILES = 8;
 
 	public static final Logger LOGGER = Logger.getLogger(FetcherHelper.class);
 	
