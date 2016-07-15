@@ -230,15 +230,15 @@ public class SebalMain {
 	
 	private static String getBlowoutVersion(Properties properties) {
 		
-		String blowoutDirPath = "blowout-version/";
+		String blowoutDirPath = System.getProperty("user.dir");
 		File blowoutDir = new File(blowoutDirPath);
 		
 		if (blowoutDir.exists() && blowoutDir.isDirectory()) {
 			for (File file : blowoutDir.listFiles()) {
-				if (file.getName().startsWith("blowout-") && file.getName().endsWith("-version")) {
+				if (file.getName().startsWith("blowout.version.")) {
 					String[] blowoutVersionFileSplit = file.getName()
 							.split("-");
-					return blowoutVersionFileSplit[1];
+					return blowoutVersionFileSplit[2];
 				}
 			}
 		}

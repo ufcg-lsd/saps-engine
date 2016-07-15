@@ -436,14 +436,14 @@ public class Crawler {
 	
 	protected String getSebalEngineVersion() {
 		
-		String sebalEngineDirPath = "sebal-engine-version/";
+		String sebalEngineDirPath = System.getProperty("user.dir");
 		File sebalEngineDir = new File(sebalEngineDirPath);
 		
 		if (sebalEngineDir.exists() && sebalEngineDir.isDirectory()) {
 			for (File file : sebalEngineDir.listFiles()) {
-				if (file.getName().startsWith("sebal-engine") && file.getName().endsWith("-version")) {
+				if (file.getName().startsWith("sebal-engine.version.")) {
 					String[] sebalEngineVersionFileSplit = file.getName()
-							.split("-");
+							.split("\\.");
 					return sebalEngineVersionFileSplit[2];
 				}
 			}
