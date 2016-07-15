@@ -259,7 +259,9 @@ function main() {
 
   # see if the name of the project will change
   echo "Upload crawler package"
-  scp_to_crawler $APP_FILE_LOCAL_DIR/$APP_FILE $APP_FILE
+  #scp_to_crawler $APP_FILE_LOCAL_DIR/$APP_FILE $APP_FILE
+  pkg_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/pack_sebal_engine_repository.sh"
+  ssh_to_crawler $pkg_cmd
 
   echo "Extracting SEBAL-engine"
   extract_cmd="tar -vzxf $REMOTE_FILE_PATH"
