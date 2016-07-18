@@ -33,10 +33,12 @@ fi
 #FIXME not sure if we should keep these declarations here or to load from a config file
 #GLOBAL CONSTANTS
 REMOTE_BASE_DIR=tmp
-SANDBOX_DIR=sebal-scheduler
+SANDBOX_DIR=sebal-engine
 VOMS_CERT_FOLDER=tmp
 VOMS_CERT_FILE=x509up_u1210
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
+CONFIG_FILE=$SANDBOX_DIR/src/main/resources/sebal.conf
+SPEC_FILE=$SANDBOX_DIR/src/main/resources/crawlerSpec
 
 #Execution INFO
 CRAWLER_EXECUTION_INFO=crawler-info/crawler-exec.info
@@ -90,9 +92,6 @@ function infra_call() {
 # Returns
 #   infrastructure description
 function create_crawler_vm() {
-  #CONFIG_FILE=target/classes/sebal.conf
-  #SPEC_FILE=target/classes/crawlerSpec
-
   create_arsg="compute $CONFIG_FILE $SPEC_FILE"
   VM_CRAWLER_INFO=`infra_call ${create_args}`
 
