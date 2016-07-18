@@ -221,7 +221,7 @@ public class Fetcher {
 			String stationId = fetcherHelper
 					.getStationId(imageData, properties);
 			imageData.setStationId(stationId);
-			imageData.setSebalVersion(fetcherHelper.getSebalVersion(localImageResultsPath));
+			imageData.setSebalVersion(getSebalVersion(localImageResultsPath));
 
 			Date lastUpdateTime = new Date(Calendar.getInstance()
 					.getTimeInMillis());
@@ -379,5 +379,21 @@ public class Fetcher {
 		return properties
 				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) + 
 				File.separator + localImageResultsDir.getName() + File.separator;
+	}
+	
+	protected String getSebalVersion(String localImageResultsPath) {
+		
+		File localImageResultsDir = new File(localImageResultsPath);
+		
+		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {
+			for (File file : localImageResultsDir.listFiles()) {
+				if (file.getName().startsWith("SEBAL.version.")) {
+					String[] versionFileSplit = file.getName().split("\\.");
+					return versionFileSplit[2];
+				}
+			}
+		}
+		
+		return "";
 	}
 }

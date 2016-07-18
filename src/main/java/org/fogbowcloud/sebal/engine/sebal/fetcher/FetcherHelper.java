@@ -127,20 +127,4 @@ public class FetcherHelper {
 		
 		return true;
 	}
-	
-	protected String getSebalVersion(String localImageResultsPath) {
-		
-		File localImageResultsDir = new File(localImageResultsPath);
-		
-		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {
-			for (File file : localImageResultsDir.listFiles()) {
-				if (file.getName().startsWith("SEBAL.version.")) {
-					String[] versionFileSplit = file.getName().split("\\.");
-					return versionFileSplit[2];
-				}
-			}
-		}
-		
-		return "";
-	}
 }

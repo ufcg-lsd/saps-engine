@@ -464,4 +464,26 @@ public class TestFetcherIntegration {
 		Assert.assertEquals(ImageState.CORRUPTED, imageData.getState());
 		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
 	}
+	
+	@Test
+	public void testGetSebalVersion() {
+		// setup
+		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
+		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
+		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
+		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		Properties properties = Mockito.mock(Properties.class);
+		String ftpServerIP = "fake-IP";
+		String ftpServerPort = "fake-PORT";
+		String fakeLocalImageDirPath = System.getProperty("user.dir");
+		
+		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
+				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+		
+		// exercise
+		String sebalVersion = fetcher.getSebalVersion(fakeLocalImageDirPath);
+		
+		// expect
+		Assert.assertEquals("VERSION", sebalVersion);
+	}
 }

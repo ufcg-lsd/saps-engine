@@ -330,4 +330,23 @@ public class TestCrawlerIntegration {
 		Assert.assertNotEquals(image1.getFederationMember(),
 				image2.getFederationMember());
 	}
+	
+	@Test
+	public void testGetSebalEngineVersion() throws SQLException, IOException, InterruptedException {
+		// setup
+		Properties properties = Mockito.mock(Properties.class);
+		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
+		NASARepository nasaRepository = Mockito.mock(NASARepository.class);
+		FMask fmask = Mockito.mock(FMask.class);
+		String federationMember = "fake-fed-member";
+		
+		Crawler crawler = new Crawler(properties, imageStore, nasaRepository,
+				federationMember, fmask);
+		
+		// exercise
+		String versionReturn = crawler.getSebalEngineVersion();
+		
+		// expect
+		Assert.assertEquals("0c26f092e976389c593953a1ad8ddaadb5c2ab2a", versionReturn);
+	}
 }
