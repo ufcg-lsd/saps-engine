@@ -23,7 +23,7 @@ if [[ ! "${STORAGE_SIZE}" =~ ^[0-9]+$ ]]; then
 fi
 
 #FIXME should not use target/classe
-LOG4J=target/classe/log4j.properties
+LOG4J=target/classes/log4j.properties
 if [[ -f ${LOG4J} ]]; then
   CONF_LOG=-Dlog4j.configuration=file:$LOG4J
 else
@@ -32,8 +32,6 @@ fi
 
 #FIXME not sure if we should keep these declarations here or to load from a config file
 #GLOBAL CONSTANTS
-APP_FILE=sebal-scheduler-project.tar.gz
-APP_FILE_LOCAL_DIR=baseapp
 REMOTE_BASE_DIR=tmp
 SANDBOX_DIR=sebal-scheduler
 VOMS_CERT_FOLDER=tmp

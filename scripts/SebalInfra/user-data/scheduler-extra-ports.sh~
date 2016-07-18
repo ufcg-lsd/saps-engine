@@ -1,3 +1,0 @@
-#!/bin/bash
-echo "\n\n\n" | ssh-keygen -t rsa
-create-fogbow-tunnel postgres 5432 &
