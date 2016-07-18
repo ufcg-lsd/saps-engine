@@ -1,6 +1,5 @@
 package org.fogbowcloud.scheduler.core.model;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -14,10 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.fogbowcloud.scheduler.core.model.Job.TaskState;
+import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
-import org.fogbowcloud.sebal.SebalTasks;
 import org.junit.Before;
 import org.junit.Test;
 

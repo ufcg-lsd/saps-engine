@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.scheduler.core.model.Task;
+import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.SebalTasks;
 import org.fogbowcloud.sebal.bootstrap.DBBootstrap;

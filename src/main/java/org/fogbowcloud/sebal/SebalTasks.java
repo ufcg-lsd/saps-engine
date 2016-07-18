@@ -12,10 +12,10 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.scheduler.core.model.Command;
-import org.fogbowcloud.scheduler.core.model.Specification;
-import org.fogbowcloud.scheduler.core.model.Task;
-import org.fogbowcloud.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.blowout.scheduler.core.model.Command;
+import org.fogbowcloud.blowout.scheduler.core.model.Specification;
+import org.fogbowcloud.blowout.scheduler.core.model.Task;
+import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.sebal.bootstrap.DBBootstrap;
 
 

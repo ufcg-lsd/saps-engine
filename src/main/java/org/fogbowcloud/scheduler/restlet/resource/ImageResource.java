@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.scheduler.core.model.Job.TaskState;
-import org.fogbowcloud.scheduler.core.model.Task;
-import org.fogbowcloud.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.blowout.scheduler.core.model.Job.TaskState;
+import org.fogbowcloud.blowout.scheduler.core.model.Task;
+import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.ImageData;
 import org.json.JSONArray;

@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.scheduler.core.model.Resource;
-import org.fogbowcloud.scheduler.core.model.Specification;
-import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
-import org.fogbowcloud.scheduler.infrastructure.InfrastructureManager;
-import org.fogbowcloud.scheduler.infrastructure.InfrastructureProvider;
+import org.fogbowcloud.blowout.infrastructure.ResourceNotifier;
+import org.fogbowcloud.blowout.scheduler.core.model.Resource;
+import org.fogbowcloud.blowout.scheduler.core.model.Specification;
+import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
+import org.fogbowcloud.blowout.scheduler.infrastructure.InfrastructureManager;
+import org.fogbowcloud.blowout.scheduler.infrastructure.InfrastructureProvider;
 
 public class InfrastructureMain implements ResourceNotifier {
 	

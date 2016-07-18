@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.fogbowcloud.scheduler.core.model.Job.TaskState;
+import org.fogbowcloud.blowout.scheduler.core.model.Job.TaskState;
+import org.fogbowcloud.blowout.scheduler.core.model.Task;
+import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.core.model.SebalJob;
-import org.fogbowcloud.scheduler.core.model.Task;
-import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.scheduler.restlet.resource.ImageResource;
 import org.fogbowcloud.scheduler.restlet.resource.SebalImagensResource;
 import org.fogbowcloud.scheduler.restlet.resource.TaskResource;

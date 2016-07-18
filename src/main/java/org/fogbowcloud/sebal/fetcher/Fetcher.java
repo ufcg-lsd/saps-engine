@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.scheduler.core.util.AppPropertiesConstants;
+import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.sebal.ImageData;
 import org.fogbowcloud.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.ImageState;
