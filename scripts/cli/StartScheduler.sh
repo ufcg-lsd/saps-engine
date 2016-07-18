@@ -8,12 +8,18 @@ else
 CONF_LOG=
 fi
 
+PRIVATE_KEY_FILE=$1
+
+SANDBOX_DIR=sebal-engine
+VM_SCHEDULER_INFO=$SANDBOX_DIR/scripts/infrastructure/scheduler-info
+
 source scheduler.properties;
 
 #VARIABLES
-VM_IP;
-VM_PORT;
-PRIVATE_KEY_FILE;
+USER_NAME=$(echo $VM_SCHEDULER_INFO | cut -d";" -f2 | cut -d"=" -f2)
+VM_IP=$(echo $VM_SCHEDULER_INFO | cut -d";" -f3 | cut -d"=" -f2)
+VM_PORT=$(echo $VM_SCHEDULER_INFO | cut -d";" -f4 | cut -d"=" -f2)
+EXTRA_PORT=$(echo $VM_SCHEDULER_INFO | cut -d";" -f5 | cut -d"=" -f2)
 
 #SSH TO VM
 REMOTE_COMMAND;
