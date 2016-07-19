@@ -2,7 +2,7 @@
 # CLI of the SEBAL engine catalog
 
 function call_catalog() {
-  local args=$1
+  local args=$*
   local java_opts="-Xmx1G -Xss1G"
   local lpath="/usr/local/lib"
   local sebal_engine_classpath="target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/*"
@@ -48,13 +48,13 @@ fi
 
 case "${command}" in
   create)
-    call_catalog "add ${first_year} ${last_year} ${regions_path} ${regions}"
+    call_catalog add "${first_year}" "${last_year}" "${region}"
     ;;
   get)
-    call_catalog "get ${first_year} ${last_year} ${region}"
+    call_catalog get "${first_year}" "${last_year}" "${region}"
     ;;
   list)
-    call_catalog "list ${first_year} ${last_year} ${region_file_path} ${region}"
+    call_catalog list "${first_year}" "${last_year}" "${region}"
   ;;
   *)
     echo "'${command}' is not command. Available commands: [create, get, list]"
