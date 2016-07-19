@@ -3,17 +3,17 @@
 
 function call_catalog() {
   local args=$1
+  local java_opts="-Xmx1G -Xss1G"
   local lpath="/usr/local/lib"
   local sebal_engine_classpath="target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/*"
   local sebal_engine_class="org.fogbowcloud.sebal.bootstrap.DBBootstrapMain"
 
-  cmd_out="$(java -Xmx1G -Xss1G\
+  java ${java_opts}
     -Djava.library.path=${lpath}\
     -cp ${sebal_engine_classpath}\
     ${sebal_engine_class}\
     ${DB_ADDRESS} ${DB_PORT} ${DB_USER} $DB_PASSWORD}\
-    ${args} 2>&1)"
-  echo $cmd_out
+    ${args} 2>&1
 }
 
 config_file=`dirname $0`/catalog.config
