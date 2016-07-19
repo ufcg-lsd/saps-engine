@@ -22,7 +22,7 @@ public class BootstrapMain {
     private static final String DATASTORE_DRIVER = "datastore_driver";
     private static final String DATASTORE_URL_PREFIX = "datastore_url_prefix";
 
-    static String SELECT_ALL_IMAGES_SQL = "SELECT * FROM nasa_images ORDER BY priority, image_name";
+    private static String SELECT_ALL_IMAGES_SQL = "SELECT * FROM nasa_images ORDER BY priority, image_name";
 
     /**
      * @param args args[0] path to properties file
@@ -48,7 +48,6 @@ public class BootstrapMain {
         connectionPool.setDriverClassName(properties.getProperty(DATASTORE_DRIVER));
         connectionPool.setUrl(properties.getProperty(DATASTORE_URL_PREFIX) + sqlIP + ":" + sqlPort);
         connectionPool.setInitialSize(1);
-
 
         try {
             Connection c = connectionPool.getConnection();
