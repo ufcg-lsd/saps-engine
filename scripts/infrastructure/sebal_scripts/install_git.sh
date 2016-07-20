@@ -1,3 +1,4 @@
 #!/bin/bash
 
-echo -e "Y\n" | apt-get install git-all
+apt-get update
+echo "Y\n" | apt-get install git

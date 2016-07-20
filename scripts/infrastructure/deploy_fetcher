@@ -4,35 +4,29 @@
 
 #FIXME add classpath and class names to constants
 
-if [[ $# -ne 2 ]]; then
+if [[ $# -ne 1 ]]; then
   echo "Usage:" $0 "path/to/private_key storage_size"
   exit 1
 fi
 
 PRIVATE_KEY_FILE=$1
-STORAGE_SIZE=$2
 
 if [[ ! -f "${PRIVATE_KEY_FILE}" ]]; then
   echo $PRIVATE_KEY_FILE "is not a regular file or does not exist"
   exit 1
 fi
 
-if [[ ! "${STORAGE_SIZE}" =~ ^[0-9]+$ ]]; then
-  echo "Invalid storage_size" $STORAGE_SIZE
-  exit 1
-fi
-
 #FIXME not sure if we should keep these declarations here or to load from a config file
 #GLOBAL CONSTANTS
-REMOTE_BASE_DIR=tmp
-SANDBOX_DIR=sebal-engine
-VOMS_CERT_FOLDER=tmp
+REMOTE_BASE_DIR=/tmp
+SANDBOX_DIR=/local/esdras/git/sebal-engine
+VOMS_CERT_FOLDER=/tmp
 VOMS_CERT_FILE=x509up_u1210
+REMOTE_REPOSITORY_PATH=/home/fogbow
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/fetcherSpec
 
-#FIXME should not use target/classe
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [[ -f ${LOG4J} ]]; then
   CONF_LOG=-Dlog4j.configuration=file:$LOG4J
@@ -50,39 +44,11 @@ if [ ! -e "$FETCHER_EXECUTION_INFO" ]; then
 	echo "FETCHER_INSTANCE_IP=" >> $FETCHER_EXECUTION_INFO
 	echo "FETCHER_INSTANCE_PORT=" >> $FETCHER_EXECUTION_INFO
 	echo "FETCHER_EXTRA_PORT=" >> $FETCHER_EXECUTION_INFO
-	echo "FETCHER_STORAGE_ID=" >> $FETCHER_EXECUTION_INFO
-	echo "FETCHER_STORAGE_ATTACHMENT_ID=" >> $FETCHER_EXECUTION_INFO
-	echo "FETCHER_STORAGE_PORT=" >> $FETCHER_EXECUTION_INFO
-	echo "FETCHER_STORAGE_FORMATED=NO" >> $FETCHER_EXECUTION_INFO
 fi
 
 source $FETCHER_EXECUTION_INFO
 
-#FIXME add some doc. i did not understand the purpose of below code
-STORAGE_COMMAND="FORMAT";
-
-if [ "$FETCHER_STORAGE_FORMATED" = "YES" ]; then
-	STORAGE_COMMAND="RETRIEVE";
-fi
-
-echo "Storage command: $STORAGE_COMMAND";
-
 ########### FETCHER INFRASTRUCTURE ##############
-
-# It wrapps the java call to the Infrastructure main
-# Globals
-#   CONF_LOG
-# Args
-#   java_args
-# Returns
-function infra_call() {
-  local java_args=$1
-  cmd_out="$(java $CONF_LOG -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.infrastructure.InfrastructureMain compute $CONFIG_FILE $SPEC_FILE 2>&1)"
-  echo $cmd_out
-}
-
-#FIXME remove vars from inside the function. should be global
-#FIXME improve contains test
 
 # It starts fetcher VM
 # Globals
@@ -91,8 +57,7 @@ function infra_call() {
 # Returns
 #   infrastructure description
 function create_fetcher_vm() {
-  create_arsg="compute $CONFIG_FILE $SPEC_FILE"
-  VM_FETCHER_INFO=`infra_call ${create_args}`
+  VM_FETCHER_INFO=`java $CONF_LOG -cp $SANDBOX_DIR/target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.infrastructure.InfrastructureMain compute $CONFIG_FILE $SPEC_FILE "false" 2>&1`
 
   if [[ ! $VM_FETCHER_INFO == *"INSTANCE_ID"* ]]; then
     echo $VM_FETCHER_INFO
@@ -103,86 +68,10 @@ function create_fetcher_vm() {
   echo $VM_FETCHER_INFO
 }
 
-#PREPARING VARIABLES FOR SSH/SCP
-#Sample return USER_NAME=fogbow;SSH_HOST=192.168.0.1;SSH_HOST=9000;SSH_HOST=
-INSTANCE_ID=$(echo $VM_FETCHER_INFO | cut -d";" -f1 | cut -d"=" -f2)
-USER_NAME=$(echo $VM_FETCHER_INFO | cut -d";" -f2 | cut -d"=" -f2)
-INSTANCE_IP=$(echo $VM_FETCHER_INFO | cut -d";" -f3 | cut -d"=" -f2)
-INSTANCE_PORT=$(echo $VM_FETCHER_INFO | cut -d";" -f4 | cut -d"=" -f2)
-EXTRA_PORT=$(echo $VM_FETCHER_INFO | cut -d";" -f5 | cut -d"=" -f2)
-
-echo $INSTANCE_ID;
-echo $USER_NAME;
-echo $INSTANCE_IP;
-echo $INSTANCE_PORT;
-echo $EXTRA_PORT;
-
-#FIXME improve function. we need return values
-# It Verifies if storage info exists.
-# Globals
-#   FETCHER_STORAGE_ID
-#   CONFIG_FILE
-#   SPEC_FILE
-# Args
-#  FETCHER_STORAGE_ID
-function storage_exists() {
-  if [ -n "$FETCHER_STORAGE_ID" ]; then
-    check_exits_args="test-storage $FETCHER_STORAGE_ID $CONFIG_FILE $SPEC_FILE";
-    STORAGE_STATUS=`infra_call $check_exits_args`
-    STORAGE_STATUS=$(echo $STORAGE_STATUS | cut -d";" -f1 | cut -d"=" -f2)
-    echo "Storage status: $STORAGE_STATUS";
-    if [ ! $STORAGE_STATUS = "active" ]; then
-      FETCHER_STORAGE_ID="";
-    fi
-  fi
-}
-
-# It creates a volume
-# Globals
-# Args
-# Returns
-function create_volume() {
-  #FIXME check args
-  STORAGE_COMMAND="FORMAT";
-  sed -i "/FETCHER_STORAGE_FORMATED=/ s/=.*/=NO/" $FETCHER_EXECUTION_INFO
-
-  #This tow variables indicates if a new storage is been used. For new storage, the disk must be formated and the database must be created.
-  create_vol_args="storage $STORAGE_SIZE $CONFIG_FILE $SPEC_FILE"
-  STORAGE_INFO=`infra_call $create_vol_args`
-  echo $STORAGE_INFO
-
-  FETCHER_STORAGE_ID=$(echo $STORAGE_INFO | cut -d";" -f1 | cut -d"=" -f2)
-
-  echo "New storage created: "$FETCHER_STORAGE_ID
-}
-
-# it attaches the volume to the VM
-# Globals
-# Args
-# Returns
-function attach_volume() {
-#FIXME check vars
-#FIXME add proper return
-  echo "Attaching $FETCHER_STORAGE_ID to $INSTANCE_ID"
-  attach_arg="attachment $INSTANCE_ID $FETCHER_STORAGE_ID $CONFIG_FILE $SPEC_FILE"
-  FETCHER_STORAGE_ATTACHMENT_INFO=`infra_call $attach_args`
-
-  if [[ ! $FETCHER_STORAGE_ATTACHMENT_INFO == *"ATTACHMENT_ID"* ]]; then
-    echo $FETCHER_STORAGE_ATTACHMENT_INFO
-    echo "Error while attaching $FETCHER_STORAGE_ID to $INSTANCE_ID."
-    exit
-  fi
-
-  echo $FETCHER_STORAGE_ATTACHMENT_INFO;
-  FETCHER_STORAGE_ATTACHMENT_ID=$(echo $FETCHER_STORAGE_ATTACHMENT_INFO | cut -d";" -f1 | cut -d"=" -f2)
-  echo "Attach ID: $FETCHER_STORAGE_ATTACHMENT_ID"
-  #Update Storage INFO FILE with the new attachment id.
-  sed -i "/FETCHER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$FETCHER_STORAGE_ATTACHMENT_ID/" $FETCHER_EXECUTION_INFO
-}
-
 #FIXME extract to a method
 #Coping scripts to mount disk.
-LOCAL_FILE_PATH="sebal_scripts"
+SCRIPTS_DIR="sebal_scripts"
+LOCAL_FILE_PATH="$SANDBOX_DIR/scripts/infrastructure/sebal_scripts"
 REMOTE_FILE_PATH="$REMOTE_BASE_DIR";
 
 # SSH to fetcher VM
@@ -196,8 +85,8 @@ REMOTE_FILE_PATH="$REMOTE_BASE_DIR";
 # Returns
 function ssh_to_fetcher() {
   #FIXME check remote_command?
-  local remote_command=$1
-  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $remote_command
+  local remote_command=$*
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP ${remote_command}
 }
 
 # Globals
@@ -217,41 +106,42 @@ function scp_to_fetcher() {
 }
 
 function main() {
+  echo "Creating Fetcher VM"
+  VM_FETCHER_INFO=`create_fetcher_vm`
+
+  #PREPARING VARIABLES FOR SSH/SCP
+  #Sample return USER_NAME=fogbow;SSH_HOST=192.168.0.1;SSH_HOST=9000;SSH_HOST=
+  INSTANCE_ID=$(echo $VM_FETCHER_INFO | cut -d";" -f1 | cut -d"=" -f2)
+  USER_NAME=$(echo $VM_FETCHER_INFO | cut -d";" -f2 | cut -d"=" -f2)
+  INSTANCE_IP=$(echo $VM_FETCHER_INFO | cut -d";" -f3 | cut -d"=" -f2)
+  INSTANCE_PORT=$(echo $VM_FETCHER_INFO | cut -d";" -f4 | cut -d"=" -f2)
+  EXTRA_PORT=$(echo $VM_FETCHER_INFO | cut -d";" -f5 | cut -d"=" -f2)
+  
   echo "Uploading scripts"
-  scp_to_fetcher $LOCAL_FILE_PATH/ $REMOVE_FILE_PATH
+  scp_to_fetcher $LOCAL_FILE_PATH $REMOTE_FILE_PATH
 
   echo "Change script dir permission"
-  chmod_cmd="sudo chmod -R 777 /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH"
-  ssh_to_fetcher $chmod_cmd
-
-  echo "Mounting volume"
-  mount_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/mount_partition.sh $STORAGE_COMMAND"
-  ssh_to_fetcher $cmd_cmd
-  sed -i "/FETCHER_STORAGE_FORMATED=/ s/=.*/=YES/" $FETCHER_EXECUTION_INFO
+  chmod_cmd="sudo chmod -R 777 $REMOTE_FILE_PATH/$SCRIPTS_DIR"
+  ssh_to_fetcher ${chmod_cmd}
 
   #do we need it here?
   echo "Installing git"
-  install_git_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/install_git.sh"
-  ssh_to_fetcher $install_git_cmd
-
-  # see if the name of the project will change
+  install_git_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/install_git.sh"
+  ssh_to_fetcher ${install_git_cmd}
+  
   echo "Upload fetcher package"
   #scp_to_fetcher $APP_FILE_LOCAL_DIR/$APP_FILE $APP_FILE
-  pkg_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/pack_sebal_engine_repository.sh"
-  ssh_to_fetcher $pkg_cmd
-
-  #echo "Extracting SEBAL-engine"
-  #extract_cmd="tar -vzxf $REMOTE_FILE_PATH"
-  #ssh_to_fetcher $extract_cmd
+  pkg_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $REMOTE_REPOSITORY_PATH"
+  ssh_to_fetcher ${pkg_cmd}
 
   echo "Upload certificates"
-  LOCAL_FILE_PATH="/$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
-  FILE_PATH="/$REMOTE_VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
+  LOCAL_FILE_PATH="$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
+  FILE_PATH="$REMOTE_VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
+  mkdir_cmd="sudo mkdir -p $FILE_PATH"
+  chmod_cmd="sudo chmod 777 $FILE_PATH"
+  ssh_to_fetcher ${chmod_cmd}
+  ssh_to_fetcher ${mkdir_cmd}
   scp_to_fetcher $LOCAL_FILE_PATH $FILE_PATH
-
-  #FIXME dst dir of private key?
-  echo "Upload private key"
-  #scp_to_fetcher $PRIVATE_KEY $REMOTE_FILE_PATH
   
   #Putting informations on Fetcher execution info.
   sed -i "/FETCHER_INSTANCE_ID=/ s/=.*/=$INSTANCE_ID/" $FETCHER_EXECUTION_INFO
@@ -259,9 +149,6 @@ function main() {
   sed -i "/FETCHER_INSTANCE_IP=/ s/=.*/=$INSTANCE_IP/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_INSTANCE_PORT=/ s/=.*/=$INSTANCE_PORT/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_EXTRA_PORT=/ s/=.*/=$EXTRA_PORT/" $FETCHER_EXECUTION_INFO
-  #Update STORAGE INFO FILE with the new attachment id.
-  sed -i "/FETCHER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$FETCHER_STORAGE_ATTACHMENT_ID/" $FETCHER_EXECUTION_INFO
-  sed -i "/FETCHER_STORAGE_ID=/ s/=.*/=$FETCHER_STORAGE_ID/" $FETCHER_EXECUTION_INFO
 }
 
 #do deploy

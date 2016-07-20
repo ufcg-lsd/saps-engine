@@ -84,7 +84,7 @@ public class SebalMain {
 		LOGGER.info("Calling infrastructure manager");
 		infraManager = new InfrastructureManager(initialSpecs, isElastic,
 				infraProvider, properties);
-		infraManager.start(blockWhileInitializing);
+		infraManager.start(blockWhileInitializing, true);
 		
 		Scheduler scheduler = new Scheduler(infraManager, job);
 		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, job);
