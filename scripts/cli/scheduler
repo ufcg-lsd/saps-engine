@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if [[ $# -ne 2 ]]; then
+  echo "Usage:" $0 "path/to/private_key path/to/sebal-engine/dir"
+  exit 1
+fi
+
+PRIVATE_KEY_FILE=$1
+WORK_DIR=$2
+SCHEDULER_EXEC_INFO_FILE=$WORK_DIR/scheduler/scheduler-info/scheduler-exec.info
+CRAWLER_EXEC_INFO_FILE=$WORK_DIR/crawler/crawler-info/crawler-exec.info
+
+function ssh_to_scheduler() {
+  #FIXME check remote_command?
+  local remote_command=$*
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $SCHEDULER_INSTANCE_PORT -i $PRIVATE_KEY_FILE  $SCHEDULER_USER_NAME@$SCHEDULER_INSTANCE_IP ${remote_command}
+}
+
+function main() {
+  SCHEDULER_USER_NAME=$(sed -n 2p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+  SCHEDULER_INSTANCE_IP=$(sed -n 3p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+  SCHEDULER_INSTANCE_PORT=$(sed -n 4p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+  DB_PORT=$(sed -n 8p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+
+  NFS_INSTANCE_IP=$(sed -n 3p $CRAWLER_EXEC_INFO_FILE | cut -d"=" -f2)
+  NFS_PORT=$(sed -n 10p $CRAWLER_EXEC_INFO_FILE | cut -d"=" -f2)
+
+  echo "Sending scheduler app script to instance"
+  schedulerapp_cmd="sudo sh $WORK_DIR/scripts/cli/scheduler-start.sh $SCHEDULER_INSTANCE_IP $DB_PORT $NFS_INSTANCE_IP $NFS_PORT"
+  ssh_to_scheduler ${schedulerapp_cmd}
+}
+
+main

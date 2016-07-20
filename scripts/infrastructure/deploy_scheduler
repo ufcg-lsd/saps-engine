@@ -27,9 +27,12 @@ fi
 REMOTE_BASE_DIR=/tmp
 SANDBOX_DIR=/local/esdras/git/sebal-engine
 VOMS_CERT_FOLDER=/tmp
+KEYSTONE_CERT_FOLDER=/tmp
 VOMS_CERT_FILE=x509up_u1210
+KEYSTONE_CERT_FILE=keystone_cert
 REMOTE_REPOSITORY_PATH=/home/fogbow
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert
+REMOTE_KEYSTONE_CERT_FOLDER=/home/fogbow/Dev/keys/cert
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/schedulerSpec
 
@@ -202,7 +205,7 @@ function parse_postgres_port() {
   do
     actualPort=${extraPortsArray[$i]};
     if [[ $actualPort == *"postgres"* ]]; then
-      postgres_port=`$actualPort | cut -d":" -f3 | tr -d`
+      postgres_port=`echo $actualPort | cut -d":" -f3 | tr -d "}"`
       echo $postgres_port
     fi
   done
@@ -263,6 +266,14 @@ function main() {
   ssh_to_scheduler ${mkdir_cmd}
   ssh_to_scheduler ${chmod_cmd}
   scp_to_scheduler $LOCAL_FILE_PATH $FILE_PATH
+
+  KEYSTONE_LOCAL_FILE_PATH="$KEYSTONE_CERT_FOLDER/$KEYSTONE_CERT_FILE"
+  KEYSTONE_FILE_PATH="$REMOTE_KEYSTONE_CERT_FOLDER/$KEYSTONE_CERT_FILE"
+  mkdir_cmd="sudo mkdir -p $KEYSTONE_FILE_PATH"
+  chmod_cmd="sudo chmod 777 $KEYSTONE_FILE_PATH"
+  ssh_to_scheduler ${mkdir_cmd}
+  ssh_to_scheduler ${chmod_cmd}
+  scp_to_scheduler $KEYSTONE_LOCAL_FILE_PATH $KEYSTONE_FILE_PATH
 
   DB_STORAGE_PORT=`parse_postgres_port`
 

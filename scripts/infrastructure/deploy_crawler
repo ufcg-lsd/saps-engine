@@ -197,7 +197,7 @@ function parse_nfs_port() {
   do
     actualPort=${extraPortsArray[$i]};
     if [[ $actualPort == *"nfs"* ]]; then
-      nfs_port=`$actualPort | cut -d":" -f3 | tr -d`
+      nfs_port=`echo $actualPort | cut -d":" -f3 | tr -d "}"`
       echo $nfs_port
     fi
   done
@@ -264,11 +264,10 @@ function main() {
   sed -i "/CRAWLER_INSTANCE_IP=/ s/=.*/=$INSTANCE_IP/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_INSTANCE_PORT=/ s/=.*/=$INSTANCE_PORT/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_EXTRA_PORT=/ s/=.*/=$EXTRA_PORT/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_NFS_PORT=/ s/=.*/=$CRAWLER_NFS_PORT/" $CRAWLER_EXECUTION_INFO
   #Update STORAGE INFO FILE with the new attachment id.
   sed -i "/CRAWLER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$CRAWLER_STORAGE_ATTACHMENT_ID/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_STORAGE_ID=/ s/=.*/=$CRAWLER_STORAGE_ID/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_STORAGE_PORT=/ s/=.*/=$CRAWLER_STORAGE_PORT/" $CRAWLER_EXECUTION_INFO
+  sed -i "/CRAWLER_NFS_PORT=/ s/=.*/=$CRAWLER_NFS_PORT/" $CRAWLER_EXECUTION_INFO
 }
 
 #do deploy

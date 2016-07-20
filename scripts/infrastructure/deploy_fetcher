@@ -5,7 +5,7 @@
 #FIXME add classpath and class names to constants
 
 if [[ $# -ne 1 ]]; then
-  echo "Usage:" $0 "path/to/private_key storage_size"
+  echo "Usage:" $0 "path/to/private_key"
   exit 1
 fi
 
