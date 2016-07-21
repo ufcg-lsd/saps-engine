@@ -32,6 +32,7 @@ REMOTE_REPOSITORY_PATH=/home/fogbow
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/crawlerSpec
+SCHEDULER_EXEC_INFO_FILE=$SANDBOX_DIR/scheduler/scheduler-info/scheduler-exec.info
 
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [[ -f ${LOG4J} ]]; then
@@ -203,6 +204,14 @@ function parse_nfs_port() {
   done
 }
 
+function execute_crawler_app() {
+  DB_INSTANCE_IP=$(sed -n 3p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+  DB_PORT=$(sed -n 8p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+
+  crawlerapp_cmd="sudo sh $SANDBOX_DIR/scripts/cli/crawler $DB_INSTANCE_IP $DB_PORT"
+  ssh_to_crawler ${crawlerapp_cmd}
+}
+
 function main() {
   echo "Creating Crawler VM"
   VM_CRAWLER_INFO=`create_crawler_vm`
@@ -268,6 +277,9 @@ function main() {
   sed -i "/CRAWLER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$CRAWLER_STORAGE_ATTACHMENT_ID/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_STORAGE_ID=/ s/=.*/=$CRAWLER_STORAGE_ID/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_NFS_PORT=/ s/=.*/=$CRAWLER_NFS_PORT/" $CRAWLER_EXECUTION_INFO
+
+  echo "Executing crawler app"
+  execute_crawler_app
 }
 
 #do deploy

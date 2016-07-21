@@ -26,6 +26,8 @@ REMOTE_REPOSITORY_PATH=/home/fogbow
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/fetcherSpec
+SCHEDULER_EXEC_INFO_FILE=$SANDBOX_DIR/scheduler/scheduler-info/scheduler-exec.info
+CRAWLER_EXEC_INFO_FILE=$SANDBOX_DIR/crawler/crawler-info/crawler-exec.info
 
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [[ -f ${LOG4J} ]]; then
@@ -105,6 +107,18 @@ function scp_to_fetcher() {
   scp -r -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $INSTANCE_PORT -i $PRIVATE_KEY_FILE $src_path $USER_NAME@$INSTANCE_IP:/$dst_path
 }
 
+function execute_fetcher_app() {
+  FTP_USER_NAME=$(sed -n 2p $CRAWLER_EXEC_INFO_FILE | cut -d"=" -f2)
+  FTP_INSTANCE_IP=$(sed -n 3p $CRAWLER_EXEC_INFO_FILE | cut -d"=" -f2)
+  FTP_INSTANCE_PORT=$(sed -n 4p $CRAWLER_EXEC_INFO_FILE | cut -d"=" -f2)
+
+  DB_INSTANCE_IP=$(sed -n 3p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+  DB_PORT=$(sed -n 8p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+
+  fetcherapp_cmd="sudo sh $SANDBOX_DIR/scripts/cli/fetcher $DB_INSTANCE_IP $DB_PORT $FTP_USER_NAME $FTP_INSTANCE_IP $FTP_INSTANCE_PORT"
+  ssh_to_fetcher ${fetcherapp_cmd}
+}
+
 function main() {
   echo "Creating Fetcher VM"
   VM_FETCHER_INFO=`create_fetcher_vm`
@@ -149,6 +163,9 @@ function main() {
   sed -i "/FETCHER_INSTANCE_IP=/ s/=.*/=$INSTANCE_IP/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_INSTANCE_PORT=/ s/=.*/=$INSTANCE_PORT/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_EXTRA_PORT=/ s/=.*/=$EXTRA_PORT/" $FETCHER_EXECUTION_INFO
+
+  echo "Executing fetcher app"
+  execute_fetcher_app
 }
 
 #do deploy

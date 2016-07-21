@@ -35,6 +35,7 @@ REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert
 REMOTE_KEYSTONE_CERT_FOLDER=/home/fogbow/Dev/keys/cert
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/schedulerSpec
+CRAWLER_EXEC_INFO_FILE=$SANDBOX_DIR/crawler/crawler-info/crawler-exec.info
 
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [ -f $LOG4J ]; then
@@ -211,6 +212,14 @@ function parse_postgres_port() {
   done
 }
 
+function execute_scheduler_app() {
+  NFS_INSTANCE_IP=$(sed -n 3p $CRAWLER_EXEC_INFO_FILE | cut -d"=" -f2)
+  NFS_PORT=$(sed -n 10p $CRAWLER_EXEC_INFO_FILE | cut -d"=" -f2)
+
+  schedulerapp_cmd="sudo sh $SANDBOX_DIR/scripts/cli/scheduler $INSTANCE_IP $DB_STORAGE_PORT $NFS_INSTANCE_IP $NFS_PORT"
+  ssh_to_scheduler ${schedulerapp_cmd}
+}
+
 function main() {
   echo "Creating Scheduler VM"
   VM_SCHEDULER_INFO=`create_scheduler_vm`
@@ -290,6 +299,9 @@ function main() {
   sed -i "/DB_STORAGE_FORMATED=/ s/=.*/=YES/" $SCHEDULER_EXECUTION_INFO
   sed -i "/DB_STORAGE_CREATED=/ s/=.*/=YES/" $SCHEDULER_EXECUTION_INFO
   sed -i "/SCHEDULER_BASE_DIR=/ s/=.*/=/$SCHEDULER_BASE_DIR/" $SCHEDULER_EXECUTION_INFO
+
+  echo "Executing scheduler app in VM"
+  execute_scheduler_app
 }
 
 #do deploy
