@@ -32,6 +32,7 @@ public class InfrastructureMain implements ResourceNotifier {
 	private static final String ATTACHMENT_ID = "ATTACHMENT_ID=";
 	private static final String STORAGE_STATUS = "STORAGE_STATUS=";
 	private static final String DELIMITER = ";";
+	private static final String CLEAN = "true";
 
 	private Resource resource;
 	
@@ -39,6 +40,7 @@ public class InfrastructureMain implements ResourceNotifier {
 	private static String command;
 	private static String confgFilePath;
 	private static String specsFilePath;
+	private static String cleanCommand;
 	private static String storageSize;
 	private static String instanceId;
 	private static String storageId;
@@ -99,7 +101,12 @@ public class InfrastructureMain implements ResourceNotifier {
 
 		InfrastructureManager infraManager = new InfrastructureManager(null, true,
 				infraProvider, properties);
-		infraManager.start(blockWhileInitializing);
+		
+		if(CLEAN.equals(cleanCommand)) {
+			infraManager.start(blockWhileInitializing, true);
+		} else {
+			infraManager.start(blockWhileInitializing, false);
+		}
 		
 		InfrastructureMain infraMain = new InfrastructureMain();
 		
@@ -208,6 +215,7 @@ public class InfrastructureMain implements ResourceNotifier {
 			}
 			confgFilePath = args[1];
 			specsFilePath = args[2];
+			cleanCommand = args[3];
 		}else if(TEST_COMPUTE.equals(command)){
 			if(args.length < 2){
 				throw new IllegalArgumentException("Wrong usage for teste compute command. Instance Id must be informed.");
@@ -221,6 +229,7 @@ public class InfrastructureMain implements ResourceNotifier {
 			storageSize = args[1];
 			confgFilePath = args[2];
 			specsFilePath = args[3];
+			cleanCommand = args[4];
 			try {
 				Integer.parseInt(storageSize);
 			} catch (Exception e) {
@@ -233,6 +242,7 @@ public class InfrastructureMain implements ResourceNotifier {
 			}
 			storageId = args[1];
 			confgFilePath = args[2];
+			cleanCommand = args[3];
 			
 		}else if(STORAGE_ATTACHMENT.equals(command)){
 			if(args.length < 4){
@@ -241,6 +251,7 @@ public class InfrastructureMain implements ResourceNotifier {
 			instanceId = args[1];
 			storageId = args[2];
 			confgFilePath = args[3];
+			cleanCommand = args[4];
 			
 		}else{
 			throw new IllegalArgumentException("Invalid command argument usage.");

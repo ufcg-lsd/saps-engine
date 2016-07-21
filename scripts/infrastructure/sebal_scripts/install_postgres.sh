@@ -20,6 +20,7 @@ DATABASE_DIR=/local/exports/postgres
 service postgresql stop
 EOF
 sed -i "/data_directory =/ s/=.*/=$DATABASE_DIR_CHAR/" $CONFIG_FILE
+sed -i 's/peer/md5/g' /etc/postgresql/$VERSION/main/pg_hba.conf
 service postgresql start
 
 if[ "$COMMAND" = "CREATE" ]; then
@@ -29,3 +30,4 @@ if[ "$COMMAND" = "CREATE" ]; then
 	psql -c "GRANT ALL PRIVILEGES ON DATABASE sebal TO sebal;"
 	EOF
 fi
+

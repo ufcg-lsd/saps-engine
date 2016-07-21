@@ -24,15 +24,16 @@ fi
 
 #FIXME not sure if we should keep these declarations here or to load from a config file
 #GLOBAL CONSTANTS
-REMOTE_BASE_DIR=tmp
-SANDBOX_DIR=sebal-engine
-VOMS_CERT_FOLDER=tmp
+REMOTE_BASE_DIR=/tmp
+SANDBOX_DIR=/local/esdras/git/sebal-engine
+VOMS_CERT_FOLDER=/tmp
 VOMS_CERT_FILE=x509up_u1210
+REMOTE_REPOSITORY_PATH=/home/fogbow
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/crawlerSpec
+SCHEDULER_EXEC_INFO_FILE=$SANDBOX_DIR/scheduler/scheduler-info/scheduler-exec.info
 
-#FIXME should not use target/classe
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [[ -f ${LOG4J} ]]; then
   CONF_LOG=-Dlog4j.configuration=file:$LOG4J
@@ -70,21 +71,6 @@ echo "Storage command: $STORAGE_COMMAND";
 
 ########### CRAWLER INFRASTRUCTURE ##############
 
-# It wrapps the java call to the Infrastructure main
-# Globals
-#   CONF_LOG
-# Args
-#   java_args
-# Returns
-function infra_call() {
-  local java_args=$1
-  cmd_out="$(java $CONF_LOG -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.infrastructure.InfrastructureMain compute $CONFIG_FILE $SPEC_FILE 2>&1)"
-  echo $cmd_out
-}
-
-#FIXME remove vars from inside the function. should be global
-#FIXME improve contains test
-
 # It starts crawler VM
 # Globals
 #   CONFIG_FILE
@@ -92,8 +78,7 @@ function infra_call() {
 # Returns
 #   infrastructure description
 function create_crawler_vm() {
-  create_arsg="compute $CONFIG_FILE $SPEC_FILE"
-  VM_CRAWLER_INFO=`infra_call ${create_args}`
+  VM_CRAWLER_INFO=`java $CONF_LOG -cp $SANDBOX_DIR/target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.infrastructure.InfrastructureMain compute $CONFIG_FILE $SPEC_FILE "false" 2>&1`
 
   if [[ ! $VM_CRAWLER_INFO == *"INSTANCE_ID"* ]]; then
     echo $VM_CRAWLER_INFO
@@ -103,20 +88,6 @@ function create_crawler_vm() {
 
   echo $VM_CRAWLER_INFO
 }
-
-#PREPARING VARIABLES FOR SSH/SCP
-#Sample return USER_NAME=fogbow;SSH_HOST=192.168.0.1;SSH_HOST=9000;SSH_HOST=
-INSTANCE_ID=$(echo $VM_CRAWLER_INFO | cut -d";" -f1 | cut -d"=" -f2)
-USER_NAME=$(echo $VM_CRAWLER_INFO | cut -d";" -f2 | cut -d"=" -f2)
-INSTANCE_IP=$(echo $VM_CRAWLER_INFO | cut -d";" -f3 | cut -d"=" -f2)
-INSTANCE_PORT=$(echo $VM_CRAWLER_INFO | cut -d";" -f4 | cut -d"=" -f2)
-EXTRA_PORT=$(echo $VM_CRAWLER_INFO | cut -d";" -f5 | cut -d"=" -f2)
-
-echo $INSTANCE_ID;
-echo $USER_NAME;
-echo $INSTANCE_IP;
-echo $INSTANCE_PORT;
-echo $EXTRA_PORT;
 
 #FIXME improve function. we need return values
 # It Verifies if storage info exists.
@@ -128,8 +99,7 @@ echo $EXTRA_PORT;
 #  CRAWLER_STORAGE_ID
 function storage_exists() {
   if [ -n "$CRAWLER_STORAGE_ID" ]; then
-    check_exits_args="test-storage $CRAWLER_STORAGE_ID $CONFIG_FILE $SPEC_FILE";
-    STORAGE_STATUS=`infra_call $check_exits_args`
+    STORAGE_STATUS=`java $CONF_LOG -cp $SANDBOX_DIR/target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.infrastructure.InfrastructureMain "test-storage" $DB_STORAGE_ID $CONFIG_FILE "false" 2>&1`
     STORAGE_STATUS=$(echo $STORAGE_STATUS | cut -d";" -f1 | cut -d"=" -f2)
     echo "Storage status: $STORAGE_STATUS";
     if [ ! $STORAGE_STATUS = "active" ]; then
@@ -148,8 +118,7 @@ function create_volume() {
   sed -i "/CRAWLER_STORAGE_FORMATED=/ s/=.*/=NO/" $CRAWLER_EXECUTION_INFO
 
   #This tow variables indicates if a new storage is been used. For new storage, the disk must be formated and the database must be created.
-  create_vol_args="storage $STORAGE_SIZE $CONFIG_FILE $SPEC_FILE"
-  STORAGE_INFO=`infra_call $create_vol_args`
+  STORAGE_INFO=`java $CONF_LOG -cp $SANDBOX_DIR/target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.infrastructure.InfrastructureMain storage $STORAGE_SIZE $CONFIG_FILE $SPEC_FILE "false" 2>&1`
   echo $STORAGE_INFO
 
   CRAWLER_STORAGE_ID=$(echo $STORAGE_INFO | cut -d";" -f1 | cut -d"=" -f2)
@@ -165,8 +134,7 @@ function attach_volume() {
 #FIXME check vars
 #FIXME add proper return
   echo "Attaching $CRAWLER_STORAGE_ID to $INSTANCE_ID"
-  attach_arg="attachment $INSTANCE_ID $CRAWLER_STORAGE_ID $CONFIG_FILE $SPEC_FILE"
-  CRAWLER_STORAGE_ATTACHMENT_INFO=`infra_call $attach_args`
+  CRAWLER_STORAGE_ATTACHMENT_INFO=`java $CONF_LOG -cp $SANDBOX_DIR/target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.infrastructure.InfrastructureMain attachment $INSTANCE_ID $CRAWLER_STORAGE_ID $CONFIG_FILE $SPEC_FILE "false" 2>&1`
 
   if [[ ! $CRAWLER_STORAGE_ATTACHMENT_INFO == *"ATTACHMENT_ID"* ]]; then
     echo $CRAWLER_STORAGE_ATTACHMENT_INFO
@@ -183,7 +151,8 @@ function attach_volume() {
 
 #FIXME extract to a method
 #Coping scripts to mount disk.
-LOCAL_FILE_PATH="sebal_scripts"
+SCRIPTS_DIR="sebal_scripts"
+LOCAL_FILE_PATH="$SANDBOX_DIR/scripts/infrastructure/sebal_scripts"
 REMOTE_FILE_PATH="$REMOTE_BASE_DIR";
 
 # SSH to crawler VM
@@ -197,8 +166,8 @@ REMOTE_FILE_PATH="$REMOTE_BASE_DIR";
 # Returns
 function ssh_to_crawler() {
   #FIXME check remote_command?
-  local remote_command=$1
-  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP $remote_command
+  local remote_command=$*
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $INSTANCE_PORT -i $PRIVATE_KEY_FILE  $USER_NAME@$INSTANCE_IP ${remote_command}
 }
 
 # Globals
@@ -229,48 +198,72 @@ function parse_nfs_port() {
   do
     actualPort=${extraPortsArray[$i]};
     if [[ $actualPort == *"nfs"* ]]; then
-      nfs_port=`$actualPort | cut -d":" -f3 | tr -d`
+      nfs_port=`echo $actualPort | cut -d":" -f3 | tr -d "}"`
       echo $nfs_port
     fi
   done
 }
 
+function execute_crawler_app() {
+  DB_INSTANCE_IP=$(sed -n 3p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+  DB_PORT=$(sed -n 8p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
+
+  crawlerapp_cmd="sudo sh $SANDBOX_DIR/scripts/cli/crawler $DB_INSTANCE_IP $DB_PORT"
+  ssh_to_crawler ${crawlerapp_cmd}
+}
+
 function main() {
+  echo "Creating Crawler VM"
+  VM_CRAWLER_INFO=`create_crawler_vm`
+  
+  #PREPARING VARIABLES FOR SSH/SCP
+  #Sample return USER_NAME=fogbow;SSH_HOST=192.168.0.1;SSH_HOST=9000;SSH_HOST=
+  INSTANCE_ID=$(echo $VM_CRAWLER_INFO | cut -d";" -f1 | cut -d"=" -f2)
+  USER_NAME=$(echo $VM_CRAWLER_INFO | cut -d";" -f2 | cut -d"=" -f2)
+  INSTANCE_IP=$(echo $VM_CRAWLER_INFO | cut -d";" -f3 | cut -d"=" -f2)
+  INSTANCE_PORT=$(echo $VM_CRAWLER_INFO | cut -d";" -f4 | cut -d"=" -f2)
+  EXTRA_PORT=$(echo $VM_CRAWLER_INFO | cut -d";" -f5 | cut -d"=" -f2)
+
+  echo "Checking if storage exists"
+  storage_exists
+
+  echo "Creating volume"
+  create_volume
+
+  echo "Attaching volume"
+  attach_volume
+
   echo "Uploading scripts"
-  scp_to_crawler $LOCAL_FILE_PATH/ $REMOVE_FILE_PATH
+  scp_to_crawler $LOCAL_FILE_PATH $REMOTE_FILE_PATH
 
   echo "Change script dir permission"
-  chmod_cmd="sudo chmod -R 777 /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH"
-  ssh_to_crawler $chmod_cmd
+  chmod_cmd="sudo chmod -R 777 $REMOTE_FILE_PATH/$SCRIPTS_DIR"
+  ssh_to_crawler ${chmod_cmd}
 
   echo "Mounting volume"
-  mount_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/mount_partition.sh $STORAGE_COMMAND"
-  ssh_to_crawler $cmd_cmd
+  mount_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/mount_partition.sh $STORAGE_COMMAND"
+  ssh_to_crawler ${mount_cmd}
   sed -i "/CRAWLER_STORAGE_FORMATED=/ s/=.*/=YES/" $CRAWLER_EXECUTION_INFO
 
   #do we need it here?
   echo "Installing git"
-  install_git_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/install_git.sh"
-  ssh_to_crawler $install_git_cmd
+  install_git_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/install_git.sh"
+  ssh_to_crawler ${install_git_cmd}
 
   # see if the name of the project will change
   echo "Upload crawler package"
   #scp_to_crawler $APP_FILE_LOCAL_DIR/$APP_FILE $APP_FILE
-  pkg_cmd="sudo sh /$REMOTE_FILE_PATH/$LOCAL_FILE_PATH/pack_sebal_engine_repository.sh"
-  ssh_to_crawler $pkg_cmd
-
-  #echo "Extracting SEBAL-engine"
-  #extract_cmd="tar -vzxf $REMOTE_FILE_PATH"
-  #ssh_to_crawler $extract_cmd
+  pkg_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $REMOTE_REPOSITORY_PATH"
+  ssh_to_crawler ${pkg_cmd}
 
   echo "Upload certificates"
-  LOCAL_FILE_PATH="/$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
-  FILE_PATH="/$REMOTE_VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
+  LOCAL_FILE_PATH="$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
+  FILE_PATH="$REMOTE_VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
+  mkdir_cmd="sudo mkdir -p $FILE_PATH"
+  chmod_cmd="sudo chmod 777 $FILE_PATH"
+  ssh_to_crawler ${mkdir_cmd}
+  ssh_to_crawler ${chmod_cmd}
   scp_to_crawler $LOCAL_FILE_PATH $FILE_PATH
-
-  #FIXME dst dir of private key?
-  echo "Upload private key"
-  #scp_to_crawler $PRIVATE_KEY $REMOTE_FILE_PATH
 
   CRAWLER_NFS_PORT=`parse_nfs_port`
 
@@ -280,11 +273,13 @@ function main() {
   sed -i "/CRAWLER_INSTANCE_IP=/ s/=.*/=$INSTANCE_IP/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_INSTANCE_PORT=/ s/=.*/=$INSTANCE_PORT/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_EXTRA_PORT=/ s/=.*/=$EXTRA_PORT/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_NFS_PORT=/ s/=.*/=$CRAWLER_NFS_PORT/" $CRAWLER_EXECUTION_INFO
   #Update STORAGE INFO FILE with the new attachment id.
   sed -i "/CRAWLER_STORAGE_ATTACHMENT_ID=/ s/=.*/=$CRAWLER_STORAGE_ATTACHMENT_ID/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_STORAGE_ID=/ s/=.*/=$CRAWLER_STORAGE_ID/" $CRAWLER_EXECUTION_INFO
-  sed -i "/CRAWLER_STORAGE_PORT=/ s/=.*/=$CRAWLER_STORAGE_PORT/" $CRAWLER_EXECUTION_INFO
+  sed -i "/CRAWLER_NFS_PORT=/ s/=.*/=$CRAWLER_NFS_PORT/" $CRAWLER_EXECUTION_INFO
+
+  echo "Executing crawler app"
+  execute_crawler_app
 }
 
 #do deploy

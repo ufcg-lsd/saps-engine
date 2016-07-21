@@ -120,7 +120,7 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>org.fogbowcloud</groupId>
+			<groupId>blowout</groupId>
 			<artifactId>blowout</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
