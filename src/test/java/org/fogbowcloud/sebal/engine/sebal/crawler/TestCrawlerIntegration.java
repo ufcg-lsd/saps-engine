@@ -2,6 +2,9 @@ package org.fogbowcloud.sebal.engine.sebal.crawler;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,7 +18,6 @@ import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.NASARepository;
-import org.fogbowcloud.sebal.engine.sebal.crawler.Crawler;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -340,6 +342,10 @@ public class TestCrawlerIntegration {
 		FMask fmask = Mockito.mock(FMask.class);
 		String federationMember = "fake-fed-member";
 		
+		PrintWriter writer = new PrintWriter("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a", "UTF-8");
+		writer.println("0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
+		writer.close();
+		
 		Crawler crawler = new Crawler(properties, imageStore, nasaRepository,
 				federationMember, fmask);
 		
@@ -348,5 +354,8 @@ public class TestCrawlerIntegration {
 		
 		// expect
 		Assert.assertEquals("0c26f092e976389c593953a1ad8ddaadb5c2ab2a", versionReturn);
+		
+		File file = new File("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a");		
+		file.delete();
 	}
 }
