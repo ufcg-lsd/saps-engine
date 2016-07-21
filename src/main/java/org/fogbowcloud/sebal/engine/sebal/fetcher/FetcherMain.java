@@ -17,7 +17,10 @@ public class FetcherMain {
 		String ftpServerIP = args[3];
 		String ftpServerPort = args[4];
 		
-		Fetcher Fetcher = new Fetcher(properties, imageStoreIP, imageStorePort, ftpServerIP, ftpServerPort);
+		properties.put("datastore_ip", imageStoreIP);
+		properties.put("datastore_port", imageStorePort);
+		
+		Fetcher Fetcher = new Fetcher(properties, ftpServerIP, ftpServerPort);
 		Fetcher.exec();
 	}
 }

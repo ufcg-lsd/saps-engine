@@ -44,14 +44,13 @@ public class Fetcher {
 
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 
-	public Fetcher(Properties properties, String imageStoreIP,
-			String imageStorePort, String ftpServerIP, String ftpServerPort) throws SQLException {
+	public Fetcher(Properties properties, String ftpServerIP, String ftpServerPort) throws SQLException {
 
 		this(properties, new JDBCImageDataStore(properties), ftpServerIP, ftpServerPort, new SwiftClient(
 				properties), new FTPIntegrationImpl(), new FetcherHelper());
 
 		LOGGER.debug("Creating fetcher");
-		LOGGER.debug("Imagestore " + imageStoreIP + ":" + imageStorePort
+		LOGGER.debug("Imagestore " + properties.getProperty("datastore_ip") + ":" + properties.getProperty("datastore_port")
 				+ " FTPServer " + ftpServerIP + ":" + ftpServerPort);
 	}
 

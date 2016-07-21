@@ -6,7 +6,7 @@ function call_catalog() {
   local java_opts="-Xmx1G -Xss1G"
   local lpath="/usr/local/lib"
   local sebal_engine_classpath="target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/*"
-  local sebal_engine_class="org.fogbowcloud.sebal.bootstrap.DBBootstrapMain"
+  local sebal_engine_class="org.fogbowcloud.sebal.engine.sebal.bootstrap.DBMain"
 
   java ${java_opts}
     -Djava.library.path=${lpath}\
@@ -16,7 +16,7 @@ function call_catalog() {
     ${args} 2>&1
 }
 
-config_file=`dirname $0`/catalog.config
+config_file=`dirname $0`/config/catalog.config
 
 if [[ ! -f "${config_file}" ]]; then
   echo "${config_file} is not a regular file or does not exist"
@@ -47,7 +47,7 @@ if [[ ! "${last_year}" =~ ^[0-9]+$ ]]; then
 fi
 
 case "${command}" in
-  create)
+  add)
     call_catalog add "${first_year}" "${last_year}" "${region}"
     ;;
   get)
@@ -57,7 +57,7 @@ case "${command}" in
     call_catalog list "${first_year}" "${last_year}" "${region}"
   ;;
   *)
-    echo "'${command}' is not command. Available commands: [create, get, list]"
+    echo "'${command}' is not command. Available commands: [add, get, list]"
     exit 1
     ;;
 esac
