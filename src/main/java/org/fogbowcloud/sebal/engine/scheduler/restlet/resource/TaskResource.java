@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
-import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBBootstrap;
+import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
 import org.json.JSONObject;
 import org.opensaml.util.resource.ResourceException;
 import org.restlet.data.MediaType;
@@ -162,11 +162,11 @@ public class TaskResource extends ServerResource {
 
 		if (properties.getProperty("sebal_local_boundingbox_dir") != null) {
 			LOGGER.debug("Region of image is "
-					+ DBBootstrap.getImageRegionFromName(task
+					+ DBUtilsImpl.getImageRegionFromName(task
 							.getMetadata(SebalTasks.METADATA_IMAGE_NAME)));
 			File boundingboxFile = new File(properties.getProperty("sebal_local_boundingbox_dir")
 					+ "/boundingbox_"
-					+ DBBootstrap.getImageRegionFromName(task
+					+ DBUtilsImpl.getImageRegionFromName(task
 							.getMetadata(SebalTasks.METADATA_IMAGE_NAME)));
 			LOGGER.debug("The boundingbox file for this image should be "
 					+ boundingboxFile.getAbsolutePath());

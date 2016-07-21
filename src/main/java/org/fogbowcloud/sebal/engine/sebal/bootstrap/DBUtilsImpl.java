@@ -1,5 +1,6 @@
 package org.fogbowcloud.sebal.engine.sebal.bootstrap;
 
+import java.io.*;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -10,243 +11,187 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.io.FileUtils;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.sebal.ImageData;
-import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
-import org.fogbowcloud.sebal.engine.sebal.ImageState;
-import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.*;
 
 public class DBUtilsImpl implements DBUtils {
 
-	private static Properties properties;
-	private static String imageStoreIP;
-	private static String imageStorePort;
-	private static String dbUserName;
-	private static String dbUserPass;
-	private static String firstYear;
-	private static String lastYear;
-	private static String regionsFilePath;
-	private static String specificRegion;
-	private static BasicDataSource connectionPool;
+    private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
 
-	static String SELECT_ALL_IMAGES_SQL = "SELECT * FROM nasa_images ORDER BY priority, image_name";
-	static String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM nasa_images WHERE state = ? ORDER BY priority, image_name LIMIT ? ";
+    private final JDBCImageDataStore imageStore;
+    private NASARepository nasaRepository;
+    private Properties properties;
 
-	static String SELECT_UNLOCK_IMAGE_SQL_SQL = "SELECT pg_advisory_unlock(?)";
-	static String SELECT_LOCK_IMAGE_SQL_SQL = "SELECT pg_try_advisory_lock(?) FROM nasa_images WHERE image_name = ?";
+    private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM nasa_images ORDER BY priority, image_name";
 
-	private static final String UPDATE_STATE_SQL = "UPDATE nasa_images SET state = ? WHERE image_name = ?";
+    public DBUtilsImpl(Properties properties) throws SQLException {
+        this.properties = properties;
+        this.imageStore = new JDBCImageDataStore(this.properties);
+        this.nasaRepository = new NASARepository(properties);
+    }
 
-	private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
+    private Connection getConnection() throws SQLException {
+        return imageStore.getConnection();
+    }
 
-	public DBUtilsImpl(Properties properties, String firstYear,
-			String lastYear, String regionsFilePath) {
-		DBUtilsImpl.properties = properties;
+    private void preparingStatement(Connection c) throws SQLException {
 
-		if (properties == null) {
-			throw new IllegalArgumentException(
-					"Properties arg must not be null.");
-		}
+        PreparedStatement selectStatement = c.prepareStatement(SELECT_ALL_IMAGES_SQL);
+        ResultSet rs = selectStatement.executeQuery();
 
-		DBUtilsImpl.imageStoreIP = properties.getProperty("datastore_ip");
-		DBUtilsImpl.imageStorePort = properties.getProperty("datastore_port");
-		DBUtilsImpl.dbUserName = properties.getProperty("datastore_username");
-		DBUtilsImpl.dbUserPass = properties.getProperty("datastore_password");
+        while (rs.next()) {
+            ImageData imageData = new ImageData(
+                    rs.getString("image_name"),
+                    rs.getString("download_link"),
+                    ImageState.getStateFromStr(rs.getString("state")),
+                    rs.getString("federation_member"),
+                    rs.getInt("priority"),
+                    rs.getString("station_id"),
+                    rs.getString("sebal_version"),
+                    rs.getString("sebal_engine_version"),
+                    rs.getString("blowout_version"),
+                    rs.getDate("ctime"),
+                    rs.getDate("utime"),
+                    rs.getString("error_msg"));
+            System.out.println(imageData);
+        }
+    }
 
-		DBUtilsImpl.firstYear = firstYear;
-		DBUtilsImpl.lastYear = lastYear;
-		DBUtilsImpl.regionsFilePath = regionsFilePath;
-	}
+    @Override
+    public void setImagesToPurge(String day, boolean force) throws SQLException {
 
-	@Override
-	public Connection getConnection() throws SQLException {
-		try {
-			return connectionPool.getConnection();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw e;
-		}
-	}
+        List<ImageData> imagesToPurge =
+                force ? imageStore.getAllImages() : imageStore.getIn(ImageState.FETCHED);
 
-	@Override
-	public void preparingStatement(Connection c) throws SQLException {
-		PreparedStatement selectStatement = null;
+        for (ImageData imageData : imagesToPurge) {
+            long date = 0;
+            // FIXME: deal with this better
+            try {
+                date = parseStringToDate(day).getTime();
+            } catch (ParseException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            if (isBeforeDay(date, imageData.getUpdateTime())) {
+                imageData.setImageStatus(ImageData.PURGED);
+                imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
+                imageStore.updateImage(imageData);
+            }
+        }
+    }
 
-		selectStatement = c.prepareStatement(SELECT_ALL_IMAGES_SQL);
+    protected Date parseStringToDate(String day) throws ParseException {
+        DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
+        java.util.Date date = format.parse(day);
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+        return sqlDate;
+    }
 
-		ResultSet rs = selectStatement.executeQuery();
+    protected boolean isBeforeDay(long date, Date imageDataDay) {
+        return (imageDataDay.getTime() <= date);
+    }
 
-		while (rs.next()) {
-			System.out.println(new ImageData(rs.getString("image_name"), rs
-					.getString("download_link"), ImageState.getStateFromStr(rs
-					.getString("state")), rs.getString("federation_member"), rs
-					.getInt("priority"), rs.getString("station_id"), rs
-					.getString("sebal_version"), rs
-					.getString("sebal_engine_version"), rs
-					.getString("blowout_version"), rs.getDate("ctime"), rs
-					.getDate("utime"), rs.getString("error_msg")));
-		}
-	}
+    @Override
+    public void listImagesInDB() throws SQLException {
 
-	@Override
-	public void updateState(String imageName, ImageState state)
-			throws SQLException {
-		if (imageName == null || imageName.isEmpty() || state == null) {
-			throw new IllegalArgumentException("Invalid image name "
-					+ imageName + " or state " + state);
-		}
-		PreparedStatement updateStatement = null;
-		Connection connection = null;
+        List<ImageData> allImageData = imageStore.getAllImages();
+        for (int i = 0; i < allImageData.size(); i++) {
+            System.out.println(allImageData.get(i).toString());
+        }
+    }
 
-		try {
-			connection = getConnection();
+    @Override
+    public void listCorruptedImages() {
 
-			updateStatement = connection.prepareStatement(UPDATE_STATE_SQL);
-			updateStatement.setString(1, state.getValue());
-			updateStatement.setString(2, imageName);
-			updateStatement.execute();
-		} finally {
-			if (updateStatement != null) {
-				try {
-					if (!updateStatement.isClosed()) {
-						updateStatement.close();
-					}
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
+        List<ImageData> allImageData;
+        try {
+            allImageData = imageStore.getIn(ImageState.CORRUPTED);
+            for (int i = 0; i < allImageData.size(); i++) {
+                System.out.println(allImageData.get(i).toString());
+            }
+        } catch (SQLException e) {
+            LOGGER.error(e);
+        }
+    }
 
-			connection.close();
-		}
-	}
-	
-	@Override
-	public void setImagesToPurge(String day, String dayOpt) throws SQLException {
-		ImageDataStore imageStore = new JDBCImageDataStore(properties,
-				imageStoreIP, imageStorePort);
-		
-		List<ImageData> imagesToPurge = new ArrayList<ImageData>();
-		
-		if(!dayOpt.equals("-f")) {
-			imagesToPurge = imageStore.getAllImages();
-		} else {
-			imagesToPurge = imageStore.getIn(ImageState.FETCHED);
-		}
-		
-		for(ImageData imageData : imagesToPurge) {			
-			long date = 0;
-			// FIXME: deal with this better
-			try {
-				date = parseStringToDate(day).getTime();
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if(isBeforeDay(date, imageData.getUpdateTime())) {
-				imageData.setImageStatus(ImageData.PURGED);
-				imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
-				imageStore.updateImage(imageData);
-			}
-		}
-	}
-	
-	protected Date parseStringToDate(String day) throws ParseException {
-		DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
-		java.util.Date date = format.parse(day);
-		java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-		return sqlDate;
-	}
+    @Override
+    public void getRegionImages(int firstYear, int lastYear, String region) throws SQLException {
 
-	protected boolean isBeforeDay(long date, Date imageDataDay) {
-		return (imageDataDay.getTime() <= date);
-	}
-	
-	@Override
-	public void addImages() throws SQLException {
-		LOGGER.debug("Establishing connection to database...");
-		Connection c = null;
+        for (int year = firstYear; year <= lastYear; year++) {
+            List<String> imageList = new ArrayList<String>();
 
-		connectionPool = new BasicDataSource();
-		connectionPool.setUsername(dbUserName);
-		connectionPool.setPassword(dbUserPass);
-		connectionPool.setDriverClassName(properties
-				.getProperty("datastore_driver"));
-		connectionPool.setUrl(properties.getProperty("datastore_url_prefix")
-				+ imageStoreIP + ":" + imageStorePort + "/"
-				+ properties.getProperty("datastore_name"));
-		connectionPool.setInitialSize(1);
+            for (int day = 1; day < 366; day++) {
+                //FIXME: extract the join stuff to an aux method
+                NumberFormat formatter = new DecimalFormat("000");
+                String imageName = "LT5" + region + year + formatter.format(day) + "CUB00";
+                imageList.add(imageName);
+                if (imageStore.getImage(imageName) != null) {
+                    imageStore.getImage(imageName).toString();
+                }
+            }
+        }
+    }
 
-		c = getConnection();
+    @Override
+    public void fillDB(int firstYear, int lastYear, List<String> regions) throws IOException {
 
-		try {
-			LOGGER.debug("Filling DB...");
-			DBBootstrap dbBootstrap = new DBBootstrap(properties, imageStoreIP,
-					imageStorePort);
-			dbBootstrap.fillDB(firstYear, lastYear, regionsFilePath);
+        LOGGER.debug("Regions: " + regions);
 
-			preparingStatement(c);
-		} catch (Exception e) {
-			System.err.println(e.getClass().getName() + ": " + e.getMessage());
-			e.printStackTrace();
-			System.exit(0);
-		}
+        int priority = 0;
+        for (String region : regions) {
+            for (int year = firstYear; year <= lastYear; year++) {
+                String imageList = createImageList(region, year);
 
-		LOGGER.debug("Images added to " + dbUserName + " database");
-	}
+                File imageListFile = new File("images-" + year + ".txt");
+                FileUtils.write(imageListFile, imageList);
 
-	@Override
-	public void listImagesInDB() throws SQLException {
-		ImageDataStore imageStore = new JDBCImageDataStore(properties,
-				imageStoreIP, imageStorePort);
+                Map<String, String> imageAndDownloadLink = getNasaRepository()
+                        .checkExistingImages(imageListFile);
 
-		List<ImageData> allImageData = imageStore.getAllImages();
-		for (int i = 0; i < allImageData.size(); i++) {
-			System.out.println(allImageData.get(i).toString());
-		}
-	}
+                imageListFile.delete();
 
-	@Override
-	public void listCorruptedImages() {
-		ImageDataStore imageStore = new JDBCImageDataStore(properties,
-				imageStoreIP, imageStorePort);
+                for (String imageName : imageAndDownloadLink.keySet()) {
+                    try {
+                        getImageStore().addImage(imageName,
+                                imageAndDownloadLink.get(imageName), priority);
+                    } catch (SQLException e) {
+                        // TODO do we need to do something?
+                        LOGGER.error("Error while adding image at data base.", e);
+                    }
+                }
+            }
+            priority++;
+        }
+    }
 
-		List<ImageData> allImageData;
-		try {
-			allImageData = imageStore.getIn(ImageState.CORRUPTED);
-			for (int i = 0; i < allImageData.size(); i++) {
-				System.out.println(allImageData.get(i).toString());
-			}
-		} catch (SQLException e) {
-			LOGGER.error(e);
-		}
-	}
+    protected String createImageList(String region, int year) {
+        StringBuilder imageList = new StringBuilder();
+        for (int day = 1; day < 366; day++) {
+            NumberFormat formatter = new DecimalFormat("000");
+            String imageName = "LT5" + region + year + formatter.format(day) + "CUB00";
+            imageList.append(imageName + "\n");
+        }
+        return imageList.toString().trim();
+    }
 
-	@Override
-	public void getRegionImages() throws SQLException {
-		ImageDataStore imageStore = new JDBCImageDataStore(properties,
-				imageStoreIP, imageStorePort);
+    public JDBCImageDataStore getImageStore() {
+        return imageStore;
+    }
 
-		for (int year = Integer.parseInt(firstYear); year <= Integer
-				.parseInt(lastYear); year++) {
-			List<String> imageList = new ArrayList<String>();
+    protected void setNasaRepository(NASARepository nasaRepository) {
+        this.nasaRepository = nasaRepository;
+    }
 
-			for (int day = 1; day < 366; day++) {
-				NumberFormat formatter = new DecimalFormat("000");
-				String imageName = "LT5" + specificRegion + year
-						+ formatter.format(day) + "CUB00";
-				imageList.add(imageName);
-				if (imageStore.getImage(imageName) != null) {
-					imageStore.getImage(imageName).toString();
-				}
-			}
-		}
-	}
+    protected NASARepository getNasaRepository() {
+        return nasaRepository;
+    }
 
+    public static String getImageRegionFromName(String imageName) {
+        return imageName.substring(3, 9);
+    }
 }

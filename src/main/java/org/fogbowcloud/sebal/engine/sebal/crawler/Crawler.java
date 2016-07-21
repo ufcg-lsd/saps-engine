@@ -43,10 +43,9 @@ public class Crawler {
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
 	public Crawler(Properties properties, String imageStoreIP,
-			String imageStorePort, String federationMember) {
+			String imageStorePort, String federationMember) throws SQLException {
 
-		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
-				imageStorePort), new NASARepository(properties),
+		this(properties, new JDBCImageDataStore(properties), new NASARepository(properties),
 				federationMember, new FMask());
 
 		LOGGER.info("Creating crawler");

@@ -1,29 +1,18 @@
 package org.fogbowcloud.sebal.engine.sebal.bootstrap;
 
-import java.sql.Connection;
+import java.io.IOException;
 import java.sql.SQLException;
-
-import org.fogbowcloud.sebal.engine.sebal.ImageState;
+import java.util.List;
 
 public interface DBUtils {
 
-	public final static int UNLIMITED = -1;
-	
-	public Connection getConnection() throws SQLException;
+	void setImagesToPurge(String day, boolean forceRemoveNonFetched) throws SQLException;
 
-	public void preparingStatement(Connection c) throws SQLException;
+	void listImagesInDB() throws SQLException;
 
-	public void updateState(String imageName, ImageState state)
-			throws SQLException;
+	void listCorruptedImages();
 
-	public void setImagesToPurge(String day, String dayOpt) throws SQLException;
+	void getRegionImages(int firstYear, int lastYear, String region) throws SQLException;
 
-	public void addImages() throws SQLException;
-
-	public void listImagesInDB() throws SQLException;
-
-	public void listCorruptedImages();
-
-	public void getRegionImages() throws SQLException;
-
+	void fillDB(int firstYear, int lastYear, List<String> regions) throws IOException;
 }

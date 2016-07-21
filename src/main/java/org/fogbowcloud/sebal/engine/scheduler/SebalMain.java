@@ -64,7 +64,7 @@ public class SebalMain {
 		
 		LOGGER.debug("imagestore " + imageStoreIP + ":" + imageStorePort);
 		
-		imageStore = new JDBCImageDataStore(properties, imageStoreIP, imageStorePort);		
+		imageStore = new JDBCImageDataStore(properties);
 
 		final Job job = new SebalJob(imageStore);
 		

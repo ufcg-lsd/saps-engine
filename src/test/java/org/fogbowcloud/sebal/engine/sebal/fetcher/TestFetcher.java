@@ -43,21 +43,12 @@ public class TestFetcher {
 	}
 	
 	@Test
-	public void testImageStoreNullProperties() {
+	public void testImageStoreNullProperties() throws SQLException {
 		exception.expect(Exception.class);
 		
-		imageStoreMock = spy(new JDBCImageDataStore(null, imageStoreIPMock,
-				imageStorePortMock));
+		imageStoreMock = spy(new JDBCImageDataStore(null));
 	}
 
-	@Test
-	public void testImageStoreNotNull() {
-		imageStoreMock = spy(new JDBCImageDataStore(properties, imageStoreIPMock,
-				imageStorePortMock));
-		
-		Assert.assertNotNull(imageStoreMock);
-	}
-	
 	@Test
 	public void testCleanUnfinishedFetchedData() throws SQLException {
 		exception.expect(Exception.class);

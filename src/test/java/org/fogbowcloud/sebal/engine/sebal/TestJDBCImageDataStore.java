@@ -43,17 +43,10 @@ public class TestJDBCImageDataStore {
 	}
 	
 	@Test
-	public void testCreateJDBCDataStore() {
-		imageDataStore = new JDBCImageDataStore(properties, fakeImageStoreIP, fakeImageStorePort);
-		
-		Assert.assertNotNull(imageDataStore);
-	}
-	
-	@Test
-	public void testJDBCDataStoreNullProperties() {
+	public void testJDBCDataStoreNullProperties() throws SQLException {
 		exception.expect(Exception.class);
 		
-		imageDataStore = new JDBCImageDataStore(null, fakeImageStoreIP, fakeImageStorePort);
+		imageDataStore = new JDBCImageDataStore(null);
 	}
 	
 	@Test

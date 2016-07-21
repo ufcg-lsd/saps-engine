@@ -2,6 +2,7 @@ package org.fogbowcloud.sebal.engine.sebal.crawler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -10,7 +11,7 @@ public class CrawlerMain {
 	
 	public static final Logger LOGGER = Logger.getLogger(CrawlerMain.class);
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws IOException, InterruptedException, SQLException {
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);

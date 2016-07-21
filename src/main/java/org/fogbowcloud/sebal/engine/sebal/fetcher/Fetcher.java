@@ -45,10 +45,9 @@ public class Fetcher {
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 
 	public Fetcher(Properties properties, String imageStoreIP,
-			String imageStorePort, String ftpServerIP, String ftpServerPort) {
+			String imageStorePort, String ftpServerIP, String ftpServerPort) throws SQLException {
 
-		this(properties, new JDBCImageDataStore(properties, imageStoreIP,
-				imageStorePort), ftpServerIP, ftpServerPort, new SwiftClient(
+		this(properties, new JDBCImageDataStore(properties), ftpServerIP, ftpServerPort, new SwiftClient(
 				properties), new FTPIntegrationImpl(), new FetcherHelper());
 
 		LOGGER.debug("Creating fetcher");

@@ -16,7 +16,7 @@ import org.fogbowcloud.blowout.scheduler.core.model.Command;
 import org.fogbowcloud.blowout.scheduler.core.model.Specification;
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
-import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBBootstrap;
+import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
 
 
 public class SebalTasks {
@@ -113,10 +113,10 @@ public class SebalTasks {
 			// treating boundingbox 
 			if (properties.getProperty("sebal_local_boundingbox_dir") != null) {
 				LOGGER.debug("Region of image is "
-						+ DBBootstrap.getImageRegionFromName(imageName));
+						+ DBUtilsImpl.getImageRegionFromName(imageName));
 				File boundingboxFile = new File(
 						properties.getProperty("sebal_local_boundingbox_dir") + "/boundingbox_"
-								+ DBBootstrap.getImageRegionFromName(imageName));
+								+ DBUtilsImpl.getImageRegionFromName(imageName));
 				LOGGER.debug("The boundingbox file for this image should be "
 						+ boundingboxFile.getAbsolutePath());
 				if (boundingboxFile.exists()) {

@@ -137,7 +137,7 @@ public class SebalScheduleApplication extends Application {
 		String imageStoreIP = "127.0.0.1";
 		String imageStorePort = "5432";
 		
-		ImageDataStore imageStore = new JDBCImageDataStore(properties, imageStoreIP, imageStorePort);
+		ImageDataStore imageStore = new JDBCImageDataStore(properties);
 		
 		SebalScheduleApplication sebalScheduleApplication = new SebalScheduleApplication(null, imageStore, properties);
 		sebalScheduleApplication.startServer();
