@@ -35,14 +35,6 @@ public class JDBCImageDataStore implements ImageDataStore {
     private static final String IMAGE_STATUS_COL = "status";
     private static final String ERROR_MSG_COL = "error_msg";
 
-    public static final String DATASTORE_USERNAME = "datastore_username";
-    public static final String DATASTORE_PASSWORD = "datastore_password";
-    public static final String DATASTORE_DRIVER = "datastore_driver";
-    public static final String DATASTORE_URL_PREFIX = "datastore_url_prefix";
-    public static final String DATASTORE_NAME = "datastore_name";
-    public static final String DATASTORE_IP = "datastore_ip";
-    public static final String DATASTORE_PORT = "datastore_port";
-
     private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
     private BasicDataSource connectionPool;
 

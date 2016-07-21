@@ -6,39 +6,47 @@ import java.util.List;
 
 public interface ImageDataStore {
 
-	public final static String NONE = "None";
-	public final static int UNLIMITED = -1;
+    String NONE = "None";
+    int UNLIMITED = -1;
 
-	public void addImage(String imageName, String downloadLink, int priority) throws SQLException;
-	
-	public void addStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException;
+    String DATASTORE_USERNAME = "datastore_username";
+    String DATASTORE_PASSWORD = "datastore_password";
+    String DATASTORE_DRIVER = "datastore_driver";
+    String DATASTORE_URL_PREFIX = "datastore_url_prefix";
+    String DATASTORE_NAME = "datastore_name";
+    String DATASTORE_IP = "datastore_ip";
+    String DATASTORE_PORT = "datastore_port";
 
-	public void updateImage(ImageData imageData) throws SQLException;
-	
-	public void updateImageState(String imageName, ImageState state) throws SQLException;
-	
-	public void updateImageMetadata(String imageName, String stationId, String sebalVersion) throws SQLException;
-	
-	public List<ImageData> getAllImages() throws SQLException;
+    void addImage(String imageName, String downloadLink, int priority) throws SQLException;
 
-	public List<ImageData> getIn(ImageState state) throws SQLException;
+    void addStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException;
 
-	public List<ImageData> getIn(ImageState state, int limit) throws SQLException;
-	
-	public List<ImageData> getPurgedImages() throws SQLException;
+    void updateImage(ImageData imageData) throws SQLException;
 
-	public List<ImageData> getImagesToDownload(String federationMember, int limit) throws SQLException;
-	
-	public ImageData getImage(String imageName) throws SQLException;
-	
-	public void dispose();
+    void updateImageState(String imageName, ImageState state) throws SQLException;
 
-	public boolean lockImage(String imageName) throws SQLException;
+    void updateImageMetadata(String imageName, String stationId, String sebalVersion) throws SQLException;
 
-	public boolean unlockImage(String imageName) throws SQLException;
-	
-	public void removeStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException;
+    List<ImageData> getAllImages() throws SQLException;
 
-	public List<ImageData> getImagesByFilter(ImageState state, String name, long processDateInit, long processDateEnd)
-			throws SQLException;
+    List<ImageData> getIn(ImageState state) throws SQLException;
+
+    List<ImageData> getIn(ImageState state, int limit) throws SQLException;
+
+    List<ImageData> getPurgedImages() throws SQLException;
+
+    List<ImageData> getImagesToDownload(String federationMember, int limit) throws SQLException;
+
+    ImageData getImage(String imageName) throws SQLException;
+
+    void dispose();
+
+    boolean lockImage(String imageName) throws SQLException;
+
+    boolean unlockImage(String imageName) throws SQLException;
+
+    void removeStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException;
+
+    List<ImageData> getImagesByFilter(ImageState state, String name, long processDateInit, long processDateEnd)
+            throws SQLException;
 }
