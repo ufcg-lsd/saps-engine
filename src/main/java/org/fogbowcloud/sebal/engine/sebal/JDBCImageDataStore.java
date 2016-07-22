@@ -87,10 +87,11 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + " VARCHAR(255), " + CREATION_TIME_COL + " VARCHAR(255), "
                     + UPDATED_TIME_COL + " VARCHAR(255), " + IMAGE_STATUS_COL
                     + " VARCHAR(255))");
+            
             statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME
                     + "(" + IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, "
                     + STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL
-                    + " VARCHAR(255), " + ERROR_MSG_COL + "VARCHAR(255))");
+                    + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
             statement.close();
         } catch (SQLException e) {
             LOGGER.error("Error while initializing DataStore.", e);
