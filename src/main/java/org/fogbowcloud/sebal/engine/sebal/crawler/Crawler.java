@@ -168,8 +168,8 @@ public class Crawler {
 					LOGGER.error("Error while adding state "
 							+ imageData.getState() + " timestamp "
 							+ imageData.getUpdateTime() + " in DB");
-					continue;
 				}
+				
 				LOGGER.debug("Adding image " + imageData.getName()
 						+ " to pending database");
 				pendingImageDownloadMap.put(imageData.getName(), imageData);
