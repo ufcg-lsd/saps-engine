@@ -28,11 +28,14 @@ REMOTE_BASE_DIR=/tmp
 SANDBOX_DIR=/local/esdras/git/sebal-engine
 VOMS_CERT_FOLDER=/tmp
 VOMS_CERT_FILE=x509up_u1210
+LOCAL_REPOSITORY_PATH=/local/esdras
 REMOTE_REPOSITORY_PATH=/home/fogbow
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/crawlerSpec
 SCHEDULER_EXEC_INFO_FILE=$SANDBOX_DIR/scheduler/scheduler-info/scheduler-exec.info
+SEBAL_ENGINE_PKG_FILE=sebal-engine-pkg.tar.gz
+MANAGER_PKG_FILE=manager-pkg.tar.gz
 
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [[ -f ${LOG4J} ]]; then
@@ -43,6 +46,10 @@ fi
 
 #Execution INFO
 CRAWLER_EXECUTION_INFO=$SANDBOX_DIR/crawler/crawler-info/crawler-exec.info
+if [ -f "$CRAWLER_EXECUTION_INFO" ]; then
+        sudo rm $CRAWLER_EXECUTION_INFO
+fi
+
 if [ ! -e "$CRAWLER_EXECUTION_INFO" ]; then
 	echo "Creating execution info file"
 	touch $CRAWLER_EXECUTION_INFO
@@ -245,17 +252,12 @@ function main() {
   ssh_to_crawler ${mount_cmd}
   sed -i "/CRAWLER_STORAGE_FORMATED=/ s/=.*/=YES/" $CRAWLER_EXECUTION_INFO
 
-  #do we need it here?
-  echo "Installing git"
-  install_git_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/install_git.sh"
-  ssh_to_crawler ${install_git_cmd}
-
-  # see if the name of the project will change
-  echo "Upload crawler package"
-  #scp_to_crawler $APP_FILE_LOCAL_DIR/$APP_FILE $APP_FILE
-  pkg_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $REMOTE_REPOSITORY_PATH"
-  ssh_to_crawler ${pkg_cmd}
-
+  echo "Upload crawler packages"
+  sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $LOCAL_REPOSITORY_PATH $SANDBOX_DIR
+  sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_manager_repository.sh $LOCAL_REPOSITORY_PATH
+  scp_to_crawler $LOCAL_REPOSITORY_PATH/$SEBAL_ENGINE_PKG_FILE $REMOTE_REPOSITORY_PATH
+  scp_to_crawler $LOCAL_REPOSITORY_PATH/$MANAGER_PKG_FILE $REMOTE_REPOSITORY_PATH
+  
   echo "Upload certificates"
   LOCAL_FILE_PATH="$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
   FILE_PATH="$REMOTE_VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
@@ -266,6 +268,14 @@ function main() {
   scp_to_crawler $LOCAL_FILE_PATH $FILE_PATH
 
   CRAWLER_NFS_PORT=`parse_nfs_port`
+
+  echo "Preparing log4j dir"
+  mkdir_log4j_cmd="sudo mkdir -p /var/log/sebal-execution"
+  touch_log4j_cmd="sudo touch /var/log/sebal-execution/sebal-execution.log"
+  chmod_log4j_cmd="sudo chmod 777 /var/log/sebal-execution/sebal-execution.log"
+  ssh_to_crawler ${mkdir_log4j_cmd}
+  ssh_to_crawler ${touch_log4j_cmd}
+  ssh_to_crawler ${chmod_log4j_cmd}
 
   #Putting informations on Crawler execution info.
   sed -i "/CRAWLER_INSTANCE_ID=/ s/=.*/=$INSTANCE_ID/" $CRAWLER_EXECUTION_INFO

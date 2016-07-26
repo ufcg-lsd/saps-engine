@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -12,7 +13,7 @@ public class DBMain {
 
 	private static final Logger LOGGER = Logger.getLogger(DBMain.class);
 
-	public static void main(String[] args) throws SQLException {
+	public static void main(String[] args) throws SQLException, ParseException {
 
 		if (args.length < 2) {
 			System.err.println("Usage: DBMain /path/to/sebal.conf [add,list,list-corrupted,get,purge] [options]");

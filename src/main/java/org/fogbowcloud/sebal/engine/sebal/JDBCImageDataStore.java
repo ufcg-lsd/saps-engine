@@ -86,7 +86,7 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + " VARCHAR(255), " + BLOWOUT_VERSION_COL
                     + " VARCHAR(255), " + CREATION_TIME_COL + " VARCHAR(255), "
                     + UPDATED_TIME_COL + " VARCHAR(255), " + IMAGE_STATUS_COL
-                    + " VARCHAR(255))");
+                    + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
             
             statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME
                     + "(" + IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, "
@@ -184,8 +184,8 @@ public class JDBCImageDataStore implements ImageDataStore {
             insertStatement.setString(7, "NE");
             insertStatement.setString(8, "NE");
             insertStatement.setString(9, "NE");
-            insertStatement.setString(10, "NE");
-            insertStatement.setString(11, "NE");
+            insertStatement.setDate(10, new Date(Calendar.getInstance().getTimeInMillis()));
+            insertStatement.setDate(11, new Date(Calendar.getInstance().getTimeInMillis()));
             insertStatement.setString(12, ImageData.AVAILABLE);
             insertStatement.setString(13, "");
 
@@ -467,7 +467,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     @Override
-    public List<ImageData> getIn(ImageState state) throws SQLException {
+    public List<ImageData> getIn(ImageState state) throws SQLException{
         return getIn(state, UNLIMITED);
     }
 
@@ -561,17 +561,17 @@ public class JDBCImageDataStore implements ImageDataStore {
             throws SQLException {
         List<ImageData> imageDatas = new ArrayList<ImageData>();
         while (rs.next()) {
-            imageDatas.add(new ImageData(rs.getString(IMAGE_NAME_COL), rs
-                    .getString(DOWNLOAD_LINK_COL), ImageState
-                    .getStateFromStr(rs.getString(STATE_COL)), rs
-                    .getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
-                    rs.getString(STATION_ID_COL), rs
-                    .getString(SEBAL_VERSION_COL), rs
-                    .getString(SEBAL_ENGINE_VERSION_COL), rs
-                    .getString(BLOWOUT_VERSION_COL), rs
-                    .getDate(CREATION_TIME_COL), rs
-                    .getDate(UPDATED_TIME_COL), rs
-                    .getString(ERROR_MSG_COL)));
+			imageDatas.add(new ImageData(rs.getString(IMAGE_NAME_COL), rs
+					.getString(DOWNLOAD_LINK_COL), ImageState
+					.getStateFromStr(rs.getString(STATE_COL)), rs
+					.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
+					rs.getString(STATION_ID_COL), rs
+							.getString(SEBAL_VERSION_COL), rs
+							.getString(SEBAL_ENGINE_VERSION_COL), rs
+							.getString(BLOWOUT_VERSION_COL), rs
+							.getDate(CREATION_TIME_COL), rs
+							.getDate(UPDATED_TIME_COL), rs
+							.getString(ERROR_MSG_COL)));
         }
         return imageDatas;
     }

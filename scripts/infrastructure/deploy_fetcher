@@ -22,12 +22,15 @@ REMOTE_BASE_DIR=/tmp
 SANDBOX_DIR=/local/esdras/git/sebal-engine
 VOMS_CERT_FOLDER=/tmp
 VOMS_CERT_FILE=x509up_u1210
+LOCAL_REPOSITORY_PATH=/local/esdras
 REMOTE_REPOSITORY_PATH=/home/fogbow
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/fetcherSpec
 SCHEDULER_EXEC_INFO_FILE=$SANDBOX_DIR/scheduler/scheduler-info/scheduler-exec.info
 CRAWLER_EXEC_INFO_FILE=$SANDBOX_DIR/crawler/crawler-info/crawler-exec.info
+SEBAL_ENGINE_PKG_FILE=sebal-engine-pkg.tar.gz
+MANAGER_PKG_FILE=manager-pkg.tar.gz
 
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [[ -f ${LOG4J} ]]; then
@@ -38,6 +41,10 @@ fi
 
 #Execution INFO
 FETCHER_EXECUTION_INFO=$SANDBOX_DIR/fetcher/fetcher-info/fetcher-exec.info
+if [ -f "$FETCHER_EXECUTION_INFO" ]; then
+        sudo rm $FETCHER_EXECUTION_INFO
+fi
+
 if [ ! -e "$FETCHER_EXECUTION_INFO" ]; then
 	echo "Creating execution info file"
 	touch $FETCHER_EXECUTION_INFO
@@ -137,16 +144,12 @@ function main() {
   echo "Change script dir permission"
   chmod_cmd="sudo chmod -R 777 $REMOTE_FILE_PATH/$SCRIPTS_DIR"
   ssh_to_fetcher ${chmod_cmd}
-
-  #do we need it here?
-  echo "Installing git"
-  install_git_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/install_git.sh"
-  ssh_to_fetcher ${install_git_cmd}
   
-  echo "Upload fetcher package"
-  #scp_to_fetcher $APP_FILE_LOCAL_DIR/$APP_FILE $APP_FILE
-  pkg_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $REMOTE_REPOSITORY_PATH"
-  ssh_to_fetcher ${pkg_cmd}
+  echo "Upload fetcher packages"
+  sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $LOCAL_REPOSITORY_PATH $SANDBOX_DIR
+  sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_manager_repository.sh $LOCAL_REPOSITORY_PATH
+  scp_to_fetcher $LOCAL_REPOSITORY_PATH/$SEBAL_ENGINE_PKG_FILE $REMOTE_REPOSITORY_PATH
+  scp_to_fetcher $LOCAL_REPOSITORY_PATH/$MANAGER_PKG_FILE $REMOTE_REPOSITORY_PATH
 
   echo "Upload certificates"
   LOCAL_FILE_PATH="$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"
@@ -156,7 +159,15 @@ function main() {
   ssh_to_fetcher ${chmod_cmd}
   ssh_to_fetcher ${mkdir_cmd}
   scp_to_fetcher $LOCAL_FILE_PATH $FILE_PATH
-  
+
+  echo "Preparing log4j dir"
+  mkdir_log4j_cmd="sudo mkdir -p /var/log/sebal-execution"
+  touch_log4j_cmd="sudo touch /var/log/sebal-execution/sebal-execution.log"
+  chmod_log4j_cmd="sudo chmod 777 /var/log/sebal-execution/sebal-execution.log"
+  ssh_to_fetcher ${mkdir_log4j_cmd}
+  ssh_to_fetcher ${touch_log4j_cmd}
+  ssh_to_fetcher ${chmod_log4j_cmd}  
+
   #Putting informations on Fetcher execution info.
   sed -i "/FETCHER_INSTANCE_ID=/ s/=.*/=$INSTANCE_ID/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_USER_NAME=/ s/=.*/=$USER_NAME/" $FETCHER_EXECUTION_INFO

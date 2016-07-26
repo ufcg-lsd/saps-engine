@@ -18,8 +18,8 @@ SANDBOX_DIR=/home/fogbow/sebal-engine
 SPEC_FILE=$SANDBOX_DIR/config/initialSpec
 CONF_DIR=$SANDBOX_DIR/config
 CONF_FILE_PATH=$CONF_DIR/sebal.conf
-OUT_LOG_PATH=$SANDBOX_DIR/log
 LIBRARY_PATH=/usr/local/lib
+LOG4J_PATH=$SANDBOX_DIR/config/log4j.properties
 
 function main() {
   cd $SANDBOX_DIR
@@ -27,7 +27,7 @@ function main() {
   mvn -e install -Dmaven.test.skip=true
 
   echo "Starting scheduler app"
-  sudo java -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.SebalMain $CONF_FILE_PATH $SCHEDULER_INSTANCE_IP $DB_PORT $NFS_INSTANCE_IP $NFS_PORT > $OUT_LOG_PATH/scheduler-app.out 2> $OUT_LOG_PATH/scheduler-app.err &
+  sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.scheduler.SebalMain $CONF_FILE_PATH $SCHEDULER_INSTANCE_IP $DB_PORT $NFS_INSTANCE_IP $NFS_PORT
 }
 
 main

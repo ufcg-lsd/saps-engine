@@ -17,7 +17,7 @@ function call_catalog() {
 #    ${DB_ADDRESS} ${DB_PORT} ${DB_USER} $DB_PASSWORD}\
 #    ${args} 2>&1
 
-   java -Djava.library.path=${lpath} -cp ${sebal_engine_classpath} ${sebal_engine_class} ${sebal_engine_conf} ${DB_ADDRESS} ${DB_PORT} ${DB_USER} $DB_PASSWORD} ${args} 2>&1
+   java -Djava.library.path=${lpath} -cp ${sebal_engine_classpath} ${sebal_engine_class} ${sebal_engine_conf} ${args} 2>&1
 }
 
 #config_file=`dirname $0`/config/catalog.config

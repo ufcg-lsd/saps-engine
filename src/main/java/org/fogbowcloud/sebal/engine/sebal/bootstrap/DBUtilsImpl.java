@@ -63,7 +63,7 @@ public class DBUtilsImpl implements DBUtils {
     }
 
     @Override
-    public void setImagesToPurge(String day, boolean force) throws SQLException {
+    public void setImagesToPurge(String day, boolean force) throws SQLException, ParseException {
 
         List<ImageData> imagesToPurge =
                 force ? imageStore.getAllImages() : imageStore.getIn(ImageState.FETCHED);
@@ -97,7 +97,7 @@ public class DBUtilsImpl implements DBUtils {
     }
 
     @Override
-    public void listImagesInDB() throws SQLException {
+    public void listImagesInDB() throws SQLException, ParseException {
 
         List<ImageData> allImageData = imageStore.getAllImages();
         for (int i = 0; i < allImageData.size(); i++) {
@@ -106,7 +106,7 @@ public class DBUtilsImpl implements DBUtils {
     }
 
     @Override
-    public void listCorruptedImages() {
+    public void listCorruptedImages() throws ParseException {
 
         List<ImageData> allImageData;
         try {
@@ -120,7 +120,7 @@ public class DBUtilsImpl implements DBUtils {
     }
 
     @Override
-    public void getRegionImages(int firstYear, int lastYear, String region) throws SQLException {
+    public void getRegionImages(int firstYear, int lastYear, String region) throws SQLException, ParseException {
 
         for (int year = firstYear; year <= lastYear; year++) {
             List<String> imageList = new ArrayList<String>();

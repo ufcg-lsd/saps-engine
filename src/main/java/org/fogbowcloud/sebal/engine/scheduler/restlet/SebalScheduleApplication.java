@@ -1,6 +1,7 @@
 package org.fogbowcloud.sebal.engine.scheduler.restlet;
 import java.io.FileInputStream;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,11 +70,11 @@ public class SebalScheduleApplication extends Application {
 		return router;
 	}
 	
-	public List<ImageData> getAllImages() throws SQLException{
+	public List<ImageData> getAllImages() throws SQLException, ParseException{
 		return imageDataStore.getAllImages();
 	}
 	
-	public List<ImageData> getImagesByFilters(ImageState state, String name, long periodInit, long periodEnd) throws SQLException{
+	public List<ImageData> getImagesByFilters(ImageState state, String name, long periodInit, long periodEnd) throws SQLException, ParseException{
 		return imageDataStore.getImagesByFilter(state, name, periodInit, periodEnd);
 	}
 	

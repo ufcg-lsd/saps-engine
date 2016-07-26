@@ -108,10 +108,10 @@ public class Crawler {
 	}
 
 	public void exec() throws InterruptedException, IOException {
+		cleanUnfinishedDownloadedData(properties);
 
 		try {
 			while (true) {
-				cleanUnfinishedDownloadedData(properties);
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
@@ -232,7 +232,6 @@ public class Crawler {
 
 			imageData.setState(ImageState.DOWNLOADED);
 			Date updateTime = new Date(Calendar.getInstance().getTimeInMillis());
-			imageData.setCreationTime(updateTime);
 			imageData.setSebalEngineVersion(getSebalEngineVersion());
 			imageData.setUpdateTime(updateTime);
 

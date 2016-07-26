@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -107,6 +108,8 @@ public class SebalMain {
 					addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 				} catch (InterruptedException e) {
 					LOGGER.error(e);
+				} catch (ParseException e) {
+					LOGGER.error(e);
 				}
 			}
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
@@ -158,7 +161,7 @@ public class SebalMain {
 	}
 	
 	private static void addRTasks(final Properties properties, final Job job,
-			final Specification sebalSpec, ImageState imageState, int limit) throws InterruptedException {
+			final Specification sebalSpec, ImageState imageState, int limit) throws InterruptedException, ParseException {
 		
 		try {
 			List<ImageData> imagesToExecute = imageStore.getIn(imageState,

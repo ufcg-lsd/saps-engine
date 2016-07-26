@@ -26,7 +26,7 @@ function main() {
   mvn -e install -Dmaven.test.skip=true
 
   echo "Starting fetcher app"
-  sudo java -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.sebal.fetcher.FetcherMain $CONF_FILE_PATH $DB_INSTANCE_IP $DB_PORT $FTP_SERVER_IP $FTP_SERVER_PORT > $OUT_LOG_PATH/fetcher-app.out 2> $OUT_LOG_PATH/fetcher-app.err &
+  sudo java -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.sebal.fetcher.FetcherMain $CONF_FILE_PATH $DB_INSTANCE_IP $DB_PORT $FTP_SERVER_IP $FTP_SERVER_PORT > $OUT_LOG_PATH/fetcher-app.out 2>&1
 }
 
 main
