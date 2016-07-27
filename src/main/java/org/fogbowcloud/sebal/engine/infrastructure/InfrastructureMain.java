@@ -81,7 +81,7 @@ public class InfrastructureMain implements ResourceNotifier {
 		try {
 			validateArgs(args);
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			LOGGER.error(e);
 			printUsage();
 			System.exit(1);
 		}
@@ -233,7 +233,7 @@ public class InfrastructureMain implements ResourceNotifier {
 			try {
 				Integer.parseInt(storageSize);
 			} catch (Exception e) {
-				throw new IllegalArgumentException("Illegal storage size format. Storage size must be integer value.");
+				throw new IllegalArgumentException("Illegal storage size format. Storage size must be integer value.", e);
 			}
 			
 		}else if(TEST_STORAGE.equals(command)){

@@ -138,7 +138,7 @@ public class JDBCImageDataStore implements ImageDataStore {
                     conn.close();
                 }
             } catch (SQLException e) {
-                LOGGER.error("Couldn't close connection");
+                LOGGER.error("Couldn't close connection", e);
             }
         }
     }
@@ -150,7 +150,7 @@ public class JDBCImageDataStore implements ImageDataStore {
                     statement.close();
                 }
             } catch (SQLException e) {
-                LOGGER.error("Couldn't close statement");
+                LOGGER.error("Couldn't close statement", e);
             }
         }
     }

@@ -104,7 +104,7 @@ public class SebalJob extends Job {
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image " + imageName + " to state "
-					+ imageState.getValue());
+					+ imageState.getValue(), e);
 			LOGGER.debug("Adding image " + imageName + " to pendingUpdates.");
 			getPendingUpdates().put(imageName, imageState);
 		}

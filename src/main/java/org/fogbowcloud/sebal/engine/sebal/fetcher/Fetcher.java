@@ -354,6 +354,7 @@ public class Fetcher {
 							pseudoFolder);
 					break;
 				} catch (Exception e) {
+					LOGGER.error(e);
 					continue;
 				}
 			}

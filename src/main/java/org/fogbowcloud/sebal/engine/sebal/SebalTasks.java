@@ -365,6 +365,7 @@ public class SebalTasks {
 					fos.close();
 				}
 			} catch (Throwable t) {
+				LOGGER.error(t);
 				// Do nothing, best effort
 			}
 		}

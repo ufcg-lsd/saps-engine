@@ -123,6 +123,7 @@ public class StorageInitializer {
 			}
 
 		} catch (Exception e) {
+			LOGGER.error(e);
 			return STORAGE_STATUS_UNAVAILABLE;
 		}
 		
@@ -222,6 +223,7 @@ public class StorageInitializer {
 			try {
 				token = IOUtils.toString(new FileInputStream(tokenFile));
 			} catch (Exception e) {
+				LOGGER.error(e);
 				return null;
 			}
 		} else {

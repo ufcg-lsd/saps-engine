@@ -74,7 +74,7 @@ public class DBUtilsImpl implements DBUtils {
             try {
                 date = parseStringToDate(day).getTime();
             } catch (ParseException e) {
-                // TODO Auto-generated catch block
+            	LOGGER.error(e);
                 e.printStackTrace();
             }
             if (isBeforeDay(date, imageData.getUpdateTime())) {

@@ -156,7 +156,7 @@ public class Crawler {
 					(int) maxImagesToDownload);
 		} catch (SQLException e) {
 			// TODO: deal with this better
-			LOGGER.error("Error while accessing not downloaded images in DB");
+			LOGGER.error("Error while accessing not downloaded images in DB", e);
 		}
 
 		for (ImageData imageData : imageDataList) {
@@ -246,7 +246,7 @@ public class Crawler {
 				imageStore.updateImage(imageData);
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image " + imageData
-						+ " to DB");
+						+ " to DB", e);
 				removeFromPendingAndUpdateState(imageData, properties);
 			}
 

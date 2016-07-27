@@ -126,6 +126,7 @@ public class SebalImagensResource extends ServerResource {
 			};
 			return or;
 		} catch (Exception ex) {
+			LOGGER.error(ex);
 			throw new ResourceException("It was not possible download the file for variable " + varName);
 		}
 	}

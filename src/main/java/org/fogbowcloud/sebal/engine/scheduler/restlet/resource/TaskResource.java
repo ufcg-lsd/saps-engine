@@ -270,6 +270,7 @@ public class TaskResource extends ServerResource {
 				};
 				return or;
 			} catch (IOException ex) {
+				LOGGER.error(ex);
 			} finally {
 				try {
 					if (fis != null) {
@@ -277,7 +278,7 @@ public class TaskResource extends ServerResource {
 					}
 					bos.close();
 				} catch (IOException e) {
-
+					LOGGER.error(e);
 				}
 			}
 		} else {
