@@ -147,7 +147,7 @@ function main() {
 
   echo "Changing VM timezone"
   timezone_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/change_timezone.sh"
-  ssh_to_scheduler ${timezone_cmd}
+  ssh_to_fetcher ${timezone_cmd}
   
   echo "Upload fetcher packages"
   sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $LOCAL_REPOSITORY_PATH $SANDBOX_DIR

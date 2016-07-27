@@ -6,7 +6,7 @@
  "userDataFile":"user-data/crawler-extra-ports.sh",
  "userDataType":"text/x-shellscript",
  "requirements":{
-	"FogbowRequirements":"Glue2RAM >= 4096 && Glue2CloudComputeManagerID==\"servers-cloud3.lsd.ufcg.edu.br\"",
+	"FogbowRequirements":"Glue2RAM >= 8192 && Glue2CloudComputeManagerID==\"servers-cloud3.lsd.ufcg.edu.br\"",
 	"RequestType":"one-time"}
 	}
 ]
