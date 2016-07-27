@@ -215,7 +215,7 @@ public class SebalMain {
 						} catch (SQLException e) {
 							LOGGER.error("Error while adding state "
 									+ imageData.getState() + " timestamp "
-									+ imageData.getUpdateTime() + " in DB");
+									+ imageData.getUpdateTime() + " in DB", e);
 						}
 					}
 				} else {

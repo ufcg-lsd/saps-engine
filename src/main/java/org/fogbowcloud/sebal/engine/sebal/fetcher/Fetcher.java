@@ -196,7 +196,7 @@ public class Fetcher {
 						imageData.getState(), imageData.getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while adding state " + imageData.getState()
-						+ " timestamp " + imageData.getUpdateTime() + " in DB");
+						+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
 			}
 			imageStore.unlockImage(imageData.getName());
 
@@ -240,7 +240,7 @@ public class Fetcher {
 						imageData.getState(), imageData.getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while adding state " + imageData.getState()
-						+ " timestamp " + imageData.getUpdateTime() + " in DB");
+						+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
 			}
 
 			fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB, pendingImageFetchMap);
