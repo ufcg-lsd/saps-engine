@@ -167,7 +167,7 @@ public class Crawler {
 				} catch (SQLException e) {
 					LOGGER.error("Error while adding state "
 							+ imageData.getState() + " timestamp "
-							+ imageData.getUpdateTime() + " in DB");
+							+ imageData.getUpdateTime() + " in DB", e);
 				}
 				
 				LOGGER.debug("Adding image " + imageData.getName()
@@ -255,7 +255,7 @@ public class Crawler {
 						imageData.getState(), imageData.getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while adding state " + imageData.getState()
-						+ " timestamp " + imageData.getUpdateTime() + " in DB");
+						+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
 			}
 
 			pendingImageDownloadMap.remove(imageData.getName());
