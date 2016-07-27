@@ -219,10 +219,17 @@ public class Crawler {
 			// TODO: insert source .profile before fmask execution
 			LOGGER.debug("Running Fmask for image " + imageData.getName());
 
-			int exitValue = fmask.runFmask(imageData,
-					properties.getProperty(FMASK_SCRIPT_PATH),
-					properties.getProperty(FMASK_TOOL_PATH),
-					properties.getProperty(SEBAL_EXPORT_PATH));
+			int exitValue = 0;
+			
+			try {
+				exitValue = fmask.runFmask(imageData,
+						properties.getProperty(FMASK_SCRIPT_PATH),
+						properties.getProperty(FMASK_TOOL_PATH),
+						properties.getProperty(SEBAL_EXPORT_PATH));
+			} catch (Exception e) {
+				LOGGER.error("Error while running Fmask", e);
+			}
+			
 			if (exitValue != 0) {
 				LOGGER.error("It was not possible run Fmask for image "
 						+ imageData);

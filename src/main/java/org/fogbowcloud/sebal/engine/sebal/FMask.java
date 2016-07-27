@@ -18,6 +18,8 @@ public class FMask {
 	
 	public int runFmask(final ImageData imageData, String fmaskScriptPath, String fmaskToolsPath, String sebalExportPath) throws IOException,
 			FileNotFoundException, InterruptedException {
+		
+		LOGGER.debug("fmaskScriptPath " + fmaskScriptPath + " fmaskToolsPath " + fmaskToolsPath + " sebalExportPath " + sebalExportPath);
 
 		File tempFile = File.createTempFile("temp-" + imageData.getName(),
 				".sh");
@@ -28,6 +30,8 @@ public class FMask {
 
 		IOUtils.write(replaceVariables(origExec, imageData, fmaskToolsPath, sebalExportPath), fos);
 		fos.close();
+		
+		LOGGER.debug("temp file absolute path " + tempFile.getAbsolutePath());
 
 		ProcessBuilder builder = new ProcessBuilder("chmod", "+x",
 				tempFile.getAbsolutePath());
@@ -35,9 +39,10 @@ public class FMask {
 		p.waitFor();
 
 		if (p.exitValue() != 0) {
-			LOGGER.error("Error while running chmod +x command. Message="
+			LOGGER.error("Error while running chmod +x command. Process exit value= " + String.valueOf(p.exitValue()) + " Message="
 					+ getError(p));
 		}
+		LOGGER.debug("exitValue=" + String.valueOf(p.exitValue()));
 		LOGGER.debug("chmod +x command output=" + getOutput(p));
 
 		builder = new ProcessBuilder("bash", tempFile.getAbsolutePath());
@@ -45,9 +50,10 @@ public class FMask {
 		p.waitFor();
 
 		if (p.exitValue() != 0) {
-			LOGGER.error("Error while running fmask command. Message="
+			LOGGER.error("Error while running fmask command. Process exit value= " + String.valueOf(p.exitValue()) + " Message="
 					+ getError(p));
 		}
+		LOGGER.debug("exitValue=" + String.valueOf(p.exitValue()));
 		LOGGER.debug("run-fmask command output=" + getOutput(p));
 
 		return p.exitValue();

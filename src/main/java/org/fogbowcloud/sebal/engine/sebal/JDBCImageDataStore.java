@@ -254,7 +254,8 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET download_link = ?, state = ?, federation_member = ?,"
-            + " priority = ?, station_id = ?, sebal_version = ?, ctime = ?, utime = ?, status = ?, error_msg = ? WHERE image_name = ?";
+            + " priority = ?, station_id = ?, sebal_version = ?, sebal_engine_version = ?, blowout_version = ?, ctime = ?, utime = ?, status = ?,"
+            + " error_msg = ? WHERE image_name = ?";
 
     @Override
     public void updateImage(ImageData imageData) throws SQLException {
