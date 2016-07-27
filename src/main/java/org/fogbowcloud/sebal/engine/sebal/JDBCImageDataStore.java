@@ -187,7 +187,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             insertStatement.setDate(10, new Date(Calendar.getInstance().getTimeInMillis()));
             insertStatement.setDate(11, new Date(Calendar.getInstance().getTimeInMillis()));
             insertStatement.setString(12, ImageData.AVAILABLE);
-            insertStatement.setString(13, "");
+            insertStatement.setString(13, "no_errors");
 
             insertStatement.execute();
         } finally {
