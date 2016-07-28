@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -21,6 +22,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     private static final Logger LOGGER = Logger.getLogger(JDBCImageDataStore.class);
     protected static final String IMAGE_TABLE_NAME = "NASA_IMAGES";
     protected static final String STATES_TABLE_NAME = "STATES_TIMESTAMPS";
+    private static final String ID_COL = "id";
     private static final String IMAGE_NAME_COL = "image_name";
     private static final String DOWNLOAD_LINK_COL = "download_link";
     private static final String PRIORITY_COL = "priority";
@@ -34,6 +36,9 @@ public class JDBCImageDataStore implements ImageDataStore {
     private static final String UPDATED_TIME_COL = "utime";
     private static final String IMAGE_STATUS_COL = "status";
     private static final String ERROR_MSG_COL = "error_msg";
+    
+    private static final int INTERVAL_MIN = 0;
+    private static final int INTERVAL_MAX = 1000;
 
     private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
     private BasicDataSource connectionPool;
@@ -89,7 +94,7 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
             
             statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME
-                    + "(" + IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, "
+                    + "(" + ID_COL + " INTEGER PRIMARY KEY, " + IMAGE_NAME_COL + " VARCHAR(255) FOREIGN KEY, "
                     + STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL
                     + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
             statement.close();
@@ -194,9 +199,12 @@ public class JDBCImageDataStore implements ImageDataStore {
             close(insertStatement, connection);
         }
     }
+    
+    private static final String CHECK_PRIMARY_KEY_EXISTS_SQL = "SELECT EXISTS (SELECT * FROM " + STATES_TABLE_NAME +
+    		" WHERE id = ?";
 
-    private static final String INSERT_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
-            + " VALUES(?, ?, ?)";
+    private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
+            + " VALUES(?, ?, ?, ?)";
 
     @Override
     public void addStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException {
@@ -204,24 +212,42 @@ public class JDBCImageDataStore implements ImageDataStore {
         if (imageName == null || imageName.isEmpty() || state == null) {
             LOGGER.error("Invalid image " + imageName + " or state " + state.getValue());
             throw new IllegalArgumentException("Invalid image " + imageName);
-        }
+        }        
 
         PreparedStatement insertStatement = null;
         Connection connection = null;
 
         try {
             connection = getConnection();
-
-            insertStatement = connection.prepareStatement(INSERT_STATE_TIMESTAMP_SQL);
-            insertStatement.setString(1, imageName);
-            insertStatement.setString(2, state.getValue());
-            insertStatement.setString(3, String.valueOf(timestamp));
-
-            insertStatement.execute();
+            
+            // Generating unique ID
+			int id = 0;
+			while (checkImageNameExistsInStampsSQL(id, connection)) {
+				id = new Random().nextInt((INTERVAL_MAX - INTERVAL_MIN) + 1)
+						+ INTERVAL_MIN;
+			}
+            
+			insertStatement = connection
+					.prepareStatement(INSERT_NEW_STATE_TIMESTAMP_SQL);
+			insertStatement.setInt(1, id);
+			insertStatement.setString(2, imageName);
+			insertStatement.setString(3, state.getValue());
+			insertStatement.setString(4, String.valueOf(timestamp));
+			
+			insertStatement.execute();
         } finally {
             close(insertStatement, connection);
         }
     }
+
+	private boolean checkImageNameExistsInStampsSQL(int id,
+			Connection connection) throws SQLException {
+		PreparedStatement checkStatement = null;
+		
+		checkStatement = connection.prepareStatement(CHECK_PRIMARY_KEY_EXISTS_SQL);
+		checkStatement.setInt(1, id);
+		return checkStatement.execute();
+	}
 
     private static String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME
             + " SET state = ?, utime = ? WHERE image_name = ?";
