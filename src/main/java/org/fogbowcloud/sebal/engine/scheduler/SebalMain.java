@@ -184,6 +184,8 @@ public class SebalMain {
 				tempSpec.putAllRequirements(sebalSpec.getAllRequirements());
 				setFederationMemberIntoSpec(sebalSpec, tempSpec,
 						imageData.getFederationMember());
+				
+				LOGGER.debug("tempSpec " + tempSpec.toString());
 
 				Map<String, Collection<Resource>> allocationMap = allocationMap();
 
