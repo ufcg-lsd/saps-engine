@@ -200,8 +200,8 @@ public class JDBCImageDataStore implements ImageDataStore {
         }
     }
     
-    private static final String CHECK_PRIMARY_KEY_EXISTS_SQL = "SELECT * FROM " + STATES_TABLE_NAME +
-    		" WHERE id = ?";
+    private static final String CHECK_PRIMARY_KEY_EXISTS_SQL = "SELECT EXISTS (SELECT TRUE FROM " + STATES_TABLE_NAME +
+    		" WHERE id = ?)";
 
     private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
             + " VALUES(?, ?, ?, ?)";
