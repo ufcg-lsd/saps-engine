@@ -94,7 +94,7 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
             
             statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME
-                    + "(" + ID_COL + " INTEGER PRIMARY KEY, " + IMAGE_NAME_COL + " VARCHAR(255) FOREIGN KEY, "
+                    + "(" + ID_COL + " INTEGER PRIMARY KEY, " + IMAGE_NAME_COL + " VARCHAR(255), "
                     + STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL
                     + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
             statement.close();
