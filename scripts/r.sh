@@ -7,7 +7,7 @@ IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
 OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
-R_EXEC_DIR=${SANDBOX}/R/
+R_EXEC_DIR=${SANDBOX}/SEBAL/workspace/R/
 R_ALGORITHM_VERSION=AlgoritmoFinal-v2_01072016.R
 
 # This function downloads all projects and dependencies
@@ -18,15 +18,12 @@ function prepareDependencies {
 
   #installing git
   sudo apt-get update
-  echo -e "Y\n" | sudo apt-get install git-all
+  echo -e "Y\n" | sudo apt-get install git
 
   cd $SANDBOX
 
   # cloning SEBAL project
   git clone ${SEBAL_URL}
-
-  # cloning R project
-  git clone ${R_URL}
 
   # TODO: install in image
   echo -e "Y\n" | sudo apt-get install nfs-common
