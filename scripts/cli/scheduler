@@ -22,12 +22,16 @@ LIBRARY_PATH=/usr/local/lib
 LOG4J_PATH=$SANDBOX_DIR/config/log4j.properties
 
 function main() {
+  tar -xvzf manager-pkg.tar.gz
+  tar -xvzf blowout-pkg.tar.gz
+  tar -xvzf sebal-engine-pkg.tar.gz
+
+  rm *tar.gz
+
   cd $SANDBOX_DIR
-  echo "Generating app snapshot"
-  mvn -e install -Dmaven.test.skip=true
 
   echo "Starting scheduler app"
-  sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.scheduler.SebalMain $CONF_FILE_PATH $SCHEDULER_INSTANCE_IP $DB_PORT $NFS_INSTANCE_IP $NFS_PORT
+  sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.scheduler.SebalMain $CONF_FILE_PATH $SCHEDULER_INSTANCE_IP $DB_PORT $NFS_INSTANCE_IP $NFS_PORT &
 }
 
 main

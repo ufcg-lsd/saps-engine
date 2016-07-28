@@ -292,6 +292,7 @@ function main() {
   sed -i "/CRAWLER_STORAGE_ID=/ s/=.*/=$CRAWLER_STORAGE_ID/" $CRAWLER_EXECUTION_INFO
   sed -i "/CRAWLER_NFS_PORT=/ s/=.*/=$CRAWLER_NFS_PORT/" $CRAWLER_EXECUTION_INFO
 
+  #Remember to add federation_member param here
   echo "Executing crawler app"
   execute_crawler_app
 }

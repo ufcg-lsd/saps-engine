@@ -216,7 +216,6 @@ public class SebalTasks {
 		// setting image R execution properties
 		rTaskImpl.putMetadata(METADATA_SEBAL_URL, properties.getProperty("sebal_url"));
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
-		rTaskImpl.putMetadata(METADATA_R_URL, properties.getProperty("r_url"));
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 		rTaskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
 				properties.getProperty("sebal_export_path"));
@@ -381,8 +380,6 @@ public class SebalTasks {
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
 		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
 				task.getMetadata(METADATA_SEBAL_URL));
-		command = command.replaceAll(Pattern.quote("${R_URL}"),
-				task.getMetadata(METADATA_R_URL));
 
 		// repositories properties
 		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),

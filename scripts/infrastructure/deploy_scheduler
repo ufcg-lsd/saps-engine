@@ -282,6 +282,10 @@ function main() {
   echo "Preparing database"
   prepdb_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/install_postgres.sh $DATABASE_COMMAND"
   ssh_to_scheduler ${prepdb_cmd}
+
+  echo "Changing database permissions"
+  perm_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/md5_postgres.sh"
+  ssh_to_scheduler ${perm_cmd}
   
   echo "Upload scheduler packages"
   sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_blowout_repository.sh $LOCAL_REPOSITORY_PATH 
