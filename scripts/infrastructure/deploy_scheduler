@@ -334,8 +334,8 @@ function main() {
   sed -i "/DB_STORAGE_CREATED=/ s/=.*/=YES/" $SCHEDULER_EXECUTION_INFO
   sed -i "/SCHEDULER_BASE_DIR=/ s/=.*/=/$SCHEDULER_BASE_DIR/" $SCHEDULER_EXECUTION_INFO
 
-  echo "Executing scheduler app in VM"
-  execute_scheduler_app
+  #echo "Executing scheduler app in VM"
+  #execute_scheduler_app
 }
 
 #do deploy

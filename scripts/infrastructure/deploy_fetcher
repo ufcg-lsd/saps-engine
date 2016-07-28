@@ -179,8 +179,8 @@ function main() {
   sed -i "/FETCHER_INSTANCE_PORT=/ s/=.*/=$INSTANCE_PORT/" $FETCHER_EXECUTION_INFO
   sed -i "/FETCHER_EXTRA_PORT=/ s/=.*/=$EXTRA_PORT/" $FETCHER_EXECUTION_INFO
 
-  echo "Executing fetcher app"
-  execute_fetcher_app
+  #echo "Executing fetcher app"
+  #execute_fetcher_app
 }
 
 #do deploy

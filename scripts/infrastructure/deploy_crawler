@@ -293,8 +293,8 @@ function main() {
   sed -i "/CRAWLER_NFS_PORT=/ s/=.*/=$CRAWLER_NFS_PORT/" $CRAWLER_EXECUTION_INFO
 
   #Remember to add federation_member param here
-  echo "Executing crawler app"
-  execute_crawler_app
+  #echo "Executing crawler app"
+  #execute_crawler_app
 }
 
 #do deploy
