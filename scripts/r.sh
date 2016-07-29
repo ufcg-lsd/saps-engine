@@ -7,14 +7,16 @@ IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
 OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
+LOG4J_PATH=${SANDBOX}/SEBAL/log4j.properties
+LOG4J_FILE_PATH=/var/log/sebal/sebal.log
 R_EXEC_DIR=${SANDBOX}/SEBAL/workspace/R/
 R_ALGORITHM_VERSION=AlgoritmoFinal-v2_01072016.R
 
 # This function downloads all projects and dependencies
 function prepareDependencies {
-  mkdir -p ${SANDBOX}
-  cd ${SANDBOX}
-  mkdir -p ${OUTPUT_FOLDER}
+  #mkdir -p ${SANDBOX}
+  #cd ${SANDBOX}
+  #mkdir -p ${OUTPUT_FOLDER}
 
   #installing git
   sudo apt-get update
@@ -24,6 +26,8 @@ function prepareDependencies {
 
   # cloning SEBAL project
   git clone ${SEBAL_URL}
+
+  sudo mkdir -p $LOG4J_FILE_PATH
 
   # TODO: install in image
   echo -e "Y\n" | sudo apt-get install nfs-common
@@ -55,10 +59,10 @@ function untarImageAndPrepareDirs {
 function preProcessImage {
   cd ${SANDBOX}/SEBAL/
 
-  echo "Generating app snapshot"
-  mvn -e install -Dmaven.test.skip=true
+#  echo "Generating app snapshot"
+#  mvn -e install -Dmaven.test.skip=true
 
-  sudo java -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/ 0 0 9000 9000 1 1 $BOUNDING_BOX_PATH $CONF_FILE ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
+  sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/ 0 0 9000 9000 1 1 $BOUNDING_BOX_PATH $CONF_FILE ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
   sudo chmod 777 ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv"
   echo -e "\n" >> ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv"
 }
