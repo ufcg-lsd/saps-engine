@@ -187,13 +187,15 @@ public class SebalTasks {
 		FileInputStream fis = null;
 		try {
 			tempFile = File.createTempFile("temp-sebal-", ".sh");
+//			fis = new FileInputStream(task.getMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR) + "/"
+//					+ task.getMetadata(METADATA_PHASE) + ".sh");
 			fis = new FileInputStream(task.getMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR) + "/"
-					+ task.getMetadata(METADATA_PHASE) + ".sh");
+					+ "r.sh");
 			String origExec = IOUtils.toString(fis);
 			fos = new FileOutputStream(tempFile);
 			IOUtils.write(replaceVariables(props, task, origExec), fos);
 		} catch (IOException e) {
-			LOGGER.error(e);
+			LOGGER.error("Error while creating script file", e);
 		} finally {
 			try {
 				if (fis != null) {

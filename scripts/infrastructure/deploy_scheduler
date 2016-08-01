@@ -242,17 +242,23 @@ function main() {
   EXTRA_PORT=$(echo $VM_SCHEDULER_INFO | cut -d";" -f5 | cut -d"=" -f2)
   DB_STORAGE_PORT=`parse_postgres_port`
 
-  #Putting DB info into sebal.conf
+  #Putting DB info into catalog.config
   sed -i "/DB_ADDRESS/d" $CATALOG_CONFIG_FILE
   sed -i "/DB_PORT/d" $CATALOG_CONFIG_FILE
   echo "DB_ADDRESS=$INSTANCE_IP" >> $CATALOG_CONFIG_FILE
   echo "DB_PORT=$DB_STORAGE_PORT" >> $CATALOG_CONFIG_FILE
 
-  #Putting DB info into catalog.config
+  #Putting DB info into sebal.conf
   sed -i "/datastore_ip/d" $CONFIG_FILE
   sed -i "/datastore_port/d" $CONFIG_FILE
   echo "datastore_ip=$INSTANCE_IP" >> $CONFIG_FILE
   echo "datastore_port=$DB_STORAGE_PORT" >> $CONFIG_FILE
+
+  #Updating accounting datastore info in sebal.conf
+  sed -i "/accounting_datastore_url/d" $CONFIG_FILE
+  sed -i "/local.output/d" $CONFIG_FILE
+  echo "accounting_datastore_url=jdbc:h2:/home/fogbow/Dev/sebalScheduleEnv/h2db/orders" >> $CONFIG_FILE
+  echo "local.output=/home/fogbow/Dev/sebalScheduleEnv/result" >> $CONFIG_FILE
 
   echo "Checking if storage exists"
   storage_exists
