@@ -47,49 +47,13 @@ public class SebalJob extends Job {
 				udpateDB(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME),
 						ImageState.FINISHED);
 			}
-			// check if all F1 tasks already ran for the image
-		} /*else if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.F1_PHASE)){
-			List<Task> readyOrRunningTasks = getTasksOfImageByState(
-					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME), TaskState.READY, TaskState.RUNNING);
-			
-			List<Task> f1Tasks = filterTaskByPhase(readyOrRunningTasks, SebalTasks.F1_PHASE);
-			LOGGER.debug("There is " + f1Tasks.size() + " tasks of image "
-					+ task.getMetadata(SebalTasks.METADATA_IMAGE_NAME) + " in phase F1.");
-			if (f1Tasks == null || f1Tasks.isEmpty()) {
-				udpateDB(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME),
-						ImageState.READY_FOR_PHASE_C);
-			}
-			
-			// check if all C tasks already ran for the image
-		} else if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.C_PHASE)) {
-			List<Task> readyOrRunningTasks = getTasksOfImageByState(
-					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME), TaskState.READY, TaskState.RUNNING);
-
-			List<Task> cTasks = filterTaskByPhase(readyOrRunningTasks, SebalTasks.C_PHASE);
-			LOGGER.debug("There is " + cTasks.size() + " tasks of image "
-					+ task.getMetadata(SebalTasks.METADATA_IMAGE_NAME) + " in phase C.");
-			if (cTasks == null || cTasks.isEmpty()) {
-				udpateDB(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME),
-						ImageState.READY_FOR_PHASE_F2);
-			}
-			
-			// check if all F2 tasks already ran for the image
-		} else if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.F2_PHASE)) {
-			List<Task> readyOrRunningTasks = getTasksOfImageByState(
-					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME), TaskState.READY, TaskState.RUNNING);
-
-			List<Task> f2Tasks = filterTaskByPhase(readyOrRunningTasks, SebalTasks.F2_PHASE);
-			LOGGER.debug("There is " + f2Tasks.size() + " tasks of image "
-					+ task.getMetadata(SebalTasks.METADATA_IMAGE_NAME) + " in phase F2.");
-			if (f2Tasks == null || f2Tasks.isEmpty()) {
-				udpateDB(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME),
-						ImageState.FINISHED);
-			}
-		}*/
+		}
 	}
 
 	protected void udpateDB(String imageName, ImageState imageState) {
 		LOGGER.debug("Updating image " + imageName + " to state " + imageState.getValue());
+		//TODO: Review this try/catch section
+		//****	Each DB interaction could be dealt separately in this case?
 		try {
 			imageStore.updateImageState(imageName, imageState);
 			imageStore.addStateStamp(imageName, imageState, new Date(Calendar

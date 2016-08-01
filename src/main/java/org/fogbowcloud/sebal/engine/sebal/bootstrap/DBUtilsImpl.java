@@ -1,23 +1,27 @@
 package org.fogbowcloud.sebal.engine.sebal.bootstrap;
 
-import java.io.*;
-import java.sql.Connection;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
 
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.sebal.*;
+import org.fogbowcloud.sebal.engine.sebal.ImageData;
+import org.fogbowcloud.sebal.engine.sebal.ImageState;
+import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.NASARepository;
 
 public class DBUtilsImpl implements DBUtils {
 
@@ -27,39 +31,10 @@ public class DBUtilsImpl implements DBUtils {
     private NASARepository nasaRepository;
     private Properties properties;
 
-    private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM nasa_images ORDER BY priority, image_name";
-
     public DBUtilsImpl(Properties properties) throws SQLException {
         this.properties = properties;
         this.imageStore = new JDBCImageDataStore(this.properties);
         this.nasaRepository = new NASARepository(properties);
-    }
-
-    private Connection getConnection() throws SQLException {
-        return imageStore.getConnection();
-    }
-
-    private void preparingStatement(Connection c) throws SQLException {
-
-        PreparedStatement selectStatement = c.prepareStatement(SELECT_ALL_IMAGES_SQL);
-        ResultSet rs = selectStatement.executeQuery();
-
-        while (rs.next()) {
-            ImageData imageData = new ImageData(
-                    rs.getString("image_name"),
-                    rs.getString("download_link"),
-                    ImageState.getStateFromStr(rs.getString("state")),
-                    rs.getString("federation_member"),
-                    rs.getInt("priority"),
-                    rs.getString("station_id"),
-                    rs.getString("sebal_version"),
-                    rs.getString("sebal_engine_version"),
-                    rs.getString("blowout_version"),
-                    rs.getDate("ctime"),
-                    rs.getDate("utime"),
-                    rs.getString("error_msg"));
-            System.out.println(imageData);
-        }
     }
 
     @Override
@@ -74,8 +49,7 @@ public class DBUtilsImpl implements DBUtils {
             try {
                 date = parseStringToDate(day).getTime();
             } catch (ParseException e) {
-            	LOGGER.error(e);
-                e.printStackTrace();
+            	LOGGER.error("Error while parsing string to date", e);
             }
             if (isBeforeDay(date, imageData.getUpdateTime())) {
                 imageData.setImageStatus(ImageData.PURGED);
@@ -115,7 +89,7 @@ public class DBUtilsImpl implements DBUtils {
                 System.out.println(allImageData.get(i).toString());
             }
         } catch (SQLException e) {
-            LOGGER.error(e);
+            LOGGER.error("Error while gettin images in " + ImageState.CORRUPTED + " state from DB", e);
         }
     }
 

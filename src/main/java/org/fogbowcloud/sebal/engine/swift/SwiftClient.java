@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
 import org.javaswift.joss.client.factory.AccountConfig;
 import org.javaswift.joss.client.factory.AccountFactory;
@@ -17,8 +16,6 @@ public class SwiftClient {
 	
 	private static final String URL_PATH_SEPARATOR = "/";
 	private Account account;
-	
-	public static final Logger LOGGER = Logger.getLogger(SwiftClient.class);
 	
 	public SwiftClient(Properties properties){
 	

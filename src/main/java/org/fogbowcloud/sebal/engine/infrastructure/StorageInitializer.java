@@ -52,7 +52,7 @@ public class StorageInitializer {
 	
 	public String orderStorage(Integer storageSize, String requirementsCloud) throws Exception {
 		
-		LOGGER.debug("Creating storage order...");
+		LOGGER.debug("Creating order for storage with " + String.valueOf(storageSize) + "GB");
 		
 		if (requirementsCloud == null || requirementsCloud.isEmpty()) {
 			throw new IllegalArgumentException("Requirement can not be null or empty");
@@ -78,7 +78,7 @@ public class StorageInitializer {
 			Thread.sleep(5000);
 		}
 		
-		LOGGER.debug("Process finished.");
+		LOGGER.debug("Storage ordered. Storage ID " + storageId);
 		return storageId;
 		
 	}
@@ -123,7 +123,7 @@ public class StorageInitializer {
 			}
 
 		} catch (Exception e) {
-			LOGGER.error(e);
+			LOGGER.error("Error while testing storage " + globalStorageId, e);
 			return STORAGE_STATUS_UNAVAILABLE;
 		}
 		
@@ -223,7 +223,7 @@ public class StorageInitializer {
 			try {
 				token = IOUtils.toString(new FileInputStream(tokenFile));
 			} catch (Exception e) {
-				LOGGER.error(e);
+				LOGGER.error("Error while normalizing token file", e);
 				return null;
 			}
 		} else {

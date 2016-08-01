@@ -35,7 +35,7 @@ public class TaskResource extends ServerResource {
 
 	@Get
 	public Representation fetch() throws Exception {
-		LOGGER.info("Getting tasks...");
+		LOGGER.info("Getting tasks");
 		fillValidVariables();
 		String taskId = (String) getRequest().getAttributes().get("taskId");
 		LOGGER.debug("TaskId is " + taskId);
@@ -67,14 +67,14 @@ public class TaskResource extends ServerResource {
 
 		JSONObject jsonTask = new JSONObject();
 		Map<String, String> existingFiles = filelist(imageResultFolder, fileNamePrefix);
-		LOGGER.debug("existing files are " + existingFiles);
+		LOGGER.debug("Existing files are " + existingFiles);
 
 		if (existingFiles.size() != validVariables.size()) {
-			LOGGER.debug("Results are not generated yet.");
+			LOGGER.debug("Results are not generated yet");
 			try {
 				render(task, properties);
 			} catch (Exception e) {
-				LOGGER.error("Error while rendering.", e);
+				LOGGER.error("Error while rendering", e);
 				throw new ResourceException("It was not possible rendering results of task "
 						+ taskId + ".");
 			}
@@ -226,7 +226,7 @@ public class TaskResource extends ServerResource {
 		Map<String, String> varNameToFile = new HashMap<String, String>();
 		File parentFolderFile = new File(parentFolder);
 
-		LOGGER.debug("image result dir is " + parentFolderFile.getAbsolutePath());
+		LOGGER.debug("Image result dir is " + parentFolderFile.getAbsolutePath());
 		if (parentFolderFile.exists() && parentFolderFile.isDirectory()) {
 			for (String varName : validVariables) {
 				for (File file : parentFolderFile.listFiles()) {

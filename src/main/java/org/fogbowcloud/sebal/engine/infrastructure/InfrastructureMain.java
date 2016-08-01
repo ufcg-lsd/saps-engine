@@ -81,7 +81,7 @@ public class InfrastructureMain implements ResourceNotifier {
 		try {
 			validateArgs(args);
 		} catch (Exception e) {
-			LOGGER.error(e);
+			LOGGER.error("Error while validating args", e);
 			printUsage();
 			System.exit(1);
 		}
@@ -175,7 +175,7 @@ public class InfrastructureMain implements ResourceNotifier {
 			
 		}
 
-		LOGGER.debug("Infrastructure created.");
+		LOGGER.debug("Infrastructure created");
 
 		//FIXME: parece que alguma thread to Infra estah pendurada. 
 		System.exit(0);
@@ -292,7 +292,7 @@ public class InfrastructureMain implements ResourceNotifier {
 
 	@Override
 	public void resourceReady(Resource resource) {
-		LOGGER.debug("Receiving new assigned resource...");
+		LOGGER.debug("Receiving new assigned resource");
 		
 		if(resource == null) {
 			LOGGER.error("Received resource is null");
@@ -301,7 +301,7 @@ public class InfrastructureMain implements ResourceNotifier {
 		
 		this.resource = resource;
 		
-		LOGGER.debug("Process finished.");
+		LOGGER.debug("Process finished. Choosen resource was " + resourceAsString(resource.getId(), resource));
 	}
 	
 }

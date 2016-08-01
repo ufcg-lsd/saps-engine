@@ -123,7 +123,7 @@ public class Crawler {
 				}
 			}
 		} catch (Throwable e) {
-			LOGGER.error("Failed while downloading task.", e);
+			LOGGER.error("Failed while downloading images", e);
 		} finally {
 			pendingImageDownloadDB.close();
 		}
@@ -290,9 +290,7 @@ public class Crawler {
 				pendingImageDownloadDB.commit();
 			}
 		} catch (SQLException e) {
-			LOGGER.error(
-					"Error while updating image data: " + imageData.getName(),
-					e);
+			LOGGER.error("Error while updating image data: " + imageData.getName(), e);
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}
@@ -303,7 +301,7 @@ public class Crawler {
 		if (imageData.getFederationMember().equals(federationMember)) {
 
 			LOGGER.debug("Rolling back " + imageData + " to "
-					+ ImageState.NOT_DOWNLOADED);
+					+ ImageState.NOT_DOWNLOADED + " state");
 
 			try {
 				imageStore.removeStateStamp(imageData.getName(),
@@ -322,7 +320,7 @@ public class Crawler {
 			try {
 				imageStore.updateImage(imageData);
 			} catch (SQLException e) {
-				Crawler.LOGGER.error("Error while updating image data: "
+				Crawler.LOGGER.error("Error while updating image data "
 						+ imageData.getName(), e);
 				imageData.setFederationMember(federationMember);
 				imageData.setState(ImageState.DOWNLOADING);
@@ -355,7 +353,7 @@ public class Crawler {
 
 	protected boolean isImageOnDisk(String imageDirPath, File imageDir) {
 		if (!imageDir.exists() || !imageDir.isDirectory()) {
-			LOGGER.info("path " + imageDirPath + " does not exist");
+			LOGGER.info("Path " + imageDirPath + " does not exist");
 			return false;
 		}
 		return true;
@@ -388,7 +386,7 @@ public class Crawler {
 				}
 			}
 		} else {
-			LOGGER.error("Volume directory path is null or empty");
+			LOGGER.error("Export path is null or empty");
 		}
 	}
 
@@ -399,7 +397,7 @@ public class Crawler {
 		File resultsDir = new File(resultsDirPath);
 
 		if (!resultsDir.exists() || !resultsDir.isDirectory()) {
-			LOGGER.info("This file does not exist!");
+			LOGGER.debug("Path" + resultsDirPath + " does not exist or is not a directory");
 			return;
 		}
 
@@ -435,7 +433,7 @@ public class Crawler {
 				}
 			}
 		} else {
-			LOGGER.error("Volume directory path is null or empty!");
+			LOGGER.error("Export path is null or empty!");
 		}
 	}
 	

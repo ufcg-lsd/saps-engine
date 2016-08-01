@@ -51,7 +51,7 @@ public class SebalImagensResource extends ServerResource {
 	 */
 	@Get
 	public Representation fetch() throws Exception {
-		LOGGER.info("Getting tasks...");
+		LOGGER.info("Getting tasks");
 		fillValidVariables();
 		
 		String varName = (String) getRequest().getAttributes().get("varName");
@@ -126,7 +126,7 @@ public class SebalImagensResource extends ServerResource {
 			};
 			return or;
 		} catch (Exception ex) {
-			LOGGER.error(ex);
+			LOGGER.error("Error while getting image as representation", ex);
 			throw new ResourceException("It was not possible download the file for variable " + varName);
 		}
 	}

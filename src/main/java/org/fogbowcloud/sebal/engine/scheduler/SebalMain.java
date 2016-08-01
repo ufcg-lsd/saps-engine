@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -63,7 +62,7 @@ public class SebalMain {
 		nfsServerIP = args[3];
 		nfsServerPort = args[4];
 		
-		LOGGER.debug("imagestore " + imageStoreIP + ":" + imageStorePort);
+		LOGGER.debug("Imagestore " + imageStoreIP + ":" + imageStorePort);
 		
 		imageStore = new JDBCImageDataStore(properties);
 
@@ -107,9 +106,7 @@ public class SebalMain {
 				try {
 					addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 				} catch (InterruptedException e) {
-					LOGGER.error(e);
-				} catch (ParseException e) {
-					LOGGER.error(e);
+					LOGGER.error("Error while adding R tasks", e);
 				}
 			}
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
@@ -141,7 +138,7 @@ public class SebalMain {
 				LOGGER.debug("Adding " + location + " to location map");
 				allocMap.put(location, new LinkedList<Resource>());
 			}
-			LOGGER.debug("Associating resource" + resource.getId() + " to location " + location);
+			LOGGER.debug("Associating resource " + resource.getId() + " to location " + location);
 			allocMap.get(location).add(resource);
 		}
 		return allocMap;
@@ -161,7 +158,7 @@ public class SebalMain {
 	}
 	
 	private static void addRTasks(final Properties properties, final Job job,
-			final Specification sebalSpec, ImageState imageState, int limit) throws InterruptedException, ParseException {
+			final Specification sebalSpec, ImageState imageState, int limit) throws InterruptedException {
 		
 		try {
 			List<ImageData> imagesToExecute = imageStore.getIn(imageState,
@@ -172,7 +169,7 @@ public class SebalMain {
 						+ " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
 
-				LOGGER.info("Adding " + imageState + " task for image "
+				LOGGER.debug("Adding " + imageState + " task for image "
 						+ imageData.getName());
 
 				Specification tempSpec = new Specification(
@@ -199,7 +196,7 @@ public class SebalMain {
 						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
 								.toString(), tempSpec);
 						
-						LOGGER.info("Creating R task " + taskImpl.getId());
+						LOGGER.debug("Creating R task " + taskImpl.getId());
 						
 						taskImpl = SebalTasks.createRTask(taskImpl, properties,
 								imageData.getName(), tempSpec,
@@ -221,7 +218,7 @@ public class SebalMain {
 						}
 					}
 				} else {
-					LOGGER.info("Not enough quota to allocate instance for <"
+					LOGGER.debug("Not enough quota to allocate instance for <"
 							+ imageData.getName() + "> "
 							+ "in federationMember <"
 							+ imageData.getFederationMember() + ">");
@@ -260,7 +257,7 @@ public class SebalMain {
 			}
 			return null;
 		} catch (IOException e) {
-			LOGGER.error(e);
+			LOGGER.error("Error while getting spec from file " + sebalSpecFile, e);
 			return null;
 		}
 	}
@@ -268,7 +265,7 @@ public class SebalMain {
 	private static List<Specification> getInitialSpecs(Properties properties)
 			throws IOException {
 		String initialSpecsFilePath = properties.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);		
-		LOGGER.info("Getting initial spec from " + initialSpecsFilePath);
+		LOGGER.debug("Getting initial spec from " + initialSpecsFilePath);
 		
 		return Specification.getSpecificationsFromJSonFile(initialSpecsFilePath);
 	}

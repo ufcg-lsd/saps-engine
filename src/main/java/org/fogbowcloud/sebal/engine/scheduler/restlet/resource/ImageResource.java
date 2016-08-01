@@ -28,7 +28,7 @@ public class ImageResource extends ServerResource {
 
 	@Get
 	public Representation getEvents() throws Exception{
-		LOGGER.info("Getting image...");
+		LOGGER.info("Getting image");
 		String imageName = (String) getRequest().getAttributes().get("imgName");
 		
 		LOGGER.debug("ImageName is " + imageName);
@@ -48,7 +48,7 @@ public class ImageResource extends ServerResource {
 		}
 		
 		List<ImageData> images = ((SebalScheduleApplication) getApplication()).getAllImages();
-		LOGGER.debug("The are " + images.size() + " images.");
+		LOGGER.debug("There are " + images.size() + " images.");
 		
 		for(ImageData image : images){
 			Map<Task, TaskState> tasks = ((SebalScheduleApplication) getApplication()).getAllTaskByImage(image.getName());

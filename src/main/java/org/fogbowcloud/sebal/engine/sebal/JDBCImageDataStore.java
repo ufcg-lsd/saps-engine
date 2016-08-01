@@ -94,7 +94,7 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
             statement.close();
         } catch (SQLException e) {
-            LOGGER.error("Error while initializing DataStore.", e);
+            LOGGER.error("Error while initializing DataStore", e);
             throw e;
         } finally {
             close(statement, connection);
@@ -124,7 +124,7 @@ public class JDBCImageDataStore implements ImageDataStore {
         try {
             return connectionPool.getConnection();
         } catch (SQLException e) {
-            LOGGER.error("Error while getting a new connection from the connection pool.", e);
+            LOGGER.error("Error while getting a new connection from the connection pool", e);
             throw e;
         }
     }
@@ -327,7 +327,7 @@ public class JDBCImageDataStore implements ImageDataStore {
         try {
             this.connectionPool.close();
         } catch (SQLException e) {
-            LOGGER.error("Error wile closing ConnectionPool.", e);
+            LOGGER.error("Error wile closing ConnectionPool", e);
         }
     }
 
@@ -335,7 +335,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
     @Override
     public List<ImageData> getAllImages() throws SQLException {
-        LOGGER.debug("Getting all images.");
+        LOGGER.debug("Getting all images");
 
         Statement statement = null;
         Connection conn = null;

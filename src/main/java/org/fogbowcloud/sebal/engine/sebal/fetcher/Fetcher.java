@@ -49,7 +49,7 @@ public class Fetcher {
 		this(properties, new JDBCImageDataStore(properties), ftpServerIP, ftpServerPort, new SwiftClient(
 				properties), new FTPIntegrationImpl(), new FetcherHelper());
 
-		LOGGER.debug("Creating fetcher");
+		LOGGER.info("Creating fetcher");
 		LOGGER.debug("Imagestore " + properties.getProperty("datastore_ip") + ":" + properties.getProperty("datastore_port")
 				+ " FTPServer " + ftpServerIP + ":" + ftpServerPort);
 	}
@@ -104,9 +104,9 @@ public class Fetcher {
 				Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
 			}
 		} catch (InterruptedException e) {
-			LOGGER.error(e);
+			LOGGER.error("Error while fetching images", e);
 		} catch (IOException e) {
-			LOGGER.error(e);
+			LOGGER.error("Error while fetching images", e);
 		}
 
 		pendingImageFetchDB.close();
@@ -132,7 +132,7 @@ public class Fetcher {
 		if (resultsDir.exists() && resultsDir.isDirectory()) {
 			FileUtils.deleteDirectory(resultsDir);
 		} else {
-			LOGGER.info(resultsDirPath
+			LOGGER.info("Path " + resultsDirPath
 					+ " does not exist or is not a directory!");
 		}
 
@@ -142,7 +142,7 @@ public class Fetcher {
 		try {
 			return imageStore.getIn(ImageState.FINISHED);
 		} catch (SQLException e) {
-			LOGGER.error("Error getting finished images.", e);
+			LOGGER.error("Error getting " + ImageState.FINISHED + " images from DB", e);
 		}
 		return Collections.EMPTY_LIST;
 	}
@@ -160,7 +160,7 @@ public class Fetcher {
 				LOGGER.error("Could not prepare image " + imageData + " to fetch");
 			}
 		} catch (Exception e) {
-			LOGGER.error("Could not fetch image " + imageData.getName() + ".", e);
+			LOGGER.error("Could not fetch image " + imageData.getName(), e);
 			rollBackFetch(imageData);
 			if(fetcherHelper.isThereFetchedFiles(properties.getProperty(FETCHER_RESULTS_PATH))) {
 				deleteResultsFromDisk(imageData, properties);
@@ -247,7 +247,7 @@ public class Fetcher {
 
 			LOGGER.debug("Image " + imageData.getName() + " fetched");
 		} else {
-			LOGGER.error("No " + imageData + " result files fetched");
+			LOGGER.debug("No " + imageData + " result files fetched");
 			rollBackFetch(imageData);
 		}
 	}
@@ -291,12 +291,12 @@ public class Fetcher {
 			File localImageResultsDir = new File(localImageResultsPath);
 
 			if (!localImageResultsDir.exists()) {
-				LOGGER.info("Path " + localImageResultsPath
+				LOGGER.debug("Path " + localImageResultsPath
 						+ " not valid or nonexistent. Creating "
 						+ localImageResultsPath);
 				localImageResultsDir.mkdirs();
 			} else if (!localImageResultsDir.isDirectory()) {
-				LOGGER.info(localImageResultsPath
+				LOGGER.debug(localImageResultsPath
 						+ " is a file, not a directory. Deleting it and creating a actual directory");
 				localImageResultsDir.delete();
 				localImageResultsDir.mkdirs();
@@ -354,7 +354,7 @@ public class Fetcher {
 							pseudoFolder);
 					break;
 				} catch (Exception e) {
-					LOGGER.error(e);
+					LOGGER.error("Error while uploading files to swift", e);
 					continue;
 				}
 			}

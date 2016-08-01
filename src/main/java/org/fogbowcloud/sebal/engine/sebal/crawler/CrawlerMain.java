@@ -25,7 +25,7 @@ public class CrawlerMain {
 			Crawler crawler = new Crawler(properties, imageStoreIP, imageStorePort, federationMember);
 			crawler.exec();
 		} catch(NullPointerException e) {
-			LOGGER.error("Data store IP/PORT is null", e);
+			LOGGER.error("Invalid args", e);
 		}
 		
 	}

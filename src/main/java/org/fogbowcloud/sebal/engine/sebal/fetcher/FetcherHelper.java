@@ -27,7 +27,7 @@ public class FetcherHelper {
 			DB pendingImageFetchDB,
 			ConcurrentMap<String, ImageData> pendingImageFetchMap) {
 
-		LOGGER.debug("Adding image" + imageData + " to pending database");
+		LOGGER.debug("Adding image " + imageData + " to pending database");
 		pendingImageFetchMap.put(imageData.getName(), imageData);
 		pendingImageFetchDB.commit();
 	}
@@ -35,7 +35,7 @@ public class FetcherHelper {
 	protected void removeImageFromPendingMap(ImageData imageData,
 			DB pendingImageFetchDB,
 			ConcurrentMap<String, ImageData> pendingImageFetchMap) {
-		LOGGER.info("Removing image from pending map.");
+		LOGGER.info("Removing image " + imageData + " from pending map.");
 		pendingImageFetchMap.remove(imageData.getName());
 		pendingImageFetchDB.commit();
 	}
@@ -57,7 +57,7 @@ public class FetcherHelper {
 			reader.close();
 			return stationId;
 		} else {
-			LOGGER.error("Station file for image " + imageData.getName()
+			LOGGER.debug("Station file for image " + imageData.getName()
 					+ " does not exist or is not a file!");
 			return null;
 		}

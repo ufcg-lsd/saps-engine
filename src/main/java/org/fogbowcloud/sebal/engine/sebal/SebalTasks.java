@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
@@ -16,7 +13,6 @@ import org.fogbowcloud.blowout.scheduler.core.model.Command;
 import org.fogbowcloud.blowout.scheduler.core.model.Specification;
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
-import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
 
 
 public class SebalTasks {
@@ -45,166 +41,9 @@ public class SebalTasks {
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
 	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
 	private static final String METADATA_SEBAL_URL = "sebal_url";
-	private static final String METADATA_R_URL = "r_url";
 	private static final String METADATA_REPOS_USER = "repository_user";
 	private static final String METADATA_MOUNT_POINT = "mount_point";
 	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
-
-	public static List<Task> createF1Tasks(Properties properties, String imageName, Specification spec, String location) {
-		LOGGER.debug("Creating F1 tasks for image " + imageName);
-
-		String numberOfPartitions = properties.getProperty("sebal_number_of_partitions");
-		List<Task> f1Tasks = new ArrayList<Task>();
-
-		for (int partitionIndex = 1; partitionIndex <= Integer.parseInt(numberOfPartitions); partitionIndex++) {
-			//setting location on spec
-//			String locationSpec = "Glue2CloudComputeManagerID==\"" + location + "\"";
-//			if (spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS) == null) {
-//				spec.addRequitement(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
-//						locationSpec);
-//			} else {
-//				spec.addRequitement(
-//						FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS,
-//						spec.getRequirementValue(FogbowRequirementsHelper.METADATA_FOGBOW_REQUIREMENTS)
-//								+ " && " + locationSpec);
-//			}
-
-			TaskImpl f1Task = new TaskImpl(UUID.randomUUID().toString(), spec);
-						
-			settingCommonTaskMetadata(properties, f1Task);
-			
-			// setting image F1 execution properties
-			f1Task.putMetadata(METADATA_PHASE, F1_PHASE);
-			f1Task.putMetadata(METADATA_SEBAL_URL, properties.getProperty("sebal_url"));
-			f1Task.putMetadata(METADATA_IMAGE_NAME, imageName);
-			f1Task.putMetadata(METADATA_NUMBER_OF_PARTITIONS,
-					properties.getProperty("sebal_number_of_partitions"));
-			f1Task.putMetadata(METADATA_PARTITION_INDEX, String.valueOf(partitionIndex));
-			f1Task.putMetadata(METADATA_LEFT_X, properties.getProperty("sebal_image_interval_left_x"));
-			f1Task.putMetadata(METADATA_UPPER_Y,
-					properties.getProperty("sebal_image_interval_upper_y"));
-			f1Task.putMetadata(METADATA_RIGHT_X,
-					properties.getProperty("sebal_image_interval_right_x"));
-			f1Task.putMetadata(METADATA_LOWER_Y,
-					properties.getProperty("sebal_image_interval_lower_y"));
-			f1Task.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
-					properties.getProperty("sebal_local_scripts_dir"));
-			f1Task.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
-					f1Task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + f1Task.getId());
-			
-			// creating sandbox
-			String mkdirCommand = "mkdir -p " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX);
-			String mkdirRemotly = createCommandToRunRemotly(mkdirCommand);
-			f1Task.addCommand(new Command(mkdirRemotly, Command.Type.PROLOGUE));
-			
-			//treating repository user private key
-			if (properties.getProperty("sebal_repository_user_private_key") != null) {
-				File privateKeyFile = new File(properties.getProperty("sebal_repository_user_private_key"));
-				String remotePrivateKeyPath = f1Task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/"
-						+ privateKeyFile.getName();
-				
-				f1Task.putMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH, remotePrivateKeyPath);
-				String scpUploadCommand = createSCPUploadCommand(privateKeyFile.getAbsolutePath(),
-						remotePrivateKeyPath);
-				LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-				f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
-			}
-		
-			// treating boundingbox 
-			if (properties.getProperty("sebal_local_boundingbox_dir") != null) {
-				LOGGER.debug("Region of image is "
-						+ DBUtilsImpl.getImageRegionFromName(imageName));
-				File boundingboxFile = new File(
-						properties.getProperty("sebal_local_boundingbox_dir") + "/boundingbox_"
-								+ DBUtilsImpl.getImageRegionFromName(imageName));
-				LOGGER.debug("The boundingbox file for this image should be "
-						+ boundingboxFile.getAbsolutePath());
-				if (boundingboxFile.exists()) {
-					String remoteBoundingboxPath = f1Task.getMetadata(TaskImpl.METADATA_SANDBOX)
-							+ "/boundingbox_vertices";
-
-					f1Task.putMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH, remoteBoundingboxPath);
-					String scpUploadCommand = createSCPUploadCommand(
-							boundingboxFile.getAbsolutePath(), remoteBoundingboxPath);
-					LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-					f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
-				} else {
-					LOGGER.warn("There is no boundingbox file specified for image " + imageName);
-				}
-			}
-			
-			// creating f1 script for this image
-			File localScriptFile = createScriptFile(properties, f1Task);
-			String remoteScriptPath = f1Task.getMetadata(TaskImpl.METADATA_SANDBOX) + "/"
-					+ localScriptFile.getName();
-			
-			// adding command
-			String scpUploadCommand = createSCPUploadCommand(
-					localScriptFile.getAbsolutePath(), remoteScriptPath);
-			LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-			f1Task.addCommand(new Command(scpUploadCommand, Command.Type.PROLOGUE));
-			
-			// adding remote command
-			String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);
-			LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
-			f1Task.addCommand(new Command(remoteExecScriptCommand , Command.Type.REMOTE));
-
-			// adding epilogue command
-			
-			String copyCommand = "cp -R " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX)
-					+ "/SEBAL/local_results/" + f1Task.getMetadata(METADATA_IMAGE_NAME) + " "
-					+ f1Task.getMetadata(METADATA_RESULTS_LOCAL_PATH) + "/results";
-			String remoteCopyCommand = createCommandToRunRemotly(copyCommand);
-			f1Task.addCommand(new Command(remoteCopyCommand, Command.Type.EPILOGUE));
-			
-			String cleanEnvironment = "rm -r " + f1Task.getMetadata(TaskImpl.METADATA_SANDBOX);
-			String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
-			f1Task.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
-
-			// stage out of output files
-			String remoteOutFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
-					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_out";
-			
-			String scpDownloadCommand = createSCPDownloadCommand(
-					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
-							+ remoteOutFilePath,
-					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteOutFilePath);
-			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
-
-			String remoteErrFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
-					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_err";
-			scpDownloadCommand = createSCPDownloadCommand(
-					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
-							+ remoteErrFilePath,
-					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteErrFilePath);
-			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
-
-//			// stage out render out 
-//			String remoteRenderOutFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
-//					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_render_out";
-//			
-//			scpDownloadCommand = createSCPDownloadCommand(
-//					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
-//							+ remoteRenderOutFilePath,
-//					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-//							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteRenderOutFilePath);
-//			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
-//
-//			String remoteRenderErrFilePath = f1Task.getMetadata(METADATA_NUMBER_OF_PARTITIONS) + "_"
-//					+ f1Task.getMetadata(METADATA_PARTITION_INDEX) + "_render_err";
-//			scpDownloadCommand = createSCPDownloadCommand(
-//					f1Task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER) + "/"
-//							+ remoteRenderErrFilePath,
-//					f1Task.getMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER) + "/"
-//							+ f1Task.getMetadata(METADATA_IMAGE_NAME) + "_" + remoteRenderErrFilePath);
-//			f1Task.addCommand(new Command(scpDownloadCommand, Command.Type.EPILOGUE));
-			
-			f1Tasks.add(f1Task);
-		}
-		return f1Tasks;
-	}
 	
 	public static TaskImpl createRTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
@@ -431,17 +270,5 @@ public class SebalTasks {
 		}
 		LOGGER.debug("Command that will be executed: " + command);
 		return command;
-	}
-
-	public static List<Task> createCTasks(Properties properties, String name,
-			Specification sebalSpec) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public static List<Task> createF2Tasks(Properties properties, String name,
-			Specification sebalSpec) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }
