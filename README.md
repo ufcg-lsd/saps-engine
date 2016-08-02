@@ -1,6 +1,7 @@
 # SEBAL Engine
 ## What is SEBAL Engine?
-  This section will contain a brief explanation about the project.
+  SEBAL Engine is a tool created to provide a dynamic use of SEBAL algorithm using computational resources obtained through a multi-cloud environment federated by the [fogbow middleware](http://www.fogbowcloud.org).
+  
   SEBAL Engine has three main components:
   - **Scheduler**:
   - **Crawler**:
