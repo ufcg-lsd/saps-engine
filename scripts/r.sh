@@ -35,9 +35,9 @@ function prepareDependencies {
 
 # This function mounts exports dir from NFS server
 function mountExportsDir {
-  #sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
-  sudo echo "${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT} nfs proto=tcp,port=${NFS_SERVER_PORT}" >> /etc/fstab
-  sudo mount -a
+  sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
+  #sudo echo "${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT} nfs proto=tcp,port=${NFS_SERVER_PORT}" >> /etc/fstab
+  #sudo mount -a
 }
 
 # This function untare image and creates an output dir into mounted dir
@@ -81,6 +81,7 @@ function executeRScript {
 
   echo "Renaming dados file"
   mv dados.csv dados"-${IMAGE_NAME}".csv
+  sudo cp dados"-${IMAGE_NAME}".csv $OUTPUT_IMAGE_DIR
 
   cd ${SANDBOX}/SEBAL
   SEBAL_VERSION=$(git rev-parse HEAD)
