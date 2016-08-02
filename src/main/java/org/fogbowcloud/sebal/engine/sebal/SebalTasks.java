@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -176,8 +178,11 @@ public class SebalTasks {
 	}
 
 	private static String createRemoteScriptExecCommand(String remoteScript) {
+		Path pathToRemoteScript = Paths.get(remoteScript);
+		String outPath = pathToRemoteScript.getFileName().toString() + "." + "out";
+		String errPath = pathToRemoteScript.getFileName().toString() + "." + "err";
 		String execScriptCommand = "\"chmod +x " + remoteScript + "; nohup " + remoteScript
-				+ " > /dev/null 2>&1 &\"";
+				+ " > /tmp/" + outPath + " 2> /tmp/" + errPath + " &\"";
 		return execScriptCommand;
 	}
 
