@@ -22,6 +22,22 @@
   git clone [repository-url]
   ```
   
+  The second step is to get all projects JAR to run application as expected. To achieve that, maven and maven2 must be installed in client's machine with commands:
+  
+  ```
+  apt-get install maven
+  ```
+  
+  ```
+  apt-get install maven2
+  ```
+  
+  After that, simply use the following command in each project directory:
+  
+  ```
+  mvn -e install -Dmaven.test.skip=true
+  ```
+  
 ## Infrastructure Deploy
 ### Configuring Deploy
   To configure SEBAL Engine deploy, is necessary to generate a token that will be used to order resources from **Fogbow**. For that, simply generate a token using the following **fogbow-cli** command:
@@ -43,7 +59,7 @@
   bash sebal-engine/scripts/infrastructure/deploy_scheduler [private-key-path] [storage-size]
   ```
   
-  When ran, the above command will generate a file into **scheduler/scheduler-info/scheduler-exec-info** with all needed information about returned resource.
+  When finished, the above command will generate a file into **scheduler/scheduler-info/scheduler-exec-info** with all needed information about returned resource.
   
 ### Deploying Crawler
   To deploy Crawler, run the command:
@@ -52,7 +68,7 @@
   bash sebal-engine/scripts/infrastructure/deploy_crawler [private-key-path] [storage-size]
   ```
   
-  When ran, the above command will generate a file into **crawler/crawler-info/crawler-exec-info** with all needed information about returned resource.
+  When finished, the above command will generate a file into **crawler/crawler-info/crawler-exec-info** with all needed information about returned resource.
   
 ### Deploying Fetcher
   To deploy Fetcher, run the command:
@@ -61,7 +77,7 @@
   bash sebal-engine/scripts/infrastructure/deploy_fetcher [private-key-path]
   ```
   
-  When ran, the above command will generate a file into **fetcher/fetcher-info/fetcher-exec-info** with all needed information about returned resource.
+  When finished, the above command will generate a file into **fetcher/fetcher-info/fetcher-exec-info** with all needed information about returned resource.
   
 ## Using SEBAL Engine CLI
 ### Using Catalog
