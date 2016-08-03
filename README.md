@@ -14,7 +14,7 @@
   This section will contain all info about how to use SEBAL Engine, such as infrastructure deployment, database filling and application launch.
 ## Configuring SEBAL Engine
 ### Getting all dependencies
-  Before configure **SEBAL Engine**, is necessary to get all dependencies and projects to use the application.
+  Before configure SEBAL Engine, is necessary to get all dependencies and projects to use the application.
   
   The first step is to get [fogbow-manager](https://github.com/fogbow/fogbow-manager.git), [fogbow-cli](https://github.com/fogbow/fogbow-cli.git), [blowout](https://github.com/fogbow/blowout.git) and [SEBAL Engine](https://github.com/fogbow/sebal-engine.git) repositories from **Git Hub** with the command:
   
@@ -24,7 +24,7 @@
   
 ## Infrastructure Deploy
 ### Configuring Deploy
-  To configure **SEBAL Engine** deploy, is necessary to generate a token that will be used to order resources from **Fogbow**. For that, simply generate a token using the following **fogbow-cli** command:
+  To configure SEBAL Engine deploy, is necessary to generate a token that will be used to order resources from **Fogbow**. For that, simply generate a token using the following **fogbow-cli** command:
   
   ```
   bash bin/fogbow-cli token --create --type openstack -Dusername=[user-name] -Dpassword=[password] -DauthUrl=[auth-url] -DtenantName=[tenant-name]
