@@ -16,7 +16,7 @@
 ### Getting all dependencies
   Before configure **SEBAL Engine**, is necessary to get all dependencies and projects to use the application.
   
-  The first step is to get [manager](https://github.com/fogbow/fogbow-manager.git), [blowout](https://github.com/fogbow/blowout.git), [fogbow-cli](https://github.com/fogbow/fogbow-cli.git) and [SEBAL Engine](https://github.com/fogbow/sebal-engine.git) repositories from **Git Hub** with the command:
+  The first step is to get [fogbow-manager](https://github.com/fogbow/fogbow-manager.git), [fogbow-cli](https://github.com/fogbow/fogbow-cli.git), [blowout](https://github.com/fogbow/blowout.git) and [SEBAL Engine](https://github.com/fogbow/sebal-engine.git) repositories from **Git Hub** with the command:
   
   ```
   git clone [repository-url]
