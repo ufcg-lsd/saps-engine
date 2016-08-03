@@ -27,7 +27,7 @@
   To configure **SEBAL Engine** deploy, is necessary to generate a token that will be used to order resources from **Fogbow**. For that, simply generate a token using the following **fogbow-cli** command:
   
   ```
-  bash repository-path/bin/fogbow-cli token --create --type openstack -Dusername=[user-name] -Dpassword=[password] -DauthUrl=[auth-url] -DtenantName=[tenant-name]
+  bash bin/fogbow-cli token --create --type openstack -Dusername=[user-name] -Dpassword=[password] -DauthUrl=[auth-url] -DtenantName=[tenant-name]
   ```
   
   When token is generated, put it into a file and insert its path in **sebal-engine/config/sebal.conf**
@@ -40,7 +40,7 @@
   To deploy Task Catalog and Scheduler, run the command:
   
   ```
-  bash repository-path/scripts/infrastructure/deploy_scheduler [private-key-path] [storage-size]
+  bash scripts/infrastructure/deploy_scheduler [private-key-path] [storage-size]
   ```
   
   When ran, the above command will generate a file into **scheduler/scheduler-info/scheduler-exec-info** with all needed information about returned resource.
@@ -49,7 +49,7 @@
   To deploy Crawler, run the command:
 
   ```
-  bash repository-path/scripts/infrastructure/deploy_crawler [private-key-path] [storage-size]
+  bash scripts/infrastructure/deploy_crawler [private-key-path] [storage-size]
   ```
   
   When ran, the above command will generate a file into **crawler/crawler-info/crawler-exec-info** with all needed information about returned resource.
@@ -58,7 +58,7 @@
   To deploy Fetcher, run the command:
 
   ```
-  bash repository-path/scripts/infrastructure/deploy_fetcher [private-key-path]
+  bash scripts/infrastructure/deploy_fetcher [private-key-path]
   ```
   
   When ran, the above command will generate a file into **fetcher/fetcher-info/fetcher-exec-info** with all needed information about returned resource.
@@ -68,44 +68,44 @@
   To add LANDSAT images from a list of regions with first and last year, run the **add** command:
   
   ```
-  bash repository-path/scripts/cli/catalog add [first-year] [last-year] [regions-file-path]
+  bash scripts/cli/catalog add [first-year] [last-year] [regions-file-path]
   ```
   
   To get LANDSAT images from a list of regions with first and last year, run the **get** command:
   
   ```
-  bash repository-path/scripts/cli/catalog get [first-year] [last-year] [regions-file-path]
+  bash scripts/cli/catalog get [first-year] [last-year] [regions-file-path]
   ```
   
   To list corrupted LANDSAT images from **Task Catalog**, run the **list-corrupted** command:
   
   ```
-  bash repository-path/scripts/cli/catalog list-corrupted
+  bash scripts/cli/catalog list-corrupted
   ```
   
   To list all LANDSAT images from **Task Catalog**, run the **list** command:
   
   ```
-  bash repository-path/scripts/cli/catalog list
+  bash scripts/cli/catalog list
   ```
   
 ### Using Crawler
   To start Crawler application, run the Crawler CLI command:
 
   ```
-  bash repository-path/scripts/cli/crawler [task-catalog-ip] [task-catalog-port] [federation-member]
+  bash scripts/cli/crawler [task-catalog-ip] [task-catalog-port] [federation-member]
   ```
   
 ### Using Scheduler
   To start Scheduler application, run the Scheduler CLI command:
   
   ```
-  bash repository-path/scripts/cli/scheduler [task-catalog-ip] [task-catalog-port] [nfs-server-ip] [nfs-server-port]
+  bash scripts/cli/scheduler [task-catalog-ip] [task-catalog-port] [nfs-server-ip] [nfs-server-port]
   ```
   
 ### Using Fetcher
   To start Fetcher application, run the Fetcher CLI command:
   
   ```
-  bash repository-path/scripts/cli/crawler [task-catalog-ip] [task-catalog-port] [ftp-server-ip] [ftp-server-port]
+  bash scripts/cli/crawler [task-catalog-ip] [task-catalog-port] [ftp-server-ip] [ftp-server-port]
   ```
