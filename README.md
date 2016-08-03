@@ -16,7 +16,7 @@
   
   Database Field | Description
 ---- | --------------------
-Image Name: | An image name with landsat type, region and year as prefix
+Image Name: | Image name with landsat type, region and year as prefix
 Download Link: | Image download link from NASA repository
 Image State: | Image state in system execution
 Federation Member: | Federation member that deals with the image
