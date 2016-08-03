@@ -11,7 +11,26 @@
   - **Fetcher**: Search at **Task Catalog** for images in "finished" (processed by a **Worker Node**) state and transfer all output data from the FTP Server to a Swift. After that, **Crawler** is able to detect if the image was fetched, so it can remove all results from repository.
 
 ## How to use it?
-  This section will contain all info about how to use SEBAL Engine, such as infrastructure deployment, database filling and application launch.
+### Task Catalog Management
+  The SEBAL Engine application depends on a centralized task creator that get and store information about image data and process output.
+  
+  Database Field | Description
+---- | --------------------
+Image Name: | An image name with landsat type, region and year as prefix.
+Download Link: | Image download link from NASA repository.
+State: | Image state in system execution.
+Federation Member: | Federation member that deals with the image.
+Priority: | Processing priority.
+Station ID: | Image's nearest station ID.
+Sebal Version: | Current SEBAL application version.
+Sebal Engine Version: | Current SEBAL Engine application version.
+Blowout Version: | Current blowout application version.
+Creation Time: | Date of first interation with image in database.
+Update Time: | Date of last interation with image in database.
+Status: | Tells if image was purged from database or not.
+Error: | Tells if image processing returned an error.
+
+
 ## Configuring SEBAL Engine
 ### Getting all dependencies
   Before configure SEBAL Engine, is necessary to get all dependencies and projects to use the application.
@@ -39,7 +58,7 @@
   ```
   
 ## Infrastructure Deploy
-### Configuring Deploy
+### Configuring deploy with keystone token
   To configure SEBAL Engine deploy, is necessary to generate a token that will be used to order resources from **Fogbow**. For that, simply generate a token using the following **fogbow-cli** command:
   
   ```
