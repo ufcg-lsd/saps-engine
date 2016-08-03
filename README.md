@@ -16,19 +16,19 @@
   
   Database Field | Description
 ---- | --------------------
-Image Name: | An image name with landsat type, region and year as prefix.
-Download Link: | Image download link from NASA repository.
-State: | Image state in system execution.
-Federation Member: | Federation member that deals with the image.
-Priority: | Processing priority.
-Station ID: | Image's nearest station ID.
-Sebal Version: | Current SEBAL application version.
-Sebal Engine Version: | Current SEBAL Engine application version.
-Blowout Version: | Current blowout application version.
-Creation Time: | Date of first interation with image in database.
-Update Time: | Date of last interation with image in database.
-Status: | Tells if image was purged from database or not.
-Error: | Tells if image processing returned an error.
+Image Name: | An image name with landsat type, region and year as prefix
+Download Link: | Image download link from NASA repository
+State: | Image state in system execution
+Federation Member: | Federation member that deals with the image
+Priority: | Processing priority
+Station ID: | Image's nearest station ID
+Sebal Version: | Current SEBAL application version
+Sebal Engine Version: | Current SEBAL Engine application version
+Blowout Version: | Current blowout application version
+Creation Time: | Date of first interation with image in database
+Update Time: | Date of last interation with image in database
+Status: | Tells if image was purged from database or not
+Error: | Tells if image processing returned an error
 
 
 ## Configuring SEBAL Engine
