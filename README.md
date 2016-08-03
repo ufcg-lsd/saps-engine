@@ -16,7 +16,18 @@
   This section will contain all info about how to deploy SEBAL Engine infrastructure, providing configuration help step-by-step.
 ## Infrastructure Deploy
 ### Configuring Deploy
-  This subsection will explain how to configure deploy.
+  To configure **SEBAL Engine** deploy, it is necessary to generate a token that will be used to order resources from **Fogbow**. For that, the **fogbow-cli** project must be cloned from repository (https://github.com/fogbow/fogbow-cli.git) using command:
+  
+  ```git clone [fogbow-cli-url]```
+  
+  After that, simply generate a token using the following command:
+  
+  ```bash bin/fogbow-cli token --create --type openstack -Dusername=[user-name] -Dpassword=[password] -DauthUrl=[auth-url] -DtenantName=[tenant-name]```
+  
+  When token is generated, put it into a file and insert its path in **sebal-engine/config/sebal.conf**
+  
+  ```infra_fogbow_token_public_key_filepath=path-to-file ```
+  
 ### Deploying Task Catalog and Scheduler
   To deploy Task Catalog and Scheduler, run the command:
   
