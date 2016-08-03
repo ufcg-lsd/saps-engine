@@ -33,19 +33,23 @@
   
   ```bash scripts/infrastructure/deploy_scheduler [private-key-path] [storage-size]```
   
+  When ran, the above command will generate a file into **scheduler/scheduler-info/scheduler-exec-info** with all needed information about returned resource.
+  
 ### Deploying Crawler
   To deploy Crawler, run the command:
 
   ```bash scripts/infrastructure/deploy_crawler [private-key-path] [storage-size]```
+  
+  When ran, the above command will generate a file into **crawler/crawler-info/crawler-exec-info** with all needed information about returned resource.
   
 ### Deploying Fetcher
   To deploy Fetcher, run the command:
 
   ```bash scripts/infrastructure/deploy_fetcher [private-key-path]```
   
+  When ran, the above command will generate a file into **fetcher/fetcher-info/fetcher-exec-info** with all needed information about returned resource.
+  
 ## Using SEBAL Engine CLI
-### Configuring CLI
-  This subsection will explain how to configure SEBAL Engine CLI.
 ### Using Catalog
   To add LANDSAT images from a list of regions with first and last year, run the **add** command:
   
