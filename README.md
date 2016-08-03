@@ -4,7 +4,7 @@
   
   SEBAL Engine has six main components:
   - **Submission Service**: Serves requests from a federation member, such as the creation and monitoring new work units, or the purge of processed data.
-  - **Task Catalog**: Stores LANDSAT image data information obtained from [NASA repository](https://ers.cr.usgs.gov).
+  - **Task Catalog**: Stores information of LANDSAT image data (obtained from [NASA repository](https://ers.cr.usgs.gov)) and its execution.
   - **Crawler**: Search at **Task Catalog** for LANDSAT images in "not downloaded" state. This component assumes a NFS Server and FTP Server role and stores image data into a repository provided by an interation with **Fogbow Middleware**.
   - **Scheduler**: Order resources as it detects whether or not are images with "downloaded" state in **Task Catalog**, then redirects SEBAL execution tasks to **Worker Nodes**, which performs the image processing.
   - **Worker Node**: Receives a task from **Scheduler** and executes it. The execution consists of perform a image processing and store data in the NFS Server.
@@ -15,4 +15,22 @@
 ## Configuring SEBAL Engine
   This section will contain all info about how to deploy SEBAL Engine infrastructure, providing configuration help step-by-step.
 ## Using SEBAL Engine CLI
-  This section will contain all info about SEBAL Engine CLI and how to use it, providing configuration help step-by-step.
+### Using Catalog
+  To add LANDSAT images from a list of regions with a first and last year, run the **add** command:
+  
+  ```bash scripts/cli/catalog add [first-year] [last-year] [regions-file-path]```
+
+### Using Crawler
+  To start Crawler application, run the Crawler CLI command:
+
+  ```bash scripts/cli/crawler [task-catalog-ip] [task-catalog-port] [federation-member]```
+  
+### Using Scheduler
+  To start Scheduler application, run the Scheduler CLI command:
+  
+  ```bash scripts/cli/scheduler [task-catalog-ip] [task-catalog-port] [nfs-server-ip] [nfs-server-port]```
+  
+### Using Fetcher
+  To start Fetcher application, run the Fetcher CLI command:
+  
+  ```bash scripts/cli/crawler [task-catalog-ip] [task-catalog-port] [ftp-server-ip] [ftp-server-port]```
