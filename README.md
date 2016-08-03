@@ -14,7 +14,9 @@
   This section will contain all info about how to use SEBAL Engine, such as infrastructure deployment, database filling and application launch.
 ## Configuring SEBAL Engine
   This section will contain all info about how to deploy SEBAL Engine infrastructure, providing configuration help step-by-step.
-## Deploying Infrastructure
+## Infrastructure Deploy
+### Configuring Deploy
+  This subsection will explain how to configure deploy.
 ### Deploying Task Catalog and Scheduler
   To deploy Task Catalog and Scheduler, run the command:
   
@@ -31,8 +33,10 @@
   ```bash scripts/infrastructure/deploy_fetcher [private-key-path]```
   
 ## Using SEBAL Engine CLI
+### Configuring CLI
+  This subsection will explain how to configure SEBAL Engine CLI.
 ### Using Catalog
-  To add LANDSAT images from a list of regions with a first and last year, run the **add** command:
+  To add LANDSAT images from a list of regions with first and last year, run the **add** command:
   
   ```bash scripts/cli/catalog add [first-year] [last-year] [regions-file-path]```
 
