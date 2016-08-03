@@ -54,7 +54,19 @@
   To add LANDSAT images from a list of regions with first and last year, run the **add** command:
   
   ```bash scripts/cli/catalog add [first-year] [last-year] [regions-file-path]```
-
+  
+  To get LANDSAT images from a list of regions with first and last year, run the **get** command:
+  
+  ```bash scripts/cli/catalog get [first-year] [last-year] [regions-file-path]```
+  
+  To list corrupted LANDSAT images from **Task Catalog**, run the **list-corrupted** command:
+  
+  ```bash scripts/cli/catalog list-corrupted```
+  
+  To list all LANDSAT images from **Task Catalog**, run the **list** command:
+  
+  ```bash scripts/cli/catalog list```
+  
 ### Using Crawler
   To start Crawler application, run the Crawler CLI command:
 
