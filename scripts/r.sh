@@ -22,7 +22,7 @@ function prepareDependencies {
   sudo apt-get update
   echo -e "Y\n" | sudo apt-get install git
 
-  cd $SANDBOX
+  cd ${SANDBOX}
 
   # cloning SEBAL project
   git clone ${SEBAL_URL}
