@@ -12,7 +12,9 @@
 
 ## How to use it?
 ### Task Catalog Management
-  The SEBAL Engine application depends on a centralized task creator that get and store information about image data and process output.
+  The SEBAL Engine application depends on a centralized task creator that get and store information about image data and process output. For that, a database containing these data is created for the components make their decisions. 
+  
+  Informations like image name, download link, state and federation member are some of the most important ones in SEBAL Engine application.
   
   Database Field | Description
 ---- | --------------------
@@ -30,6 +32,16 @@ Update Time: | Date of last interation with image in database
 Status: | Tells if image was purged from database or not
 Error: | Tells if image processing returned an error
 
+### Image States
+  While running SEBAL Engine application, each image might be in several different states. The image state will show in which phase exactly the execution is.
+  
+    not_downloaded: image was not downloaded by crawler yet
+    downloading: image is being downloaded by crawler from nasa repository
+    downloaded : image is downloaded by crawler
+    running_r: image is ready to be processed/is being processed by worker node
+    finished: image successfully processed by worker node
+    fetching: image is being fetched into a swift
+    fetched: image successfully fetched
 
 ## Configuring SEBAL Engine
 ### Getting all dependencies
