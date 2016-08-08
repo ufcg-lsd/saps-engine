@@ -11,28 +11,28 @@
   - **Fetcher**: Search at **Task Catalog** for images in "finished" (processed by a **Worker Node**) state and transfer all output data from the FTP Server to a Swift. After that, **Crawler** is able to detect if the image was fetched, so it can remove all results from repository.
 
 ## How to use it?
-### Task Catalog Management
-  The SEBAL Engine application depends on a centralized task creator that get and store information about image data and process output. For that, a database containing these data is created for the components make their decisions. 
+### Submitting Tasks
+  A pool of tasks is created when **Task Catalog** is called passing the range of years for which the images were captured by the satellite and a text file, containing the regions that will be processed.
   
-  Informations like image name, download link, state and federation member are some of the most important ones in SEBAL Engine application.
+  Task Field | Description
+  ---- | --------------------
+  Image Name: | Image name with landsat type, region and year as prefix
+  Download Link: | Image download link from NASA repository
+  Image State: | Image state in system execution
+  Federation Member: | Federation member that deals with the image
+  Priority: | Processing priority
+  Station ID: | Image's nearest station ID
+  Sebal Version: | Current SEBAL application version
+  Sebal Engine Version: | Current SEBAL Engine application version
+  Blowout Version: | Current blowout application version
+  Creation Time: | Date of first interation with image in database
+  Update Time: | Date of last interation with image in database
+  Status: | Tells if image was purged from database or not
+  Error: | Shows the error message in case of execution failure
   
-  Database Field | Description
----- | --------------------
-Image Name: | Image name with landsat type, region and year as prefix
-Download Link: | Image download link from NASA repository
-Image State: | Image state in system execution
-Federation Member: | Federation member that deals with the image
-Priority: | Processing priority
-Station ID: | Image's nearest station ID
-Sebal Version: | Current SEBAL application version
-Sebal Engine Version: | Current SEBAL Engine application version
-Blowout Version: | Current blowout application version
-Creation Time: | Date of first interation with image in database
-Update Time: | Date of last interation with image in database
-Status: | Tells if image was purged from database or not
-Error: | Tells if image processing returned an error
+  For that, SEBAL Engine relies on a centralized database that gets and stores informations about image data and process output so the components can make their decisions.
 
-### Image States
+#### Image States
   While running SEBAL Engine application, each image might be in several different states. The image state will show in which phase exactly the execution is.
   
     not_downloaded: image was not downloaded by crawler yet
@@ -42,6 +42,7 @@ Error: | Tells if image processing returned an error
     finished: image successfully processed by worker node
     fetching: image is being fetched into a swift
     fetched: image successfully fetched
+    error: image execution returned error
 
 ## Configuring SEBAL Engine
 ### Getting all dependencies
