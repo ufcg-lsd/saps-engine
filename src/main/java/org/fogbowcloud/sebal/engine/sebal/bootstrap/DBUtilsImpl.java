@@ -124,6 +124,7 @@ public class DBUtilsImpl implements DBUtils {
                 File imageListFile = new File("images-" + year + ".txt");
                 FileUtils.write(imageListFile, imageList);
 
+                LOGGER.debug("Getting download links of images from " + imageListFile.getAbsolutePath());
                 Map<String, String> imageAndDownloadLink = getNasaRepository()
                         .checkExistingImages(imageListFile);
 

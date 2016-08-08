@@ -118,14 +118,19 @@ public class NASARepository {
 		Map<String, String> imageAndDownloadLink = new HashMap<String, String>();
 		if (httpPostResponse.getStatusLine().getStatusCode() == HttpStatus.SC_MOVED_TEMPORARILY) {
 			// selecting download option
-			String selectLocation = httpPostResponse.getFirstHeader("Location").getValue();
+			String selectLocation = httpPostResponse.getFirstHeader("Location").getValue();			
+			
+			LOGGER.debug("BaseURL is " + baseURL + " and Location is " + selectLocation);
 			httpPost = new HttpPost(baseURL + selectLocation);
+			
 			reqEntity = MultipartEntityBuilder
 					.create()
 					.addPart("orderType",
 							new StringBody("bulk_dta", ContentType.TEXT_PLAIN))
 					.addPart("dlOptions_3119[]",
 							new StringBody("STANDARD", ContentType.TEXT_PLAIN)).build();
+			
+			LOGGER.debug("reqEntity is " + reqEntity.toString());
 
 			httpPost.setEntity(reqEntity);
 			httpPostResponse = httpClient.execute(httpPost);
