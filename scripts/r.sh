@@ -21,6 +21,7 @@ function prepareDependencies {
   #installing git
   sudo apt-get update
   echo -e "Y\n" | sudo apt-get install git
+  echo -e "install.packages(\"raster\")\ninstall.packages(\"rgdal\")\ninstall.packages(\"maptools\")\ninstall.packages(\"ncdf4\")\ninstall.packages(\"sp\")\nq()\nn\n" | sudo R
 
   cd ${SANDBOX}
 
@@ -76,7 +77,8 @@ function executeRScript {
   echo "File images;MTL;File Station Weather;File Fmask;Path Output" > dados.csv
   echo "${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME};${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt";${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv";${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask";$OUTPUT_IMAGE_DIR" >> dados.csv
   echo "Executing R script..."
-  Rscript $R_EXEC_DIR/$R_ALGORITHM_VERSION $R_EXEC_DIR
+  #Rscript $R_EXEC_DIR/$R_ALGORITHM_VERSION $R_EXEC_DIR
+  R CMD BATCH "--args WD='$R_EXEC_DIR'" $R_EXEC_DIR/$R_ALGORITHM_VERSION
   echo "Process finished!"
 
   echo "Renaming dados file"
