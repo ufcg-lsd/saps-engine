@@ -50,10 +50,10 @@ function untarImageAndPrepareDirs {
   # untar image
   echo "Untaring image ${IMAGE_NAME}"
   cd ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}
-  tar -xvzf ${IMAGE_NAME}".tar.gz"
+  sudo tar -xvzf ${IMAGE_NAME}".tar.gz"
 
   echo "Creating image output directory"
-  mkdir -p $OUTPUT_IMAGE_DIR
+  sudo mkdir -p $OUTPUT_IMAGE_DIR
 }
 
 # This function calls a pre process java code to prepare a station file of a given image
@@ -83,11 +83,11 @@ function executeRScript {
 
   echo "Renaming dados file"
   mv dados.csv dados"-${IMAGE_NAME}".csv
-  sudo cp dados"-${IMAGE_NAME}".csv $OUTPUT_IMAGE_DIR
+  sudo mv dados"-${IMAGE_NAME}".csv $OUTPUT_IMAGE_DIR
 
   cd ${SANDBOX}/SEBAL
   SEBAL_VERSION=$(git rev-parse HEAD)
-  echo "$SEBAL_VERSION" > $OUTPUT_IMAGE_DIR/SEBAL.version.$SEBAL_VERSION
+  sudo echo "$SEBAL_VERSION" > $OUTPUT_IMAGE_DIR/SEBAL.version.$SEBAL_VERSION
 }
 
 # This function do a checksum of all output files in image dir
@@ -95,7 +95,7 @@ function checkSum {
   find ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME} -type f -iname "*.nc" | while read f
   do
     CHECK_SUM=$(echo | md5sum $f | cut -c1-32)
-    touch $f.$CHECK_SUM.md5
+    sudo touch $f.$CHECK_SUM.md5
   done
 }
 
