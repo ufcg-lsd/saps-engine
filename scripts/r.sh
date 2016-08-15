@@ -7,10 +7,12 @@ IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
 OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
-LOG4J_PATH=${SANDBOX}/SEBAL/log4j.properties
 LOG4J_FILE_PATH=/var/log/sebal/sebal.log
 R_EXEC_DIR=${SANDBOX}/SEBAL/workspace/R/
 R_ALGORITHM_VERSION=AlgoritmoFinal-v2_01072016.R
+SEBAL_SNAPSHOT_M2_PATH=/home/esdras/.m2/repository/org/fogbowcloud/SEBAL/0.0.1-SNAPSHOT/
+SEBAL_DIR_PATH=
+LOG4J_PATH=
 
 # This function downloads all projects and dependencies
 function prepareDependencies {
@@ -21,6 +23,8 @@ function prepareDependencies {
   #installing git
   sudo apt-get update
   echo -e "Y\n" | sudo apt-get install git
+  #echo -e "Y\n" | sudo apt-get install maven
+  #echo -e "Y\n" | sudo apt-get install maven2
   echo -e "install.packages(\"raster\")\ninstall.packages(\"rgdal\")\ninstall.packages(\"maptools\")\ninstall.packages(\"ncdf4\")\ninstall.packages(\"sp\")\nq()\nn\n" | sudo R
 
   cd ${SANDBOX}
@@ -28,7 +32,19 @@ function prepareDependencies {
   # cloning SEBAL project
   git clone ${SEBAL_URL}
 
+  # getting sebal snapshot from public_html
+  cd ${SANDBOX}/SEBAL
+  sudo tar -xvzf target.tar.gz
+  rm target.tar.gz
+
+  # putting snapshot into .m2
+  SEBAL_DIR_PATH=$(pwd)
+  sudo mkdir -p $SEBAL_SNAPSHOT_M2_PATH
+  sudo cp $SEBAL_DIR_PATH/target/SEBAL-0.0.1-SNAPSHOT.jar $SEBAL_SNAPSHOT_M2_PATH
+
   sudo mkdir -p $LOG4J_FILE_PATH
+
+  cd ${SANDBOX}
 
   # TODO: install in image
   echo -e "Y\n" | sudo apt-get install nfs-common
@@ -59,11 +75,13 @@ function untarImageAndPrepareDirs {
 # This function calls a pre process java code to prepare a station file of a given image
 function preProcessImage {
   cd ${SANDBOX}/SEBAL/
+  SEBAL_DIR_PATH=$(pwd)
+  LOG4J_PATH=$SEBAL_DIR_PATH/log4j.properties
 
-#  echo "Generating app snapshot"
-#  mvn -e install -Dmaven.test.skip=true
+  #echo "Generating app snapshot"
+  #mvn -e install -Dmaven.test.skip=true
 
-  sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/ 0 0 9000 9000 1 1 $BOUNDING_BOX_PATH $CONF_FILE ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
+  sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/SEBAL-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.PreProcessMain ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/ 0 0 9000 9000 1 1 $SEBAL_DIR_PATH/$BOUNDING_BOX_PATH $SEBAL_DIR_PATH/$CONF_FILE ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask"
   sudo chmod 777 ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv"
   echo -e "\n" >> ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv"
 }
@@ -87,7 +105,8 @@ function executeRScript {
 
   cd ${SANDBOX}/SEBAL
   SEBAL_VERSION=$(git rev-parse HEAD)
-  sudo echo "$SEBAL_VERSION" > $OUTPUT_IMAGE_DIR/SEBAL.version.$SEBAL_VERSION
+  sudo sh -c "echo \"$SEBAL_VERSION\" > $OUTPUT_IMAGE_DIR/SEBAL.version.$SEBAL_VERSION"
+  #sudo echo "$SEBAL_VERSION" > $OUTPUT_IMAGE_DIR/SEBAL.version.$SEBAL_VERSION
 }
 
 # This function do a checksum of all output files in image dir
