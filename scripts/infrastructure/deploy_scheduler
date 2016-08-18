@@ -28,12 +28,16 @@ REMOTE_BASE_DIR=/tmp
 SANDBOX_DIR=/local/esdras/git/sebal-engine
 VOMS_CERT_FOLDER=/tmp
 KEYSTONE_CERT_FOLDER=/tmp
+LDAP_KEYS_FOLDER=/tmp
 VOMS_CERT_FILE=x509up_u1210
 KEYSTONE_CERT_FILE=keystone_cert
+LDAP_PRIVATE_KEY=private_key.pem
+LDAP_PUBLIC_KEY=public_key.pem
 LOCAL_REPOSITORY_PATH=/local/esdras
 REMOTE_REPOSITORY_PATH=/home/fogbow
 REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert
 REMOTE_KEYSTONE_CERT_FOLDER=/home/fogbow/Dev/keys/cert
+REMOTE_LDAP_KEYS_FOLDER=/tmp
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 CATALOG_CONFIG_FILE=$SANDBOX_DIR/config/catalog.config
 SPEC_FILE=$SANDBOX_DIR/config/schedulerSpec
@@ -44,7 +48,7 @@ MANAGER_PKG_FILE=manager-pkg.tar.gz
 
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [ -f $LOG4J ]; then
-CONF_LOG=-Dlog4j.configuration=$LOG4J
+CONF_LOG=-Dlog4j.configuration=file:$LOG4J
 else
 CONF_LOG=
 fi
@@ -310,13 +314,20 @@ function main() {
   ssh_to_scheduler ${chmod_cmd}
   scp_to_scheduler $LOCAL_FILE_PATH $FILE_PATH
 
-  KEYSTONE_LOCAL_FILE_PATH="$KEYSTONE_CERT_FOLDER/$KEYSTONE_CERT_FILE"
-  KEYSTONE_FILE_PATH="$REMOTE_KEYSTONE_CERT_FOLDER/$KEYSTONE_CERT_FILE"
-  mkdir_cmd="sudo mkdir -p $KEYSTONE_FILE_PATH"
-  chmod_cmd="sudo chmod 777 $KEYSTONE_FILE_PATH"
-  ssh_to_scheduler ${mkdir_cmd}
-  ssh_to_scheduler ${chmod_cmd}
-  scp_to_scheduler $KEYSTONE_LOCAL_FILE_PATH $KEYSTONE_FILE_PATH
+  #KEYSTONE_LOCAL_FILE_PATH="$KEYSTONE_CERT_FOLDER/$KEYSTONE_CERT_FILE"
+  #KEYSTONE_FILE_PATH="$REMOTE_KEYSTONE_CERT_FOLDER/$KEYSTONE_CERT_FILE"
+  #mkdir_cmd="sudo mkdir -p $KEYSTONE_FILE_PATH"
+  #chmod_cmd="sudo chmod 777 $KEYSTONE_FILE_PATH"
+  #ssh_to_scheduler ${mkdir_cmd}
+  #ssh_to_scheduler ${chmod_cmd}
+  #scp_to_scheduler $KEYSTONE_LOCAL_FILE_PATH $KEYSTONE_FILE_PATH
+
+  LDAP_LOCAL_PRIVATE_FILE_PATH="$LDAP_KEYS_FOLDER/$LDAP_PRIVATE_KEY"
+  LDAP_LOCAL_PUBLIC_FILE_PATH="$LDAP_KEYS_FOLDER/$LDAP_PUBLIC_KEY"
+  LDAP_PRIVATE_FILE_PATH="$REMOTE_LDAP_KEYS_FOLDER/$LDAP_PRIVATE_KEY"
+  LDAP_PUBLIC_FILE_PATH="$REMOTE_LDAP_KEYS_FOLDER/$LDAP_PUBLIC_KEY"
+  scp_to_scheduler $LDAP_LOCAL_PRIVATE_FILE_PATH $LDAP_PRIVATE_FILE_PATH
+  scp_to_scheduler $LDAP_LOCAL_PUBLIC_FILE_PATH $LDAP_PUBLIC_FILE_PATH
 
   echo "Preparing log4j dir"
   mkdir_log4j_cmd="sudo mkdir -p /var/log/sebal-execution"
