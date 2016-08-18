@@ -23,13 +23,6 @@ function prepareDependencies {
   #installing git
   sudo apt-get update
   echo -e "Y\n" | sudo apt-get install git
-  #echo -e "Y\n" | sudo apt-get install maven
-  #echo -e "Y\n" | sudo apt-get install maven2
-  echo -e "install.packages(\"raster\")\nq()\nn\n" | sudo R
-  echo -e "install.packages(\"rgdal\")\nq()\nn\n" | sudo R
-  echo -e "install.packages(\"maptools\")\nq()\nn\n" | sudo R
-  echo -e "install.packages(\"ncdf4\")\nq()\nn\n" | sudo R
-  echo -e "install.packages(\"sp\")\nq()\nn\n" | sudo R
 
   cd ${SANDBOX}
 
