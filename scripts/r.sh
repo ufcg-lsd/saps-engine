@@ -90,9 +90,9 @@ function executeRScript {
   cd $R_EXEC_DIR
 
   echo "File images;MTL;File Station Weather;File Fmask;Path Output" > dados.csv
-  echo "${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME};${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt";${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv";${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask";$OUTPUT_IMAGE_DIR" >> dados.csv
+  echo "${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME};${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt";${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv";${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask";$OUTPUT_IMAGE_DIR" >> dados.csv
   echo "Executing R script..."
-  Rscript $R_EXEC_DIR/$R_ALGORITHM_VERSION $R_EXEC_DIR
+  sudo Rscript $R_EXEC_DIR/$R_ALGORITHM_VERSION $R_EXEC_DIR
   #R CMD BATCH "--args WD='$R_EXEC_DIR'" $R_EXEC_DIR/$R_ALGORITHM_VERSION
   echo "Process finished!"
 
@@ -108,7 +108,7 @@ function executeRScript {
 
 # This function do a checksum of all output files in image dir
 function checkSum {
-  find ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME} -type f -iname "*.nc" | while read f
+  sudo find ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME} -type f -iname "*.nc" | while read f
   do
     CHECK_SUM=$(echo | md5sum $f | cut -c1-32)
     sudo touch $f.$CHECK_SUM.md5

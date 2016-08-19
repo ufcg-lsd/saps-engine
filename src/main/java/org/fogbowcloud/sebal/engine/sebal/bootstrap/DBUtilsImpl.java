@@ -18,23 +18,20 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.sebal.ImageData;
-import org.fogbowcloud.sebal.engine.sebal.ImageState;
-import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
-import org.fogbowcloud.sebal.engine.sebal.NASARepository;
+import org.fogbowcloud.sebal.engine.sebal.*;
 
 public class DBUtilsImpl implements DBUtils {
 
     private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
 
     private final JDBCImageDataStore imageStore;
-    private NASARepository nasaRepository;
+    private DefaultNASARepository nasaRepository;
     private Properties properties;
 
     public DBUtilsImpl(Properties properties) throws SQLException {
         this.properties = properties;
         this.imageStore = new JDBCImageDataStore(this.properties);
-        this.nasaRepository = new NASARepository(properties);
+        this.nasaRepository = new DefaultNASARepository(properties);
     }
 
     @Override
@@ -126,7 +123,7 @@ public class DBUtilsImpl implements DBUtils {
 
                 LOGGER.debug("Getting download links of images from " + imageListFile.getAbsolutePath());
                 Map<String, String> imageAndDownloadLink = getNasaRepository()
-                        .checkExistingImages(imageListFile);
+                        .getDownloadLinks(imageListFile);
 
                 imageListFile.delete();
 
@@ -158,11 +155,11 @@ public class DBUtilsImpl implements DBUtils {
         return imageStore;
     }
 
-    protected void setNasaRepository(NASARepository nasaRepository) {
+    protected void setNasaRepository(DefaultNASARepository nasaRepository) {
         this.nasaRepository = nasaRepository;
     }
 
-    protected NASARepository getNasaRepository() {
+    protected DefaultNASARepository getNasaRepository() {
         return nasaRepository;
     }
 

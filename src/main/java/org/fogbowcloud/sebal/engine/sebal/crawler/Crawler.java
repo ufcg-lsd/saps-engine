@@ -13,12 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.sebal.FMask;
-import org.fogbowcloud.sebal.engine.sebal.ImageData;
-import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
-import org.fogbowcloud.sebal.engine.sebal.ImageState;
-import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
-import org.fogbowcloud.sebal.engine.sebal.NASARepository;
+import org.fogbowcloud.sebal.engine.sebal.*;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -45,7 +40,7 @@ public class Crawler {
 	public Crawler(Properties properties, String imageStoreIP,
 			String imageStorePort, String federationMember) throws SQLException {
 
-		this(properties, new JDBCImageDataStore(properties), new NASARepository(properties),
+		this(properties, new JDBCImageDataStore(properties), new DefaultNASARepository(properties),
 				federationMember, new FMask());
 
 		LOGGER.info("Creating crawler");
@@ -54,7 +49,7 @@ public class Crawler {
 	}
 
 	protected Crawler(Properties properties, ImageDataStore imageStore,
-			NASARepository nasaRepository, String federationMember, FMask fmask) {
+					  NASARepository nasaRepository, String federationMember, FMask fmask) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
