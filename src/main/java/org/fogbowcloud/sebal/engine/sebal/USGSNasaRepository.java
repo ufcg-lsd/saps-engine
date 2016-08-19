@@ -33,6 +33,12 @@ public class USGSNasaRepository implements NASARepository {
     private final String usgsUserName;
     private final String usgsPassword;
     private final String usgsCLIPath;
+    
+    // nodes
+    private static final String EARTH_EXPLORER_NODE = "EE";
+    
+    // products
+    private static final String LEVEL_1_PRODUCT = "level-1";
 
     //properties.getProperty("sebal_export_path")
 
@@ -131,25 +137,39 @@ public class USGSNasaRepository implements NASARepository {
         return null;
     }
 
-    private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) throws IOException {
+    private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) throws IOException, InterruptedException {
 
         //usgs download-url [dataset] [entity/scene id] --node [node] --product [product]
 
         //do_call
-//        Response response = usgsDownloadURL(dataset, sceneId, node, product);
-//        if (response.exitValue != 0) {
-//                //FIXME: catch this IOException
-//                LOGGER.error("Error while running command. Process exit value = " + String.valueOf(p.exitValue()) + " Message="
-//                        + response.err);
-//            }
-//        }
+        Response response = usgsDownloadURL(getDataSet(), getSceneId(), EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+        if (response.exitValue != 0) {
+            //FIXME: catch this IOException
+			LOGGER.error("Error while running command\nProcess exit value = " + String.valueOf(response.exitValue)
+					+ " Message=" + response.err);
+        } else {        	
+        	response.err = "no_errors";
+			LOGGER.debug("Command successfully executed\nProcess exit value = "
+					+ String.valueOf(response.exitValue) + " Message="
+					+ response.out);
+        }
 
 
         //generate map based on response.out
         return null;
     }
 
-    class Response {
+    private String getDataSet() {
+		// TODO returns the dataset based on image name
+		return null;
+	}
+
+	private String getSceneId() {
+		// TODO returns scene id based on image name
+		return null;
+	}
+
+	class Response {
         public String out;
         public String err;
         public int exitValue;
@@ -159,9 +179,16 @@ public class USGSNasaRepository implements NASARepository {
             InterruptedException {
         //FIXME: log command lin
         ProcessBuilder builder = new ProcessBuilder(this.usgsCLIPath, dataset, sceneId, "--" + node, "--" + product);
-        //FIXME: create response object
-//        return builder.start();
-        return null;
+        LOGGER.debug("Executing command " + builder.command());
+        Process p = builder.start();
+        p.waitFor();
+        
+        Response response = new Response();
+        response.out = getOutput(p);
+        response.err = getError(p);
+        response.exitValue = p.exitValue();
+        
+        return response;
     }
 
 //FIXME: duplicate code
