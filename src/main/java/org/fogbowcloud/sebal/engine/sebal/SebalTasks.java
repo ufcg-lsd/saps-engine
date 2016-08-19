@@ -74,7 +74,7 @@ public class SebalTasks {
 		String mkdirCommand = "mkdir -p "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		String mkdirRemotly = createCommandToRunRemotly(mkdirCommand);
-		rTaskImpl.addCommand(new Command(mkdirRemotly, Command.Type.PROLOGUE));
+		rTaskImpl.addCommand(new Command(mkdirRemotly, Command.Type.REMOTE));
 
 		// treating repository user private key
 		if (properties.getProperty("sebal_repository_user_private_key") != null) {
@@ -91,7 +91,7 @@ public class SebalTasks {
 					privateKeyFile.getAbsolutePath(), remotePrivateKeyPath);
 			LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 			rTaskImpl.addCommand(new Command(scpUploadCommand,
-					Command.Type.PROLOGUE));
+					Command.Type.LOCAL));
 		}
 
 		// creating r script for this image
@@ -106,7 +106,7 @@ public class SebalTasks {
 				localScriptFile.getAbsolutePath(), remoteScriptPath);
 		LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 		rTaskImpl.addCommand(new Command(scpUploadCommand,
-				Command.Type.PROLOGUE));
+				Command.Type.LOCAL));
 
 		// adding remote command
 		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);

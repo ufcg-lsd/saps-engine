@@ -16,10 +16,10 @@ import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
-
 public class SebalJob extends Job {
 
 	private ImageDataStore imageStore;
+	private Map<String, Task> taskList = new HashMap<String, Task>();
 	private Map<String, ImageState> pendingUpdates = new HashMap<String, ImageState>();
 	
 	public static final Logger LOGGER = Logger.getLogger(SebalJob.class);
@@ -32,8 +32,6 @@ public class SebalJob extends Job {
 	public void finish(Task task) {
 		LOGGER.debug("Moving task " + task.getId() + " from RUNNING to COMPLETED.");
 		task.finish();
-		this.tasksRunning.remove(task);
-		this.tasksCompleted.add(task);
 		
 		// check if all R tasks already ran for the image
 		if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.R_SCRIPT_PHASE)){
@@ -86,16 +84,7 @@ public class SebalJob extends Job {
 
 	@Override
 	public void fail(Task task) {
-		LOGGER.debug("Moving task " + task.getId() + " from RUNNING to FAILED.");
-		this.tasksRunning.remove(task);
-		this.tasksFailed.add(task);
-	}
-
-	@Override
-	public void run(Task task) {
-		LOGGER.debug("Moving task " + task.getId() + " from READY to RUNNING.");
-		tasksReady.remove(task);
-		tasksRunning.add(task);
+		LOGGER.debug("Task " + task.getId() + " FAILED.");
 	}
 
 	protected Map<String, ImageState> getPendingUpdates(){
@@ -105,17 +94,24 @@ public class SebalJob extends Job {
 	public List<Task> getTasksOfImageByState(String imageName, TaskState... taskStates) {
 		List<Task> allTasks = new ArrayList<Task>();
 		
-		for (TaskState taskState : taskStates) {
-			if (TaskState.READY.equals(taskState)) {
-				allTasks.addAll(tasksReady);
-			} else if (TaskState.RUNNING.equals(taskState)) {
-				allTasks.addAll(tasksRunning);
-			} else if (TaskState.FAILED.equals(taskState)) {
-				allTasks.addAll(tasksFailed);
-			} else if (TaskState.COMPLETED.equals(taskState)) {
-				allTasks.addAll(tasksCompleted);			
-			}			
+		for(Task task : this.taskList.values()) {
+			if(!task.isFinished() && !task.isFailed()) {
+				allTasks.add(task);
+			}
 		}
+
+//		Old:
+//		for (TaskState taskState : taskStates) {
+//			if (TaskState.READY.equals(taskState)) {
+//				allTasks.addAll(tasksReady);
+//			} else if (TaskState.RUNNING.equals(taskState)) {
+//				allTasks.addAll(tasksRunning);
+//			} else if (TaskState.FAILED.equals(taskState)) {
+//				allTasks.addAll(tasksFailed);
+//			} else if (TaskState.COMPLETED.equals(taskState)) {
+//				allTasks.addAll(tasksCompleted);			
+//			}			
+//		}
 		
 		List<Task> imageTasks = new LinkedList<Task>();		
 		for (Task task : allTasks) {
@@ -128,27 +124,19 @@ public class SebalJob extends Job {
 	}
 	
 	public Task getCompletedTask(String taskId){
-		for (Task task : this.tasksCompleted){
-			if (task.getId().equals(taskId)){
-				return task;
-			}
+		if(taskList.get(taskId).isFinished()) {
+				return taskList.get(taskId);
 		}
 		return null;
 	}
 	
-	public List<Task> getTasksByState(TaskState... taskStates) {
+	public List<Task> getAllCompletedTasks() {
 		List<Task> allTasks = new ArrayList<Task>();
 		
-		for (TaskState taskState : taskStates) {
-			if (TaskState.READY.equals(taskState)) {
-				allTasks.addAll(tasksReady);
-			} else if (TaskState.RUNNING.equals(taskState)) {
-				allTasks.addAll(tasksRunning);
-			} else if (TaskState.FAILED.equals(taskState)) {
-				allTasks.addAll(tasksFailed);
-			} else if (TaskState.COMPLETED.equals(taskState)) {
-				allTasks.addAll(tasksCompleted);			
-			}			
+		for (Task task : this.taskList.values()) {
+			if(task.isFinished()) {
+				allTasks.add(task);
+			}
 		}
 		return allTasks;
 	}

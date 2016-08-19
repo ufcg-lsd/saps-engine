@@ -1,5 +1,4 @@
 package org.fogbowcloud.sebal.engine.scheduler.restlet;
-import java.io.FileInputStream;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.HashMap;
@@ -7,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.fogbowcloud.blowout.scheduler.core.Scheduler;
 import org.fogbowcloud.blowout.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
@@ -17,7 +17,6 @@ import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.TaskResource;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
-import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.engine.swift.SwiftClient;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -32,12 +31,14 @@ public class SebalScheduleApplication extends Application {
 	private Properties properties;
 	private ImageDataStore imageDataStore;
 	private SwiftClient swiftClient;
+	private Scheduler scheduler;
 	
-	public SebalScheduleApplication(SebalJob job, ImageDataStore imageDataStore, Properties properties){
+	public SebalScheduleApplication(Scheduler scheduler, SebalJob job, ImageDataStore imageDataStore, Properties properties){
 		this.job = job;
 		this.properties = properties;
 		this.imageDataStore = imageDataStore;
 		this.swiftClient = new SwiftClient(properties);
+		this.scheduler = scheduler;
 	}
 	
 
@@ -81,18 +82,24 @@ public class SebalScheduleApplication extends Application {
 	public Map<Task, TaskState> getAllTaskByImage(String imageName){
 		
 		Map<Task, TaskState> tasks = new HashMap<Task, TaskState>();
-		for(Task t : job.getTasksOfImageByState(imageName, TaskState.READY)){
-			tasks.put(t, TaskState.READY);
+		for(Task t : job.getTasks().values()){
+			tasks.put(t, scheduler.inferTaskState(t));
 		}
-		for(Task t : job.getTasksOfImageByState(imageName, TaskState.RUNNING)){
-			tasks.put(t, TaskState.RUNNING);
-		}
-		for(Task t : job.getTasksOfImageByState(imageName, TaskState.COMPLETED)){
-			tasks.put(t, TaskState.COMPLETED);
-		}
-		for(Task t : job.getTasksOfImageByState(imageName, TaskState.FAILED)){
-			tasks.put(t, TaskState.FAILED);
-		}
+		
+//		Old:
+//
+//		for(Task t : job.getTasksOfImageByState(imageName, TaskState.READY)){
+//			tasks.put(t, TaskState.READY);
+//		}
+//		for(Task t : job.getTasksOfImageByState(imageName, TaskState.RUNNING)){
+//			tasks.put(t, TaskState.RUNNING);
+//		}
+//		for(Task t : job.getTasksOfImageByState(imageName, TaskState.COMPLETED)){
+//			tasks.put(t, TaskState.COMPLETED);
+//		}
+//		for(Task t : job.getTasksOfImageByState(imageName, TaskState.FAILED)){
+//			tasks.put(t, TaskState.FAILED);
+//		}
 		
 		return tasks;
 	}
@@ -120,7 +127,7 @@ public class SebalScheduleApplication extends Application {
 	}
 	
 	public List<Task> getAllCompletedTasks() {
-		return job.getTasksByState(TaskState.COMPLETED);
+		return job.getAllCompletedTasks();
 		
 	}
 	
@@ -129,19 +136,19 @@ public class SebalScheduleApplication extends Application {
 	}
 	
 	//This method is only for test propose 
-	public static void main(String[] args) throws Exception{
-		
-		final Properties properties = new Properties();
-		FileInputStream input = new FileInputStream("sebal.conf");
-		properties.load(input);
-		
-		String imageStoreIP = "127.0.0.1";
-		String imageStorePort = "5432";
-		
-		ImageDataStore imageStore = new JDBCImageDataStore(properties);
-		
-		SebalScheduleApplication sebalScheduleApplication = new SebalScheduleApplication(null, imageStore, properties);
-		sebalScheduleApplication.startServer();
-	}
+//	public static void main(String[] args) throws Exception{
+//		
+//		final Properties properties = new Properties();
+//		FileInputStream input = new FileInputStream("sebal.conf");
+//		properties.load(input);
+//		
+//		String imageStoreIP = "127.0.0.1";
+//		String imageStorePort = "5432";
+//		
+//		ImageDataStore imageStore = new JDBCImageDataStore(properties);
+//		
+//		SebalScheduleApplication sebalScheduleApplication = new SebalScheduleApplication(null, imageStore, properties);
+//		sebalScheduleApplication.startServer();
+//	}
 
 }
