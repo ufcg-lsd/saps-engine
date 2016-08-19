@@ -94,15 +94,19 @@ public class NASARepository {
 		nvps.add(new BasicNameValuePair("rememberMe", "0"));
 
 		homePost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+		
 		HttpResponse homePostResponse = httpClient.execute(homePost);
 		EntityUtils.toString(homePostResponse.getEntity());
 		return httpClient;
 	}
 
 	public Map<String, String> checkExistingImages(File imageListFile) throws ClientProtocolException, UnsupportedEncodingException, IOException {
+		LOGGER.debug("Image list file " + imageListFile);
+		
 		HttpClient httpClient = initClient();
 		String baseURL = "http://earthexplorer.usgs.gov";
 		HttpPost httpPost = new HttpPost(baseURL + "/filelist");
+		
 		HttpEntity reqEntity = MultipartEntityBuilder.create()
 				.addPart("filelistType", new StringBody("single", ContentType.TEXT_PLAIN))
 				.addPart("datasetSelection", new StringBody("3119", ContentType.TEXT_PLAIN))
@@ -112,15 +116,17 @@ public class NASARepository {
 				.addPart("multipleFileFormat", new StringBody("gv", ContentType.TEXT_PLAIN))
 				.build();
 
+		LOGGER.debug("httpPost " + httpPost.toString());
 		httpPost.setEntity(reqEntity);
 		HttpResponse httpPostResponse = httpClient.execute(httpPost);
 
+		LOGGER.debug("httpPostResponse " + httpPostResponse.toString());
 		Map<String, String> imageAndDownloadLink = new HashMap<String, String>();
 		if (httpPostResponse.getStatusLine().getStatusCode() == HttpStatus.SC_MOVED_TEMPORARILY) {
 			// selecting download option
 			String selectLocation = httpPostResponse.getFirstHeader("Location").getValue();			
 			
-			LOGGER.debug("BaseURL is " + baseURL + " and Location is " + selectLocation);
+			LOGGER.debug("BaseURL " + baseURL + " Location " + selectLocation);
 			httpPost = new HttpPost(baseURL + selectLocation);
 			
 			reqEntity = MultipartEntityBuilder
@@ -130,10 +136,12 @@ public class NASARepository {
 					.addPart("dlOptions_3119[]",
 							new StringBody("STANDARD", ContentType.TEXT_PLAIN)).build();
 			
-			LOGGER.debug("reqEntity is " + reqEntity.toString());
-
+			LOGGER.debug("httpPost " + httpPost.toString());
+			LOGGER.debug("reqEntity " + reqEntity.toString());
+						
 			httpPost.setEntity(reqEntity);
 			httpPostResponse = httpClient.execute(httpPost);
+			LOGGER.debug("httpPostResponse " + httpPostResponse.toString());
 
 			if (httpPostResponse.getStatusLine().getStatusCode() == HttpStatus.SC_MOVED_TEMPORARILY) {
 				String imagesLocation = httpPostResponse.getFirstHeader("Location")
