@@ -40,10 +40,10 @@ public class FMask {
 
 		if (p.exitValue() != 0) {
 			LOGGER.error("Error while running chmod +x command. Process exit value= " + String.valueOf(p.exitValue()) + " Message="
-					+ getError(p));
+					+ ProcessUtil.getError(p));
 		}
 		LOGGER.debug("exitValue=" + String.valueOf(p.exitValue()));
-		LOGGER.debug("chmod +x command output=" + getOutput(p));
+		LOGGER.debug("chmod +x command output=" + ProcessUtil.getOutput(p));
 
 		builder = new ProcessBuilder("bash", tempFile.getAbsolutePath());
 		p = builder.start();
@@ -51,42 +51,14 @@ public class FMask {
 
 		if (p.exitValue() != 0) {
 			LOGGER.error("Error while running fmask command. Process exit value= " + String.valueOf(p.exitValue()) + " Message="
-					+ getError(p));
+					+ ProcessUtil.getError(p));
 		}
 		LOGGER.debug("exitValue=" + String.valueOf(p.exitValue()));
-		LOGGER.debug("run-fmask command output=" + getOutput(p));
+		LOGGER.debug("run-fmask command output=" + ProcessUtil.getOutput(p));
 
 		return p.exitValue();
 	}
 
-	private static String getOutput(Process p) throws IOException {
-		BufferedReader r = new BufferedReader(new InputStreamReader(
-				p.getInputStream()));
-		String out = new String();
-		while (true) {
-			String line = r.readLine();
-			if (line == null) {
-				break;
-			}
-			out += line;
-		}
-		return out;
-	}
-
-	private static String getError(Process p) throws IOException {
-		BufferedReader r = new BufferedReader(new InputStreamReader(
-				p.getErrorStream()));
-		String error = new String();
-		while (true) {
-			String line = r.readLine();
-			if (line == null) {
-				break;
-			}
-			error += line;
-		}
-		return error;
-	}
-	
 	private String replaceVariables(String command, ImageData imageData, String fmaskToolsPath, String sebalExportPath) {
 		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
 				imageData.getName());

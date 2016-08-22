@@ -1,6 +1,8 @@
 package org.fogbowcloud.sebal.engine.sebal;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.Validate;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -26,34 +28,52 @@ public class USGSNasaRepository implements NASARepository {
 
     private static final Logger LOGGER = Logger.getLogger(USGSNasaRepository.class);
 
-
     private final String sebalExportPath;
 
     private final String usgsLoginUrl;
     private final String usgsUserName;
     private final String usgsPassword;
     private final String usgsCLIPath;
-    
+
+    //dataset
+    private static final String DATASET = "LANDSAT-5";
     // nodes
     private static final String EARTH_EXPLORER_NODE = "EE";
-    
     // products
     private static final String LEVEL_1_PRODUCT = "level-1";
 
-    //properties.getProperty("sebal_export_path")
+    public USGSNasaRepository(String sebalExportPath, String usgsLoginUrl, String usgsUserName,
+                              String usgsPassword, String usgsCLIPath) {
 
-    public USGSNasaRepository(String sebalExportPath, String usgsLoginUrl, String usgsUserName, String usgsPassword,
-                              String usgsCLIPath) {
 
-        //FIXME: check directory exists.
+        Validate.notNull(sebalExportPath, "sebalExportPath cannot be null");
+
+        Validate.notNull(usgsLoginUrl, "usgsLoginUrl cannot be null");
+        Validate.notNull(usgsUserName, "usgsUserName cannot be null");
+        Validate.notNull(usgsPassword, "usgsPassword cannot be null");
+        Validate.notNull(usgsCLIPath, "usgsCLIPath cannot be null");
+
         this.sebalExportPath = sebalExportPath;
-
-        //FIXME: check not null
         this.usgsLoginUrl = usgsLoginUrl;
         this.usgsUserName = usgsUserName;
         this.usgsPassword = usgsPassword;
-
         this.usgsCLIPath = usgsCLIPath;
+
+        Validate.isTrue(directoryExists(sebalExportPath),
+                "Sebal sebalExportPath directory " + sebalExportPath + "does not exist.");
+
+        Validate.isTrue(fileExists(usgsCLIPath),
+                "usgsCLIPath file " + usgsCLIPath + "does not exist.");
+    }
+
+    private boolean directoryExists(String path) {
+        File f = new File(path);
+        return (f.exists() && f.isDirectory());
+    }
+
+    private boolean fileExists(String path) {
+        File f = new File(path);
+        return (f.exists() && !f.isDirectory());
     }
 
     @Override
@@ -70,7 +90,7 @@ public class USGSNasaRepository implements NASARepository {
             //clean if already exists (garbage collection)
             File localImageFile = new File(localImageFilePath);
             if (localImageFile.exists()) {
-                LOGGER.info("File " + localImageFilePath + " already exists. Will remove it before repeat download");
+                LOGGER.info("File " + localImageFilePath + " already exists. Will be removed before repeating download");
                 localImageFile.delete();
             }
 
@@ -110,6 +130,8 @@ public class USGSNasaRepository implements NASARepository {
 
     private HttpClient initClient() throws IOException {
 
+        //FIXME: refactor no use usgs API
+
         BasicCookieStore cookieStore = new BasicCookieStore();
         HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
 
@@ -132,91 +154,98 @@ public class USGSNasaRepository implements NASARepository {
 
     @Override
     public Map<String, String> getDownloadLinks(File imageListFile) throws IOException {
-
-        //call python API
+        //FIXME: this will be removed from API after we get USGS working
         return null;
     }
 
-    private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) throws IOException, InterruptedException {
+    private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) {
 
-        //usgs download-url [dataset] [entity/scene id] --node [node] --product [product]
+        Map<String, String> links = new HashedMap();
 
-        //do_call
-        Response response = usgsDownloadURL(getDataSet(), getSceneId(), EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
-        if (response.exitValue != 0) {
-            //FIXME: catch this IOException
-			LOGGER.error("Error while running command\nProcess exit value = " + String.valueOf(response.exitValue)
-					+ " Message=" + response.err);
-        } else {        	
-        	response.err = "no_errors";
-			LOGGER.debug("Command successfully executed\nProcess exit value = "
-					+ String.valueOf(response.exitValue) + " Message="
-					+ response.out);
+        for(String imageName: imageNames) {
+            String link = doGetDownloadLink(imageName);
+            if (link != null) {
+                links.put(imageName, link);
+            }
         }
 
+        return links;
+    }
 
-        //generate map based on response.out
-        return null;
+    private String doGetDownloadLink(String imageName) {
+
+        String link = null;
+
+        try {
+            Response response = usgsDownloadURL(getDataSet(), imageName, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+
+            if (response.exitValue != 0) {
+                LOGGER.error("Error while running command. " + response);
+            } else {
+                LOGGER.debug("Command successfully executed. " + response);
+                link = response.out;
+            }
+        } catch (Throwable e) {
+            LOGGER.error("Error while running command", e) ;
+        }
+
+        return link;
     }
 
     private String getDataSet() {
-		// TODO returns the dataset based on image name
-		return null;
-	}
-
-	private String getSceneId() {
-		// TODO returns scene id based on image name
-		return null;
-	}
-
-	class Response {
-        public String out;
-        public String err;
-        public int exitValue;
+        return DATASET;
     }
 
-    protected Response usgsDownloadURL(String dataset, String sceneId, String node, String product) throws IOException,
-            InterruptedException {
-        //FIXME: log command lin
+    protected Response usgsDownloadURL(String dataset, String sceneId, String node, String product)
+            throws IOException, InterruptedException {
+
+        //usgs download-url [dataset] [entity/scene id] --node [node] --product [product]
+        //FIXME: is it possible to download a list of scenes at once?
+
         ProcessBuilder builder = new ProcessBuilder(this.usgsCLIPath, dataset, sceneId, "--" + node, "--" + product);
         LOGGER.debug("Executing command " + builder.command());
+
         Process p = builder.start();
         p.waitFor();
-        
-        Response response = new Response();
-        response.out = getOutput(p);
-        response.err = getError(p);
-        response.exitValue = p.exitValue();
-        
+
+        String output = ProcessUtil.getOutput(p);
+        String err = ProcessUtil.getError(p);
+
+        int exitValue = p.exitValue();
+
+        Response response = new Response(output, err, exitValue);
         return response;
     }
 
-//FIXME: duplicate code
-    private static String getOutput(Process p) throws IOException {
-        BufferedReader r = new BufferedReader(new InputStreamReader(
-                p.getInputStream()));
-        String out = new String();
-        while (true) {
-            String line = r.readLine();
-            if (line == null) {
-                break;
+    private class Response {
+
+        public String out;
+        public String err;
+        public int exitValue;
+
+        public Response(String out, String err, int exitValue) {
+
+            if (out == null) {
+                throw new IllegalArgumentException("out parameter cannot be null");
             }
-            out += line;
+
+            if (err == null) {
+                throw new IllegalArgumentException("err parameter cannot be null");
+            }
+
+            this.out = out;
+            this.err = err;
+            this.exitValue = exitValue;
         }
-        return out;
+
+        @Override
+        public String toString() {
+            return "Response{" +
+                    "out='" + out + '\'' +
+                    ", err='" + err + '\'' +
+                    ", exitValue=" + exitValue +
+                    '}';
+        }
     }
 
-    private static String getError(Process p) throws IOException {
-        BufferedReader r = new BufferedReader(new InputStreamReader(
-                p.getErrorStream()));
-        String error = new String();
-        while (true) {
-            String line = r.readLine();
-            if (line == null) {
-                break;
-            }
-            error += line;
-        }
-        return error;
-    }
 }
