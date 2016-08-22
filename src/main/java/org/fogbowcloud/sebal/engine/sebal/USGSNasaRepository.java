@@ -1,5 +1,6 @@
 package org.fogbowcloud.sebal.engine.sebal;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.http.HttpResponse;
@@ -34,6 +35,8 @@ public class USGSNasaRepository implements NASARepository {
     private final String usgsPassword;
     private final String usgsCLIPath;
 
+    //dataset
+    private static final String DATASET = "LANDSAT-5";
     // nodes
     private static final String EARTH_EXPLORER_NODE = "EE";
     // products
@@ -87,7 +90,7 @@ public class USGSNasaRepository implements NASARepository {
             //clean if already exists (garbage collection)
             File localImageFile = new File(localImageFilePath);
             if (localImageFile.exists()) {
-                LOGGER.info("File " + localImageFilePath + " already exists. Will remove it before repeat download");
+                LOGGER.info("File " + localImageFilePath + " already exists. Will be removed before repeating download");
                 localImageFile.delete();
             }
 
@@ -127,6 +130,8 @@ public class USGSNasaRepository implements NASARepository {
 
     private HttpClient initClient() throws IOException {
 
+        //FIXME: refactor no use usgs API
+
         BasicCookieStore cookieStore = new BasicCookieStore();
         HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
 
@@ -153,38 +158,49 @@ public class USGSNasaRepository implements NASARepository {
         return null;
     }
 
-    private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) throws IOException, InterruptedException {
+    private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) {
 
-        //do_call
-        Response response = usgsDownloadURL(getDataSet(), getSceneId(), EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
-        if (response.exitValue != 0) {
-            //FIXME: catch this IOException
-            LOGGER.error("Error while running command\nProcess exit value = "
-                    + String.valueOf(response.exitValue) + " Message=" + response.err);
-        } else {
-            response.err = "no_errors";
-            LOGGER.debug("Command successfully executed\nProcess exit value = "
-                    + String.valueOf(response.exitValue) + " Message=" + response.out);
+        Map<String, String> links = new HashedMap();
+
+        for(String imageName: imageNames) {
+            String link = doGetDownloadLink(imageName);
+            if (link != null) {
+                links.put(imageName, link);
+            }
         }
 
-        //generate map based on response.out
-        return null;
+        return links;
+    }
+
+    private String doGetDownloadLink(String imageName) {
+
+        String link = null;
+
+        try {
+            Response response = usgsDownloadURL(getDataSet(), imageName, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+
+            if (response.exitValue != 0) {
+                LOGGER.error("Error while running command. " + response);
+            } else {
+                LOGGER.debug("Command successfully executed. " + response);
+                link = response.out;
+            }
+        } catch (Throwable e) {
+            LOGGER.error("Error while running command", e) ;
+        }
+
+        return link;
     }
 
     private String getDataSet() {
-        // TODO returns the dataset based on image name
-        return null;
-    }
-
-    private String getSceneId() {
-        // TODO returns scene id based on image name
-        return null;
+        return DATASET;
     }
 
     protected Response usgsDownloadURL(String dataset, String sceneId, String node, String product)
             throws IOException, InterruptedException {
 
         //usgs download-url [dataset] [entity/scene id] --node [node] --product [product]
+        //FIXME: is it possible to download a list of scenes at once?
 
         ProcessBuilder builder = new ProcessBuilder(this.usgsCLIPath, dataset, sceneId, "--" + node, "--" + product);
         LOGGER.debug("Executing command " + builder.command());
@@ -220,6 +236,15 @@ public class USGSNasaRepository implements NASARepository {
             this.out = out;
             this.err = err;
             this.exitValue = exitValue;
+        }
+
+        @Override
+        public String toString() {
+            return "Response{" +
+                    "out='" + out + '\'' +
+                    ", err='" + err + '\'' +
+                    ", exitValue=" + exitValue +
+                    '}';
         }
     }
 
