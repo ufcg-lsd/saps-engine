@@ -73,8 +73,7 @@ public class SebalTasks {
 		// creating sandbox
 		String mkdirCommand = "mkdir -p "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
-		String mkdirRemotly = createCommandToRunRemotly(mkdirCommand);
-		rTaskImpl.addCommand(new Command(mkdirRemotly, Command.Type.REMOTE));
+		rTaskImpl.addCommand(new Command(mkdirCommand, Command.Type.REMOTE));
 
 		// treating repository user private key
 		if (properties.getProperty("sebal_repository_user_private_key") != null) {
@@ -118,8 +117,7 @@ public class SebalTasks {
 		// TODO: see if sudo will be really necessary here
 		String cleanEnvironment = "sudo rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
-		String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
-		rTaskImpl.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
+		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.EPILOGUE));
 
 //		FIXME: The following must copy out and err files generated from r script execution to Crawler VM
 //		FIXME: put in r.sh
@@ -142,10 +140,6 @@ public class SebalTasks {
 //				Command.Type.EPILOGUE));
 
 		return rTaskImpl;
-	}
-
-	private static String createCommandToRunRemotly(String command) {		
-		return "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $PRIVATE_KEY_FILE $SSH_USER@$HOST -p $SSH_PORT " + command;
 	}
 	
 	private static String createSCPDownloadCommand(String remoteFilePath, String localFilePath) {
