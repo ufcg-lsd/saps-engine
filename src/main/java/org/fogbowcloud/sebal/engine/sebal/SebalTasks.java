@@ -122,6 +122,7 @@ public class SebalTasks {
 		rTaskImpl.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
 
 //		FIXME: The following must copy out and err files generated from r script execution to Crawler VM
+//		FIXME: put in r.sh
 //		String scpDownloadCommand = createSCPDownloadCommand(
 //				METADATA_RESULTS_LOCAL_PATH + "/"
 //						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
@@ -194,8 +195,7 @@ public class SebalTasks {
 		FileInputStream fis = null;
 		try {
 			tempFile = File.createTempFile("temp-sebal-", ".sh");
-			fis = new FileInputStream(task.getMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR) + File.separator
-					+ props.getProperty("sebal_r_script_path"));
+			fis = new FileInputStream(props.getProperty("sebal_r_script_path"));
 			String origExec = IOUtils.toString(fis);
 			fos = new FileOutputStream(tempFile);
 			IOUtils.write(replaceVariables(props, task, origExec), fos);

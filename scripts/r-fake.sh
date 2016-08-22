@@ -98,6 +98,8 @@ function executeRScript {
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_G.nc"
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_LAI.nc"
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_NDVI.nc"
+  sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_Rn.nc"
+  sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_TS.nc"
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_new_alb.nc"
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_new_EF.nc"
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_new_ET24h.nc"
@@ -105,6 +107,8 @@ function executeRScript {
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_new_G.nc"
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_new_LAI.nc"
   sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_new_NDVI.nc"
+  sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_new_Rn.nc"
+  sudo touch ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_new_TS.nc"
   echo "Process finished!"
 
   echo "Renaming dados file"
@@ -127,11 +131,7 @@ function checkSum {
 
 # This function ends the script
 function finally {
-  # see if this rm will be necessary
-  #rm -r /tmp/Rtmp*
-  PROCESS_OUTPUT=$?
-
-  echo $PROCESS_OUTPUT > ${REMOTE_COMMAND_EXIT_PATH}
+  echo "0" > ${REMOTE_COMMAND_EXIT_PATH}
 }
 
 prepareDependencies
