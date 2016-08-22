@@ -115,28 +115,30 @@ public class SebalTasks {
 				Command.Type.REMOTE));
 		
 		// adding epilogue command
-		String cleanEnvironment = "rm -r "
+		// TODO: see if sudo will be really necessary here
+		String cleanEnvironment = "sudo rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		String remoteCleanEnv = createCommandToRunRemotly(cleanEnvironment);
 		rTaskImpl.addCommand(new Command(remoteCleanEnv, Command.Type.EPILOGUE));
 
-		String scpDownloadCommand = createSCPDownloadCommand(
-				METADATA_RESULTS_LOCAL_PATH + "/"
-						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
-				METADATA_VOLUME_EXPORT_PATH + "/results/"
-						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "/"
-						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_out");
-		rTaskImpl.addCommand(new Command(scpDownloadCommand,
-				Command.Type.EPILOGUE));
-
-		scpDownloadCommand = createSCPDownloadCommand(
-				METADATA_RESULTS_LOCAL_PATH + "/"
-						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
-				METADATA_VOLUME_EXPORT_PATH + "/results/"
-						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "/"
-						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_err");
-		rTaskImpl.addCommand(new Command(scpDownloadCommand,
-				Command.Type.EPILOGUE));
+//		FIXME: The following must copy out and err files generated from r script execution to Crawler VM
+//		String scpDownloadCommand = createSCPDownloadCommand(
+//				METADATA_RESULTS_LOCAL_PATH + "/"
+//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
+//				METADATA_VOLUME_EXPORT_PATH + "/results/"
+//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "/"
+//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_out");
+//		rTaskImpl.addCommand(new Command(scpDownloadCommand,
+//				Command.Type.EPILOGUE));
+//
+//		scpDownloadCommand = createSCPDownloadCommand(
+//				METADATA_RESULTS_LOCAL_PATH + "/"
+//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
+//				METADATA_VOLUME_EXPORT_PATH + "/results/"
+//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "/"
+//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_err");
+//		rTaskImpl.addCommand(new Command(scpDownloadCommand,
+//				Command.Type.EPILOGUE));
 
 		return rTaskImpl;
 	}
@@ -182,7 +184,7 @@ public class SebalTasks {
 		String outPath = pathToRemoteScript.getFileName().toString() + "." + "out";
 		String errPath = pathToRemoteScript.getFileName().toString() + "." + "err";
 		String execScriptCommand = "\"chmod +x " + remoteScript + "; nohup " + remoteScript
-				+ " > /tmp/" + outPath + " 2> /tmp/" + errPath + " &\"";
+				+ " >> /tmp/" + outPath + " 2>> /tmp/" + errPath + " &\"";
 		return execScriptCommand;
 	}
 
@@ -192,8 +194,8 @@ public class SebalTasks {
 		FileInputStream fis = null;
 		try {
 			tempFile = File.createTempFile("temp-sebal-", ".sh");
-			fis = new FileInputStream(task.getMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR) + "/"
-					+ "r.sh");
+			fis = new FileInputStream(task.getMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR) + File.separator
+					+ props.getProperty("sebal_r_script_path"));
 			String origExec = IOUtils.toString(fis);
 			fos = new FileOutputStream(tempFile);
 			IOUtils.write(replaceVariables(props, task, origExec), fos);

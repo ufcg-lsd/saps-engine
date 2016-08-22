@@ -33,10 +33,10 @@ public class SebalJob extends Job {
 		LOGGER.debug("Moving task " + task.getId() + " from RUNNING to COMPLETED.");
 		task.finish();
 		
-		// check if all R tasks already ran for the image
+		// check if all R task already ran for the image
 		if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.R_SCRIPT_PHASE)){
-			List<Task> readyOrRunningTasks = getTasksOfImageByState(
-					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME), TaskState.READY, TaskState.RUNNING);
+			List<Task> readyOrRunningTasks = getReadyOrRunningTasks(
+					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME));
 			
 			List<Task> rTasks = filterTaskByPhase(readyOrRunningTasks, SebalTasks.R_SCRIPT_PHASE);
 			LOGGER.debug("There is " + rTasks.size() + " tasks of image "
@@ -91,7 +91,7 @@ public class SebalJob extends Job {
 		return this.pendingUpdates;
 	}
 	
-	public List<Task> getTasksOfImageByState(String imageName, TaskState... taskStates) {
+	public List<Task> getReadyOrRunningTasks(String imageName) {
 		List<Task> allTasks = new ArrayList<Task>();
 		
 		for(Task task : this.taskList.values()) {
