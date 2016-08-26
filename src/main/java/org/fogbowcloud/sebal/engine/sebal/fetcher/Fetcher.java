@@ -242,6 +242,10 @@ public class Fetcher {
 				LOGGER.error("Error while adding state " + imageData.getState()
 						+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
 			}
+			
+			LOGGER.debug("Deleting local results file for "
+					+ imageData.getName());
+			deleteResultsFromDisk(imageData, properties);
 
 			fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB, pendingImageFetchMap);
 
@@ -342,16 +346,22 @@ public class Fetcher {
 	}
 
 	protected boolean uploadFilesToSwift(ImageData imageData, File localImageResultsDir) throws Exception {
+		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
+				
 		String pseudoFolder = getPseudoFolder(localImageResultsDir);
 		
 		String containerName = getContainerName();
 
 		for (File actualFile : localImageResultsDir.listFiles()) {
+			LOGGER.debug("Actual file " + actualFile.getName());
 			int uploadFileTries;
-			for (uploadFileTries = 0; uploadFileTries < MAX_SWIFT_UPLOAD_TRIES; uploadFileTries++) {
+			for (uploadFileTries = 0; uploadFileTries < MAX_SWIFT_UPLOAD_TRIES; uploadFileTries++) {				
 				try {
+					LOGGER.debug("Trying to upload file "
+							+ actualFile.getName() + " to " + pseudoFolder
+							+ " in " + containerName);
 					swiftClient.uploadFile(containerName, actualFile,
-							pseudoFolder);
+							pseudoFolder);					
 					break;
 				} catch (Exception e) {
 					LOGGER.error("Error while uploading files to swift", e);
@@ -366,6 +376,7 @@ public class Fetcher {
 			}
 		}
 		
+		LOGGER.info("Upload to swift succsessfully done");
 		return true;
 	}
 
