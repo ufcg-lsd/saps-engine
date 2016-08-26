@@ -34,6 +34,7 @@ REMOTE_VOMS_CERT_FOLDER=/home/fogbow/Dev/keys/cert/
 CONFIG_FILE=$SANDBOX_DIR/config/sebal.conf
 SPEC_FILE=$SANDBOX_DIR/config/crawlerSpec
 SCHEDULER_EXEC_INFO_FILE=$SANDBOX_DIR/scheduler/scheduler-info/scheduler-exec.info
+FETCHER_EXEC_INFO_FILE=$SANDBOX_DIR/fetcher/fetcher-info/fetcher-exec.info
 SEBAL_ENGINE_PKG_FILE=sebal-engine-pkg.tar.gz
 MANAGER_PKG_FILE=manager-pkg.tar.gz
 
@@ -230,6 +231,7 @@ function main() {
   INSTANCE_IP=$(echo $VM_CRAWLER_INFO | cut -d";" -f3 | cut -d"=" -f2)
   INSTANCE_PORT=$(echo $VM_CRAWLER_INFO | cut -d";" -f4 | cut -d"=" -f2)
   EXTRA_PORT=$(echo $VM_CRAWLER_INFO | cut -d";" -f5 | cut -d"=" -f2)
+  FETCHER_PUBLIC_KEY=$(cat $FETCHER_EXEC_INFO_FILE | cut -d";" -f6 | cut -d"=" -f2)
 
   echo "Checking if storage exists"
   storage_exists
@@ -255,6 +257,12 @@ function main() {
   mount_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/mount_partition.sh $STORAGE_COMMAND"
   ssh_to_crawler ${mount_cmd}
   sed -i "/CRAWLER_STORAGE_FORMATED=/ s/=.*/=YES/" $CRAWLER_EXECUTION_INFO
+
+  echo "Putting Fetcher public key into authorized keys"
+  auth_key_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/authorize_fetcher_key.sh $FETCHER_PUBLIC_KEY"
+  ssh_to_crawler ${auth_key_cmd}
+
+  # FIXME remember to put here a ftp install sh
 
   echo "Upload crawler packages"
   sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $LOCAL_REPOSITORY_PATH $SANDBOX_DIR
