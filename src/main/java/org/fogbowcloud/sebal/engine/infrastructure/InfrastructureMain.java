@@ -271,6 +271,8 @@ public class InfrastructureMain implements ResourceNotifier {
 		sb.append(SSH_PORT).append(resource.getMetadataValue(Resource.METADATA_SSH_PORT));
 		sb.append(DELIMITER);
 		sb.append(EXTRA_PORT).append(resource.getMetadataValue(Resource.METADATA_EXTRA_PORTS_ATT));
+		sb.append(DELIMITER);
+		sb.append(EXTRA_PORT).append(resource.getMetadataValue(Resource.METADATA_PUBLIC_KEY));
 		
 		return sb.toString();
 	}
