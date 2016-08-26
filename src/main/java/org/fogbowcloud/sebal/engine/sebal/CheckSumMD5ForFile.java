@@ -12,7 +12,7 @@ public class CheckSumMD5ForFile {
 	
 	public static final Logger LOGGER = Logger.getLogger(CheckSumMD5ForFile.class);
 
-	public static boolean isFileCorrupted(ImageData imageData, File localFilesDir) {
+	public static boolean isFileCorrupted(File localFilesDir) {
 		String localChecksum = null;
 		FileInputStream fileInputStream = null;
 		try {

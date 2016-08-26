@@ -21,6 +21,8 @@ public class FTPIntegrationImpl implements FTPIntegration{
 				+ ftpServerIP + ":" + ftpServerPort + " to "
 				+ localImageResultsPath + " in localhost");
 		
+		LOGGER.debug("Image " + imageData.getName());
+		
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash",
 				"scripts/sftp-access.sh",
 				properties.getProperty("ftp_server_user"), ftpServerIP,

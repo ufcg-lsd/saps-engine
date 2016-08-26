@@ -19,7 +19,7 @@ import org.mapdb.DB;
 
 public class FetcherHelper {
 
-	protected static final int NUMBER_OF_RESULT_FILES = 8;
+	protected static final int NUMBER_OF_RESULT_FILES = 9;
 
 	public static final Logger LOGGER = Logger.getLogger(FetcherHelper.class);
 	
@@ -117,8 +117,7 @@ public class FetcherHelper {
 			File localImageResultsDir) throws Exception {
 		LOGGER.info("Checksum of " + imageData + " result files");
 		if(isThereFetchedFiles(localImageResultsDir.getAbsolutePath())) {
-			if (CheckSumMD5ForFile.isFileCorrupted(imageData,
-					localImageResultsDir)) {
+			if (CheckSumMD5ForFile.isFileCorrupted(localImageResultsDir)) {
 				return false;
 			}
 		} else {

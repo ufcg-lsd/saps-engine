@@ -10,6 +10,7 @@ import java.io.IOException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,6 +56,15 @@ public class TestCheckSumMD5ForFile {
 		remoteChecksum = pieces[1];
 		
 		doReturn(true).when(localChecksum).equals(eq(remoteChecksum));
+	}
+	
+	@Test
+	public void testOutOfMemoryError() {
+		CheckSumMD5ForFile checkSumObject = new CheckSumMD5ForFile();
+		File fakeFilesDir = new File("/tmp/fake-files-md5");
+		
+		boolean isFileCorrupted = checkSumObject.isFileCorrupted(fakeFilesDir);
+		Assert.assertEquals(true, isFileCorrupted);
 	}
 
 }

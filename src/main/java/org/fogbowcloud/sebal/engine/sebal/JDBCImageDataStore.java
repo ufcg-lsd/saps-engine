@@ -243,11 +243,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
             updateStatement = connection.prepareStatement(UPDATE_IMAGE_STATE_SQL);
             updateStatement.setString(1, state.getValue());
-
-            String epoch = String.valueOf(System.currentTimeMillis());
-            updateStatement.setString(2, epoch);
-            updateStatement.setString(3, epoch);
-            updateStatement.setString(4, imageName);
+            updateStatement.setDate(2, new Date(Calendar.getInstance().getTimeInMillis()));
+            updateStatement.setString(3, imageName);
             updateStatement.execute();
         } finally {
             close(updateStatement, connection);
@@ -314,7 +311,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             updateStatement = connection.prepareStatement(UPDATE_IMAGE_METADATA_SQL);
             updateStatement.setString(1, stationId);
             updateStatement.setString(2, sebalVersion);
-            updateStatement.setString(3, String.valueOf(System.currentTimeMillis()));
+            updateStatement.setDate(3, new Date(Calendar.getInstance().getTimeInMillis()));
             updateStatement.setString(4, imageName);
             updateStatement.execute();
         } finally {
