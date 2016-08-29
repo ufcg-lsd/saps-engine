@@ -58,13 +58,13 @@ public class TestCheckSumMD5ForFile {
 		doReturn(true).when(localChecksum).equals(eq(remoteChecksum));
 	}
 	
-	@Test
-	public void testOutOfMemoryError() {
-		CheckSumMD5ForFile checkSumObject = new CheckSumMD5ForFile();
-		File fakeFilesDir = new File("/tmp/fake-files-md5");
-		
-		boolean isFileCorrupted = checkSumObject.isFileCorrupted(fakeFilesDir);
-		Assert.assertEquals(true, isFileCorrupted);
-	}
+//	@Test
+//	public void testOutOfMemoryError() {
+//		CheckSumMD5ForFile checkSumObject = new CheckSumMD5ForFile();
+//		File fakeFilesDir = new File("/tmp/fake-files-md5");
+//		
+//		boolean isFileCorrupted = checkSumObject.isFileCorrupted(fakeFilesDir);
+//		Assert.assertEquals(true, isFileCorrupted);
+//	}
 
 }

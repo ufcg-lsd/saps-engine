@@ -26,12 +26,14 @@ public class DBUtilsImpl implements DBUtils {
 
     private final JDBCImageDataStore imageStore;
     private DefaultNASARepository nasaRepository;
+    private USGSNasaRepository usgsRepository;
     private Properties properties;
 
     public DBUtilsImpl(Properties properties) throws SQLException {
         this.properties = properties;
         this.imageStore = new JDBCImageDataStore(this.properties);
         this.nasaRepository = new DefaultNASARepository(properties);
+		this.usgsRepository = new USGSNasaRepository(properties);
     }
 
     @Override
@@ -122,8 +124,7 @@ public class DBUtilsImpl implements DBUtils {
                 FileUtils.write(imageListFile, imageList);
 
                 LOGGER.debug("Getting download links of images from " + imageListFile.getAbsolutePath());
-                Map<String, String> imageAndDownloadLink = getNasaRepository()
-                        .getDownloadLinks(imageListFile);
+                Map<String, String> imageAndDownloadLink = getUSGSRepository().getDownloadLinks(imageListFile);
 
                 imageListFile.delete();
 
@@ -161,6 +162,14 @@ public class DBUtilsImpl implements DBUtils {
 
     protected DefaultNASARepository getNasaRepository() {
         return nasaRepository;
+    }
+    
+    protected void setUSGSRepository(USGSNasaRepository usgsRepository) {
+    	this.usgsRepository = usgsRepository;
+    }
+    
+    protected USGSNasaRepository getUSGSRepository() {
+    	return usgsRepository;
     }
 
     public static String getImageRegionFromName(String imageName) {

@@ -1,6 +1,8 @@
 package org.fogbowcloud.sebal.engine.sebal;
 
 import org.apache.commons.collections.map.HashedMap;
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.http.HttpResponse;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Created by manel on 18/08/16.
@@ -36,15 +39,29 @@ public class USGSNasaRepository implements NASARepository {
     private final String usgsCLIPath;
 
     //dataset
-    private static final String DATASET = "LANDSAT-5";
+    private static final String DATASET = "LANDSAT_TM";
     // nodes
     private static final String EARTH_EXPLORER_NODE = "EE";
     // products
-    private static final String LEVEL_1_PRODUCT = "level-1";
+    private static final String LEVEL_1_PRODUCT = "STANDARD";
+    
+    // conf constants
+    private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
+    private static final String USGS_LOGIN_URL = "nasa_login_url";
+    private static final String USGS_USERNAME = "usgs_username";
+    private static final String USGS_PASSWORD = "usgs_password";
+    private static final String USGS_CLI_PATH = "usgs_cli_path";
+    
+    public USGSNasaRepository(Properties properties) {
+		this(properties.getProperty(SEBAL_EXPORT_PATH), properties
+				.getProperty(USGS_LOGIN_URL), properties
+				.getProperty(USGS_USERNAME), properties
+				.getProperty(USGS_PASSWORD), properties
+				.getProperty(USGS_CLI_PATH));
+    }
 
-    public USGSNasaRepository(String sebalExportPath, String usgsLoginUrl, String usgsUserName,
+    protected USGSNasaRepository(String sebalExportPath, String usgsLoginUrl, String usgsUserName,
                               String usgsPassword, String usgsCLIPath) {
-
 
         Validate.notNull(sebalExportPath, "sebalExportPath cannot be null");
 
@@ -103,11 +120,11 @@ public class USGSNasaRepository implements NASARepository {
         }
     }
 
-    private String imageFilePath(ImageData imageData, String imageDirPath) {
+    protected String imageFilePath(ImageData imageData, String imageDirPath) {
         return imageDirPath + File.separator + imageData.getName() + ".tar.gz";
     }
 
-    private String imageDirPath(ImageData imageData) {
+    protected String imageDirPath(ImageData imageData) {
         return sebalExportPath + File.separator + "images" + File.separator + imageData.getName();
     }
 
@@ -119,11 +136,12 @@ public class USGSNasaRepository implements NASARepository {
         HttpResponse response = httpClient.execute(homeGet);
 
         OutputStream outStream = new FileOutputStream(targetFile);
-        IOUtils.copy(response.getEntity().getContent(), outStream);
-        outStream.close();
+		IOUtils.copy(response.getEntity().getContent(), outStream);
+		outStream.close();
+        
     }
 
-    private boolean createDirectoryToImage(String imageDirPath) {
+    protected boolean createDirectoryToImage(String imageDirPath) {
         File imageDir = new File(imageDirPath);
         return imageDir.mkdirs();
     }
@@ -155,7 +173,9 @@ public class USGSNasaRepository implements NASARepository {
     @Override
     public Map<String, String> getDownloadLinks(File imageListFile) throws IOException {
         //FIXME: this will be removed from API after we get USGS working
-        return null;
+    	//FIXME: see if Charsets import is correct
+    	Collection<String> imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
+        return doGetDownloadLinks(imageNames);
     }
 
     private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) {

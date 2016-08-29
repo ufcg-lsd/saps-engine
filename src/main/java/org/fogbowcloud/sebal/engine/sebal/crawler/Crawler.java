@@ -23,7 +23,7 @@ public class Crawler {
 	protected static final String FMASK_TOOL_PATH = "fmask_tool_path";
 	protected static final String FMASK_SCRIPT_PATH = "fmask_script_path";
 	private final Properties properties;
-	private NASARepository nasaRepository;
+	private USGSNasaRepository usgsRepository;
 	private final ImageDataStore imageStore;
 	private File pendingImageDownloadFile;
 	protected DB pendingImageDownloadDB;
@@ -40,7 +40,7 @@ public class Crawler {
 	public Crawler(Properties properties, String imageStoreIP,
 			String imageStorePort, String federationMember) throws SQLException {
 
-		this(properties, new JDBCImageDataStore(properties), new DefaultNASARepository(properties),
+		this(properties, new JDBCImageDataStore(properties), new USGSNasaRepository(properties),
 				federationMember, new FMask());
 
 		LOGGER.info("Creating crawler");
@@ -49,7 +49,7 @@ public class Crawler {
 	}
 
 	protected Crawler(Properties properties, ImageDataStore imageStore,
-					  NASARepository nasaRepository, String federationMember, FMask fmask) {
+					  USGSNasaRepository usgsRepository, String federationMember, FMask fmask) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
@@ -61,9 +61,9 @@ public class Crawler {
 					"Imagestore arg must not be null.");
 		}
 
-		if (nasaRepository == null) {
+		if (usgsRepository == null) {
 			throw new IllegalArgumentException(
-					"NASARepository arg must not be null.");
+					"USGSRepository arg must not be null.");
 		}
 
 		if (federationMember == null) {
@@ -82,7 +82,7 @@ public class Crawler {
 
 		this.properties = properties;
 		this.imageStore = imageStore;
-		this.nasaRepository = nasaRepository;
+		this.usgsRepository = usgsRepository;
 		this.federationMember = federationMember;
 		this.fmask = fmask;
 
@@ -208,7 +208,7 @@ public class Crawler {
 			throws SQLException, IOException {
 
 		try {
-			nasaRepository.downloadImage(imageData);
+			usgsRepository.downloadImage(imageData);
 
 			// running Fmask
 			// TODO: insert source .profile before fmask execution
