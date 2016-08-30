@@ -52,6 +52,8 @@ public class USGSNasaRepository implements NASARepository {
     private static final String USGS_PASSWORD = "usgs_password";
     private static final String USGS_CLI_PATH = "usgs_cli_path";
     
+    private static final int MAX_LOGIN_TRIES = 2;
+    
     public USGSNasaRepository(Properties properties) {
 		this(properties.getProperty(SEBAL_EXPORT_PATH), properties
 				.getProperty(USGS_LOGIN_URL), properties
@@ -178,21 +180,55 @@ public class USGSNasaRepository implements NASARepository {
         return doGetDownloadLinks(imageNames);
     }
 
-    private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) {
+	private Map<String, String> doGetDownloadLinks(Collection<String> imageNames) {
 
-        Map<String, String> links = new HashedMap();
+		Map<String, String> links = new HashedMap();
+		
+		if (doLoginIntoUSGS() == 0) {
+			for (String imageName : imageNames) {
+				String link = doGetDownloadLink(imageName);
+				if (link != null && !link.isEmpty()) {
+					links.put(imageName, link);
+				}
+			}
+		} else {			
+			LOGGER.error("Error while logging in USGS Repository");
+		}
 
-        for(String imageName: imageNames) {
-            String link = doGetDownloadLink(imageName);
-            if (link != null) {
-                links.put(imageName, link);
-            }
+		return links;
+	}
+
+    private int doLoginIntoUSGS() {
+
+    	Response loginResponse = null;
+    	
+        try {
+        	loginResponse = loginUSGSRepository(usgsUserName, usgsPassword);
+        } catch(Throwable e) {
+        	LOGGER.error("Error while running login command", e);
+        	LOGGER.debug("Error response was " + loginResponse.err);
         }
+        
+        return loginResponse.exitValue;
+	}
 
-        return links;
-    }
+	private Response loginUSGSRepository(String usgsUserName, String usgsPassword) throws IOException, InterruptedException {
+    	ProcessBuilder builder = new ProcessBuilder("usgs", "login", usgsUserName, usgsPassword);        
+        LOGGER.debug("Executing command " + builder.command());
+        
+        Process p = builder.start();
+        p.waitFor();
+        
+        String loginOutput = ProcessUtil.getOutput(p);
+        String loginErr = ProcessUtil.getError(p);
+        
+        int exitValue = p.exitValue();
 
-    private String doGetDownloadLink(String imageName) {
+        Response loginResponse = new Response(loginOutput, loginErr, exitValue);
+        return loginResponse;
+	}
+
+	private String doGetDownloadLink(String imageName) {
 
         String link = null;
 
@@ -206,7 +242,7 @@ public class USGSNasaRepository implements NASARepository {
                 link = response.out;
             }
         } catch (Throwable e) {
-            LOGGER.error("Error while running command", e) ;
+            LOGGER.error("Error while running command", e);
         }
 
         return link;
@@ -220,21 +256,22 @@ public class USGSNasaRepository implements NASARepository {
             throws IOException, InterruptedException {
 
         //usgs download-url [dataset] [entity/scene id] --node [node] --product [product]
-        //FIXME: is it possible to download a list of scenes at once?
-
-        ProcessBuilder builder = new ProcessBuilder(this.usgsCLIPath, dataset, sceneId, "--" + node, "--" + product);
+        //FIXME: is it possible to download a list of scenes at once?    
+        
+        // GET DOWNLOAD LINKS
+        ProcessBuilder builder = new ProcessBuilder("usgs", "download-url", dataset, sceneId, "--node", node, "--product", product);        
         LOGGER.debug("Executing command " + builder.command());
 
         Process p = builder.start();
         p.waitFor();
 
-        String output = ProcessUtil.getOutput(p);
-        String err = ProcessUtil.getError(p);
+        String getDownloadUrlOutput = ProcessUtil.getOutput(p);
+        String getDownloadUrlErr = ProcessUtil.getError(p);
 
         int exitValue = p.exitValue();
 
-        Response response = new Response(output, err, exitValue);
-        return response;
+        Response getDownloadUrlResponse = new Response(getDownloadUrlOutput, getDownloadUrlErr, exitValue);
+        return getDownloadUrlResponse;
     }
 
     private class Response {
