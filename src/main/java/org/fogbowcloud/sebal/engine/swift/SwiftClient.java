@@ -86,6 +86,29 @@ public class SwiftClient {
 		return storedObject.downloadObject();
 
 	}
+	
+	// TODO: review
+	public void deleteFile(String containerName, String fileName,
+			String pseudFolder) {
+		LOGGER.debug("fileName " + fileName);
+		LOGGER.debug("containerName " + containerName);
+		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
+		
+		Container container = account.getContainer(containerName);
+
+		String completeFileName;
+		if (pseudFolder != null && !pseudFolder.isEmpty()) {
+			pseudFolder = this.normalizePseudFolder(pseudFolder);
+			LOGGER.debug("Pseudo folder " + pseudFolder + " after normalize");
+			
+			completeFileName = pseudFolder + fileName;
+		} else {
+			completeFileName = fileName;
+		}
+		
+		LOGGER.debug("Complete file name " + completeFileName);
+		container.getObject(completeFileName).delete();
+	}
 
 	private String normalizePseudFolder(String value) {
 		StringBuilder normalizedPath = new StringBuilder();
