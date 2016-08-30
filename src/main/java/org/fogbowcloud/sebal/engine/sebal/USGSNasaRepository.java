@@ -1,5 +1,15 @@
 package org.fogbowcloud.sebal.engine.sebal;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -16,13 +26,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * Created by manel on 18/08/16.
@@ -85,11 +88,6 @@ public class USGSNasaRepository implements NASARepository {
     private boolean directoryExists(String path) {
         File f = new File(path);
         return (f.exists() && f.isDirectory());
-    }
-
-    private boolean fileExists(String path) {
-        File f = new File(path);
-        return (f.exists() && !f.isDirectory());
     }
 
     @Override
