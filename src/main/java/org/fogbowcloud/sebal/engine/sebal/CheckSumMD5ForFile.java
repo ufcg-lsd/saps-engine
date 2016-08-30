@@ -41,14 +41,17 @@ public class CheckSumMD5ForFile {
 										+ " is corrupted or present some error");
 							}
 						}
-					}					
+					}
+					
+					fileInputStream.close();
 				}
 			}
 		} catch (IOException e) {
 			LOGGER.error(e);
 			return true;
 		} finally {
-			IOUtils.closeQuietly(fileInputStream);
+			// TODO: See if this will reamain commented
+			//IOUtils.closeQuietly(fileInputStream);
 		}
 		
 		LOGGER.info("Files are not corrupted!");
