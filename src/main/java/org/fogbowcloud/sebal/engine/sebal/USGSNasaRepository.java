@@ -80,9 +80,6 @@ public class USGSNasaRepository implements NASARepository {
 
         Validate.isTrue(directoryExists(sebalExportPath),
                 "Sebal sebalExportPath directory " + sebalExportPath + "does not exist.");
-
-        Validate.isTrue(fileExists(usgsCLIPath),
-                "usgsCLIPath file " + usgsCLIPath + "does not exist.");
     }
 
     private boolean directoryExists(String path) {
