@@ -213,7 +213,7 @@ public class USGSNasaRepository implements NASARepository {
 	}
 
 	private Response loginUSGSRepository(String usgsUserName, String usgsPassword) throws IOException, InterruptedException {
-    	ProcessBuilder builder = new ProcessBuilder("usgs", "login", usgsUserName, usgsPassword);        
+    	ProcessBuilder builder = new ProcessBuilder(this.usgsCLIPath, "login", usgsUserName, usgsPassword);        
         LOGGER.debug("Executing command " + builder.command());
         
         Process p = builder.start();
@@ -259,7 +259,7 @@ public class USGSNasaRepository implements NASARepository {
         //FIXME: is it possible to download a list of scenes at once?    
         
         // GET DOWNLOAD LINKS
-        ProcessBuilder builder = new ProcessBuilder("usgs", "download-url", dataset, sceneId, "--node", node, "--product", product);        
+        ProcessBuilder builder = new ProcessBuilder(this.usgsCLIPath, "download-url", dataset, sceneId, "--node", node, "--product", product);        
         LOGGER.debug("Executing command " + builder.command());
 
         Process p = builder.start();
