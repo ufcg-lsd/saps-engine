@@ -1,32 +1,38 @@
 package org.fogbowcloud.sebal.engine.sebal.fetcher;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
-import org.fogbowcloud.sebal.engine.sebal.fetcher.FTPIntegrationImpl;
-import org.fogbowcloud.sebal.engine.sebal.fetcher.Fetcher;
-import org.fogbowcloud.sebal.engine.sebal.fetcher.FetcherHelper;
 import org.fogbowcloud.sebal.engine.swift.SwiftClient;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mapdb.DB;
 import org.mockito.Mockito;
 
 public class TestFetcherIntegration {
+	
+	@Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
 	@Before
 	public void clean() {
@@ -494,7 +500,64 @@ public class TestFetcherIntegration {
 		// expect
 		Assert.assertEquals("VERSION", sebalVersion);
 		
-		File file = new File("SEBAL.version.VERSION");		
+		File file = new File("SEBAL.version.VERSION");
 		file.delete();
+	}
+	
+	@Test
+	// TODO: run this test
+	public void testDeleteFilesFromSwift() throws Exception {
+		// setup
+		Properties properties = new Properties();
+		FileInputStream input = new FileInputStream("config/sebal.conf");
+		properties.load(input);
+		
+		SwiftClient swiftClient = new SwiftClient(properties);
+		
+		File tempFile1 = folder.newFile("file1.nc");
+		File tempFile2 = folder.newFile("file2.nc");
+		
+		FileInputStream file1InputStream = new FileInputStream(tempFile1);
+		FileInputStream file2InputStream = new FileInputStream(tempFile2);
+		
+		String checkSum1 = DigestUtils.md5Hex(IOUtils
+				.toByteArray(file1InputStream));
+		String checkSum2 = DigestUtils.md5Hex(IOUtils
+				.toByteArray(file2InputStream));
+		
+		file1InputStream.close();
+		file2InputStream.close();
+		
+		folder.newFile(tempFile1.getName() + "." + checkSum1 + ".md5");
+		folder.newFile(tempFile2.getName() + "." + checkSum2 + ".md5");
+		
+		String containerName = "container-test";
+		String pseudFolder = "test/images";
+		
+		swiftClient.createContainer(containerName);
+		
+		swiftClient.uploadFile(containerName, tempFile1, pseudFolder);
+		swiftClient.uploadFile(containerName, tempFile2, pseudFolder);
+		
+		ImageData imageData1 = new ImageData(tempFile1.getName(), "",
+				ImageState.FETCHED, "", 0, "", "", "", "", new Date(Calendar
+						.getInstance().getTimeInMillis()), new Date(Calendar
+						.getInstance().getTimeInMillis()), "");
+		ImageData imageData2 = new ImageData(tempFile2.getName(), "",
+				ImageState.FETCHED, "", 0, "", "", "", "", new Date(Calendar
+						.getInstance().getTimeInMillis()), new Date(Calendar
+						.getInstance().getTimeInMillis()), "");
+		
+		Fetcher fetcher = Mockito.mock(Fetcher.class);			
+		
+		// exercise
+		fetcher.deleteFilesFromSwift(imageData1, properties);
+		fetcher.deleteFilesFromSwift(imageData2, properties);
+		
+		// expect
+		Assert.assertTrue(swiftClient.isContainerEmpty(containerName));
+		
+		// clean environment
+		swiftClient.deleteContainer(containerName);
 	}
 }

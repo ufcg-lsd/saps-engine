@@ -392,7 +392,6 @@ public class Fetcher {
 	protected boolean deleteFilesFromSwift(ImageData imageData, Properties properties) throws Exception {
 		LOGGER.debug("Deleting " + imageData + " files from swift");
 		String containerName = getContainerName();
-		String pseudFolder = properties.getProperty("swift_pseud_folder");
 		String keystoneToken = generateToken();
 		
 		// TODO: test this

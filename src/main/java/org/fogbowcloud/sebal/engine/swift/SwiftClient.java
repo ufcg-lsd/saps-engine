@@ -35,6 +35,61 @@ public class SwiftClient {
 		account = new AccountFactory(config).createAccount();
 
 	}
+	
+	public void createContainer(String containerName) {
+		try {
+			LOGGER.debug("containerName " + containerName);
+			Container container = account.getContainer(containerName);
+			
+			if(!container.exists()) {
+				LOGGER.debug("Creating container " + containerName);
+				container.create();
+			} else {
+				LOGGER.debug("Container " + containerName + " already exist");
+				// TODO: see how to deal with this
+			}
+		} catch(Exception e) {
+			LOGGER.error(e);
+		}
+	}
+	
+	public void deleteContainer(String containerName) {
+		try {
+			LOGGER.debug("containerName " + containerName);
+			Container container = account.getContainer(containerName);
+			
+			if(container.exists()) {
+				LOGGER.debug("Deleting container " + containerName);
+				container.delete();
+			} else {
+				LOGGER.debug("Container " + containerName + " does not exist");
+				// TODO: see how to deal with this
+			}
+		} catch(Exception e) {
+			LOGGER.error(e);
+		}
+	}
+	
+	public boolean isContainerEmpty(String containerName) {
+		try {
+			LOGGER.debug("containerName " + containerName);
+			Container container = account.getContainer(containerName);
+			
+			if(container.exists()) {
+				LOGGER.debug("Deleting container " + containerName);
+				if(container.getBytesUsed() <= 0) {
+					return true;
+				}
+			} else {
+				LOGGER.debug("Container " + containerName + " does not exist");
+				return false;
+			}
+		} catch(Exception e) {
+			LOGGER.error(e);
+		}
+		
+		return false;
+	}
 
 	public void uploadFile(String containerName, File file, String pseudoFolder)
 			throws Exception {
