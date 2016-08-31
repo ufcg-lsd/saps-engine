@@ -408,14 +408,15 @@ public class Fetcher {
         String output = ProcessUtil.getOutput(p);
         
         // TODO: test this
+        // each file has complete path
+        // ex.: fetcher/images/image_name/file.nc
         List<String> fileNames = getOutputLinesIntoList(output);
         
         for(String file : fileNames) {
 			if (file.contains(imageData.getName())) {
 				try {
-					LOGGER.debug("Trying to delete file " + file + " from "
-							+ pseudFolder + " in " + containerName);
-					swiftClient.deleteFile(containerName, file, pseudFolder);
+					LOGGER.debug("Trying to delete file " + file + " from " + containerName);
+					swiftClient.deleteFile(containerName, file);
 				} catch (Exception e) {
 					LOGGER.error("Error while deleting files to swift", e);
 					return false;

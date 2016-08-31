@@ -88,26 +88,16 @@ public class SwiftClient {
 	}
 	
 	// TODO: review
-	public void deleteFile(String containerName, String fileName,
-			String pseudFolder) {
+	public void deleteFile(String containerName, String fileName) {
 		LOGGER.debug("fileName " + fileName);
 		LOGGER.debug("containerName " + containerName);
-		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
 		
 		Container container = account.getContainer(containerName);
-
-		String completeFileName;
-		if (pseudFolder != null && !pseudFolder.isEmpty()) {
-			pseudFolder = this.normalizePseudFolder(pseudFolder);
-			LOGGER.debug("Pseudo folder " + pseudFolder + " after normalize");
-			
-			completeFileName = pseudFolder + fileName;
-		} else {
-			completeFileName = fileName;
-		}
 		
-		LOGGER.debug("Complete file name " + completeFileName);
-		container.getObject(completeFileName).delete();
+		LOGGER.debug("Complete file name " + fileName);
+		container.getObject(fileName).delete();
+		
+		LOGGER.debug("Object " + fileName + " deleted successfully");
 	}
 
 	private String normalizePseudFolder(String value) {
