@@ -10,7 +10,6 @@ import java.io.IOException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,12 +58,32 @@ public class TestCheckSumMD5ForFile {
 	}
 	
 //	@Test
-//	public void testOutOfMemoryError() {
-//		CheckSumMD5ForFile checkSumObject = new CheckSumMD5ForFile();
-//		File fakeFilesDir = new File("/tmp/fake-files-md5");
+//	public void testOutOfMemoryError() throws IOException {
+//		// setup				
+//		File tempFile1 = folder.newFile("file1.nc");
+//		File tempFile2 = folder.newFile("file2.nc");
 //		
-//		boolean isFileCorrupted = checkSumObject.isFileCorrupted(fakeFilesDir);
-//		Assert.assertEquals(true, isFileCorrupted);
+//		FileInputStream file1InputStream = new FileInputStream(tempFile1);
+//		FileInputStream file2InputStream = new FileInputStream(tempFile2);
+//		
+//		String checkSum1 = DigestUtils.md5Hex(IOUtils
+//				.toByteArray(file1InputStream));
+//		String checkSum2 = DigestUtils.md5Hex(IOUtils
+//				.toByteArray(file2InputStream));
+//		
+//		file1InputStream.close();
+//		file2InputStream.close();
+//		
+//		folder.newFile(tempFile1.getName() + checkSum1 + ".md5");
+//		folder.newFile(tempFile2.getName() + checkSum2 + ".md5");
+//		
+//		// exercise
+//		boolean isFile1Corrupted = CheckSumMD5ForFile.isFileCorrupted(tempFile1);
+//		boolean isFile2Corrupted = CheckSumMD5ForFile.isFileCorrupted(tempFile2);
+//		
+//		// expect
+//		Assert.assertEquals(false, isFile1Corrupted);
+//		Assert.assertEquals(false, isFile2Corrupted);
 //	}
 
 }
