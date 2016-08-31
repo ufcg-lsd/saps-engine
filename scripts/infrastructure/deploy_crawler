@@ -4,13 +4,14 @@
 
 #FIXME add classpath and class names to constants
 
-if [[ $# -ne 2 ]]; then
-  echo "Usage:" $0 "path/to/private_key storage_size"
+if [[ $# -ne 3 ]]; then
+  echo "Usage:" $0 "path/to/private_key storage_size federation_member"
   exit 1
 fi
 
 PRIVATE_KEY_FILE=$1
 STORAGE_SIZE=$2
+FEDERATION_MEMBER=$3
 
 if [[ ! -f "${PRIVATE_KEY_FILE}" ]]; then
   echo $PRIVATE_KEY_FILE "is not a regular file or does not exist"
@@ -216,7 +217,7 @@ function execute_crawler_app() {
   DB_INSTANCE_IP=$(sed -n 3p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
   DB_PORT=$(sed -n 8p $SCHEDULER_EXEC_INFO_FILE | cut -d"=" -f2)
 
-  crawlerapp_cmd="sudo sh $SANDBOX_DIR/scripts/cli/crawler $DB_INSTANCE_IP $DB_PORT"
+  crawlerapp_cmd="sudo sh $SANDBOX_DIR/scripts/cli/crawler $DB_INSTANCE_IP $DB_PORT $FEDERATION_MEMBER"
   ssh_to_crawler ${crawlerapp_cmd}
 }
 
@@ -261,6 +262,10 @@ function main() {
   echo "Putting Fetcher public key into authorized keys"
   auth_key_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/authorize_fetcher_key.sh $FETCHER_PUBLIC_KEY"
   ssh_to_crawler ${auth_key_cmd}
+
+  echo "Installing USGS API in Crawler VM"
+  usgs_install_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/install_usgs_api.sh"
+  ssh_to_crawler ${usgs_install_cmd}
 
   # FIXME remember to put here a ftp install sh
 

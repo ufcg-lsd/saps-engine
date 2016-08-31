@@ -31,6 +31,7 @@ SCHEDULER_EXEC_INFO_FILE=$SANDBOX_DIR/scheduler/scheduler-info/scheduler-exec.in
 CRAWLER_EXEC_INFO_FILE=$SANDBOX_DIR/crawler/crawler-info/crawler-exec.info
 SEBAL_ENGINE_PKG_FILE=sebal-engine-pkg.tar.gz
 MANAGER_PKG_FILE=manager-pkg.tar.gz
+FOGBOW_CLI_PKG_FILE=fogbow-cli-pkg.tar.gz
 
 LOG4J=$SANDBOX_DIR/config/log4j.properties
 if [[ -f ${LOG4J} ]]; then
@@ -149,12 +150,18 @@ function main() {
   echo "Changing VM timezone"
   timezone_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/change_timezone.sh"
   ssh_to_fetcher ${timezone_cmd}
+
+  echo "Installing Openstack Swift CLI"
+  swift_cli_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/install_swift_cli.sh"
+  ssh_to_fetcher ${swift_cli_cmd}
   
   echo "Upload fetcher packages"
   sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_sebal_engine_repository.sh $LOCAL_REPOSITORY_PATH $SANDBOX_DIR
   sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_manager_repository.sh $LOCAL_REPOSITORY_PATH
+  sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/pack_fogbow_cli_repository.sh $LOCAL_REPOSITORY_PATH $SANDBOX_DIR
   scp_to_fetcher $LOCAL_REPOSITORY_PATH/$SEBAL_ENGINE_PKG_FILE $REMOTE_REPOSITORY_PATH
   scp_to_fetcher $LOCAL_REPOSITORY_PATH/$MANAGER_PKG_FILE $REMOTE_REPOSITORY_PATH
+  scp_to_fetcher $LOCAL_REPOSITORY_PATH/$FOGBOW_CLI_PKG_FILE $REMOTE_REPOSITORY_PATH
 
   echo "Upload certificates"
   LOCAL_FILE_PATH="$VOMS_CERT_FOLDER/$VOMS_CERT_FILE"

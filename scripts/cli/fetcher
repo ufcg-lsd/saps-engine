@@ -23,6 +23,7 @@ LOG4J_PATH=$SANDBOX_DIR/config/log4j.properties
 function main() {
   tar -xvzf manager-pkg.tar.gz
   tar -xvzf sebal-engine-pkg.tar.gz
+  tar -xvzf fogbow-cli-pkg.tar.gz
 
   cd $SANDBOX_DIR
 

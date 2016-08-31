@@ -28,7 +28,7 @@ function main() {
   cd $SANDBOX_DIR
 
   echo "Starting crawler app"
-  sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.sebal.crawler.CrawlerMain $CONF_FILE_PATH $DB_INSTANCE_IP $DB_PORT $FEDERATION_MEMBER
+  sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.sebal.crawler.CrawlerMain $CONF_FILE_PATH $DB_INSTANCE_IP $DB_PORT $FEDERATION_MEMBER &
 }
 
 main
