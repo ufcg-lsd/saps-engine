@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.ProcessUtil;
 import org.fogbowcloud.sebal.engine.swift.SwiftClient;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -90,7 +92,7 @@ public class Fetcher {
 		}
 	}
 
-	public void exec() throws SQLException {
+	public void exec() throws Exception {
 
 		try {
 			while (true) {
@@ -113,14 +115,21 @@ public class Fetcher {
 	}
 
 	protected void cleanUnfinishedFetchedData(Properties properties)
-			throws InterruptedException, IOException, SQLException {
+			throws Exception {
 		LOGGER.info("Starting garbage collector");
 		Collection<ImageData> data = pendingImageFetchMap.values();
 		for (ImageData imageData : data) {
 			rollBackFetch(imageData);
 			deleteResultsFromDisk(imageData, properties);
+			deletePendingResultsFromSwift(imageData, properties);
 		}
 		LOGGER.info("Garbage collect finished");
+	}
+
+	private void deletePendingResultsFromSwift(ImageData imageData,
+			Properties properties) throws Exception {
+		LOGGER.debug("Pending image" + imageData + " still have files in swift");
+		deleteFilesFromSwift(imageData, properties);
 	}
 
 	protected void deleteResultsFromDisk(final ImageData imageData,
@@ -378,6 +387,91 @@ public class Fetcher {
 		
 		LOGGER.info("Upload to swift succsessfully done");
 		return true;
+	}
+	
+	protected boolean deleteFilesFromSwift(ImageData imageData, Properties properties) throws Exception {
+		LOGGER.debug("Deleting " + imageData + " files from swift");
+		String containerName = getContainerName();
+		String pseudFolder = properties.getProperty("swift_pseud_folder");
+		String keystoneToken = generateToken();
+		
+		// TODO: test this
+		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
+				keystoneToken, "--os-storage-url",
+				properties.getProperty("swift_container_url"), "list",
+				containerName);
+        LOGGER.debug("Executing command " + builder.command());
+        
+        Process p = builder.start();
+        p.waitFor();
+        
+        String output = ProcessUtil.getOutput(p);
+        
+        // TODO: test this
+        List<String> fileNames = getOutputLinesIntoList(output);
+        
+        for(String file : fileNames) {
+			if (file.contains(imageData.getName())) {
+				try {
+					LOGGER.debug("Trying to delete file " + file + " from "
+							+ pseudFolder + " in " + containerName);
+					swiftClient.deleteFile(containerName, file, pseudFolder);
+				} catch (Exception e) {
+					LOGGER.error("Error while deleting files to swift", e);
+					return false;
+				}
+			}
+        }
+		
+		return true;
+	}
+	
+	private List<String> getOutputLinesIntoList(String fileNames) throws IOException {
+		List<String> fileNamesList = new ArrayList<String>();
+		
+		String[] lines = fileNames.split(System.getProperty("line.separator"));
+		
+		for(int i = 0; i < lines.length; i++) {
+			fileNamesList.add(lines[i]);
+		}
+		
+		return fileNamesList;
+	}
+
+	private String generateToken() {
+		
+		String tokenGenerateCommandOutput = null;
+		try {
+			// FIXME: check this later
+			//		  it must get property name relatively
+			ProcessBuilder builder = new ProcessBuilder("bash",
+					properties.get("fogbow_cli_path") + File.separator
+							+ "bin/fogbow-cli", "token", "--create", "--type",
+					"openstack",
+					"-Dusername="
+							+ properties
+									.getProperty("fogbow.keystone.username"),
+					"-Dpassword="
+							+ properties
+									.getProperty("fogbow.keystone.password"),
+					"-DauthUrl="
+							+ properties
+									.getProperty("fogbow.keystone.auth.url"),
+					"-DtenantName="
+							+ properties
+									.getProperty("fogbow.keystone.tenantname"));
+			LOGGER.debug("Executing command " + builder.command());
+
+			Process p = builder.start();
+			p.waitFor();
+			
+			tokenGenerateCommandOutput = ProcessUtil.getOutput(p);
+		} catch (Throwable e) {
+			LOGGER.error("Error while generating keystone token", e);
+			return null;
+		}
+		
+		return tokenGenerateCommandOutput;
 	}
 
 	private String getContainerName() {
