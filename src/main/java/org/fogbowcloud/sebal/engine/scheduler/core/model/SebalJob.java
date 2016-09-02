@@ -1,9 +1,7 @@
 package org.fogbowcloud.sebal.engine.scheduler.core.model;
 
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,14 +52,12 @@ public class SebalJob extends Job {
 		//****	Each DB interaction could be dealt separately in this case?
 		try {
 			imageStore.updateImageState(imageName, imageState);
-			imageStore.addStateStamp(imageName, imageState, new Date(Calendar
-					.getInstance().getTimeInMillis()));
+			imageStore.addStateStamp(imageName, imageState, imageStore.getImage(imageName).getUpdateTime());
 
 			// updating previous images not updated yet because of any connection problem
 			for (String pendingImage : new ArrayList<String>(getPendingUpdates().keySet())) {
 				imageStore.updateImageState(pendingImage, getPendingUpdates().get(pendingImage));
-				imageStore.addStateStamp(pendingImage, getPendingUpdates().get(pendingImage), new Date(Calendar
-						.getInstance().getTimeInMillis()));
+				imageStore.addStateStamp(pendingImage, getPendingUpdates().get(pendingImage), imageStore.getImage(imageName).getUpdateTime());
 				getPendingUpdates().remove(pendingImage);
 			}
 		} catch (SQLException e) {

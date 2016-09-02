@@ -1,7 +1,7 @@
 package org.fogbowcloud.sebal.engine.sebal;
 
-import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 
 public interface ImageDataStore {
@@ -19,7 +19,7 @@ public interface ImageDataStore {
 
     void addImage(String imageName, String downloadLink, int priority) throws SQLException;
 
-    void addStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException;
+    void addStateStamp(String imageName, ImageState state, Timestamp timestamp) throws SQLException;
 
     void updateImage(ImageData imageData) throws SQLException;
 
@@ -37,7 +37,7 @@ public interface ImageDataStore {
 
     List<ImageData> getImagesToDownload(String federationMember, int limit) throws SQLException;
 
-    ImageData getImage(String imageName) throws SQLException;
+    ImageData getImage(String imageName) throws SQLException;    
 
     void dispose();
 
@@ -45,7 +45,7 @@ public interface ImageDataStore {
 
     boolean unlockImage(String imageName) throws SQLException;
 
-    void removeStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException;
+    void removeStateStamp(String imageName, ImageState state, Timestamp timestamp) throws SQLException;
 
     List<ImageData> getImagesByFilter(ImageState state, String name, long processDateInit, long processDateEnd)
             throws SQLException;

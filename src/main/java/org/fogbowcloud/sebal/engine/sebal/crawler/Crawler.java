@@ -2,10 +2,8 @@ package org.fogbowcloud.sebal.engine.sebal.crawler;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -13,7 +11,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.sebal.*;
+import org.fogbowcloud.sebal.engine.sebal.FMask;
+import org.fogbowcloud.sebal.engine.sebal.ImageData;
+import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.ImageState;
+import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.USGSNasaRepository;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -155,6 +158,8 @@ public class Crawler {
 		}
 
 		for (ImageData imageData : imageDataList) {
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			
 			if (imageData != null) {
 				try {
 					imageStore.addStateStamp(imageData.getName(),
@@ -233,12 +238,11 @@ public class Crawler {
 			}
 
 			imageData.setState(ImageState.DOWNLOADED);
-			Date updateTime = new Date(Calendar.getInstance().getTimeInMillis());
 			imageData.setSebalEngineVersion(getSebalEngineVersion());
-			imageData.setUpdateTime(updateTime);
 
 			try {
 				imageStore.updateImage(imageData);
+				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image " + imageData
 						+ " to DB", e);
@@ -270,11 +274,10 @@ public class Crawler {
 		try {
 			if (imageData.getFederationMember().equals(federationMember)) {
 				imageData.setState(ImageState.ERROR);
-				imageData
-						.setImageError("It was not possible run Fmask for image");
-				imageData.setUpdateTime(new Date(Calendar.getInstance()
-						.getTimeInMillis()));
+				imageData.setImageError("It was not possible run Fmask for image");			
+				
 				imageStore.updateImage(imageData);
+				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 
 				deleteImageFromDisk(imageData,
 						properties.getProperty(SEBAL_EXPORT_PATH));
@@ -309,11 +312,10 @@ public class Crawler {
 
 			imageData.setFederationMember(ImageDataStore.NONE);
 			imageData.setState(ImageState.NOT_DOWNLOADED);
-			imageData.setUpdateTime(new Date(Calendar.getInstance()
-					.getTimeInMillis()));
 
 			try {
 				imageStore.updateImage(imageData);
+				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 			} catch (SQLException e) {
 				Crawler.LOGGER.error("Error while updating image data "
 						+ imageData.getName(), e);

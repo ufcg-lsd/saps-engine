@@ -2,10 +2,8 @@ package org.fogbowcloud.sebal.engine.sebal.fetcher;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -183,9 +181,6 @@ public class Fetcher {
 		if (imageStore.lockImage(imageData.getName())) {
 			
 			imageData.setState(ImageState.FETCHING);
-			Date lastUpdateTime = new Date(Calendar.getInstance()
-					.getTimeInMillis());
-			imageData.setUpdateTime(lastUpdateTime);
 			
 			fetcherHelper.updatePendingMapAndDB(imageData,
 					pendingImageFetchDB, pendingImageFetchMap);
@@ -193,6 +188,7 @@ public class Fetcher {
 			try {
 				LOGGER.info("Updating image data in DB");
 				imageStore.updateImage(imageData);
+				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image " + imageData
 						+ " in DB", e);
@@ -230,13 +226,10 @@ public class Fetcher {
 			imageData.setStationId(stationId);
 			imageData.setSebalVersion(getSebalVersion(localImageResultsPath));
 
-			Date lastUpdateTime = new Date(Calendar.getInstance()
-					.getTimeInMillis());
-			imageData.setUpdateTime(lastUpdateTime);
-
 			try {
 				LOGGER.info("Updating image data in DB");
 				imageStore.updateImage(imageData);
+				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image " + imageData
 						+ " in DB", e);
@@ -276,11 +269,10 @@ public class Fetcher {
 					+ " timestamp", e);
 		}
 		imageData.setState(ImageState.FINISHED);
-		imageData.setUpdateTime(new Date(Calendar.getInstance()
-				.getTimeInMillis()));
 
 		try {
 			imageStore.updateImage(imageData);
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image data.", e);
 			imageData.setState(ImageState.FETCHING);
@@ -351,6 +343,7 @@ public class Fetcher {
 					pendingImageFetchDB, pendingImageFetchMap);
 			// TODO: see if this have to be in try-catch
 			imageStore.updateImage(imageData);
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 		}
 	}
 

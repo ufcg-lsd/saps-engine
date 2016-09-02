@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -84,14 +85,14 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
                     + " VARCHAR(255), " + SEBAL_ENGINE_VERSION_COL
                     + " VARCHAR(255), " + BLOWOUT_VERSION_COL
-                    + " VARCHAR(255), " + CREATION_TIME_COL + " VARCHAR(255), "
-                    + UPDATED_TIME_COL + " VARCHAR(255), " + IMAGE_STATUS_COL
+                    + " VARCHAR(255), " + CREATION_TIME_COL + " TIMESTAMP, "
+                    + UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL
                     + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
             
             statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME
                     + "(" + IMAGE_NAME_COL + " VARCHAR(255), "
                     + STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL
-                    + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
+                    + " TIMESTAMP, " + ERROR_MSG_COL + " VARCHAR(255))");
             statement.close();
         } catch (SQLException e) {
             LOGGER.error("Error while initializing DataStore", e);
@@ -156,7 +157,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     private static final String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-            + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
 
     @Override
     public void addImage(String imageName, String downloadLink, int priority) throws SQLException {
@@ -169,7 +170,7 @@ public class JDBCImageDataStore implements ImageDataStore {
         }
 
         PreparedStatement insertStatement = null;
-        Connection connection = null;
+        Connection connection = null;           
 
         try {
             connection = getConnection();
@@ -184,10 +185,8 @@ public class JDBCImageDataStore implements ImageDataStore {
             insertStatement.setString(7, "NE");
             insertStatement.setString(8, "NE");
             insertStatement.setString(9, "NE");
-            insertStatement.setDate(10, new Date(Calendar.getInstance().getTimeInMillis()));
-            insertStatement.setDate(11, new Date(Calendar.getInstance().getTimeInMillis()));
-            insertStatement.setString(12, ImageData.AVAILABLE);
-            insertStatement.setString(13, "no_errors");
+            insertStatement.setString(10, ImageData.AVAILABLE);
+            insertStatement.setString(11, "no_errors");
 
             insertStatement.execute();
         } finally {
@@ -199,7 +198,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             + " VALUES(?, ?, ?)";
 
     @Override
-    public void addStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException {
+    public void addStateStamp(String imageName, ImageState state, Timestamp timestamp) throws SQLException {
         LOGGER.info("Adding image " + imageName + " state " + state.getValue() + " with timestamp " + timestamp + " into DB");
         if (imageName == null || imageName.isEmpty() || state == null) {
             LOGGER.error("Invalid image " + imageName + " or state " + state.getValue());
@@ -216,7 +215,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 					.prepareStatement(INSERT_NEW_STATE_TIMESTAMP_SQL);
 			insertStatement.setString(1, imageName);
 			insertStatement.setString(2, state.getValue());
-			insertStatement.setString(3, String.valueOf(timestamp));
+			insertStatement.setTimestamp(3, timestamp);
 			
 			insertStatement.execute();
         } finally {
@@ -225,7 +224,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     private static String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME
-            + " SET state = ?, utime = ? WHERE image_name = ?";
+            + " SET state = ?, utime = now() WHERE image_name = ?";
 
     @Override
     public void updateImageState(String imageName, ImageState state) throws SQLException {
@@ -236,15 +235,14 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + state);
         }
         PreparedStatement updateStatement = null;
-        Connection connection = null;
+        Connection connection = null;    
 
         try {
             connection = getConnection();
 
             updateStatement = connection.prepareStatement(UPDATE_IMAGE_STATE_SQL);
             updateStatement.setString(1, state.getValue());
-            updateStatement.setDate(2, new Date(Calendar.getInstance().getTimeInMillis()));
-            updateStatement.setString(3, imageName);
+            updateStatement.setString(2, imageName);
             updateStatement.execute();
         } finally {
             close(updateStatement, connection);
@@ -252,7 +250,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET download_link = ?, state = ?, federation_member = ?,"
-            + " priority = ?, station_id = ?, sebal_version = ?, sebal_engine_version = ?, blowout_version = ?, ctime = ?, utime = ?, status = ?,"
+            + " priority = ?, station_id = ?, sebal_version = ?, sebal_engine_version = ?, blowout_version = ?, utime = now(), status = ?,"
             + " error_msg = ? WHERE image_name = ?";
 
     @Override
@@ -277,11 +275,9 @@ public class JDBCImageDataStore implements ImageDataStore {
             updateStatement.setString(6, imageData.getSebalVersion());
             updateStatement.setString(7, imageData.getSebalEngineVersion());
             updateStatement.setString(8, imageData.getBlowoutVersion());
-            updateStatement.setDate(9, imageData.getCreationTime());
-            updateStatement.setDate(10, imageData.getUpdateTime());
-            updateStatement.setString(11, imageData.getImageStatus());
-            updateStatement.setString(12, imageData.getImageError());
-            updateStatement.setString(13, imageData.getName());
+            updateStatement.setString(9, imageData.getImageStatus());
+            updateStatement.setString(10, imageData.getImageError());
+            updateStatement.setString(11, imageData.getName());
 
             updateStatement.execute();
         } finally {
@@ -290,7 +286,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     private static final String UPDATE_IMAGE_METADATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
-            + " SET station_id = ?, sebal_version = ?, utime = ? WHERE image_name = ?";
+            + " SET station_id = ?, sebal_version = ?, utime = now() WHERE image_name = ?";
 
     @Override
     public void updateImageMetadata(String imageName, String stationId,
@@ -303,7 +299,7 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + stationId + " or sebal version " + sebalVersion);
         }
         PreparedStatement updateStatement = null;
-        Connection connection = null;
+        Connection connection = null;       
 
         try {
             connection = getConnection();
@@ -311,8 +307,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             updateStatement = connection.prepareStatement(UPDATE_IMAGE_METADATA_SQL);
             updateStatement.setString(1, stationId);
             updateStatement.setString(2, sebalVersion);
-            updateStatement.setDate(3, new Date(Calendar.getInstance().getTimeInMillis()));
-            updateStatement.setString(4, imageName);
+            updateStatement.setString(3, imageName);
             updateStatement.execute();
         } finally {
             close(updateStatement, connection);
@@ -496,7 +491,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     private static final String SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME + " it SET " + STATE_COL + " = ?, "
-            + FEDERATION_MEMBER_COL + " = ?, " + UPDATED_TIME_COL + " = ? FROM (SELECT * FROM "
+            + FEDERATION_MEMBER_COL + " = ?, " + UPDATED_TIME_COL + " = now() FROM (SELECT * FROM "
             + IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL + " = ? LIMIT ? FOR UPDATE) filter WHERE it."
             + IMAGE_NAME_COL + " = filter." + IMAGE_NAME_COL;
 
@@ -533,11 +528,9 @@ public class JDBCImageDataStore implements ImageDataStore {
             lockAndUpdateStatement = connection.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
             lockAndUpdateStatement.setString(1, ImageState.DOWNLOADING.getValue());
             lockAndUpdateStatement.setString(2, federationMember);
-            Date date = new Date(Calendar.getInstance().getTimeInMillis());
-            lockAndUpdateStatement.setDate(3, date);
-            lockAndUpdateStatement.setString(4, ImageState.NOT_DOWNLOADED.getValue());
-            lockAndUpdateStatement.setString(5, ImageData.AVAILABLE);
-            lockAndUpdateStatement.setInt(6, limit);
+            lockAndUpdateStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
+            lockAndUpdateStatement.setString(4, ImageData.AVAILABLE);
+            lockAndUpdateStatement.setInt(5, limit);
             lockAndUpdateStatement.execute();
 
             selectStatement = connection.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
@@ -568,8 +561,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 							.getString(SEBAL_VERSION_COL), rs
 							.getString(SEBAL_ENGINE_VERSION_COL), rs
 							.getString(BLOWOUT_VERSION_COL), rs
-							.getDate(CREATION_TIME_COL), rs
-							.getDate(UPDATED_TIME_COL), rs
+							.getTimestamp(CREATION_TIME_COL), rs
+							.getTimestamp(UPDATED_TIME_COL), rs
 							.getString(ERROR_MSG_COL)));
         }
         return imageDatas;
@@ -674,7 +667,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             + " WHERE image_name = ? AND state = ? AND utime = ?";
 
     @Override
-    public void removeStateStamp(String imageName, ImageState state, Date timestamp) throws SQLException {
+    public void removeStateStamp(String imageName, ImageState state, Timestamp timestamp) throws SQLException {
         LOGGER.info("Removing image " + imageName + " state " + state.getValue() + " with timestamp " + timestamp);
         if (imageName == null || imageName.isEmpty() || state == null) {
             LOGGER.error("Invalid image " + imageName + " or state " + state.getValue());
@@ -690,7 +683,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             removeStatement = connection.prepareStatement(REMOVE_STATE_SQL);
             removeStatement.setString(1, imageName);
             removeStatement.setString(2, state.getValue());
-            removeStatement.setString(3, String.valueOf(timestamp));
+            removeStatement.setTimestamp(3, timestamp);
 
             removeStatement.execute();
         } finally {

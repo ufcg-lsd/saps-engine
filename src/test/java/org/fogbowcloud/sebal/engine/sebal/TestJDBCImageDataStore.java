@@ -152,4 +152,9 @@ public class TestJDBCImageDataStore {
 		
 		doNothing().when(imageDataStore).close(removeStatement, connection);
 	}
+	
+	@Test
+	public void testTimeStamp() {
+		
+	}
 }

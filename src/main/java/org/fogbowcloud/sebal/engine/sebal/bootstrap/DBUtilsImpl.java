@@ -4,13 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -18,7 +18,11 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.sebal.*;
+import org.fogbowcloud.sebal.engine.sebal.DefaultNASARepository;
+import org.fogbowcloud.sebal.engine.sebal.ImageData;
+import org.fogbowcloud.sebal.engine.sebal.ImageState;
+import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.USGSNasaRepository;
 
 public class DBUtilsImpl implements DBUtils {
 
@@ -52,8 +56,9 @@ public class DBUtilsImpl implements DBUtils {
             }
             if (isBeforeDay(date, imageData.getUpdateTime())) {
                 imageData.setImageStatus(ImageData.PURGED);
-                imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
+                
                 imageStore.updateImage(imageData);
+                imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
             }
         }
     }
@@ -65,7 +70,7 @@ public class DBUtilsImpl implements DBUtils {
         return sqlDate;
     }
 
-    protected boolean isBeforeDay(long date, Date imageDataDay) {
+    protected boolean isBeforeDay(long date, Timestamp imageDataDay) {
         return (imageDataDay.getTime() <= date);
     }
 

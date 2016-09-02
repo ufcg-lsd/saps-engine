@@ -3,10 +3,8 @@ package org.fogbowcloud.sebal.engine.scheduler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -203,10 +201,12 @@ public class SebalMain {
 								imageData.getFederationMember(), nfsServerIP,
 								nfsServerPort);
 						imageData.setState(ImageState.RUNNING_R);
-						imageData.setUpdateTime(new Date(Calendar.getInstance().getTimeInMillis()));
+						
 						imageData.setBlowoutVersion(getBlowoutVersion(properties));
 						job.addTask(taskImpl);
-						imageStore.updateImage(imageData);
+						
+						imageStore.updateImage(imageData);						
+						imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());					
 						try {
 							imageStore.addStateStamp(imageData.getName(),
 									imageData.getState(),

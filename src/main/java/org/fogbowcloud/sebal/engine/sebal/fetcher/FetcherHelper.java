@@ -4,9 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.Date;
 import java.sql.SQLException;
-import java.util.Calendar;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
@@ -83,10 +81,9 @@ public class FetcherHelper {
 			ConcurrentMap<String, ImageData> pendingImageFetchMap,
 			ImageDataStore imageStore) throws SQLException {
 		if (imageData.getState().equals(ImageState.CORRUPTED)) {
-			imageData.setUpdateTime(new Date(Calendar.getInstance()
-					.getTimeInMillis()));
 			pendingImageFetchMap.remove(imageData.getName());
 			imageStore.updateImage(imageData);
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 			return true;
 		}
 		return false;

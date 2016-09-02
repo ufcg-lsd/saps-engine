@@ -1,7 +1,7 @@
 package org.fogbowcloud.sebal.engine.sebal;
 
 import java.io.Serializable;
-import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,8 +16,8 @@ public class ImageData implements Serializable {
 	private String sebalVersion;
 	private String sebalEngineVersion;
 	private String blowoutVersion;
-	private Date creationTime;
-	private Date updateTime;
+	private Timestamp creationTime;
+	private Timestamp updateTime;
 	private String status;
 	private String error;
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
@@ -28,7 +28,7 @@ public class ImageData implements Serializable {
 	public ImageData(String name, String downloadLink, ImageState state,
 			String federationMember, int priority, String stationId,
 			String sebalVersion, String sebalEngineVersion,
-			String blowoutVersion, Date creationTime, Date updateTime,
+			String blowoutVersion, Timestamp creationTime, Timestamp updateTime,
 			String error) {
 		this.name = name;
 		this.downloadLink = downloadLink;
@@ -81,11 +81,11 @@ public class ImageData implements Serializable {
 		return blowoutVersion;
 	}
 	
-	public Date getCreationTime() {
+	public Timestamp getCreationTime() {
 		return creationTime;
 	}
 	
-	public Date getUpdateTime() {
+	public Timestamp getUpdateTime() {
 		return updateTime;
 	}
 	
@@ -133,11 +133,11 @@ public class ImageData implements Serializable {
 		this.blowoutVersion = blowoutVersion;
 	}
 	
-	public void setCreationTime(Date creationTime) {
+	public void setCreationTime(Timestamp creationTime) {
 		this.creationTime = creationTime;
 	}
 	
-	public void setUpdateTime(Date updateTime) {
+	public void setUpdateTime(Timestamp updateTime) {
 		this.updateTime = updateTime;
 	}
 	

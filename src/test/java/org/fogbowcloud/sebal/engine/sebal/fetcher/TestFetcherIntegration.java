@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
@@ -66,8 +67,8 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
@@ -110,8 +111,8 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
@@ -156,11 +157,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
@@ -204,11 +205,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
 				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
@@ -257,11 +258,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
 				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
@@ -313,8 +314,8 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
 				.getRemoteImageResultsPath(imageData, properties);
@@ -361,11 +362,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
 				.getRemoteImageResultsPath(imageData, properties);
@@ -432,11 +433,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", date,
-				date, "");
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
 				.getRemoteImageResultsPath(imageData, properties);
@@ -539,14 +540,13 @@ public class TestFetcherIntegration {
 		swiftClient.uploadFile(containerName, tempFile1, pseudFolder);
 		swiftClient.uploadFile(containerName, tempFile2, pseudFolder);
 		
+		Date date = new Date(Calendar
+				.getInstance().getTimeInMillis());			
+		
 		ImageData imageData1 = new ImageData(tempFile1.getName(), "",
-				ImageState.FETCHED, "", 0, "", "", "", "", new Date(Calendar
-						.getInstance().getTimeInMillis()), new Date(Calendar
-						.getInstance().getTimeInMillis()), "");
+				ImageState.FETCHED, "", 0, "", "", "", "", new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
 		ImageData imageData2 = new ImageData(tempFile2.getName(), "",
-				ImageState.FETCHED, "", 0, "", "", "", "", new Date(Calendar
-						.getInstance().getTimeInMillis()), new Date(Calendar
-						.getInstance().getTimeInMillis()), "");
+				ImageState.FETCHED, "", 0, "", "", "", "", new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
 		
 		Fetcher fetcher = Mockito.mock(Fetcher.class);			
 		
