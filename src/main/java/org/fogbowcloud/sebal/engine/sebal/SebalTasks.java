@@ -33,6 +33,7 @@ public class SebalTasks {
 	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
+	private static final String METADATA_SEBAL_VERSION = "sebal_version";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -49,7 +50,7 @@ public class SebalTasks {
 	
 	public static TaskImpl createRTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
-			String location, String nfsServerIP, String nfsServerPort) {
+			String location, String nfsServerIP, String nfsServerPort, String sebalVersion) {
 		LOGGER.debug("Creating R task for image " + imageName);
 
 		settingCommonTaskMetadata(properties, rTaskImpl);
@@ -66,6 +67,7 @@ public class SebalTasks {
 				properties.getProperty("sebal_mount_point"));
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_IP, nfsServerIP);
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
+		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);
 		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 				rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_"
 						+ rTaskImpl.getId());
@@ -220,6 +222,8 @@ public class SebalTasks {
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
 		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
 				task.getMetadata(METADATA_SEBAL_URL));
+		command = command.replaceAll(Pattern.quote("${PINPOINTED_SEBAL_VERSION}"),
+				task.getMetadata(METADATA_SEBAL_VERSION));
 
 		// repositories properties
 		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),

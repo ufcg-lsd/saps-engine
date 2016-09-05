@@ -199,7 +199,7 @@ public class SebalMain {
 						taskImpl = SebalTasks.createRTask(taskImpl, properties,
 								imageData.getName(), tempSpec,
 								imageData.getFederationMember(), nfsServerIP,
-								nfsServerPort);
+								nfsServerPort, imageData.getSebalVersion());
 						imageData.setState(ImageState.RUNNING_R);
 						
 						imageData.setBlowoutVersion(getBlowoutVersion(properties));

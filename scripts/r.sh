@@ -26,8 +26,23 @@ function prepareDependencies {
 
   cd ${SANDBOX}
 
-  # cloning SEBAL project
-  git clone ${SEBAL_URL}
+  if [ "${PINPOINTED_SEBAL_VERSION}" -ne "NE" ]
+  then
+  	# make a new blank repository in the current directory
+  	git init
+
+  	# add a remote
+  	git remote add origin ${SEBAL_URL}
+
+  	# fetch a commit (or branch or tag) of interest
+  	# Note: the full history of this commit will be retrieved
+  	git fetch origin ${PINPOINTED_SEBAL_VERSION}
+
+  	# reset this repository's master branch to the commit of interest
+  	git reset --hard FETCH_HEAD
+  else
+  	git clone ${SEBAL_URL}
+  fi
 
   # getting sebal snapshot from public_html
   cd ${SANDBOX}/SEBAL
@@ -101,7 +116,15 @@ function executeRScript {
   sudo mv dados"-${IMAGE_NAME}".csv $OUTPUT_IMAGE_DIR
 
   cd ${SANDBOX}/SEBAL
-  SEBAL_VERSION=$(git rev-parse HEAD)
+
+  # check if a SEBAL version was not pinpointed
+  if [ "${PINPOINTED_SEBAL_VERSION}" -eq "NE" ]
+  then
+    SEBAL_VERSION=$(git rev-parse HEAD)
+  else
+    SEBAL_VERSION=${PINPOINTED_SEBAL_VERSION}
+  fi
+
   sudo sh -c "echo \"$SEBAL_VERSION\" > $OUTPUT_IMAGE_DIR/SEBAL.version.$SEBAL_VERSION"
   #sudo echo "$SEBAL_VERSION" > $OUTPUT_IMAGE_DIR/SEBAL.version.$SEBAL_VERSION
 }

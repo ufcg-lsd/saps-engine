@@ -1,14 +1,12 @@
 package org.fogbowcloud.sebal.engine.sebal;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -160,7 +158,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
 
     @Override
-    public void addImage(String imageName, String downloadLink, int priority) throws SQLException {
+    public void addImage(String imageName, String downloadLink, int priority, String sebalVersion) throws SQLException {
         LOGGER.info("Adding image " + imageName + " with download link " + downloadLink
                 + " and priority " + priority);
         if (imageName == null || imageName.isEmpty() || downloadLink == null
@@ -182,7 +180,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             insertStatement.setString(4, ImageDataStore.NONE);
             insertStatement.setInt(5, priority);
             insertStatement.setString(6, "NE");
-            insertStatement.setString(7, "NE");
+            insertStatement.setString(7, sebalVersion);
             insertStatement.setString(8, "NE");
             insertStatement.setString(9, "NE");
             insertStatement.setString(10, ImageData.AVAILABLE);
