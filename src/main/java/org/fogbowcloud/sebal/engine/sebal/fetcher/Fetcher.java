@@ -223,7 +223,10 @@ public class Fetcher {
 
 			String stationId = fetcherHelper
 					.getStationId(imageData, properties);
+			String fetcherVersion = getFetcherVersion();
+			
 			imageData.setStationId(stationId);
+			imageData.setFetcherVersion(fetcherVersion);
 			imageData.setSebalVersion(getSebalVersion(localImageResultsPath));
 
 			try {
@@ -408,7 +411,11 @@ public class Fetcher {
 			if (file.contains(imageData.getName())) {
 				try {
 					LOGGER.debug("Trying to delete file " + file + " from " + containerName);
-					swiftClient.deleteFile(containerName, file);
+					String localImageResultsPath = properties
+							.get("fetcher_volume_path")
+							+ File.separator
+							+ "results" + File.separator + imageData.getName();
+					swiftClient.deleteFile(containerName, getPseudoFolder(new File(localImageResultsPath)), file);
 				} catch (Exception e) {
 					LOGGER.error("Error while deleting files to swift", e);
 					return false;
@@ -487,6 +494,24 @@ public class Fetcher {
 				if (file.getName().startsWith("SEBAL.version.")) {
 					String[] versionFileSplit = file.getName().split("\\.");
 					return versionFileSplit[2];
+				}
+			}
+		}
+		
+		return "";
+	}
+	
+	protected String getFetcherVersion() {
+		
+		String sebalEngineDirPath = System.getProperty("user.dir");
+		File sebalEngineDir = new File(sebalEngineDirPath);
+		
+		if (sebalEngineDir.exists() && sebalEngineDir.isDirectory()) {
+			for (File file : sebalEngineDir.listFiles()) {
+				if (file.getName().startsWith("sebal-engine.version.")) {
+					String[] sebalEngineVersionFileSplit = file.getName()
+							.split("\\.");
+					return sebalEngineVersionFileSplit[2];
 				}
 			}
 		}

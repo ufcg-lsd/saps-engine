@@ -14,8 +14,10 @@ public class ImageData implements Serializable {
 	private int priority;
 	private String stationId;
 	private String sebalVersion;
-	private String sebalEngineVersion;
+	private String crawlerVersion;
+	private String fetcherVersion;
 	private String blowoutVersion;
+	private String fmaskVersion;
 	private Timestamp creationTime;
 	private Timestamp updateTime;
 	private String status;
@@ -27,9 +29,9 @@ public class ImageData implements Serializable {
 
 	public ImageData(String name, String downloadLink, ImageState state,
 			String federationMember, int priority, String stationId,
-			String sebalVersion, String sebalEngineVersion,
-			String blowoutVersion, Timestamp creationTime, Timestamp updateTime,
-			String error) {
+			String sebalVersion, String crawlerVersion, String fetcherVersion,
+			String blowoutVersion, String fmaskVersion, Timestamp creationTime,
+			Timestamp updateTime, String error) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -37,8 +39,10 @@ public class ImageData implements Serializable {
 		this.priority = priority;
 		this.stationId = stationId;
 		this.sebalVersion = sebalVersion;
-		this.sebalEngineVersion = sebalEngineVersion;
+		this.crawlerVersion = crawlerVersion;
+		this.fetcherVersion = fetcherVersion;
 		this.blowoutVersion = blowoutVersion;
+		this.fmaskVersion = fmaskVersion;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
 		this.status = "available";
@@ -73,12 +77,20 @@ public class ImageData implements Serializable {
 		return sebalVersion;
 	}
 	
-	public String getSebalEngineVersion() {
-		return sebalEngineVersion;
+	public String getCrawlerVersion() {
+		return crawlerVersion;
+	}
+	
+	public String getFetcherVersion() {
+		return fetcherVersion;
 	}
 	
 	public String getBlowoutVersion() {
 		return blowoutVersion;
+	}
+	
+	public String getFmaskVersion() {
+		return fmaskVersion;
 	}
 	
 	public Timestamp getCreationTime() {
@@ -125,12 +137,20 @@ public class ImageData implements Serializable {
 		this.sebalVersion = sebalVersion;
 	}
 	
-	public void setSebalEngineVersion(String sebalEngineVersion) {
-		this.sebalEngineVersion = sebalEngineVersion;
+	public void setCrawlerVersion(String crawlerVersion) {
+		this.crawlerVersion = crawlerVersion;
+	}
+	
+	public void setFetcherVersion(String fetcherVersion) {
+		this.fetcherVersion = fetcherVersion;
 	}
 	
 	public void setBlowoutVersion(String blowoutVersion) {
 		this.blowoutVersion = blowoutVersion;
+	}
+	
+	public void setFmaskVersion(String fmaskVersion) {
+		this.fmaskVersion = fmaskVersion;
 	}
 	
 	public void setCreationTime(Timestamp creationTime) {
@@ -152,9 +172,10 @@ public class ImageData implements Serializable {
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", "
 				+ federationMember + ", " + priority + ", " + stationId + ", "
-				+ sebalVersion + ", " + sebalEngineVersion + ", "
-				+ blowoutVersion + ", " + creationTime + ", " + updateTime
-				+ ", " + status + ", " + error;
+				+ sebalVersion + ", " + crawlerVersion + ", " + fetcherVersion
+				+ ", " + blowoutVersion + ", " + fmaskVersion + ", "
+				+ creationTime + ", " + updateTime + ", " + status + ", "
+				+ error;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -175,8 +196,10 @@ public class ImageData implements Serializable {
 					&& getFederationMember().equals(other.getFederationMember())
 					&& getStationId().equals(other.getStationId())
 					&& getSebalVersion().equals(other.getSebalVersion())
-					&& getSebalEngineVersion().equals(other.getSebalEngineVersion())
+					&& getCrawlerVersion().equals(other.getCrawlerVersion())
+					&& getFetcherVersion().equals(other.getFetcherVersion())
 					&& getBlowoutVersion().equals(other.getBlowoutVersion())
+					&& getFmaskVersion().equals(other.getFmaskVersion())
 					&& getCreationTime().equals(other.getCreationTime())
 					&& getUpdateTime().equals(other.getUpdateTime())
 					&& getImageStatus().equals(other.getImageStatus())

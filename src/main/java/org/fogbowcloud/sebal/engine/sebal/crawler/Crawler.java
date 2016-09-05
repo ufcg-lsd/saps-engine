@@ -1,7 +1,11 @@
 package org.fogbowcloud.sebal.engine.sebal.crawler;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +29,7 @@ public class Crawler {
 	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 	protected static final String FMASK_TOOL_PATH = "fmask_tool_path";
 	protected static final String FMASK_SCRIPT_PATH = "fmask_script_path";
+	private static final String FMASK_VERSION_FILE_PATH = "crawler/fmask-version";
 	private final Properties properties;
 	private USGSNasaRepository usgsRepository;
 	private final ImageDataStore imageStore;
@@ -236,9 +241,12 @@ public class Crawler {
 				markImageWithErrorAndUpdateState(imageData, properties);
 				return;
 			}
-
+			
+			String fmaskVersion = getFmaskVersion();
+			
 			imageData.setState(ImageState.DOWNLOADED);
-			imageData.setSebalEngineVersion(getSebalEngineVersion());
+			imageData.setCrawlerVersion(getCrawlerVersion());
+			imageData.setFmaskVersion(fmaskVersion);
 
 			try {
 				imageStore.updateImage(imageData);
@@ -266,6 +274,21 @@ public class Crawler {
 			LOGGER.error("Error when downloading image " + imageData, e);
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
+	}
+
+	protected String getFmaskVersion() throws IOException {
+		File fmaskVersionFile = new File(FMASK_VERSION_FILE_PATH);
+		FileInputStream fileInputStream = new FileInputStream(fmaskVersionFile);
+		BufferedReader br = new BufferedReader(new InputStreamReader(fileInputStream));
+		 
+		String line = null;
+		String fmaskVersion = null;
+		while ((line = br.readLine()) != null) {
+			fmaskVersion = line;
+		}
+	 
+		br.close();
+		return fmaskVersion;
 	}
 
 	private void markImageWithErrorAndUpdateState(ImageData imageData,
@@ -434,7 +457,7 @@ public class Crawler {
 		}
 	}
 	
-	protected String getSebalEngineVersion() {
+	protected String getCrawlerVersion() {
 		
 		String sebalEngineDirPath = System.getProperty("user.dir");
 		File sebalEngineDir = new File(sebalEngineDirPath);

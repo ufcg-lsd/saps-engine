@@ -54,16 +54,20 @@ public class TestCrawlerIntegration {
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
 				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
-				"NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
+				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 		ImageData image2 = new ImageData("image2", "link2",
 				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
-				"NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
+				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		imageList.add(image1);
 		imageList.add(image2);
 
 		Mockito.doReturn(imageList).when(imageStore)
 				.getImagesToDownload(federationMember, maxImagesToDownload);
+		Mockito.doReturn(image1).when(imageStore).getImage(image1.getName());
+		Mockito.doReturn(image2).when(imageStore).getImage(image2.getName());
 		Mockito.doThrow(new IOException()).when(usgsRepository)
 				.downloadImage(image1);
 		Mockito.doNothing().when(usgsRepository).downloadImage(image2);
@@ -109,11 +113,13 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
+				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
+				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
+				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
+				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -127,12 +133,14 @@ public class TestCrawlerIntegration {
 
 		Mockito.doReturn(imageList).when(imageStore)
 				.getImagesToDownload(federationMember, maxImagesToDownload);
+		Mockito.doReturn(image1).when(imageStore).getImage(image1.getName());
 		Mockito.doNothing().when(usgsRepository).downloadImage(image1);
 		Mockito.doReturn(1)
 				.when(fmask)
 				.runFmask(image1, fmaskScriptPath, fmaskToolsPath,
 						sebalExportPath);
 
+		Mockito.doReturn(image2).when(imageStore).getImage(image2.getName());
 		Mockito.doNothing().when(usgsRepository).downloadImage(image2);
 		Mockito.doReturn(0)
 				.when(fmask)
@@ -169,11 +177,13 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
+				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
+				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
+				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
+				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -266,12 +276,14 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "");
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
+						date.getTime()), "");
 		image1.setImageStatus(ImageData.PURGED);
 		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 1, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "");
+				ImageState.FINISHED, federationMember, 1, "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
+						date.getTime()), "");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -304,9 +316,13 @@ public class TestCrawlerIntegration {
 
 		List<ImageData> imageList = new ArrayList<ImageData>();
 		ImageData image1 = new ImageData("image1", "link1", ImageState.FETCHED,
-				federationMember1, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
+				federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"");
 		ImageData image2 = new ImageData("image2", "link2", ImageState.FETCHED,
-				federationMember2, 0, "NE", "NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()), "");
+				federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -328,7 +344,7 @@ public class TestCrawlerIntegration {
 	}
 	
 	@Test
-	public void testGetSebalEngineVersion() throws SQLException, IOException, InterruptedException {
+	public void testGetCrawlerVersion() throws SQLException, IOException, InterruptedException {
 		// setup
 		Properties properties = Mockito.mock(Properties.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
@@ -344,12 +360,30 @@ public class TestCrawlerIntegration {
 				federationMember, fmask);
 		
 		// exercise
-		String versionReturn = crawler.getSebalEngineVersion();
+		String versionReturn = crawler.getCrawlerVersion();
 		
 		// expect
 		Assert.assertEquals("0c26f092e976389c593953a1ad8ddaadb5c2ab2a", versionReturn);
 		
 		File file = new File("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a");		
 		file.delete();
+	}
+	
+	@Test
+	public void testGetFmaskVersion() throws IOException {
+		Properties properties = Mockito.mock(Properties.class);
+		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
+		USGSNasaRepository usgsRepository = Mockito.mock(USGSNasaRepository.class);
+		FMask fmask = Mockito.mock(FMask.class);
+		String federationMember = "fake-fed-member";
+		
+		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
+				federationMember, fmask);
+		
+		// exercise
+		String versionReturn = crawler.getFmaskVersion();
+		
+		// expect
+		Assert.assertEquals("http://ftp-earth.bu.edu/public/zhuzhe/Fmask_Linux_3.2v/Fmask_pkg.zip", versionReturn);
 	}
 }

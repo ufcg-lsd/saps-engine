@@ -1,6 +1,7 @@
 package org.fogbowcloud.sebal.engine.scheduler.core.model;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -10,6 +11,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.scheduler.core.model.Job;
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
+import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
@@ -52,12 +54,16 @@ public class SebalJob extends Job {
 		//****	Each DB interaction could be dealt separately in this case?
 		try {
 			imageStore.updateImageState(imageName, imageState);
-			imageStore.addStateStamp(imageName, imageState, imageStore.getImage(imageName).getUpdateTime());
+			
+			ImageData imageData = imageStore.getImage(imageName);			
+			imageStore.addStateStamp(imageName, imageState, imageData.getUpdateTime());
 
 			// updating previous images not updated yet because of any connection problem
 			for (String pendingImage : new ArrayList<String>(getPendingUpdates().keySet())) {
 				imageStore.updateImageState(pendingImage, getPendingUpdates().get(pendingImage));
-				imageStore.addStateStamp(pendingImage, getPendingUpdates().get(pendingImage), imageStore.getImage(imageName).getUpdateTime());
+				
+				ImageData pendingImageData = imageStore.getImage(pendingImage);
+				imageStore.addStateStamp(pendingImage, getPendingUpdates().get(pendingImage), pendingImageData.getUpdateTime());
 				getPendingUpdates().remove(pendingImage);
 			}
 		} catch (SQLException e) {

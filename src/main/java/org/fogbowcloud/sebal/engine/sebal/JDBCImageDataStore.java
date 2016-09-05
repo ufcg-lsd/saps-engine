@@ -27,8 +27,10 @@ public class JDBCImageDataStore implements ImageDataStore {
     private static final String STATE_COL = "state";
     private static final String STATION_ID_COL = "station_id";
     private static final String SEBAL_VERSION_COL = "sebal_version";
-    private static final String SEBAL_ENGINE_VERSION_COL = "sebal_engine_version";
+    private static final String CRAWLER_VERSION_COL = "crawler_version";
+    private static final String FETCHER_VERSION_COL = "fetcher_version";
     private static final String BLOWOUT_VERSION_COL = "blowout_version";
+    private static final String FMASK_VERSION_COL = "fmask_version";
     private static final String CREATION_TIME_COL = "ctime";
     private static final String UPDATED_TIME_COL = "utime";
     private static final String IMAGE_STATUS_COL = "status";
@@ -75,17 +77,19 @@ public class JDBCImageDataStore implements ImageDataStore {
         try {
             connection = getConnection();
             statement = connection.createStatement();
-            statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME
-                    + "(" + IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, "
-                    + DOWNLOAD_LINK_COL + " VARCHAR(255), " + STATE_COL
-                    + " VARCHAR(100), " + FEDERATION_MEMBER_COL
-                    + " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
-                    + STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
-                    + " VARCHAR(255), " + SEBAL_ENGINE_VERSION_COL
-                    + " VARCHAR(255), " + BLOWOUT_VERSION_COL
-                    + " VARCHAR(255), " + CREATION_TIME_COL + " TIMESTAMP, "
-                    + UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL
-                    + " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
+			statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME
+					+ "(" + IMAGE_NAME_COL + " VARCHAR(255) PRIMARY KEY, "
+					+ DOWNLOAD_LINK_COL + " VARCHAR(255), " + STATE_COL
+					+ " VARCHAR(100), " + FEDERATION_MEMBER_COL
+					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
+					+ STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
+					+ " VARCHAR(255), " + CRAWLER_VERSION_COL
+					+ " VARCHAR(255), " + FETCHER_VERSION_COL
+					+ " VARCHAR(255)," + BLOWOUT_VERSION_COL
+					+ " VARCHAR(255), " + FMASK_VERSION_COL + " VARCHAR(255),"
+					+ CREATION_TIME_COL + " TIMESTAMP, " + UPDATED_TIME_COL
+					+ " TIMESTAMP, " + IMAGE_STATUS_COL + " VARCHAR(255), "
+					+ ERROR_MSG_COL + " VARCHAR(255))");
             
             statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME
                     + "(" + IMAGE_NAME_COL + " VARCHAR(255), "
@@ -155,7 +159,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     private static final String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-            + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
+            + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
 
     @Override
     public void addImage(String imageName, String downloadLink, int priority, String sebalVersion) throws SQLException {
@@ -183,8 +187,10 @@ public class JDBCImageDataStore implements ImageDataStore {
             insertStatement.setString(7, sebalVersion);
             insertStatement.setString(8, "NE");
             insertStatement.setString(9, "NE");
-            insertStatement.setString(10, ImageData.AVAILABLE);
-            insertStatement.setString(11, "no_errors");
+            insertStatement.setString(10, "NE");
+            insertStatement.setString(11, "NE");
+            insertStatement.setString(12, ImageData.AVAILABLE);
+            insertStatement.setString(13, "no_errors");
 
             insertStatement.execute();
         } finally {
@@ -248,8 +254,8 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
 
     private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET download_link = ?, state = ?, federation_member = ?,"
-            + " priority = ?, station_id = ?, sebal_version = ?, sebal_engine_version = ?, blowout_version = ?, utime = now(), status = ?,"
-            + " error_msg = ? WHERE image_name = ?";
+            + " priority = ?, station_id = ?, sebal_version = ?, crawler_version = ?, fetcher_version = ?, blowout_version = ?, fmask_version = ?,"
+            + " utime = now(), status = ?," + " error_msg = ? WHERE image_name = ?";
 
     @Override
     public void updateImage(ImageData imageData) throws SQLException {
@@ -271,11 +277,13 @@ public class JDBCImageDataStore implements ImageDataStore {
             updateStatement.setInt(4, imageData.getPriority());
             updateStatement.setString(5, imageData.getStationId());
             updateStatement.setString(6, imageData.getSebalVersion());
-            updateStatement.setString(7, imageData.getSebalEngineVersion());
-            updateStatement.setString(8, imageData.getBlowoutVersion());
-            updateStatement.setString(9, imageData.getImageStatus());
-            updateStatement.setString(10, imageData.getImageError());
-            updateStatement.setString(11, imageData.getName());
+            updateStatement.setString(7, imageData.getCrawlerVersion());
+            updateStatement.setString(8, imageData.getFetcherVersion());
+            updateStatement.setString(9, imageData.getBlowoutVersion());
+            updateStatement.setString(10, imageData.getFmaskVersion());
+            updateStatement.setString(11, imageData.getImageStatus());
+            updateStatement.setString(12, imageData.getImageError());
+            updateStatement.setString(13, imageData.getName());
 
             updateStatement.execute();
         } finally {
@@ -557,8 +565,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 					.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
 					rs.getString(STATION_ID_COL), rs
 							.getString(SEBAL_VERSION_COL), rs
-							.getString(SEBAL_ENGINE_VERSION_COL), rs
+							.getString(CRAWLER_VERSION_COL), rs
+							.getString(FETCHER_VERSION_COL), rs
 							.getString(BLOWOUT_VERSION_COL), rs
+							.getString(FMASK_VERSION_COL), rs
 							.getTimestamp(CREATION_TIME_COL), rs
 							.getTimestamp(UPDATED_TIME_COL), rs
 							.getString(ERROR_MSG_COL)));
