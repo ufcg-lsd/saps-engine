@@ -225,6 +225,14 @@ public class Fetcher {
 					.getStationId(imageData, properties);
 			String fetcherVersion = getFetcherVersion();
 			
+			if(fetcherVersion == null || fetcherVersion.isEmpty()) {
+				LOGGER.error("Fmask version file does not exist");
+				LOGGER.info("Restart Fetcher infrastructure");
+				
+				rollBackFetch(imageData);
+				System.exit(1);
+			}
+			
 			imageData.setStationId(stationId);
 			imageData.setFetcherVersion(fetcherVersion);
 			imageData.setSebalVersion(getSebalVersion(localImageResultsPath));
@@ -262,6 +270,7 @@ public class Fetcher {
 	}
 
 	protected void rollBackFetch(ImageData imageData) {
+		LOGGER.debug("Rolling back Fetcher for image " + imageData);
 
 		fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB, pendingImageFetchMap);
 		try {

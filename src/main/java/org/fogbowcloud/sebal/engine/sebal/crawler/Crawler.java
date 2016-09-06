@@ -3,7 +3,6 @@ package org.fogbowcloud.sebal.engine.sebal.crawler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
@@ -240,13 +239,42 @@ public class Crawler {
 						+ imageData);
 				markImageWithErrorAndUpdateState(imageData, properties);
 				return;
-			}
-			
-			String fmaskVersion = getFmaskVersion();
+			}			
 			
 			imageData.setState(ImageState.DOWNLOADED);
-			imageData.setCrawlerVersion(getCrawlerVersion());
+			
+			String fmaskVersion = getFmaskVersion();
+			String crawlerVersion = getCrawlerVersion();
+			
+			if(fmaskVersion == null || fmaskVersion.isEmpty()) {
+				LOGGER.error("Fmask version file does not exist");
+				LOGGER.info("Restart Crawler infrastructure");
+				
+				removeFromPendingAndUpdateState(imageData, properties);
+				deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
+				System.exit(1);
+			}
+			
+			if(crawlerVersion == null || crawlerVersion.isEmpty()) {
+				LOGGER.error("Crawler version file does not exist");
+				LOGGER.info("Restart Crawler infrastructure");
+				
+				removeFromPendingAndUpdateState(imageData, properties);
+				deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
+				System.exit(1);
+			}
+			
+			imageData.setCrawlerVersion(crawlerVersion);
 			imageData.setFmaskVersion(fmaskVersion);
+			
+			if(crawlerVersion == null || crawlerVersion.isEmpty()) {
+				LOGGER.error("Crawler version file does not exist");
+				LOGGER.info("Restart Crawler infrastructure");
+				
+				removeFromPendingAndUpdateState(imageData, properties);
+				deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
+				System.exit(1);
+			}
 
 			try {
 				imageStore.updateImage(imageData);
@@ -461,17 +489,18 @@ public class Crawler {
 		
 		String sebalEngineDirPath = System.getProperty("user.dir");
 		File sebalEngineDir = new File(sebalEngineDirPath);
+		String[] sebalEngineVersionFileSplit = null;
 		
-		if (sebalEngineDir.exists() && sebalEngineDir.isDirectory()) {
-			for (File file : sebalEngineDir.listFiles()) {
+		if (sebalEngineDir.exists() && sebalEngineDir.isDirectory()) {			
+			for (File file : sebalEngineDir.listFiles()) {				
 				if (file.getName().startsWith("sebal-engine.version.")) {
-					String[] sebalEngineVersionFileSplit = file.getName()
-							.split("\\.");
+					sebalEngineVersionFileSplit = file.getName()
+							.split("\\.");					
 					return sebalEngineVersionFileSplit[2];
 				}
-			}
+			}			
 		}
 		
-		return "";
+		return null;
 	}
 }
