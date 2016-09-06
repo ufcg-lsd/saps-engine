@@ -37,6 +37,8 @@ public class Crawler {
 	protected ConcurrentMap<String, ImageData> pendingImageDownloadMap;
 	private String federationMember;
 	private FMask fmask;
+	private String crawlerVersion;
+	private String fmaskVersion;
 
 	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
 	// Image dir size in bytes
@@ -106,13 +108,17 @@ public class Crawler {
 			LOGGER.info("Loading map of pending images to download");
 			this.pendingImageDownloadMap = pendingImageDownloadDB
 					.getHashMap("map");
-		}
+		}		
 	}
 
 	public void exec() throws InterruptedException, IOException {
+		if(!crawlerVersionFileExists() || !fmaskVersionFileExists()) {
+			System.exit(1);
+		}
+		
 		cleanUnfinishedDownloadedData(properties);
 
-		try {
+		try {			
 			while (true) {
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
@@ -129,6 +135,37 @@ public class Crawler {
 		} finally {
 			pendingImageDownloadDB.close();
 		}
+	}
+	
+	protected boolean crawlerVersionFileExists() {
+		this.crawlerVersion = getCrawlerVersion();
+
+		if(crawlerVersion == null || crawlerVersion.isEmpty()) {
+			LOGGER.error("Crawler version file does not exist");
+			LOGGER.info("Restart Crawler infrastructure");
+			
+			return false;
+		}
+		
+		return true;
+	}
+	
+	protected boolean fmaskVersionFileExists() {
+		try {			
+			this.fmaskVersion = getFmaskVersion();
+		} catch(IOException e) {
+			LOGGER.error("Error while reading Fmask version file");
+			return false;
+		}		
+		
+		if(fmaskVersion == null || fmaskVersion.isEmpty()) {
+			LOGGER.error("Fmask version file does not exist");
+			LOGGER.info("Restart Crawler infrastructure");
+			
+			return false;
+		}
+		
+		return true;
 	}
 
 	protected void cleanUnfinishedDownloadedData(Properties properties)
@@ -159,6 +196,7 @@ public class Crawler {
 			
 			// FIXME: see a way to deal with this problem better than this
 			if(imageDataList.isEmpty()) {
+				LOGGER.debug("No images to download at the moment");
 				return;
 			}
 		} catch (SQLException e) {
@@ -247,39 +285,8 @@ public class Crawler {
 			}			
 			
 			imageData.setState(ImageState.DOWNLOADED);
-			
-			String fmaskVersion = getFmaskVersion();
-			String crawlerVersion = getCrawlerVersion();
-			
-			if(fmaskVersion == null || fmaskVersion.isEmpty()) {
-				LOGGER.error("Fmask version file does not exist");
-				LOGGER.info("Restart Crawler infrastructure");
-				
-				removeFromPendingAndUpdateState(imageData, properties);
-				deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
-				System.exit(1);
-			}
-			
-			if(crawlerVersion == null || crawlerVersion.isEmpty()) {
-				LOGGER.error("Crawler version file does not exist");
-				LOGGER.info("Restart Crawler infrastructure");
-				
-				removeFromPendingAndUpdateState(imageData, properties);
-				deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
-				System.exit(1);
-			}
-			
 			imageData.setCrawlerVersion(crawlerVersion);
-			imageData.setFmaskVersion(fmaskVersion);
-			
-			if(crawlerVersion == null || crawlerVersion.isEmpty()) {
-				LOGGER.error("Crawler version file does not exist");
-				LOGGER.info("Restart Crawler infrastructure");
-				
-				removeFromPendingAndUpdateState(imageData, properties);
-				deleteImageFromDisk(imageData, properties.getProperty(SEBAL_EXPORT_PATH));
-				System.exit(1);
-			}
+			imageData.setFmaskVersion(fmaskVersion);		
 
 			try {
 				imageStore.updateImage(imageData);

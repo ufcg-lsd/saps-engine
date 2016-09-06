@@ -34,6 +34,7 @@ public class Fetcher {
 	private ConcurrentMap<String, ImageData> pendingImageFetchMap;
 	private FTPIntegrationImpl ftpImpl;
 	private FetcherHelper fetcherHelper;
+	private String fetcherVersion;
 
 	private String ftpServerIP;
 	private String ftpServerPort;
@@ -93,6 +94,10 @@ public class Fetcher {
 	public void exec() throws Exception {
 
 		try {
+			if(!versionFileExists()) {
+				System.exit(1);
+			}
+			
 			while (true) {
 				cleanUnfinishedFetchedData(properties);
 				List<ImageData> imagesToFetch = imagesToFetch();
@@ -110,6 +115,19 @@ public class Fetcher {
 		}
 
 		pendingImageFetchDB.close();
+	}
+	
+	protected boolean versionFileExists() {
+		this.fetcherVersion = getFetcherVersion();
+		
+		if(fetcherVersion == null || fetcherVersion.isEmpty()) {
+			LOGGER.error("Fmask version file does not exist");
+			LOGGER.info("Restart Fetcher infrastructure");
+						
+			return false;
+		}
+		
+		return true;
 	}
 
 	protected void cleanUnfinishedFetchedData(Properties properties)
@@ -223,15 +241,6 @@ public class Fetcher {
 
 			String stationId = fetcherHelper
 					.getStationId(imageData, properties);
-			String fetcherVersion = getFetcherVersion();
-			
-			if(fetcherVersion == null || fetcherVersion.isEmpty()) {
-				LOGGER.error("Fmask version file does not exist");
-				LOGGER.info("Restart Fetcher infrastructure");
-				
-				rollBackFetch(imageData);
-				System.exit(1);
-			}
 			
 			imageData.setStationId(stationId);
 			imageData.setFetcherVersion(fetcherVersion);
