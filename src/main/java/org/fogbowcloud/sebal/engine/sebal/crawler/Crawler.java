@@ -192,13 +192,7 @@ public class Crawler {
 			// images
 			// marked as DOWNLOADING
 			imageDataList = imageStore.getImagesToDownload(federationMember,
-					(int) maxImagesToDownload);
-			
-			// FIXME: see a way to deal with this problem better than this
-			if(imageDataList.isEmpty()) {
-				LOGGER.debug("No images to download at the moment");
-				return;
-			}
+					(int) maxImagesToDownload);			
 		} catch (SQLException e) {
 			// TODO: deal with this better
 			LOGGER.error("Error while accessing not downloaded images in DB", e);
@@ -426,11 +420,17 @@ public class Crawler {
 
 		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
 
+		String resultsPath = exportPath + File.separator + "results";
+
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : setOfImageData) {
+				String imageResultsPath = resultsPath + File.separator
+						+ imageData.getName();
+				File imageResultsDir = new File(imageResultsPath);
+
 				if (imageData.getState().equals(ImageState.FETCHED)
 						&& imageData.getFederationMember().equals(
-								federationMember)) {
+								federationMember) && imageResultsDir.exists()) {
 					LOGGER.debug("Image " + imageData.getName() + " fetched");
 					LOGGER.info("Removing" + imageData);
 
