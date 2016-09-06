@@ -156,6 +156,11 @@ public class Crawler {
 			// marked as DOWNLOADING
 			imageDataList = imageStore.getImagesToDownload(federationMember,
 					(int) maxImagesToDownload);
+			
+			// FIXME: see a way to deal with this problem better than this
+			if(imageDataList.isEmpty()) {
+				return;
+			}
 		} catch (SQLException e) {
 			// TODO: deal with this better
 			LOGGER.error("Error while accessing not downloaded images in DB", e);
