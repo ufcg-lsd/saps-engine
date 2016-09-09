@@ -2,6 +2,7 @@ package org.fogbowcloud.sebal.engine.swift;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -164,7 +165,18 @@ public class SwiftClient {
 		
 		LOGGER.debug("Object " + completeFileName + " deleted successfully");
 	}
-
+	
+	
+	public int numberOfFilesInContainer(String containerName) {
+		LOGGER.debug("containerName " + containerName);
+		
+		Container container = account.getContainer(containerName);
+		
+		Collection<StoredObject> objects = container.list();
+		
+		return objects.size();
+	}
+	
 	private String normalizePseudFolder(String value) {
 		StringBuilder normalizedPath = new StringBuilder();
 		// Path cannot have separator "/" in begin.
