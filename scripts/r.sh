@@ -24,9 +24,21 @@ function prepareDependencies {
 
   if [ "${PINPOINTED_SEBAL_TAG}" -eq "NE" ]
   then
-  	git clone ${SEBAL_URL}	
+    git clone ${SEBAL_URL}
+    PROCESS_OUTPUT=$?
+	
+    if [ $PROCESS_OUTPUT -ne 0 ]
+    then
+      echo $PROCESS_OUTPUT > ${REMOTE_COMMAND_EXIT_PATH}
+    fi
   else
-	git clone --branch ${PINPOINTED_SEBAL_TAG} ${SEBAL_URL}
+    git clone --branch ${PINPOINTED_SEBAL_TAG} ${SEBAL_URL}
+    PROCESS_OUTPUT=$?
+
+    if [ $PROCESS_OUTPUT -ne 0 ]
+    then
+      echo $PROCESS_OUTPUT > ${REMOTE_COMMAND_EXIT_PATH}
+    fi
   fi
 
   # getting sebal snapshot from public_html
