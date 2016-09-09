@@ -50,19 +50,27 @@ public class DBMain {
 
 			// TODO: one more field corresponding to SEBAL software version
 			if (args.length < 5) {
-				System.err.println("Usage: DBMain /path/to/sebal.conf add firstYear lastYear /path/to/regions/file [--sebal-version]");
+				System.err.println("Usage: DBMain /path/to/sebal.conf add firstYear lastYear /path/to/regions/file"
+						+ " [--sebal-repository] [--repository-tag]");
 				System.exit(1);
 			}
 
 			int firstYear;
 			int lastYear;		
 			String sebalVersion = null;
+			String sebalTag = null;
 			
 			if(args.length > 5) {
-				String opt = args[6];				
-				if(opt.equals("--sebal-version")) {
+				String opt = args[6];
+				if(opt.equals("--sebal-repository")) {
 					// pinpoint specific SEBAL software version to be used in Worker
 					sebalVersion = args[7];
+					opt = args[7];
+					if(opt.equals("--repository-tag")) {
+						sebalTag = args[8];
+					} else {
+						sebalTag = "NE";
+					}
 				} else {
 					sebalVersion = "NE";
 				}
@@ -73,7 +81,7 @@ public class DBMain {
 				lastYear = new Integer(args[3]);
 				try {
 					List<String> regions = getRegions(args[4]);
-					dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion);
+					dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion, sebalTag);
 				} catch (IOException e) {
 					String errorMsg = "Error while reading regions from file path " + args[4];
 					LOGGER.error(errorMsg, e);

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
-import org.fogbowcloud.sebal.engine.scheduler.core.model.SebalJob;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
@@ -43,7 +42,7 @@ public class TestSebalJob {
 		Date date = new Date(10000854);
 		ImageData imageData = new ImageData("fakeimagename", "link1",
 				ImageState.NOT_DOWNLOADED, "fake-federation", 0, "NE", "NE",
-				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
 				new Timestamp(date.getTime()), "");
 		
 		doNothing().when(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
@@ -60,7 +59,7 @@ public class TestSebalJob {
 		String fakeImageName = "fakeimagename";
 		Date date = new Date(10000854);
 		ImageData imageData = new ImageData("fakeimagename", "link1",
-				ImageState.NOT_DOWNLOADED, "fake-federation", 0, "NE", "NE",
+				ImageState.NOT_DOWNLOADED, "fake-federation", 0, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
 				new Timestamp(date.getTime()), "");
 		
@@ -70,7 +69,7 @@ public class TestSebalJob {
 		
 		String pendingImageName = "pendindImage";
 		ImageData pendingImageData = new ImageData("pendingImage", "link2",
-				ImageState.NOT_DOWNLOADED, "fake-federation", 0, "NE", "NE",
+				ImageState.NOT_DOWNLOADED, "fake-federation", 0, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
 				new Timestamp(date.getTime()), "");
 		

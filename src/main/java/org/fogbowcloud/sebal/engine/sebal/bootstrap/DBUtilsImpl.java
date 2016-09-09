@@ -116,7 +116,7 @@ public class DBUtilsImpl implements DBUtils {
     }
 
     @Override
-    public void fillDB(int firstYear, int lastYear, List<String> regions, String sebalVersion) throws IOException {
+    public void fillDB(int firstYear, int lastYear, List<String> regions, String sebalVersion, String sebalTag) throws IOException {
 
         LOGGER.debug("Regions: " + regions);
         
@@ -140,7 +140,7 @@ public class DBUtilsImpl implements DBUtils {
                 for (String imageName : imageAndDownloadLink.keySet()) {
                     try {
                         getImageStore().addImage(imageName,
-                                imageAndDownloadLink.get(imageName), priority, sebalVersion);
+                                imageAndDownloadLink.get(imageName), priority, sebalVersion, sebalTag);
                     } catch (SQLException e) {
                         // TODO do we need to do something?
                         LOGGER.error("Error while adding image at data base.", e);

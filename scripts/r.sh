@@ -16,32 +16,17 @@ LOG4J_PATH=
 
 # This function downloads all projects and dependencies
 function prepareDependencies {
-  #mkdir -p ${SANDBOX}
-  #cd ${SANDBOX}
-  #mkdir -p ${OUTPUT_FOLDER}
-
   #installing git
   sudo apt-get update
   echo -e "Y\n" | sudo apt-get install git
 
   cd ${SANDBOX}
 
-  if [ "${PINPOINTED_SEBAL_VERSION}" -ne "NE" ]
+  if [ "${PINPOINTED_SEBAL_TAG}" -eq "NE" ]
   then
-  	# make a new blank repository in the current directory
-  	git init
-
-  	# add a remote
-  	git remote add origin ${SEBAL_URL}
-
-  	# fetch a commit (or branch or tag) of interest
-  	# Note: the full history of this commit will be retrieved
-  	git fetch origin ${PINPOINTED_SEBAL_VERSION}
-
-  	# reset this repository's master branch to the commit of interest
-  	git reset --hard FETCH_HEAD
+  	git clone ${SEBAL_URL}	
   else
-  	git clone ${SEBAL_URL}
+	git clone --branch ${PINPOINTED_SEBAL_TAG} ${SEBAL_URL}
   fi
 
   # getting sebal snapshot from public_html

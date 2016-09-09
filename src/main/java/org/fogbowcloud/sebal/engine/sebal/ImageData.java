@@ -14,6 +14,7 @@ public class ImageData implements Serializable {
 	private int priority;
 	private String stationId;
 	private String sebalVersion;
+	private String sebalTag;
 	private String crawlerVersion;
 	private String fetcherVersion;
 	private String blowoutVersion;
@@ -29,9 +30,9 @@ public class ImageData implements Serializable {
 
 	public ImageData(String name, String downloadLink, ImageState state,
 			String federationMember, int priority, String stationId,
-			String sebalVersion, String crawlerVersion, String fetcherVersion,
-			String blowoutVersion, String fmaskVersion, Timestamp creationTime,
-			Timestamp updateTime, String error) {
+			String sebalVersion, String sebalTag, String crawlerVersion,
+			String fetcherVersion, String blowoutVersion, String fmaskVersion,
+			Timestamp creationTime, Timestamp updateTime, String error) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -39,6 +40,7 @@ public class ImageData implements Serializable {
 		this.priority = priority;
 		this.stationId = stationId;
 		this.sebalVersion = sebalVersion;
+		this.sebalTag = sebalTag;
 		this.crawlerVersion = crawlerVersion;
 		this.fetcherVersion = fetcherVersion;
 		this.blowoutVersion = blowoutVersion;
@@ -75,6 +77,10 @@ public class ImageData implements Serializable {
 	
 	public String getSebalVersion() {
 		return sebalVersion;
+	}
+	
+	public String getSebalTag() {
+		return sebalTag;
 	}
 	
 	public String getCrawlerVersion() {
@@ -137,6 +143,10 @@ public class ImageData implements Serializable {
 		this.sebalVersion = sebalVersion;
 	}
 	
+	public void setSebalTag(String sebalTag) {
+		this.sebalTag = sebalTag;
+	}
+	
 	public void setCrawlerVersion(String crawlerVersion) {
 		this.crawlerVersion = crawlerVersion;
 	}
@@ -172,10 +182,10 @@ public class ImageData implements Serializable {
 	public String toString() {
 		return name + ", " + downloadLink + ", " + state.getValue() + ", "
 				+ federationMember + ", " + priority + ", " + stationId + ", "
-				+ sebalVersion + ", " + crawlerVersion + ", " + fetcherVersion
-				+ ", " + blowoutVersion + ", " + fmaskVersion + ", "
-				+ creationTime + ", " + updateTime + ", " + status + ", "
-				+ error;
+				+ sebalVersion + ", " + sebalTag + ", " + crawlerVersion + ", "
+				+ fetcherVersion + ", " + blowoutVersion + ", " + fmaskVersion
+				+ ", " + creationTime + ", " + updateTime + ", " + status
+				+ ", " + error;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
@@ -196,6 +206,7 @@ public class ImageData implements Serializable {
 					&& getFederationMember().equals(other.getFederationMember())
 					&& getStationId().equals(other.getStationId())
 					&& getSebalVersion().equals(other.getSebalVersion())
+					&& getSebalTag().equals(other.getSebalTag())
 					&& getCrawlerVersion().equals(other.getCrawlerVersion())
 					&& getFetcherVersion().equals(other.getFetcherVersion())
 					&& getBlowoutVersion().equals(other.getBlowoutVersion())

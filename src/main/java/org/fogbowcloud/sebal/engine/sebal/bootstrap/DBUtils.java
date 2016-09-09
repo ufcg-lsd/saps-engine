@@ -15,5 +15,5 @@ public interface DBUtils {
 
 	void getRegionImages(int firstYear, int lastYear, String region) throws SQLException, ParseException;
 
-	void fillDB(int firstYear, int lastYear, List<String> regions, String sebalVersion) throws IOException;
+	void fillDB(int firstYear, int lastYear, List<String> regions, String sebalVersion, String sebalTag) throws IOException;
 }

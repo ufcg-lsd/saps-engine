@@ -18,6 +18,8 @@ import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 
 
 public class SebalTasks {
+	
+	public static final String DEFAULT_FIELD = "NE";
 
 	public static final String F1_PHASE = "f1";
 	public static final String C_PHASE = "c";
@@ -33,7 +35,7 @@ public class SebalTasks {
 	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
-	private static final String METADATA_SEBAL_VERSION = "sebal_version";
+	private static final String METADATA_SEBAL_TAG = "sebal_version";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -43,20 +45,22 @@ public class SebalTasks {
 	private static final String METADATA_REMOTE_BOUNDINGBOX_PATH = "remote_boundingbox_path";
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
 	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
-	private static final String METADATA_SEBAL_URL = "sebal_url";
+	private static final String METADATA_SEBAL_VERSION = "sebal_url";
 	private static final String METADATA_REPOS_USER = "repository_user";
 	private static final String METADATA_MOUNT_POINT = "mount_point";
 	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
 	
 	public static TaskImpl createRTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
-			String location, String nfsServerIP, String nfsServerPort, String sebalVersion) {
+			String location, String nfsServerIP, String nfsServerPort,
+			String sebalVersion, String sebalTag) {
 		LOGGER.debug("Creating R task for image " + imageName);
 
-		settingCommonTaskMetadata(properties, rTaskImpl);
+		settingCommonTaskMetadata(properties, rTaskImpl);		
 
-		// setting image R execution properties
-		rTaskImpl.putMetadata(METADATA_SEBAL_URL, properties.getProperty("sebal_url"));
+		// setting image R execution properties		
+		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);		
+		rTaskImpl.putMetadata(METADATA_SEBAL_TAG, sebalTag);
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 		rTaskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
@@ -67,7 +71,6 @@ public class SebalTasks {
 				properties.getProperty("sebal_mount_point"));
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_IP, nfsServerIP);
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
-		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);
 		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 				rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_"
 						+ rTaskImpl.getId());
@@ -221,9 +224,9 @@ public class SebalTasks {
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
 		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
-				task.getMetadata(METADATA_SEBAL_URL));
-		command = command.replaceAll(Pattern.quote("${PINPOINTED_SEBAL_VERSION}"),
 				task.getMetadata(METADATA_SEBAL_VERSION));
+		command = command.replaceAll(Pattern.quote("${PINPOINTED_SEBAL_TAG}"),
+				task.getMetadata(METADATA_SEBAL_TAG));
 
 		// repositories properties
 		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),

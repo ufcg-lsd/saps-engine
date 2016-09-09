@@ -17,7 +17,7 @@ public interface ImageDataStore {
     String DATASTORE_IP = "datastore_ip";
     String DATASTORE_PORT = "datastore_port";
 
-    void addImage(String imageName, String downloadLink, int priority, String sebalVersion) throws SQLException;
+    void addImage(String imageName, String downloadLink, int priority, String sebalVersion, String sebalTag) throws SQLException;
 
     void addStateStamp(String imageName, ImageState state, Timestamp timestamp) throws SQLException;
 

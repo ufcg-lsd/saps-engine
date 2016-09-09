@@ -66,7 +66,7 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 
@@ -112,7 +112,7 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 
@@ -160,11 +160,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 
@@ -210,11 +210,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 
@@ -269,11 +269,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 
@@ -329,7 +329,7 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 
@@ -379,11 +379,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 
@@ -452,11 +452,11 @@ public class TestFetcherIntegration {
 		Date date = Mockito.mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE",
+				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "");
 
