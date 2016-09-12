@@ -11,6 +11,8 @@ import java.util.Properties;
 
 public class DBMain {
 
+	private static final String DEFAULT_SEBAL_VERSION = "default_sebal_version";
+	
 	private static final Logger LOGGER = Logger.getLogger(DBMain.class);
 
 	public static void main(String[] args) throws SQLException, ParseException {
@@ -72,7 +74,7 @@ public class DBMain {
 						sebalTag = "NE";
 					}
 				} else {
-					sebalVersion = "NE";
+					sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
 				}
 			}
 

@@ -19,8 +19,6 @@ import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 
 public class SebalTasks {
 	
-	public static final String DEFAULT_FIELD = "NE";
-
 	public static final String F1_PHASE = "f1";
 	public static final String C_PHASE = "c";
 	public static final String F2_PHASE = "f2";
