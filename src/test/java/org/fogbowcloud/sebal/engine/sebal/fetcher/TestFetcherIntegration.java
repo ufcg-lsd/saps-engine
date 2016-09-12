@@ -1,10 +1,8 @@
 package org.fogbowcloud.sebal.engine.sebal.fetcher;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -13,13 +11,10 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
-import org.fogbowcloud.sebal.engine.sebal.FMask;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
-import org.fogbowcloud.sebal.engine.sebal.USGSNasaRepository;
-import org.fogbowcloud.sebal.engine.sebal.crawler.Crawler;
 import org.fogbowcloud.sebal.engine.swift.SwiftClient;
 import org.junit.Assert;
 import org.junit.Before;
@@ -498,95 +493,6 @@ public class TestFetcherIntegration {
 		Assert.assertEquals(ImageState.CORRUPTED, imageData.getState());
 		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
 	}
-	
-	@Test
-	public void testGetSebalVersion() throws FileNotFoundException, UnsupportedEncodingException {
-		// setup
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
-		Properties properties = Mockito.mock(Properties.class);
-		String ftpServerIP = "fake-IP";
-		String ftpServerPort = "fake-PORT";
-		String fakeLocalImageDirPath = System.getProperty("user.dir");
-		
-		PrintWriter writer = new PrintWriter("SEBAL.version.VERSION", "UTF-8");
-		writer.println("VERSION");
-		writer.close();
-		
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
-		
-		// exercise
-		String sebalVersion = fetcher.getSebalVersion(fakeLocalImageDirPath);
-		
-		// expect
-		Assert.assertEquals("VERSION", sebalVersion);
-		
-		File file = new File("SEBAL.version.VERSION");
-		file.delete();
-	}
-	
-//	@Test
-//	// TODO: run this test
-//	public void testDeleteFilesFromSwift() throws Exception {
-//		// setup
-//		Properties properties = new Properties();
-//		FileInputStream input = new FileInputStream("config/sebal.conf");
-//		properties.load(input);
-//		
-//		SwiftClient swiftClient = new SwiftClient(properties);
-//		
-//		File tempFile1 = folder.newFile("file1.nc");
-//		File tempFile2 = folder.newFile("file2.nc");
-//		
-//		FileInputStream file1InputStream = new FileInputStream(tempFile1);
-//		FileInputStream file2InputStream = new FileInputStream(tempFile2);
-//		
-//		String checkSum1 = DigestUtils.md5Hex(IOUtils
-//				.toByteArray(file1InputStream));
-//		String checkSum2 = DigestUtils.md5Hex(IOUtils
-//				.toByteArray(file2InputStream));
-//		
-//		file1InputStream.close();
-//		file2InputStream.close();
-//		
-//		folder.newFile(tempFile1.getName() + "." + checkSum1 + ".md5");
-//		folder.newFile(tempFile2.getName() + "." + checkSum2 + ".md5");
-//		
-//		String containerName = "container-test";
-//		String pseudFolder = "test/images";
-//		
-//		swiftClient.createContainer(containerName);
-//		
-//		swiftClient.uploadFile(containerName, tempFile1, pseudFolder);
-//		swiftClient.uploadFile(containerName, tempFile2, pseudFolder);
-//		
-//		Date date = new Date(Calendar
-//				.getInstance().getTimeInMillis());			
-//		
-//		ImageData imageData1 = new ImageData(tempFile1.getName(), "",
-//				ImageState.FETCHED, "", 0, "", "", "", "", "", "",
-//				new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-//				"");
-//		ImageData imageData2 = new ImageData(tempFile2.getName(), "",
-//				ImageState.FETCHED, "", 0, "", "", "", "", "", "",
-//				new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-//				"");		
-//		
-//		Fetcher fetcher = Mockito.mock(Fetcher.class);			
-//		
-//		// exercise
-//		fetcher.deleteFilesFromSwift(imageData1, properties);
-//		fetcher.deleteFilesFromSwift(imageData2, properties);
-//		
-//		// expect
-//		Assert.assertTrue(swiftClient.isContainerEmpty(containerName));
-//		
-//		// clean environment
-//		swiftClient.deleteContainer(containerName);
-//	}
 	
 	@Test
 	public void testGetFetcherVersion() throws SQLException, IOException, InterruptedException {
