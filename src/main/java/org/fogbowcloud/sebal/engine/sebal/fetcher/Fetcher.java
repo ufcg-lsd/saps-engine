@@ -244,7 +244,6 @@ public class Fetcher {
 			
 			imageData.setStationId(stationId);
 			imageData.setFetcherVersion(fetcherVersion);
-			imageData.setSebalVersion(getSebalVersion(localImageResultsPath));
 
 			try {
 				LOGGER.info("Updating image data in DB");
@@ -501,22 +500,6 @@ public class Fetcher {
 		return properties
 				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) + 
 				File.separator + localImageResultsDir.getName() + File.separator;
-	}
-	
-	protected String getSebalVersion(String localImageResultsPath) {
-		
-		File localImageResultsDir = new File(localImageResultsPath);
-		
-		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {
-			for (File file : localImageResultsDir.listFiles()) {
-				if (file.getName().startsWith("SEBAL.version.")) {
-					String[] versionFileSplit = file.getName().split("\\.");
-					return versionFileSplit[2];
-				}
-			}
-		}
-		
-		return "";
 	}
 	
 	protected String getFetcherVersion() {
