@@ -34,6 +34,7 @@ public class SebalTasks {
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 	private static final String METADATA_SEBAL_TAG = "sebal_version";
+	private static final String METADATA_SEBAL_R_CHECKSUM = "sebal_r_checksum";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -59,6 +60,7 @@ public class SebalTasks {
 		// setting image R execution properties		
 		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);		
 		rTaskImpl.putMetadata(METADATA_SEBAL_TAG, sebalTag);
+		rTaskImpl.putMetadata(METADATA_SEBAL_R_CHECKSUM, properties.getProperty("sebal_r_checksum"));
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 		rTaskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
@@ -225,6 +227,8 @@ public class SebalTasks {
 				task.getMetadata(METADATA_SEBAL_VERSION));
 		command = command.replaceAll(Pattern.quote("${PINPOINTED_SEBAL_TAG}"),
 				task.getMetadata(METADATA_SEBAL_TAG));
+		command = command.replaceAll(Pattern.quote("${ORIGINAL_CHECKSUM}"),
+				task.getMetadata(METADATA_SEBAL_R_CHECKSUM));
 
 		// repositories properties
 		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
