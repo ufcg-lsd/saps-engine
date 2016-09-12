@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -54,7 +56,7 @@ public class DBMain {
 			// TODO: one more field corresponding to SEBAL software version
 			if (args.length < 5) {
 				System.err.println("Usage: DBMain /path/to/sebal.conf add firstYear lastYear /path/to/regions/file"
-						+ " [--sebal-repository] [--repository-tag]");
+						+ " [--sebal-repository] urlToRepository [--repository-tag] tagFromRepository");
 				System.exit(1);
 			}
 
