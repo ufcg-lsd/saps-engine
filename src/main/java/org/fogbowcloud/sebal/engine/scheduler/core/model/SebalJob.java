@@ -1,7 +1,6 @@
 package org.fogbowcloud.sebal.engine.scheduler.core.model;
 
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;

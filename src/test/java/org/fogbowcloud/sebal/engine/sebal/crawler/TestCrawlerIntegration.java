@@ -11,7 +11,12 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
-import org.fogbowcloud.sebal.engine.sebal.*;
+import org.fogbowcloud.sebal.engine.sebal.FMask;
+import org.fogbowcloud.sebal.engine.sebal.ImageData;
+import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.ImageState;
+import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.USGSNasaRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
