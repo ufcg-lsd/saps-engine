@@ -16,7 +16,7 @@ public class DBMain {
 	private static final String DEFAULT_SEBAL_VERSION = "default_sebal_version";
 	private static final Logger LOGGER = Logger.getLogger(DBMain.class);
 
-	public static void main(String[] args) throws Exception {				
+	public static void main(String[] args) throws Exception {
 
 		if (args.length < 2) {
 			System.err.println("Usage: DBMain /path/to/sebal.conf [add,list,list-corrupted,get,purge] [options]");
@@ -59,10 +59,10 @@ public class DBMain {
 			}
 
 			int firstYear;
-			int lastYear;		
+			int lastYear;
 			String sebalVersion = null;
 			String sebalTag = null;
-			
+
 			if (args.length > 5) {
 				String opt = args[6];
 				if (opt.equals("--sebal-repository")) {
@@ -88,7 +88,7 @@ public class DBMain {
 				lastYear = new Integer(args[3]);
 				try {
 					List<String> regions = getRegions(args[4]);
-					dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion, sebalTag);					
+					dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion, sebalTag);
 				} catch (IOException e) {
 					String errorMsg = "Error while reading regions from file path " + args[4];
 					LOGGER.error(errorMsg, e);
