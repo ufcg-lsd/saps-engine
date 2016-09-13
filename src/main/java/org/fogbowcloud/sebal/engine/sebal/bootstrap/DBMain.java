@@ -56,7 +56,7 @@ public class DBMain {
 			// TODO: one more field corresponding to SEBAL software version
 			if (args.length < 5) {
 				System.err.println("Usage: DBMain /path/to/sebal.conf add firstYear lastYear /path/to/regions/file"
-						+ " [--sebal-repository] urlToRepository [--repository-tag] tagFromRepository");
+						+ " [--sebal-repository] urlToRepository tagFromRepository");
 				System.exit(1);
 			}
 
@@ -71,14 +71,23 @@ public class DBMain {
 					// pinpoint specific SEBAL software version to be used in
 					// Worker
 					sebalVersion = args[7];
+<<<<<<< HEAD
 					opt = args[7];
 					if (opt.equals("--repository-tag")) {
 						sebalTag = args[8];
 					} else {
 						sebalTag = "NE";
+=======
+					sebalTag = args[8];
+					
+					if(sebalTag == null || sebalTag.isEmpty()) {
+						LOGGER.error("Invalid tag. Insert a valid one");
+						System.exit(1);
+>>>>>>> 425bbc6... Forcing use of a tag when sebal repository is specified
 					}
 				} else {
 					sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
+					sebalTag = "NE";
 				}
 			} else {
 				sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
