@@ -16,13 +16,31 @@ import org.fogbowcloud.blowout.scheduler.core.model.Specification;
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 
-
+// TODO: we will probably have to adapt execution monitor to check process output from init.sh and run.sh
 public class SebalTasks {
 	
+	private static final String INIT_TYPE = "init";
+	private static final String RUN_TYPE = "run";
+	private static final String SEBAL_RUN_SCRIPT_PATH = "sebal_worker_run_script_path";
+	private static final String SEBAL_INIT_SCRIPT_PATH = "sebal_worker_init_script_path";
 	public static final String F1_PHASE = "f1";
 	public static final String C_PHASE = "c";
 	public static final String F2_PHASE = "f2";
-	public static final String R_SCRIPT_PHASE = "rscript";
+	public static final String R_SCRIPT_PHASE = "rscript";	
+
+	private static final String SEBAL_SANDBOX = "sebal_sandbox";
+	private static final String SEBAL_MOUNT_POINT = "sebal_mount_point";
+	private static final String SEBAL_TASK_TIMEOUT = "sebal_task_timeout";
+	private static final String SEBAL_LOCAL_OUTPUT_DIR = "sebal_local_output_dir";
+	private static final String SEBAL_IMAGES_LOCAL_PATH = "sebal_images_local_path";
+	private static final String SEBAL_RESULTS_LOCAL_PATH = "sebal_results_local_path";
+	private static final String SEBAL_REPOSITORY_USER_PRIVATE_KEY = "sebal_repository_user_private_key";
+
+	private static final String SEBAL_REMOTE_USER = "sebal_remote_user";
+	private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
+	private static final String SEBAL_R_SCRIPT_PATH = "sebal_r_script_path";
+	private static final String SEBAL_LOCAL_SCRIPTS_DIR = "sebal_local_scripts_dir";
+	private static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
 	
 	public static final String METADATA_PHASE = "phase";
 	public static final String METADATA_IMAGE_NAME = "image_name";
@@ -34,7 +52,6 @@ public class SebalTasks {
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 	private static final String METADATA_SEBAL_TAG = "sebal_version";
-	private static final String METADATA_SEBAL_R_CHECKSUM = "sebal_r_checksum";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -55,20 +72,19 @@ public class SebalTasks {
 			String sebalVersion, String sebalTag) {
 		LOGGER.debug("Creating R task for image " + imageName);
 
-		settingCommonTaskMetadata(properties, rTaskImpl);		
+		settingCommonTaskMetadata(properties, rTaskImpl);
 
 		// setting image R execution properties		
-		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);		
+		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);
 		rTaskImpl.putMetadata(METADATA_SEBAL_TAG, sebalTag);
-		rTaskImpl.putMetadata(METADATA_SEBAL_R_CHECKSUM, properties.getProperty("sebal_r_checksum"));
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 		rTaskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
-				properties.getProperty("sebal_export_path"));
+				properties.getProperty(SEBAL_EXPORT_PATH));
 		rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
-				properties.getProperty("sebal_local_scripts_dir"));
+				properties.getProperty(SEBAL_LOCAL_SCRIPTS_DIR));
 		rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
-				properties.getProperty("sebal_mount_point"));
+				properties.getProperty(SEBAL_MOUNT_POINT));
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_IP, nfsServerIP);
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
 		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
@@ -81,9 +97,9 @@ public class SebalTasks {
 		rTaskImpl.addCommand(new Command(mkdirCommand, Command.Type.REMOTE));
 
 		// treating repository user private key
-		if (properties.getProperty("sebal_repository_user_private_key") != null) {
+		if (properties.getProperty(SEBAL_REPOSITORY_USER_PRIVATE_KEY) != null) {
 			File privateKeyFile = new File(
-					properties.getProperty("sebal_repository_user_private_key"));
+					properties.getProperty(SEBAL_REPOSITORY_USER_PRIVATE_KEY));
 			String remotePrivateKeyPath = rTaskImpl
 					.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ "/"
@@ -98,22 +114,39 @@ public class SebalTasks {
 					Command.Type.LOCAL));
 		}
 
-		// creating r script for this image
-		File localScriptFile = createScriptFile(properties, rTaskImpl);
-		String remoteScriptPath = rTaskImpl
+		// creating init and run R script for this image
+		File localInitScriptFile = createScriptFile(properties, rTaskImpl, INIT_TYPE);
+		String remoteInitScriptPath = rTaskImpl
 				.getMetadata(TaskImpl.METADATA_SANDBOX)
 				+ "/"
-				+ localScriptFile.getName();
+				+ localInitScriptFile.getName();
+				
+		File localRunScriptFile = createScriptFile(properties, rTaskImpl, RUN_TYPE);
+		String remoteRunScriptPath = rTaskImpl
+				.getMetadata(TaskImpl.METADATA_SANDBOX)
+				+ "/"
+				+ localRunScriptFile.getName();
 
-		// adding command
+		// adding commands
 		String scpUploadCommand = createSCPUploadCommand(
-				localScriptFile.getAbsolutePath(), remoteScriptPath);
+				localRunScriptFile.getAbsolutePath(), remoteInitScriptPath);
 		LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 		rTaskImpl.addCommand(new Command(scpUploadCommand,
 				Command.Type.LOCAL));
 
-		// adding remote command
-		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteScriptPath);
+		scpUploadCommand = createSCPUploadCommand(
+				localRunScriptFile.getAbsolutePath(), remoteRunScriptPath);
+		LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
+		rTaskImpl.addCommand(new Command(scpUploadCommand,
+				Command.Type.LOCAL));		
+
+		// adding remote commands
+		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteInitScriptPath);
+		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
+		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
+				Command.Type.REMOTE));
+		
+		remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath);
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
@@ -124,32 +157,7 @@ public class SebalTasks {
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.EPILOGUE));
 
-//		FIXME: The following must copy out and err files generated from r script execution to Crawler VM
-//		FIXME: put in r.sh
-//		String scpDownloadCommand = createSCPDownloadCommand(
-//				METADATA_RESULTS_LOCAL_PATH + "/"
-//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
-//				METADATA_VOLUME_EXPORT_PATH + "/results/"
-//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "/"
-//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_out");
-//		rTaskImpl.addCommand(new Command(scpDownloadCommand,
-//				Command.Type.EPILOGUE));
-//
-//		scpDownloadCommand = createSCPDownloadCommand(
-//				METADATA_RESULTS_LOCAL_PATH + "/"
-//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME),
-//				METADATA_VOLUME_EXPORT_PATH + "/results/"
-//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "/"
-//						+ rTaskImpl.getMetadata(METADATA_IMAGE_NAME) + "_err");
-//		rTaskImpl.addCommand(new Command(scpDownloadCommand,
-//				Command.Type.EPILOGUE));
-
 		return rTaskImpl;
-	}
-	
-	private static String createSCPDownloadCommand(String remoteFilePath, String localFilePath) {
-		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT $SSH_USER@$HOST:"
-				+ remoteFilePath + " " + localFilePath;
 	}
 
 	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
@@ -159,24 +167,24 @@ public class SebalTasks {
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
 		// task property
-		task.putMetadata(TaskImpl.METADATA_MAX_RESOURCE_CONN_RETRIES, properties.getProperty("max_resource_conn_retries"));
+		task.putMetadata(TaskImpl.METADATA_MAX_RESOURCE_CONN_RETRIES, properties.getProperty(MAX_RESOURCE_CONN_RETRIES));
 		
 		// sdexs properties
-		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty("sebal_sandbox") + "/" + task.getId());
+		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty(SEBAL_SANDBOX) + "/" + task.getId());
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,
-				properties.getProperty("sebal_sandbox") + "/output");
+				properties.getProperty(SEBAL_SANDBOX) + "/output");
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER,
-				properties.getProperty("sebal_local_output_dir"));
-		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, properties.getProperty("sebal_task_timeout"));
+				properties.getProperty(SEBAL_LOCAL_OUTPUT_DIR));
+		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, properties.getProperty(SEBAL_TASK_TIMEOUT));
 		
 		// repository properties
-		task.putMetadata(METADATA_REPOS_USER, properties.getProperty("sebal_remote_user"));
+		task.putMetadata(METADATA_REPOS_USER, properties.getProperty(SEBAL_REMOTE_USER));
 		task.putMetadata(METADATA_MOUNT_POINT,
-				properties.getProperty("sebal_mount_point"));
+				properties.getProperty(SEBAL_MOUNT_POINT));
 		task.putMetadata(METADATA_IMAGES_LOCAL_PATH,
-				properties.getProperty("sebal_images_local_path"));
+				properties.getProperty(SEBAL_IMAGES_LOCAL_PATH));
 		task.putMetadata(METADATA_RESULTS_LOCAL_PATH,
-				properties.getProperty("sebal_results_local_path"));
+				properties.getProperty(SEBAL_RESULTS_LOCAL_PATH));
 	}
 
 	private static String createRemoteScriptExecCommand(String remoteScript) {
@@ -188,18 +196,24 @@ public class SebalTasks {
 		return execScriptCommand;
 	}
 
-	private static File createScriptFile(Properties props, TaskImpl task) {
+	private static File createScriptFile(Properties props, TaskImpl task, String scriptType) {
 		File tempFile = null;
 		FileOutputStream fos = null;
 		FileInputStream fis = null;
-		try {
-			tempFile = File.createTempFile("temp-sebal-", ".sh");
-			fis = new FileInputStream(props.getProperty("sebal_r_script_path"));
+		try {			
+			if(scriptType.equals(INIT_TYPE)) {				
+				tempFile = File.createTempFile("temp-sebal-init-", ".sh");
+				fis = new FileInputStream(props.getProperty(SEBAL_INIT_SCRIPT_PATH));
+			} else {
+				tempFile = File.createTempFile("temp-sebal-run-", ".sh");
+				fis = new FileInputStream(props.getProperty(SEBAL_RUN_SCRIPT_PATH));
+			}
+			
 			String origExec = IOUtils.toString(fis);
 			fos = new FileOutputStream(tempFile);
-			IOUtils.write(replaceVariables(props, task, origExec), fos);
+			IOUtils.write(replaceVariables(props, task, origExec, scriptType), fos);
 		} catch (IOException e) {
-			LOGGER.error("Error while creating script file", e);
+			LOGGER.error("Error while creating script " + tempFile.getName() + " file", e);
 		} finally {
 			try {
 				if (fis != null) {
@@ -216,68 +230,73 @@ public class SebalTasks {
 		return tempFile;
 	}
 
-	public static String replaceVariables(Properties props, TaskImpl task, String command) {
-		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
-				task.getMetadata(METADATA_IMAGE_NAME));
-		command = command.replaceAll(Pattern.quote("${OUTPUT_FOLDER}"),
-				task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER));
+	public static String replaceVariables(Properties props, TaskImpl task, String command, String scriptType) {
+		
+		if(scriptType.equals(INIT_TYPE)) {
+			command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
+					task.getMetadata(METADATA_SEBAL_VERSION));
+			command = command.replaceAll(Pattern.quote("${PINPOINTED_SEBAL_TAG}"),
+					task.getMetadata(METADATA_SEBAL_TAG));			
+			command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
+					task.getMetadata(METADATA_NFS_SERVER_IP));
+			command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"),
+					task.getMetadata(METADATA_NFS_SERVER_PORT));
+			command = command.replaceAll(Pattern.quote("${VOLUME_EXPORT_PATH}"),
+					task.getMetadata(METADATA_VOLUME_EXPORT_PATH));
+		} else {
+			command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
+					task.getMetadata(METADATA_IMAGE_NAME));
+		}
+		
+		// common variables for both scripts
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
-		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
-				task.getMetadata(METADATA_SEBAL_VERSION));
-		command = command.replaceAll(Pattern.quote("${PINPOINTED_SEBAL_TAG}"),
-				task.getMetadata(METADATA_SEBAL_TAG));
-		command = command.replaceAll(Pattern.quote("${ORIGINAL_CHECKSUM}"),
-				task.getMetadata(METADATA_SEBAL_R_CHECKSUM));
-
-		// repositories properties
-		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
-				task.getMetadata(METADATA_NFS_SERVER_IP));
-		command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"),
-				task.getMetadata(METADATA_NFS_SERVER_PORT));
-		command = command.replaceAll(Pattern.quote("${VOLUME_EXPORT_PATH}"),
-				task.getMetadata(METADATA_VOLUME_EXPORT_PATH));
-		command = command.replaceAll(Pattern.quote("${REMOTE_USER}"),
-				task.getMetadata(METADATA_REPOS_USER));
-		command = command.replaceAll(Pattern.quote("${USER_PRIVATE_KEY}"),
-				task.getMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH));
-		command = command.replaceAll(Pattern.quote("${IMAGES_LOCAL_PATH}"),
-				task.getMetadata(METADATA_IMAGES_LOCAL_PATH));
-		command = command.replaceAll(Pattern.quote("${RESULTS_LOCAL_PATH}"),
-				task.getMetadata(METADATA_RESULTS_LOCAL_PATH));
 		command = command.replaceAll(Pattern.quote("${SEBAL_MOUNT_POINT}"),
-				task.getMetadata(METADATA_MOUNT_POINT));
-
-		// execution properties
-		if (task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH) != null) {
-			command = command.replaceAll(Pattern.quote("${ADDITIONAL_LIBRARY_PATH}"),
-					":" + task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH));
-		} else {
-			command = command.replaceAll(Pattern.quote("${ADDITIONAL_LIBRARY_PATH}"),
-					"");
-		}
-
-		command = command.replaceAll(Pattern.quote("${NUMBER_OF_PARTITIONS}"),
-				task.getMetadata(METADATA_NUMBER_OF_PARTITIONS));
-		command = command.replaceAll(Pattern.quote("${PARTITION_INDEX}"),
-				task.getMetadata(METADATA_PARTITION_INDEX));
-		command = command.replaceAll(Pattern.quote("${LEFT_X}"), task.getMetadata(METADATA_LEFT_X));
-		command = command.replaceAll(Pattern.quote("${UPPER_Y}"),
-				task.getMetadata(METADATA_UPPER_Y));
-		command = command.replaceAll(Pattern.quote("${RIGHT_X}"),
-				task.getMetadata(METADATA_RIGHT_X));
-		command = command.replaceAll(Pattern.quote("${LOWER_Y}"),
-				task.getMetadata(METADATA_LOWER_Y));
-
+				task.getMetadata(METADATA_MOUNT_POINT));		
 		command = command.replaceAll(Pattern.quote("${REMOTE_COMMAND_EXIT_PATH}"),
 				task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH));
+
+		// TODO: see what variables below will be used		
+//		command = command.replaceAll(Pattern.quote("${OUTPUT_FOLDER}"),
+//				task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER));
 		
-		if (task.getMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH) != null) {
-			command = command.replaceAll(Pattern.quote("${BOUNDING_BOX_PATH}"),
-					task.getMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH));
-		} else {
-			command = command.replaceAll(Pattern.quote("${BOUNDING_BOX_PATH}"), "");
-		}
+		// repositories properties
+//		command = command.replaceAll(Pattern.quote("${REMOTE_USER}"),
+//				task.getMetadata(METADATA_REPOS_USER));
+//		command = command.replaceAll(Pattern.quote("${USER_PRIVATE_KEY}"),
+//				task.getMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH));
+//		command = command.replaceAll(Pattern.quote("${IMAGES_LOCAL_PATH}"),
+//				task.getMetadata(METADATA_IMAGES_LOCAL_PATH));
+//		command = command.replaceAll(Pattern.quote("${RESULTS_LOCAL_PATH}"),
+//				task.getMetadata(METADATA_RESULTS_LOCAL_PATH));
+
+		// execution properties
+//		if (task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH) != null) {
+//			command = command.replaceAll(Pattern.quote("${ADDITIONAL_LIBRARY_PATH}"),
+//					":" + task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH));
+//		} else {
+//			command = command.replaceAll(Pattern.quote("${ADDITIONAL_LIBRARY_PATH}"),
+//					"");
+//		}
+//
+//		command = command.replaceAll(Pattern.quote("${NUMBER_OF_PARTITIONS}"),
+//				task.getMetadata(METADATA_NUMBER_OF_PARTITIONS));
+//		command = command.replaceAll(Pattern.quote("${PARTITION_INDEX}"),
+//				task.getMetadata(METADATA_PARTITION_INDEX));
+//		command = command.replaceAll(Pattern.quote("${LEFT_X}"), task.getMetadata(METADATA_LEFT_X));
+//		command = command.replaceAll(Pattern.quote("${UPPER_Y}"),
+//				task.getMetadata(METADATA_UPPER_Y));
+//		command = command.replaceAll(Pattern.quote("${RIGHT_X}"),
+//				task.getMetadata(METADATA_RIGHT_X));
+//		command = command.replaceAll(Pattern.quote("${LOWER_Y}"),
+//				task.getMetadata(METADATA_LOWER_Y));
+//		
+//		if (task.getMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH) != null) {
+//			command = command.replaceAll(Pattern.quote("${BOUNDING_BOX_PATH}"),
+//					task.getMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH));
+//		} else {
+//			command = command.replaceAll(Pattern.quote("${BOUNDING_BOX_PATH}"), "");
+//		}
 		LOGGER.debug("Command that will be executed: " + command);
 		return command;
 	}
