@@ -50,6 +50,7 @@ public class SebalTasks {
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 	private static final String METADATA_SEBAL_TAG = "sebal_version";
+	private static final String METADATA_SEBAL_VERIFICATION_SCRIPT_PATH = "sebal_verification_script_path";
 	private static final String METADATA_SEBAL_R_REPO_PATH = "sebal_r_repository_path";
 	private static final String METADATA_SEBAL_R_ALGORITHM_VERSION = "sebal_r_algorithm_version";
 
@@ -76,6 +77,8 @@ public class SebalTasks {
 		// setting image R execution properties		
 		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);
 		rTaskImpl.putMetadata(METADATA_SEBAL_TAG, sebalTag);
+		rTaskImpl.putMetadata(METADATA_SEBAL_VERIFICATION_SCRIPT_PATH, 
+				properties.getProperty(METADATA_SEBAL_VERIFICATION_SCRIPT_PATH));
 		rTaskImpl.putMetadata(METADATA_SEBAL_R_REPO_PATH,
 				properties.getProperty(METADATA_SEBAL_R_REPO_PATH));
 		rTaskImpl.putMetadata(METADATA_SEBAL_R_ALGORITHM_VERSION,
@@ -245,6 +248,8 @@ public class SebalTasks {
 					task.getMetadata(METADATA_NFS_SERVER_PORT));
 			command = command.replaceAll(Pattern.quote("${VOLUME_EXPORT_PATH}"),
 					task.getMetadata(METADATA_VOLUME_EXPORT_PATH));
+			command = command.replaceAll(Pattern.quote("${VERIFICATION_SCRIPT}"),
+					task.getMetadata(METADATA_SEBAL_VERIFICATION_SCRIPT_PATH));
 		} else {
 			command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
 					task.getMetadata(METADATA_IMAGE_NAME));
