@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Global variables
+LOG4J_FILE_PATH=/var/log/sebal/sebal.log
+
+# TODO: see if this will remain here, since the code used may not be ours
+SEBAL_SNAPSHOT_M2_PATH=/home/fogbow/.m2/repository/org/fogbowcloud/SEBAL/0.0.1-SNAPSHOT/
+
 # This function downloads all projects and dependencies
 function prepareDependencies {
   #installing git

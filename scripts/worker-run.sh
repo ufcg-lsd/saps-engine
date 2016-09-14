@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Global variables
+CONF_FILE=sebal.conf
+BOUNDING_BOX_PATH=example/boundingbox_vertices
+IMAGES_DIR_NAME=images
+RESULTS_DIR_NAME=results
+OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
+LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
+
+# User's responsability
+R_EXEC_DIR=${SANDBOX}/${R_REPOSITORY_PATH}
+
+SEBAL_DIR_PATH=
+LOG4J_PATH=
+
 # This function untare image and creates an output dir into mounted dir
 function untarImageAndPrepareDirs {
   cd ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME
@@ -38,8 +52,8 @@ function executeRScript {
   echo "File images;MTL;File Station Weather;File Fmask;Path Output" > dados.csv
   echo "${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME};${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTL.txt";${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_station.csv";${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/${IMAGE_NAME}"_MTLFmask";$OUTPUT_IMAGE_DIR" >> dados.csv
   echo "Executing R script..."
-  sudo Rscript $R_EXEC_DIR/$R_ALGORITHM_VERSION $R_EXEC_DIR
-  #R CMD BATCH "--args WD='$R_EXEC_DIR'" $R_EXEC_DIR/$R_ALGORITHM_VERSION
+  sudo Rscript $R_EXEC_DIR/${R_ALGORITHM_VERSION} $R_EXEC_DIR
+  #R CMD BATCH "--args WD='$R_EXEC_DIR'" $R_EXEC_DIR/${R_ALGORITHM_VERSION}
   echo "Process finished!"
 
   echo "Renaming dados file"

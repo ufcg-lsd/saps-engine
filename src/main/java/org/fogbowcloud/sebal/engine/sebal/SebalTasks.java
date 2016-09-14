@@ -38,7 +38,6 @@ public class SebalTasks {
 
 	private static final String SEBAL_REMOTE_USER = "sebal_remote_user";
 	private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
-	private static final String SEBAL_R_SCRIPT_PATH = "sebal_r_script_path";
 	private static final String SEBAL_LOCAL_SCRIPTS_DIR = "sebal_local_scripts_dir";
 	private static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
 	
@@ -47,18 +46,18 @@ public class SebalTasks {
 	public static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
 	public static final String METADATA_PARTITION_INDEX = "partition_index";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
-	private static final String METADATA_ADDITIONAL_LIBRARY_PATH = "additonal_library_path";
 	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 	private static final String METADATA_SEBAL_TAG = "sebal_version";
+	private static final String METADATA_SEBAL_R_REPO_PATH = "sebal_r_repository_path";
+	private static final String METADATA_SEBAL_R_ALGORITHM_VERSION = "sebal_r_algorithm_version";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
 	public static final String METADATA_UPPER_Y = "upper_y";
 	public static final String METADATA_RIGHT_X = "right_x";
 	public static final String METADATA_LOWER_Y = "lower_y";
-	private static final String METADATA_REMOTE_BOUNDINGBOX_PATH = "remote_boundingbox_path";
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
 	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
 	private static final String METADATA_SEBAL_VERSION = "sebal_url";
@@ -77,6 +76,10 @@ public class SebalTasks {
 		// setting image R execution properties		
 		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);
 		rTaskImpl.putMetadata(METADATA_SEBAL_TAG, sebalTag);
+		rTaskImpl.putMetadata(METADATA_SEBAL_R_REPO_PATH,
+				properties.getProperty(METADATA_SEBAL_R_REPO_PATH));
+		rTaskImpl.putMetadata(METADATA_SEBAL_R_ALGORITHM_VERSION,
+				properties.getProperty(METADATA_SEBAL_R_ALGORITHM_VERSION));
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 		rTaskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
@@ -152,7 +155,6 @@ public class SebalTasks {
 				Command.Type.REMOTE));
 		
 		// adding epilogue command
-		// TODO: see if sudo will be really necessary here
 		String cleanEnvironment = "sudo rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.EPILOGUE));
@@ -201,7 +203,7 @@ public class SebalTasks {
 		FileOutputStream fos = null;
 		FileInputStream fis = null;
 		try {			
-			if(scriptType.equals(INIT_TYPE)) {				
+			if(scriptType.equals(INIT_TYPE)) {
 				tempFile = File.createTempFile("temp-sebal-init-", ".sh");
 				fis = new FileInputStream(props.getProperty(SEBAL_INIT_SCRIPT_PATH));
 			} else {
@@ -246,6 +248,10 @@ public class SebalTasks {
 		} else {
 			command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
 					task.getMetadata(METADATA_IMAGE_NAME));
+			command = command.replaceAll(Pattern.quote("${R_REPOSITORY_PATH}"),
+					task.getMetadata(METADATA_SEBAL_R_REPO_PATH));
+			command = command.replaceAll(Pattern.quote("${R_ALGORITHM_VERSION}"),
+					task.getMetadata(METADATA_SEBAL_R_ALGORITHM_VERSION));
 		}
 		
 		// common variables for both scripts
