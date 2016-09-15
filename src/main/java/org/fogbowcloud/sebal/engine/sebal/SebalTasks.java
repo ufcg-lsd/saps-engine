@@ -16,8 +16,12 @@ import org.fogbowcloud.blowout.scheduler.core.model.Specification;
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 
-// TODO: we will probably have to adapt execution monitor to check process output from init.sh and run.sh
 public class SebalTasks {
+	
+	static String initOutPath;
+	static String initErrPath;
+	static String runOutPath;
+	static String runErrPath;
 	
 	private static final String INIT_TYPE = "init";
 	private static final String RUN_TYPE = "run";
@@ -147,17 +151,33 @@ public class SebalTasks {
 				Command.Type.LOCAL));		
 
 		// adding remote commands
-		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteInitScriptPath);
+		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteInitScriptPath, INIT_TYPE);
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
 		
-		remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath);
+		remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath, RUN_TYPE);
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
 		
-		// adding epilogue command
+		// adding epilogue commands
+		// moving worker-init.sh out and err files to image results dir
+		String mvOutErrCommand = "sudo mv " + File.separator + "tmp"
+				+ File.separator + initOutPath + " " + File.separator + "tmp"
+				+ File.separator + initErrPath + " " + METADATA_MOUNT_POINT
+				+ File.separator + "results" + File.separator + imageName;
+		rTaskImpl.addCommand(new Command(mvOutErrCommand,
+				Command.Type.EPILOGUE));
+
+		// moving worker-run.sh out and err files to image results dir
+		mvOutErrCommand = "sudo mv " + File.separator + "tmp"
+				+ File.separator + runOutPath + " " + File.separator + "tmp"
+				+ File.separator + runErrPath + " " + METADATA_MOUNT_POINT
+				+ File.separator + "results" + File.separator + imageName;
+		rTaskImpl.addCommand(new Command(mvOutErrCommand,
+				Command.Type.EPILOGUE));
+		
 		String cleanEnvironment = "sudo rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.EPILOGUE));
@@ -192,12 +212,24 @@ public class SebalTasks {
 				properties.getProperty(SEBAL_RESULTS_LOCAL_PATH));
 	}
 
-	private static String createRemoteScriptExecCommand(String remoteScript) {
+	private static String createRemoteScriptExecCommand(String remoteScript, String scriptType) {
+		
 		Path pathToRemoteScript = Paths.get(remoteScript);
-		String outPath = pathToRemoteScript.getFileName().toString() + "." + "out";
-		String errPath = pathToRemoteScript.getFileName().toString() + "." + "err";
-		String execScriptCommand = "\"chmod +x " + remoteScript + "; nohup " + remoteScript
-				+ " >> /tmp/" + outPath + " 2>> /tmp/" + errPath + " &\"";
+		String execScriptCommand = null;
+		if(scriptType.equals(INIT_TYPE)) {
+			initOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
+			initErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
+			
+			execScriptCommand = "\"chmod +x " + remoteScript + "; nohup " + remoteScript
+					+ " >> /tmp/" + initOutPath + " 2>> /tmp/" + initErrPath + " &\"";
+		} else {
+			runOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
+			runErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
+			
+			execScriptCommand = "\"chmod +x " + remoteScript + "; nohup " + remoteScript
+					+ " >> /tmp/" + runOutPath + " 2>> /tmp/" + runErrPath + " &\"";
+		}
+		
 		return execScriptCommand;
 	}
 
@@ -267,47 +299,6 @@ public class SebalTasks {
 		command = command.replaceAll(Pattern.quote("${REMOTE_COMMAND_EXIT_PATH}"),
 				task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH));
 
-		// TODO: see what variables below will be used		
-//		command = command.replaceAll(Pattern.quote("${OUTPUT_FOLDER}"),
-//				task.getMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER));
-		
-		// repositories properties
-//		command = command.replaceAll(Pattern.quote("${REMOTE_USER}"),
-//				task.getMetadata(METADATA_REPOS_USER));
-//		command = command.replaceAll(Pattern.quote("${USER_PRIVATE_KEY}"),
-//				task.getMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH));
-//		command = command.replaceAll(Pattern.quote("${IMAGES_LOCAL_PATH}"),
-//				task.getMetadata(METADATA_IMAGES_LOCAL_PATH));
-//		command = command.replaceAll(Pattern.quote("${RESULTS_LOCAL_PATH}"),
-//				task.getMetadata(METADATA_RESULTS_LOCAL_PATH));
-
-		// execution properties
-//		if (task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH) != null) {
-//			command = command.replaceAll(Pattern.quote("${ADDITIONAL_LIBRARY_PATH}"),
-//					":" + task.getMetadata(METADATA_ADDITIONAL_LIBRARY_PATH));
-//		} else {
-//			command = command.replaceAll(Pattern.quote("${ADDITIONAL_LIBRARY_PATH}"),
-//					"");
-//		}
-//
-//		command = command.replaceAll(Pattern.quote("${NUMBER_OF_PARTITIONS}"),
-//				task.getMetadata(METADATA_NUMBER_OF_PARTITIONS));
-//		command = command.replaceAll(Pattern.quote("${PARTITION_INDEX}"),
-//				task.getMetadata(METADATA_PARTITION_INDEX));
-//		command = command.replaceAll(Pattern.quote("${LEFT_X}"), task.getMetadata(METADATA_LEFT_X));
-//		command = command.replaceAll(Pattern.quote("${UPPER_Y}"),
-//				task.getMetadata(METADATA_UPPER_Y));
-//		command = command.replaceAll(Pattern.quote("${RIGHT_X}"),
-//				task.getMetadata(METADATA_RIGHT_X));
-//		command = command.replaceAll(Pattern.quote("${LOWER_Y}"),
-//				task.getMetadata(METADATA_LOWER_Y));
-//		
-//		if (task.getMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH) != null) {
-//			command = command.replaceAll(Pattern.quote("${BOUNDING_BOX_PATH}"),
-//					task.getMetadata(METADATA_REMOTE_BOUNDINGBOX_PATH));
-//		} else {
-//			command = command.replaceAll(Pattern.quote("${BOUNDING_BOX_PATH}"), "");
-//		}
 		LOGGER.debug("Command that will be executed: " + command);
 		return command;
 	}
