@@ -109,6 +109,7 @@ public class SebalMain {
 			}
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 		
+		// TODO: see how this will be modified
 		SebalScheduleApplication restletServer = new SebalScheduleApplication(scheduler, (SebalJob)job, imageStore, properties);
 		restletServer.startServer();
 		
@@ -151,7 +152,7 @@ public class SebalMain {
 			LOGGER.debug(numAllocationPerFederationMember + " allocated resources to " + federationMemberId);			
 			return numAllocationPerFederationMember < maxAllowedResources;
 		}
-		// TODO: see if this will be default true or false
+		
 		return true;
 	}
 	
