@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.fogbowcloud.blowout.scheduler.core.Scheduler;
 import org.fogbowcloud.blowout.scheduler.core.model.Job.TaskState;
 import org.fogbowcloud.blowout.scheduler.core.model.Task;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
+import org.fogbowcloud.sebal.engine.scheduler.SchedulerController;
 import org.fogbowcloud.sebal.engine.scheduler.core.model.SebalJob;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.ImageResource;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.SebalImagensResource;
@@ -31,16 +31,14 @@ public class SebalScheduleApplication extends Application {
 	private Properties properties;
 	private ImageDataStore imageDataStore;
 	private SwiftClient swiftClient;
-	private Scheduler scheduler;
+	private SchedulerController schedulerController;
 	
-	public SebalScheduleApplication(Scheduler scheduler, SebalJob job, ImageDataStore imageDataStore, Properties properties){
-		this.job = job;
-		this.properties = properties;
-		this.imageDataStore = imageDataStore;
+	public SebalScheduleApplication(SchedulerController schedulerController) throws Exception {
+		// TODO: see if this is correct, because swiftClient was passed as argument for SebalSchedulerApplication before
 		this.swiftClient = new SwiftClient(properties);
-		this.scheduler = scheduler;
+		this.schedulerController = schedulerController;
+		this.schedulerController.init();
 	}
-	
 
 	public void startServer() throws Exception {
 		
@@ -83,23 +81,8 @@ public class SebalScheduleApplication extends Application {
 		
 		Map<Task, TaskState> tasks = new HashMap<Task, TaskState>();
 		for(Task t : job.getTasks().values()){
-			tasks.put(t, scheduler.inferTaskState(t));
+			tasks.put(t, schedulerController.getScheduler().inferTaskState(t));
 		}
-		
-//		Old:
-//
-//		for(Task t : job.getTasksOfImageByState(imageName, TaskState.READY)){
-//			tasks.put(t, TaskState.READY);
-//		}
-//		for(Task t : job.getTasksOfImageByState(imageName, TaskState.RUNNING)){
-//			tasks.put(t, TaskState.RUNNING);
-//		}
-//		for(Task t : job.getTasksOfImageByState(imageName, TaskState.COMPLETED)){
-//			tasks.put(t, TaskState.COMPLETED);
-//		}
-//		for(Task t : job.getTasksOfImageByState(imageName, TaskState.FAILED)){
-//			tasks.put(t, TaskState.FAILED);
-//		}
 		
 		return tasks;
 	}
