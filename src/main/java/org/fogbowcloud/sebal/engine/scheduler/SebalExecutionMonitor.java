@@ -17,8 +17,8 @@ public class SebalExecutionMonitor extends ExecutionMonitor{
 	
 	private ImageDataStore imageStore;
 	
-	public SebalExecutionMonitor(Scheduler scheduler, ExecutorService service,ImageDataStore imageStore, Job[] job) {
-		super(scheduler, service, job);
+	public SebalExecutionMonitor(Scheduler scheduler, ExecutorService service,ImageDataStore imageStore) {
+		super(scheduler, service);
 		this.imageStore = imageStore;
 	}
 	

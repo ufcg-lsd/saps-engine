@@ -88,15 +88,14 @@ public class SebalMain {
 		infraManager.start(blockWhileInitializing, true);
 
 		Scheduler scheduler = new Scheduler(infraManager, job);
-		ExecutionMonitor execMonitor = new ExecutionMonitor(scheduler, job);
+		ExecutionMonitor execMonitor = new SebalExecutionMonitor(scheduler, null, imageStore);
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 
-		addRTasks(properties, job, sebalSpec, ImageState.RUNNING_R,
-				ImageDataStore.UNLIMITED);
+		addRTasks(properties, job, sebalSpec, ImageState.QUEUED, ImageDataStore.UNLIMITED);
 
-		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0, Integer
-				.parseInt(properties.getProperty("execution_monitor_period")));
+		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
+				Integer.parseInt(properties.getProperty("execution_monitor_period")));
 
 		schedulerTimer.scheduleAtFixedRate(scheduler, 0,
 				Integer.parseInt(properties.getProperty("scheduler_period")));
@@ -206,7 +205,7 @@ public class SebalMain {
 				if (isQuotaAvailable(imageData.getFederationMember(),
 						allocationMap, maxAllowedResources)) {
 
-					if (ImageState.RUNNING_R.equals(imageState)
+					if (ImageState.QUEUED.equals(imageState)
 							|| ImageState.DOWNLOADED.equals(imageState)) {
 
 						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
@@ -219,10 +218,9 @@ public class SebalMain {
 								imageData.getFederationMember(), nfsServerIP,
 								nfsServerPort, imageData.getSebalVersion(),
 								imageData.getSebalTag());
-						imageData.setState(ImageState.RUNNING_R);
+						imageData.setState(ImageState.QUEUED);
 
-						imageData
-								.setBlowoutVersion(getBlowoutVersion(properties));
+						imageData.setBlowoutVersion(getBlowoutVersion(properties));
 						job.addTask(taskImpl);
 
 						imageStore.updateImage(imageData);

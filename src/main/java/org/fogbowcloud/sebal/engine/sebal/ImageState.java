@@ -6,7 +6,7 @@ import java.util.List;
 public enum ImageState {
 
 	NOT_DOWNLOADED("not_downloaded"), DOWNLOADED("downloaded"), DOWNLOADING(
-			"downloading"), RUNNING_R("running_r"), FINISHED("finished"), FETCHING(
+			"downloading"),QUEUED("queued"), RUNNING_R("running_r"), FINISHED("finished"), FETCHING(
 			"fetching"), FETCHED("fetched"), CORRUPTED("corrupted"), ERROR("error");
 
 	private String value;
