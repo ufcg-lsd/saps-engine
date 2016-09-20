@@ -579,6 +579,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 							.getString(FMASK_VERSION_COL), rs
 							.getTimestamp(CREATION_TIME_COL), rs
 							.getTimestamp(UPDATED_TIME_COL), rs
+							.getString(IMAGE_STATUS_COL), rs
 							.getString(ERROR_MSG_COL)));
         }
         return imageDatas;

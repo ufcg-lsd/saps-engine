@@ -64,7 +64,7 @@ public class DBUtilsImpl implements DBUtils {
     }
 
     protected Date parseStringToDate(String day) throws ParseException {
-        DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
         java.util.Date date = format.parse(day);
         java.sql.Date sqlDate = new java.sql.Date(date.getTime());
         return sqlDate;
@@ -81,7 +81,7 @@ public class DBUtilsImpl implements DBUtils {
         for (int i = 0; i < allImageData.size(); i++) {
             System.out.println(allImageData.get(i).toString());
         }
-    }
+    }    
 
     @Override
     public void listCorruptedImages() throws ParseException {
@@ -119,10 +119,6 @@ public class DBUtilsImpl implements DBUtils {
     public void fillDB(int firstYear, int lastYear, List<String> regions, String sebalVersion, String sebalTag) throws IOException {
 
         LOGGER.debug("Regions: " + regions);
-        
-        if(sebalVersion == null || sebalVersion.isEmpty()) {
-        	sebalVersion = "NE";
-        }
 
         int priority = 0;
         for (String region : regions) {
@@ -149,6 +145,24 @@ public class DBUtilsImpl implements DBUtils {
             }
             priority++;
         }
+    }
+
+    public List<ImageData> getImagesInDB() throws SQLException, ParseException {
+    	
+    	return imageStore.getAllImages();        
+    }
+    
+    public ImageData getImageInDB(String imageName) throws SQLException {
+    	List<ImageData> allImages = imageStore.getAllImages();
+    	
+    	for(ImageData imageData : allImages) {
+    		if(imageData.getName().equals(imageName)) {
+    			return imageData;
+    		}
+    	}
+    	
+    	// FIXME: deal with this better
+    	return null;
     }
 
     protected String createImageList(String region, int year) {
@@ -183,5 +197,9 @@ public class DBUtilsImpl implements DBUtils {
 
     public static String getImageRegionFromName(String imageName) {
         return imageName.substring(3, 9);
+    }
+    
+    public Properties getProperties() {
+    	return properties;
     }
 }

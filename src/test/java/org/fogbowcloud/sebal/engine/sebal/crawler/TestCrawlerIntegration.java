@@ -55,11 +55,11 @@ public class TestCrawlerIntegration {
 		ImageData image1 = new ImageData("image1", "link1",
 				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "");
+				new Timestamp(date.getTime()), "available", "");
 		ImageData image2 = new ImageData("image2", "link2",
 				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "");
+				new Timestamp(date.getTime()), "available", "");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -115,11 +115,11 @@ public class TestCrawlerIntegration {
 		ImageData image1 = new ImageData("image1", "link1",
 				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "");
+				new Timestamp(date.getTime()), "available", "");
 		ImageData image2 = new ImageData("image2", "link2",
 				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "");
+				new Timestamp(date.getTime()), "available", "");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -179,11 +179,11 @@ public class TestCrawlerIntegration {
 		ImageData image1 = new ImageData("image1", "link1",
 				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "");
+				new Timestamp(date.getTime()), "available", "");
 		ImageData image2 = new ImageData("image2", "link2",
 				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "");
+				new Timestamp(date.getTime()), "available", "");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -278,12 +278,12 @@ public class TestCrawlerIntegration {
 		ImageData image1 = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "");
+						date.getTime()), "available", "");
 		image1.setImageStatus(ImageData.PURGED);
 		ImageData image2 = new ImageData("image2", "link2",
 				ImageState.FINISHED, federationMember, 1, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "");
+						date.getTime()), "available", "");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -318,11 +318,11 @@ public class TestCrawlerIntegration {
 		ImageData image1 = new ImageData("image1", "link1", ImageState.FETCHED,
 				federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
 				new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"");
+				"available", "");
 		ImageData image2 = new ImageData("image2", "link2", ImageState.FETCHED,
 				federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
 				new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"");
+				"available", "");
 
 		imageList.add(image1);
 		imageList.add(image2);

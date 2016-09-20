@@ -1,19 +1,23 @@
 package org.fogbowcloud.sebal.engine.sebal.bootstrap;
 
-import org.apache.log4j.Logger;
-
-import java.io.*;
-import java.sql.SQLException;
-import java.text.ParseException;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.engine.scheduler.restlet.DatabaseApplication;
+
 public class DBMain {
 
+	private static final String DEFAULT_SEBAL_VERSION = "default_sebal_version";
 	private static final Logger LOGGER = Logger.getLogger(DBMain.class);
 
-	public static void main(String[] args) throws SQLException, ParseException {
+	public static void main(String[] args) throws Exception {
 
 		if (args.length < 2) {
 			System.err.println("Usage: DBMain /path/to/sebal.conf [add,list,list-corrupted,get,purge] [options]");
@@ -60,20 +64,24 @@ public class DBMain {
 			String sebalVersion = null;
 			String sebalTag = null;
 			
-			if(args.length > 5) {
+			if (args.length > 5) {
 				String opt = args[6];
-				if(opt.equals("--sebal-repository")) {
-					// pinpoint specific SEBAL software version to be used in Worker
+				if (opt.equals("--sebal-repository")) {
+					// pinpoint specific SEBAL software version to be used in
+					// Worker
 					sebalVersion = args[7];
 					opt = args[7];
-					if(opt.equals("--repository-tag")) {
+					if (opt.equals("--repository-tag")) {
 						sebalTag = args[8];
 					} else {
 						sebalTag = "NE";
 					}
 				} else {
-					sebalVersion = "NE";
+					sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
 				}
+			} else {
+				sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
+				sebalTag = "NE";
 			}
 
 			try {
@@ -136,6 +144,9 @@ public class DBMain {
 				dbUtilsImpl.setImagesToPurge(day, opt.equals("-f"));
 			}
 		}
+		
+		DatabaseApplication databaseApplication = new DatabaseApplication(dbUtilsImpl);
+		databaseApplication.startServer();
 	}
 
 	private static List<String> getRegions(String filePath) throws IOException {

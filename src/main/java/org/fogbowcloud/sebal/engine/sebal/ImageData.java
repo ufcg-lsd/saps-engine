@@ -5,6 +5,9 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class ImageData implements Serializable {
 
 	private String name;
@@ -32,7 +35,7 @@ public class ImageData implements Serializable {
 			String federationMember, int priority, String stationId,
 			String sebalVersion, String sebalTag, String crawlerVersion,
 			String fetcherVersion, String blowoutVersion, String fmaskVersion,
-			Timestamp creationTime, Timestamp updateTime, String error) {
+			Timestamp creationTime, Timestamp updateTime, String status, String error) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -47,7 +50,7 @@ public class ImageData implements Serializable {
 		this.fmaskVersion = fmaskVersion;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
-		this.status = "available";
+		this.status = status;
 		this.error = error;
 	}
 
@@ -186,6 +189,29 @@ public class ImageData implements Serializable {
 				+ fetcherVersion + ", " + blowoutVersion + ", " + fmaskVersion
 				+ ", " + creationTime + ", " + updateTime + ", " + status
 				+ ", " + error;
+	}
+	
+	public JSONObject toJSON() throws JSONException {
+		JSONObject json = new JSONObject();
+		
+		json.put("name", name);
+		json.put("downloadLink", downloadLink);
+		json.put("state", state.getValue());
+		json.put("federationMember", federationMember);
+		json.put("priority", priority);
+		json.put("stationId", stationId);
+		json.put("sebalVersion", sebalVersion);
+		json.put("sebalTag", sebalTag);
+		json.put("crawlerVersion", crawlerVersion);
+		json.put("fetcherVersion", fetcherVersion);
+		json.put("blowoutVersion", blowoutVersion);
+		json.put("fmaskVersion", fmaskVersion);
+		json.put("creationTime", creationTime);
+		json.put("updateTime", updateTime);
+		json.put("status", status);
+		json.put("error", error);		
+		
+		return json;
 	}
 	
 	public Map<String, Integer> getTasksStatesCount() {
