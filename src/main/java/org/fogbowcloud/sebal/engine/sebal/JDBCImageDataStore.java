@@ -14,10 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
 
 public class JDBCImageDataStore implements ImageDataStore {
 
-    private static final Logger LOGGER = Logger.getLogger(JDBCImageDataStore.class);
+	private static final Logger LOGGER = Logger.getLogger(JDBCImageDataStore.class);
     protected static final String IMAGE_TABLE_NAME = "NASA_IMAGES";
     protected static final String STATES_TABLE_NAME = "STATES_TIMESTAMPS";
     private static final String IMAGE_NAME_COL = "image_name";
@@ -36,6 +37,16 @@ public class JDBCImageDataStore implements ImageDataStore {
     private static final String UPDATED_TIME_COL = "utime";
     private static final String IMAGE_STATUS_COL = "status";
     private static final String ERROR_MSG_COL = "error_msg";
+	
+    private static final String USERS_TABLE_NAME = "sebal_users";
+    private static final String USER_EMAIL_COL = "user_email";
+    private static final String USER_NAME_COL = "user_name";
+	private static final String USER_PASSWORD_COL = "user_password";
+	private static final String USER_STATE_COL = "active";
+	private static final String USER_NOTIFY_COL = "user_notify";
+	private static final String ADMIN_ROLE_COL = "admin_role";
+	
+	private static final String USERS_NOTIFY_TABLE_NAME = "sebal_notify";	
 
     private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
     private BasicDataSource connectionPool;
@@ -97,6 +108,19 @@ public class JDBCImageDataStore implements ImageDataStore {
                     + "(" + IMAGE_NAME_COL + " VARCHAR(255), "
                     + STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL
                     + " TIMESTAMP, " + ERROR_MSG_COL + " VARCHAR(255))");
+            
+			statement.execute("CREATE TABLE IF NOT EXISTS " + USERS_TABLE_NAME
+					+ "(" + USER_EMAIL_COL + " VARCHAR(255) PRIMARY KEY, "
+					+ USER_NAME_COL + " VARCHAR(255), " + USER_PASSWORD_COL
+					+ " VARCHAR(100), " + USER_STATE_COL + " BOOLEAN, "
+					+ USER_NOTIFY_COL + " BOOLEAN, " + ADMIN_ROLE_COL + " BOOLEAN)");
+			
+			statement.execute("CREATE TABLE IF NOT EXISTS "
+					+ USERS_NOTIFY_TABLE_NAME + "( " + IMAGE_NAME_COL
+					+ " VARCHAR(255), " + USER_EMAIL_COL
+					+ " VARCHAR(255), PRIMARY KEY(" + IMAGE_NAME_COL + ", "
+					+ USER_EMAIL_COL + "))");
+			
             statement.close();
         } catch (SQLException e) {
             LOGGER.error("Error while initializing DataStore", e);
@@ -200,6 +224,86 @@ public class JDBCImageDataStore implements ImageDataStore {
             close(insertStatement, connection);
         }
     }
+    
+    private static final String INSERT_USER_NOTIFICATION_SQL = "INSERT INTO " + USERS_NOTIFY_TABLE_NAME
+            + " VALUES(?, ?)";
+    
+    @Override
+    public void addUserNotify(String imageName, String userEmail) throws SQLException {
+    	LOGGER.info("Adding image " + imageName + " notification for " + userEmail);
+		if (imageName == null || imageName.isEmpty() || userEmail == null
+				|| userEmail.isEmpty()) {
+			throw new IllegalArgumentException("Invalid image name "
+					+ imageName + " or user " + userEmail);
+		}
+
+		PreparedStatement insertStatement = null;
+		Connection connection = null;
+		
+		 try {
+	            connection = getConnection();
+	            
+				insertStatement = connection
+						.prepareStatement(INSERT_USER_NOTIFICATION_SQL);
+				insertStatement.setString(1, imageName);
+				insertStatement.setString(2, userEmail);
+								
+				insertStatement.execute();
+		 } finally {
+	            close(insertStatement, connection);
+		 }
+    }
+    
+    private static final String SELECT_USER_NOTIFIABLE_SQL = "SELECT " + USER_NOTIFY_COL + " FROM " + USERS_TABLE_NAME
+            + " WHERE " + USER_EMAIL_COL + " = ?";
+    
+    @Override
+    public boolean isUserNotifiable(String userEmail) throws SQLException {
+    	LOGGER.debug("Verifying if user is notifiable");
+
+    	PreparedStatement statement = null;
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            statement = conn.prepareStatement(SELECT_USER_NOTIFIABLE_SQL);
+            statement.setString(1, userEmail);
+            statement.execute();
+
+            ResultSet rs = statement.getResultSet();
+            return rs.getBoolean(1);
+        } finally {
+            close(statement, conn);
+        }
+    }
+    
+    private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME
+            + " WHERE image_name = ? AND user_email = ?";
+    
+    @Override
+    public void removeUserNotify(String imageName, String userEmail) throws SQLException {
+    	LOGGER.info("Removing image " + imageName + " notification for " + userEmail);
+		if (imageName == null || imageName.isEmpty() || userEmail == null
+				|| userEmail.isEmpty()) {
+			throw new IllegalArgumentException("Invalid image name "
+					+ imageName + " or user " + userEmail);
+		}
+
+		PreparedStatement insertStatement = null;
+		Connection connection = null;
+		
+		 try {
+	            connection = getConnection();
+	            
+				insertStatement = connection
+						.prepareStatement(REMOVE_USER_NOTIFY_SQL);
+				insertStatement.setString(1, imageName);
+				insertStatement.setString(2, userEmail);
+								
+				insertStatement.execute();
+		 } finally {
+	            close(insertStatement, connection);
+		 }
+    }
 
     private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
             + " VALUES(?, ?, ?)";
@@ -229,7 +333,67 @@ public class JDBCImageDataStore implements ImageDataStore {
             close(insertStatement, connection);
         }
     }
+    
+    private static final String INSERT_NEW_USER_SQL = "INSERT INTO " + USERS_TABLE_NAME
+            + " VALUES(?, ?, ?, ?, ?, ?)";
+    
+    @Override
+    public void addUser(String userEmail, String userName, String userPass,
+			boolean userState, boolean userNotify, boolean adminRole) throws SQLException {
+    	
+    	LOGGER.info("Adding user " + userName + " into DB");
+		if (userName == null || userName.isEmpty() || userPass == null
+				|| userPass.isEmpty()) {
+			throw new IllegalArgumentException("Invalid user " + userName);
+		}
 
+		PreparedStatement insertStatement = null;
+		Connection connection = null;
+		
+		 try {
+	            connection = getConnection();
+	            
+				insertStatement = connection
+						.prepareStatement(INSERT_NEW_USER_SQL);
+				insertStatement.setString(1, userEmail);
+				insertStatement.setString(2, userName);
+				insertStatement.setString(3, userPass);
+				insertStatement.setBoolean(4, userState);
+				insertStatement.setBoolean(5, userNotify);
+				insertStatement.setBoolean(6, adminRole);
+				
+				insertStatement.execute();
+		 } finally {
+	            close(insertStatement, connection);
+		 }
+    }
+    
+    private static String UPDATE_USER_STATE_SQL = "UPDATE " + USERS_TABLE_NAME
+            + " SET active = ? WHERE user_email = ?";
+    
+    @Override
+    public void updateUserState(String userEmail, boolean userState) throws SQLException {
+    	
+    	LOGGER.info("Updating user " + userEmail + " state to " + userState);
+    	if (userEmail == null || userEmail.isEmpty()) {            
+            throw new IllegalArgumentException("Invalid user " + userEmail);
+        }
+    	
+        PreparedStatement updateStatement = null;
+        Connection connection = null;    
+
+        try {
+            connection = getConnection();
+
+            updateStatement = connection.prepareStatement(UPDATE_USER_STATE_SQL);
+            updateStatement.setBoolean(1, userState);
+            updateStatement.setString(2, userEmail);
+            updateStatement.execute();
+        } finally {
+            close(updateStatement, connection);
+        }
+    }
+    
     private static String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME
             + " SET state = ?, utime = now() WHERE image_name = ?";
 
@@ -357,6 +521,39 @@ public class JDBCImageDataStore implements ImageDataStore {
             close(statement, conn);
         }
     }
+    
+    private static final String SELECT_USER_SQL = "SELECT * FROM " + USERS_TABLE_NAME
+            + " WHERE " + USER_EMAIL_COL + " = ?";
+    
+	@Override
+	public SebalUser getUser(String userEmail) throws SQLException {
+
+		if (userEmail == null || userEmail.isEmpty()) {
+			LOGGER.error("Invalid userEmail " + userEmail);
+			return null;
+		}
+		PreparedStatement selectStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			selectStatement = connection
+					.prepareStatement(SELECT_USER_SQL);
+			selectStatement.setString(1, userEmail);
+			selectStatement.execute();
+
+			ResultSet rs = selectStatement.getResultSet();
+			if (rs.next()) {
+				SebalUser sebalUser = extractSebalUserFrom(rs);
+				return sebalUser;
+			}
+			rs.close();
+			return null;
+		} finally {
+			close(selectStatement, connection);
+		}
+	}
 
     private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
             + " WHERE state = ? ORDER BY priority, image_name";
@@ -560,6 +757,16 @@ public class JDBCImageDataStore implements ImageDataStore {
             close(selectStatement, null);
             close(lockAndUpdateStatement, connection);
         }
+    }
+    
+	private static SebalUser extractSebalUserFrom(ResultSet rs)
+            throws SQLException {
+		SebalUser sebalUser = new SebalUser(rs.getString(USER_EMAIL_COL),
+				rs.getString(USER_NAME_COL), rs.getString(USER_PASSWORD_COL),
+				rs.getBoolean(USER_STATE_COL), rs.getBoolean(USER_NOTIFY_COL),
+				rs.getBoolean(ADMIN_ROLE_COL));
+							
+        return sebalUser;
     }
 
     private static List<ImageData> extractImageDataFrom(ResultSet rs)

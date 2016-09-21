@@ -10,14 +10,13 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.scheduler.restlet.DatabaseApplication;
 
 public class DBMain {
 
 	private static final String DEFAULT_SEBAL_VERSION = "default_sebal_version";
 	private static final Logger LOGGER = Logger.getLogger(DBMain.class);
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {				
 
 		if (args.length < 2) {
 			System.err.println("Usage: DBMain /path/to/sebal.conf [add,list,list-corrupted,get,purge] [options]");
@@ -89,7 +88,7 @@ public class DBMain {
 				lastYear = new Integer(args[3]);
 				try {
 					List<String> regions = getRegions(args[4]);
-					dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion, sebalTag);
+					dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion, sebalTag);					
 				} catch (IOException e) {
 					String errorMsg = "Error while reading regions from file path " + args[4];
 					LOGGER.error(errorMsg, e);
@@ -121,6 +120,7 @@ public class DBMain {
 				firstYear = new Integer(args[2]);
 				lastYear = new Integer(args[3]);
 				String region = args[4];
+
 				dbUtilsImpl.getRegionImages(firstYear, lastYear, region);
 			} catch (NumberFormatException e) {
 				String errorMsg = "Wrong format firstYear: " + args[2] + " lastYear: " + args[3];
@@ -144,9 +144,6 @@ public class DBMain {
 				dbUtilsImpl.setImagesToPurge(day, opt.equals("-f"));
 			}
 		}
-		
-		DatabaseApplication databaseApplication = new DatabaseApplication(dbUtilsImpl);
-		databaseApplication.startServer();
 	}
 
 	private static List<String> getRegions(String filePath) throws IOException {

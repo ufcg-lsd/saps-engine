@@ -10,8 +10,10 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBImageResource;
+import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.UserResource;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
+import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Restlet;
@@ -59,6 +61,9 @@ public class DatabaseApplication extends Application {
 	@Override
 	public Restlet createInboundRoot() {
 		Router router = new Router(getContext());
+		router.attach("/users", UserResource.class);
+		router.attach("/users/{userEmail}", UserResource.class);
+		router.attach("/user/register", UserResource.class);
 		router.attach("/images", DBImageResource.class);
 		router.attach("/images/{imgName}", DBImageResource.class);
 
@@ -73,15 +78,25 @@ public class DatabaseApplication extends Application {
 		return dbUtilsImpl.getImageInDB(imageName);
 	}
 	
-	public void addImage(String firstYear, String lastYear, String region,
+	/**
+	 * 
+	 * @param firstYear
+	 * @param lastYear
+	 * @param region
+	 * @param sebalVersion
+	 * @param sebalTag
+	 * @return List<String> Image names list
+	 * @throws SQLException
+	 * @throws NumberFormatException
+	 * @throws IOException
+	 */
+	public List<String> addImages(int firstYear, int lastYear, String region,
 			String sebalVersion, String sebalTag) throws SQLException,
 			NumberFormatException, IOException {
 		List<String> regions = new ArrayList<String>();
 		regions.add(region);
 
-		// TODO: see the consequences of these casts
-		dbUtilsImpl.fillDB(Integer.valueOf(firstYear),
-				Integer.valueOf(lastYear), regions, sebalVersion, sebalTag);
+		return dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion, sebalTag);
 	}
 	
 	public void purgeImage(String day, String force) throws SQLException, ParseException {
@@ -94,5 +109,33 @@ public class DatabaseApplication extends Application {
 		}
 		
 		dbUtilsImpl.setImagesToPurge(day, forceValue);		
+	}
+
+	public void createUser(String userEmail, String userName, String userPass,
+			boolean userState, boolean userNotify, boolean adminRole)
+			throws SQLException {
+
+		dbUtilsImpl.addUserInDB(userEmail, userName, userPass, userState,
+				userNotify, adminRole);
+	}
+	
+	public void updateUserState(String userEmail, boolean userState)
+			throws SQLException {
+
+		dbUtilsImpl.updateUserState(userEmail, userState);
+	}
+	
+	public void addUserNotify(String imageName, String userEmail) throws SQLException {
+		
+		dbUtilsImpl.addUserInNotifyDB(imageName, userEmail);
+	}
+	
+	public boolean isUserNotifiable(String userEmail) throws SQLException {
+		
+		return dbUtilsImpl.isUserNotifiable(userEmail);
+	}
+
+	public SebalUser getUser(String userEmail) {
+		return dbUtilsImpl.getUser(userEmail);
 	}
 }

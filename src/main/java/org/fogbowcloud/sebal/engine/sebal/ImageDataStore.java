@@ -4,6 +4,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
+
 public interface ImageDataStore {
 
     String NONE = "None";
@@ -20,12 +22,23 @@ public interface ImageDataStore {
     void addImage(String imageName, String downloadLink, int priority, String sebalVersion, String sebalTag) throws SQLException;
 
     void addStateStamp(String imageName, ImageState state, Timestamp timestamp) throws SQLException;
+    
+	void addUser(String userEmail, String userName, String userPass,
+			boolean userState, boolean userNotify, boolean adminRole) throws SQLException;
+	
+	void addUserNotify(String imageName, String userEmail) throws SQLException;
+	
+	void updateUserState(String userEmail, boolean state) throws SQLException;
 
     void updateImage(ImageData imageData) throws SQLException;
 
     void updateImageState(String imageName, ImageState state) throws SQLException;
 
     void updateImageMetadata(String imageName, String stationId, String sebalVersion) throws SQLException;
+    
+    void removeUserNotify(String imageName, String userEmail) throws SQLException;
+    
+    boolean isUserNotifiable(String userEmail) throws SQLException;
 
     List<ImageData> getAllImages() throws SQLException;
 
@@ -37,7 +50,9 @@ public interface ImageDataStore {
 
     List<ImageData> getImagesToDownload(String federationMember, int limit) throws SQLException;
 
-    ImageData getImage(String imageName) throws SQLException;    
+    ImageData getImage(String imageName) throws SQLException;
+    
+    SebalUser getUser(String userEmail) throws SQLException;
 
     void dispose();
 

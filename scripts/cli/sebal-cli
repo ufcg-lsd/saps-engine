@@ -1,0 +1,192 @@
+#!/bin/bash
+
+. sebal.properties
+
+print_menu() {
+	echo "Usage: $0 COMMAND [OPTIONS]"
+	echo "Commands are GET, POST or PURGE"
+	echo "GET | GET [image_name] -e | --email email"
+	echo "POST --first-year first-year --last-year last-year --region region --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
+	echo "PURGE [day] -f | --force -e | --email email"
+	echo "CREATEUSER -e | --email email -u | --user user-name -n | --notify yes|no"
+	echo "UPDATE_USER_STATE --admin-email admin email -e | --email target user email -a | --active yes|no"
+	exit 1
+}
+
+askPassword() {
+	echo -n "Password: "
+	read -s password
+	echo
+}
+
+askPasswordConfirmation() {
+	echo -n "Confirm password: "
+	read -s passwordConfirmation
+	echo
+}
+
+define_parameters() {
+	while [ ! -z $1 ]; do
+		case $1 in
+			--admin-email)
+				shift;
+				admin=$1;
+				;;
+			-a | --active)
+				shift;
+				active=$1;
+				;;
+			-e | --email)
+				shift;
+				email=$1;
+				;;
+			-u | --user-name)
+				shift;
+				user=$1;
+				;;
+			-n | --notify)
+				shift;
+				notify=$1;
+				;;
+			-f | --force)
+				shift;
+				force="yes";
+				;;
+			--first-year)
+				shift;
+				first_year=$1;
+				;;
+			--last-year)
+				shift;
+				last_year=$1;
+				;;
+			--region)
+				shift;
+				region=$1;
+				;;
+			--sebal-version)
+				shift;
+				sebal_version=$1;
+				;;
+			--sebal-tag)
+				shift;
+				sebal_tag=$1;
+				;;
+
+		esac
+		shift
+	done
+}
+
+do_get() {
+
+	define_parameters $@
+	askPassword
+	if [ $# -eq 2 ]
+	then
+		response=$(curl -H "userEmail: $email" -H "userPass: $password" "$host/images" 2> /dev/null)
+		echo $response
+	elif [ $# -eq 3 ]
+	then
+		echo "getting image by name $1"
+        	response=$(curl -H "userEmail: $email" -H "userPass: $password" "$host/images/$1" 2> /dev/null)
+        	echo $response
+	else
+		print_menu
+		exit 1
+	fi
+}
+
+do_post() {
+	define_parameters $@
+	askPassword
+	if [[ "$first_year" == "" || "$last_year" == "" || "$region" == "" ]]
+	then
+		echo "ERROR: --first-year, --last-year and --region are mandatories"
+		print_menu
+	else
+        	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&sebalVersion=$sebal_version&sebalTag=$sebal_tag" "$host/images" 2> /dev/null)
+		echo $response
+	fi
+}
+
+purge_image() {
+	if [ ! $# -lt 1 ]
+	then
+		define_parameters $@
+		askPassword
+		day=$1
+        	response=$(curl -X DELETE --data "userEmail=$email&userPass=$password&day=$day&force=$force" "$host/images" 2> /dev/null)
+                echo $response
+        else
+		print_menu
+		exit 1
+        fi
+}
+
+create_user() {
+	if [ ! $# -lt 6 ]
+	then
+		define_parameters $@
+		askPassword
+		askPasswordConfirmation
+		if [ ! "$password" == "$passwordConfirmation" ]
+		then
+			echo "Password and password confirmation doesn't match"
+		else
+			response=$(curl --data "userEmail=$email&userName=$user&userPass=$password&userPassConfirm=$passwordConfirmation&userNotify=$notify" "$host/user/register" 2> /dev/null)
+			echo $response
+		fi
+	else
+		print_menu
+		exit 1
+	fi
+}
+
+update_state() {
+	if [ ! $# -lt 6 ]
+	then
+		define_parameters $@
+		echo "$host/users/$email"
+		askPassword
+		response=$(curl -X PUT --data "adminEmail=$admin&adminPass=$password&userEmail=$email&userState=$active" "$host/users/$email" 2> /dev/null)
+		echo $response
+	else
+		print_menu
+		exit 1
+	fi
+}
+
+if [ $# -gt 0 ]
+then
+    op=$1
+    case "$op" in
+        GET)
+            shift
+            do_get $@
+        ;;
+        POST)
+            shift
+            do_post $@
+        ;;
+        PURGE)
+            shift
+            purge_image $@
+        ;;
+        CREATEUSER)
+            shift
+            create_user $@
+        ;;
+	UPDATE_USER_STATE)
+            shift
+            update_state $@
+        ;;
+        *)
+            print_menu
+            exit 1
+        ;;
+    esac
+else
+	print_menu
+	exit 1
+fi
