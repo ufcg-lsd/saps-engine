@@ -183,12 +183,12 @@ public class ImageData implements Serializable {
 	}
 
 	public String toString() {
-		return name + ", " + downloadLink + ", " + state.getValue() + ", "
+		return "[" + name + ", " + downloadLink + ", " + state.getValue() + ", "
 				+ federationMember + ", " + priority + ", " + stationId + ", "
 				+ sebalVersion + ", " + sebalTag + ", " + crawlerVersion + ", "
 				+ fetcherVersion + ", " + blowoutVersion + ", " + fmaskVersion
 				+ ", " + creationTime + ", " + updateTime + ", " + status
-				+ ", " + error;
+				+ ", " + error + "]";
 	}
 	
 	public JSONObject toJSON() throws JSONException {

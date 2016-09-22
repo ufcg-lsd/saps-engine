@@ -29,25 +29,33 @@ public class WardenImpl implements Warden {
 	private static final String CONF_PATH = "config/sebal.conf";
 	private static final String NOREPLY_EMAIL = "noreply_email";
 	private static final String NOREPLY_PASSWORD = "noreply_password";
-	private static final String DEFAULT_EMAIL_TITLE = "SEBAL IMAGE FETCHED";
+	private static final String DEFAULT_SLEEP_TIME = "default_sleep_time";
 
-	public void init() throws IOException, SQLException {
-		properties = new Properties();
-		FileInputStream input = new FileInputStream(CONF_PATH);
-		properties.load(input);
+	public WardenImpl() {
+		try {
+			properties = new Properties();
+			FileInputStream input = new FileInputStream(CONF_PATH);
+			properties.load(input);
 
-		dbUtilsImpl = new DBUtilsImpl(properties);
+			dbUtilsImpl = new DBUtilsImpl(properties);
+		} catch (IOException e) {
+			LOGGER.error("Error while getting properties", e);
+		} catch (SQLException e) {
+			LOGGER.error("Error while initializing DBUtilsImpl", e);
+		}
+	}
+
+	// TODO: see if this will be runnable
+	public void init() {
 
 		while (true) {
 			Collection<Ward> notified = new LinkedList<Ward>();
 			for (Ward ward : getPending()) {
-				if (reached(ward)) {
-					ImageData imageData = getImageData(ward.getImageName());
+				ImageData imageData = getImageData(ward.getImageName());
+				if (reached(ward, imageData)) {
 					try {
-						if (doNotify(ward.getEmail(), ward.getJobId(),
-								imageData)) {
-							notified.add(ward);
-						}
+						doNotify(ward.getEmail(), ward.getJobId(), imageData);
+						notified.add(ward);
 					} catch (Throwable e) {
 						LOGGER.error(
 								"Could not notify the user on: "
@@ -55,67 +63,88 @@ public class WardenImpl implements Warden {
 					}
 				}
 			}
+			
 			removeNotified(notified);
+			try {
+				Thread.sleep(Long.valueOf(properties
+						.getProperty(DEFAULT_SLEEP_TIME)));
+			} catch (InterruptedException e) {
+				LOGGER.error("Thread error while sleep", e);
+			}
 		}
 	}
 
 	@Override
-	public boolean doNotify(String email, String jobId, ImageData context) {
+	public void doNotify(String email, String jobId, ImageData context) {
+
+		String subject = "IMAGE " + context.getName() + " WITH JOB_ID " + jobId
+				+ " FETCHED";
 
 		String message = "The image " + context.getName()
-				+ " was FETCHED into swift.";
+				+ " was FETCHED into swift.\nIMAGE_DATA=" + context;
 
 		try {
 			GoogleMail.Send(properties.getProperty(NOREPLY_EMAIL),
-					properties.getProperty(NOREPLY_PASSWORD), email,
-					DEFAULT_EMAIL_TITLE, message);
-			return true;
+					properties.getProperty(NOREPLY_PASSWORD), email, subject,
+					message);
 		} catch (AddressException e) {
 			LOGGER.error("Error while sending email to " + email, e);
 		} catch (MessagingException e) {
 			LOGGER.error("Error while sending email to " + email, e);
 		}
-
-		return false;
 	}
 
-	private void removeNotified(Collection<Ward> notified) throws SQLException {
+	protected void removeNotified(Collection<Ward> notified) {
 
-		for (Ward ward : notified) {
-			dbUtilsImpl.removeUserNotify(ward.getImageName(), ward.getEmail());
+		try {
+			for (Ward ward : notified) {
+				dbUtilsImpl.removeUserNotify(ward.getImageName(),
+						ward.getEmail());
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Error while accessing database", e);
+		} catch (NullPointerException e) {
+			LOGGER.error("Ward list is null", e);
 		}
 	}
 
-	private ImageData getImageData(String imageName) throws SQLException {
+	protected ImageData getImageData(String imageName) {
 
-		return dbUtilsImpl.getImageInDB(imageName);
+		try {
+			return dbUtilsImpl.getImageInDB(imageName);
+		} catch (SQLException e) {
+			LOGGER.error("Error while accessing database", e);
+		}
+
+		return null;
 	}
 
-	private List<Ward> getPending() throws SQLException {
-
-		Map<String, String> mapUsersImages = dbUtilsImpl.getUsersToNotify();
+	protected List<Ward> getPending() {
 		List<Ward> wards = new ArrayList<Ward>();
 
-		for (Map.Entry<String, String> entry : mapUsersImages.entrySet()) {
-			Ward ward = new Ward(entry.getKey(), ImageState.FETCHED, UUID
-					.randomUUID().toString(), entry.getValue());
-			wards.add(ward);
+		try {
+			Map<String, String> mapUsersImages = dbUtilsImpl.getUsersToNotify();
+
+			for (Map.Entry<String, String> entry : mapUsersImages.entrySet()) {
+				Ward ward = new Ward(entry.getKey(), ImageState.FETCHED, UUID
+						.randomUUID().toString(), entry.getValue());
+				wards.add(ward);
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Error while accessing database", e);
 		}
 
 		return wards;
 	}
 
-	private boolean reached(Ward ward) throws SQLException {
+	protected boolean reached(Ward ward, ImageData imageData) {
 
-		if (dbUtilsImpl.getImageInDB(ward.getImageName()).getState()
-				.equals(ward.getTargetState())) {
-			return true;
-		}
-
-		return false;
+		// TODO: see if this works
+		return (imageData.getState().ordinal() >= ward.getTargetState()
+				.ordinal());
 	}
 
-	private class Ward {
+	protected class Ward {
 
 		private final String imageName;
 		private final ImageState targetState;
