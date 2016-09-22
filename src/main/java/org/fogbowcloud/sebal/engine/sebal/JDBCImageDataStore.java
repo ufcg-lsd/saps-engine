@@ -16,8 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
-import org.fogbowcloud.sebal.notifier.Ward;
-import org.fogbowcloud.sebal.notifier.Warden;
 
 public class JDBCImageDataStore implements ImageDataStore {
 
