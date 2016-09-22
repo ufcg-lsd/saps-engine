@@ -3,6 +3,7 @@ package org.fogbowcloud.sebal.engine.sebal;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
 
@@ -26,7 +27,9 @@ public interface ImageDataStore {
 	void addUser(String userEmail, String userName, String userPass,
 			boolean userState, boolean userNotify, boolean adminRole) throws SQLException;
 	
-	void addUserNotify(String imageName, String userEmail) throws SQLException;
+	void addUserNotify(String imageName, String userEmail) throws SQLException;	
+	
+	Map<String, String> getUsersToNotify() throws SQLException;
 	
 	void updateUserState(String userEmail, boolean state) throws SQLException;
 

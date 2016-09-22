@@ -11,6 +11,7 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -83,6 +84,18 @@ public class DBUtilsImpl implements DBUtils {
 			imageStore.addUserNotify(imageName, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while adding image " + imageName + " user " + userEmail + " in notify DB", e);
+		}
+	}
+	
+	@Override
+	public void removeUserNotify(String imageName, String userEmail)
+			throws SQLException {
+
+		try {
+			imageStore.removeUserNotify(imageName, userEmail);
+		} catch (SQLException e) {
+			LOGGER.error("Error while removing image " + imageName + " user "
+					+ userEmail + " from notify DB", e);
 		}
 	}
 	
@@ -210,6 +223,15 @@ public class DBUtilsImpl implements DBUtils {
     public List<ImageData> getImagesInDB() throws SQLException, ParseException {
     	
     	return imageStore.getAllImages();        
+    }
+    
+    @Override
+    public Map<String, String> getUsersToNotify() throws SQLException {
+    	
+    	Map<String, String> mapUsersImages = new HashMap<String, String>();
+    	
+    	mapUsersImages =  imageStore.getUsersToNotify();    	
+    	return mapUsersImages;    	
     }
     
     public ImageData getImageInDB(String imageName) throws SQLException {

@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -15,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
+import org.fogbowcloud.sebal.notifier.Ward;
+import org.fogbowcloud.sebal.notifier.Warden;
 
 public class JDBCImageDataStore implements ImageDataStore {
 
@@ -254,6 +257,39 @@ public class JDBCImageDataStore implements ImageDataStore {
 		 }
     }
     
+    private static final String SELECT_ALL_USERS_TO_NOTIFY_SQL = "SELECT * FROM " + USERS_NOTIFY_TABLE_NAME;
+    
+    @Override
+	public Map<String, String> getUsersToNotify() throws SQLException {
+    	
+    	LOGGER.debug("Getting all users to notify");
+
+        Statement statement = null;
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            statement = conn.createStatement();
+
+            statement.execute(SELECT_ALL_USERS_TO_NOTIFY_SQL);
+            ResultSet rs = statement.getResultSet();
+            Map<String, String> mapUsersImages = extractUsersToNotifyFrom(rs);         
+            return mapUsersImages;
+        } finally {
+            close(statement, conn);
+        }
+    }
+    
+	private Map<String, String> extractUsersToNotifyFrom(ResultSet rs)
+			throws SQLException {
+		
+		Map<String, String> mapUsersImages = new HashMap<String, String>();
+		while (rs.next()) {
+			mapUsersImages.put(rs.getString(IMAGE_NAME_COL),
+					rs.getString(USER_EMAIL_COL));
+		}
+		return mapUsersImages;
+	}
+    
     private static final String SELECT_USER_NOTIFIABLE_SQL = "SELECT " + USER_NOTIFY_COL + " FROM " + USERS_TABLE_NAME
             + " WHERE " + USER_EMAIL_COL + " = ?";
     
@@ -281,7 +317,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     
     @Override
     public void removeUserNotify(String imageName, String userEmail) throws SQLException {
-    	LOGGER.info("Removing image " + imageName + " notification for " + userEmail);
+    	LOGGER.debug("Removing image " + imageName + " notification for " + userEmail);
 		if (imageName == null || imageName.isEmpty() || userEmail == null
 				|| userEmail.isEmpty()) {
 			throw new IllegalArgumentException("Invalid image name "

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Map;
 
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
 
@@ -29,5 +30,9 @@ public interface DBUtils {
 	boolean isUserNotifiable(String userEmail) throws SQLException;
 	
 	SebalUser getUser(String userEmail);
+	
+	Map<String, String> getUsersToNotify() throws SQLException;
+	
+	void removeUserNotify(String imageName, String userEmail) throws SQLException;
 	
 }
