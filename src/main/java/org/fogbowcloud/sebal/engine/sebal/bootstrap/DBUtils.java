@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.List;
-import java.util.Map;
 
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
+import org.fogbowcloud.sebal.notifier.Ward;
 
 public interface DBUtils {
 
@@ -23,7 +23,7 @@ public interface DBUtils {
 	void addUserInDB(String userEmail, String userName, String userPass, boolean userState,
 			boolean userNotify, boolean adminRole) throws SQLException;
 	
-	void addUserInNotifyDB(String imageName, String userEmail) throws SQLException;
+	void addUserInNotifyDB(String jobId, String imageName, String userEmail) throws SQLException;
 
 	void updateUserState(String userEmail, boolean userState) throws SQLException;
 	
@@ -31,8 +31,8 @@ public interface DBUtils {
 	
 	SebalUser getUser(String userEmail);
 	
-	Map<String, String> getUsersToNotify() throws SQLException;
+	List<Ward> getUsersToNotify() throws SQLException;
 	
-	void removeUserNotify(String imageName, String userEmail) throws SQLException;
+	void removeUserNotify(String jobId, String imageName, String userEmail) throws SQLException;
 	
 }

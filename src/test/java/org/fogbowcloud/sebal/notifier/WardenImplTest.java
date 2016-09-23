@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
-import org.fogbowcloud.sebal.notifier.WardenImpl.Ward;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

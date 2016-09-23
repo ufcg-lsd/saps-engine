@@ -147,7 +147,6 @@ update_state() {
 	if [ ! $# -lt 6 ]
 	then
 		define_parameters $@
-		echo "$host/users/$email"
 		askPassword
 		response=$(curl -X PUT --data "adminEmail=$admin&adminPass=$password&userEmail=$email&userState=$active" "$host/users/$email" 2> /dev/null)
 		echo $response

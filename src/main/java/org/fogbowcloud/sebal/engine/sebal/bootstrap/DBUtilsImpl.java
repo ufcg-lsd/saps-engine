@@ -11,7 +11,6 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -25,6 +24,7 @@ import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.USGSNasaRepository;
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
+import org.fogbowcloud.sebal.notifier.Ward;
 
 public class DBUtilsImpl implements DBUtils {
 
@@ -78,21 +78,21 @@ public class DBUtilsImpl implements DBUtils {
 	}
 	
 	@Override
-	public void addUserInNotifyDB(String imageName, String userEmail) throws SQLException {
+	public void addUserInNotifyDB(String jobId, String imageName, String userEmail) throws SQLException {
 		
 		try {
-			imageStore.addUserNotify(imageName, userEmail);
+			imageStore.addUserNotify(jobId, imageName, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while adding image " + imageName + " user " + userEmail + " in notify DB", e);
 		}
 	}
 	
 	@Override
-	public void removeUserNotify(String imageName, String userEmail)
+	public void removeUserNotify(String jobId, String imageName, String userEmail)
 			throws SQLException {
 
 		try {
-			imageStore.removeUserNotify(imageName, userEmail);
+			imageStore.removeUserNotify(jobId, imageName, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while removing image " + imageName + " user "
 					+ userEmail + " from notify DB", e);
@@ -226,12 +226,10 @@ public class DBUtilsImpl implements DBUtils {
     }
     
     @Override
-    public Map<String, String> getUsersToNotify() throws SQLException {
+    public List<Ward> getUsersToNotify() throws SQLException {    	
     	
-    	Map<String, String> mapUsersImages = new HashMap<String, String>();
-    	
-    	mapUsersImages =  imageStore.getUsersToNotify();    	
-    	return mapUsersImages;    	
+    	List<Ward> wards = imageStore.getUsersToNotify();    	
+    	return wards;    	
     }
     
     public ImageData getImageInDB(String imageName) throws SQLException {

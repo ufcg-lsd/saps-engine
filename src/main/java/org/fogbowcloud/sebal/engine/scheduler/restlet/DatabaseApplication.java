@@ -134,9 +134,9 @@ public class DatabaseApplication extends Application {
 		dbUtilsImpl.updateUserState(userEmail, userState);
 	}
 	
-	public void addUserNotify(String imageName, String userEmail) throws SQLException {
+	public void addUserNotify(String jobId, String imageName, String userEmail) throws SQLException {
 		
-		dbUtilsImpl.addUserInNotifyDB(imageName, userEmail);
+		dbUtilsImpl.addUserInNotifyDB(jobId, imageName, userEmail);
 	}
 	
 	public boolean isUserNotifiable(String userEmail) throws SQLException {

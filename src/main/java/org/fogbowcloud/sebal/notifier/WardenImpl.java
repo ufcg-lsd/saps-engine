@@ -7,16 +7,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
-import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
 
 public class WardenImpl implements Warden {
@@ -54,8 +51,10 @@ public class WardenImpl implements Warden {
 				ImageData imageData = getImageData(ward.getImageName());
 				if (reached(ward, imageData)) {
 					try {
-						doNotify(ward.getEmail(), ward.getJobId(), imageData);
-						notified.add(ward);
+						if (doNotify(ward.getEmail(), ward.getJobId(),
+								imageData)) {
+							notified.add(ward);
+						}
 					} catch (Throwable e) {
 						LOGGER.error(
 								"Could not notify the user on: "
@@ -63,7 +62,7 @@ public class WardenImpl implements Warden {
 					}
 				}
 			}
-			
+
 			removeNotified(notified);
 			try {
 				Thread.sleep(Long.valueOf(properties
@@ -75,31 +74,34 @@ public class WardenImpl implements Warden {
 	}
 
 	@Override
-	public void doNotify(String email, String jobId, ImageData context) {
+	public boolean doNotify(String email, String jobId, ImageData context) {
 
 		String subject = "IMAGE " + context.getName() + " WITH JOB_ID " + jobId
 				+ " FETCHED";
 
 		String message = "The image " + context.getName()
-				+ " was FETCHED into swift.\nIMAGE_DATA=" + context;
+				+ " was FETCHED into swift.\n" + context.formatedToString();
 
 		try {
 			GoogleMail.Send(properties.getProperty(NOREPLY_EMAIL),
 					properties.getProperty(NOREPLY_PASSWORD), email, subject,
 					message);
+			return true;
 		} catch (AddressException e) {
 			LOGGER.error("Error while sending email to " + email, e);
 		} catch (MessagingException e) {
 			LOGGER.error("Error while sending email to " + email, e);
 		}
+
+		return false;
 	}
 
 	protected void removeNotified(Collection<Ward> notified) {
 
 		try {
 			for (Ward ward : notified) {
-				dbUtilsImpl.removeUserNotify(ward.getImageName(),
-						ward.getEmail());
+				dbUtilsImpl.removeUserNotify(ward.getJobId(),
+						ward.getImageName(), ward.getEmail());
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
@@ -120,16 +122,11 @@ public class WardenImpl implements Warden {
 	}
 
 	protected List<Ward> getPending() {
+
 		List<Ward> wards = new ArrayList<Ward>();
 
 		try {
-			Map<String, String> mapUsersImages = dbUtilsImpl.getUsersToNotify();
-
-			for (Map.Entry<String, String> entry : mapUsersImages.entrySet()) {
-				Ward ward = new Ward(entry.getKey(), ImageState.FETCHED, UUID
-						.randomUUID().toString(), entry.getValue());
-				wards.add(ward);
-			}
+			wards = dbUtilsImpl.getUsersToNotify();
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
 		}
@@ -142,45 +139,5 @@ public class WardenImpl implements Warden {
 		// TODO: see if this works
 		return (imageData.getState().ordinal() >= ward.getTargetState()
 				.ordinal());
-	}
-
-	protected class Ward {
-
-		private final String imageName;
-		private final ImageState targetState;
-		private final String jobId;
-		private final String email;
-
-		public Ward(String imageName, ImageState targetState, String jobId,
-				String email) {
-			this.imageName = imageName;
-			this.targetState = targetState;
-			this.email = email;
-			this.jobId = jobId;
-		}
-
-		@Override
-		public String toString() {
-			return "Ward [imageName=" + imageName + ", targetState="
-					+ targetState + ", jobId=" + jobId + ", email=" + email
-					+ "]";
-		}
-
-		public String getJobId() {
-			return jobId;
-		}
-
-		public String getEmail() {
-			return email;
-		}
-
-		public String getImageName() {
-			return imageName;
-		}
-
-		public ImageState getTargetState() {
-			return targetState;
-		}
-
 	}
 }

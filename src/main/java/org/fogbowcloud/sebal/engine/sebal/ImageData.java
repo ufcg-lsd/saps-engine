@@ -191,6 +191,23 @@ public class ImageData implements Serializable {
 				+ ", " + error + "]";
 	}
 	
+	public String formatedToString() {
+
+		return "[ ImageName = " + name + " ]\n" + "[ DownloadLink = "
+				+ downloadLink + " ]\n" + "[ ImageState = " + state.getValue()
+				+ " ]\n" + "[ FederationMember = " + federationMember + " ]\n"
+				+ "[ Priority = " + priority + " ]\n" + "[ StationId = "
+				+ stationId + " ]\n" + "[ SebalVersion = " + sebalVersion
+				+ " ]\n" + "[ SebalTag = " + sebalTag + " ]\n"
+				+ "[ CrawlerVersion = " + crawlerVersion + " ]\n"
+				+ "[ FetcherVersion = " + fetcherVersion + " ]\n"
+				+ "[ BlowoutVersion = " + blowoutVersion + " ]\n"
+				+ "[ FmaskVersion = " + fmaskVersion + " ]\n"
+				+ "[ CreationTime = " + creationTime + " ]\n"
+				+ "[ UpdateTime = " + updateTime + " ]\n" + "[ Status = "
+				+ status + " ]\n" + "[ Error = " + error + " ]";
+	}
+	
 	public JSONObject toJSON() throws JSONException {
 		JSONObject json = new JSONObject();
 		

@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -16,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
+import org.fogbowcloud.sebal.notifier.Ward;
 
 public class JDBCImageDataStore implements ImageDataStore {
 
@@ -47,7 +47,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String USER_NOTIFY_COL = "user_notify";
 	private static final String ADMIN_ROLE_COL = "admin_role";
 	
-	private static final String USERS_NOTIFY_TABLE_NAME = "sebal_notify";	
+	private static final String USERS_NOTIFY_TABLE_NAME = "sebal_notify";
+	private static final String JOB_ID_COL = "job_id";	
 
     private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
     private BasicDataSource connectionPool;
@@ -117,9 +118,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ USER_NOTIFY_COL + " BOOLEAN, " + ADMIN_ROLE_COL + " BOOLEAN)");
 			
 			statement.execute("CREATE TABLE IF NOT EXISTS "
-					+ USERS_NOTIFY_TABLE_NAME + "( " + IMAGE_NAME_COL
-					+ " VARCHAR(255), " + USER_EMAIL_COL
-					+ " VARCHAR(255), PRIMARY KEY(" + IMAGE_NAME_COL + ", "
+					+ USERS_NOTIFY_TABLE_NAME + "(" + JOB_ID_COL
+					+ " VARCHAR(255), " + IMAGE_NAME_COL + " VARCHAR(255), "
+					+ USER_EMAIL_COL + " VARCHAR(255), " + " PRIMARY KEY("
+					+ JOB_ID_COL + ", " + IMAGE_NAME_COL + ", "
 					+ USER_EMAIL_COL + "))");
 			
             statement.close();
@@ -227,11 +229,11 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
     
     private static final String INSERT_USER_NOTIFICATION_SQL = "INSERT INTO " + USERS_NOTIFY_TABLE_NAME
-            + " VALUES(?, ?)";
+            + " VALUES(?, ?, ?)";
     
     @Override
-    public void addUserNotify(String imageName, String userEmail) throws SQLException {
-    	LOGGER.info("Adding image " + imageName + " notification for " + userEmail);
+    public void addUserNotify(String jobId, String imageName, String userEmail) throws SQLException {
+    	LOGGER.info("Adding image " + imageName + " with jobId " + jobId + " notification for " + userEmail);
 		if (imageName == null || imageName.isEmpty() || userEmail == null
 				|| userEmail.isEmpty()) {
 			throw new IllegalArgumentException("Invalid image name "
@@ -246,8 +248,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 	            
 				insertStatement = connection
 						.prepareStatement(INSERT_USER_NOTIFICATION_SQL);
-				insertStatement.setString(1, imageName);
-				insertStatement.setString(2, userEmail);
+				insertStatement.setString(1, jobId);
+				insertStatement.setString(2, imageName);
+				insertStatement.setString(3, userEmail);
 								
 				insertStatement.execute();
 		 } finally {
@@ -258,7 +261,7 @@ public class JDBCImageDataStore implements ImageDataStore {
     private static final String SELECT_ALL_USERS_TO_NOTIFY_SQL = "SELECT * FROM " + USERS_NOTIFY_TABLE_NAME;
     
     @Override
-	public Map<String, String> getUsersToNotify() throws SQLException {
+	public List<Ward> getUsersToNotify() throws SQLException {
     	
     	LOGGER.debug("Getting all users to notify");
 
@@ -270,22 +273,23 @@ public class JDBCImageDataStore implements ImageDataStore {
 
             statement.execute(SELECT_ALL_USERS_TO_NOTIFY_SQL);
             ResultSet rs = statement.getResultSet();
-            Map<String, String> mapUsersImages = extractUsersToNotifyFrom(rs);         
-            return mapUsersImages;
+            List<Ward> wards = extractUsersToNotifyFrom(rs);
+            return wards;
         } finally {
             close(statement, conn);
         }
     }
     
-	private Map<String, String> extractUsersToNotifyFrom(ResultSet rs)
-			throws SQLException {
+	private List<Ward> extractUsersToNotifyFrom(ResultSet rs) throws SQLException {
 		
-		Map<String, String> mapUsersImages = new HashMap<String, String>();
+		List<Ward> wards = new ArrayList<Ward>();
+
 		while (rs.next()) {
-			mapUsersImages.put(rs.getString(IMAGE_NAME_COL),
-					rs.getString(USER_EMAIL_COL));
+			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageState.FETCHED,
+					rs.getString(JOB_ID_COL), rs.getString(USER_EMAIL_COL)));
 		}
-		return mapUsersImages;
+
+		return wards;
 	}
     
     private static final String SELECT_USER_NOTIFIABLE_SQL = "SELECT " + USER_NOTIFY_COL + " FROM " + USERS_TABLE_NAME
@@ -304,6 +308,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             statement.execute();
 
             ResultSet rs = statement.getResultSet();
+            rs.next();
             return rs.getBoolean(1);
         } finally {
             close(statement, conn);
@@ -311,10 +316,10 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
     
     private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME
-            + " WHERE image_name = ? AND user_email = ?";
+            + " WHERE jobId = ? AND image_name = ? AND user_email = ?";
     
     @Override
-    public void removeUserNotify(String imageName, String userEmail) throws SQLException {
+    public void removeUserNotify(String jobId, String imageName, String userEmail) throws SQLException {
     	LOGGER.debug("Removing image " + imageName + " notification for " + userEmail);
 		if (imageName == null || imageName.isEmpty() || userEmail == null
 				|| userEmail.isEmpty()) {
@@ -331,7 +336,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 				insertStatement = connection
 						.prepareStatement(REMOVE_USER_NOTIFY_SQL);
 				insertStatement.setString(1, imageName);
-				insertStatement.setString(2, userEmail);
+				insertStatement.setString(2, imageName);
+				insertStatement.setString(3, userEmail);
 								
 				insertStatement.execute();
 		 } finally {

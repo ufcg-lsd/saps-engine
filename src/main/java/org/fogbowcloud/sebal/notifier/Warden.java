@@ -10,6 +10,6 @@ public interface Warden {
 	 * @param jobId
 	 * @param context
 	 */
-	void doNotify(String email, String jobId, ImageData context);
+	boolean doNotify(String email, String jobId, ImageData context);
 	
 }
