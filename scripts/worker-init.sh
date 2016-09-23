@@ -1,15 +1,14 @@
 #!/bin/bash
 
-# Global variables
-LOG4J_FILE_PATH=/var/log/sebal/sebal.log
-
-# TODO: see if this will remain here, since the code used may not be ours
-SEBAL_SNAPSHOT_M2_PATH=/home/fogbow/.m2/repository/org/fogbowcloud/SEBAL/0.0.1-SNAPSHOT/
+BIN_INIT_SCRIPT="bin/init.sh"
 
 # This function downloads all projects and dependencies
 function prepareDependencies {
   #installing git
   sudo apt-get update
+
+  # TODO: install in image
+  echo -e "Y\n" | sudo apt-get install nfs-common
 
   # TODO: install in image
   echo -e "Y\n" | sudo apt-get install git
@@ -23,32 +22,15 @@ function prepareDependencies {
     git clone --branch ${PINPOINTED_SEBAL_TAG} ${SEBAL_URL}
   fi
 
-  # getting sebal snapshot from public_html
-  cd ${SANDBOX}/SEBAL
-  sudo tar -xvzf target.tar.gz
-  rm target.tar.gz
+  #when https://github.com/xpto/foo-baa.git we have foo-baa which is the root dir of the repo
+  repositoryName=`echo ${SEBAL_URL} | rev | cut -d "/" -f1 | cut -d"." -f2 | rev`
 
-  # putting snapshot into .m2
-  SEBAL_DIR_PATH=$(pwd)
-  sudo mkdir -p $SEBAL_SNAPSHOT_M2_PATH
-  sudo cp $SEBAL_DIR_PATH/target/SEBAL-0.0.1-SNAPSHOT.jar $SEBAL_SNAPSHOT_M2_PATH
-
-  sudo mkdir -p $LOG4J_FILE_PATH
-
-  cd ${SANDBOX}
-
-  # TODO: install in image
-  echo -e "Y\n" | sudo apt-get install nfs-common
+  bash -x $repositoryName/$BIN_INIT_SCRIPT
 }
 
 # This function mounts exports dir from NFS server
 function mountExportsDir {
   sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
-}
-
-function verifyRScript {
-  echo "Verifying dependencies for R script"
-  bash -x ${VERIFICATION_SCRIPT}
 }
 
 # This function ends the script
@@ -60,5 +42,4 @@ function finally {
 
 prepareDependencies
 mountExportsDir
-verifyRScript
 finally
