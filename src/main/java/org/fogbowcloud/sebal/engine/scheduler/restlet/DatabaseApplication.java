@@ -1,5 +1,6 @@
 package org.fogbowcloud.sebal.engine.scheduler.restlet;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -10,6 +11,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBImageResource;
+import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBMainResource;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.UserResource;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
@@ -18,15 +20,18 @@ import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Restlet;
 import org.restlet.data.Protocol;
+import org.restlet.resource.Directory;
 import org.restlet.routing.Router;
 import org.restlet.service.ConnectorService;
 
 public class DatabaseApplication extends Application {
+	private static final String DB_WEB_STATIC_ROOT = "./dbWebHtml/static";
+
+	public static final Logger LOGGER = Logger.getLogger(DatabaseApplication.class);
 	
 	private DBUtilsImpl dbUtilsImpl;
 	private Component restletComponent;
 	
-	public static final Logger LOGGER = Logger.getLogger(DatabaseApplication.class);
 	
 	public DatabaseApplication(DBUtilsImpl dbUtilsImpl) throws Exception {
 		this.dbUtilsImpl = dbUtilsImpl;
@@ -49,6 +54,7 @@ public class DatabaseApplication extends Application {
 
 		this.restletComponent = new Component();
 		this.restletComponent.getServers().add(Protocol.HTTP, restServerPort);
+		this.restletComponent.getClients().add(Protocol.FILE);
 		this.restletComponent.getDefaultHost().attach(this);
 
 		this.restletComponent.start();
@@ -61,6 +67,9 @@ public class DatabaseApplication extends Application {
 	@Override
 	public Restlet createInboundRoot() {
 		Router router = new Router(getContext());
+		router.attach("/", DBMainResource.class);
+		router.attach("/ui/{requestPath}", DBMainResource.class);
+		router.attach("/static", new Directory(getContext(), "file:///" + new File(DB_WEB_STATIC_ROOT).getAbsolutePath()));
 		router.attach("/users", UserResource.class);
 		router.attach("/users/{userEmail}", UserResource.class);
 		router.attach("/user/register", UserResource.class);
@@ -138,4 +147,5 @@ public class DatabaseApplication extends Application {
 	public SebalUser getUser(String userEmail) {
 		return dbUtilsImpl.getUser(userEmail);
 	}
+	
 }

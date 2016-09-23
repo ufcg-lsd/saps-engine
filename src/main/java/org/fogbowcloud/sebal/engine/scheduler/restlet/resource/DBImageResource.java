@@ -47,6 +47,7 @@ public class DBImageResource extends BaseResource {
 		super();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Get
 	public Representation getImages() throws Exception {
 		Series<Header> series = (Series<Header>)getRequestAttributes().get("org.restlet.http.headers");		
