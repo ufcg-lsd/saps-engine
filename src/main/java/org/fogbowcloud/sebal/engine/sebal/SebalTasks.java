@@ -25,8 +25,9 @@ public class SebalTasks {
 	
 	private static final String INIT_TYPE = "init";
 	private static final String RUN_TYPE = "run";
-	private static final String SEBAL_RUN_SCRIPT_PATH = "sebal_worker_run_script_path";
 	private static final String SEBAL_INIT_SCRIPT_PATH = "sebal_worker_init_script_path";
+	private static final String SEBAL_RUN_SCRIPT_PATH = "sebal_worker_run_script_path";
+	
 	public static final String F1_PHASE = "f1";
 	public static final String C_PHASE = "c";
 	public static final String F2_PHASE = "f2";
@@ -54,9 +55,6 @@ public class SebalTasks {
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 	private static final String METADATA_SEBAL_TAG = "sebal_version";
-	private static final String METADATA_SEBAL_VERIFICATION_SCRIPT_PATH = "sebal_verification_script_path";
-	private static final String METADATA_SEBAL_R_REPO_PATH = "sebal_r_repository_path";
-	private static final String METADATA_SEBAL_R_ALGORITHM_VERSION = "sebal_r_algorithm_version";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -78,15 +76,9 @@ public class SebalTasks {
 
 		settingCommonTaskMetadata(properties, rTaskImpl);
 
-		// setting image R execution properties		
+		// setting image R execution properties
 		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);
 		rTaskImpl.putMetadata(METADATA_SEBAL_TAG, sebalTag);
-		rTaskImpl.putMetadata(METADATA_SEBAL_VERIFICATION_SCRIPT_PATH, 
-				properties.getProperty(METADATA_SEBAL_VERIFICATION_SCRIPT_PATH));
-		rTaskImpl.putMetadata(METADATA_SEBAL_R_REPO_PATH,
-				properties.getProperty(METADATA_SEBAL_R_REPO_PATH));
-		rTaskImpl.putMetadata(METADATA_SEBAL_R_ALGORITHM_VERSION,
-				properties.getProperty(METADATA_SEBAL_R_ALGORITHM_VERSION));
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 		rTaskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
@@ -239,10 +231,10 @@ public class SebalTasks {
 		FileInputStream fis = null;
 		try {			
 			if(scriptType.equals(INIT_TYPE)) {
-				tempFile = File.createTempFile("temp-sebal-init-", ".sh");
+				tempFile = File.createTempFile("temp-worker-init-", ".sh");
 				fis = new FileInputStream(props.getProperty(SEBAL_INIT_SCRIPT_PATH));
 			} else {
-				tempFile = File.createTempFile("temp-sebal-run-", ".sh");
+				tempFile = File.createTempFile("temp-worker-run-", ".sh");
 				fis = new FileInputStream(props.getProperty(SEBAL_RUN_SCRIPT_PATH));
 			}
 			
@@ -270,8 +262,6 @@ public class SebalTasks {
 	public static String replaceVariables(Properties props, TaskImpl task, String command, String scriptType) {
 		
 		if(scriptType.equals(INIT_TYPE)) {
-			command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
-					task.getMetadata(METADATA_SEBAL_VERSION));
 			command = command.replaceAll(Pattern.quote("${PINPOINTED_SEBAL_TAG}"),
 					task.getMetadata(METADATA_SEBAL_TAG));			
 			command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
@@ -280,18 +270,14 @@ public class SebalTasks {
 					task.getMetadata(METADATA_NFS_SERVER_PORT));
 			command = command.replaceAll(Pattern.quote("${VOLUME_EXPORT_PATH}"),
 					task.getMetadata(METADATA_VOLUME_EXPORT_PATH));
-			command = command.replaceAll(Pattern.quote("${VERIFICATION_SCRIPT}"),
-					task.getMetadata(METADATA_SEBAL_VERIFICATION_SCRIPT_PATH));
 		} else {
 			command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
 					task.getMetadata(METADATA_IMAGE_NAME));
-			command = command.replaceAll(Pattern.quote("${R_REPOSITORY_PATH}"),
-					task.getMetadata(METADATA_SEBAL_R_REPO_PATH));
-			command = command.replaceAll(Pattern.quote("${R_ALGORITHM_VERSION}"),
-					task.getMetadata(METADATA_SEBAL_R_ALGORITHM_VERSION));
 		}
 		
 		// common variables for both scripts
+		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
+				task.getMetadata(METADATA_SEBAL_VERSION));
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
 		command = command.replaceAll(Pattern.quote("${SEBAL_MOUNT_POINT}"),
