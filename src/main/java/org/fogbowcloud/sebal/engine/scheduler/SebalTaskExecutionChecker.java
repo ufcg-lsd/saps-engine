@@ -40,12 +40,12 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 	}
 
 	@Override
-	public void Failure(TaskProcess tp) {
+	public void failure(TaskProcess tp) {
 
 	}
 
 	@Override
-	public void Completion(TaskProcess tp) {
+	public void completion(TaskProcess tp) {
 		try {
 			imageToFinnished(this.imageName);
 		} catch (SQLException e) {

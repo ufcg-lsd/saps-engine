@@ -30,22 +30,6 @@ public class SebalJob extends Job {
 
 	@Override
 	public void finish(Task task) {
-		LOGGER.debug("Moving task " + task.getId() + " from RUNNING to COMPLETED.");
-		task.finish();
-		
-		// check if all R task already ran for the image
-		if (task.getMetadata(SebalTasks.METADATA_PHASE).equals(SebalTasks.R_SCRIPT_PHASE)){
-			List<Task> readyOrRunningTasks = getReadyOrRunningTasks(
-					task.getMetadata(SebalTasks.METADATA_IMAGE_NAME));
-			
-			List<Task> rTasks = filterTaskByPhase(readyOrRunningTasks, SebalTasks.R_SCRIPT_PHASE);
-			LOGGER.debug("There is " + rTasks.size() + " tasks of image "
-					+ task.getMetadata(SebalTasks.METADATA_IMAGE_NAME) + " in R script phase.");
-			if (rTasks == null || rTasks.isEmpty()) {
-				udpateDB(task.getMetadata(SebalTasks.METADATA_IMAGE_NAME),
-						ImageState.FINISHED);
-			}
-		}
 	}
 
 	protected void udpateDB(String imageName, ImageState imageState) {
