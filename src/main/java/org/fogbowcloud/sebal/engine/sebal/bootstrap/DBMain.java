@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -71,19 +69,11 @@ public class DBMain {
 					// pinpoint specific SEBAL software version to be used in
 					// Worker
 					sebalVersion = args[7];
-<<<<<<< HEAD
-					opt = args[7];
-					if (opt.equals("--repository-tag")) {
-						sebalTag = args[8];
-					} else {
-						sebalTag = "NE";
-=======
 					sebalTag = args[8];
 					
 					if(sebalTag == null || sebalTag.isEmpty()) {
 						LOGGER.error("Invalid tag. Insert a valid one");
 						System.exit(1);
->>>>>>> 425bbc6... Forcing use of a tag when sebal repository is specified
 					}
 				} else {
 					sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
