@@ -131,7 +131,7 @@ public class SebalTasks {
 
 		// adding commands
 		String scpUploadCommand = createSCPUploadCommand(
-				localRunScriptFile.getAbsolutePath(), remoteInitScriptPath);
+				localInitScriptFile.getAbsolutePath(), remoteInitScriptPath);
 		LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 		rTaskImpl.addCommand(new Command(scpUploadCommand,
 				Command.Type.LOCAL));
@@ -281,7 +281,7 @@ public class SebalTasks {
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
 		command = command.replaceAll(Pattern.quote("${SEBAL_MOUNT_POINT}"),
-				task.getMetadata(METADATA_MOUNT_POINT));		
+				task.getMetadata(METADATA_MOUNT_POINT));
 		command = command.replaceAll(Pattern.quote("${REMOTE_COMMAND_EXIT_PATH}"),
 				task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH));
 

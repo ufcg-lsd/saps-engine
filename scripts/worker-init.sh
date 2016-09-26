@@ -1,6 +1,7 @@
 #!/bin/bash
 
 BIN_INIT_SCRIPT="bin/init.sh"
+PROCESS_OUTPUT=
 
 # This function downloads all projects and dependencies
 function prepareDependencies {
@@ -33,13 +34,23 @@ function mountExportsDir {
   sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
 }
 
-# This function ends the script
-function finally {
+function checkProcessOutput {
   PROCESS_OUTPUT=$?
 
+  if [ $PROCESS_OUTPUT -ne 0 ]
+  then
+    finally
+  fi
+}
+
+# This function ends the script
+function finally {
   echo $PROCESS_OUTPUT > ${REMOTE_COMMAND_EXIT_PATH}
+  exit $PROCESS_OUTPUT
 }
 
 prepareDependencies
+checkProcessOutput
 mountExportsDir
+checkProcessOutput
 finally
