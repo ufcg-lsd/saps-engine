@@ -4,6 +4,7 @@
 IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
 BIN_INIT_SCRIPT="bin/run.sh"
+PROCESS_OUTPUT=
 
 # This function untare image and creates an output dir into mounted dir
 function untarImageAndPrepareDirs {
@@ -38,16 +39,27 @@ function checkSum {
   done
 }
 
+function checkProcessOutput {
+  PROCESS_OUTPUT=$?
+
+  if [ $PROCESS_OUTPUT -ne 0 ]
+  then
+    finally
+  fi
+}
+
 # This function ends the script
 function finally {
   # see if this rm will be necessary
   #rm -r /tmp/Rtmp*
-  PROCESS_OUTPUT=$?
-
   echo $PROCESS_OUTPUT > ${REMOTE_COMMAND_EXIT_PATH}
+  exit $PROCESS_OUTPUT
 }
 
 untarImageAndPrepareDirs
+checkProcessOutput
 executeRunScript
+checkProcessOutput
 checkSum
+checkProcessOutput
 finally
