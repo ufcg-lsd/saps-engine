@@ -171,18 +171,14 @@ public class Crawler {
 	protected void cleanUnfinishedDownloadedData(Properties properties)
 			throws IOException {
 
-		LOGGER.info("Starting garbage collector");
 		Collection<ImageData> data = pendingImageDownloadMap.values();
 		for (ImageData imageData : data) {
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
-		LOGGER.info("Garbage collect finished");
 	}
 
 	protected void download(long maxImagesToDownload) throws SQLException,
 			IOException {
-
-		LOGGER.info("maxImagesToDownload " + maxImagesToDownload);
 
 		List<ImageData> imageDataList = new ArrayList<ImageData>();
 
@@ -217,10 +213,10 @@ public class Crawler {
 				pendingImageDownloadDB.commit();
 
 				downloadImage(imageData);
+				LOGGER.info("Image " + imageData + " download finished");
 			}
 		}
 
-		LOGGER.info("Download finished");
 	}
 
 	protected long numberOfImagesToDownload() throws NumberFormatException,
@@ -467,8 +463,6 @@ public class Crawler {
 
 	protected void purgeImagesFromVolume(Properties properties)
 			throws IOException, InterruptedException, SQLException {
-
-		LOGGER.info("Starting purge");
 
 		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.FINISHED);
 

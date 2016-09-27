@@ -1,7 +1,6 @@
 package org.fogbowcloud.sebal.engine.scheduler.restlet.resource;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -103,6 +102,10 @@ public class DBImageResource extends BaseResource {
 	@Post
 	public StringRepresentation insertImages(Representation entity)
 			throws Exception {
+		
+		Properties properties = new Properties();
+		FileInputStream input = new FileInputStream(DEFAULT_CONF_PATH);
+		properties.load(input);
 
 		Form form = new Form(entity);
 
@@ -119,8 +122,21 @@ public class DBImageResource extends BaseResource {
 		String sebalVersion = form.getFirstValue(SEBAL_VERSION);
 		String sebalTag = form.getFirstValue(SEBAL_TAG);
 
-		try {
-			checkAttributes(region, sebalVersion, sebalTag);
+		try {		
+			
+			if (region == null || region.isEmpty()) {
+				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
+			}	
+			
+			if (sebalVersion == null || sebalVersion.isEmpty()) {
+				sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
+				sebalTag = "NE";
+			} else {
+				if (sebalTag == null || sebalTag.isEmpty()) {
+					throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
+				}
+			}
+			
 			List<String> imageNames = application.addImages(firstYear,
 					lastYear, region, sebalVersion, sebalTag);
 			if (application.isUserNotifiable(userEmail)) {
@@ -137,27 +153,6 @@ public class DBImageResource extends BaseResource {
 
 		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK,
 				MediaType.APPLICATION_JSON);
-	}
-
-	private void checkAttributes(String region, String sebalVersion,
-			String sebalTag) throws IOException {
-
-		Properties properties = new Properties();
-		FileInputStream input = new FileInputStream(DEFAULT_CONF_PATH);
-		properties.load(input);
-
-		if (region == null || region.isEmpty()) {
-			throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
-		}
-
-		if (sebalVersion == null || sebalVersion.isEmpty()) {
-			sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
-			sebalTag = "NE";
-		} else {
-			if (sebalTag == null || sebalTag.isEmpty()) {
-				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
-			}
-		}
 	}
 
 	@Delete

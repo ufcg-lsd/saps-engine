@@ -29,7 +29,7 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 
 	private void imageToRunning(String image) throws SQLException {
 		ImageData imageData = this.imageStore.getImage(image);
-		imageData.setState(ImageState.RUNNING_R);
+		imageData.setState(ImageState.RUNNING);
 		imageStore.updateImage(imageData);
 	}
 
