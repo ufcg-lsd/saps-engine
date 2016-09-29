@@ -2,6 +2,7 @@ package org.fogbowcloud.sebal.engine.scheduler;
 
 import java.sql.SQLException;
 
+import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.scheduler.core.Scheduler;
 import org.fogbowcloud.blowout.scheduler.core.TaskExecutionChecker;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskProcess;
@@ -10,6 +11,7 @@ import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 
 public class SebalTaskExecutionChecker extends TaskExecutionChecker {
+	private static final Logger LOGGER = Logger.getLogger(SebalTaskExecutionChecker.class);
 
 	String imageName;
 	
@@ -22,8 +24,7 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 		try {
 			imageToRunning(this.imageName);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.debug("Could not change image '" + this.imageName + "' state to RUNNING", e);
 		}
 	}
 
@@ -49,8 +50,7 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 		try {
 			imageToFinnished(this.imageName);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.debug("Could not change image '" + this.imageName + "' state to Finnished", e);
 		}
 	}
 

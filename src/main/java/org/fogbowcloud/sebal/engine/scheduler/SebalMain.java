@@ -91,6 +91,10 @@ public class SebalMain {
 		ExecutionMonitor execMonitor = new SebalExecutionMonitor(scheduler, null, imageStore);
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
+		
+		// In case of the process has been stopped before finishing the images running 
+		// in the next restart all images in running state will be reseted to queued state
+		resetImagesRunningToQueued();
 
 		addRTasks(properties, job, sebalSpec, ImageState.QUEUED, ImageDataStore.UNLIMITED);
 
@@ -114,6 +118,14 @@ public class SebalMain {
 		restletServer.startServer();
 
 		LOGGER.info("Scheduler working");
+	}
+
+	private static void resetImagesRunningToQueued() throws SQLException {
+		List<ImageData> imagesRunning = imageStore.getIn(ImageState.RUNNING);
+		for (ImageData imageData : imagesRunning) {
+			imageData.setState(ImageState.QUEUED);
+			imageStore.updateImage(imageData);
+		}
 	}
 
 	private static void setFederationMemberIntoSpec(Specification spec,
