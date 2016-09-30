@@ -155,18 +155,12 @@ public class SebalTasks {
 		
 		// adding epilogue commands
 		// moving worker-init.sh out and err files to image results dir
-		String mvOutErrCommand = "sudo mv " + File.separator + "tmp"
-				+ File.separator + initOutPath + " " + File.separator + "tmp"
-				+ File.separator + initErrPath + " " + METADATA_MOUNT_POINT
-				+ File.separator + "results" + File.separator + imageName;
+		String mvOutErrCommand = creatMVInitTempFilesCommand(imageName);
 		rTaskImpl.addCommand(new Command(mvOutErrCommand,
 				Command.Type.EPILOGUE));
 
 		// moving worker-run.sh out and err files to image results dir
-		mvOutErrCommand = "sudo mv " + File.separator + "tmp"
-				+ File.separator + runOutPath + " " + File.separator + "tmp"
-				+ File.separator + runErrPath + " " + METADATA_MOUNT_POINT
-				+ File.separator + "results" + File.separator + imageName;
+		mvOutErrCommand = createMVRunTempFilesCommand(imageName);
 		rTaskImpl.addCommand(new Command(mvOutErrCommand,
 				Command.Type.EPILOGUE));
 		
@@ -175,6 +169,20 @@ public class SebalTasks {
 		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.EPILOGUE));
 
 		return rTaskImpl;
+	}
+
+	private static String creatMVInitTempFilesCommand(String imageName) {
+		return "\"sudo mv " + File.separator + "tmp"
+				+ File.separator + initOutPath + " " + File.separator + "tmp"
+				+ File.separator + initErrPath + " " + METADATA_MOUNT_POINT
+				+ File.separator + "results" + File.separator + imageName + "\"";
+	}
+
+	private static String createMVRunTempFilesCommand(String imageName) {
+		return "\"sudo mv " + File.separator + "tmp"
+				+ File.separator + runOutPath + " " + File.separator + "tmp"
+				+ File.separator + runErrPath + " " + METADATA_MOUNT_POINT
+				+ File.separator + "results" + File.separator + imageName + "\"";
 	}
 
 	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
