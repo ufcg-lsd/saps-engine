@@ -3,7 +3,7 @@
 # Global variables
 IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
-BIN_INIT_SCRIPT="bin/run.sh"
+BIN_RUN_SCRIPT="bin/run.sh"
 PROCESS_OUTPUT=
 
 # This function untare image and creates an output dir into mounted dir

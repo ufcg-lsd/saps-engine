@@ -143,6 +143,14 @@ public class SebalTasks {
 				Command.Type.LOCAL));		
 
 		// adding remote commands
+		String remoteChmodInitScriptCommand = createChmodScriptCommand(remoteInitScriptPath);
+		rTaskImpl.addCommand(new Command(remoteChmodInitScriptCommand,
+				Command.Type.REMOTE));
+		
+		String remoteChmodRunScriptCommand = createChmodScriptCommand(remoteRunScriptPath);
+		rTaskImpl.addCommand(new Command(remoteChmodRunScriptCommand,
+				Command.Type.REMOTE));
+		
 		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteInitScriptPath, INIT_TYPE);
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
@@ -155,14 +163,14 @@ public class SebalTasks {
 		
 		// adding epilogue commands
 		// moving worker-init.sh out and err files to image results dir
-		String mvOutErrCommand = creatMVInitTempFilesCommand(imageName);
-		rTaskImpl.addCommand(new Command(mvOutErrCommand,
-				Command.Type.EPILOGUE));
-
-		// moving worker-run.sh out and err files to image results dir
-		mvOutErrCommand = createMVRunTempFilesCommand(imageName);
-		rTaskImpl.addCommand(new Command(mvOutErrCommand,
-				Command.Type.EPILOGUE));
+//		String mvOutErrCommand = creatMVInitTempFilesCommand(imageName);
+//		rTaskImpl.addCommand(new Command(mvOutErrCommand,
+//				Command.Type.EPILOGUE));
+//
+//		// moving worker-run.sh out and err files to image results dir
+//		mvOutErrCommand = createMVRunTempFilesCommand(imageName);
+//		rTaskImpl.addCommand(new Command(mvOutErrCommand,
+//				Command.Type.EPILOGUE));
 		
 		String cleanEnvironment = "sudo rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
@@ -211,6 +219,10 @@ public class SebalTasks {
 		task.putMetadata(METADATA_RESULTS_LOCAL_PATH,
 				properties.getProperty(SEBAL_RESULTS_LOCAL_PATH));
 	}
+	
+	private static String createChmodScriptCommand(String remoteScript) {
+		return "\"chmod +x " + remoteScript + "\"";
+	}
 
 	private static String createRemoteScriptExecCommand(String remoteScript, String scriptType) {
 		
@@ -220,14 +232,14 @@ public class SebalTasks {
 			initOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
 			initErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
 			
-			execScriptCommand = "\"chmod +x " + remoteScript + "; nohup " + remoteScript
-					+ " >> /tmp/" + initOutPath + " 2>> /tmp/" + initErrPath + " &\"";
+			execScriptCommand = "\"nohup " + remoteScript + " >> /tmp/"
+					+ initOutPath + " 2>> /tmp/" + initErrPath + "\"";
 		} else {
 			runOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
 			runErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
 			
-			execScriptCommand = "\"chmod +x " + remoteScript + "; nohup " + remoteScript
-					+ " >> /tmp/" + runOutPath + " 2>> /tmp/" + runErrPath + " &\"";
+			execScriptCommand = "\"nohup " + remoteScript + " >> /tmp/"
+					+ runOutPath + " 2>> /tmp/" + runErrPath + "\"";
 		}
 		
 		return execScriptCommand;
