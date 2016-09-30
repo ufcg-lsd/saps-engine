@@ -14,12 +14,13 @@ NFS_INSTANCE_IP=$3
 NFS_PORT=$4
 
 #GLOBAL CONSTANTS
-SANDBOX_DIR=/home/fogbow/sebal-engine
-SPEC_FILE=$SANDBOX_DIR/config/initialSpec
-CONF_DIR=$SANDBOX_DIR/config
+SEBAL_ENGINE_PATH=/home/fogbow/sebal-engine
+BLOWOUT_PATH=/home/fogbow/blowout
+SPEC_FILE=$SEBAL_ENGINE_PATH/config/initialSpec
+CONF_DIR=$SEBAL_ENGINE_PATH/config
 CONF_FILE_PATH=$CONF_DIR/sebal.conf
 LIBRARY_PATH=/usr/local/lib
-LOG4J_PATH=$SANDBOX_DIR/config/log4j.properties
+LOG4J_PATH=$SEBAL_ENGINE_PATH/config/log4j.properties
 
 function main() {
   tar -xvzf manager-pkg.tar.gz
@@ -28,7 +29,11 @@ function main() {
 
   rm *tar.gz
 
-  cd $SANDBOX_DIR
+  cd $BLOWOUT_PATH/scripts
+
+  make su_command
+
+  cd $SEBAL_ENGINE_PATH
 
   echo "Starting scheduler app"
   sudo java -Dlog4j.configuration=file:$LOG4J_PATH -Djava.library.path=$LIBRARY_PATH -cp target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.sebal.engine.scheduler.SebalMain $CONF_FILE_PATH $SCHEDULER_INSTANCE_IP $DB_PORT $NFS_INSTANCE_IP $NFS_PORT &
