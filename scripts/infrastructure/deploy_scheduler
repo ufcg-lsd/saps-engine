@@ -247,6 +247,14 @@ function execute_scheduler_app() {
   ssh_to_scheduler ${schedulerapp_cmd}
 }
 
+function execute_restlet_app() {
+  local scheduler_instance_ip=$1
+  local restlet_port=$2
+  
+  restletapp_cmd="sudo sh $SANDBOX_DIR/scripts/infrastructure/$SCRIPTS_DIR/start_restlet_application.sh $scheduler_instance_ip $restlet_port"
+  ssh_to_scheduler ${restletapp_cmd}
+}
+
 function main() {
   echo "Creating Scheduler VM"
   VM_SCHEDULER_INFO=`create_scheduler_vm`
@@ -373,6 +381,9 @@ function main() {
 
   #echo "Executing scheduler app in VM"
   #execute_scheduler_app
+
+  #echo "Starting restlet application"
+  #execute_restlet_app $INSTANCE_IP $RESTLET_PORT
 }
 
 #do deploy
