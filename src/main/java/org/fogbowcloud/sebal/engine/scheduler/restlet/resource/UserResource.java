@@ -43,6 +43,8 @@ public class UserResource extends BaseResource {
 		
 		checkMandatoryAttributes(userName, userEmail, userPass, userPassConfirm);
 		
+		LOGGER.debug("Creating user with userEmail " + userEmail + " and userName " + userName);
+		
 		try {
 			String md5Pass = DigestUtils.md5Hex(userPass);
 			boolean notify = false;
@@ -75,7 +77,7 @@ public class UserResource extends BaseResource {
 		Form form = new Form(entity);
 		
 		String adminUserEmail = form.getFirstValue(ADMIN_USER_EMAIL);
-		String adminUserPass = form.getFirstValue(ADMIN_USER_PASSWORD);
+		String adminUserPass = form.getFirstValue(ADMIN_USER_PASSWORD);		
 		
 		if(!authenticateUser(adminUserEmail, adminUserPass, true)) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
@@ -83,6 +85,8 @@ public class UserResource extends BaseResource {
 
 		String userEmail = form.getFirstValue(REQUEST_ATTR_USER_EMAIL);
 		String userState = form.getFirstValue(REQUEST_ATTR_USERSTATE);
+		LOGGER.debug("Upating user " + userEmail);
+
 		boolean state = false;
 
 		try {

@@ -111,7 +111,8 @@ public class DBImageResource extends BaseResource {
 
 		String userEmail = form.getFirstValue(USER_EMAIL);
 		String userPass = form.getFirstValue(USER_PASSWORD);
-
+		
+		LOGGER.debug("POST with userEmail " + userEmail);
 		if (!authenticateUser(userEmail, userPass)) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 		}
@@ -121,7 +122,8 @@ public class DBImageResource extends BaseResource {
 		String region = form.getFirstValue(REGION);
 		String sebalVersion = form.getFirstValue(SEBAL_VERSION);
 		String sebalTag = form.getFirstValue(SEBAL_TAG);
-
+		LOGGER.debug("FirstYear " + firstYear + " LastYear " + lastYear + " Region " + region);
+		
 		try {		
 			
 			if (region == null || region.isEmpty()) {
@@ -131,6 +133,8 @@ public class DBImageResource extends BaseResource {
 			if (sebalVersion == null || sebalVersion.isEmpty()) {
 				sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
 				sebalTag = "NE";
+				
+				LOGGER.debug("SebalVersion not passed...using default repository " + sebalVersion);
 			} else {
 				if (sebalTag == null || sebalTag.isEmpty()) {
 					throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
@@ -164,6 +168,8 @@ public class DBImageResource extends BaseResource {
 		String userEmail = form.getFirstValue(USER_EMAIL);
 		String userPass = form.getFirstValue(USER_PASSWORD);
 
+		LOGGER.debug("DELETE with userEmail " + userEmail);
+		
 		boolean mustBeAdmin = true;
 		if (!authenticateUser(userEmail, userPass, mustBeAdmin)) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
@@ -172,6 +178,7 @@ public class DBImageResource extends BaseResource {
 		String day = form.getFirstValue(DAY);
 		String force = form.getFirstValue(FORCE);
 
+		LOGGER.debug("Purging images from day " + day);
 		DatabaseApplication application = (DatabaseApplication) getApplication();
 
 		try {

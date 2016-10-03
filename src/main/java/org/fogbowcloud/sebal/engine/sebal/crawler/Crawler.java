@@ -231,10 +231,10 @@ public class Crawler {
 
 			// FIXME: ceil para o inteiro inferior
 
-			LOGGER.debug("volumePath " + volumePath + "availableVolumeSpace "
-					+ availableVolumeSpace + " DEFAULT_IMAGE_DIR_SIZE "
-					+ DEFAULT_IMAGE_DIR_SIZE + " numberOfImagesToDownload "
-					+ numberOfImagesToDownload);
+//			LOGGER.debug("volumePath " + volumePath + "availableVolumeSpace "
+//					+ availableVolumeSpace + " DEFAULT_IMAGE_DIR_SIZE "
+//					+ DEFAULT_IMAGE_DIR_SIZE + " numberOfImagesToDownload "
+//					+ numberOfImagesToDownload);
 			return numberOfImagesToDownload;
 		} else {
 			throw new RuntimeException("VolumePath: " + volumeDirPath

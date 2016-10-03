@@ -99,9 +99,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL
 					+ " VARCHAR(255), " + SEBAL_TAG_COL + " VARCHAR(255), "
 					+ CRAWLER_VERSION_COL + " VARCHAR(255), "
-					+ FETCHER_VERSION_COL + " VARCHAR(255),"
+					+ FETCHER_VERSION_COL + " VARCHAR(255), "
 					+ BLOWOUT_VERSION_COL + " VARCHAR(255), "
-					+ FMASK_VERSION_COL + " VARCHAR(255)," + CREATION_TIME_COL
+					+ FMASK_VERSION_COL + " VARCHAR(255), " + CREATION_TIME_COL
 					+ " TIMESTAMP, " + UPDATED_TIME_COL + " TIMESTAMP, "
 					+ IMAGE_STATUS_COL + " VARCHAR(255), " + ERROR_MSG_COL
 					+ " VARCHAR(255))");
@@ -544,8 +544,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 
     @Override
     public List<ImageData> getAllImages() throws SQLException {
-        LOGGER.debug("Getting all images");
-
         Statement statement = null;
         Connection conn = null;
         try {
@@ -554,8 +552,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
             statement.execute(SELECT_ALL_IMAGES_SQL);
             ResultSet rs = statement.getResultSet();
-            List<ImageData> imageDatas = extractImageDataFrom(rs);
-            LOGGER.debug("Current images on data base: " + imageDatas);
+            List<ImageData> imageDatas = extractImageDataFrom(rs);        
             return imageDatas;
         } finally {
             close(statement, conn);
