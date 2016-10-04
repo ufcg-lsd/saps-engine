@@ -8,6 +8,8 @@ import org.fogbowcloud.sebal.engine.sebal.ImageData;
 
 public class FTPIntegrationImpl implements FTPIntegration{
 	
+	private static final String FTP_SERVER_USER = "ftp_server_user";
+	private static final String SEBAL_SFTP_SCRIPT_PATH = "sebal_sftp_script_path";
 	public static final Logger LOGGER = Logger.getLogger(FTPIntegrationImpl.class);
 	
 	public int getFiles(Properties properties, String ftpServerIP,
@@ -24,8 +26,8 @@ public class FTPIntegrationImpl implements FTPIntegration{
 		LOGGER.debug("Image " + imageData.getName());
 		
 		ProcessBuilder builder = new ProcessBuilder("/bin/bash",
-				"scripts/sftp-access.sh",
-				properties.getProperty("ftp_server_user"), ftpServerIP,
+				properties.getProperty(SEBAL_SFTP_SCRIPT_PATH),
+				properties.getProperty(FTP_SERVER_USER), ftpServerIP,
 				ftpServerPort, remoteImageResultsPath, localImageResultsPath,
 				imageData.getName());
 		

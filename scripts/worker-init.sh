@@ -31,7 +31,13 @@ function prepareDependencies {
 
 # This function mounts exports dir from NFS server
 function mountExportsDir {
-  sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
+  if grep -qs "${SEBAL_MOUNT_POINT}" /proc/mounts;
+  then
+    echo "Directory ${SEBAL_MOUNT_POINT} already mounted."
+  else
+    echo "Directory ${SEBAL_MOUNT_POINT} not mounted yet...proceeding to mount"
+    sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
+  fi
 }
 
 function checkProcessOutput {

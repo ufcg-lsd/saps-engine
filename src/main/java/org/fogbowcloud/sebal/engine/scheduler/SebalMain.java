@@ -36,6 +36,7 @@ import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
 public class SebalMain {
 
+	private static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	private static ManagerTimer executionMonitorTimer = new ManagerTimer(
 			Executors.newScheduledThreadPool(1));
 	private static ManagerTimer schedulerTimer = new ManagerTimer(
@@ -256,7 +257,8 @@ public class SebalMain {
 
 	private static String getBlowoutVersion(Properties properties) {
 
-		String blowoutDirPath = System.getProperty("user.dir");
+		//String blowoutDirPath = System.getProperty("user.dir");
+		String blowoutDirPath = properties.getProperty(BLOWOUT_DIR_PATH);
 		File blowoutDir = new File(blowoutDirPath);
 
 		if (blowoutDir.exists() && blowoutDir.isDirectory()) {
