@@ -364,6 +364,10 @@ function main() {
   ssh_to_scheduler ${touch_log4j_cmd}
   ssh_to_scheduler ${chmod_log4j_cmd}
 
+  #Puting hostname into /etc/hosts
+  insert_hostname_cmd="sudo sh $REMOTE_FILE_PATH/$SCRIPTS_DIR/insert_hostname.sh"
+  ssh_to_scheduler ${insert_hostname_cmd}
+
   #Putting informations on Scheduler execution info.
   sed -i "/SCHEDULER_INSTANCE_ID=/ s/=.*/=$INSTANCE_ID/" $SCHEDULER_EXECUTION_INFO
   sed -i "/SCHEDULER_USER_NAME=/ s/=.*/=$USER_NAME/" $SCHEDULER_EXECUTION_INFO
