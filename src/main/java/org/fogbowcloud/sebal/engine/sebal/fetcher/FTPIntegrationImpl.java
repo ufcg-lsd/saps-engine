@@ -34,6 +34,11 @@ public class FTPIntegrationImpl implements FTPIntegration{
 		try {
 			Process p = builder.start();
 			p.waitFor();
+			
+			if(p.exitValue() != 0) {
+				LOGGER.error("Error while executing sftp-access script");
+				return 1;
+			}
 		} catch (InterruptedException e) {
 			LOGGER.error("Could not get image " + imageData
 					+ " results from FTP server", e);
