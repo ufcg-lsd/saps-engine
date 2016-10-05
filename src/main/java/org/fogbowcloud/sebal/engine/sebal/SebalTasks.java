@@ -290,12 +290,11 @@ public class SebalTasks {
 					task.getMetadata(METADATA_NFS_SERVER_PORT));
 			command = command.replaceAll(Pattern.quote("${VOLUME_EXPORT_PATH}"),
 					task.getMetadata(METADATA_VOLUME_EXPORT_PATH));
-		} else {
-			command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
-					task.getMetadata(METADATA_IMAGE_NAME));
 		}
 		
 		// common variables for both scripts
+		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
+				task.getMetadata(METADATA_IMAGE_NAME));
 		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
 				task.getMetadata(METADATA_SEBAL_VERSION));
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),

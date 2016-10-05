@@ -1,7 +1,9 @@
 #!/bin/bash
 
 BIN_INIT_SCRIPT="bin/init.sh"
+IMAGES_DIR_NAME=images
 PROCESS_OUTPUT=
+repositoryName=
 
 # This function downloads all projects and dependencies
 function prepareDependencies {
@@ -27,6 +29,22 @@ function prepareDependencies {
   repositoryName=`echo ${SEBAL_URL} | rev | cut -d "/" -f1 | cut -d"." -f2 | rev`
 
   bash -x $repositoryName/$BIN_INIT_SCRIPT
+}
+
+# This function checks if there is a missing dependencies file created
+# if it exists, it will be stored in image directory
+function checkMissingDependenciesFile {
+  if [ -f ${SANDBOX}/$repositoryName/missing_dependencies ];
+  then
+    echo "Transfering missing_dependencies file to ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME} directory"
+    sudo mv ${SANDBOX}/$repositoryName/missing_dependencies ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}
+  else
+    echo "No missing dependencies"
+    if [ -f ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/missing_dependencies ]
+    then
+      sudo rm ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/missing_dependencies
+    fi
+  fi
 }
 
 # This function mounts exports dir from NFS server
@@ -56,6 +74,8 @@ function finally {
 }
 
 prepareDependencies
+checkProcessOutput
+checkMissingDependenciesFile
 checkProcessOutput
 mountExportsDir
 checkProcessOutput
