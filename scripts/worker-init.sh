@@ -18,15 +18,19 @@ function prepareDependencies {
 
   cd ${SANDBOX}
 
+  #when https://github.com/xpto/foo-baa.git we have foo-baa which is the root dir of the repo
+  repositoryName=`echo ${SEBAL_URL} | rev | cut -d "/" -f1 | cut -d"." -f2 | rev`
+
   if [ ${PINPOINTED_SEBAL_TAG} = "NE" ]
   then
     git clone ${SEBAL_URL}	
   else
-    git clone --branch ${PINPOINTED_SEBAL_TAG} ${SEBAL_URL}
+    #git clone --branch ${PINPOINTED_SEBAL_TAG} ${SEBAL_URL}
+    git clone ${SEBAL_URL}
+    cd $repositoryName
+    git checkout ${PINPOINTED_SEBAL_TAG}
+    cd ..
   fi
-
-  #when https://github.com/xpto/foo-baa.git we have foo-baa which is the root dir of the repo
-  repositoryName=`echo ${SEBAL_URL} | rev | cut -d "/" -f1 | cut -d"." -f2 | rev`
 
   bash -x $repositoryName/$BIN_INIT_SCRIPT
 }
