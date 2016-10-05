@@ -47,7 +47,7 @@ public class GoogleMail {
         final String SSL_FACTORY = "javax.net.ssl.SSLSocketFactory";
 
         // Get a Properties object
-        Properties props = System.getProperties();
+        Properties props = System.getProperties();        
         props.setProperty("mail.smtps.host", "smtp.gmail.com");
         props.setProperty("mail.smtp.socketFactory.class", SSL_FACTORY);
         props.setProperty("mail.smtp.socketFactory.fallback", "false");
@@ -63,9 +63,10 @@ public class GoogleMail {
                 http://forum.java.sun.com/thread.jspa?threadID=5205249
                 smtpsend.java - demo program from javamail
         */
-        props.put("mail.smtps.quitwait", "false");
+        props.put("mail.smtps.quitwait", "true");
 
         Session session = Session.getInstance(props, null);
+        session.setDebug(true);
 
         // -- Create a new message --
         final MimeMessage msg = new MimeMessage(session);

@@ -40,9 +40,19 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 		imageStore.updateImage(imageData);
 	}
 
+	private void imageToFailed(String imageName2) throws SQLException {
+		ImageData imageData = this.imageStore.getImage(imageName2);
+		imageData.setState(ImageState.QUEUED);
+		imageStore.updateImage(imageData);
+	}
+	
 	@Override
 	public void failure(TaskProcess tp) {
-
+		try {
+			imageToFailed(this.imageName);
+		} catch (SQLException e) {
+			LOGGER.debug("Could not change image '" + this.imageName + "' state to Finnished", e);
+		}
 	}
 
 	@Override

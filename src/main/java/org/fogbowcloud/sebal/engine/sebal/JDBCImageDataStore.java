@@ -316,15 +316,16 @@ public class JDBCImageDataStore implements ImageDataStore {
     }
     
     private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME
-            + " WHERE jobId = ? AND image_name = ? AND user_email = ?";
+            + " WHERE job_id = ? AND image_name = ? AND user_email = ?";
     
     @Override
     public void removeUserNotify(String jobId, String imageName, String userEmail) throws SQLException {
     	LOGGER.debug("Removing image " + imageName + " notification for " + userEmail);
-		if (imageName == null || imageName.isEmpty() || userEmail == null
+		if (jobId == null || jobId.isEmpty() || imageName == null
+				|| imageName.isEmpty() || userEmail == null
 				|| userEmail.isEmpty()) {
-			throw new IllegalArgumentException("Invalid image name "
-					+ imageName + " or user " + userEmail);
+			throw new IllegalArgumentException("Invalid jobId " + jobId
+					+ ", imageName " + imageName + " or user " + userEmail);
 		}
 
 		PreparedStatement insertStatement = null;
@@ -335,7 +336,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	            
 				insertStatement = connection
 						.prepareStatement(REMOVE_USER_NOTIFY_SQL);
-				insertStatement.setString(1, imageName);
+				insertStatement.setString(1, jobId);
 				insertStatement.setString(2, imageName);
 				insertStatement.setString(3, userEmail);
 								
