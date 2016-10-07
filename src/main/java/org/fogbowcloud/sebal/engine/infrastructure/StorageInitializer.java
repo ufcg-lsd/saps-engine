@@ -148,7 +148,7 @@ public class StorageInitializer {
 				.getValue() + "=" + "storage"));
 		
 		headers.add(new BasicHeader("X-OCCI-Attribute",
-				"org.fogbowcloud.request.requirements" + "=" + requirementsCloud));
+				OrderAttribute.REQUIREMENTS + "=" + requirementsCloud));
 		return headers;
 	}
 	
