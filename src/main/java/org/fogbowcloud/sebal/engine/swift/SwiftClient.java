@@ -92,19 +92,19 @@ public class SwiftClient {
 		return false;
 	}
 
-	public void uploadFile(String containerName, File file, String pseudoFolder)
+	public void uploadFile(String containerName, File file, String pseudFolder)
 			throws Exception {
 		try {
 			LOGGER.debug("containerName " + containerName);
-			LOGGER.debug("pseudoFolder " + pseudoFolder + " before normalize");
+			LOGGER.debug("pseudFolder " + pseudFolder + " before normalize");
 			Container container = account.getContainer(containerName);
 
 			String completeFileName;
-			if (pseudoFolder != null && !pseudoFolder.isEmpty()) {
-				pseudoFolder = this.normalizePseudFolder(pseudoFolder);
-				LOGGER.debug("Pseudo folder " + pseudoFolder + " after normalize");
+			if (pseudFolder != null && !pseudFolder.isEmpty()) {
+				pseudFolder = this.normalizePseudFolder(pseudFolder);
+				LOGGER.debug("Pseud folder " + pseudFolder + " after normalize");
 				
-				completeFileName = pseudoFolder + file.getName();
+				completeFileName = pseudFolder + file.getName();
 			} else {
 				completeFileName = file.getName();
 			}
@@ -123,7 +123,7 @@ public class SwiftClient {
 		
 		LOGGER.debug("fileName " + fileName);
 		LOGGER.debug("containerName " + containerName);
-		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
+		LOGGER.debug("pseudFolder " + pseudFolder + " before normalize");
 
 		Container container = account.getContainer(containerName);
 

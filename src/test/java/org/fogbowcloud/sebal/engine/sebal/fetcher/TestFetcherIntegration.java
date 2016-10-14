@@ -15,7 +15,7 @@ import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
-import org.fogbowcloud.sebal.engine.swift.SwiftClient;
+import org.fogbowcloud.sebal.engine.swift.SwiftAPIClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,7 +50,7 @@ public class TestFetcherIntegration {
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
@@ -69,7 +69,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		Mockito.doReturn(1)
@@ -96,7 +96,7 @@ public class TestFetcherIntegration {
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
@@ -115,7 +115,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
@@ -144,7 +144,7 @@ public class TestFetcherIntegration {
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
@@ -167,7 +167,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 
 		Mockito.doThrow(new SQLException()).when(imageStore).getIn(ImageState.FINISHED);
 
@@ -195,7 +195,7 @@ public class TestFetcherIntegration {
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		DB pendingImageFetchDB = Mockito.mock(DB.class);
 		String ftpServerIP = "fake-IP";
@@ -214,7 +214,7 @@ public class TestFetcherIntegration {
 						date.getTime()), "available", "");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 
@@ -254,7 +254,7 @@ public class TestFetcherIntegration {
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		DB pendingImageFetchDB = Mockito.mock(DB.class);
 		String ftpServerIP = "fake-IP";
@@ -273,7 +273,7 @@ public class TestFetcherIntegration {
 						date.getTime()), "available", "");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		Mockito.doReturn(true).when(imageStore).lockImage(imageData.getName());
@@ -312,7 +312,7 @@ public class TestFetcherIntegration {
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		
 		String ftpServerIP = "fake-IP";
@@ -335,7 +335,7 @@ public class TestFetcherIntegration {
 				.getLocalImageResultsPath(imageData, properties);
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 
 		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
 		
@@ -361,7 +361,7 @@ public class TestFetcherIntegration {
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
@@ -409,11 +409,11 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(containerName).when(properties).getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
 
 		String foo = pseudFolder + File.separator + fetcherVolumePath + File.separator;
-		Mockito.doThrow(new Exception()).when(swiftClient).uploadFile(Mockito.eq(containerName), Mockito.any(File.class),
+		Mockito.doThrow(new Exception()).when(swiftAPIClient).uploadFile(Mockito.eq(containerName), Mockito.any(File.class),
 						Mockito.eq(foo));
 		
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		// exercise
 		fetcher.fetch(imageData, 3);
@@ -436,7 +436,7 @@ public class TestFetcherIntegration {
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
@@ -483,7 +483,7 @@ public class TestFetcherIntegration {
 				.resultsChecksumOK(imageData2, fetcherVolumeResultsDir);
 		
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		// exercise
 		fetcher.fetch(imageData, 3);
@@ -501,7 +501,7 @@ public class TestFetcherIntegration {
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftClient swiftClient = Mockito.mock(SwiftClient.class);
+		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
 		
@@ -510,7 +510,7 @@ public class TestFetcherIntegration {
 		writer.close();
 		
 		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftClient, ftpImpl, fetcherHelper);
+				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		// exercise
 		String versionReturn = fetcher.getFetcherVersion();

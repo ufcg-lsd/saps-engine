@@ -1,7 +1,10 @@
 package org.fogbowcloud.sebal.engine.swift;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -44,7 +47,7 @@ public class SwiftAPIClient {
 	}
 
 	public void createContainer(String containerName) {
-		// TODO: test
+		// TODO: test JUnit
 		LOGGER.debug("Creating container " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
 				token, "--os-storage-url", swiftUrl, "post", containerName);
@@ -60,7 +63,7 @@ public class SwiftAPIClient {
 	}
 
 	public void deleteContainer(String containerName) {
-		// TODO: test
+		// TODO: test JUnit
 		LOGGER.debug("Deleting container " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
 				token, "--os-storage-url", swiftUrl, "delete", containerName);
@@ -75,18 +78,19 @@ public class SwiftAPIClient {
 		}
 	}
 
-	public boolean isContainerEmpty(String containerName) {
-		// TODO: test
-		if (numberOfFilesInContainer(containerName) <= 3) {
-			return true;
+	protected boolean isContainerEmpty(String containerName) {
+		// TODO: test JUnit
+		int numberOfFiles = numberOfFilesInContainer(containerName);
+		if (numberOfFiles != 0) {			
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	public void uploadFile(String containerName, File file, String pseudFolder)
 			throws Exception {
-		// TODO: test
+		// TODO: test JUnit
 		LOGGER.debug("containerName " + containerName);
 		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
 
@@ -103,7 +107,7 @@ public class SwiftAPIClient {
 		LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
 				token, "--os-storage-url", swiftUrl, "upload", containerName,
-				completeFileName);
+				file.getAbsolutePath(), "--object-name", completeFileName);
 		try {
 			Process p = builder.start();
 			p.waitFor();
@@ -116,6 +120,7 @@ public class SwiftAPIClient {
 		}
 	}
 
+	// TODO: this will download file into a given path
 	public byte[] downloadFile(String containerName, String fileName,
 			String pseudFolder) {
 		// TODO
@@ -154,7 +159,7 @@ public class SwiftAPIClient {
 
 	public void deleteFile(String containerName, String pseudFolder,
 			String fileName) {
-		// TODO: test
+		// TODO: test JUnit
 		LOGGER.debug("fileName " + fileName);
 		LOGGER.debug("containerName " + containerName);
 
@@ -188,24 +193,22 @@ public class SwiftAPIClient {
 				+ " deleted successfully from " + containerName);
 	}
 
-	public int numberOfFilesInContainer(String containerName) {
-		// TODO: test
+	protected int numberOfFilesInContainer(String containerName) {
+		// TODO: test JUnit
 		LOGGER.debug("containerName " + containerName);
 		
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
-				token, "--os-storage-url", swiftUrl, "stat", "--lh", containerName);
+				token, "--os-storage-url", swiftUrl, "list", "-l", containerName);
 
 		try {
 			Process p = builder.start();
 			p.waitFor();
 						
-			String[] splitCommandOutput = ProcessUtil.getOutput(p).split("\n");		
+			String commandOutput = ProcessUtil.getOutput(p);
 			
-			for(String line : splitCommandOutput) {
-				if(line.contains("Objects:")) {
-					String[] lineSplit = line.split("Objects:");
-					
-					return Integer.valueOf(lineSplit[1]);						
+			for(int i = 0; i < commandOutput.length(); i++) {
+				if(Character.isDigit(commandOutput.charAt(i))) {
+					return Character.getNumericValue(commandOutput.charAt(i));
 				}
 			}
 		} catch (IOException e) {
@@ -215,6 +218,48 @@ public class SwiftAPIClient {
 		}
 				
 		return 0;
+	}
+	
+	public List<String> listFilesInContainer(String containerName) {
+		LOGGER.info("Listing files in container " + containerName);
+		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
+				token, "--os-storage-url",
+				properties.getProperty(FOGBOW_KEYSTONEV3_SWIFT_URL), "list",
+				containerName);
+		LOGGER.debug("Executing command " + builder.command());
+        
+        Process p;
+        String output;
+        
+        try {
+			p = builder.start();
+			p.waitFor();
+
+			output = ProcessUtil.getOutput(p);
+
+			// TODO: test this
+			// each file has complete path
+			// ex.: fetcher/images/image_name/file.nc
+			return getOutputLinesIntoList(output);
+		} catch (IOException e) {
+			LOGGER.error("Error while listing files from " + containerName);
+			return new ArrayList<String>();
+		} catch (InterruptedException e) {
+			LOGGER.error("Error while listing files from " + containerName);
+			return new ArrayList<String>();
+		}        
+	}
+	
+	private List<String> getOutputLinesIntoList(String fileNames) throws IOException {
+		List<String> fileNamesList = new ArrayList<String>();
+		
+		String[] lines = fileNames.split(System.getProperty("line.separator"));
+		
+		for(int i = 0; i < lines.length; i++) {
+			fileNamesList.add(lines[i]);
+		}
+		
+		return fileNamesList;
 	}
 
 	private String normalizePseudFolder(String value) {
@@ -251,5 +296,29 @@ public class SwiftAPIClient {
 		}
 
 		return null;
+	}
+	
+	public static void main(String[] args) throws Exception {				
+		Properties properties = new Properties();
+		FileInputStream input = new FileInputStream(args[0]);
+		properties.load(input);
+		
+		SwiftAPIClient swiftAPIClient = new SwiftAPIClient(properties);
+
+		String containerName = "container-test";
+		String pseudFolder = "/pseudFolder";
+		File file = new File("/local/esdras/test-swift");
+		
+		swiftAPIClient.createContainer(containerName);
+		
+		if(swiftAPIClient.isContainerEmpty(containerName)) {
+			System.out.println("Container is empty!");
+		} else {
+			System.out.println("Container is not empty!\nNumber of files in container: " + swiftAPIClient.numberOfFilesInContainer(containerName));
+		}
+				
+		swiftAPIClient.uploadFile(containerName, file, pseudFolder);			
+		swiftAPIClient.deleteFile(containerName, pseudFolder, file.getName());
+		swiftAPIClient.deleteContainer(containerName);
 	}
 }

@@ -3,7 +3,6 @@ package org.fogbowcloud.sebal.engine.sebal.fetcher;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -17,8 +16,7 @@ import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
-import org.fogbowcloud.sebal.engine.sebal.ProcessUtil;
-import org.fogbowcloud.sebal.engine.swift.SwiftClient;
+import org.fogbowcloud.sebal.engine.swift.SwiftAPIClient;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -28,7 +26,7 @@ public class Fetcher {
 	protected static final String FETCHER_RESULTS_PATH = "fetcher_volume_path";
 	private final Properties properties;
 	private final ImageDataStore imageStore;
-	private final SwiftClient swiftClient;
+	private final SwiftAPIClient swiftAPIClient;
 	private File pendingImageFetchFile;
 	private DB pendingImageFetchDB;
 	private ConcurrentMap<String, ImageData> pendingImageFetchMap;
@@ -47,7 +45,7 @@ public class Fetcher {
 
 	public Fetcher(Properties properties, String ftpServerIP, String ftpServerPort) throws SQLException {
 
-		this(properties, new JDBCImageDataStore(properties), ftpServerIP, ftpServerPort, new SwiftClient(
+		this(properties, new JDBCImageDataStore(properties), ftpServerIP, ftpServerPort, new SwiftAPIClient(
 				properties), new FTPIntegrationImpl(), new FetcherHelper());
 
 		LOGGER.info("Creating fetcher");
@@ -56,7 +54,7 @@ public class Fetcher {
 	}
 
 	protected Fetcher(Properties properties, ImageDataStore imageStore,
-			String ftpServerIP, String ftpServerPort, SwiftClient swiftClient,
+			String ftpServerIP, String ftpServerPort, SwiftAPIClient swiftAPIClient,
 			FTPIntegrationImpl ftpImpl, FetcherHelper fetcherHelper) {
 
 		if (properties == null) {
@@ -73,7 +71,7 @@ public class Fetcher {
 		this.imageStore = imageStore;
 		this.ftpServerIP = ftpServerIP;
 		this.ftpServerPort = ftpServerPort;
-		this.swiftClient = swiftClient;
+		this.swiftAPIClient = swiftAPIClient;
 		this.ftpImpl = ftpImpl;
 		this.fetcherHelper = fetcherHelper;
 
@@ -89,6 +87,9 @@ public class Fetcher {
 			LOGGER.info("Loading map of pending images to fetch");
 			this.pendingImageFetchMap = pendingImageFetchDB.getHashMap("map");
 		}
+		
+		// Creating Swift container
+		this.swiftAPIClient.createContainer(getContainerName());
 	}
 
 	public void exec() throws Exception {
@@ -382,7 +383,7 @@ public class Fetcher {
 					LOGGER.debug("Trying to upload file "
 							+ actualFile.getName() + " to " + pseudoFolder
 							+ " in " + containerName);
-					swiftClient.uploadFile(containerName, actualFile,
+					swiftAPIClient.uploadFile(containerName, actualFile,
 							pseudoFolder);					
 					break;
 				} catch (Exception e) {
@@ -405,24 +406,8 @@ public class Fetcher {
 	protected boolean deleteFilesFromSwift(ImageData imageData, Properties properties) throws Exception {
 		LOGGER.debug("Deleting " + imageData + " files from swift");
 		String containerName = getContainerName();
-		String keystoneToken = generateToken();
 		
-		// TODO: test this
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
-				keystoneToken, "--os-storage-url",
-				properties.getProperty("swift_container_url"), "list",
-				containerName);
-        LOGGER.debug("Executing command " + builder.command());
-        
-        Process p = builder.start();
-        p.waitFor();
-        
-        String output = ProcessUtil.getOutput(p);
-        
-        // TODO: test this
-        // each file has complete path
-        // ex.: fetcher/images/image_name/file.nc
-        List<String> fileNames = getOutputLinesIntoList(output);
+		List<String> fileNames = swiftAPIClient.listFilesInContainer(containerName);
         
         for(String file : fileNames) {
 			if (file.contains(imageData.getName())) {
@@ -432,7 +417,7 @@ public class Fetcher {
 							.get("fetcher_volume_path")
 							+ File.separator
 							+ "results" + File.separator + imageData.getName();
-					swiftClient.deleteFile(containerName, getPseudoFolder(new File(localImageResultsPath)), file);
+					swiftAPIClient.deleteFile(containerName, getPseudoFolder(new File(localImageResultsPath)), file);
 				} catch (Exception e) {
 					LOGGER.error("Error while deleting files to swift", e);
 					return false;
@@ -441,54 +426,6 @@ public class Fetcher {
         }
 		
 		return true;
-	}
-	
-	private List<String> getOutputLinesIntoList(String fileNames) throws IOException {
-		List<String> fileNamesList = new ArrayList<String>();
-		
-		String[] lines = fileNames.split(System.getProperty("line.separator"));
-		
-		for(int i = 0; i < lines.length; i++) {
-			fileNamesList.add(lines[i]);
-		}
-		
-		return fileNamesList;
-	}
-
-	private String generateToken() {
-		
-		String tokenGenerateCommandOutput = null;
-		try {
-			// FIXME: check this later
-			//		  it must get property name relatively
-			ProcessBuilder builder = new ProcessBuilder("bash",
-					properties.get("fogbow_cli_path") + File.separator
-							+ "bin/fogbow-cli", "token", "--create",
-					"-DprojectId="
-							+ properties
-									.getProperty("fogbow.keystonev3.project.id"),
-					"-DuserId="
-							+ properties
-									.getProperty("fogbow.keystonev3.user.id"),
-					"-Dpassword="
-							+ properties
-									.getProperty("fogbow.keystonev3.password"),
-					"-DauthUrl="
-							+ properties
-									.getProperty("fogbow.keystonev3.auth.url"),
-					"--type", "openstack");
-			LOGGER.debug("Executing command " + builder.command());
-
-			Process p = builder.start();
-			p.waitFor();
-			
-			tokenGenerateCommandOutput = ProcessUtil.getOutput(p);
-		} catch (Throwable e) {
-			LOGGER.error("Error while generating keystone token", e);
-			return null;
-		}
-		
-		return tokenGenerateCommandOutput;
 	}
 
 	private String getContainerName() {

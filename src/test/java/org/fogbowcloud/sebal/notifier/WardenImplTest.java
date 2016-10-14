@@ -1,9 +1,8 @@
 package org.fogbowcloud.sebal.notifier;
 
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
@@ -38,11 +37,11 @@ public class WardenImplTest {
 	public void setUp() {
 		properties = Mockito.mock(Properties.class);
 		dbUtilsImpl = Mockito.mock(DBUtilsImpl.class);
-		wardenImpl = Mockito.mock(WardenImpl.class);
+		wardenImpl = new WardenImpl(properties, dbUtilsImpl);
 	}
 	
 	@Test
-	public void testSQLExceptionWhileGetPending() throws SQLException {
+	public void testSQLExceptionWhileGetPending() throws SQLException {				
 		Mockito.doThrow(new SQLException()).when(dbUtilsImpl).getUsersToNotify();		
 		
 		Assert.assertTrue(wardenImpl.getPending().isEmpty());
@@ -50,22 +49,21 @@ public class WardenImplTest {
 	
 	@Test
 	public void testWardListWithCorrectContent() throws SQLException {
-		Map<String, String> mapUsersImages = new HashMap<String, String>();
-		mapUsersImages.put("image-1", "email-1");
-		mapUsersImages.put("image-2", "email-2");
-		mapUsersImages.put("image-3", "email-3");
+		List<Ward> listWards = new ArrayList<Ward>();
 		
-		Mockito.doReturn(mapUsersImages).when(dbUtilsImpl).getUsersToNotify();
+		Ward ward1 = Mockito.mock(Ward.class);
+		Ward ward2 = Mockito.mock(Ward.class);
+		Ward ward3 = Mockito.mock(Ward.class);
+		
+		listWards.add(ward1);
+		listWards.add(ward2);
+		listWards.add(ward3);
+		
+		Mockito.doReturn(listWards).when(dbUtilsImpl).getUsersToNotify();
 		
 		List<Ward> wards = wardenImpl.getPending();
 		
-		Assert.assertEquals("email-1", wards.get(0).getEmail());
-		Assert.assertEquals("email-2", wards.get(1).getEmail());
-		Assert.assertEquals("email-3", wards.get(2).getEmail());
-		
-		Assert.assertEquals("image-1", wards.get(0).getImageName());
-		Assert.assertEquals("image-2", wards.get(1).getImageName());
-		Assert.assertEquals("image-3", wards.get(2).getImageName());
+		Assert.assertEquals(listWards, wards);
 	}
 
 }

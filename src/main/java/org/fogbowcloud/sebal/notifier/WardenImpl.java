@@ -26,20 +26,26 @@ public class WardenImpl implements Warden {
 	private static final String CONF_PATH = "config/sebal.conf";
 	private static final String NOREPLY_EMAIL = "noreply_email";
 	private static final String NOREPLY_PASSWORD = "noreply_password";
-	private static final String DEFAULT_SLEEP_TIME = "default_sleep_time";
-
+	private static final String DEFAULT_SLEEP_TIME = "default_sleep_time";	
+	
 	public WardenImpl() {
-		try {
+		try {					
 			properties = new Properties();
 			FileInputStream input = new FileInputStream(CONF_PATH);
 			properties.load(input);
-
+						
 			dbUtilsImpl = new DBUtilsImpl(properties);
 		} catch (IOException e) {
 			LOGGER.error("Error while getting properties", e);
 		} catch (SQLException e) {
 			LOGGER.error("Error while initializing DBUtilsImpl", e);
 		}
+	}
+	
+	// For test only
+	protected WardenImpl(Properties properties, DBUtilsImpl dbUtilsImpl) {
+		this.properties = properties;
+		this.dbUtilsImpl = dbUtilsImpl;
 	}
 
 	// TODO: see if this will be runnable
