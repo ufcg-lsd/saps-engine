@@ -121,8 +121,8 @@ public class SwiftAPIClient {
 	}
 
 	// TODO: this will download file into a given path
-	public byte[] downloadFile(String containerName, String fileName,
-			String pseudFolder) {
+	public void downloadFile(String containerName, String fileName,
+			String pseudFolder, String localOutputPath) {
 		// TODO
 		LOGGER.debug("containerName " + containerName);
 		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
@@ -140,12 +140,14 @@ public class SwiftAPIClient {
 		LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
 				token, "--os-storage-url", swiftUrl, "download", containerName,
-				completeFileName);
+				completeFileName, "-D", localOutputPath);
+		
 		try {
 			Process p = builder.start();
 			p.waitFor();
 			
-			// TODO: see how output will be handled
+			LOGGER.debug("File " + completeFileName + " from " + containerName
+					+ " download successfully into " + localOutputPath);
 		} catch (IOException e) {
 			LOGGER.error("Error while uploading file " + completeFileName
 					+ " to container " + containerName, e);
@@ -153,8 +155,6 @@ public class SwiftAPIClient {
 			LOGGER.error("Error while uploading file " + completeFileName
 					+ " to container " + containerName, e);
 		}
-
-		return null;
 	}
 
 	public void deleteFile(String containerName, String pseudFolder,
@@ -298,6 +298,7 @@ public class SwiftAPIClient {
 		return null;
 	}
 	
+	// This is for test only
 	public static void main(String[] args) throws Exception {				
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(args[0]);
