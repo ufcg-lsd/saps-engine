@@ -108,7 +108,7 @@ public class SebalMain {
 			@Override
 			public void run() {
 				try {
-					addRTasks(properties, job, sebalSpec, ImageState.QUEUED, 1);
+					addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
 				} catch (InterruptedException e) {
 					LOGGER.error("Error while adding R tasks", e);
 				}
