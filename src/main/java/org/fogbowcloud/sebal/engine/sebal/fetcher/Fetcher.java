@@ -463,20 +463,20 @@ public class Fetcher {
 			//		  it must get property name relatively
 			ProcessBuilder builder = new ProcessBuilder("bash",
 					properties.get("fogbow_cli_path") + File.separator
-							+ "bin/fogbow-cli", "token", "--create", "--type",
-					"openstack",
-					"-Dusername="
+							+ "bin/fogbow-cli", "token", "--create",
+					"-DprojectId="
 							+ properties
-									.getProperty("fogbow.keystone.username"),
+									.getProperty("fogbow.keystonev3.project.id"),
+					"-DuserId="
+							+ properties
+									.getProperty("fogbow.keystonev3.user.id"),
 					"-Dpassword="
 							+ properties
-									.getProperty("fogbow.keystone.password"),
+									.getProperty("fogbow.keystonev3.password"),
 					"-DauthUrl="
 							+ properties
-									.getProperty("fogbow.keystone.auth.url"),
-					"-DtenantName="
-							+ properties
-									.getProperty("fogbow.keystone.tenantname"));
+									.getProperty("fogbow.keystonev3.auth.url"),
+					"--type", "openstack");
 			LOGGER.debug("Executing command " + builder.command());
 
 			Process p = builder.start();
