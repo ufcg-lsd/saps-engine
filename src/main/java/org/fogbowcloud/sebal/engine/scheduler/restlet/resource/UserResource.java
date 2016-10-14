@@ -76,7 +76,7 @@ public class UserResource extends BaseResource {
 		
 		Form form = new Form(entity);
 		
-		String adminUserEmail = form.getFirstValue(ADMIN_USER_EMAIL);
+		String adminUserEmail = form.getFirstValue(ADMIN_USER_EMAIL, true);
 		String adminUserPass = form.getFirstValue(ADMIN_USER_PASSWORD);		
 		
 		if(!authenticateUser(adminUserEmail, adminUserPass, true)) {

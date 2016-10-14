@@ -53,7 +53,7 @@ public class DBImageResource extends BaseResource {
 		Series<Header> series = (Series<Header>) getRequestAttributes().get(
 				"org.restlet.http.headers");
 
-		String userEmail = series.getFirstValue(USER_EMAIL);
+		String userEmail = series.getFirstValue(USER_EMAIL, true);
 		String userPass = series.getFirstValue(USER_PASSWORD);
 
 		if (!authenticateUser(userEmail, userPass)) {
@@ -109,7 +109,7 @@ public class DBImageResource extends BaseResource {
 
 		Form form = new Form(entity);
 
-		String userEmail = form.getFirstValue(USER_EMAIL);
+		String userEmail = form.getFirstValue(USER_EMAIL, true);
 		String userPass = form.getFirstValue(USER_PASSWORD);
 		
 		LOGGER.debug("POST with userEmail " + userEmail);
@@ -165,7 +165,7 @@ public class DBImageResource extends BaseResource {
 
 		Form form = new Form(entity);
 
-		String userEmail = form.getFirstValue(USER_EMAIL);
+		String userEmail = form.getFirstValue(USER_EMAIL, true);
 		String userPass = form.getFirstValue(USER_PASSWORD);
 
 		LOGGER.debug("DELETE with userEmail " + userEmail);
