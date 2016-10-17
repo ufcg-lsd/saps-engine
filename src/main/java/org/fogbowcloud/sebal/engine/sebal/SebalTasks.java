@@ -18,11 +18,6 @@ import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 
 public class SebalTasks {
 	
-	static String initOutPath;
-	static String initErrPath;
-	static String runOutPath;
-	static String runErrPath;
-	
 	private static final String INIT_TYPE = "init";
 	private static final String RUN_TYPE = "run";
 	private static final String SEBAL_INIT_SCRIPT_PATH = "sebal_worker_init_script_path";
@@ -40,21 +35,33 @@ public class SebalTasks {
 	private static final String SEBAL_IMAGES_LOCAL_PATH = "sebal_images_local_path";
 	private static final String SEBAL_RESULTS_LOCAL_PATH = "sebal_results_local_path";
 	private static final String SEBAL_REPOSITORY_USER_PRIVATE_KEY = "sebal_repository_user_private_key";
+	private static final String SEBAL_LOCAL_SCRIPTS_DIR = "sebal_local_scripts_dir";
 
 	private static final String SEBAL_REMOTE_USER = "sebal_remote_user";
 	private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
-	private static final String SEBAL_LOCAL_SCRIPTS_DIR = "sebal_local_scripts_dir";
 	private static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
 	
-	public static final String METADATA_PHASE = "phase";
-	public static final String METADATA_IMAGE_NAME = "image_name";
-	public static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
-	public static final String METADATA_PARTITION_INDEX = "partition_index";
-	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
-	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
+	public static final String METADATA_IMAGE_NAME = "image_name";
+
+	private static final String METADATA_SEBAL_VERSION = "sebal_url";
 	private static final String METADATA_SEBAL_TAG = "sebal_version";
+
+	private static final String METADATA_REPOS_USER = "repository_user";
+	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
+
+	private static final String METADATA_MOUNT_POINT = "mount_point";
+	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
+	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
+	private static final String METADATA_WORKER_INIT_OUT_FILE_PATH = "worker_init_output_file";
+	private static final String METADATA_WORKER_INIT_ERR_FILE_PATH = "worker_init_error_file";
+	private static final String METADATA_WORKER_RUN_OUT_FILE_PATH = "worker_run_output_file";
+	private static final String METADATA_WORKER_RUN_ERR_FILE_PATH = "worker_run_error_file";
+
+	public static final String METADATA_PHASE = "phase";
+	public static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
+	public static final String METADATA_PARTITION_INDEX = "partition_index";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
 	public static final String METADATA_LEFT_X = "left_x";
@@ -63,10 +70,6 @@ public class SebalTasks {
 	public static final String METADATA_LOWER_Y = "lower_y";
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
 	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
-	private static final String METADATA_SEBAL_VERSION = "sebal_url";
-	private static final String METADATA_REPOS_USER = "repository_user";
-	private static final String METADATA_MOUNT_POINT = "mount_point";
-	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
 	
 	public static TaskImpl createRTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
@@ -104,7 +107,7 @@ public class SebalTasks {
 					properties.getProperty(SEBAL_REPOSITORY_USER_PRIVATE_KEY));
 			String remotePrivateKeyPath = rTaskImpl
 					.getMetadata(TaskImpl.METADATA_SANDBOX)
-					+ "/"
+					+ File.separator
 					+ privateKeyFile.getName();
 
 			rTaskImpl.putMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH,
@@ -120,13 +123,13 @@ public class SebalTasks {
 		File localInitScriptFile = createScriptFile(properties, rTaskImpl, INIT_TYPE);
 		String remoteInitScriptPath = rTaskImpl
 				.getMetadata(TaskImpl.METADATA_SANDBOX)
-				+ "/"
+				+ File.separator
 				+ localInitScriptFile.getName();
 				
 		File localRunScriptFile = createScriptFile(properties, rTaskImpl, RUN_TYPE);
 		String remoteRunScriptPath = rTaskImpl
 				.getMetadata(TaskImpl.METADATA_SANDBOX)
-				+ "/"
+				+ File.separator
 				+ localRunScriptFile.getName();
 
 		// adding commands
@@ -151,26 +154,27 @@ public class SebalTasks {
 		rTaskImpl.addCommand(new Command(remoteChmodRunScriptCommand,
 				Command.Type.REMOTE));
 		
-		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteInitScriptPath, INIT_TYPE);
+		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteInitScriptPath, INIT_TYPE, rTaskImpl);
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
 		
-		remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath, RUN_TYPE);
+		remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath, RUN_TYPE, rTaskImpl);
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
 		
 		// adding epilogue commands
 		// moving worker-init.sh out and err files to image results dir
-//		String mvOutErrCommand = creatMVInitTempFilesCommand(imageName);
-//		rTaskImpl.addCommand(new Command(mvOutErrCommand,
-//				Command.Type.EPILOGUE));
-//
-//		// moving worker-run.sh out and err files to image results dir
-//		mvOutErrCommand = createMVRunTempFilesCommand(imageName);
-//		rTaskImpl.addCommand(new Command(mvOutErrCommand,
-//				Command.Type.EPILOGUE));
+		// TODO: test this
+		String mvOutErrCommand = creatMVInitTempFilesCommand(imageName);
+		rTaskImpl.addCommand(new Command(mvOutErrCommand,
+				Command.Type.EPILOGUE));
+
+		// moving worker-run.sh out and err files to image results dir
+		mvOutErrCommand = createMVRunTempFilesCommand(imageName);
+		rTaskImpl.addCommand(new Command(mvOutErrCommand,
+				Command.Type.EPILOGUE));
 		
 		String cleanEnvironment = "sudo rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
@@ -179,23 +183,23 @@ public class SebalTasks {
 		return rTaskImpl;
 	}
 
-	private static String creatMVInitTempFilesCommand(String imageName) {
-		return "\"sudo mv " + File.separator + "tmp"
-				+ File.separator + initOutPath + " " + File.separator + "tmp"
-				+ File.separator + initErrPath + " " + METADATA_MOUNT_POINT
-				+ File.separator + "results" + File.separator + imageName + "\"";
-	}
-
-	private static String createMVRunTempFilesCommand(String imageName) {
-		return "\"sudo mv " + File.separator + "tmp"
-				+ File.separator + runOutPath + " " + File.separator + "tmp"
-				+ File.separator + runErrPath + " " + METADATA_MOUNT_POINT
-				+ File.separator + "results" + File.separator + imageName + "\"";
-	}
-
 	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
 		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT "
 				+ localFilePath + " $SSH_USER@$HOST:" + remoteFilePath;
+	}
+	
+	private static String creatMVInitTempFilesCommand(String imageName) {
+		return "sudo mv " + METADATA_WORKER_INIT_OUT_FILE_PATH + " "
+				+ METADATA_WORKER_INIT_ERR_FILE_PATH + " "
+				+ METADATA_MOUNT_POINT + File.separator + "results"
+				+ File.separator + imageName;
+	}
+
+	private static String createMVRunTempFilesCommand(String imageName) {
+		return "sudo mv " + METADATA_WORKER_RUN_OUT_FILE_PATH + " "
+				+ METADATA_WORKER_RUN_ERR_FILE_PATH + " "
+				+ METADATA_MOUNT_POINT + File.separator + "results"
+				+ File.separator + imageName;
 	}
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
@@ -224,19 +228,25 @@ public class SebalTasks {
 		return "\"chmod +x " + remoteScript + "\"";
 	}
 
-	private static String createRemoteScriptExecCommand(String remoteScript, String scriptType) {
+	private static String createRemoteScriptExecCommand(String remoteScript, String scriptType, TaskImpl rTaskImpl) {
 		
 		Path pathToRemoteScript = Paths.get(remoteScript);
 		String execScriptCommand = null;
 		if(scriptType.equals(INIT_TYPE)) {
-			initOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
-			initErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
+			String initOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
+			String initErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
+			
+			rTaskImpl.putMetadata(METADATA_WORKER_INIT_OUT_FILE_PATH, initOutPath);
+			rTaskImpl.putMetadata(METADATA_WORKER_INIT_ERR_FILE_PATH, initErrPath);
 			
 			execScriptCommand = "\"nohup " + remoteScript + " >> /tmp/"
 					+ initOutPath + " 2>> /tmp/" + initErrPath + "\"";
 		} else {
-			runOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
-			runErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
+			String runOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
+			String runErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
+			
+			rTaskImpl.putMetadata(METADATA_WORKER_RUN_OUT_FILE_PATH, runOutPath);
+			rTaskImpl.putMetadata(METADATA_WORKER_RUN_ERR_FILE_PATH, runErrPath);
 			
 			execScriptCommand = "\"nohup " + remoteScript + " >> /tmp/"
 					+ runOutPath + " 2>> /tmp/" + runErrPath + "\"";

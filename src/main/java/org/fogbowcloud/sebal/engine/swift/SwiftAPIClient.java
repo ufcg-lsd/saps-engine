@@ -137,7 +137,7 @@ public class SwiftAPIClient {
 			completeFileName = fileName;
 		}
 
-		LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
+		LOGGER.debug("Downloading " + completeFileName + " to " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
 				token, "--os-storage-url", swiftUrl, "download", containerName,
 				completeFileName, "-D", localOutputPath);

@@ -32,18 +32,30 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 		ImageData imageData = this.imageStore.getImage(image);
 		imageData.setState(ImageState.RUNNING);
 		imageStore.updateImage(imageData);
+		
+		// Inserting update time into stateStamps table in DB
+		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 	}
 
-	private void imageToFinnished(String imageName2) throws SQLException {
-		ImageData imageData = this.imageStore.getImage(imageName2);
+	private void imageToFinnished(String imageName) throws SQLException {
+		ImageData imageData = this.imageStore.getImage(imageName);
 		imageData.setState(ImageState.FINISHED);
 		imageStore.updateImage(imageData);
+		
+		// Inserting update time into stateStamps table in DB
+		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 	}
 
-	private void imageToFailed(String imageName2) throws SQLException {
-		ImageData imageData = this.imageStore.getImage(imageName2);
+	private void imageToFailed(String imageName) throws SQLException {
+		ImageData imageData = this.imageStore.getImage(imageName);
 		imageData.setState(ImageState.QUEUED);
 		imageStore.updateImage(imageData);
+		
+		// Inserting update time into stateStamps table in DB
+		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 	}
 	
 	@Override
