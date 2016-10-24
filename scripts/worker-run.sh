@@ -39,6 +39,18 @@ function checkSum {
   done
 }
 
+function moveTempFiles {
+  echo "Moving temporary out and err files"
+  sudo mv ${SANDBOX}/*out ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
+  sudo mv ${SANDBOX}/*err ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
+  PROCESS_OUTPUT=$?
+
+  if [ $PROCESS_OUTPUT -ne 0 ]
+  then
+    echo "Fail while transfering out and err files to ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}"
+  fi
+}
+
 function checkProcessOutput {
   PROCESS_OUTPUT=$?
 
@@ -61,5 +73,7 @@ checkProcessOutput
 executeRunScript
 checkProcessOutput
 checkSum
+checkProcessOutput
+moveTempFiles
 checkProcessOutput
 finally

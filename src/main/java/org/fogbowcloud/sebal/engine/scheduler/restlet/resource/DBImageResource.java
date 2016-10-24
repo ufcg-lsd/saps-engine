@@ -54,7 +54,7 @@ public class DBImageResource extends BaseResource {
 				"org.restlet.http.headers");
 
 		String userEmail = series.getFirstValue(USER_EMAIL, true);
-		String userPass = series.getFirstValue(USER_PASSWORD);
+		String userPass = series.getFirstValue(USER_PASSWORD, true);
 
 		if (!authenticateUser(userEmail, userPass)) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
@@ -110,7 +110,7 @@ public class DBImageResource extends BaseResource {
 		Form form = new Form(entity);
 
 		String userEmail = form.getFirstValue(USER_EMAIL, true);
-		String userPass = form.getFirstValue(USER_PASSWORD);
+		String userPass = form.getFirstValue(USER_PASSWORD, true);
 		
 		LOGGER.debug("POST with userEmail " + userEmail);
 		if (!authenticateUser(userEmail, userPass)) {
@@ -166,7 +166,7 @@ public class DBImageResource extends BaseResource {
 		Form form = new Form(entity);
 
 		String userEmail = form.getFirstValue(USER_EMAIL, true);
-		String userPass = form.getFirstValue(USER_PASSWORD);
+		String userPass = form.getFirstValue(USER_PASSWORD, true);
 
 		LOGGER.debug("DELETE with userEmail " + userEmail);
 		

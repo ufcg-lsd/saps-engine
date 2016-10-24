@@ -54,10 +54,6 @@ public class SebalTasks {
 	private static final String METADATA_MOUNT_POINT = "mount_point";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
-	private static final String METADATA_WORKER_INIT_OUT_FILE_PATH = "worker_init_output_file";
-	private static final String METADATA_WORKER_INIT_ERR_FILE_PATH = "worker_init_error_file";
-	private static final String METADATA_WORKER_RUN_OUT_FILE_PATH = "worker_run_output_file";
-	private static final String METADATA_WORKER_RUN_ERR_FILE_PATH = "worker_run_error_file";
 
 	public static final String METADATA_PHASE = "phase";
 	public static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
@@ -164,18 +160,7 @@ public class SebalTasks {
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
 		
-		// adding epilogue commands
-		// moving worker-init.sh out and err files to image results dir
-		// TODO: test this
-		String mvOutErrCommand = creatMVInitTempFilesCommand(imageName);
-		rTaskImpl.addCommand(new Command(mvOutErrCommand,
-				Command.Type.EPILOGUE));
-
-		// moving worker-run.sh out and err files to image results dir
-		mvOutErrCommand = createMVRunTempFilesCommand(imageName);
-		rTaskImpl.addCommand(new Command(mvOutErrCommand,
-				Command.Type.EPILOGUE));
-		
+		// adding epilogue commands		
 		String cleanEnvironment = "sudo rm -r "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.EPILOGUE));
@@ -186,20 +171,6 @@ public class SebalTasks {
 	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
 		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT "
 				+ localFilePath + " $SSH_USER@$HOST:" + remoteFilePath;
-	}
-	
-	private static String creatMVInitTempFilesCommand(String imageName) {
-		return "sudo mv " + METADATA_WORKER_INIT_OUT_FILE_PATH + " "
-				+ METADATA_WORKER_INIT_ERR_FILE_PATH + " "
-				+ METADATA_MOUNT_POINT + File.separator + "results"
-				+ File.separator + imageName;
-	}
-
-	private static String createMVRunTempFilesCommand(String imageName) {
-		return "sudo mv " + METADATA_WORKER_RUN_OUT_FILE_PATH + " "
-				+ METADATA_WORKER_RUN_ERR_FILE_PATH + " "
-				+ METADATA_MOUNT_POINT + File.separator + "results"
-				+ File.separator + imageName;
 	}
 
 	private static void settingCommonTaskMetadata(Properties properties, Task task) {
@@ -228,28 +199,28 @@ public class SebalTasks {
 		return "\"chmod +x " + remoteScript + "\"";
 	}
 
-	private static String createRemoteScriptExecCommand(String remoteScript, String scriptType, TaskImpl rTaskImpl) {
+	private static String createRemoteScriptExecCommand(String remoteScript, String scriptType, TaskImpl taskImpl) {
 		
 		Path pathToRemoteScript = Paths.get(remoteScript);
 		String execScriptCommand = null;
 		if(scriptType.equals(INIT_TYPE)) {
-			String initOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
-			String initErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
+			String initOutName = pathToRemoteScript.getFileName().toString() + "." + "out";
+			String initErrName = pathToRemoteScript.getFileName().toString() + "." + "err";
 			
-			rTaskImpl.putMetadata(METADATA_WORKER_INIT_OUT_FILE_PATH, initOutPath);
-			rTaskImpl.putMetadata(METADATA_WORKER_INIT_ERR_FILE_PATH, initErrPath);
-			
-			execScriptCommand = "\"nohup " + remoteScript + " >> /tmp/"
-					+ initOutPath + " 2>> /tmp/" + initErrPath + "\"";
+			execScriptCommand = "\"nohup " + remoteScript + " >> "
+					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+					+ File.separator + initOutName + " 2>> "
+					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+					+ File.separator + initErrName + "\"";
 		} else {
-			String runOutPath = pathToRemoteScript.getFileName().toString() + "." + "out";
-			String runErrPath = pathToRemoteScript.getFileName().toString() + "." + "err";
+			String runOutName = pathToRemoteScript.getFileName().toString() + "." + "out";
+			String runErrName = pathToRemoteScript.getFileName().toString() + "." + "err";
 			
-			rTaskImpl.putMetadata(METADATA_WORKER_RUN_OUT_FILE_PATH, runOutPath);
-			rTaskImpl.putMetadata(METADATA_WORKER_RUN_ERR_FILE_PATH, runErrPath);
-			
-			execScriptCommand = "\"nohup " + remoteScript + " >> /tmp/"
-					+ runOutPath + " 2>> /tmp/" + runErrPath + "\"";
+			execScriptCommand = "\"nohup " + remoteScript + " >> "
+					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+					+ File.separator + runOutName + " 2>> "
+					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+					+ File.separator + runErrName + "\"";
 		}
 		
 		return execScriptCommand;

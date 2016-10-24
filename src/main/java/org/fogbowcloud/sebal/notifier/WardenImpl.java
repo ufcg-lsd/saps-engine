@@ -55,16 +55,20 @@ public class WardenImpl implements Warden {
 			Collection<Ward> notified = new LinkedList<Ward>();
 			for (Ward ward : getPending()) {
 				ImageData imageData = getImageData(ward.getImageName());
-				if (reached(ward, imageData)) {
-					try {
-						if (doNotify(ward.getEmail(), ward.getJobId(),
-								imageData)) {
-							notified.add(ward);
+				if(imageData == null) {
+					LOGGER.debug("Image " +  ward.getImageName() + " does not exist in main database anymore");
+					removeNonExistentWard(ward);
+				} else {
+					if (reached(ward, imageData)) {
+						try {
+							if (doNotify(ward.getEmail(), ward.getJobId(),
+									imageData)) {
+								notified.add(ward);
+							}
+						} catch (Throwable e) {
+							LOGGER.error("Could not notify the user on: "
+									+ ward.getEmail() + " about " + ward, e);
 						}
-					} catch (Throwable e) {
-						LOGGER.error(
-								"Could not notify the user on: "
-										+ ward.getEmail() + " about " + ward, e);
 					}
 				}
 			}
@@ -100,6 +104,17 @@ public class WardenImpl implements Warden {
 		}
 
 		return false;
+	}
+	
+	private void removeNonExistentWard(Ward ward) {
+		try {
+			dbUtilsImpl.removeUserNotify(ward.getJobId(), ward.getImageName(),
+					ward.getEmail());
+		} catch (SQLException e) {
+			LOGGER.error("Error while accessing database", e);
+		} catch (NullPointerException e) {
+			LOGGER.error("Ward is null", e);
+		}
 	}
 
 	protected void removeNotified(Collection<Ward> notified) {
@@ -142,8 +157,7 @@ public class WardenImpl implements Warden {
 
 	protected boolean reached(Ward ward, ImageData imageData) {
 
-		// TODO: see if this works
-		return (imageData.getState().ordinal() >= ward.getTargetState()
+		return (imageData.getState().ordinal() == ward.getTargetState()
 				.ordinal());
 	}
 }

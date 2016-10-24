@@ -33,5 +33,4 @@ public class BaseResource extends ServerResource {
 		}
 		return false;
 	}
-	
 }

@@ -30,12 +30,18 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 
 	private void imageToRunning(String image) throws SQLException {
 		ImageData imageData = this.imageStore.getImage(image);
-		imageData.setState(ImageState.RUNNING);
-		imageStore.updateImage(imageData);
 		
-		// Inserting update time into stateStamps table in DB
-		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
+		// TODO: test this
+		if(!imageData.getState().equals(ImageState.RUNNING)) {
+			imageData.setState(ImageState.RUNNING);
+			imageStore.updateImage(imageData);
+
+			// Inserting update time into stateStamps table in DB
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName())
+					.getUpdateTime());
+			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
+					imageData.getUpdateTime());
+		}
 	}
 
 	private void imageToFinnished(String imageName) throws SQLException {
