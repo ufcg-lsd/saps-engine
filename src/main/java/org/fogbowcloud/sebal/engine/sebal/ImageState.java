@@ -5,9 +5,10 @@ import java.util.List;
 
 public enum ImageState {
 
-	NOT_DOWNLOADED("not_downloaded"), DOWNLOADED("downloaded"), DOWNLOADING(
-			"downloading"),QUEUED("queued"), RUNNING("running"), FINISHED("finished"), FETCHING(
-			"fetching"), FETCHED("fetched"), CORRUPTED("corrupted"), ERROR("error");
+	NOT_DOWNLOADED("not_downloaded"), SELECTED("selected"), DOWNLOADING(
+			"downloading"), DOWNLOADED("downloaded"), QUEUED("queued"), RUNNING(
+			"running"), FINISHED("finished"), FETCHING("fetching"), FETCHED(
+			"fetched"), CORRUPTED("corrupted"), ERROR("error");
 
 	private String value;
 

@@ -774,7 +774,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             connection = getConnection();
 
             lockAndUpdateStatement = connection.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
-            lockAndUpdateStatement.setString(1, ImageState.DOWNLOADING.getValue());
+            lockAndUpdateStatement.setString(1, ImageState.SELECTED.getValue());
             lockAndUpdateStatement.setString(2, federationMember);
             lockAndUpdateStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
             lockAndUpdateStatement.setString(4, ImageData.AVAILABLE);
@@ -782,7 +782,7 @@ public class JDBCImageDataStore implements ImageDataStore {
             lockAndUpdateStatement.execute();
 
             selectStatement = connection.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
-            selectStatement.setString(1, ImageState.DOWNLOADING.getValue());
+            selectStatement.setString(1, ImageState.SELECTED.getValue());
             selectStatement.setString(2, ImageData.AVAILABLE);
             selectStatement.setString(3, federationMember);
             selectStatement.execute();

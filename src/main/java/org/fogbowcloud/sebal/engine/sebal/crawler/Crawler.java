@@ -183,14 +183,13 @@ public class Crawler {
 		List<ImageData> imageDataList = new ArrayList<ImageData>();
 
 		try {
-			// This updates images in NOT_DOWNLOADED state to DOWNLOADING
+			// This updates images in NOT_DOWNLOADED state to SELECTED
 			// and sets this federation member as owner, and then gets all
 			// images
-			// marked as DOWNLOADING
+			// marked as SELECTED
 			imageDataList = imageStore.getImagesToDownload(federationMember,
-					(int) maxImagesToDownload);			
+					(int) maxImagesToDownload);
 		} catch (SQLException e) {
-			// TODO: deal with this better
 			LOGGER.error("Error while accessing not downloaded images in DB", e);
 		}
 
@@ -198,14 +197,7 @@ public class Crawler {
 			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 			
 			if (imageData != null) {
-				try {
-					imageStore.addStateStamp(imageData.getName(),
-							imageData.getState(), imageData.getUpdateTime());
-				} catch (SQLException e) {
-					LOGGER.error("Error while adding state "
-							+ imageData.getState() + " timestamp "
-							+ imageData.getUpdateTime() + " in DB", e);
-				}
+				addStateStamp(imageData);
 				
 				LOGGER.debug("Adding image " + imageData.getName()
 						+ " to pending database");
@@ -219,6 +211,17 @@ public class Crawler {
 
 	}
 
+	private void addStateStamp(ImageData imageData) {
+		try {
+			imageStore.addStateStamp(imageData.getName(),
+					imageData.getState(), imageData.getUpdateTime());
+		} catch (SQLException e) {
+			LOGGER.error("Error while adding state "
+					+ imageData.getState() + " timestamp "
+					+ imageData.getUpdateTime() + " in DB", e);
+		}
+	}
+
 	protected long numberOfImagesToDownload() throws NumberFormatException,
 			InterruptedException, IOException, SQLException {
 
@@ -230,11 +233,6 @@ public class Crawler {
 					/ DEFAULT_IMAGE_DIR_SIZE;
 
 			// FIXME: ceil para o inteiro inferior
-
-//			LOGGER.debug("volumePath " + volumePath + "availableVolumeSpace "
-//					+ availableVolumeSpace + " DEFAULT_IMAGE_DIR_SIZE "
-//					+ DEFAULT_IMAGE_DIR_SIZE + " numberOfImagesToDownload "
-//					+ numberOfImagesToDownload);
 			return numberOfImagesToDownload;
 		} else {
 			throw new RuntimeException("VolumePath: " + volumeDirPath
@@ -250,10 +248,12 @@ public class Crawler {
 			throws SQLException, IOException {
 
 		try {
+			
+			updateToDownloadingState(imageData);
+			
 			usgsRepository.downloadImage(imageData);
 
 			// running Fmask
-			// TODO: insert source .profile before fmask execution
 			LOGGER.debug("Running Fmask for image " + imageData.getName());
 
 			int exitValue = 0;
@@ -274,36 +274,53 @@ public class Crawler {
 				return;
 			}			
 			
-			imageData.setState(ImageState.DOWNLOADED);
 			imageData.setCrawlerVersion(crawlerVersion);
-			imageData.setFmaskVersion(fmaskVersion);		
+			imageData.setFmaskVersion(fmaskVersion);
 
-			try {
-				imageStore.updateImage(imageData);
-				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-			} catch (SQLException e) {
-				LOGGER.error("Error while updating image " + imageData
-						+ " to DB", e);
-				removeFromPendingAndUpdateState(imageData, properties);
-			}
-
-			try {
-				imageStore.addStateStamp(imageData.getName(),
-						imageData.getState(), imageData.getUpdateTime());
-			} catch (SQLException e) {
-				LOGGER.error("Error while adding state " + imageData.getState()
-						+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
-			}
+			updateToDownloadedState(imageData);
 
 			pendingImageDownloadMap.remove(imageData.getName());
 			pendingImageDownloadDB.commit();
 
 			LOGGER.info("Image " + imageData + " was downloaded");
-
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageData, e);
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
+	}
+
+	private void updateToDownloadedState(final ImageData imageData)
+			throws IOException {
+		
+		imageData.setState(ImageState.DOWNLOADED);
+		
+		try {
+			imageStore.updateImage(imageData);
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		} catch (SQLException e) {
+			LOGGER.error("Error while updating image " + imageData
+					+ " to DB", e);
+			removeFromPendingAndUpdateState(imageData, properties);
+		}
+
+		addStateStamp(imageData);
+	}
+
+	private void updateToDownloadingState(final ImageData imageData)
+			throws IOException {
+		
+		imageData.setState(ImageState.DOWNLOADING);
+		
+		try {
+			imageStore.updateImage(imageData);
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		} catch (SQLException e) {
+			LOGGER.error("Error while updating image " + imageData
+					+ " to DB", e);
+			removeFromPendingAndUpdateState(imageData, properties);
+		}
+		
+		addStateStamp(imageData);
 	}
 
 	protected String getFmaskVersion() throws IOException {
@@ -373,7 +390,7 @@ public class Crawler {
 				Crawler.LOGGER.error("Error while updating image data "
 						+ imageData.getName(), e);
 				imageData.setFederationMember(federationMember);
-				imageData.setState(ImageState.DOWNLOADING);
+				imageData.setState(ImageState.SELECTED);
 			}
 
 			deleteImageFromDisk(imageData,
@@ -464,7 +481,7 @@ public class Crawler {
 	protected void purgeImagesFromVolume(Properties properties)
 			throws IOException, InterruptedException, SQLException {
 
-		List<ImageData> imagesToPurge = imageStore.getIn(ImageState.FINISHED);
+		List<ImageData> imagesToPurge = imageStore.getAllImages();
 
 		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
 
