@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.sebal.ProcessUtil;
@@ -31,8 +34,10 @@ public class SwiftAPIClient {
 	private static final String FOGBOW_KEYSTONEV3_PASSWORD = "fogbow.keystonev3.password";
 	private static final String FOGBOW_KEYSTONEV3_AUTH_URL = "fogbow.keystonev3.auth.url";
 	private static final String FOGBOW_KEYSTONEV3_SWIFT_URL = "fogbow.keystonev3.swift.url";
+	private static final String FOGBOW_KEYSTONEV3_UPDATE_PERIOD = "fogbow.keystonev3.swift.token.update.period";
 
 	public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
+
 
 	public SwiftAPIClient(Properties properties) {
 		this.properties = properties;
@@ -43,7 +48,13 @@ public class SwiftAPIClient {
 		tokenAuthUrl = properties.getProperty(FOGBOW_KEYSTONEV3_AUTH_URL);
 		swiftUrl = properties.getProperty(FOGBOW_KEYSTONEV3_SWIFT_URL);
 
-		token = generateToken();
+		handleTokenUpdate(Executors.newScheduledThreadPool(1));
+		
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			LOGGER.error(e);
+		}
 	}
 
 	public void createContainer(String containerName) {
@@ -296,6 +307,22 @@ public class SwiftAPIClient {
 		}
 
 		return null;
+	}
+	
+	protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
+		LOGGER.debug("Turning on handle token update.");
+		
+		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
+			@Override
+			public void run() {
+				setToken(generateToken());
+			}
+		}, 0, Integer.parseInt(properties.getProperty(FOGBOW_KEYSTONEV3_UPDATE_PERIOD)), TimeUnit.MILLISECONDS);
+	}
+	
+	protected void setToken(String token) {
+		LOGGER.debug("Setting token to " + token);
+		this.token = token;
 	}
 	
 	// This is for test only
