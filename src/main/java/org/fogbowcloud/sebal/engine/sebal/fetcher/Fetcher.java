@@ -434,6 +434,13 @@ public class Fetcher {
 	}
 
 	private String getPseudoFolder(File localImageResultsDir) {
+		
+		if(properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX).endsWith(File.separator)) {			
+			return properties
+					.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)
+					+ localImageResultsDir.getName() + File.separator;
+		}
+		
 		return properties
 				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) + 
 				File.separator + localImageResultsDir.getName() + File.separator;
