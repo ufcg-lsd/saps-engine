@@ -27,7 +27,6 @@ import org.fogbowcloud.blowout.scheduler.core.util.Constants;
 import org.fogbowcloud.blowout.scheduler.infrastructure.InfrastructureManager;
 import org.fogbowcloud.blowout.scheduler.infrastructure.InfrastructureProvider;
 import org.fogbowcloud.sebal.engine.scheduler.core.model.SebalJob;
-import org.fogbowcloud.sebal.engine.scheduler.restlet.SebalScheduleApplication;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
@@ -114,10 +113,6 @@ public class SebalMain {
 				}
 			}
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
-
-		// TODO: see how this will be modified
-		SebalScheduleApplication restletServer = new SebalScheduleApplication(scheduler, (SebalJob)job, imageStore, properties);
-		restletServer.startServer();
 
 		LOGGER.info("Scheduler working");
 	}
