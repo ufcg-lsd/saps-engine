@@ -61,8 +61,6 @@ public class SebalMain {
 
 		String imageStoreIP = args[1];
 		String imageStorePort = args[2];
-		nfsServerIP = args[3];
-		nfsServerPort = args[4];
 
 		LOGGER.debug("Imagestore " + imageStoreIP + ":" + imageStorePort);
 
@@ -212,6 +210,13 @@ public class SebalMain {
 
 						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
 								.toString(), tempSpec);
+						
+						Map<String, String> nfsConfig = imageStore
+								.getFederationNFSConfig(imageData
+										.getFederationMember());
+						
+						nfsServerIP = nfsConfig.keySet().toString();
+						nfsServerPort = nfsConfig.get(nfsConfig.keySet().toString());
 
 						LOGGER.debug("Creating R task " + taskImpl.getId());
 

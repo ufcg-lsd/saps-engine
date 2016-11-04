@@ -20,9 +20,12 @@ public class CrawlerMain {
 		try {
 			String imageStoreIP = args[1];
 			String imageStorePort = args[2];
-			String federationMember = args[3];
+			String crawlerIp = args[3];
+			String nfsPort = args[4];
+			String federationMember = args[5];
 
-			Crawler crawler = new Crawler(properties, imageStoreIP, imageStorePort, federationMember);
+			Crawler crawler = new Crawler(properties, imageStoreIP,
+					imageStorePort, crawlerIp, nfsPort, federationMember);
 			crawler.exec();
 		} catch(NullPointerException e) {
 			LOGGER.error("Invalid args", e);

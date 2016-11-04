@@ -29,14 +29,22 @@ public class Crawler {
 	protected static final String FMASK_TOOL_PATH = "fmask_tool_path";
 	protected static final String FMASK_SCRIPT_PATH = "fmask_script_path";
 	private static final String FMASK_VERSION_FILE_PATH = "crawler/fmask-version";
+	
+	private String crawlerIp;
+	private String nfsPort;
+	private String federationMember;
+	
 	private final Properties properties;
-	private USGSNasaRepository usgsRepository;
-	private final ImageDataStore imageStore;
+
 	private File pendingImageDownloadFile;
 	protected DB pendingImageDownloadDB;
 	protected ConcurrentMap<String, ImageData> pendingImageDownloadMap;
-	private String federationMember;
+
+	private USGSNasaRepository usgsRepository;
+	private final ImageDataStore imageStore;
+	
 	private FMask fmask;
+
 	private String crawlerVersion;
 	private String fmaskVersion;
 
@@ -47,10 +55,11 @@ public class Crawler {
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
 	public Crawler(Properties properties, String imageStoreIP,
-			String imageStorePort, String federationMember) throws SQLException {
+			String imageStorePort, String crawlerIP, String nfsPort,
+			String federationMember) throws SQLException {
 
 		this(properties, new JDBCImageDataStore(properties), new USGSNasaRepository(properties),
-				federationMember, new FMask());
+				crawlerIP, nfsPort, federationMember, new FMask());
 
 		LOGGER.info("Creating crawler");
 		LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort
@@ -58,7 +67,8 @@ public class Crawler {
 	}
 
 	protected Crawler(Properties properties, ImageDataStore imageStore,
-					  USGSNasaRepository usgsRepository, String federationMember, FMask fmask) {
+			USGSNasaRepository usgsRepository, String crawlerIP,
+			String nfsPort, String federationMember, FMask fmask) {
 
 		if (properties == null) {
 			throw new IllegalArgumentException(
@@ -74,6 +84,16 @@ public class Crawler {
 			throw new IllegalArgumentException(
 					"USGSRepository arg must not be null.");
 		}
+		
+		if (crawlerIP == null) {
+			throw new IllegalArgumentException(
+					"Crawler IP arg must not be null.");
+		}
+		
+		if (nfsPort == null) {
+			throw new IllegalArgumentException(
+					"NFS Port arg must not be null.");
+		}
 
 		if (federationMember == null) {
 			throw new IllegalArgumentException(
@@ -88,7 +108,10 @@ public class Crawler {
 		if (fmask == null) {
 			throw new IllegalArgumentException("Fmask arg must not be empty.");
 		}
-
+		
+		this.crawlerIp = crawlerIP;
+		this.nfsPort = nfsPort;
+		
 		this.properties = properties;
 		this.imageStore = imageStore;
 		this.usgsRepository = usgsRepository;
@@ -113,6 +136,13 @@ public class Crawler {
 
 	public void exec() throws InterruptedException, IOException {
 		if(!crawlerVersionFileExists() || !fmaskVersionFileExists()) {
+			System.exit(1);
+		}
+
+		try {
+			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
+		} catch (SQLException e) {
+			LOGGER.error("Error while adding crawler configuration in DB", e);
 			System.exit(1);
 		}
 		

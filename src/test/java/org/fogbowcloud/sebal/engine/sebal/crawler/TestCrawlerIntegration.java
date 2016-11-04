@@ -50,6 +50,8 @@ public class TestCrawlerIntegration {
 		Properties properties = Mockito.mock(Properties.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		USGSNasaRepository usgsRepository = Mockito.mock(USGSNasaRepository.class);
+		String crawlerIP = "fake-crawler-ip";
+		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
 		FMask fmask = Mockito.mock(FMask.class);
 		int maxImagesToDownload = 5;
@@ -78,7 +80,7 @@ public class TestCrawlerIntegration {
 		Mockito.doNothing().when(usgsRepository).downloadImage(image2);
 
 		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				federationMember, fmask);
+				crawlerIP, nfsPort, federationMember, fmask);
 		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image1.getState());
 		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image2.getState());
 		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
@@ -108,6 +110,8 @@ public class TestCrawlerIntegration {
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		USGSNasaRepository usgsRepository = Mockito.mock(USGSNasaRepository.class);
 		FMask fmask = Mockito.mock(FMask.class);
+		String crawlerIP = "fake-crawler-ip";
+		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
 		String fmaskScriptPath = "fake-script-path";
 		String fmaskToolsPath = "fake-tool-path";
@@ -153,7 +157,7 @@ public class TestCrawlerIntegration {
 						sebalExportPath);
 
 		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				federationMember, fmask);
+				crawlerIP, nfsPort, federationMember, fmask);
 		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image1.getState());
 		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image2.getState());
 		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
@@ -175,6 +179,8 @@ public class TestCrawlerIntegration {
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		USGSNasaRepository usgsRepository = Mockito.mock(USGSNasaRepository.class);
 		FMask fmask = Mockito.mock(FMask.class);
+		String crawlerIP = "fake-crawler-ip";
+		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
 		int maxImagesToDownload = 5;
 
@@ -194,7 +200,7 @@ public class TestCrawlerIntegration {
 		imageList.add(image2);
 
 		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				federationMember, fmask);
+				crawlerIP, nfsPort, federationMember, fmask);
 
 		Mockito.doThrow(new SQLException()).when(imageStore)
 				.getImagesToDownload(federationMember, maxImagesToDownload);
@@ -274,6 +280,8 @@ public class TestCrawlerIntegration {
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		USGSNasaRepository usgsRepository = Mockito.mock(USGSNasaRepository.class);
 		FMask fmask = Mockito.mock(FMask.class);
+		String crawlerIP = "fake-crawler-ip";
+		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
 		String sebalExportPath = "fake-export-path";
 
@@ -299,7 +307,7 @@ public class TestCrawlerIntegration {
 				.getProperty(Crawler.SEBAL_EXPORT_PATH);
 
 		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				federationMember, fmask);
+				crawlerIP, nfsPort, federationMember, fmask);
 
 		// exercise
 		crawler.purgeImagesFromVolume(properties);
@@ -313,6 +321,8 @@ public class TestCrawlerIntegration {
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		USGSNasaRepository usgsRepository = Mockito.mock(USGSNasaRepository.class);
 		FMask fmask = Mockito.mock(FMask.class);
+		String crawlerIP = "fake-crawler-ip";
+		String nfsPort = "fake-nfs-port";
 		String federationMember1 = "fake-fed-member-1";
 		String federationMember2 = "fake-fed-member-2";
 		String sebalExportPath = "fake-export-path";
@@ -338,7 +348,7 @@ public class TestCrawlerIntegration {
 		Mockito.doReturn(imageList).when(imageStore).getAllImages();
 
 		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				federationMember1, fmask);
+				crawlerIP, nfsPort, federationMember1, fmask);
 
 		// exercise
 		crawler.deleteFetchedResultsFromVolume(properties);
@@ -355,6 +365,8 @@ public class TestCrawlerIntegration {
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		USGSNasaRepository usgsRepository = Mockito.mock(USGSNasaRepository.class);
 		FMask fmask = Mockito.mock(FMask.class);
+		String crawlerIP = "fake-crawler-ip";
+		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
 		
 		PrintWriter writer = new PrintWriter("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a", "UTF-8");
@@ -362,7 +374,7 @@ public class TestCrawlerIntegration {
 		writer.close();
 		
 		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				federationMember, fmask);
+				crawlerIP, nfsPort, federationMember, fmask);
 		
 		// exercise
 		String versionReturn = crawler.getCrawlerVersion();
@@ -380,10 +392,12 @@ public class TestCrawlerIntegration {
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		USGSNasaRepository usgsRepository = Mockito.mock(USGSNasaRepository.class);
 		FMask fmask = Mockito.mock(FMask.class);
+		String crawlerIP = "fake-crawler-ip";
+		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
 		
 		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				federationMember, fmask);
+				crawlerIP, nfsPort, federationMember, fmask);
 		
 		// exercise
 		String versionReturn = crawler.getFmaskVersion();
