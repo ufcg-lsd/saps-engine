@@ -142,8 +142,8 @@ public class Crawler {
 		try {
 			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
 		} catch (SQLException e) {
+			//TODO: see how to deal with this
 			LOGGER.error("Error while adding crawler configuration in DB", e);
-			System.exit(1);
 		}
 		
 		cleanUnfinishedDownloadedData(properties);
