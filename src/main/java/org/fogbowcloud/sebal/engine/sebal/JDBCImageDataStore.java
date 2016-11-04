@@ -344,20 +344,21 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 	
 	private static final String SELECT_NFS_CONFIG_SQL = "SELECT nfs_ip, nfs_port FROM "
-			+ DEPLOY_CONFIG_TABLE_NAME;
+			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE federation_member = ?";
 
 	@Override
 	public Map<String, String> getFederationNFSConfig(String federationMember) throws SQLException {
 
 		LOGGER.debug("Getting NFS configuration for " + federationMember);
 
-		Statement statement = null;
+		PreparedStatement statement = null;
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			statement = conn.createStatement();
-
-			statement.execute(SELECT_NFS_CONFIG_SQL);
+			statement = conn.prepareStatement(SELECT_NFS_CONFIG_SQL);
+			statement.setString(1, federationMember);
+			statement.execute();
+			
 			ResultSet rs = statement.getResultSet();
 			HashMap<String, String> nfsConfig = extractNFSConfigFrom(rs);
 			return nfsConfig;
