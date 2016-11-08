@@ -62,6 +62,16 @@ function mountExportsDir {
   fi
 }
 
+function garbageCollect {
+  shopt -s nullglob dotglob     # To include hidden files
+  files=(${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/*)
+  if [ ${#files[@]} -gt 0 ];
+  then
+    echo "Directory contains garbage...cleanning it"
+    sudo rm ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/*
+  fi
+}
+
 function checkProcessOutput {
   PROCESS_OUTPUT=$?
 
@@ -82,5 +92,7 @@ checkProcessOutput
 checkMissingDependenciesFile
 checkProcessOutput
 mountExportsDir
+checkProcessOutput
+garbageCollect
 checkProcessOutput
 finally
