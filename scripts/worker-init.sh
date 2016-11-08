@@ -63,12 +63,15 @@ function mountExportsDir {
 }
 
 function garbageCollect {
-  shopt -s nullglob dotglob     # To include hidden files
-  files=(${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/*)
-  if [ ${#files[@]} -gt 0 ];
-  then
-    echo "Directory contains garbage...cleanning it"
-    sudo rm ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/*
+  DIRECTORY=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
+  if [ -d "$DIRECTORY" ]; then
+    shopt -s nullglob dotglob     # To include hidden files
+    files=($DIRECTORY/*)
+    if [ ${#files[@]} -gt 0 ];
+    then
+      echo "Directory contains garbage...cleanning it"
+      sudo rm ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/*
+    fi
   fi
 }
 
