@@ -58,5 +58,110 @@ public class CheckSumMD5ForFile {
 		LOGGER.info("Proceeding with the execution");		
 		return false;
 	}
+	
+//	private String getProcessOutputString(Process p) {
+//		
+//		BufferedReader reader = new BufferedReader(new InputStreamReader(
+//				p.getInputStream()));
+//		StringBuilder builder = new StringBuilder();
+//		String line = null;
+//		try {
+//			while ((line = reader.readLine()) != null) {
+//				builder.append(line);
+//				builder.append(System.getProperty("line.separator"));
+//			}
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		return builder.toString();
+//	}
 
+	// For test only
+//	public static void main(String[] args) {
+//		
+//		while (true) {
+//			String fileDirPath = "/home/esdras/checksumTest";
+//			String filePath = fileDirPath + File.separator + "file.nc";
+//
+//			File fileDir = new File(fileDirPath);
+//
+//			String checksum;
+//
+//			try {
+//
+//				ProcessBuilder builder = new ProcessBuilder("md5sum", filePath);
+//				Process p = builder.start();
+//				p.waitFor();
+//
+//				CheckSumMD5ForFile checkSumMD5ForFile = new CheckSumMD5ForFile();
+//				String[] splitOutput = checkSumMD5ForFile
+//						.getProcessOutputString(p).split("\\s+");
+//				checksum = splitOutput[0];
+//
+//				System.out.println("checksum for file " + filePath + " is "
+//						+ checksum);
+//
+//				String fileChecksumPath = filePath + "." + checksum + ".md5";
+//
+//				PrintWriter writer = new PrintWriter(fileChecksumPath, "UTF-8");
+//				writer.println(checksum);
+//
+//				writer.close();
+//
+//				if (isFileCorrupted(fileDir)) {
+//					System.out.println("File " + filePath + " is corrupted");
+//				} else {
+//					System.out
+//							.println("File " + filePath + " is not corrupted");
+//				}
+//
+//				File fileChecksum = new File(fileChecksumPath);
+//				fileChecksum.delete();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+////		while (true) {
+////			String fileDirPath = "/home/esdras/checksumTest";
+////			String filePath = fileDirPath + File.separator + "file.nc";
+////
+////			File fileDir = new File(fileDirPath);
+////			File file = new File(filePath);
+////			FileInputStream fileInputStream;
+////
+////			String checksum;
+////
+////			try {
+////				fileInputStream = new FileInputStream(file);
+////
+////				checksum = DigestUtils.md5Hex(IOUtils
+////						.toByteArray(fileInputStream));
+////
+////				System.out.println("checksum for file " + filePath + " is "
+////						+ checksum);
+////
+////				String fileChecksumPath = filePath + "." + checksum
+////						+ ".md5";
+////
+////				PrintWriter writer = new PrintWriter(fileChecksumPath, "UTF-8");
+////				writer.println(checksum);
+////				
+////				writer.close();				
+////				fileInputStream.close();
+////				
+////				if(isFileCorrupted(fileDir)) {
+////					System.out.println("File " + filePath + " is corrupted");
+////				} else {
+////					System.out.println("File " + filePath + " is not corrupted");
+////				}
+////				
+////				File fileChecksum = new File(fileChecksumPath);				
+////				fileChecksum.delete();
+////			} catch (Exception e) {
+////				e.printStackTrace();
+////			}
+////		}
+//	}
 }

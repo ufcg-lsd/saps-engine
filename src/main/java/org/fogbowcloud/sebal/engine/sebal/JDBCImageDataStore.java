@@ -917,7 +917,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			LOGGER.error("Invalid federation member " + federationMember);
 			throw new IllegalArgumentException("Invalid federation member "
 					+ federationMember);
-		}
+		}				
+		
 		PreparedStatement lockAndUpdateStatement = null;
 		PreparedStatement selectStatement = null;
 		Connection connection = null;

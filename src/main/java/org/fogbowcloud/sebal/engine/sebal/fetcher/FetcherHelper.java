@@ -32,10 +32,15 @@ public class FetcherHelper {
 	
 	protected void removeImageFromPendingMap(ImageData imageData,
 			DB pendingImageFetchDB,
-			ConcurrentMap<String, ImageData> pendingImageFetchMap) {
+			ConcurrentMap<String, ImageData> pendingImageFetchMap) {		
 		LOGGER.info("Removing image " + imageData + " from pending map.");
 		pendingImageFetchMap.remove(imageData.getName());
 		pendingImageFetchDB.commit();
+		
+		if(pendingImageFetchMap.containsKey(imageData.getName())) {
+			LOGGER.debug("There is still register for image " + imageData
+					+ " into Map DB");
+		}
 	}
 
 	protected String getStationId(ImageData imageData, Properties properties)

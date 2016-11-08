@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -215,8 +216,13 @@ public class SebalMain {
 								.getFederationNFSConfig(imageData
 										.getFederationMember());
 						
-						nfsServerIP = nfsConfig.keySet().toString();
-						nfsServerPort = nfsConfig.get(nfsConfig.keySet().toString());
+						Iterator it = nfsConfig.entrySet().iterator();
+						while (it.hasNext()) {
+					        Map.Entry pair = (Map.Entry)it.next();
+					        nfsServerIP = pair.getKey().toString();
+					        nfsServerPort = pair.getValue().toString();
+					        it.remove(); // avoids a ConcurrentModificationException
+					    }
 
 						LOGGER.debug("Creating R task " + taskImpl.getId());
 

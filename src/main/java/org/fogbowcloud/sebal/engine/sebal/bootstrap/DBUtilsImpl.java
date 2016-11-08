@@ -210,7 +210,6 @@ public class DBUtilsImpl implements DBUtils {
                                 imageAndDownloadLink.get(imageName), priority, sebalVersion, sebalTag);
                         imageNames.add(imageName);
                     } catch (SQLException e) {
-                        // TODO do we need to do something?
                         LOGGER.error("Error while adding image at data base.", e);
                     }
                 }
