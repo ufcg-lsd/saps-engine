@@ -122,13 +122,17 @@ public class SwiftAPIClient {
 		try {
 			Process p = builder.start();
 			p.waitFor();
+			
+			if(p.exitValue() != 0) {
+				throw new Exception("process_output=" + p.exitValue());
+			}
 		} catch (IOException e) {
 			LOGGER.error("Error while uploading file " + completeFileName
 					+ " to container " + containerName, e);
 		} catch (InterruptedException e) {
 			LOGGER.error("Error while uploading file " + completeFileName
 					+ " to container " + containerName, e);
-		}
+		}		
 	}
 
 	// TODO: this will download file into a given path
