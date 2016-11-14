@@ -287,7 +287,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_DEPLOY_CONFIG_SQL = "INSERT INTO "
-			+ DEPLOY_CONFIG_TABLE_NAME + " VALUES(?, ?, ?)";
+			+ DEPLOY_CONFIG_TABLE_NAME + " VALUES(?, ?, ?) ON CONFLICT DO UPDATE";
 
 	@Override
 	public void addDeployConfig(String nfsIP, String nfsPort,
