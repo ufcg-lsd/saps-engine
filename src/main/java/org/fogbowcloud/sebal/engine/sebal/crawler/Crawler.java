@@ -26,9 +26,12 @@ import org.mapdb.DBMaker;
 public class Crawler {
 
 	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
+
 	protected static final String FMASK_TOOL_PATH = "fmask_tool_path";
 	protected static final String FMASK_SCRIPT_PATH = "fmask_script_path";
 	private static final String FMASK_VERSION_FILE_PATH = "crawler/fmask-version";
+	
+	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
 	
 	private String crawlerIp;
 	private String nfsPort;
@@ -141,9 +144,12 @@ public class Crawler {
 
 		try {
 			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding crawler configuration in DB", e);
-			System.exit(1);
+		} catch (SQLException e) {			
+			final String ss = e.getSQLState();
+			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {
+				LOGGER.error("Error while adding crawler configuration in DB", e);
+				System.exit(1);
+			}
 		}
 		
 		cleanUnfinishedDownloadedData(properties);
