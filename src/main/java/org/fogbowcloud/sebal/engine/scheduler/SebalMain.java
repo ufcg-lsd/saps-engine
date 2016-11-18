@@ -56,6 +56,7 @@ public class SebalMain {
 
 	private static final String AZURE_USER_DATA_PATH = "azure_user_data_path";
 	private static final String AZURE_FEDERATION_ID = "azure.lsd.ufcg.edu.br";
+	private static final String USER_DATA_CONTENT_TYPE = "text/x-shellscript";
 	private static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 
 	public static void main(String[] args) throws Exception {
@@ -274,6 +275,7 @@ public class SebalMain {
 			Specification spec) {
 		LOGGER.debug("Inserting azure user-data into spec");
 		spec.setUserDataFile(pathToAzureUserData);
+		spec.setUserDataType(USER_DATA_CONTENT_TYPE);
 	}
 
 	private static String getBlowoutVersion(Properties properties) {
