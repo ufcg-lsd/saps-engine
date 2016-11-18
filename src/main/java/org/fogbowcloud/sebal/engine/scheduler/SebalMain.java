@@ -36,7 +36,6 @@ import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
 public class SebalMain {
 
-	private static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	private static ManagerTimer executionMonitorTimer = new ManagerTimer(
 			Executors.newScheduledThreadPool(1));
 	private static ManagerTimer schedulerTimer = new ManagerTimer(
@@ -54,6 +53,10 @@ public class SebalMain {
 	private static int maxAllowedResources = 5;
 
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
+
+	private static final String AZURE_USER_DATA_PATH = "azure_user_data_path";
+	private static final String AZURE_FEDERATION_ID = "azure.lsd.ufcg.edu.br";
+	private static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 
 	public static void main(String[] args) throws Exception {
 		final Properties properties = new Properties();
@@ -198,7 +201,13 @@ public class SebalMain {
 				tempSpec.putAllRequirements(sebalSpec.getAllRequirements());
 				setFederationMemberIntoSpec(sebalSpec, tempSpec,
 						imageData.getFederationMember());
-
+				
+				if (imageData.getFederationMember().equals(AZURE_FEDERATION_ID)) {
+					String pathToAzureUserData = properties
+							.getProperty(AZURE_USER_DATA_PATH);
+					setUserDataIntoSpec(pathToAzureUserData, tempSpec);
+				}				
+				
 				LOGGER.debug("tempSpec " + tempSpec.toString());
 
 				Map<String, Collection<Resource>> allocationMap = allocationMap();
@@ -259,6 +268,12 @@ public class SebalMain {
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
+	}
+	
+	private static void setUserDataIntoSpec(String pathToAzureUserData,
+			Specification spec) {
+		LOGGER.debug("Inserting azure user-data into spec");
+		spec.setUserDataFile(pathToAzureUserData);
 	}
 
 	private static String getBlowoutVersion(Properties properties) {
