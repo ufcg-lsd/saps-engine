@@ -52,6 +52,7 @@ public class SebalTasks {
 	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
 
 	private static final String METADATA_MOUNT_POINT = "mount_point";
+	private static final String METADATA_AZURE_MOUNT_POINT = "azure_mount_point";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 
@@ -67,9 +68,11 @@ public class SebalTasks {
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
 	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
 	
+	private static final String AZURE_FEDERATION_MEMBER = "azure.lsd.ufcg.edu.br";
+	
 	public static TaskImpl createRTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
-			String location, String nfsServerIP, String nfsServerPort,
+			String federationMember, String nfsServerIP, String nfsServerPort,
 			String sebalVersion, String sebalTag) {
 		LOGGER.debug("Creating R task for image " + imageName);
 
@@ -84,8 +87,15 @@ public class SebalTasks {
 				properties.getProperty(SEBAL_EXPORT_PATH));
 		rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 				properties.getProperty(SEBAL_LOCAL_SCRIPTS_DIR));
-		rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
-				properties.getProperty(SEBAL_MOUNT_POINT));
+		
+		if(federationMember.equals(AZURE_FEDERATION_MEMBER)) {			
+			rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
+					properties.getProperty(METADATA_AZURE_MOUNT_POINT));
+		} else {
+			rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
+					properties.getProperty(SEBAL_MOUNT_POINT));
+		}
+		
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_IP, nfsServerIP);
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
 		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,

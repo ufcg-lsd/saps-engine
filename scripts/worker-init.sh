@@ -53,6 +53,11 @@ function checkMissingDependenciesFile {
 
 # This function mounts exports dir from NFS server
 function mountExportsDir {
+  if [ ! -d ${SEBAL_MOUNT_POINT} ]
+  then
+    sudo mkdir -p ${SEBAL_MOUNT_POINT}
+  fi
+
   if grep -qs "${SEBAL_MOUNT_POINT}" /proc/mounts;
   then
     echo "Directory ${SEBAL_MOUNT_POINT} already mounted."

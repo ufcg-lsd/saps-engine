@@ -5,10 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -20,7 +17,6 @@ import org.fogbowcloud.blowout.scheduler.core.ExecutionMonitor;
 import org.fogbowcloud.blowout.scheduler.core.ManagerTimer;
 import org.fogbowcloud.blowout.scheduler.core.Scheduler;
 import org.fogbowcloud.blowout.scheduler.core.model.Job;
-import org.fogbowcloud.blowout.scheduler.core.model.Resource;
 import org.fogbowcloud.blowout.scheduler.core.model.Specification;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
@@ -42,21 +38,20 @@ public class SebalMain {
 			Executors.newScheduledThreadPool(1));
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(
 			Executors.newScheduledThreadPool(1));
+//	private static ManagerTimer taskMapUpdateTimer = new ManagerTimer(
+//			Executors.newScheduledThreadPool(1));
 
-	// private static Map<String, ImageData> pendingImageExecution = new
-	// ConcurrentHashMap<String, ImageData>();
 	private static ImageDataStore imageStore;
 	private static String nfsServerIP;
 	private static String nfsServerPort;
 	private static InfrastructureManager infraManager;
+	
+//	private static Map<String, Collection<Task>> submissionControlMap;
+	
 	// FIXME: change this later
-	private static int maxAllowedResources = 5;
+//	private static int maxAllowedTasks = 5;
 
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
-
-	private static final String AZURE_USER_DATA_PATH = "azure_user_data_path";
-	private static final String AZURE_FEDERATION_ID = "azure.lsd.ufcg.edu.br";
-	private static final String USER_DATA_CONTENT_TYPE = "text/x-shellscript";
 	private static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 
 	public static void main(String[] args) throws Exception {
@@ -90,10 +85,12 @@ public class SebalMain {
 				infraProvider, properties);
 		infraManager.start(blockWhileInitializing, true);
 
-		Scheduler scheduler = new Scheduler(infraManager, job);
+		final Scheduler scheduler = new Scheduler(infraManager, job);
 		ExecutionMonitor execMonitor = new SebalExecutionMonitor(scheduler, null, imageStore);
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
+		
+//		submissionControlMap = new HashMap<String, Collection<Task>>();
 		
 		// In case of the process has been stopped before finishing the images running 
 		// in the next restart all images in running state will be reseted to queued state
@@ -115,11 +112,47 @@ public class SebalMain {
 					LOGGER.error("Error while adding R tasks", e);
 				}
 			}
+
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 
 		LOGGER.info("Scheduler working");
+		
+//		taskMapUpdateTimer.scheduleAtFixedRate(new Runnable() {
+//			@Override
+//			public void run() {
+//				updateSubmissionControlMap(scheduler);
+//				try {
+//					Thread.sleep(1800000);
+//				} catch (InterruptedException e) {				
+//					LOGGER.error(e);
+//				}
+//			}
+//		}, 0, Integer.parseInt(properties.getProperty("task_map_update_period")));
 	}
 
+//	private static void updateSubmissionControlMap(Scheduler scheduler) {
+//		List<TaskProcess> allTaskProcesses = scheduler.getAllProcs();
+//		
+//		for(TaskProcess taskProcess : allTaskProcesses) {
+//			String federationMemberId = taskProcess.getSpecification()
+//					.getRequirementValue("Glue2CloudComputeManagerID");
+//			Collection<Task> federationTasks = submissionControlMap.get(federationMemberId);
+//			for(Task task : federationTasks) {
+//				if(task.getId().equals(taskProcess.getTaskId())) {
+//					// TODO: see if failed status reschedule task
+//					if (taskProcess.getStatus().equals(
+//							TaskProcessImpl.State.FINNISHED)
+//							|| taskProcess.getStatus().equals(
+//									TaskProcessImpl.State.FAILED)) {
+//						federationTasks.remove(task);
+//					}
+//				}
+//			}
+//			
+//			submissionControlMap.put(federationMemberId, federationTasks);
+//		}
+//	}
+	
 	private static void resetImagesRunningToQueued() throws SQLException {
 		List<ImageData> imagesRunning = imageStore.getIn(ImageState.RUNNING);
 		for (ImageData imageData : imagesRunning) {
@@ -140,41 +173,6 @@ public class SebalMain {
 				+ "\"";
 		tempSpec.addRequirement("FogbowRequirements", newRequirements);
 		tempSpec.addRequirement("RequestType", requestType);
-	}
-
-	private static Map<String, Collection<Resource>> allocationMap() {
-		List<Resource> allResources = infraManager.getAllResources();
-
-		Map<String, Collection<Resource>> allocMap = new HashMap<String, Collection<Resource>>();
-		for (Resource resource : allResources) {
-			String location = resource
-					.getMetadataValue(Resource.METADATA_LOCATION);
-			LOGGER.debug("Resource location " + location);
-			if (!allocMap.containsKey(location)) {
-				LOGGER.debug("Adding " + location + " to location map");
-				allocMap.put(location, new LinkedList<Resource>());
-			}
-			LOGGER.debug("Associating resource " + resource.getId()
-					+ " to location " + location);
-			allocMap.get(location).add(resource);
-		}
-		return allocMap;
-	}
-
-	private static boolean isQuotaAvailable(String federationMemberId,
-			Map<String, Collection<Resource>> allocationMap,
-			int maxAllowedResources) {
-		LOGGER.debug("maxAllowedResources per location is "
-				+ maxAllowedResources);
-		if (allocationMap.containsKey(federationMemberId)) {
-			int numAllocationPerFederationMember = allocationMap.get(
-					federationMemberId).size();
-			LOGGER.debug(numAllocationPerFederationMember
-					+ " allocated resources to " + federationMemberId);
-			return numAllocationPerFederationMember < maxAllowedResources;
-		}
-		
-		return true;
 	}
 
 	private static void addRTasks(final Properties properties, final Job job,
@@ -201,26 +199,22 @@ public class SebalMain {
 						sebalSpec.getUserDataType());
 				tempSpec.putAllRequirements(sebalSpec.getAllRequirements());
 				setFederationMemberIntoSpec(sebalSpec, tempSpec,
-						imageData.getFederationMember());
-				
-				if (imageData.getFederationMember().equals(AZURE_FEDERATION_ID)) {
-					String pathToAzureUserData = properties
-							.getProperty(AZURE_USER_DATA_PATH);
-					setUserDataIntoSpec(pathToAzureUserData, tempSpec);
-				}				
+						imageData.getFederationMember());				
 				
 				LOGGER.debug("tempSpec " + tempSpec.toString());
 
-				Map<String, Collection<Resource>> allocationMap = allocationMap();
-				LOGGER.info("Checking resource quota");
-				if (isQuotaAvailable(imageData.getFederationMember(),
-						allocationMap, maxAllowedResources)) {
+//				if (federationHasQuota(imageData.getFederationMember())) {
+				boolean hasQuota = true;
+				if(hasQuota) {
 
 					if (ImageState.QUEUED.equals(imageState)
 							|| ImageState.DOWNLOADED.equals(imageState)) {
 
 						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
 								.toString(), tempSpec);
+						
+//						addTaskIntoSubmissionControlMap(taskImpl,
+//								imageData.getFederationMember());
 						
 						Map<String, String> nfsConfig = imageStore
 								.getFederationNFSConfig(imageData
@@ -271,12 +265,31 @@ public class SebalMain {
 		}
 	}
 	
-	private static void setUserDataIntoSpec(String pathToAzureUserData,
-			Specification spec) {
-		LOGGER.debug("Inserting azure user-data into spec");
-		spec.setUserDataFile(pathToAzureUserData);
-		spec.setUserDataType(USER_DATA_CONTENT_TYPE);
-	}
+//	private static void addTaskIntoSubmissionControlMap(TaskImpl taskImpl,
+//			String federationMember) {
+//		LOGGER.debug("Adding task " + taskImpl.getId() + " for "
+//				+ federationMember + " into submission control map");
+//		Collection<Task> federationTaskCollection = submissionControlMap
+//				.get(federationMember);
+//
+//		if (federationTaskCollection == null) {
+//			federationTaskCollection = new ArrayList<Task>();
+//		}
+//
+//		federationTaskCollection.add(taskImpl);
+//		submissionControlMap.put(federationMember, federationTaskCollection);
+//		LOGGER.debug("Task " + taskImpl.getId()
+//				+ " added to submission control map");
+//	}
+//
+//	private static boolean federationHasQuota(String federationMember) {
+//		if (submissionControlMap.containsKey(federationMember)) {
+//			if (submissionControlMap.get(federationMember).size() >= maxAllowedTasks) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 
 	private static String getBlowoutVersion(Properties properties) {
 
