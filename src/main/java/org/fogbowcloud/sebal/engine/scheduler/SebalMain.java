@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,8 @@ import org.fogbowcloud.blowout.scheduler.core.Scheduler;
 import org.fogbowcloud.blowout.scheduler.core.model.Job;
 import org.fogbowcloud.blowout.scheduler.core.model.Specification;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
+import org.fogbowcloud.blowout.scheduler.core.model.TaskProcess;
+import org.fogbowcloud.blowout.scheduler.core.model.TaskProcessImpl;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.blowout.scheduler.core.util.Constants;
 import org.fogbowcloud.blowout.scheduler.infrastructure.InfrastructureManager;
@@ -38,18 +42,18 @@ public class SebalMain {
 			Executors.newScheduledThreadPool(1));
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(
 			Executors.newScheduledThreadPool(1));
-//	private static ManagerTimer taskMapUpdateTimer = new ManagerTimer(
-//			Executors.newScheduledThreadPool(1));
+	private static ManagerTimer taskMapUpdateTimer = new ManagerTimer(
+			Executors.newScheduledThreadPool(1));
 
 	private static ImageDataStore imageStore;
 	private static String nfsServerIP;
 	private static String nfsServerPort;
 	private static InfrastructureManager infraManager;
 	
-//	private static Map<String, Collection<Task>> submissionControlMap;
+	private static Map<String, Collection<String>> submissionControlMap;
 	
 	// FIXME: change this later
-//	private static int maxAllowedTasks = 5;
+	private static int maxAllowedTasks = 5;
 
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 	private static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
@@ -90,7 +94,7 @@ public class SebalMain {
 
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 		
-//		submissionControlMap = new HashMap<String, Collection<Task>>();
+		submissionControlMap = new HashMap<String, Collection<String>>();		
 		
 		// In case of the process has been stopped before finishing the images running 
 		// in the next restart all images in running state will be reseted to queued state
@@ -117,41 +121,32 @@ public class SebalMain {
 
 		LOGGER.info("Scheduler working");
 		
-//		taskMapUpdateTimer.scheduleAtFixedRate(new Runnable() {
-//			@Override
-//			public void run() {
-//				updateSubmissionControlMap(scheduler);
-//				try {
-//					Thread.sleep(1800000);
-//				} catch (InterruptedException e) {				
-//					LOGGER.error(e);
-//				}
-//			}
-//		}, 0, Integer.parseInt(properties.getProperty("task_map_update_period")));
+		taskMapUpdateTimer.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				updateSubmissionControlMap(scheduler);
+			}
+		}, 0, Integer.parseInt(properties.getProperty("task_map_update_period")));
 	}
 
-//	private static void updateSubmissionControlMap(Scheduler scheduler) {
-//		List<TaskProcess> allTaskProcesses = scheduler.getAllProcs();
-//		
-//		for(TaskProcess taskProcess : allTaskProcesses) {
-//			String federationMemberId = taskProcess.getSpecification()
-//					.getRequirementValue("Glue2CloudComputeManagerID");
-//			Collection<Task> federationTasks = submissionControlMap.get(federationMemberId);
-//			for(Task task : federationTasks) {
-//				if(task.getId().equals(taskProcess.getTaskId())) {
-//					// TODO: see if failed status reschedule task
-//					if (taskProcess.getStatus().equals(
-//							TaskProcessImpl.State.FINNISHED)
-//							|| taskProcess.getStatus().equals(
-//									TaskProcessImpl.State.FAILED)) {
-//						federationTasks.remove(task);
-//					}
-//				}
-//			}
-//			
-//			submissionControlMap.put(federationMemberId, federationTasks);
-//		}
-//	}
+	private static void updateSubmissionControlMap(Scheduler scheduler) {
+		LOGGER.info("Updating task submission control map");		
+		List<TaskProcess> allTaskProcesses = scheduler.getAllProcs();
+		
+		// TODO: see if this toString works
+		LOGGER.debug("Current task processes active " + allTaskProcesses.toString());
+		for(TaskProcess taskProcess : allTaskProcesses) {
+			String federationMemberId = taskProcess.getSpecification()
+					.getRequirementValue("Glue2CloudComputeManagerID");
+			Collection<String> federationTasks = submissionControlMap.get(federationMemberId);
+			
+			if (taskProcess.getStatus().equals(TaskProcessImpl.State.FINNISHED)) {
+				federationTasks.remove(taskProcess.getTaskId());
+			}
+			
+			submissionControlMap.put(federationMemberId, federationTasks);
+		}
+	}
 	
 	private static void resetImagesRunningToQueued() throws SQLException {
 		List<ImageData> imagesRunning = imageStore.getIn(ImageState.RUNNING);
@@ -203,9 +198,7 @@ public class SebalMain {
 				
 				LOGGER.debug("tempSpec " + tempSpec.toString());
 
-//				if (federationHasQuota(imageData.getFederationMember())) {
-				boolean hasQuota = true;
-				if(hasQuota) {
+				if (federationHasQuota(imageData.getFederationMember())) {
 
 					if (ImageState.QUEUED.equals(imageState)
 							|| ImageState.DOWNLOADED.equals(imageState)) {
@@ -213,8 +206,8 @@ public class SebalMain {
 						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
 								.toString(), tempSpec);
 						
-//						addTaskIntoSubmissionControlMap(taskImpl,
-//								imageData.getFederationMember());
+						addTaskIntoSubmissionControlMap(taskImpl,
+								imageData.getFederationMember());
 						
 						Map<String, String> nfsConfig = imageStore
 								.getFederationNFSConfig(imageData
@@ -265,31 +258,33 @@ public class SebalMain {
 		}
 	}
 	
-//	private static void addTaskIntoSubmissionControlMap(TaskImpl taskImpl,
-//			String federationMember) {
-//		LOGGER.debug("Adding task " + taskImpl.getId() + " for "
-//				+ federationMember + " into submission control map");
-//		Collection<Task> federationTaskCollection = submissionControlMap
-//				.get(federationMember);
-//
-//		if (federationTaskCollection == null) {
-//			federationTaskCollection = new ArrayList<Task>();
-//		}
-//
-//		federationTaskCollection.add(taskImpl);
-//		submissionControlMap.put(federationMember, federationTaskCollection);
-//		LOGGER.debug("Task " + taskImpl.getId()
-//				+ " added to submission control map");
-//	}
-//
-//	private static boolean federationHasQuota(String federationMember) {
-//		if (submissionControlMap.containsKey(federationMember)) {
-//			if (submissionControlMap.get(federationMember).size() >= maxAllowedTasks) {
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
+	private static void addTaskIntoSubmissionControlMap(TaskImpl taskImpl,
+			String federationMember) {
+		LOGGER.debug("Adding task " + taskImpl.getId() + " for "
+				+ federationMember + " into submission control map");
+		Collection<String> federationTaskCollection = submissionControlMap
+				.get(federationMember);
+
+		if (federationTaskCollection == null) {
+			federationTaskCollection = new ArrayList<String>();
+		}
+
+		federationTaskCollection.add(taskImpl.getId());
+		submissionControlMap.put(federationMember, federationTaskCollection);
+		
+		LOGGER.debug("Task " + taskImpl.getId()
+				+ " added to submission control map");
+	}
+
+	private static boolean federationHasQuota(String federationMember) {
+		if (submissionControlMap.containsKey(federationMember)) {
+			if (submissionControlMap.get(federationMember).size() >= maxAllowedTasks) {
+				return false;
+			}
+		}
+		
+		return true;		
+	}
 
 	private static String getBlowoutVersion(Properties properties) {
 
