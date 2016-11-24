@@ -192,6 +192,20 @@ public class USGSNasaRepository implements NASARepository {
 
 		return links;
 	}
+	
+	public String getImageDownloadLink(String imageName) {
+
+		if (doLoginIntoUSGS() == 0) {
+			String link = doGetDownloadLink(imageName);
+			if (link != null && !link.isEmpty()) {
+				return link;
+			}
+		} else {
+			LOGGER.error("Error while logging in USGS Repository");
+		}
+
+		return null;
+	}
 
     private int doLoginIntoUSGS() {
 

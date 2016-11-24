@@ -13,9 +13,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.sebal.DefaultNASARepository;
@@ -199,20 +199,22 @@ public class DBUtilsImpl implements DBUtils {
                 File imageListFile = new File("images-" + year + ".txt");
                 FileUtils.write(imageListFile, imageList);
 
-                LOGGER.debug("Getting download links of images from " + imageListFile.getAbsolutePath());
-                Map<String, String> imageAndDownloadLink = getUSGSRepository().getDownloadLinks(imageListFile);
-
-                imageListFile.delete();
-
-                for (String imageName : imageAndDownloadLink.keySet()) {
-                    try {
-                        getImageStore().addImage(imageName,
-                                imageAndDownloadLink.get(imageName), priority, sebalVersion, sebalTag);
-                        imageNames.add(imageName);
-                    } catch (SQLException e) {
-                        LOGGER.error("Error while adding image at data base.", e);
-                    }
+                imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
+                for(String imageName : imageNames) {
+                	LOGGER.debug("Getting download link for " + imageName);
+                	String imageDownloadLink = getUSGSRepository().getImageDownloadLink(imageName);
+                	
+                	if(imageDownloadLink != null && !imageDownloadLink.isEmpty()) {                		
+                		try {
+                			getImageStore().addImage(imageName,
+                					imageDownloadLink, priority, sebalVersion, sebalTag);
+                		} catch (SQLException e) {
+                			LOGGER.error("Error while adding image at data base.", e);
+                		}
+                	}
                 }
+                
+                imageListFile.delete();
             }
             priority++;
         }
