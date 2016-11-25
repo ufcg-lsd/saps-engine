@@ -416,10 +416,33 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(statement, conn);
 		}
 	}
+	
+	private static final String SELECT_CHECK_FEDERATION_EXISTS_SQL = "SELECT EXISTS(SELECT 1 FROM "
+			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?)";
+	
+	@Override
+	public boolean deployConfigExists(String federationMember) throws SQLException {
+		LOGGER.debug("Verifying if a deploy config for " + federationMember
+				+ " exists in database");
+
+		PreparedStatement statement = null;
+		Connection conn = null;
+		try {
+			conn = getConnection();
+			statement = conn.prepareStatement(SELECT_CHECK_FEDERATION_EXISTS_SQL);
+			statement.setString(1, federationMember);
+			statement.execute();
+
+			ResultSet rs = statement.getResultSet();
+			return rs.next();
+		} finally {
+			close(statement, conn);
+		}
+	}
 
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM "
-			+ USERS_NOTIFY_TABLE_NAME
-			+ " WHERE job_id = ? AND image_name = ? AND user_email = ?";
+			+ USERS_NOTIFY_TABLE_NAME + " WHERE " + JOB_ID_COL + " = ? AND "
+			+ IMAGE_NAME_COL + " = ? AND " + USER_EMAIL_COL + " = ?";
 
 	@Override
 	public void removeUserNotify(String jobId, String imageName,
@@ -444,6 +467,33 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, jobId);
 			insertStatement.setString(2, imageName);
 			insertStatement.setString(3, userEmail);
+
+			insertStatement.execute();
+		} finally {
+			close(insertStatement, connection);
+		}
+	}
+	
+	private static final String REMOVE_DEPLOY_CONFIG_SQL = "DELETE FROM "
+			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?";
+	
+	@Override
+	public void removeDeployConfig(String federationMember) throws SQLException {
+		LOGGER.debug("Removing register for " + federationMember
+				+ " from database");
+		if (federationMember == null || federationMember.isEmpty()) {
+			throw new IllegalArgumentException("Invalid federationMember "
+					+ federationMember);
+		}
+
+		PreparedStatement insertStatement = null;
+		Connection connection = null;
+		try {
+			connection = getConnection();
+
+			insertStatement = connection
+					.prepareStatement(REMOVE_DEPLOY_CONFIG_SQL);
+			insertStatement.setString(1, federationMember);
 
 			insertStatement.execute();
 		} finally {

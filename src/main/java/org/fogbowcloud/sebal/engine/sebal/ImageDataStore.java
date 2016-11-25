@@ -44,9 +44,9 @@ public interface ImageDataStore {
 
     void updateImageMetadata(String imageName, String stationId, String sebalVersion) throws SQLException;
     
-    void removeUserNotify(String jobId, String imageName, String userEmail) throws SQLException;
-    
     boolean isUserNotifiable(String userEmail) throws SQLException;
+    
+    boolean deployConfigExists(String federationMember) throws SQLException;
 
     List<ImageData> getAllImages() throws SQLException;
 
@@ -68,7 +68,11 @@ public interface ImageDataStore {
 
     boolean unlockImage(String imageName) throws SQLException;
 
+    void removeUserNotify(String jobId, String imageName, String userEmail) throws SQLException;
+
     void removeStateStamp(String imageName, ImageState state, Timestamp timestamp) throws SQLException;
+    
+    void removeDeployConfig(String federationMember) throws SQLException;
 
     List<ImageData> getImagesByFilter(ImageState state, String name, long processDateInit, long processDateEnd)
             throws SQLException;

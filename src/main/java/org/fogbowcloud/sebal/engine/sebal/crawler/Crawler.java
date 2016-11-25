@@ -138,19 +138,8 @@ public class Crawler {
 	}
 
 	public void exec() throws InterruptedException, IOException {
-		if(!crawlerVersionFileExists() || !fmaskVersionFileExists()) {
-			System.exit(1);
-		}
-
-		try {
-			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
-		} catch (SQLException e) {			
-			final String ss = e.getSQLState();
-			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {
-				LOGGER.error("Error while adding crawler configuration in DB", e);
-				System.exit(1);
-			}
-		}
+		checkVersionFileExists();
+		registerDeployConfig();
 		
 		cleanUnfinishedDownloadedData(properties);
 
@@ -170,6 +159,28 @@ public class Crawler {
 			LOGGER.error("Failed while downloading images", e);
 		} finally {
 			pendingImageDownloadDB.close();
+		}
+	}
+
+	private void checkVersionFileExists() {
+		if(!crawlerVersionFileExists() || !fmaskVersionFileExists()) {
+			System.exit(1);
+		}
+	}
+
+	private void registerDeployConfig() {
+		try {			
+			if(imageStore.deployConfigExists(federationMember)) {
+				imageStore.removeDeployConfig(federationMember);
+			}
+			
+			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
+		} catch (SQLException e) {			
+			final String ss = e.getSQLState();
+			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {			
+				LOGGER.error("Error while adding crawler configuration in DB", e);
+				System.exit(1);
+			}
 		}
 	}
 	
@@ -230,18 +241,20 @@ public class Crawler {
 		}
 
 		for (ImageData imageData : imageDataList) {
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-			
-			if (imageData != null) {
-				addStateStamp(imageData);
+			if(imageData.getFederationMember().equals(federationMember)) {				
+				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 				
-				LOGGER.debug("Adding image " + imageData.getName()
-						+ " to pending database");
-				pendingImageDownloadMap.put(imageData.getName(), imageData);
-				pendingImageDownloadDB.commit();
-
-				downloadImage(imageData);
-				LOGGER.info("Image " + imageData + " download finished");
+				if (imageData != null) {
+					addStateStamp(imageData);
+					
+					LOGGER.debug("Adding image " + imageData.getName()
+							+ " to pending database");
+					pendingImageDownloadMap.put(imageData.getName(), imageData);
+					pendingImageDownloadDB.commit();
+					
+					downloadImage(imageData);
+					LOGGER.info("Image " + imageData + " download finished");
+				}
 			}
 		}
 
