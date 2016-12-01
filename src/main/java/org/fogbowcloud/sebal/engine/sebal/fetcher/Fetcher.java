@@ -152,7 +152,8 @@ public class Fetcher {
 	protected void deleteResultsFromDisk(final ImageData imageData,
 			Properties properties) throws IOException {
 		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
-		String resultsDirPath = exportPath + "/results/" + imageData.getName();
+		String resultsDirPath = exportPath + File.separator + "results"
+				+ File.separator + imageData.getName();
 		File resultsDir = new File(resultsDirPath);
 
 		if (resultsDir.exists() && resultsDir.isDirectory()) {

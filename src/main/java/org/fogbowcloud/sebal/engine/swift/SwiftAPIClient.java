@@ -135,10 +135,8 @@ public class SwiftAPIClient {
 		}		
 	}
 
-	// TODO: this will download file into a given path
 	public void downloadFile(String containerName, String fileName,
 			String pseudFolder, String localOutputPath) {
-		// TODO
 		LOGGER.debug("containerName " + containerName);
 		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
 
@@ -155,7 +153,8 @@ public class SwiftAPIClient {
 		LOGGER.debug("Downloading " + completeFileName + " to " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
 				token, "--os-storage-url", swiftUrl, "download", containerName,
-				completeFileName, "-D", localOutputPath);
+				completeFileName, "-o", localOutputPath + File.separator
+						+ fileName);
 		
 		try {
 			Process p = builder.start();
@@ -339,6 +338,7 @@ public class SwiftAPIClient {
 
 		String containerName = "container-test";
 		String pseudFolder = "/pseudFolder";
+		String localOutputPath = "/tmp/swift-test";
 		File file = new File("/local/esdras/test-swift");
 		
 		swiftAPIClient.createContainer(containerName);
@@ -349,7 +349,8 @@ public class SwiftAPIClient {
 			System.out.println("Container is not empty!\nNumber of files in container: " + swiftAPIClient.numberOfFilesInContainer(containerName));
 		}
 				
-		swiftAPIClient.uploadFile(containerName, file, pseudFolder);			
+		swiftAPIClient.uploadFile(containerName, file, pseudFolder);
+		swiftAPIClient.downloadFile(containerName, file.getName(), pseudFolder, localOutputPath);
 		swiftAPIClient.deleteFile(containerName, pseudFolder, file.getName());
 		swiftAPIClient.deleteContainer(containerName);
 	}
