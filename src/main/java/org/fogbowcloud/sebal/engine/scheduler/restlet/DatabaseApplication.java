@@ -128,6 +128,12 @@ public class DatabaseApplication extends Application {
 				userNotify, adminRole);
 	}
 	
+	public void updateImageToPhase2(String imageName, String sebalVersion,
+			String sebalTag) throws SQLException {
+		
+		dbUtilsImpl.setImageForPhase2(imageName, sebalVersion, sebalTag);
+	}
+	
 	public void updateUserState(String userEmail, boolean userState)
 			throws SQLException {
 

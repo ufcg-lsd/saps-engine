@@ -185,6 +185,20 @@ public class DBUtilsImpl implements DBUtils {
             }
         }
     }
+    
+    // TODO: test
+    @Override
+    public void setImageForPhase2(String imageName, String sebalVersion, String sebalTag) throws SQLException {
+		LOGGER.debug("Updating image " + imageName + " with sebalVersion "
+				+ sebalVersion + " and tag " + sebalTag + " to execute phase 2");
+		
+		try {
+			getImageStore().updateImageForPhase2(imageName, sebalVersion, sebalTag);
+		} catch(SQLException e) {
+			LOGGER.error("Error while updating image " + imageName + " with sebalVersion "
+					+ sebalVersion + " and tag " + sebalTag + " to execute phase 2");
+		}
+    }
 
     @Override
     public List<String> fillDB(int firstYear, int lastYear, List<String> regions, String sebalVersion, String sebalTag) throws IOException {

@@ -44,6 +44,8 @@ public interface ImageDataStore {
 
     void updateImageMetadata(String imageName, String stationId, String sebalVersion) throws SQLException;
     
+    void updateImageForPhase2(String imageName, String sebalVersion, String sebalTag) throws SQLException;
+    
     boolean isUserNotifiable(String userEmail) throws SQLException;
     
     boolean deployConfigExists(String federationMember) throws SQLException;

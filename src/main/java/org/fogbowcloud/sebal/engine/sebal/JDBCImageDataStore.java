@@ -700,6 +700,42 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(updateStatement, connection);
 		}
 	}
+	
+	private static final String UPDATE_IMAGE_PHASE2_SQL = "UPDATE "
+			+ IMAGE_TABLE_NAME + " SET " + STATE_COL + " = ?, "
+			+ SEBAL_VERSION_COL + " = ?, " + SEBAL_TAG_COL
+			+ " = ?, utime = now() WHERE image_name = ?";
+	
+	// TODO: test
+	@Override
+	public void updateImageForPhase2(String imageName, String sebalVersion,
+			String sebalTag) throws SQLException {
+		if (imageName == null || imageName.isEmpty() || sebalVersion == null
+				|| sebalVersion.isEmpty() || sebalTag == null
+				|| sebalTag.isEmpty()) {
+			LOGGER.error("Invalid image name " + imageName + ", sebal version "
+					+ sebalVersion + " or tag " + sebalTag);
+			throw new IllegalArgumentException("Invalid image name "
+					+ imageName + ", sebal version " + sebalVersion
+					+ " or tag " + sebalTag);
+		}
+		PreparedStatement updateStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			updateStatement = connection
+					.prepareStatement(UPDATE_IMAGE_PHASE2_SQL);
+			updateStatement.setString(1, ImageState.QUEUED.getValue());
+			updateStatement.setString(2, sebalVersion);
+			updateStatement.setString(3, sebalTag);
+			updateStatement.setString(4, imageName);
+			updateStatement.execute();
+		} finally {
+			close(updateStatement, connection);
+		}
+	}
 
 	@Override
 	public void dispose() {
@@ -764,11 +800,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM "
 			+ IMAGE_TABLE_NAME
-			+ " WHERE state = ? ORDER BY priority, image_name";
+			+ " WHERE state = ? ORDER BY priority ASC";
 
 	private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM "
 			+ IMAGE_TABLE_NAME
-			+ " WHERE state = ? ORDER BY priority, image_name LIMIT ?";
+			+ " WHERE state = ? ORDER BY priority ASC LIMIT ?";
 
 	@Override
 	public List<ImageData> getIn(ImageState state, int limit)

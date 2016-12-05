@@ -7,6 +7,7 @@ print_menu() {
 	echo "Commands are GET, POST or PURGE"
 	echo "GET | GET [image_name] -e | --email email"
 	echo "POST --first-year first-year --last-year last-year --region region --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
+	echo "PUT --image-name image-name --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
 	echo "PURGE [day] -f | --force -e | --email email"
 	echo "CREATEUSER -e | --email email -u | --user user-name -n | --notify yes|no"
 	echo "UPDATE_USER_STATE --admin-email admin email -e | --email target user email -a | --active yes|no"
@@ -51,6 +52,10 @@ define_parameters() {
 			-f | --force)
 				shift;
 				force="yes";
+				;;
+			-i | --image-name)
+				shift;
+				image_name=$1
 				;;
 			--first-year)
 				shift;
@@ -106,6 +111,19 @@ do_post() {
 		print_menu
 	else
         	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&sebalVersion=$sebal_version&sebalTag=$sebal_tag" "$host/images" 2> /dev/null)
+		echo $response
+	fi
+}
+
+do_put() {
+	define_parameters $@
+        askPassword
+	if [[ "$image_name" == "" || "$sebal_version" == "" || "$sebal_tag" == "" ]]
+	then
+		echo "ERROR: --image-name, --sebal-version and --sebal-tag are mandatories"
+		print_menu
+	else
+		response=$(curl -X PUT --data "userEmail=$email&userPass=$password&imageName=$image_name&sebalVersion=$sebal_version&sebalTag=$sebal_tag" "$host/images" 2> /dev/null)
 		echo $response
 	fi
 }
@@ -168,6 +186,10 @@ then
             shift
             do_post $@
         ;;
+	PUT)
+	    shift
+	    do_put $@
+	;;
         PURGE)
             shift
             purge_image $@
