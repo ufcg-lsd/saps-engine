@@ -52,7 +52,6 @@ public class SebalTasks {
 	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
 
 	private static final String METADATA_MOUNT_POINT = "mount_point";
-	private static final String METADATA_AZURE_MOUNT_POINT = "azure_mount_point";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 
@@ -66,9 +65,7 @@ public class SebalTasks {
 	public static final String METADATA_RIGHT_X = "right_x";
 	public static final String METADATA_LOWER_Y = "lower_y";
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
-	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
-	
-	private static final String AZURE_FEDERATION_MEMBER = "azure.lsd.ufcg.edu.br";
+	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";	
 	
 	public static TaskImpl createRTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
@@ -88,20 +85,20 @@ public class SebalTasks {
 		rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 				properties.getProperty(SEBAL_LOCAL_SCRIPTS_DIR));
 		
-		if(federationMember.equals(AZURE_FEDERATION_MEMBER)) {			
-			rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
-					properties.getProperty(METADATA_AZURE_MOUNT_POINT));
-		} else {
-			rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
-					properties.getProperty(SEBAL_MOUNT_POINT));
-		}
+		rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
+				properties.getProperty(SEBAL_MOUNT_POINT));
 		
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_IP, nfsServerIP);
 		rTaskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
 		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 				rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_"
 						+ rTaskImpl.getId());
-
+		
+		// cleaning environment
+		String cleanEnvironment = "sudo rm -rf "
+				+ properties.getProperty(SEBAL_SANDBOX);
+		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.REMOTE));
+		
 		// creating sandbox
 		String mkdirCommand = "mkdir -p "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
@@ -169,11 +166,6 @@ public class SebalTasks {
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
-		
-		// adding epilogue commands		
-		String cleanEnvironment = "sudo rm -r "
-				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
-		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.EPILOGUE));
 
 		return rTaskImpl;
 	}
@@ -222,15 +214,35 @@ public class SebalTasks {
 					+ File.separator + initOutName + " 2>> "
 					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ File.separator + initErrName + "\"";
+//			Now: if this will be used, task must create image results directory before execution script is called
+//			execScriptCommand = "\"nohup " + remoteScript + " >> "
+//					+ taskImpl.getMetadata(METADATA_MOUNT_POINT)
+//					+ File.separator + "results" + File.separator
+//					+ taskImpl.getMetadata(METADATA_IMAGE_NAME)
+//					+ File.separator + initOutName + " 2>> "
+//					+ taskImpl.getMetadata(METADATA_MOUNT_POINT)
+//					+ File.separator + "results" + File.separator
+//					+ taskImpl.getMetadata(METADATA_IMAGE_NAME)
+//					+ File.separator + initErrName + "\"";
 		} else {
 			String runOutName = pathToRemoteScript.getFileName().toString() + "." + "out";
 			String runErrName = pathToRemoteScript.getFileName().toString() + "." + "err";
-			
+
 			execScriptCommand = "\"nohup " + remoteScript + " >> "
 					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ File.separator + runOutName + " 2>> "
 					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ File.separator + runErrName + "\"";
+//			Now: if this will be used, task must create image results directory before execution script is called
+//			execScriptCommand = "\"nohup " + remoteScript + " >> "
+//					+ taskImpl.getMetadata(METADATA_MOUNT_POINT)
+//					+ File.separator + "results" + File.separator
+//					+ taskImpl.getMetadata(METADATA_IMAGE_NAME)
+//					+ File.separator + runOutName + " 2>> "
+//					+ taskImpl.getMetadata(METADATA_MOUNT_POINT)
+//					+ File.separator + "results" + File.separator
+//					+ taskImpl.getMetadata(METADATA_IMAGE_NAME)
+//					+ File.separator + runErrName + "\"";
 		}
 		
 		return execScriptCommand;

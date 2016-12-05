@@ -5,6 +5,15 @@ IMAGES_DIR_NAME=images
 PROCESS_OUTPUT=
 repositoryName=
 
+# This function removes all garbage from tmp
+function tmpGarbageCollect {
+  count=`ls -1 /tmp/Rtmp* 2>/dev/null | wc -l`
+  if [ $count != 0 ]
+  then 
+    sudo rm -r /tmp/Rtmp*
+  fi
+}
+
 # This function downloads all projects and dependencies
 function prepareDependencies {
   #installing git
@@ -95,6 +104,8 @@ function finally {
   exit $PROCESS_OUTPUT
 }
 
+tmpGarbageCollect
+checkProcessOutput
 prepareDependencies
 checkProcessOutput
 checkMissingDependenciesFile
