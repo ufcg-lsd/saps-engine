@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
+import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBImageResource;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBMainResource;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.UserResource;

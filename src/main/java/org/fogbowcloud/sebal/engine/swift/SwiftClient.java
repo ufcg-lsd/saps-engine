@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
+import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
 import org.javaswift.joss.client.factory.AccountConfig;
 import org.javaswift.joss.client.factory.AccountFactory;
 import org.javaswift.joss.client.factory.AuthenticationMethod;

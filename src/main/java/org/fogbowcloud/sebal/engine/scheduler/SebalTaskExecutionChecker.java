@@ -3,9 +3,8 @@ package org.fogbowcloud.sebal.engine.scheduler;
 import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.scheduler.core.Scheduler;
-import org.fogbowcloud.blowout.scheduler.core.TaskExecutionChecker;
-import org.fogbowcloud.blowout.scheduler.core.model.TaskProcess;
+import org.eclipse.jetty.util.thread.Scheduler;
+import org.fogbowcloud.blowout.core.model.TaskProcess;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
@@ -64,7 +63,6 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 	}
 	
-	@Override
 	public void failure(TaskProcess tp) {
 		try {
 			imageToFailed(this.imageName);
@@ -73,7 +71,6 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 		}
 	}
 
-	@Override
 	public void completion(TaskProcess tp) {
 		try {
 			imageToFinnished(this.imageName);

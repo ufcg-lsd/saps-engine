@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.scheduler.core.model.Job;
-import org.fogbowcloud.blowout.scheduler.core.model.Task;
+import org.fogbowcloud.blowout.core.model.Job;
+import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
@@ -17,6 +17,8 @@ import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
 public class SebalJob extends Job {
 
+	private final String UUID = "";
+	
 	private ImageDataStore imageStore;
 	private Map<String, Task> taskList = new HashMap<String, Task>();
 	private Map<String, ImageState> pendingUpdates = new HashMap<String, ImageState>();
@@ -24,7 +26,9 @@ public class SebalJob extends Job {
 	public static final Logger LOGGER = Logger.getLogger(SebalJob.class);
 	
 	public SebalJob(ImageDataStore imageStore) {
+		super(new ArrayList<Task>());
 		this.imageStore = imageStore;
+		
 	}
 
 	@Override
@@ -124,5 +128,10 @@ public class SebalJob extends Job {
 			}
 		}
 		return allTasks;
+	}
+
+	@Override
+	public String getId() {
+		return this.UUID;
 	}
 }

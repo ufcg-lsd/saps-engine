@@ -6,12 +6,16 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.infrastructure.ResourceNotifier;
-import org.fogbowcloud.blowout.scheduler.core.model.Resource;
-import org.fogbowcloud.blowout.scheduler.core.model.Specification;
-import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
-import org.fogbowcloud.blowout.scheduler.infrastructure.InfrastructureManager;
-import org.fogbowcloud.blowout.scheduler.infrastructure.InfrastructureProvider;
+import org.fogbowcloud.blowout.core.model.Specification;
+import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
+import org.fogbowcloud.blowout.infrastructure.manager.DefaultInfrastructureManager;
+import org.fogbowcloud.blowout.infrastructure.manager.InfrastructureManager;
+import org.fogbowcloud.blowout.infrastructure.manager.ResourceNotifier;
+import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
+import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
+import org.fogbowcloud.blowout.pool.AbstractResource;
+import org.fogbowcloud.blowout.pool.DefauBlowoutlPool;
+import org.fogbowcloud.manager.occi.model.Resource;
 
 public class InfrastructureMain implements ResourceNotifier {
 	
@@ -91,22 +95,18 @@ public class InfrastructureMain implements ResourceNotifier {
 		FileInputStream input = new FileInputStream(confgFilePath);
 		properties.load(input);
 		
-		boolean blockWhileInitializing = new Boolean(
-				properties
-						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
-				.booleanValue();
 		
 		//TODO: create manager
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
-
-		InfrastructureManager infraManager = new InfrastructureManager(null, true,
-				infraProvider, properties);
 		
-		if(CLEAN.equals(cleanCommand)) {
-			infraManager.start(blockWhileInitializing, true);
-		} else {
-			infraManager.start(blockWhileInitializing, false);
-		}
+		DefauBlowoutlPool blowoutPool = new DefauBlowoutlPool();
+		
+		ResourceMonitor resourceMonitor = new ResourceMonitor(infraProvider, blowoutPool, properties);
+
+		DefaultInfrastructureManager infraManager = new DefaultInfrastructureManager(infraProvider, resourceMonitor);
+
+		
+		
 		
 		InfrastructureMain infraMain = new InfrastructureMain();
 		
@@ -304,6 +304,18 @@ public class InfrastructureMain implements ResourceNotifier {
 		this.resource = resource;
 		
 		LOGGER.debug("Process finished. Choosen resource was " + resourceAsString(resource.getId(), resource));
+	}
+
+	@Override
+	public void resourceReady(AbstractResource resource) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void resourceDeleted(AbstractResource resource) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }
