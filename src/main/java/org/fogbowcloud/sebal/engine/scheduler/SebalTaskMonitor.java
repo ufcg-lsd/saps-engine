@@ -13,22 +13,23 @@ import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
+import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
-public class SebalTaskExecutionChecker extends TaskMonitor {
-	private static final Logger LOGGER = Logger.getLogger(SebalTaskExecutionChecker.class);
+public class SebalTaskMonitor extends TaskMonitor {
+	private static final Logger LOGGER = Logger.getLogger(SebalTaskMonitor.class);
 
-	String imageName;
 	
 	ImageDataStore imageStore;
 
-	public SebalTaskExecutionChecker(BlowoutPool blowoutPool, Scheduler scheduler, String imageName, ImageDataStore imageStore) {
-		super(blowoutPool, 10000);
-		this.imageName = imageName;
+	public SebalTaskMonitor(BlowoutPool blowoutPool,ImageDataStore imageStore, Integer period) {
+		super(blowoutPool, period);
 		this.imageStore = imageStore;
 		try {
-			imageToRunning(this.imageName);
+		for (Task task : blowoutPool.getAllTasks()) {
+			imageToRunning(task.getMetadata("ImageName"));
+			}
 		} catch (SQLException e) {
-			LOGGER.debug("Could not change image '" + this.imageName + "' state to RUNNING", e);
+			LOGGER.debug("Could not change image state to RUNNING", e);
 		}
 	}
 
@@ -91,18 +92,20 @@ public class SebalTaskExecutionChecker extends TaskMonitor {
 	}
 	
 	public void failure(TaskProcess tp) {
+		String imageName = getBlowoutPool().getTaskById(tp.getTaskId()).getMetadata(SebalTasks.METADATA_IMAGE_NAME); 
 		try {
-			imageToFailed(this.imageName);
+			imageToFailed(imageName);
 		} catch (SQLException e) {
-			LOGGER.debug("Could not change image '" + this.imageName + "' state to Finnished", e);
+			LOGGER.debug("Could not change image '" + imageName + "' state to Finnished", e);
 		}
 	}
 
 	public void completion(TaskProcess tp) {
+		String imageName = getBlowoutPool().getTaskById(tp.getTaskId()).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
 		try {
-			imageToFinnished(this.imageName);
+			imageToFinnished(imageName);
 		} catch (SQLException e) {
-			LOGGER.debug("Could not change image '" + this.imageName + "' state to Finnished", e);
+			LOGGER.debug("Could not change image '" + imageName + "' state to Finnished", e);
 		}
 	}
 

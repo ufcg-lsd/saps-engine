@@ -10,7 +10,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
-import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
@@ -405,8 +405,8 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(true).when(fetcherHelper)
 				.resultsChecksumOK(imageData2, fetcherVolumeResultsDir);
 		
-		Mockito.doReturn(pseudFolder).when(properties).getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX);
-		Mockito.doReturn(containerName).when(properties).getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+		Mockito.doReturn(pseudFolder).when(properties).getProperty(SebalPropertiesConstants.SWIFT_PSEUDO_FOLDER_PREFIX);
+		Mockito.doReturn(containerName).when(properties).getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
 
 		String foo = pseudFolder + File.separator + fetcherVolumePath + File.separator;
 		Mockito.doThrow(new Exception()).when(swiftAPIClient).uploadFile(Mockito.eq(containerName), Mockito.any(File.class),

@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.javaswift.joss.client.factory.AccountConfig;
 import org.javaswift.joss.client.factory.AccountFactory;
 import org.javaswift.joss.client.factory.AuthenticationMethod;
@@ -25,13 +26,13 @@ public class SwiftClient {
 
 		AccountConfig config = new AccountConfig();
 		config.setUsername(properties
-				.getProperty(AppPropertiesConstants.SWIFT_USERNAME));
+				.getProperty(SebalPropertiesConstants.SWIFT_USERNAME));
 		config.setPassword(properties
-				.getProperty(AppPropertiesConstants.SWIFT_PASSWORD));
+				.getProperty(SebalPropertiesConstants.SWIFT_PASSWORD));
 		config.setTenantName(properties
-				.getProperty(AppPropertiesConstants.SWIFT_TENANT_NAME));
+				.getProperty(SebalPropertiesConstants.SWIFT_TENANT_NAME));
 		config.setAuthUrl(properties
-				.getProperty(AppPropertiesConstants.SWIFT_AUTH_URL));
+				.getProperty(SebalPropertiesConstants.SWIFT_AUTH_URL));
 		config.setAuthenticationMethod(AuthenticationMethod.KEYSTONE);
 		account = new AccountFactory(config).createAccount();
 
@@ -194,10 +195,10 @@ public class SwiftClient {
 
 		Properties prop = new Properties();
 
-		prop.put(AppPropertiesConstants.SWIFT_USERNAME, "fogbow");
-		prop.put(AppPropertiesConstants.SWIFT_PASSWORD, "nc3SRPS2");
-		prop.put(AppPropertiesConstants.SWIFT_TENANT_NAME, "Fogbow");
-		prop.put(AppPropertiesConstants.SWIFT_AUTH_URL,
+		prop.put(SebalPropertiesConstants.SWIFT_USERNAME, "fogbow");
+		prop.put(SebalPropertiesConstants.SWIFT_PASSWORD, "nc3SRPS2");
+		prop.put(SebalPropertiesConstants.SWIFT_TENANT_NAME, "Fogbow");
+		prop.put(SebalPropertiesConstants.SWIFT_AUTH_URL,
 				"http://10.5.0.14:5000/v2.0/tokens");
 
 		SwiftClient sc = new SwiftClient(prop);

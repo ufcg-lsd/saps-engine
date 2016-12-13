@@ -13,15 +13,20 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
-import org.eclipse.jetty.util.thread.Scheduler;
+import org.fogbowcloud.blowout.core.SchedulerInterface;
+import org.fogbowcloud.blowout.core.StandardScheduler;
 import org.fogbowcloud.blowout.core.model.Job;
 import org.fogbowcloud.blowout.core.model.Specification;
+import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
 import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
 import org.fogbowcloud.blowout.core.util.Constants;
 import org.fogbowcloud.blowout.core.util.ManagerTimer;
 import org.fogbowcloud.blowout.infrastructure.manager.InfrastructureManager;
+import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
 import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
+import org.fogbowcloud.blowout.pool.BlowoutPool;
+import org.fogbowcloud.blowout.pool.DefaultBlowoutlPool;
 import org.fogbowcloud.sebal.engine.scheduler.core.model.SebalJob;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
@@ -81,13 +86,19 @@ public class SebalMain {
 		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
 
 		LOGGER.info("Calling infrastructure manager");
-		infraManager = new InfrastructureManager(initialSpecs, isElastic,
-				infraProvider, properties);
-		infraManager.start(blockWhileInitializing, true);
 
-		final Scheduler scheduler = new Scheduler(infraManager, job);
-		ExecutionMonitor execMonitor = new SebalExecutionMonitor(scheduler, null, imageStore);
-
+		final BlowoutPool pool = new DefaultBlowoutlPool();
+		
+		SebalTaskMonitor execMonitor = new SebalTaskMonitor(pool, imageStore, Integer.parseInt(properties.getProperty("execution_monitor_period")));		
+		
+		ResourceMonitor resourceMonitor = new ResourceMonitor(infraProvider, pool, properties);
+		resourceMonitor.start();
+		execMonitor.start();
+		
+		SchedulerInterface scheduler = new StandardScheduler(execMonitor);
+		
+		pool.start(infraManager, scheduler);
+		
 		final Specification sebalSpec = getSebalSpecFromFile(properties);
 		
 //		maxAllowedTasksPerFederationMap = getMaxAllowedTasksPerFederation(properties);
@@ -97,18 +108,13 @@ public class SebalMain {
 		// in the next restart all images in running state will be reseted to queued state
 		resetImagesRunningToQueued();
 
-		addRTasks(properties, job, sebalSpec, ImageState.QUEUED, ImageDataStore.UNLIMITED);
-
-		executionMonitorTimer.scheduleAtFixedRate(execMonitor, 0,
-				Integer.parseInt(properties.getProperty("execution_monitor_period")));
-
-		schedulerTimer.scheduleAtFixedRate(scheduler, 0,
-				Integer.parseInt(properties.getProperty("scheduler_period")));
+		addRTasks(properties, job, sebalSpec, ImageState.QUEUED, ImageDataStore.UNLIMITED, pool);
+		
 		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1);
+					addRTasks(properties, job, sebalSpec, ImageState.DOWNLOADED, 1, pool);
 				} catch (InterruptedException e) {
 					LOGGER.error("Error while adding R tasks", e);
 				}
@@ -117,7 +123,6 @@ public class SebalMain {
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 
 		LOGGER.info("Scheduler working");
-		
 //		taskMapUpdateTimer.scheduleAtFixedRate(new Runnable() {
 //			@Override
 //			public void run() {
@@ -195,13 +200,13 @@ public class SebalMain {
 	}
 
 	private static void addRTasks(final Properties properties, final Job job,
-			final Specification sebalSpec, ImageState imageState, int limit)
+			final Specification sebalSpec, ImageState imageState, int limit, BlowoutPool pool)
 			throws InterruptedException {
 
 		try {
 			List<ImageData> imagesToExecute = imageStore.getIn(imageState,
 					limit);
-
+			List<Task> taskList = new ArrayList<Task>();
 			for (ImageData imageData : imagesToExecute) {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is in the execution state "
@@ -257,7 +262,7 @@ public class SebalMain {
 						imageData.setState(ImageState.QUEUED);
 
 						imageData.setBlowoutVersion(getBlowoutVersion(properties));
-						job.addTask(taskImpl);
+						taskList.add(taskImpl);
 
 						imageStore.updateImage(imageData);
 						imageData.setUpdateTime(imageStore.getImage(
@@ -279,6 +284,7 @@ public class SebalMain {
 							+ imageData.getFederationMember() + ">");
 				}
 			}
+			pool.addTasks(taskList);
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}

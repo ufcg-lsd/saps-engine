@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
@@ -431,19 +432,19 @@ public class Fetcher {
 
 	private String getContainerName() {
 		return properties
-				.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
+				.getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
 	}
 
 	private String getPseudoFolder(File localImageResultsDir) {
 		
-		if(properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX).endsWith(File.separator)) {			
+		if(properties.getProperty(SebalPropertiesConstants.SWIFT_PSEUDO_FOLDER_PREFIX).endsWith(File.separator)) {			
 			return properties
-					.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)
+					.getProperty(SebalPropertiesConstants.SWIFT_PSEUDO_FOLDER_PREFIX)
 					+ localImageResultsDir.getName() + File.separator;
 		}
 		
 		return properties
-				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) + 
+				.getProperty(SebalPropertiesConstants.SWIFT_PSEUDO_FOLDER_PREFIX) + 
 				File.separator + localImageResultsDir.getName() + File.separator;
 	}
 	
