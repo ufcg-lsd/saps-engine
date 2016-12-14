@@ -17,7 +17,8 @@ import org.mapdb.DB;
 
 public class FetcherHelper {
 
-	protected static final int NUMBER_OF_RESULT_FILES = 9;
+	protected static final int NUMBER_OF_INPUT_FILES = 11;
+	protected static final int NUMBER_OF_RESULT_FILES = 7;
 
 	public static final Logger LOGGER = Logger.getLogger(FetcherHelper.class);
 	
@@ -45,7 +46,7 @@ public class FetcherHelper {
 
 	protected String getStationId(ImageData imageData, Properties properties)
 			throws IOException {
-		String stationFilePath = properties.getProperty(Fetcher.FETCHER_RESULTS_PATH)
+		String stationFilePath = properties.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH)
 				+ "/results/" + imageData.getName() + "/" + imageData.getName()
 				+ "_station.csv";
 		File stationFile = new File(stationFilePath);
@@ -65,19 +66,35 @@ public class FetcherHelper {
 			return null;
 		}
 	}
+	
+	protected String getRemoteImageInputsPath(final ImageData imageData,
+			Properties properties) {
+		return properties.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator + "images" + File.separator
+				+ imageData.getName();
+	}
+	
+	protected String getLocalImageInputsPath(ImageData imageData,
+			Properties properties) {
+		String localImageInputsPath = properties
+				.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator
+				+ "images" + File.separator + imageData.getName();
+		return localImageInputsPath;
+	}
 
 	protected String getRemoteImageResultsPath(final ImageData imageData,
 			Properties properties) {
-		return properties.getProperty(Fetcher.SEBAL_EXPORT_PATH) + "/results/"
+		return properties.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH) + "/results/"
 				+ imageData.getName();
 	}
 
 	protected String getLocalImageResultsPath(ImageData imageData,
 			Properties properties) {
 		String localImageResultsPath = properties
-				.getProperty(Fetcher.FETCHER_RESULTS_PATH)
-				+ "/results/"
-				+ imageData.getName();
+				.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator
+				+ "results" + File.separator + imageData.getName();
 		return localImageResultsPath;
 	}
 
@@ -100,11 +117,25 @@ public class FetcherHelper {
 		}
 		return false;
 	}
+	
+	protected boolean isThereFetchedInputFiles(String localImageInputsPath) {
+		File localImageInputsDir = new File(localImageInputsPath);
 
-	protected boolean isThereFetchedFiles(String localImageResultsPath) {
+		if (localImageInputsDir.exists() && localImageInputsDir.isDirectory()) {
+			if (localImageInputsDir.list().length >= NUMBER_OF_INPUT_FILES) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	protected boolean isThereFetchedResultFiles(String localImageResultsPath) {
 		File localImageResultsDir = new File(localImageResultsPath);
 
-		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {		
+		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {
 			if (localImageResultsDir.list().length >= NUMBER_OF_RESULT_FILES) {
 				return true;
 			} else {
@@ -118,7 +149,7 @@ public class FetcherHelper {
 	protected boolean resultsChecksumOK(ImageData imageData,
 			File localImageResultsDir) throws Exception {
 		LOGGER.info("Checksum of " + imageData + " result files");
-		if(isThereFetchedFiles(localImageResultsDir.getAbsolutePath())) {
+		if(isThereFetchedResultFiles(localImageResultsDir.getAbsolutePath())) {
 			if (CheckSumMD5ForFile.isFileCorrupted(localImageResultsDir)) {
 				return false;
 			}

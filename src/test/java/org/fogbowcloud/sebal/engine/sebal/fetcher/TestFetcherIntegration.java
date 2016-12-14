@@ -121,7 +121,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
 				.getLocalImageResultsPath(imageData, properties);
 		Mockito.doReturn(false).when(fetcherHelper)
-				.isThereFetchedFiles(sebalExportPath);
+				.isThereFetchedResultFiles(sebalExportPath);
 
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 
@@ -405,7 +405,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(true).when(fetcherHelper)
 				.resultsChecksumOK(imageData2, fetcherVolumeResultsDir);
 		
-		Mockito.doReturn(pseudFolder).when(properties).getProperty(SebalPropertiesConstants.SWIFT_PSEUDO_FOLDER_PREFIX);
+		Mockito.doReturn(pseudFolder).when(properties).getProperty(SebalPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX);
 		Mockito.doReturn(containerName).when(properties).getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
 
 		String foo = pseudFolder + File.separator + fetcherVolumePath + File.separator;
