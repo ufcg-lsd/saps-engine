@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBImageResource;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBMainResource;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.UserResource;
@@ -39,13 +40,13 @@ public class DatabaseApplication extends Application {
 	
 	public void startServer() throws Exception {
 		Properties properties = this.dbUtilsImpl.getProperties();
-		if (!properties.containsKey(AppPropertiesConstants.DB_REST_SERVER_PORT)) {
+		if (!properties.containsKey(SebalPropertiesConstants.DB_REST_SERVER_PORT)) {
 			throw new IllegalArgumentException(
-					AppPropertiesConstants.DB_REST_SERVER_PORT
+					SebalPropertiesConstants.DB_REST_SERVER_PORT
 							+ " is missing on properties.");
 		}
 		Integer restServerPort = Integer.valueOf((String) properties
-				.get(AppPropertiesConstants.DB_REST_SERVER_PORT));
+				.get(SebalPropertiesConstants.DB_REST_SERVER_PORT));
 
 		LOGGER.info("Starting service on port: " + restServerPort);
 

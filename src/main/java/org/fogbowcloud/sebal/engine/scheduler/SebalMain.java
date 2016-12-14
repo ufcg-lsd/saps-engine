@@ -26,7 +26,7 @@ import org.fogbowcloud.blowout.infrastructure.manager.InfrastructureManager;
 import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
 import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
-import org.fogbowcloud.blowout.pool.DefaultBlowoutlPool;
+import org.fogbowcloud.blowout.pool.DefaultBlowoutPool;
 import org.fogbowcloud.sebal.engine.scheduler.core.model.SebalJob;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
@@ -75,7 +75,7 @@ public class SebalMain {
 
 		boolean blockWhileInitializing = new Boolean(
 				properties
-						.getProperty(AppPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
+						.getProperty(SebalPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
 				.booleanValue();
 
 		boolean isElastic = new Boolean(
@@ -87,7 +87,7 @@ public class SebalMain {
 
 		LOGGER.info("Calling infrastructure manager");
 
-		final BlowoutPool pool = new DefaultBlowoutlPool();
+		final BlowoutPool pool = new DefaultBlowoutPool();
 		
 		SebalTaskMonitor execMonitor = new SebalTaskMonitor(pool, imageStore, Integer.parseInt(properties.getProperty("execution_monitor_period")));		
 		
@@ -365,7 +365,7 @@ public class SebalMain {
 	private static List<Specification> getInitialSpecs(Properties properties)
 			throws IOException {
 		String initialSpecsFilePath = properties
-				.getProperty(AppPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
+				.getProperty(SebalPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
 		LOGGER.debug("Getting initial spec from " + initialSpecsFilePath);
 
 		return Specification
@@ -375,7 +375,7 @@ public class SebalMain {
 	private static InfrastructureProvider createInfraProviderInstance(
 			Properties properties) throws Exception {
 		String providerClassName = properties
-				.getProperty(AppPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
+				.getProperty(SebalPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
 
 		Object clazz = Class.forName(providerClassName)
 				.getConstructor(Properties.class).newInstance(properties);
