@@ -22,8 +22,7 @@ import org.mapdb.DBMaker;
 
 public class Fetcher {
 
-	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
-	protected static final String FETCHER_RESULTS_PATH = "fetcher_volume_path";
+	protected static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
 	private final Properties properties;
 	private final ImageDataStore imageStore;
 	private final SwiftAPIClient swiftAPIClient;
@@ -137,7 +136,9 @@ public class Fetcher {
 		Collection<ImageData> data = pendingImageFetchMap.values();
 		for (ImageData imageData : data) {
 			rollBackFetch(imageData);
+			deleteInputsFromDisk(imageData, properties);
 			deleteResultsFromDisk(imageData, properties);
+			deletePendingInputFilesFromSwift(imageData, properties);
 			deletePendingResultsFromSwift(imageData, properties);
 		}
 		LOGGER.info("Garbage collect finished");
@@ -146,12 +147,28 @@ public class Fetcher {
 	private void deletePendingResultsFromSwift(ImageData imageData,
 			Properties properties) throws Exception {
 		LOGGER.debug("Pending image" + imageData + " still have files in swift");
-		deleteFilesFromSwift(imageData, properties);
+		deleteResultFilesFromSwift(imageData, properties);
+	}
+	
+	protected void deleteInputsFromDisk(final ImageData imageData,
+			Properties properties) throws IOException {
+		String exportPath = properties.getProperty(LOCAL_INPUT_OUTPUT_PATH);
+		String inputsDirPath = exportPath + File.separator + "images"
+				+ File.separator + imageData.getName();
+		File inputsDir = new File(inputsDirPath);
+
+		if (inputsDir.exists() && inputsDir.isDirectory()) {
+			FileUtils.deleteDirectory(inputsDir);
+		} else {
+			LOGGER.info("Path " + inputsDirPath
+					+ " does not exist or is not a directory!");
+		}
+
 	}
 
 	protected void deleteResultsFromDisk(final ImageData imageData,
 			Properties properties) throws IOException {
-		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(LOCAL_INPUT_OUTPUT_PATH);
 		String resultsDirPath = exportPath + File.separator + "results"
 				+ File.separator + imageData.getName();
 		File resultsDir = new File(resultsDirPath);
@@ -182,16 +199,33 @@ public class Fetcher {
 				if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap,
 						imageStore) && !fetcherHelper.isImageRolledBack(imageData)) {
 					finishFetch(imageData);
+				} else {
+					deleteInputsFromDisk(imageData, properties);
+					deleteResultsFromDisk(imageData, properties);
 				}
 			} else {
 				LOGGER.error("Could not prepare image " + imageData + " to fetch");
 			}
 		} catch (Exception e) {
 			LOGGER.error("Could not fetch image " + imageData.getName(), e);
-			rollBackFetch(imageData);
-			if(fetcherHelper.isThereFetchedFiles(properties.getProperty(FETCHER_RESULTS_PATH))) {
-				deleteResultsFromDisk(imageData, properties);
-			}
+			handleFetchError(imageData);
+		}
+	}
+
+	private void handleFetchError(ImageData imageData) throws IOException {
+		rollBackFetch(imageData);
+		
+		if (fetcherHelper.isThereFetchedInputFiles(properties
+				.getProperty(LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator
+				+ "images" + File.separator + imageData.getName())) {
+			deleteInputsFromDisk(imageData, properties);
+		}
+		if (fetcherHelper.isThereFetchedResultFiles(properties
+				.getProperty(LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator
+				+ "results" + File.separator + imageData.getName())) {
+			deleteResultsFromDisk(imageData, properties);
 		}
 	}
 
@@ -229,14 +263,24 @@ public class Fetcher {
 		}
 		return true;
 	}
+	
+	protected void fetch(final ImageData imageData, int maxTries) throws Exception {
+		if (fetchInputs(imageData, maxTries) == 0) {
+			fetchOutputs(imageData, maxTries);
+		}
+	}
 
 	protected void finishFetch(ImageData imageData) throws IOException,
 			SQLException {
+		
+		String localImageInputsPath = fetcherHelper.getLocalImageInputsPath(
+				imageData, properties);
 
 		String localImageResultsPath = fetcherHelper.getLocalImageResultsPath(
 				imageData, properties);
 
-		if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
+		if (fetcherHelper.isThereFetchedInputFiles(localImageInputsPath)
+				&& fetcherHelper.isThereFetchedResultFiles(localImageResultsPath)) {
 
 			LOGGER.debug("Finishing fetch for image " + imageData);
 			imageData.setState(ImageState.FETCHED);
@@ -255,6 +299,7 @@ public class Fetcher {
 				LOGGER.error("Error while updating image " + imageData
 						+ " in DB", e);
 				rollBackFetch(imageData);
+				deleteInputsFromDisk(imageData, properties);
 				deleteResultsFromDisk(imageData, properties);
 			}
 
@@ -268,6 +313,8 @@ public class Fetcher {
 			
 			LOGGER.debug("Deleting local results file for "
 					+ imageData.getName());
+			
+			deleteInputsFromDisk(imageData, properties);
 			deleteResultsFromDisk(imageData, properties);
 
 			fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB, pendingImageFetchMap);
@@ -301,13 +348,73 @@ public class Fetcher {
 			fetcherHelper.updatePendingMapAndDB(imageData, pendingImageFetchDB, pendingImageFetchMap);
 		}
 	}
+	
+	protected int fetchInputs(final ImageData imageData, int maxTries)
+			throws Exception {
+		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
+		
+		int i;
+		for (i = 0; i < maxTries; i++) {
 
-	protected void fetch(final ImageData imageData, int maxTries) throws Exception {
+			String remoteImageInputsPath = fetcherHelper
+					.getRemoteImageInputsPath(imageData, properties);
+
+			String localImageInputsPath = fetcherHelper
+					.getLocalImageInputsPath(imageData, properties);
+
+			File localImageInputsDir = new File(localImageInputsPath);
+
+			if (!localImageInputsDir.exists()) {
+				LOGGER.debug("Path " + localImageInputsPath
+						+ " not valid or nonexistent. Creating "
+						+ localImageInputsPath);
+				localImageInputsDir.mkdirs();
+			} else if (!localImageInputsDir.isDirectory()) {
+				LOGGER.debug(localImageInputsPath
+						+ " is a file, not a directory. Deleting it and creating a actual directory");
+				localImageInputsDir.delete();
+				localImageInputsDir.mkdirs();
+			}
+
+			int exitValue = ftpImpl.getFiles(properties, ftpServerIP,
+					ftpServerPort, remoteImageInputsPath, localImageInputsPath,
+					imageData);
+
+			if (exitValue == 0) {
+				if (uploadInputFilesToSwift(imageData, localImageInputsDir)) {
+					LOGGER.debug("Inputs from " + localImageInputsPath
+							+ " uploaded successfully");
+					return 0;
+				}
+			} else {
+				rollBackFetch(imageData);
+				if (fetcherHelper.isThereFetchedResultFiles(localImageInputsPath)) {
+					deleteInputsFromDisk(imageData, properties);
+				}
+			}
+		}
+		
+		if (i >= maxTries) {
+			LOGGER.info("Max tries was reached. Marking " + imageData
+					+ " as corrupted.");
+			imageData.setState(ImageState.CORRUPTED);
+			fetcherHelper.removeImageFromPendingMap(imageData,
+					pendingImageFetchDB, pendingImageFetchMap);
+			deleteInputsFromDisk(imageData, properties);
+			imageStore.updateImage(imageData);
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		}
+		
+		return 1;
+	}
+
+	private void fetchOutputs(final ImageData imageData, int maxTries)
+			throws Exception, IOException, SQLException {
 		// FIXME: doc-it (we want to know the max tries logic)
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 
 		int i;
-		for (i = 0; i < maxTries; i++) {
+		for (i = 0; i < maxTries; i++) {		
 
 			String remoteImageResultsPath = fetcherHelper
 					.getRemoteImageResultsPath(imageData, properties);
@@ -315,7 +422,7 @@ public class Fetcher {
 			String localImageResultsPath = fetcherHelper
 					.getLocalImageResultsPath(imageData, properties);
 
-			File localImageResultsDir = new File(localImageResultsPath);
+			File localImageResultsDir = new File(localImageResultsPath);	
 
 			if (!localImageResultsDir.exists()) {
 				LOGGER.debug("Path " + localImageResultsPath
@@ -338,19 +445,19 @@ public class Fetcher {
 
 			if (exitValue == 0) {
 				if (fetcherHelper.resultsChecksumOK(imageData, localImageResultsDir)) {
-					if(uploadFilesToSwift(imageData, localImageResultsDir)) {						
+					if(uploadOutputFilesToSwift(imageData, localImageResultsDir)) {						
 						break;
 					} else {
 						return;
 					}
 				} else {
-					if(fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
+					if(fetcherHelper.isThereFetchedResultFiles(localImageResultsPath)) {
 						deleteResultsFromDisk(imageData, properties);
 					}
 				}
 			} else {
 				rollBackFetch(imageData);
-				if (fetcherHelper.isThereFetchedFiles(localImageResultsPath)) {
+				if (fetcherHelper.isThereFetchedResultFiles(localImageResultsPath)) {
 					deleteResultsFromDisk(imageData, properties);
 				}
 				break;
@@ -363,29 +470,30 @@ public class Fetcher {
 			imageData.setState(ImageState.CORRUPTED);
 			fetcherHelper.removeImageFromPendingMap(imageData,
 					pendingImageFetchDB, pendingImageFetchMap);
+			deleteResultsFromDisk(imageData, properties);
 			// TODO: see if this have to be in try-catch
 			imageStore.updateImage(imageData);
 			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 		}
 	}
-
-	protected boolean uploadFilesToSwift(ImageData imageData, File localImageResultsDir) throws Exception {
+	
+	protected boolean uploadInputFilesToSwift(ImageData imageData, File localImageInputFilesDir) throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
 				
-		String pseudoFolder = getPseudoFolder(localImageResultsDir);
+		String pseudoFolder = getInputPseudoFolder(localImageInputFilesDir);
 		
 		String containerName = getContainerName();
 
-		for (File actualFile : localImageResultsDir.listFiles()) {
+		for (File actualFile : localImageInputFilesDir.listFiles()) {
 			LOGGER.debug("Actual file " + actualFile.getName());
 			int uploadFileTries;
-			for (uploadFileTries = 0; uploadFileTries < MAX_SWIFT_UPLOAD_TRIES; uploadFileTries++) {				
+			for (uploadFileTries = 0; uploadFileTries < MAX_SWIFT_UPLOAD_TRIES; uploadFileTries++) {
 				try {
 					LOGGER.debug("Trying to upload file "
 							+ actualFile.getName() + " to " + pseudoFolder
 							+ " in " + containerName);
 					swiftAPIClient.uploadFile(containerName, actualFile,
-							pseudoFolder);					
+							pseudoFolder);
 					break;
 				} catch (Exception e) {
 					LOGGER.error("Error while uploading files to swift", e);
@@ -394,6 +502,47 @@ public class Fetcher {
 			}
 			
 			if(uploadFileTries >= MAX_SWIFT_UPLOAD_TRIES) {
+				LOGGER.debug("Upload tries to swift for file " + actualFile
+						+ " has passed max " + MAX_SWIFT_UPLOAD_TRIES);
+				
+				rollBackFetch(imageData);
+				deleteResultsFromDisk(imageData, properties);
+				return false;
+			}
+		}
+		
+		LOGGER.info("Upload to swift succsessfully done");
+		return true;
+	}
+
+	protected boolean uploadOutputFilesToSwift(ImageData imageData, File localImageOutputFilesDir) throws Exception {
+		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
+				
+		String pseudoFolder = getOutputPseudoFolder(localImageOutputFilesDir);
+		
+		String containerName = getContainerName();
+
+		for (File actualFile : localImageOutputFilesDir.listFiles()) {
+			LOGGER.debug("Actual file " + actualFile.getName());
+			int uploadFileTries;
+			for (uploadFileTries = 0; uploadFileTries < MAX_SWIFT_UPLOAD_TRIES; uploadFileTries++) {
+				try {
+					LOGGER.debug("Trying to upload file "
+							+ actualFile.getName() + " to " + pseudoFolder
+							+ " in " + containerName);
+					swiftAPIClient.uploadFile(containerName, actualFile,
+							pseudoFolder);
+					break;
+				} catch (Exception e) {
+					LOGGER.error("Error while uploading files to swift", e);
+					continue;
+				}
+			}
+			
+			if(uploadFileTries >= MAX_SWIFT_UPLOAD_TRIES) {
+				LOGGER.debug("Upload tries to swift for file " + actualFile
+						+ " has passed max " + MAX_SWIFT_UPLOAD_TRIES);
+						
 				rollBackFetch(imageData);
 				deleteResultsFromDisk(imageData, properties);
 				return false;
@@ -404,23 +553,57 @@ public class Fetcher {
 		return true;
 	}
 	
-	protected boolean deleteFilesFromSwift(ImageData imageData, Properties properties) throws Exception {
-		LOGGER.debug("Deleting " + imageData + " files from swift");
+	protected boolean deletePendingInputFilesFromSwift(ImageData imageData,
+			Properties properties) throws Exception {
+		LOGGER.debug("Deleting " + imageData + " input files from swift");
+		String containerName = getContainerName();
+
+		List<String> fileNames = swiftAPIClient
+				.listFilesInContainer(containerName);
+
+		for (String file : fileNames) {
+			if (file.contains(imageData.getName())
+					&& (file.contains(".TIF") || file.contains("MTL")
+							|| file.contains(".tar.gz"))) {
+				try {
+					LOGGER.debug("Trying to delete file " + file + " from "
+							+ containerName);
+					String localImageInputsPath = properties
+							.get("fetcher_volume_path")
+							+ File.separator
+							+ "images" + File.separator + imageData.getName();
+					swiftAPIClient.deleteFile(containerName,
+							getOutputPseudoFolder(new File(localImageInputsPath)),
+							file);
+				} catch (Exception e) {
+					LOGGER.error("Error while deleting files from swift", e);
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+	
+	protected boolean deleteResultFilesFromSwift(ImageData imageData, Properties properties) throws Exception {
+		LOGGER.debug("Deleting " + imageData + " result files from swift");
 		String containerName = getContainerName();
 		
 		List<String> fileNames = swiftAPIClient.listFilesInContainer(containerName);
         
         for(String file : fileNames) {
-			if (file.contains(imageData.getName())) {
+			if (file.contains(imageData.getName()) && !file.contains(".TIF")
+					&& !file.contains("MTL") && !file.contains(".tar.gz")
+					&& !file.contains("README")) {
 				try {
 					LOGGER.debug("Trying to delete file " + file + " from " + containerName);
 					String localImageResultsPath = properties
 							.get("fetcher_volume_path")
 							+ File.separator
 							+ "results" + File.separator + imageData.getName();
-					swiftAPIClient.deleteFile(containerName, getPseudoFolder(new File(localImageResultsPath)), file);
+					swiftAPIClient.deleteFile(containerName, getOutputPseudoFolder(new File(localImageResultsPath)), file);
 				} catch (Exception e) {
-					LOGGER.error("Error while deleting files to swift", e);
+					LOGGER.error("Error while deleting files from swift", e);
 					return false;
 				}
 			}
@@ -433,17 +616,30 @@ public class Fetcher {
 		return properties
 				.getProperty(AppPropertiesConstants.SWIFT_CONTAINER_NAME);
 	}
-
-	private String getPseudoFolder(File localImageResultsDir) {
+	
+	private String getInputPseudoFolder(File localImageResultsDir) {
 		
-		if(properties.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX).endsWith(File.separator)) {			
+		if(properties.getProperty(AppPropertiesConstants.SWIFT_INPUT_PSEUD_FOLDER_PREFIX).endsWith(File.separator)) {			
 			return properties
-					.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX)
+					.getProperty(AppPropertiesConstants.SWIFT_INPUT_PSEUD_FOLDER_PREFIX)
 					+ localImageResultsDir.getName() + File.separator;
 		}
 		
 		return properties
-				.getProperty(AppPropertiesConstants.SWIFT_PSEUD_FOLDER_PREFIX) + 
+				.getProperty(AppPropertiesConstants.SWIFT_INPUT_PSEUD_FOLDER_PREFIX) + 
+				File.separator + localImageResultsDir.getName() + File.separator;
+	}
+
+	private String getOutputPseudoFolder(File localImageResultsDir) {
+		
+		if(properties.getProperty(AppPropertiesConstants.SWIFT_OUTPUT_PSEUD_FOLDER_PREFIX).endsWith(File.separator)) {			
+			return properties
+					.getProperty(AppPropertiesConstants.SWIFT_OUTPUT_PSEUD_FOLDER_PREFIX)
+					+ localImageResultsDir.getName() + File.separator;
+		}
+		
+		return properties
+				.getProperty(AppPropertiesConstants.SWIFT_OUTPUT_PSEUD_FOLDER_PREFIX) + 
 				File.separator + localImageResultsDir.getName() + File.separator;
 	}
 	
