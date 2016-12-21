@@ -14,8 +14,14 @@ public class SebalPropertiesConstants {
 	public static final String SWIFT_PSEUDO_FOLDER_PREFIX = "swift_pseudo_folder_prefix";
 	
 	public static final String DB_REST_SERVER_PORT = "db_rest_server_port";
+	
 	public static final String INFRA_SPECS_BLOCK_CREATING = "infra_specs_block_creating";
-	public static final String  INFRA_INITIAL_SPECS_FILE_PATH = "infra_initial_specs_file_path";
-	public static final String  INFRA_PROVIDER_CLASS_NAME = "infra_provider_class_name";
+	public static final String INFRA_INITIAL_SPECS_FILE_PATH = "infra_initial_specs_file_path";
+	public static final String INFRA_PROVIDER_CLASS_NAME = "infra_provider_class_name";
+	
+	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
+	public static final String SEBAL_EXECUTION_PERIOD = "sebal_execution_period";
+	
+	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	
 }

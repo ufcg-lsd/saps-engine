@@ -23,11 +23,8 @@ public class SebalTasks {
 	private static final String SEBAL_INIT_SCRIPT_PATH = "sebal_worker_init_script_path";
 	private static final String SEBAL_RUN_SCRIPT_PATH = "sebal_worker_run_script_path";
 	
-	public static final String F1_PHASE = "f1";
-	public static final String C_PHASE = "c";
-	public static final String F2_PHASE = "f2";
-	public static final String R_SCRIPT_PHASE = "rscript";	
-
+	public static final String R_SCRIPT_PHASE = "rscript";
+	
 	private static final String SEBAL_SANDBOX = "sebal_sandbox";
 	private static final String SEBAL_MOUNT_POINT = "sebal_mount_point";
 	private static final String SEBAL_TASK_TIMEOUT = "sebal_task_timeout";
@@ -41,9 +38,12 @@ public class SebalTasks {
 	private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 	private static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
 	
+	public static final String METADATA_IMAGE_NAME = "image_name";
 	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
-	public static final String METADATA_IMAGE_NAME = "image_name";
+
+	public static final String METADATA_TASK_START_EXECUTION_TIME = "task_execution_time";
+	public static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
 
 	private static final String METADATA_SEBAL_VERSION = "sebal_url";
 	private static final String METADATA_SEBAL_TAG = "sebal_version";
@@ -56,16 +56,10 @@ public class SebalTasks {
 	private static final String METADATA_SEBAL_LOCAL_SCRIPTS_DIR = "local_scripts_dir";
 
 	public static final String METADATA_PHASE = "phase";
-	public static final String METADATA_NUMBER_OF_PARTITIONS = "number_of_partitions";
-	public static final String METADATA_PARTITION_INDEX = "partition_index";
 
 	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
-	public static final String METADATA_LEFT_X = "left_x";
-	public static final String METADATA_UPPER_Y = "upper_y";
-	public static final String METADATA_RIGHT_X = "right_x";
-	public static final String METADATA_LOWER_Y = "lower_y";
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
-	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";	
+	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
 	
 	public static TaskImpl createRTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
@@ -84,6 +78,8 @@ public class SebalTasks {
 				properties.getProperty(SEBAL_EXPORT_PATH));
 		rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
 				properties.getProperty(SEBAL_LOCAL_SCRIPTS_DIR));
+		rTaskImpl.putMetadata(METADATA_MAX_TASK_EXECUTION_TIME,
+				properties.getProperty(METADATA_MAX_TASK_EXECUTION_TIME));
 		
 		rTaskImpl.putMetadata(METADATA_MOUNT_POINT,
 				properties.getProperty(SEBAL_MOUNT_POINT));

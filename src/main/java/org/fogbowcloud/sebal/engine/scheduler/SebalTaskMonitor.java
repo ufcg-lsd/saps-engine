@@ -3,7 +3,6 @@ package org.fogbowcloud.sebal.engine.scheduler;
 import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
-import org.eclipse.jetty.util.thread.Scheduler;
 import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskProcess;
 import org.fogbowcloud.blowout.core.model.TaskState;
@@ -21,12 +20,19 @@ public class SebalTaskMonitor extends TaskMonitor {
 	
 	ImageDataStore imageStore;
 
-	public SebalTaskMonitor(BlowoutPool blowoutPool,ImageDataStore imageStore, Integer period) {
+	public SebalTaskMonitor(BlowoutPool blowoutPool, ImageDataStore imageStore,
+			Integer period) {
 		super(blowoutPool, period);
 		this.imageStore = imageStore;
 		try {
-		for (Task task : blowoutPool.getAllTasks()) {
-			imageToRunning(task.getMetadata("ImageName"));
+			for (Task task : blowoutPool.getAllTasks()) {				
+				if (task.getMetadata(SebalTasks.METADATA_TASK_START_EXECUTION_TIME)
+						.isEmpty()
+						|| task.getMetadata(SebalTasks.METADATA_TASK_START_EXECUTION_TIME) == null) {					
+					task.putMetadata(SebalTasks.METADATA_TASK_START_EXECUTION_TIME, String.valueOf(System.currentTimeMillis()));
+				}
+				
+				imageToRunning(task.getMetadata("ImageName"));
 			}
 		} catch (SQLException e) {
 			LOGGER.debug("Could not change image state to RUNNING", e);
@@ -72,6 +78,9 @@ public class SebalTaskMonitor extends TaskMonitor {
 	@Override
 	public void procMon() {
 		for (TaskProcess tp : getRunningProcesses()) {
+			if(tp.getStatus().equals(TaskState.RUNNING)){
+				checkTaskDuration(tp);
+			}			
 			if (tp.getStatus().equals(TaskState.FAILED)) {
 				getRunningTasks().remove(getTaskById(tp.getTaskId()));
 				if (tp.getResource()!= null) {
@@ -88,6 +97,27 @@ public class SebalTaskMonitor extends TaskMonitor {
 				}
 				completion(tp);
 			}
+		}
+	}
+
+	private void checkTaskDuration(TaskProcess tp) throws NumberFormatException {
+		Task task = getBlowoutPool().getTaskById(
+				tp.getTaskId());
+		
+		long taskStartTime = Long.valueOf(task.getMetadata(
+				SebalTasks.METADATA_TASK_START_EXECUTION_TIME));							
+		
+		long diff = taskStartTime - System.currentTimeMillis();
+		long diffHours = diff / (60 * 60 * 1000);
+		
+		LOGGER.debug("Current task duration in hours is " + diffHours);
+		
+		if(diffHours >= Long.valueOf(task.getMetadata(SebalTasks.METADATA_MAX_TASK_EXECUTION_TIME))) {
+			LOGGER.debug("Task maximum duration "
+					+ task.getMetadata(SebalTasks.METADATA_MAX_TASK_EXECUTION_TIME)
+					+ " surpassed. Marking task as " + TaskState.FAILED);
+			
+			tp.setStatus(TaskState.FAILED);
 		}
 	}
 	

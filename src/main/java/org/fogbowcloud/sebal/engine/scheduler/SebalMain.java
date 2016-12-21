@@ -13,18 +13,19 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.blowout.core.BlowoutController;
 import org.fogbowcloud.blowout.core.SchedulerInterface;
 import org.fogbowcloud.blowout.core.StandardScheduler;
 import org.fogbowcloud.blowout.core.model.Job;
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
-import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
 import org.fogbowcloud.blowout.core.util.Constants;
 import org.fogbowcloud.blowout.core.util.ManagerTimer;
+import org.fogbowcloud.blowout.infrastructure.manager.DefaultInfrastructureManager;
 import org.fogbowcloud.blowout.infrastructure.manager.InfrastructureManager;
 import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
-import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
+import org.fogbowcloud.blowout.infrastructure.provider.fogbow.FogbowInfrastructureProvider;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.blowout.pool.DefaultBlowoutPool;
 import org.fogbowcloud.sebal.engine.scheduler.core.model.SebalJob;
@@ -36,10 +37,6 @@ import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
 public class SebalMain {
 
-	private static ManagerTimer executionMonitorTimer = new ManagerTimer(
-			Executors.newScheduledThreadPool(1));
-	private static ManagerTimer schedulerTimer = new ManagerTimer(
-			Executors.newScheduledThreadPool(1));
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(
 			Executors.newScheduledThreadPool(1));
 //	private static ManagerTimer taskMapUpdateTimer = new ManagerTimer(
@@ -55,7 +52,6 @@ public class SebalMain {
 
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 	
-	private static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 //	private static final String FEDERATION_TASK_LIMIT_FILE = "federation_task_limit_file";
 //	private static final int DEFAULT_TASK_LIMIT_PER_FEDERATION = 5;
 
@@ -73,28 +69,20 @@ public class SebalMain {
 
 		final Job job = new SebalJob(imageStore);
 
-		boolean blockWhileInitializing = new Boolean(
-				properties
-						.getProperty(SebalPropertiesConstants.INFRA_SPECS_BLOCK_CREATING))
-				.booleanValue();
-
-		boolean isElastic = new Boolean(
-				properties.getProperty(AppPropertiesConstants.INFRA_IS_STATIC))
-				.booleanValue();
-		List<Specification> initialSpecs = getInitialSpecs(properties);
-
-		InfrastructureProvider infraProvider = createInfraProviderInstance(properties);
+		FogbowInfrastructureProvider infraProvider = new FogbowInfrastructureProvider(properties, true);
 
 		LOGGER.info("Calling infrastructure manager");
-
+		
 		final BlowoutPool pool = new DefaultBlowoutPool();
 		
-		SebalTaskMonitor execMonitor = new SebalTaskMonitor(pool, imageStore, Integer.parseInt(properties.getProperty("execution_monitor_period")));		
+		SebalTaskMonitor execMonitor = new SebalTaskMonitor(pool, imageStore, Integer.parseInt(properties
+						.getProperty(SebalPropertiesConstants.EXECUTION_MONITOR_PERIOD)));
 		
 		ResourceMonitor resourceMonitor = new ResourceMonitor(infraProvider, pool, properties);
 		resourceMonitor.start();
 		execMonitor.start();
 		
+		infraManager = new DefaultInfrastructureManager(infraProvider, resourceMonitor);
 		SchedulerInterface scheduler = new StandardScheduler(execMonitor);
 		
 		pool.start(infraManager, scheduler);
@@ -120,7 +108,7 @@ public class SebalMain {
 				}
 			}
 
-		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
+		}, 0, Integer.parseInt(properties.getProperty(SebalPropertiesConstants.SEBAL_EXECUTION_PERIOD)));
 
 		LOGGER.info("Scheduler working");
 //		taskMapUpdateTimer.scheduleAtFixedRate(new Runnable() {
@@ -329,7 +317,7 @@ public class SebalMain {
 	private static String getBlowoutVersion(Properties properties) {
 
 		//String blowoutDirPath = System.getProperty("user.dir");
-		String blowoutDirPath = properties.getProperty(BLOWOUT_DIR_PATH);
+		String blowoutDirPath = properties.getProperty(SebalPropertiesConstants.BLOWOUT_DIR_PATH);
 		File blowoutDir = new File(blowoutDirPath);
 
 		if (blowoutDir.exists() && blowoutDir.isDirectory()) {
@@ -347,7 +335,7 @@ public class SebalMain {
 
 	private static Specification getSebalSpecFromFile(Properties properties) {
 		String sebalSpecFile = properties
-				.getProperty("infra_initial_specs_file_path");
+				.getProperty(SebalPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
 		List<Specification> specs = new ArrayList<Specification>();
 		try {
 			specs = Specification.getSpecificationsFromJSonFile(sebalSpecFile);
@@ -360,30 +348,5 @@ public class SebalMain {
 					e);
 			return null;
 		}
-	}
-
-	private static List<Specification> getInitialSpecs(Properties properties)
-			throws IOException {
-		String initialSpecsFilePath = properties
-				.getProperty(SebalPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
-		LOGGER.debug("Getting initial spec from " + initialSpecsFilePath);
-
-		return Specification
-				.getSpecificationsFromJSonFile(initialSpecsFilePath);
-	}
-
-	private static InfrastructureProvider createInfraProviderInstance(
-			Properties properties) throws Exception {
-		String providerClassName = properties
-				.getProperty(SebalPropertiesConstants.INFRA_PROVIDER_CLASS_NAME);
-
-		Object clazz = Class.forName(providerClassName)
-				.getConstructor(Properties.class).newInstance(properties);
-		if (!(clazz instanceof InfrastructureProvider)) {
-			throw new Exception(
-					"Provider Class Name is not a InfrastructureProvider implementation");
-		}
-
-		return (InfrastructureProvider) clazz;
 	}
 }
