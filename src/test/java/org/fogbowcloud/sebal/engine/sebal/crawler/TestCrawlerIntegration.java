@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.FMask;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
@@ -134,11 +135,11 @@ public class TestCrawlerIntegration {
 		imageList.add(image2);
 
 		Mockito.doReturn(fmaskScriptPath).when(properties)
-				.getProperty(Crawler.FMASK_SCRIPT_PATH);
+				.getProperty(SebalPropertiesConstants.FMASK_SCRIPT_PATH);
 		Mockito.doReturn(fmaskToolsPath).when(properties)
-				.getProperty(Crawler.FMASK_TOOL_PATH);
+				.getProperty(SebalPropertiesConstants.FMASK_TOOL_PATH);
 		Mockito.doReturn(sebalExportPath).when(properties)
-				.getProperty(Crawler.SEBAL_EXPORT_PATH);
+				.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		Mockito.doReturn(imageList).when(imageStore)
 				.getImagesToDownload(federationMember, maxImagesToDownload);
@@ -304,7 +305,7 @@ public class TestCrawlerIntegration {
 		Mockito.doReturn(imageList).when(imageStore).getIn(ImageState.FINISHED);
 
 		Mockito.doReturn(sebalExportPath).when(properties)
-				.getProperty(Crawler.SEBAL_EXPORT_PATH);
+				.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
 				crawlerIP, nfsPort, federationMember, fmask);
@@ -343,7 +344,7 @@ public class TestCrawlerIntegration {
 		imageList.add(image2);
 
 		Mockito.doReturn(sebalExportPath).when(properties)
-				.getProperty(Crawler.SEBAL_EXPORT_PATH);
+				.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		Mockito.doReturn(imageList).when(imageStore).getAllImages();
 

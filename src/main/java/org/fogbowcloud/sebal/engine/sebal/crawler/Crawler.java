@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.FMask;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
@@ -24,11 +25,7 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 public class Crawler {
-
-	protected static final String SEBAL_EXPORT_PATH = "sebal_export_path";
-
-	protected static final String FMASK_TOOL_PATH = "fmask_tool_path";
-	protected static final String FMASK_SCRIPT_PATH = "fmask_script_path";
+	
 	private static final String FMASK_VERSION_FILE_PATH = "crawler/fmask-version";
 	
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
@@ -274,7 +271,7 @@ public class Crawler {
 	protected long numberOfImagesToDownload() throws NumberFormatException,
 			InterruptedException, IOException, SQLException {
 
-		String volumeDirPath = properties.getProperty(SEBAL_EXPORT_PATH);
+		String volumeDirPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
 		File volumePath = getExportDirPath(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
 			long availableVolumeSpace = volumePath.getFreeSpace();
@@ -309,9 +306,9 @@ public class Crawler {
 			
 			try {
 				exitValue = fmask.runFmask(imageData,
-						properties.getProperty(FMASK_SCRIPT_PATH),
-						properties.getProperty(FMASK_TOOL_PATH),
-						properties.getProperty(SEBAL_EXPORT_PATH));
+						properties.getProperty(SebalPropertiesConstants.FMASK_SCRIPT_PATH),
+						properties.getProperty(SebalPropertiesConstants.FMASK_TOOL_PATH),
+						properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
 			} catch (Exception e) {
 				LOGGER.error("Error while running Fmask", e);
 			}
@@ -399,7 +396,7 @@ public class Crawler {
 				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 
 				deleteImageFromDisk(imageData,
-						properties.getProperty(SEBAL_EXPORT_PATH));
+						properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
 
 				LOGGER.debug("Removing image " + imageData
 						+ " from pending image map");
@@ -443,7 +440,7 @@ public class Crawler {
 			}
 
 			deleteImageFromDisk(imageData,
-					properties.getProperty(SEBAL_EXPORT_PATH));
+					properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
 
 			LOGGER.debug("Removing image " + imageData
 					+ " from pending image map");
@@ -480,7 +477,7 @@ public class Crawler {
 
 		List<ImageData> setOfImageData = imageStore.getAllImages();
 
-		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		String resultsPath = exportPath + File.separator + "results";
 
@@ -532,7 +529,7 @@ public class Crawler {
 
 		List<ImageData> imagesToPurge = imageStore.getAllImages();
 
-		String exportPath = properties.getProperty(SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : imagesToPurge) {
@@ -543,7 +540,7 @@ public class Crawler {
 
 					try {
 						deleteImageFromDisk(imageData,
-								properties.getProperty(SEBAL_EXPORT_PATH));
+								properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
 						deleteResultsFromDisk(imageData, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageData, e);

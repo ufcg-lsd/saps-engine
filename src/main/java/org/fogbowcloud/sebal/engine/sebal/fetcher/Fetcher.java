@@ -22,7 +22,6 @@ import org.mapdb.DBMaker;
 
 public class Fetcher {
 
-	protected static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
 	private final Properties properties;
 	private final ImageDataStore imageStore;
 	private final SwiftAPIClient swiftAPIClient;
@@ -38,7 +37,6 @@ public class Fetcher {
 
 	private static int MAX_FETCH_TRIES = 2;
 	private static int MAX_SWIFT_UPLOAD_TRIES = 2;
-	private static final long DEFAULT_SCHEDULER_PERIOD = 60000; // 5 minutes
 
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 
@@ -106,7 +104,8 @@ public class Fetcher {
 						fetchAndUpdateImage(imageData);
 					}
 				}
-				Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
+				Thread.sleep(Long.valueOf(properties
+						.getProperty(SebalPropertiesConstants.DEFAULT_FETCHER_PERIOD)));
 			}
 		} catch (InterruptedException e) {
 			LOGGER.error("Error while fetching images", e);
@@ -152,7 +151,7 @@ public class Fetcher {
 	
 	protected void deleteInputsFromDisk(final ImageData imageData,
 			Properties properties) throws IOException {
-		String exportPath = properties.getProperty(LOCAL_INPUT_OUTPUT_PATH);
+		String exportPath = properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String inputsDirPath = exportPath + File.separator + "images"
 				+ File.separator + imageData.getName();
 		File inputsDir = new File(inputsDirPath);
@@ -168,7 +167,7 @@ public class Fetcher {
 
 	protected void deleteResultsFromDisk(final ImageData imageData,
 			Properties properties) throws IOException {
-		String exportPath = properties.getProperty(LOCAL_INPUT_OUTPUT_PATH);
+		String exportPath = properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String resultsDirPath = exportPath + File.separator + "results"
 				+ File.separator + imageData.getName();
 		File resultsDir = new File(resultsDirPath);
@@ -216,13 +215,13 @@ public class Fetcher {
 		rollBackFetch(imageData);
 		
 		if (fetcherHelper.isThereFetchedInputFiles(properties
-				.getProperty(LOCAL_INPUT_OUTPUT_PATH)
+				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
 				+ "images" + File.separator + imageData.getName())) {
 			deleteInputsFromDisk(imageData, properties);
 		}
 		if (fetcherHelper.isThereFetchedResultFiles(properties
-				.getProperty(LOCAL_INPUT_OUTPUT_PATH)
+				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
 				+ "results" + File.separator + imageData.getName())) {
 			deleteResultsFromDisk(imageData, properties);

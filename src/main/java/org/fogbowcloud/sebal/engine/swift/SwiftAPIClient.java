@@ -11,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.ProcessUtil;
 
 public class SwiftAPIClient {
@@ -28,25 +29,18 @@ public class SwiftAPIClient {
 
 	// Constants
 	private static final String URL_PATH_SEPARATOR = "/";
-	private static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
-	private static final String FOGBOW_KEYSTONEV3_PROJECT_ID = "fogbow.keystonev3.project.id";
-	private static final String FOGBOW_KEYSTONEV3_USER_ID = "fogbow.keystonev3.user.id";
-	private static final String FOGBOW_KEYSTONEV3_PASSWORD = "fogbow.keystonev3.password";
-	private static final String FOGBOW_KEYSTONEV3_AUTH_URL = "fogbow.keystonev3.auth.url";
-	private static final String FOGBOW_KEYSTONEV3_SWIFT_URL = "fogbow.keystonev3.swift.url";
-	private static final String FOGBOW_KEYSTONEV3_UPDATE_PERIOD = "fogbow.keystonev3.swift.token.update.period";
 
 	public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
 
 
 	public SwiftAPIClient(Properties properties) {
 		this.properties = properties;
-
-		projectId = properties.getProperty(FOGBOW_KEYSTONEV3_PROJECT_ID);
-		userId = properties.getProperty(FOGBOW_KEYSTONEV3_USER_ID);
-		userPassword = properties.getProperty(FOGBOW_KEYSTONEV3_PASSWORD);
-		tokenAuthUrl = properties.getProperty(FOGBOW_KEYSTONEV3_AUTH_URL);
-		swiftUrl = properties.getProperty(FOGBOW_KEYSTONEV3_SWIFT_URL);
+		
+		projectId = properties.getProperty(SebalPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
+		userId = properties.getProperty(SebalPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
+		userPassword = properties.getProperty(SebalPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
+		tokenAuthUrl = properties.getProperty(SebalPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
+		swiftUrl = properties.getProperty(SebalPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
 
 		handleTokenUpdate(Executors.newScheduledThreadPool(1));
 		
@@ -238,7 +232,7 @@ public class SwiftAPIClient {
 		LOGGER.info("Listing files in container " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
 				token, "--os-storage-url",
-				properties.getProperty(FOGBOW_KEYSTONEV3_SWIFT_URL), "list",
+				properties.getProperty(SebalPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL), "list",
 				containerName);
 		LOGGER.debug("Executing command " + builder.command());
         
@@ -293,7 +287,7 @@ public class SwiftAPIClient {
 
 		try {
 			ProcessBuilder builder = new ProcessBuilder("bash",
-					properties.get(FOGBOW_CLI_PATH) + File.separator
+					properties.get(SebalPropertiesConstants.FOGBOW_CLI_PATH) + File.separator
 							+ "bin/fogbow-cli", "token", "--create",
 					"-DprojectId=" + projectId, "-DuserId=" + userId,
 					"-Dpassword=" + userPassword, "-DauthUrl=" + tokenAuthUrl,
@@ -320,7 +314,7 @@ public class SwiftAPIClient {
 			public void run() {
 				setToken(generateToken());
 			}
-		}, 0, Integer.parseInt(properties.getProperty(FOGBOW_KEYSTONEV3_UPDATE_PERIOD)), TimeUnit.MILLISECONDS);
+		}, 0, Integer.parseInt(properties.getProperty(SebalPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)), TimeUnit.MILLISECONDS);
 	}
 	
 	protected void setToken(String token) {

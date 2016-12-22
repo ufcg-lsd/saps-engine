@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 
 public class FTPIntegrationImpl implements FTPIntegration{
 	
-	private static final String FTP_SERVER_USER = "ftp_server_user";
-	private static final String SEBAL_SFTP_SCRIPT_PATH = "sebal_sftp_script_path";
 	public static final Logger LOGGER = Logger.getLogger(FTPIntegrationImpl.class);
 	
 	public int getFiles(Properties properties, String ftpServerIP,
@@ -24,12 +23,21 @@ public class FTPIntegrationImpl implements FTPIntegration{
 				+ localImageResultsPath + " in localhost");
 		
 		LOGGER.debug("Image " + imageData.getName());
-		
-		ProcessBuilder builder = new ProcessBuilder("/bin/bash",
-				properties.getProperty(SEBAL_SFTP_SCRIPT_PATH),
-				properties.getProperty(FTP_SERVER_USER), ftpServerIP,
-				ftpServerPort, remoteImageResultsPath, localImageResultsPath,
-				imageData.getName());
+				
+		ProcessBuilder builder;
+		if (imageData.getFederationMember().equals(SebalPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
+			builder = new ProcessBuilder("/bin/bash",
+					properties.getProperty(SebalPropertiesConstants.SEBAL_SFTP_SCRIPT_PATH),
+					properties.getProperty(SebalPropertiesConstants.AZURE_FTP_SERVER_USER), ftpServerIP,
+					ftpServerPort, remoteImageResultsPath,
+					localImageResultsPath, imageData.getName());
+		} else {
+			builder = new ProcessBuilder("/bin/bash",
+					properties.getProperty(SebalPropertiesConstants.SEBAL_SFTP_SCRIPT_PATH),
+					properties.getProperty(SebalPropertiesConstants.DEFAULT_FTP_SERVER_USER), ftpServerIP,
+					ftpServerPort, remoteImageResultsPath,
+					localImageResultsPath, imageData.getName());
+		}
 		
 		try {
 			Process p = builder.start();

@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.CheckSumMD5ForFile;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
@@ -46,7 +47,7 @@ public class FetcherHelper {
 
 	protected String getStationId(ImageData imageData, Properties properties)
 			throws IOException {
-		String stationFilePath = properties.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH)
+		String stationFilePath = properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ "/results/" + imageData.getName() + "/" + imageData.getName()
 				+ "_station.csv";
 		File stationFile = new File(stationFilePath);
@@ -69,7 +70,7 @@ public class FetcherHelper {
 	
 	protected String getRemoteImageInputsPath(final ImageData imageData,
 			Properties properties) {
-		return properties.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH)
+		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator + "images" + File.separator
 				+ imageData.getName();
 	}
@@ -77,7 +78,7 @@ public class FetcherHelper {
 	protected String getLocalImageInputsPath(ImageData imageData,
 			Properties properties) {
 		String localImageInputsPath = properties
-				.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH)
+				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
 				+ "images" + File.separator + imageData.getName();
 		return localImageInputsPath;
@@ -85,14 +86,14 @@ public class FetcherHelper {
 
 	protected String getRemoteImageResultsPath(final ImageData imageData,
 			Properties properties) {
-		return properties.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH) + "/results/"
+		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH) + "/results/"
 				+ imageData.getName();
 	}
 
 	protected String getLocalImageResultsPath(ImageData imageData,
 			Properties properties) {
 		String localImageResultsPath = properties
-				.getProperty(Fetcher.LOCAL_INPUT_OUTPUT_PATH)
+				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
 				+ "results" + File.separator + imageData.getName();
 		return localImageResultsPath;
