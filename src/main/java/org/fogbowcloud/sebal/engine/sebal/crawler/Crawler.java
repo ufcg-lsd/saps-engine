@@ -166,16 +166,17 @@ public class Crawler {
 	}
 
 	private void registerDeployConfig() {
-		try {			
-			if(imageStore.deployConfigExists(federationMember)) {
+		try {
+			if (imageStore.deployConfigExists(federationMember)) {
 				imageStore.removeDeployConfig(federationMember);
 			}
-			
+
 			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
-		} catch (SQLException e) {			
+		} catch (SQLException e) {
 			final String ss = e.getSQLState();
-			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {			
-				LOGGER.error("Error while adding crawler configuration in DB", e);
+			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {
+				LOGGER.error("Error while adding crawler configuration in DB",
+						e);
 				System.exit(1);
 			}
 		}

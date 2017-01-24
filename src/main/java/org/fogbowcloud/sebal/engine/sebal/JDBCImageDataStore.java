@@ -100,6 +100,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		Connection connection = null;
 		Statement statement = null;
+		
 		try {
 			connection = getConnection();
 			statement = connection.createStatement();
@@ -174,6 +175,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	public Connection getConnection() throws SQLException {
+
 		try {
 			return connectionPool.getConnection();
 		} catch (SQLException e) {
@@ -247,6 +249,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(12, "NE");
 			insertStatement.setString(13, ImageData.AVAILABLE);
 			insertStatement.setString(14, "no_errors");
+			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
 		} finally {
@@ -279,6 +282,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, jobId);
 			insertStatement.setString(2, imageName);
 			insertStatement.setString(3, userEmail);
+			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
 		} finally {
@@ -313,6 +317,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, nfsIP);
 			insertStatement.setString(2, nfsPort);
 			insertStatement.setString(3, federationMember);
+			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
 		} finally {
@@ -333,6 +338,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			conn = getConnection();
 			statement = conn.createStatement();
+			statement.setQueryTimeout(300);
 
 			statement.execute(SELECT_ALL_USERS_TO_NOTIFY_SQL);
 			ResultSet rs = statement.getResultSet();
@@ -357,6 +363,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			conn = getConnection();
 			statement = conn.prepareStatement(SELECT_NFS_CONFIG_SQL);
 			statement.setString(1, federationMember);
+			statement.setQueryTimeout(300);
+			
 			statement.execute();
 			
 			ResultSet rs = statement.getResultSet();
@@ -407,6 +415,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			conn = getConnection();
 			statement = conn.prepareStatement(SELECT_USER_NOTIFIABLE_SQL);
 			statement.setString(1, userEmail);
+			statement.setQueryTimeout(300);
+			
 			statement.execute();
 
 			ResultSet rs = statement.getResultSet();
@@ -431,6 +441,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			conn = getConnection();
 			statement = conn.prepareStatement(SELECT_CHECK_FEDERATION_EXISTS_SQL);
 			statement.setString(1, federationMember);
+			statement.setQueryTimeout(300);
+			
 			statement.execute();
 
 			ResultSet rs = statement.getResultSet();
@@ -467,6 +479,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, jobId);
 			insertStatement.setString(2, imageName);
 			insertStatement.setString(3, userEmail);
+			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
 		} finally {
@@ -494,6 +507,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement = connection
 					.prepareStatement(REMOVE_DEPLOY_CONFIG_SQL);
 			insertStatement.setString(1, federationMember);
+			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
 		} finally {
@@ -526,6 +540,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, imageName);
 			insertStatement.setString(2, state.getValue());
 			insertStatement.setTimestamp(3, timestamp);
+			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
 		} finally {
@@ -560,6 +575,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setBoolean(4, userState);
 			insertStatement.setBoolean(5, userNotify);
 			insertStatement.setBoolean(6, adminRole);
+			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
 		} finally {
@@ -589,6 +605,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					.prepareStatement(UPDATE_USER_STATE_SQL);
 			updateStatement.setBoolean(1, userState);
 			updateStatement.setString(2, userEmail);
+			updateStatement.setQueryTimeout(300);
+			
 			updateStatement.execute();
 		} finally {
 			close(updateStatement, connection);
@@ -618,6 +636,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					.prepareStatement(UPDATE_IMAGE_STATE_SQL);
 			updateStatement.setString(1, state.getValue());
 			updateStatement.setString(2, imageName);
+			updateStatement.setQueryTimeout(300);
+			
 			updateStatement.execute();
 		} finally {
 			close(updateStatement, connection);
@@ -661,6 +681,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(12, imageData.getImageStatus());
 			updateStatement.setString(13, imageData.getImageError());
 			updateStatement.setString(14, imageData.getName());
+			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
 		} finally {
@@ -695,6 +716,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(1, stationId);
 			updateStatement.setString(2, sebalVersion);
 			updateStatement.setString(3, imageName);
+			updateStatement.setQueryTimeout(300);
+			
 			updateStatement.execute();
 		} finally {
 			close(updateStatement, connection);
@@ -731,6 +754,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(2, sebalVersion);
 			updateStatement.setString(3, sebalTag);
 			updateStatement.setString(4, imageName);
+			updateStatement.setQueryTimeout(300);
+			
 			updateStatement.execute();
 		} finally {
 			close(updateStatement, connection);
@@ -756,6 +781,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			conn = getConnection();
 			statement = conn.createStatement();
+			statement.setQueryTimeout(300);
 
 			statement.execute(SELECT_ALL_IMAGES_SQL);
 			ResultSet rs = statement.getResultSet();
@@ -784,6 +810,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			selectStatement = connection.prepareStatement(SELECT_USER_SQL);
 			selectStatement.setString(1, userEmail);
+			selectStatement.setQueryTimeout(300);
+			
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
@@ -823,12 +851,16 @@ public class JDBCImageDataStore implements ImageDataStore {
 				selectStatement = connection
 						.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
 				selectStatement.setString(1, state.getValue());
+				selectStatement.setQueryTimeout(300);
+				
 				selectStatement.execute();
 			} else {
 				selectStatement = connection
 						.prepareStatement(SELECT_LIMITED_IMAGES_IN_STATE_SQL);
 				selectStatement.setString(1, state.getValue());
 				selectStatement.setInt(2, limit);
+				selectStatement.setQueryTimeout(300);
+				
 				selectStatement.execute();
 			}
 
@@ -896,7 +928,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 
 			selectStatement = connection
-					.prepareStatement(finalQuery.toString());
+					.prepareStatement(finalQuery.toString());			
 
 			if (state != null) {
 				selectStatement.setString(++paramtersInsertCount,
@@ -913,6 +945,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 				selectStatement.setLong(++paramtersInsertCount, processDateEnd);
 			}
 
+			selectStatement.setQueryTimeout(300);
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
@@ -944,6 +977,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement = connection
 					.prepareStatement(SELECT_PURGED_IMAGES_SQL);
 			selectStatement.setString(1, ImageData.PURGED);
+			selectStatement.setQueryTimeout(300);
+			
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
@@ -1020,6 +1055,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 					ImageState.NOT_DOWNLOADED.getValue());
 			lockAndUpdateStatement.setString(4, ImageData.AVAILABLE);
 			lockAndUpdateStatement.setInt(5, limit);
+			lockAndUpdateStatement.setQueryTimeout(300);			
 			lockAndUpdateStatement.execute();
 
 			selectStatement = connection
@@ -1027,6 +1063,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.setString(1, ImageState.SELECTED.getValue());
 			selectStatement.setString(2, ImageData.AVAILABLE);
 			selectStatement.setString(3, federationMember);
+			selectStatement.setQueryTimeout(300);
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
@@ -1089,6 +1126,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			selectStatement = connection.prepareStatement(SELECT_IMAGE_SQL);
 			selectStatement.setString(1, imageName);
+			selectStatement.setQueryTimeout(300);
+			
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
@@ -1119,6 +1158,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			final int imageHashCode = imageName.hashCode();
 			lockImageStatement.setInt(1, imageHashCode);
 			lockImageStatement.setString(2, imageName);
+			lockImageStatement.setQueryTimeout(300);
+			
 			ResultSet rs = lockImageStatement.executeQuery();
 			if (rs.next()) {
 				locked = rs.getBoolean(1);
@@ -1153,6 +1194,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			try {
 				selectStatement = connection.prepareStatement(UNLOCK_IMAGE_SQL);
 				selectStatement.setInt(1, imageName.hashCode());
+				selectStatement.setQueryTimeout(300);
+				
 				ResultSet rs = selectStatement.executeQuery();
 
 				if (rs.next()) {
@@ -1192,6 +1235,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			removeStatement.setString(1, imageName);
 			removeStatement.setString(2, state.getValue());
 			removeStatement.setTimestamp(3, timestamp);
+			removeStatement.setQueryTimeout(300);
 
 			removeStatement.execute();
 		} finally {
