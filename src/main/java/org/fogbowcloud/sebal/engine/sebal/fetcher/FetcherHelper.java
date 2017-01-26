@@ -160,4 +160,27 @@ public class FetcherHelper {
 		
 		return true;
 	}
+	
+	protected void createTimeoutAndMaxTriesFiles(File localImageResultsDir) {
+		LOGGER.debug("Generating timeout and max tries files");
+		ProcessBuilder builder;
+		Process p;
+		
+		for(File file : localImageResultsDir.listFiles()) {
+			if(file.getName().startsWith("temp-worker-run-") && file.getName().endsWith(".out")) {
+				
+				try {
+					builder = new ProcessBuilder("/bin/bash", "scripts/create_timeout_file.sh", file.getAbsolutePath());
+					p = builder.start();
+					p.waitFor();
+					
+					builder = new ProcessBuilder("/bin/bash", "scripts/create_max_tries_file.sh", file.getAbsolutePath());
+					p = builder.start();
+					p.waitFor();
+				} catch (Exception e) {
+					LOGGER.debug("Error while generating timeout and max tries files", e);
+				}				
+			}
+		}	
+	}
 }

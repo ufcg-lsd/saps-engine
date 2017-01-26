@@ -413,7 +413,7 @@ public class Fetcher {
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 
 		int i;
-		for (i = 0; i < maxTries; i++) {		
+		for (i = 0; i < maxTries; i++) {
 
 			String remoteImageResultsPath = fetcherHelper
 					.getRemoteImageResultsPath(imageData, properties);
@@ -444,6 +444,8 @@ public class Fetcher {
 
 			if (exitValue == 0) {
 				if (fetcherHelper.resultsChecksumOK(imageData, localImageResultsDir)) {
+					fetcherHelper.createTimeoutAndMaxTriesFiles(localImageResultsDir);
+					
 					if(uploadOutputFilesToSwift(imageData, localImageResultsDir)) {						
 						break;
 					} else {
@@ -475,7 +477,7 @@ public class Fetcher {
 			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 		}
 	}
-	
+
 	protected boolean uploadInputFilesToSwift(ImageData imageData, File localImageInputFilesDir) throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
 				
