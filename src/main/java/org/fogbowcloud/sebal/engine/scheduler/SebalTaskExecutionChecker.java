@@ -6,15 +6,15 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.scheduler.core.Scheduler;
 import org.fogbowcloud.blowout.scheduler.core.TaskExecutionChecker;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskProcess;
+import org.fogbowcloud.blowout.scheduler.core.model.TaskProcessImpl;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
 
 public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 	private static final Logger LOGGER = Logger.getLogger(SebalTaskExecutionChecker.class);
-
-	String imageName;
 	
+	String imageName;	
 	ImageDataStore imageStore;
 
 	public SebalTaskExecutionChecker(TaskProcess tp, Scheduler scheduler, String imageName, ImageDataStore imageStore) {
@@ -64,10 +64,25 @@ public class SebalTaskExecutionChecker extends TaskExecutionChecker {
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 	}
 	
+	private void imageToTimedout(String imageName) throws SQLException {
+		ImageData imageData = this.imageStore.getImage(imageName);
+		imageData.setState(ImageState.ERROR);
+		imageData.setImageError("Image " +  imageName + " process timedout");
+		imageStore.updateImage(imageData);
+		
+		// Inserting update time into stateStamps table in DB
+		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
+	}
+	
 	@Override
 	public void failure(TaskProcess tp) {
 		try {
-			imageToFailed(this.imageName);
+			if(tp.getStatus().getNumVal() == TaskProcessImpl.State.TIMEDOUT.getNumVal()) {
+				imageToTimedout(this.imageName);
+			} else {
+				imageToFailed(this.imageName);				
+			}			
 		} catch (SQLException e) {
 			LOGGER.debug("Could not change image '" + this.imageName + "' state to Finnished", e);
 		}

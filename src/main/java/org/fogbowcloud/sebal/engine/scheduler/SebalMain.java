@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +12,6 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.scheduler.core.ExecutionMonitor;
 import org.fogbowcloud.blowout.scheduler.core.ManagerTimer;
@@ -23,8 +19,6 @@ import org.fogbowcloud.blowout.scheduler.core.Scheduler;
 import org.fogbowcloud.blowout.scheduler.core.model.Job;
 import org.fogbowcloud.blowout.scheduler.core.model.Specification;
 import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
-import org.fogbowcloud.blowout.scheduler.core.model.TaskProcess;
-import org.fogbowcloud.blowout.scheduler.core.model.TaskProcessImpl;
 import org.fogbowcloud.blowout.scheduler.core.util.AppPropertiesConstants;
 import org.fogbowcloud.blowout.scheduler.core.util.Constants;
 import org.fogbowcloud.blowout.scheduler.infrastructure.InfrastructureManager;
@@ -44,22 +38,15 @@ public class SebalMain {
 			Executors.newScheduledThreadPool(1));
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(
 			Executors.newScheduledThreadPool(1));
-	private static ManagerTimer taskMapUpdateTimer = new ManagerTimer(
-			Executors.newScheduledThreadPool(1));
 
 	private static String nfsServerIP;
 	private static String nfsServerPort;
 	private static ImageDataStore imageStore;
 	private static InfrastructureManager infraManager;
-	
-	private static Map<String, Integer> maxAllowedTasksPerFederationMap;
-	private static Map<String, Collection<String>> submissionControlMap;
 
 	private static final Logger LOGGER = Logger.getLogger(SebalMain.class);
 	
 	private static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
-	private static final String FEDERATION_TASK_LIMIT_FILE = "federation_task_limit_file";
-	private static final int DEFAULT_TASK_LIMIT_PER_FEDERATION = 5;
 
 	public static void main(String[] args) throws Exception {
 		final Properties properties = new Properties();
@@ -95,10 +82,7 @@ public class SebalMain {
 		final Scheduler scheduler = new Scheduler(infraManager, job);
 		ExecutionMonitor execMonitor = new SebalExecutionMonitor(scheduler, null, imageStore);
 
-		final Specification sebalSpec = getSebalSpecFromFile(properties);
-		
-		maxAllowedTasksPerFederationMap = getMaxAllowedTasksPerFederation(properties);
-		submissionControlMap = new HashMap<String, Collection<String>>();
+		final Specification sebalSpec = getSebalSpecFromFile(properties);	
 		
 		// In case of the process has been stopped before finishing the images running 
 		// in the next restart all images in running state will be reseted to queued state
@@ -123,60 +107,7 @@ public class SebalMain {
 
 		}, 0, Integer.parseInt(properties.getProperty("sebal_execution_period")));
 
-		LOGGER.info("Scheduler working");
-		
-		taskMapUpdateTimer.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				updateSubmissionControlMap(scheduler);
-			}
-		}, 0, Integer.parseInt(properties.getProperty("task_map_update_period")));
-	}
-
-	private static Map<String, Integer> getMaxAllowedTasksPerFederation(Properties properties) {
-
-		Map<String, Integer> maxAllowedTasksPerFederationMap = new HashMap<String, Integer>();
-		File federationTaskLimitFile = new File(properties.getProperty(FEDERATION_TASK_LIMIT_FILE));
-
-		List<String> taskLimitLines = new ArrayList<String>();
-
-		try {
-			taskLimitLines = FileUtils.readLines(federationTaskLimitFile,
-					Charsets.UTF_8);
-			
-			for (String line : taskLimitLines) {
-				String[] lineSplit = line.split("\\s+");
-				maxAllowedTasksPerFederationMap.put(lineSplit[0],
-						Integer.valueOf(lineSplit[1]));
-				LOGGER.debug("Mapping federation " + lineSplit[0]
-						+ " with task limit " + Integer.valueOf(lineSplit[1]));
-			}
-		} catch (IOException e) {
-			LOGGER.error("Error while reading task limit file "
-					+ federationTaskLimitFile, e);
-		}
-
-
-		return maxAllowedTasksPerFederationMap;
-	}
-
-	private static void updateSubmissionControlMap(Scheduler scheduler) {
-		LOGGER.info("Updating task submission control map");		
-		List<TaskProcess> allTaskProcesses = scheduler.getAllProcs();
-		
-		// TODO: see if this toString works
-		LOGGER.debug("Current task processes active " + allTaskProcesses.toString());
-		for(TaskProcess taskProcess : allTaskProcesses) {
-			String federationMemberId = taskProcess.getSpecification()
-					.getRequirementValue("Glue2CloudComputeManagerID");
-			Collection<String> federationTasks = submissionControlMap.get(federationMemberId);
-			
-			if (taskProcess.getStatus().equals(TaskProcessImpl.State.FINNISHED)) {
-				federationTasks.remove(taskProcess.getTaskId());
-			}
-			
-			submissionControlMap.put(federationMemberId, federationTasks);
-		}
+		LOGGER.info("Scheduler working");		
 	}
 	
 	private static void resetImagesRunningToQueued() throws SQLException {
@@ -225,104 +156,60 @@ public class SebalMain {
 						sebalSpec.getUserDataType());
 				tempSpec.putAllRequirements(sebalSpec.getAllRequirements());
 				setFederationMemberIntoSpec(sebalSpec, tempSpec,
-						imageData.getFederationMember());				
-				
+						imageData.getFederationMember());
+
 				LOGGER.debug("tempSpec " + tempSpec.toString());
 
-				if (federationHasQuota(imageData.getFederationMember())) {
+				if (ImageState.QUEUED.equals(imageState)
+						|| ImageState.DOWNLOADED.equals(imageState)) {
 
-					if (ImageState.QUEUED.equals(imageState)
-							|| ImageState.DOWNLOADED.equals(imageState)) {
+					TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
+							.toString(), tempSpec);
 
-						TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
-								.toString(), tempSpec);
-						
-						addTaskIntoSubmissionControlMap(taskImpl,
-								imageData.getFederationMember());
-						
-						Map<String, String> nfsConfig = imageStore
-								.getFederationNFSConfig(imageData
-										.getFederationMember());
-						
-						Iterator it = nfsConfig.entrySet().iterator();
-						while (it.hasNext()) {
-					        Map.Entry pair = (Map.Entry)it.next();
-					        nfsServerIP = pair.getKey().toString();
-					        nfsServerPort = pair.getValue().toString();
-					        it.remove(); // avoids a ConcurrentModificationException
-					    }
+					Map<String, String> nfsConfig = imageStore
+							.getFederationNFSConfig(imageData
+									.getFederationMember());
 
-						LOGGER.debug("Creating R task " + taskImpl.getId());
-
-						taskImpl = SebalTasks.createRTask(taskImpl, properties,
-								imageData.getName(), tempSpec,
-								imageData.getFederationMember(), nfsServerIP,
-								nfsServerPort, imageData.getSebalVersion(),
-								imageData.getSebalTag());
-						imageData.setState(ImageState.QUEUED);
-
-						imageData.setBlowoutVersion(getBlowoutVersion(properties));
-						job.addTask(taskImpl);
-
-						imageStore.updateImage(imageData);
-						imageData.setUpdateTime(imageStore.getImage(
-								imageData.getName()).getUpdateTime());
-						try {
-							imageStore.addStateStamp(imageData.getName(),
-									imageData.getState(),
-									imageData.getUpdateTime());
-						} catch (SQLException e) {
-							LOGGER.error("Error while adding state "
-									+ imageData.getState() + " timestamp "
-									+ imageData.getUpdateTime() + " in DB", e);
-						}
+					Iterator it = nfsConfig.entrySet().iterator();
+					while (it.hasNext()) {
+						Map.Entry pair = (Map.Entry) it.next();
+						nfsServerIP = pair.getKey().toString();
+						nfsServerPort = pair.getValue().toString();
+						it.remove(); // avoids a ConcurrentModificationException
 					}
-				} else {
-					LOGGER.debug("Not enough quota to allocate instance for <"
-							+ imageData.getName() + "> "
-							+ "in federationMember <"
-							+ imageData.getFederationMember() + ">");
+
+					LOGGER.debug("Creating R task " + taskImpl.getId());
+
+					taskImpl = SebalTasks.createRTask(taskImpl, properties,
+							imageData.getName(), tempSpec,
+							imageData.getFederationMember(), nfsServerIP,
+							nfsServerPort, imageData.getSebalVersion(),
+							imageData.getSebalTag());
+					imageData.setState(ImageState.QUEUED);
+
+					imageData.setBlowoutVersion(getBlowoutVersion(properties));
+					job.addTask(taskImpl);
+
+					imageStore.updateImage(imageData);
+					imageData.setUpdateTime(imageStore.getImage(
+							imageData.getName()).getUpdateTime());
+					try {
+						imageStore
+								.addStateStamp(imageData.getName(),
+										imageData.getState(),
+										imageData.getUpdateTime());
+					} catch (SQLException e) {
+						LOGGER.error(
+								"Error while adding state "
+										+ imageData.getState() + " timestamp "
+										+ imageData.getUpdateTime() + " in DB",
+								e);
+					}
 				}
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
-	}
-	
-	private static void addTaskIntoSubmissionControlMap(TaskImpl taskImpl,
-			String federationMember) {
-		LOGGER.debug("Adding task " + taskImpl.getId() + " for "
-				+ federationMember + " into submission control map");
-		Collection<String> federationTaskCollection = submissionControlMap
-				.get(federationMember);
-
-		if (federationTaskCollection == null) {
-			federationTaskCollection = new ArrayList<String>();
-		}
-
-		federationTaskCollection.add(taskImpl.getId());
-		submissionControlMap.put(federationMember, federationTaskCollection);
-		
-		LOGGER.debug("Task " + taskImpl.getId()
-				+ " added to submission control map");
-	}
-
-	private static boolean federationHasQuota(String federationMember) {
-		if (submissionControlMap.containsKey(federationMember)) {
-			int maxAllowedTasks = DEFAULT_TASK_LIMIT_PER_FEDERATION;
-			if (maxAllowedTasksPerFederationMap.containsKey(federationMember)) {
-				maxAllowedTasks = maxAllowedTasksPerFederationMap
-						.get(federationMember);
-			}
-
-			LOGGER.debug("Using task limit " + maxAllowedTasks + " for "
-					+ federationMember);
-			if (submissionControlMap.get(federationMember).size() >= maxAllowedTasks) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	private static String getBlowoutVersion(Properties properties) {
