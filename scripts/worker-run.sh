@@ -4,6 +4,7 @@
 IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
 BIN_RUN_SCRIPT="bin/run.sh"
+OLDER_LOGS_DIR=older_logs
 PROCESS_OUTPUT=
 
 # This function untare image and creates an output dir into mounted dir
@@ -56,6 +57,15 @@ function checkProcessOutput {
 
   if [ $PROCESS_OUTPUT -ne 0 ]
   then
+    echo "PROCESS_OUTPUT = $PROCESS_OUTPUT"
+    if [ ! -d "${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR" ]
+    then
+      sudo mkdir ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR      
+    fi
+
+    echo "Copying temporary out and err files to ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR"
+    sudo cp ${SANDBOX}/*out ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR
+    sudo cp ${SANDBOX}/*err ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR
     finally
   fi
 }

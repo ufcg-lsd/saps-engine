@@ -101,6 +101,11 @@ public class SebalTasks {
 		rTaskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 				rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_"
 						+ rTaskImpl.getId());
+		
+		// cleaning environment
+		String cleanEnvironment = "sudo rm -rf "
+				+ properties.getProperty(SEBAL_SANDBOX);
+		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.REMOTE));
 
 		// creating sandbox
 		String mkdirCommand = "mkdir -p "
@@ -169,11 +174,6 @@ public class SebalTasks {
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		rTaskImpl.addCommand(new Command(remoteExecScriptCommand,
 				Command.Type.REMOTE));
-		
-		// adding epilogue commands		
-		String cleanEnvironment = "sudo rm -r "
-				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
-		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.EPILOGUE));
 
 		return rTaskImpl;
 	}
