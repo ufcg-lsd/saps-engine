@@ -262,12 +262,15 @@ public class Fetcher {
 	
 	protected void fetch(final ImageData imageData, int maxTries) throws Exception {
 		ftpServerIP = imageStore.getNFSServerIP(imageData.getFederationMember());
+
+		LOGGER.debug("Federation member is " + imageData.getFederationMember());
 		if(imageData.getFederationMember().equals(SebalPropertiesConstants.AZURE_FEDERATION_MEMBER)) {			
 			ftpServerPort = properties.getProperty(SebalPropertiesConstants.AZURE_FTP_SERVER_PORT);
 		} else {
 			ftpServerPort = properties.getProperty(SebalPropertiesConstants.DEFAULT_FTP_SERVER_PORT);
 		}
 		
+		LOGGER.debug("Using FTP Server IP " + ftpServerIP + " and port " + ftpServerPort);		
 		if (fetchInputs(imageData, maxTries) == 0) {
 			fetchOutputs(imageData, maxTries);
 		}
