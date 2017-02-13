@@ -37,12 +37,12 @@ public class Fetcher {
 
 	private static int MAX_FETCH_TRIES = 2;
 	private static int MAX_SWIFT_UPLOAD_TRIES = 2;
-
+	
 	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
 
-	public Fetcher(Properties properties, String ftpServerIP, String ftpServerPort) throws SQLException {
+	public Fetcher(Properties properties) throws SQLException {
 
-		this(properties, new JDBCImageDataStore(properties), ftpServerIP, ftpServerPort, new SwiftAPIClient(
+		this(properties, new JDBCImageDataStore(properties), new SwiftAPIClient(
 				properties), new FTPIntegrationImpl(), new FetcherHelper());
 
 		LOGGER.info("Creating fetcher");
@@ -50,8 +50,7 @@ public class Fetcher {
 				+ " FTPServer " + ftpServerIP + ":" + ftpServerPort);
 	}
 
-	protected Fetcher(Properties properties, ImageDataStore imageStore,
-			String ftpServerIP, String ftpServerPort, SwiftAPIClient swiftAPIClient,
+	protected Fetcher(Properties properties, ImageDataStore imageStore, SwiftAPIClient swiftAPIClient,
 			FTPIntegrationImpl ftpImpl, FetcherHelper fetcherHelper) {
 
 		if (properties == null) {
@@ -66,8 +65,6 @@ public class Fetcher {
 
 		this.properties = properties;
 		this.imageStore = imageStore;
-		this.ftpServerIP = ftpServerIP;
-		this.ftpServerPort = ftpServerPort;
 		this.swiftAPIClient = swiftAPIClient;
 		this.ftpImpl = ftpImpl;
 		this.fetcherHelper = fetcherHelper;
@@ -264,6 +261,9 @@ public class Fetcher {
 	}
 	
 	protected void fetch(final ImageData imageData, int maxTries) throws Exception {
+		ftpServerIP = imageStore.getNFSServerIP(imageData.getFederationMember());
+		ftpServerPort = properties.getProperty(SebalPropertiesConstants.FTP_SERVER_PORT);
+		
 		if (fetchInputs(imageData, maxTries) == 0) {
 			fetchOutputs(imageData, maxTries);
 		}

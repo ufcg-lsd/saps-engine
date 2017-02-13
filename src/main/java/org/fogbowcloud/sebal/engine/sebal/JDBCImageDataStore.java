@@ -1138,6 +1138,38 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(selectStatement, connection);
 		}
 	}
+	
+	private static final String SELECT_NFS_SERVER_IP_SQL = "SELECT nfs_ip FROM "
+			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE federation_member = ?";
+	
+	@Override
+	public String getNFSServerIP(String federation_member) throws SQLException {
+		if (federation_member == null || federation_member.isEmpty()) {
+			LOGGER.error("Invalid federationMember " + federation_member);
+			throw new IllegalArgumentException("Invalid federationMember " + federation_member);
+		}
+		PreparedStatement selectStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			selectStatement = connection.prepareStatement(SELECT_NFS_SERVER_IP_SQL);
+			selectStatement.setString(1, federation_member);
+			selectStatement.setQueryTimeout(300);
+			
+			selectStatement.execute();
+
+			ResultSet rs = selectStatement.getResultSet();			
+			if (rs.next()) {
+				return rs.getString(NFS_IP_COL);
+			}
+			rs.close();
+			return null;
+		} finally {
+			close(selectStatement, connection);
+		}
+	}
 
 	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM "
 			+ IMAGE_TABLE_NAME + " WHERE image_name = ?";

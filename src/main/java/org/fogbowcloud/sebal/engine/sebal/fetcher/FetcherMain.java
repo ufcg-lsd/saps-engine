@@ -12,13 +12,11 @@ public class FetcherMain {
 		
 		String imageStoreIP = args[1];
 		String imageStorePort = args[2];
-		String ftpServerIP = args[3];
-		String ftpServerPort = args[4];
 		
 		properties.put("datastore_ip", imageStoreIP);
 		properties.put("datastore_port", imageStorePort);
 		
-		Fetcher Fetcher = new Fetcher(properties, ftpServerIP, ftpServerPort);
+		Fetcher Fetcher = new Fetcher(properties);
 		Fetcher.exec();
 	}
 }

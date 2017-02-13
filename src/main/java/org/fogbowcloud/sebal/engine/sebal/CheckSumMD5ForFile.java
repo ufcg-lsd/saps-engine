@@ -17,7 +17,9 @@ public class CheckSumMD5ForFile {
 		FileInputStream fileInputStream = null;
 		try {
 			for (File outputFile : localFilesDir.listFiles()) {
-				if(!outputFile.getName().endsWith(".md5")) {
+				if (outputFile.isDirectory()) {
+                    // do nothing
+                } else if(!outputFile.getName().endsWith(".md5")) {
 					LOGGER.debug("Generating local checksum for file " + outputFile.getName());
 					
 					fileInputStream = new FileInputStream(outputFile);

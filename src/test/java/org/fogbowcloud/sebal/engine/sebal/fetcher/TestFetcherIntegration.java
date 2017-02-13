@@ -68,8 +68,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
+		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		Mockito.doReturn(1)
@@ -114,8 +113,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
+		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
@@ -166,8 +164,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
+		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 
 		Mockito.doThrow(new SQLException()).when(imageStore).getIn(ImageState.FINISHED);
 
@@ -213,8 +210,7 @@ public class TestFetcherIntegration {
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "available", "");
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
+		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 
@@ -272,8 +268,7 @@ public class TestFetcherIntegration {
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "available", "");
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
+		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		Mockito.doReturn(true).when(imageStore).lockImage(imageData.getName());
@@ -334,8 +329,7 @@ public class TestFetcherIntegration {
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
 				.getLocalImageResultsPath(imageData, properties);
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
+		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 
 		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
 		
@@ -412,8 +406,7 @@ public class TestFetcherIntegration {
 		Mockito.doThrow(new Exception()).when(swiftAPIClient).uploadFile(Mockito.eq(containerName), Mockito.any(File.class),
 						Mockito.eq(foo));
 		
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
+		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		// exercise
 		fetcher.fetch(imageData, 3);
@@ -510,8 +503,7 @@ public class TestFetcherIntegration {
 		writer.println("0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
 		writer.close();
 		
-		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
+		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		// exercise
 		String versionReturn = fetcher.getFetcherVersion();

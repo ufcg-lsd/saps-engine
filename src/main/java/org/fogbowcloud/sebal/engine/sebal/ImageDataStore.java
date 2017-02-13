@@ -58,11 +58,13 @@ public interface ImageDataStore {
 
     List<ImageData> getPurgedImages() throws SQLException;
 
-    List<ImageData> getImagesToDownload(String federationMember, int limit) throws SQLException;
+    List<ImageData> getImagesToDownload(String federationMember, int limit) throws SQLException;        
 
     ImageData getImage(String imageName) throws SQLException;
     
     SebalUser getUser(String userEmail) throws SQLException;
+    
+    String getNFSServerIP(String federationMember) throws SQLException;
 
     void dispose();
 

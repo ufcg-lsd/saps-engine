@@ -48,4 +48,5 @@ public class SebalPropertiesConstants {
 	public static final String AZURE_FTP_SERVER_USER = "azure_ftp_server_user";
 	public static final String DEFAULT_FTP_SERVER_USER = "default_ftp_server_user";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
+	public static final String FTP_SERVER_PORT = "ftp_server_port";
 }
