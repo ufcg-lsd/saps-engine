@@ -100,12 +100,12 @@ public class DatabaseApplication extends Application {
 	 * @throws IOException
 	 */
 	public List<String> addImages(int firstYear, int lastYear, String region,
-			String sebalVersion, String sebalTag) throws SQLException,
-			NumberFormatException, IOException {
+			String dataSet, String sebalVersion, String sebalTag)
+			throws SQLException, NumberFormatException, IOException {
 		List<String> regions = new ArrayList<String>();
 		regions.add(region);
 
-		return dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion, sebalTag);
+		return dbUtilsImpl.fillDB(firstYear, lastYear, regions, dataSet, sebalVersion, sebalTag);
 	}
 	
 	public void purgeImage(String day, String force) throws SQLException, ParseException {

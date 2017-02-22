@@ -28,6 +28,9 @@ import org.fogbowcloud.sebal.notifier.Ward;
 
 public class DBUtilsImpl implements DBUtils {
 
+	private static final String DATASET_LT5_TYPE = "landsat_5";
+	private static final String DATASET_LT7_TYPE = "landsat_7";
+	private static final String DATASET_LT8_TYPE = "landsat_8";
     private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
 
     private final JDBCImageDataStore imageStore;
@@ -187,14 +190,16 @@ public class DBUtilsImpl implements DBUtils {
     }
 
     @Override
-    public List<String> fillDB(int firstYear, int lastYear, List<String> regions, String sebalVersion, String sebalTag) throws IOException {
+	public List<String> fillDB(int firstYear, int lastYear,
+			List<String> regions, String dataSet, String sebalVersion,
+			String sebalTag) throws IOException {
 
         LOGGER.debug("Regions: " + regions);
         List<String> imageNames = new ArrayList<String>();
         int priority = 0;
         for (String region : regions) {
             for (int year = firstYear; year <= lastYear; year++) {
-            	String imageList = createImageList(region, year);
+            	String imageList = createImageList(region, year, dataSet);
 
                 File imageListFile = new File("images-" + year + ".txt");
                 FileUtils.write(imageListFile, imageList);
@@ -246,11 +251,23 @@ public class DBUtilsImpl implements DBUtils {
     	return null;
     }
 
-    protected String createImageList(String region, int year) {
+    protected String createImageList(String region, int year, String dataSet) {
         StringBuilder imageList = new StringBuilder();
         for (int day = 1; day < 366; day++) {
             NumberFormat formatter = new DecimalFormat("000");
-            String imageName = "LT5" + region + year + formatter.format(day) + "CUB00";
+            String imageName = new String();
+            
+			if (dataSet.equals(DATASET_LT5_TYPE)) {
+				imageName = "LT5" + region + year + formatter.format(day)
+						+ "CUB00";
+			} else if(dataSet.equals(DATASET_LT7_TYPE)) {
+				imageName = "LT7" + region + year + formatter.format(day)
+						+ "CUB00";
+			} else if(dataSet.equals(DATASET_LT8_TYPE)) {
+				imageName = "LT8" + region + year + formatter.format(day)
+						+ "CUB00";
+			}
+            
             imageList.append(imageName + "\n");
         }
         return imageList.toString().trim();
