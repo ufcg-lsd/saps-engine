@@ -29,8 +29,8 @@ import org.fogbowcloud.sebal.notifier.Ward;
 public class DBUtilsImpl implements DBUtils {
 
 	private static final String DATASET_LT5_TYPE = "landsat_5";
-	private static final String DATASET_LT7_TYPE = "landsat_7";
-	private static final String DATASET_LT8_TYPE = "landsat_8";
+	private static final String DATASET_LE7_TYPE = "landsat_7";
+	private static final String DATASET_LE8_TYPE = "landsat_8";
     private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
 
     private final JDBCImageDataStore imageStore;
@@ -260,11 +260,11 @@ public class DBUtilsImpl implements DBUtils {
 			if (dataSet.equals(DATASET_LT5_TYPE)) {
 				imageName = "LT5" + region + year + formatter.format(day)
 						+ "CUB00";
-			} else if(dataSet.equals(DATASET_LT7_TYPE)) {
-				imageName = "LT7" + region + year + formatter.format(day)
+			} else if(dataSet.equals(DATASET_LE7_TYPE)) {
+				imageName = "LE7" + region + year + formatter.format(day)
 						+ "CUB00";
-			} else if(dataSet.equals(DATASET_LT8_TYPE)) {
-				imageName = "LT8" + region + year + formatter.format(day)
+			} else if(dataSet.equals(DATASET_LE8_TYPE)) {
+				imageName = "LE8" + region + year + formatter.format(day)
 						+ "CUB00";
 			}
             
