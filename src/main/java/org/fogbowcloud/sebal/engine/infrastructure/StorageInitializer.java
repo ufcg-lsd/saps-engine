@@ -13,7 +13,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.infrastructure.http.HttpWrapper;
+import org.fogbowcloud.blowout.scheduler.core.http.HttpWrapper;
 import org.fogbowcloud.manager.occi.order.OrderAttribute;
 import org.fogbowcloud.manager.occi.order.OrderConstants;
 import org.fogbowcloud.manager.occi.storage.StorageAttribute;

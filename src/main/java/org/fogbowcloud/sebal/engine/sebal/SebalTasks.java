@@ -11,10 +11,10 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.core.model.Command;
-import org.fogbowcloud.blowout.core.model.Specification;
-import org.fogbowcloud.blowout.core.model.Task;
-import org.fogbowcloud.blowout.core.model.TaskImpl;
+import org.fogbowcloud.blowout.scheduler.core.model.Command;
+import org.fogbowcloud.blowout.scheduler.core.model.Specification;
+import org.fogbowcloud.blowout.scheduler.core.model.Task;
+import org.fogbowcloud.blowout.scheduler.core.model.TaskImpl;
 
 public class SebalTasks {
 	
