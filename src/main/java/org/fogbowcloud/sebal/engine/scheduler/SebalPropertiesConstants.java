@@ -2,6 +2,10 @@ package org.fogbowcloud.sebal.engine.scheduler;
 
 public class SebalPropertiesConstants {
 
+	// Image database constants
+	public static final String IMAGE_DATASTORE_IP = "datastore_ip";
+	public static final String IMAGE_DATASTORE_PORT = "datastore_port";
+	
 	// Federation constants
 	public static final String AZURE_FEDERATION_MEMBER = "azure.lsd.ufcg.edu.br";
 

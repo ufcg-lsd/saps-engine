@@ -17,6 +17,10 @@ import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
 public class SebalJob extends Job {
 	
+	private static final long serialVersionUID = -6111900503095749695L;
+	
+	private final String UUID = "";
+	
 	private ImageDataStore imageStore;
 	private Map<String, Task> taskList = new HashMap<String, Task>();
 	private Map<String, ImageState> pendingUpdates = new HashMap<String, ImageState>();
@@ -24,6 +28,7 @@ public class SebalJob extends Job {
 	public static final Logger LOGGER = Logger.getLogger(SebalJob.class);
 	
 	public SebalJob(ImageDataStore imageStore) {
+		super(new ArrayList<Task>());
 		this.imageStore = imageStore;
 		
 	}
@@ -112,5 +117,10 @@ public class SebalJob extends Job {
 			}
 		}
 		return allTasks;
+	}
+	
+	@Override
+	public String getId() {
+		return this.UUID;
 	}
 }
