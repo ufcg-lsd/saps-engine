@@ -6,7 +6,7 @@ print_menu() {
 	echo "Usage: $0 COMMAND [OPTIONS]"
 	echo "Commands are GET, POST or PURGE"
 	echo "GET | GET [image_name] -e | --email email"
-	echo "POST --first-year first-year --last-year last-year --region region --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
+	echo "POST --first-year first-year --last-year last-year --region region --data-set data-set --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
 	echo "PUT --image-name image-name --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
 	echo "PURGE [day] -f | --force -e | --email email"
 	echo "CREATEUSER -e | --email email -u | --user user-name -n | --notify yes|no"
@@ -69,6 +69,10 @@ define_parameters() {
 				shift;
 				region=$1;
 				;;
+                        --data-set)
+                                shift;
+                                data_set=$1;
+                                ;;
 			--sebal-version)
 				shift;
 				sebal_version=$1;
@@ -105,12 +109,12 @@ do_get() {
 do_post() {
 	define_parameters $@
 	askPassword
-	if [[ "$first_year" == "" || "$last_year" == "" || "$region" == "" ]]
+	if [[ "$first_year" == "" || "$last_year" == "" || "$region" == "" || "$data_set" == "" ]]
 	then
-		echo "ERROR: --first-year, --last-year and --region are mandatories"
+		echo "ERROR: --first-year, --last-year, --region and --data-set are mandatories"
 		print_menu
 	else
-        	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&sebalVersion=$sebal_version&sebalTag=$sebal_tag" "$host/images" 2> /dev/null)
+        	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&dataSet=$data_set&sebalVersion=$sebal_version&sebalTag=$sebal_tag" "$host/images" 2> /dev/null)
 		echo $response
 	fi
 }

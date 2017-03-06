@@ -90,7 +90,8 @@ public class DBMain {
 				lastYear = new Integer(args[3]);
 				try {
 					List<String> regions = getRegions(args[4]);
-					dbUtilsImpl.fillDB(firstYear, lastYear, regions, sebalVersion, sebalTag);
+					String dataSet = args[5];
+					dbUtilsImpl.fillDB(firstYear, lastYear, regions, dataSet, sebalVersion, sebalTag);
 				} catch (IOException e) {
 					String errorMsg = "Error while reading regions from file path " + args[4];
 					LOGGER.error(errorMsg, e);

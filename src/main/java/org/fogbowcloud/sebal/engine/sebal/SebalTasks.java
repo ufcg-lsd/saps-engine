@@ -94,7 +94,7 @@ public class SebalTasks {
 		String cleanEnvironment = "sudo rm -rf "
 				+ properties.getProperty(SEBAL_SANDBOX);
 		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.REMOTE));
-		
+
 		// creating sandbox
 		String mkdirCommand = "mkdir -p "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);

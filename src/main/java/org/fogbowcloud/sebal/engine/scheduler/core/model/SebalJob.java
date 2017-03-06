@@ -85,19 +85,6 @@ public class SebalJob extends Job {
 				allTasks.add(task);
 			}
 		}
-
-//		Old:
-//		for (TaskState taskState : taskStates) {
-//			if (TaskState.READY.equals(taskState)) {
-//				allTasks.addAll(tasksReady);
-//			} else if (TaskState.RUNNING.equals(taskState)) {
-//				allTasks.addAll(tasksRunning);
-//			} else if (TaskState.FAILED.equals(taskState)) {
-//				allTasks.addAll(tasksFailed);
-//			} else if (TaskState.COMPLETED.equals(taskState)) {
-//				allTasks.addAll(tasksCompleted);			
-//			}			
-//		}
 		
 		List<Task> imageTasks = new LinkedList<Task>();		
 		for (Task task : allTasks) {

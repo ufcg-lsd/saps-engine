@@ -30,6 +30,7 @@ public class DBImageResource extends BaseResource {
 	private static final String FIRST_YEAR = "firstYear";
 	private static final String LAST_YEAR = "lastYear";
 	private static final String REGION = "region";
+	private static final String DATASET = "dataSet";
 	private static final String SEBAL_VERSION = "sebalVersion";
 	private static final String SEBAL_TAG = "sebalTag";
 	private static final String DAY = "day";
@@ -124,15 +125,17 @@ public class DBImageResource extends BaseResource {
 		int firstYear = new Integer(form.getFirstValue(FIRST_YEAR));
 		int lastYear = new Integer(form.getFirstValue(LAST_YEAR));
 		String region = form.getFirstValue(REGION);
+		String dataSet = form.getFirstValue(DATASET);
 		String sebalVersion = form.getFirstValue(SEBAL_VERSION);
 		String sebalTag = form.getFirstValue(SEBAL_TAG);
 		LOGGER.debug("FirstYear " + firstYear + " LastYear " + lastYear + " Region " + region);
 		
 		try {		
 			
-			if (region == null || region.isEmpty()) {
+			if (region == null || region.isEmpty() || dataSet == null
+					|| dataSet.isEmpty()) {
 				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
-			}	
+			}
 			
 			if (sebalVersion == null || sebalVersion.isEmpty()) {
 				sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
@@ -146,7 +149,7 @@ public class DBImageResource extends BaseResource {
 			}
 			
 			List<String> imageNames = application.addImages(firstYear,
-					lastYear, region, sebalVersion, sebalTag);
+					lastYear, region, dataSet, sebalVersion, sebalTag);
 			if (application.isUserNotifiable(userEmail)) {
 				
 				String jobId = UUID.randomUUID().toString();
