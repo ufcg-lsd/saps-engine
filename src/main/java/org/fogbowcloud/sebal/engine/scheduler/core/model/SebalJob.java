@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.scheduler.core.model.Job;
-import org.fogbowcloud.blowout.scheduler.core.model.Task;
+import org.fogbowcloud.blowout.core.model.Job;
+import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;

@@ -3,9 +3,9 @@ package org.fogbowcloud.sebal.engine.scheduler;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.scheduler.core.ExecutionMonitor;
-import org.fogbowcloud.blowout.scheduler.core.Scheduler;
-import org.fogbowcloud.blowout.scheduler.core.model.TaskProcess;
+import org.fogbowcloud.blowout.core.monitor.TaskMonitor;
+import org.fogbowcloud.blowout.core.SchedulerInterface;
+import org.fogbowcloud.blowout.core.model.TaskProcess;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 

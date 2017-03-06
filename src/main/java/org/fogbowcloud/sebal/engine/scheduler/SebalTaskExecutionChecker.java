@@ -3,10 +3,9 @@ package org.fogbowcloud.sebal.engine.scheduler;
 import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.scheduler.core.Scheduler;
-import org.fogbowcloud.blowout.scheduler.core.TaskExecutionChecker;
-import org.fogbowcloud.blowout.scheduler.core.model.TaskProcess;
-import org.fogbowcloud.blowout.scheduler.core.model.TaskProcessImpl;
+import org.fogbowcloud.blowout.core.SchedulerInterface;
+import org.fogbowcloud.blowout.core.model.TaskProcess;
+import org.fogbowcloud.blowout.core.model.TaskProcessImpl;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
