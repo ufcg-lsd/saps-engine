@@ -33,7 +33,7 @@ public class TestSebalTaskMonitor {
 	
 	private static final String FAKE_ID = "fakeId";
 	
-	public static long timeout;
+	public long timeout;
 	public ImageDataStore imageStore;
 	public SebalTaskMonitor sebalTaskMonitor;
 	public BlowoutPool pool;

@@ -40,8 +40,7 @@ public class SebalController extends BlowoutController {
 	private static Properties properties;
 	private static ImageDataStore imageStore;
 	private SebalTaskMonitor sebalTaskMonitor;
-	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(
-			Executors.newScheduledThreadPool(1));
+	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	
 	public SebalController(Properties properties) throws SebalException, BlowoutException {
 		super(properties);
@@ -59,15 +58,20 @@ public class SebalController extends BlowoutController {
 	
 	@Override
 	public void start(boolean removePreviousResouces) throws Exception {
-		imageStore = new JDBCImageDataStore(getProperties());
-		LOGGER.debug("Imagestore " + SebalPropertiesConstants.IMAGE_DATASTORE_IP + ":"
-				+ SebalPropertiesConstants.IMAGE_DATASTORE_IP);
-				
-		final Specification sebalSpec = getSebalSpecFromFile(getProperties());
+		try {
+			imageStore = new JDBCImageDataStore(getProperties());
+			LOGGER.debug("Imagestore "
+					+ SebalPropertiesConstants.IMAGE_DATASTORE_IP + ":"
+					+ SebalPropertiesConstants.IMAGE_DATASTORE_IP);
 
-		blowoutControllerStart(removePreviousResouces);
-		schedulePreviousTasks(sebalSpec);
-		scheduleTasksPeriodically(sebalSpec);
+			final Specification sebalSpec = getSebalSpecFromFile(getProperties());
+
+			blowoutControllerStart(removePreviousResouces);
+			schedulePreviousTasks(sebalSpec);
+			scheduleTasksPeriodically(sebalSpec);
+		} catch (Exception e) {
+			LOGGER.error("Error while starting SebalController", e);
+		}
 	}
 
 	private void schedulePreviousTasks(final Specification sebalSpec) {

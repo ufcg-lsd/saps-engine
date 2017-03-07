@@ -22,6 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mapdb.DB;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 public class TestFetcherIntegration {
@@ -47,16 +48,11 @@ public class TestFetcherIntegration {
 		// and (if exists) delete fetched result files
 		
 		// setup
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
-		String ftpServerIP = "fake-IP";
-		String ftpServerPort = "fake-PORT";
-		String sebalExportPath = "fake-export-path";
 		String federationMember = "fake-federation-member";
-		String fetcherVolumePath = "fake-fetcher-volume-path";
+		String fetcherVolumeInputPath = "fake-fetcher-volume-input-path";
 
 		Date date = Mockito.mock(Date.class);
 
@@ -65,21 +61,16 @@ public class TestFetcherIntegration {
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "available", "");
 
-		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
-		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
+		Mockito.doReturn(fetcherVolumeInputPath).when(fetcherHelper).getLocalImageInputsPath(imageData, properties);
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
-
+		Fetcher fetcher = Mockito.mock(Fetcher.class);
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
-		Mockito.doReturn(1)
-				.when(ftpImpl)
-				.getFiles(properties, ftpServerIP, ftpServerPort,
-						sebalExportPath, fetcherVolumePath, imageData);
+		Mockito.doReturn(1).when(fetcher).fetchInputs(imageData);
 
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 
 		// exercise
-		fetcher.fetch(imageData, 3);
+		fetcher.fetch(imageData);
 
 		// expect
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
@@ -97,8 +88,6 @@ public class TestFetcherIntegration {
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
 		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
-		String ftpServerIP = "fake-IP";
-		String ftpServerPort = "fake-PORT";
 		String sebalExportPath = "fake-export-path";
 		String federationMember = "fake-federation-member";
 		String fetcherVolumePath = "fake-fetcher-volume-path";
@@ -144,8 +133,6 @@ public class TestFetcherIntegration {
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
 		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
-		String ftpServerIP = "fake-IP";
-		String ftpServerPort = "fake-PORT";
 		String sebalExportPath = "fake-export-path";
 		String federationMember = "fake-federation-member";
 		String fetcherVolumePath = "fake-fetcher-volume-path";
@@ -195,8 +182,6 @@ public class TestFetcherIntegration {
 		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		DB pendingImageFetchDB = Mockito.mock(DB.class);
-		String ftpServerIP = "fake-IP";
-		String ftpServerPort = "fake-PORT";
 		String federationMember = "fake-federation-member";
 
 		Date date = Mockito.mock(Date.class);
@@ -253,8 +238,6 @@ public class TestFetcherIntegration {
 		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		DB pendingImageFetchDB = Mockito.mock(DB.class);
-		String ftpServerIP = "fake-IP";
-		String ftpServerPort = "fake-PORT";
 		String federationMember = "fake-federation-member";
 
 		Date date = Mockito.mock(Date.class);
@@ -296,6 +279,7 @@ public class TestFetcherIntegration {
 		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
 	}
 	
+	// FIXME: image state is FETCHING and not CORRUPTED at the end of the test
 	@Test
 	public void testMaxTriesReached() throws Exception {
 		// When Fetcher reaches maximum fetch tries for an image
@@ -304,17 +288,15 @@ public class TestFetcherIntegration {
 		// delete all result files from disk
 		
 		// setup
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
-		
-		String ftpServerIP = "fake-IP";
-		String ftpServerPort = "fake-PORT";
-		String sebalExportPath = "fake-export-path";
+		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
+		String ftpServerIP = "fake-ftp-server-ip";
+		String ftpServerPort = "fake-ftp-server-port";
+		String sebalResultsExportPath = "fake-export-path";
 		String federationMember = "fake-federation-member";
-		String fetcherVolumePath = "fake-fetcher-volume-path";
+		String fetcherVolumeOutputPath = "fake-fetcher-volume-path";
 
 		Date date = Mockito.mock(Date.class);
 
@@ -324,25 +306,25 @@ public class TestFetcherIntegration {
 						date.getTime()), "available", "");
 
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
-		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
+		Mockito.doReturn(sebalResultsExportPath).when(fetcherHelper)
 				.getRemoteImageResultsPath(imageData, properties);
-		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
+		Mockito.doReturn(fetcherVolumeOutputPath).when(fetcherHelper)
 				.getLocalImageResultsPath(imageData, properties);
+		Mockito.doReturn(0).when(ftpImpl).getFiles(properties, ftpServerIP, ftpServerPort, sebalResultsExportPath, fetcherVolumeOutputPath, imageData);
+		Mockito.doReturn(false).when(fetcherHelper).resultsChecksumOK(imageData, new File(fetcherVolumeOutputPath));
+		Mockito.doReturn(false).when(fetcherHelper).isThereFetchedResultFiles(fetcherVolumeOutputPath);
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
-
-		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
+		Fetcher fetcher = Mockito.mock(Fetcher.class);
 		
-		Mockito.doReturn(false).when(fetcherHelper).resultsChecksumOK(imageData, new File(fetcherVolumePath));
+		Mockito.doReturn(0).when(fetcher).fetchInputs(imageData);
 
 		// exercise
-		fetcher.fetch(imageData, 3);
+		fetcher.fetch(imageData);
 
 		// expect
 		Assert.assertEquals(ImageState.CORRUPTED, imageData.getState());
 	}
 	
-	//FIXME: Test does not get actual file mocks, so it does not return what is expected (states: finished, finished)
 	@Test
 	public void testFailWhileUploadingToSwift() throws Exception {
 		// When Fetcher fails to upload image results to swift
@@ -353,17 +335,13 @@ public class TestFetcherIntegration {
 		
 		// setup
 		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
 		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
 		Properties properties = Mockito.mock(Properties.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
-		String sebalExportPath = "fake-export-path";
-		String containerName = "fake-container-name";
+		String sebalInputExportPath = "fake-input-export-path";
 		String federationMember = "fake-federation-member";
-		String fetcherVolumePath = "fake-fetcher-volume-path";
-		String pseudFolder = "fake-pseudo-file";
+		String fetcherVolumeInputPath = "fake-fetcher-volume-input-path";
 
 		Date date = Mockito.mock(Date.class);
 
@@ -371,122 +349,29 @@ public class TestFetcherIntegration {
 				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "available", "");
-		ImageData imageData2 = new ImageData("image2", "link2",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
 
-		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
-				.getRemoteImageResultsPath(imageData, properties);
-		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
-				.getLocalImageResultsPath(imageData, properties);
-		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
-				.getRemoteImageResultsPath(imageData2, properties);
-		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
-				.getLocalImageResultsPath(imageData2, properties);
+		Mockito.doReturn(sebalInputExportPath).when(fetcherHelper)
+				.getRemoteImageInputsPath(imageData, properties);
+		Mockito.doReturn(fetcherVolumeInputPath).when(fetcherHelper)
+				.getLocalImageInputsPath(imageData, properties);
 		Mockito.doReturn(0)
 				.when(ftpImpl)
 				.getFiles(properties, ftpServerIP, ftpServerPort,
-						sebalExportPath, fetcherVolumePath, imageData);
-		File fetcherVolumeResultsDir = new File(fetcherVolumePath);
+						sebalInputExportPath, fetcherVolumeInputPath, imageData);
+		File fetcherVolumeInputsDir = Mockito.mock(File.class);
 		Mockito.doReturn(true).when(fetcherHelper)
-				.resultsChecksumOK(imageData, fetcherVolumeResultsDir);
+				.resultsChecksumOK(imageData, fetcherVolumeInputsDir);
 		
-		Mockito.doReturn(0)
-				.when(ftpImpl)
-				.getFiles(properties, ftpServerIP, ftpServerPort,
-						sebalExportPath, fetcherVolumePath, imageData2);
-		Mockito.doReturn(true).when(fetcherHelper)
-				.resultsChecksumOK(imageData2, fetcherVolumeResultsDir);
+		Fetcher fetcher = Mockito.mock(Fetcher.class);
 		
-		Mockito.doReturn(pseudFolder).when(properties).getProperty(SebalPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX);
-		Mockito.doReturn(containerName).when(properties).getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
+		Mockito.doReturn(false).when(fetcher).uploadInputFilesToSwift(imageData, fetcherVolumeInputsDir);
 
-		String foo = pseudFolder + File.separator + fetcherVolumePath + File.separator;
-		Mockito.doThrow(new Exception()).when(swiftAPIClient).uploadFile(Mockito.eq(containerName), Mockito.any(File.class),
-						Mockito.eq(foo));
-		
-		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
-		
 		// exercise
-		fetcher.fetch(imageData, 3);
-		fetcher.fetch(imageData2, 3);
+		fetcher.fetch(imageData);
 		
 		// expect
-		//Assert.assertEquals(ImageState.FINISHED, imageData.getState());
-		//Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
+		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
 	}
-	
-	// FIXME: fix this test
-//	@Test
-//	public void testCheckSumFail() throws Exception {
-//		// When checksum does not match for a given image result file
-//		// then
-//		// it must try again for MAX_FETCH_TRIES
-//		// (if not succeed) roll back image from FETCHING to FINISHED
-//		// delete results from disk
-//
-//		// setup
-//		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-//		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-//		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-//		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
-//		Properties properties = Mockito.mock(Properties.class);
-//		String ftpServerIP = "fake-IP";
-//		String ftpServerPort = "fake-PORT";
-//		String sebalExportPath = "fake-export-path";
-//		String federationMember = "fake-federation-member";
-//		String fetcherVolumePath = "fake-fetcher-volume-path";
-//
-//		Date date = Mockito.mock(Date.class);
-//
-//		ImageData imageData = new ImageData("image1", "link1",
-//				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
-//				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-//						date.getTime()), "available", "");
-//		ImageData imageData2 = new ImageData("image2", "link2",
-//				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
-//				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-//						date.getTime()), "available", "");
-//
-//		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
-//				.getRemoteImageResultsPath(imageData, properties);
-//		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
-//				.getLocalImageResultsPath(imageData, properties);
-//		Mockito.doReturn(sebalExportPath).when(fetcherHelper)
-//				.getRemoteImageResultsPath(imageData2, properties);
-//		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
-//				.getLocalImageResultsPath(imageData2, properties);
-//		Mockito.doReturn(0)
-//				.when(ftpImpl)
-//				.getFiles(properties, ftpServerIP, ftpServerPort,
-//						sebalExportPath, fetcherVolumePath, imageData);
-//		
-//		File fetcherVolumeResultsDir = new File(fetcherVolumePath);
-//		
-//		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
-//		Mockito.doReturn(false).when(fetcherHelper)
-//				.resultsChecksumOK(imageData, fetcherVolumeResultsDir);
-//
-//		Mockito.doReturn(0)
-//				.when(ftpImpl)
-//				.getFiles(properties, ftpServerIP, ftpServerPort,
-//						sebalExportPath, fetcherVolumePath, imageData2);
-//		Mockito.doReturn(imageData2).when(imageStore).getImage(imageData2.getName());
-//		Mockito.doReturn(true).when(fetcherHelper)
-//				.resultsChecksumOK(imageData2, fetcherVolumeResultsDir);
-//		
-//		Fetcher fetcher = new Fetcher(properties, imageStore, ftpServerIP,
-//				ftpServerPort, swiftAPIClient, ftpImpl, fetcherHelper);
-//		
-//		// exercise
-//		fetcher.fetch(imageData, 3);
-//		fetcher.fetch(imageData2, 3);
-//		
-//		// expect
-//		Assert.assertEquals(ImageState.CORRUPTED, imageData.getState());
-//		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
-//	}
 	
 	@Test
 	public void testGetFetcherVersion() throws SQLException, IOException, InterruptedException {

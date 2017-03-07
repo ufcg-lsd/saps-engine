@@ -191,7 +191,7 @@ public class Fetcher {
 			InterruptedException {
 		try {
 			if(prepareFetch(imageData)) {				
-				fetch(imageData, MAX_FETCH_TRIES);
+				fetch(imageData);
 				if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap,
 						imageStore) && !fetcherHelper.isImageRolledBack(imageData)) {
 					finishFetch(imageData);
@@ -260,7 +260,7 @@ public class Fetcher {
 		return true;
 	}
 	
-	protected void fetch(final ImageData imageData, int maxTries) throws Exception {
+	protected void fetch(final ImageData imageData) throws Exception {
 		ftpServerIP = imageStore.getNFSServerIP(imageData.getFederationMember());
 
 		LOGGER.debug("Federation member is " + imageData.getFederationMember());
@@ -271,8 +271,8 @@ public class Fetcher {
 		}
 		
 		LOGGER.debug("Using FTP Server IP " + ftpServerIP + " and port " + ftpServerPort);		
-		if (fetchInputs(imageData, maxTries) == 0) {
-			fetchOutputs(imageData, maxTries);
+		if (fetchInputs(imageData) == 0) {
+			fetchOutputs(imageData);
 		}
 	}
 
@@ -355,12 +355,12 @@ public class Fetcher {
 		}
 	}
 	
-	protected int fetchInputs(final ImageData imageData, int maxTries)
+	protected int fetchInputs(final ImageData imageData)
 			throws Exception {
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 		
 		int i;
-		for (i = 0; i < maxTries; i++) {
+		for (i = 0; i < MAX_FETCH_TRIES; i++) {
 
 			String remoteImageInputsPath = fetcherHelper
 					.getRemoteImageInputsPath(imageData, properties);
@@ -400,7 +400,7 @@ public class Fetcher {
 			}
 		}
 		
-		if (i >= maxTries) {
+		if (i >= MAX_FETCH_TRIES) {
 			LOGGER.info("Max tries was reached. Marking " + imageData
 					+ " as corrupted.");
 			imageData.setState(ImageState.CORRUPTED);
@@ -409,18 +409,18 @@ public class Fetcher {
 			deleteInputsFromDisk(imageData, properties);
 			imageStore.updateImage(imageData);
 			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-		}
-		
+		}		
+
 		return 1;
 	}
 
-	private void fetchOutputs(final ImageData imageData, int maxTries)
+	protected void fetchOutputs(final ImageData imageData)
 			throws Exception, IOException, SQLException {
 		// FIXME: doc-it (we want to know the max tries logic)
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 
 		int i;
-		for (i = 0; i < maxTries; i++) {
+		for (i = 0; i < MAX_FETCH_TRIES; i++) {
 
 			String remoteImageResultsPath = fetcherHelper
 					.getRemoteImageResultsPath(imageData, properties);
@@ -442,9 +442,6 @@ public class Fetcher {
 				localImageResultsDir.mkdirs();
 			}
 
-			// FIXME: we should test for two different errors cases:
-			// i)exception - done
-			// ii)error code;
 			int exitValue = ftpImpl.getFiles(properties, ftpServerIP,
 					ftpServerPort, remoteImageResultsPath,
 					localImageResultsPath, imageData);
@@ -472,7 +469,7 @@ public class Fetcher {
 			}
 		}
 		
-		if (i >= maxTries) {
+		if (i >= MAX_FETCH_TRIES) {
 			LOGGER.info("Max tries was reached. Marking " + imageData
 					+ " as corrupted.");
 			imageData.setState(ImageState.CORRUPTED);
@@ -625,17 +622,17 @@ public class Fetcher {
 				.getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
 	}
 	
-	private String getInputPseudoFolder(File localImageResultsDir) {
+	private String getInputPseudoFolder(File localImageInputsDir) {
 		
 		if(properties.getProperty(SebalPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX).endsWith(File.separator)) {			
 			return properties
 					.getProperty(SebalPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
-					+ localImageResultsDir.getName() + File.separator;
+					+ localImageInputsDir.getName() + File.separator;
 		}
 		
 		return properties
 				.getProperty(SebalPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX) + 
-				File.separator + localImageResultsDir.getName() + File.separator;
+				File.separator + localImageInputsDir.getName() + File.separator;
 	}
 
 	private String getOutputPseudoFolder(File localImageResultsDir) {

@@ -98,15 +98,4 @@ public class TestSebalJob {
 		assert(job.getPendingUpdates().keySet().contains(fakeImageName));
 		assert(job.getPendingUpdates().keySet().contains(pendingImageName));
 	}
-
-	@Test
-	public void testFilterTaskByPhase(){
-		Task task1 = mock(Task.class);
-		
-		List<Task> taskList = new ArrayList<Task>();
-		taskList.add(task1);
-		
-		// FIXME: add tests to R tasks
-	}
-	
 }
