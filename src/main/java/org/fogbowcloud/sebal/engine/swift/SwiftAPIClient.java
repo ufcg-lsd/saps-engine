@@ -11,7 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
+import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.ProcessUtil;
 
 public class SwiftAPIClient {

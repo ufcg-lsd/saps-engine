@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
+import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 
 public class FTPIntegrationImpl implements FTPIntegration{

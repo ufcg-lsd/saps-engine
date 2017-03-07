@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
+import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.javaswift.joss.client.factory.AccountConfig;
 import org.javaswift.joss.client.factory.AccountFactory;
 import org.javaswift.joss.client.factory.AuthenticationMethod;

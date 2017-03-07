@@ -1,4 +1,4 @@
-package org.fogbowcloud.sebal.engine.scheduler;
+package org.fogbowcloud.sebal.engine.scheduler.util;
 
 public class SebalPropertiesConstants {
 

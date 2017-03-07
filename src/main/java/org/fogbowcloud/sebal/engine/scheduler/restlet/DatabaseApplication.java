@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.sebal.engine.scheduler.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBImageResource;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.DBMainResource;
 import org.fogbowcloud.sebal.engine.scheduler.restlet.resource.UserResource;
+import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.bootstrap.DBUtilsImpl;
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
