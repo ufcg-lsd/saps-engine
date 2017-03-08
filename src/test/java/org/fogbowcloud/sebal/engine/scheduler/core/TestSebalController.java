@@ -1,24 +1,22 @@
 package org.fogbowcloud.sebal.engine.scheduler.core;
 
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import java.util.Properties;
-import java.util.concurrent.Executors;
 
 import org.fogbowcloud.blowout.core.BlowoutController;
-import org.fogbowcloud.blowout.core.exception.BlowoutException;
+import org.fogbowcloud.blowout.core.SchedulerInterface;
+import org.fogbowcloud.blowout.core.model.TaskImpl;
 import org.fogbowcloud.blowout.core.util.ManagerTimer;
+import org.fogbowcloud.blowout.infrastructure.manager.InfrastructureManager;
+import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
+import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
-import org.fogbowcloud.sebal.engine.scheduler.core.exception.SebalException;
-import org.fogbowcloud.sebal.engine.scheduler.monitor.SebalTaskMonitor;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,14 +25,14 @@ import org.junit.rules.ExpectedException;
 public class TestSebalController {
 	
 	public Properties properties;
-
 	public BlowoutPool blowoutPool;
-	public BlowoutController blowoutController;
-	
 	public ImageDataStore imageStore;
-	public SebalTaskMonitor sebalTaskMonitor;	
 	public ManagerTimer sebalExecutionTimer;
-	public SebalController sebalController;
+	public InfrastructureProvider infraProvider;
+	public InfrastructureManager infraManager;
+	public ResourceMonitor resourceMonitor;
+	public SchedulerInterface schedulerInterface;
+	public BlowoutController blowoutController;
 	
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -44,13 +42,57 @@ public class TestSebalController {
 		properties = mock(Properties.class);
 		blowoutPool = mock(BlowoutPool.class);
 		imageStore = mock(ImageDataStore.class);
-		sebalTaskMonitor = spy(new SebalTaskMonitor(blowoutPool, imageStore));
 		sebalExecutionTimer = mock(ManagerTimer.class);
+		infraProvider = mock(InfrastructureProvider.class);
+		resourceMonitor = mock(ResourceMonitor.class);
+		infraManager = mock(InfrastructureManager.class);
+		schedulerInterface = mock(SchedulerInterface.class);
 		blowoutController = mock(BlowoutController.class);
 	}
 	
-//	@Test
-//	public void testSebalControllerStart() throws SebalException, BlowoutException {		
-//		sebalController = new SebalController(properties);
-//	}
+	// FIXME: fix test
+	@Test
+	public void testSebalControllerStartNotNull() throws Exception {
+		// set up		
+		SebalController sebalController = mock(SebalController.class);
+		
+		doReturn(properties).when(sebalController).getProperties();
+		doReturn(blowoutPool).when(sebalController).getBlowoutPool();
+		doReturn(infraProvider).when(sebalController).getInfraProvider();
+		doReturn(resourceMonitor).when(sebalController).getResourceMonitor();
+		doReturn(infraManager).when(sebalController).getInfraManager();
+		doReturn(schedulerInterface).when(sebalController).getSchedulerInterface();
+		
+		// exercise
+		sebalController.start(true);
+		
+		// expect		
+		Assert.assertNotNull(sebalController.getProperties());
+		Assert.assertNotNull(sebalController.getBlowoutPool());
+		Assert.assertNotNull(sebalController.getInfraProvider());
+		Assert.assertNotNull(sebalController.getResourceMonitor());
+		Assert.assertNotNull(sebalController.getInfraManager());
+		Assert.assertNotNull(sebalController.getSchedulerInterface());
+	}
+	
+	// FIXME: fix test
+	@Test
+	public void testSebalControllerBlowoutPoolAccess() throws Exception {
+		// set up
+		SebalController sebalController = mock(SebalController.class);
+		TaskImpl taskImpl = mock(TaskImpl.class);
+		
+		doReturn(properties).when(sebalController).getProperties();
+		doReturn(blowoutPool).when(sebalController).getBlowoutPool();
+		doReturn(infraProvider).when(sebalController).getInfraProvider();
+		doReturn(resourceMonitor).when(sebalController).getResourceMonitor();
+		doReturn(infraManager).when(sebalController).getInfraManager();
+		doReturn(schedulerInterface).when(sebalController).getSchedulerInterface();
+		
+		// exercise
+		sebalController.start(true);
+		
+		// expect		
+		verify(sebalController.getBlowoutPool()).getTaskById(taskImpl.getId());
+	}
 }

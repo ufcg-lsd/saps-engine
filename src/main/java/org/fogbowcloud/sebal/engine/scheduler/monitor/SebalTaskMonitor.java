@@ -49,7 +49,7 @@ public class SebalTaskMonitor extends TaskMonitor {
 		try {
 			updateImageToRunning(tp);
 			if (tp.getResource()!= null) {
-				getBlowoutPool().updateResource(tp.getResource(), ResourceState.FAILED);
+				getBlowoutPool().updateResource(tp.getResource(), ResourceState.BUSY);
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image/task state", e);
@@ -104,7 +104,6 @@ public class SebalTaskMonitor extends TaskMonitor {
 				.getUpdateTime());
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
 				imageData.getUpdateTime());
-		getRunningTasks().remove(getTaskById(tp.getTaskId()));
 	}
 	
 	protected void updateImageToFinished(TaskProcess tp) throws SQLException {

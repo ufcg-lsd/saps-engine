@@ -39,7 +39,6 @@ public class SebalController extends BlowoutController {
 	private static String nfsServerPort;
 	private static Properties properties;
 	private static ImageDataStore imageStore;
-	private SebalTaskMonitor sebalTaskMonitor;
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	
 	public SebalController(Properties properties) throws SebalException, BlowoutException {
@@ -79,7 +78,7 @@ public class SebalController extends BlowoutController {
 		// in the next restart all images in running state will be reseted to queued state
 		try {
 			resetImagesRunningToQueued();
-			addRTasks(properties, sebalSpec, ImageState.QUEUED, 1);
+			addRTasks(properties, sebalSpec, ImageState.QUEUED);
 		} catch (Exception e) {
 			LOGGER.error("Error while adding previous tasks", e);
 		}
@@ -87,21 +86,20 @@ public class SebalController extends BlowoutController {
 
 	private void blowoutControllerStart(boolean removePreviousResouces)
 			throws Exception {
-		started = true;
+		setStarted(true);
 
-		blowoutPool = createBlowoutInstance();
-		infraProvider = createInfraProviderInstance(removePreviousResouces);
-
-		sebalTaskMonitor = new SebalTaskMonitor(blowoutPool, imageStore);
-		sebalTaskMonitor.start();
+		setBlowoutPool(createBlowoutInstance());
+		setInfraProvider(createInfraProviderInstance(removePreviousResouces));
+		setTaskMonitor(new SebalTaskMonitor(getBlowoutPool(), imageStore));
+		getTaskMonitor().start();
 		
-		resourceMonitor = new ResourceMonitor(infraProvider, blowoutPool, getProperties());
-		resourceMonitor.start();
+		setResourceMonitor(new ResourceMonitor(getInfraProvider(), getBlowoutPool(), getProperties()));
+		getResourceMonitor().start();
 
-		schedulerInterface = createSchedulerInstance(sebalTaskMonitor);
-		infraManager = createInfraManagerInstance();
+		setSchedulerInterface(createSchedulerInstance(getTaskMonitor()));
+		setInfraManager(createInfraManagerInstance());
 
-		blowoutPool.start(infraManager, schedulerInterface);
+		getBlowoutPool().start(getInfraManager(), getSchedulerInterface());
 	}
 	
 	private void scheduleTasksPeriodically(final Specification sebalSpec) {
@@ -109,7 +107,7 @@ public class SebalController extends BlowoutController {
 			@Override
 			public void run() {
 				try {
-					addRTasks(properties, sebalSpec, ImageState.DOWNLOADED, 1);
+					addRTasks(properties, sebalSpec, ImageState.DOWNLOADED);
 				} catch (InterruptedException e) {
 					LOGGER.error("Error while adding R tasks", e);
 				}
@@ -126,14 +124,14 @@ public class SebalController extends BlowoutController {
 		}
 	}
 	
-	private static void addRTasks(final Properties properties,
-			final Specification sebalSpec, ImageState imageState, int limit)
+	private void addRTasks(final Properties properties,
+			final Specification sebalSpec, ImageState imageState)
 			throws InterruptedException {
 
 		try {
-			List<ImageData> imagesToExecute = imageStore.getIn(imageState,
-					limit);			
-			for (ImageData imageData : imagesToExecute) {
+			List<ImageData> imagesToProcess = imageStore.getIn(imageState,
+					ImageDataStore.UNLIMITED);			
+			for (ImageData imageData : imagesToProcess) {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
@@ -181,7 +179,7 @@ public class SebalController extends BlowoutController {
 					imageData.setState(ImageState.QUEUED);
 
 					imageData.setBlowoutVersion(getBlowoutVersion(properties));
-					blowoutPool.putTask(taskImpl);
+					getBlowoutPool().putTask(taskImpl);
 
 					imageStore.updateImage(imageData);
 					imageData.setUpdateTime(imageStore.getImage(
@@ -254,7 +252,7 @@ public class SebalController extends BlowoutController {
 		}
 	}
 	
-	private static boolean checkProperties(Properties properties) {
+	protected static boolean checkProperties(Properties properties) {
 		if (!properties.containsKey(SebalPropertiesConstants.IMAGE_DATASTORE_IP)) {
 			LOGGER.error("Required property " + SebalPropertiesConstants.IMAGE_DATASTORE_IP + " was not set");
 			return false;
@@ -300,7 +298,7 @@ public class SebalController extends BlowoutController {
 		return true;
 	}
 
-	public static Properties getProperties() {
+	public Properties getProperties() {
 		return properties;
 	}
 
