@@ -47,10 +47,8 @@ public class SebalTaskMonitor extends TaskMonitor {
 	
 	protected void imageToRunning(TaskProcess tp) {
 		try {
+			// TODO
 			updateImageToRunning(tp);
-			if (tp.getResource()!= null) {
-				getBlowoutPool().updateResource(tp.getResource(), ResourceState.BUSY);
-			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image/task state", e);
 		}
@@ -72,7 +70,7 @@ public class SebalTaskMonitor extends TaskMonitor {
 
 	protected void imageToTimedout(TaskProcess tp) {		
 		try {
-			updateImageToError(tp);			
+			updateImageToError(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
 			if (tp.getResource()!= null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
@@ -96,14 +94,16 @@ public class SebalTaskMonitor extends TaskMonitor {
 	
 	protected void updateImageToRunning(TaskProcess tp) throws SQLException {
 		ImageData imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
-		imageData.setState(ImageState.RUNNING);
-		imageStore.updateImage(imageData);
-		
-		// Inserting update time into stateStamps table in DB
-		imageData.setUpdateTime(imageStore.getImage(imageData.getName())
-				.getUpdateTime());
-		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
+		if (!imageData.getState().equals(ImageState.RUNNING)) {
+			imageData.setState(ImageState.RUNNING);
+			imageStore.updateImage(imageData);
+
+			// Inserting update time into stateStamps table in DB
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName())
+					.getUpdateTime());
+			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
+					imageData.getUpdateTime());
+		}
 	}
 	
 	protected void updateImageToFinished(TaskProcess tp) throws SQLException {
