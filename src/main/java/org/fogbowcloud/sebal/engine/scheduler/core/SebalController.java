@@ -45,9 +45,12 @@ public class SebalController extends BlowoutController {
 		super(properties);
 		
 		this.setProperties(properties);
-		try {
+		try {			
 			if (!checkProperties(properties)) {
-				throw new SebalException("Error on validate the file ");
+				throw new SebalException("Error on validate the file");
+			} else if (getBlowoutVersion(properties).isEmpty()
+					|| getBlowoutVersion(properties) == null) {
+				throw new SebalException("Error while reading blowout version file");
 			}
 		} catch (Exception e) {
 			throw new SebalException(
@@ -78,7 +81,7 @@ public class SebalController extends BlowoutController {
 		// in the next restart all images in running state will be reseted to queued state
 		try {
 			resetImagesRunningToQueued();
-			addRTasks(properties, sebalSpec, ImageState.QUEUED);
+			addSebalTasks(properties, sebalSpec, ImageState.QUEUED);
 		} catch (Exception e) {
 			LOGGER.error("Error while adding previous tasks", e);
 		}
@@ -107,7 +110,7 @@ public class SebalController extends BlowoutController {
 			@Override
 			public void run() {
 				try {
-					addRTasks(properties, sebalSpec, ImageState.DOWNLOADED);
+					addSebalTasks(properties, sebalSpec, ImageState.DOWNLOADED);
 				} catch (InterruptedException e) {
 					LOGGER.error("Error while adding R tasks", e);
 				}
@@ -124,7 +127,7 @@ public class SebalController extends BlowoutController {
 		}
 	}
 	
-	private void addRTasks(final Properties properties,
+	private void addSebalTasks(final Properties properties,
 			final Specification sebalSpec, ImageState imageState)
 			throws InterruptedException {
 
@@ -139,23 +142,15 @@ public class SebalController extends BlowoutController {
 				LOGGER.debug("Adding " + imageState + " task for image "
 						+ imageData.getName());
 
-				Specification tempSpec = new Specification(
-						sebalSpec.getImage(), sebalSpec.getUsername(),
-						sebalSpec.getPublicKey(),
-						sebalSpec.getPrivateKeyFilePath(),
-						sebalSpec.getUserDataFile(),
-						sebalSpec.getUserDataType());
-				tempSpec.putAllRequirements(sebalSpec.getAllRequirements());
-				setFederationMemberIntoSpec(sebalSpec, tempSpec,
-						imageData.getFederationMember());
+				Specification specWithFederation = generateModifiedSpec(imageData, sebalSpec);
 
-				LOGGER.debug("tempSpec " + tempSpec.toString());
+				LOGGER.debug("specWithFederation " + specWithFederation.toString());
 
 				if (ImageState.QUEUED.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)) {
 
 					TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
-							.toString(), tempSpec);
+							.toString(), specWithFederation);
 
 					Map<String, String> nfsConfig = imageStore
 							.getFederationNFSConfig(imageData
@@ -169,10 +164,10 @@ public class SebalController extends BlowoutController {
 						it.remove(); // avoids a ConcurrentModificationException
 					}
 
-					LOGGER.debug("Creating R task " + taskImpl.getId());
+					LOGGER.debug("Creating Sebal task " + taskImpl.getId());
 
-					taskImpl = SebalTasks.createRTask(taskImpl, properties,
-							imageData.getName(), tempSpec,
+					taskImpl = SebalTasks.createSebalTask(taskImpl, properties,
+							imageData.getName(), specWithFederation,
 							imageData.getFederationMember(), nfsServerIP,
 							nfsServerPort, imageData.getSebalVersion(),
 							imageData.getSebalTag());
@@ -203,6 +198,19 @@ public class SebalController extends BlowoutController {
 		}
 	}
 	
+	private Specification generateModifiedSpec(ImageData imageData,
+			Specification sebalSpec) {
+		Specification specWithFederation = new Specification(
+				sebalSpec.getImage(), sebalSpec.getUsername(),
+				sebalSpec.getPublicKey(), sebalSpec.getPrivateKeyFilePath(),
+				sebalSpec.getUserDataFile(), sebalSpec.getUserDataType());
+		specWithFederation.putAllRequirements(sebalSpec.getAllRequirements());
+		setFederationMemberIntoSpec(sebalSpec, specWithFederation,
+				imageData.getFederationMember());
+		
+		return specWithFederation;
+	}
+
 	private static void setFederationMemberIntoSpec(Specification spec,
 			Specification tempSpec, String federationMember) {
 		String fogbowRequirements = spec

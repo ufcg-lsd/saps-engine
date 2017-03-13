@@ -61,7 +61,7 @@ public class SebalTasks {
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
 	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
 	
-	public static TaskImpl createRTask(TaskImpl rTaskImpl,
+	public static TaskImpl createSebalTask(TaskImpl rTaskImpl,
 			Properties properties, String imageName, Specification spec,
 			String federationMember, String nfsServerIP, String nfsServerPort,
 			String sebalVersion, String sebalTag) {
@@ -210,16 +210,6 @@ public class SebalTasks {
 					+ File.separator + initOutName + " 2>> "
 					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ File.separator + initErrName + "\"";
-//			Now: if this will be used, task must create image results directory before execution script is called
-//			execScriptCommand = "\"nohup " + remoteScript + " >> "
-//					+ taskImpl.getMetadata(METADATA_MOUNT_POINT)
-//					+ File.separator + "results" + File.separator
-//					+ taskImpl.getMetadata(METADATA_IMAGE_NAME)
-//					+ File.separator + initOutName + " 2>> "
-//					+ taskImpl.getMetadata(METADATA_MOUNT_POINT)
-//					+ File.separator + "results" + File.separator
-//					+ taskImpl.getMetadata(METADATA_IMAGE_NAME)
-//					+ File.separator + initErrName + "\"";
 		} else {
 			String runOutName = pathToRemoteScript.getFileName().toString() + "." + "out";
 			String runErrName = pathToRemoteScript.getFileName().toString() + "." + "err";
@@ -229,16 +219,6 @@ public class SebalTasks {
 					+ File.separator + runOutName + " 2>> "
 					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
 					+ File.separator + runErrName + "\"";
-//			Now: if this will be used, task must create image results directory before execution script is called
-//			execScriptCommand = "\"nohup " + remoteScript + " >> "
-//					+ taskImpl.getMetadata(METADATA_MOUNT_POINT)
-//					+ File.separator + "results" + File.separator
-//					+ taskImpl.getMetadata(METADATA_IMAGE_NAME)
-//					+ File.separator + runOutName + " 2>> "
-//					+ taskImpl.getMetadata(METADATA_MOUNT_POINT)
-//					+ File.separator + "results" + File.separator
-//					+ taskImpl.getMetadata(METADATA_IMAGE_NAME)
-//					+ File.separator + runErrName + "\"";
 		}
 		
 		return execScriptCommand;
