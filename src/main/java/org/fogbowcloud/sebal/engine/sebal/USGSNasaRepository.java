@@ -40,9 +40,16 @@ public class USGSNasaRepository implements NASARepository {
     private final String usgsUserName;
     private final String usgsPassword;
     private final String usgsCLIPath;
+    
+    private static final String LANDSAT_5_PREFIX = "LT5";
+    private static final String LANDSAT_7_PREFIX = "LE7";
+    private static final String LANDSAT_8_PREFIX = "LT8";
 
     //dataset
-    private static final String DATASET = "LANDSAT_TM";
+    private static final String LANDSAT_5_DATASET = "LANDSAT_TM";
+    private static final String LANDSAT_7_DATASET = "LSR_LANDSAT_ETM_COMBINED";
+    private static final String LANDSAT_8_DATASET = "LANDSAT_8";
+    
     // nodes
     private static final String EARTH_EXPLORER_NODE = "EE";
     // products
@@ -54,8 +61,6 @@ public class USGSNasaRepository implements NASARepository {
     private static final String USGS_USERNAME = "usgs_username";
     private static final String USGS_PASSWORD = "usgs_password";
     private static final String USGS_CLI_PATH = "usgs_cli_path";
-    
-    private static final int MAX_LOGIN_TRIES = 2;
     
     public USGSNasaRepository(Properties properties) {
 		this(properties.getProperty(SEBAL_EXPORT_PATH), properties
@@ -242,7 +247,7 @@ public class USGSNasaRepository implements NASARepository {
         String link = null;
 
         try {
-            Response response = usgsDownloadURL(getDataSet(), imageName, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+            Response response = usgsDownloadURL(getDataSet(imageName), imageName, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 
             if (response.exitValue != 0) {
                 LOGGER.error("Error while running command. " + response);
@@ -257,15 +262,23 @@ public class USGSNasaRepository implements NASARepository {
         return link;
     }
 
-    private String getDataSet() {
-        return DATASET;
+    private String getDataSet(String imageName) {
+    	if(imageName.startsWith(LANDSAT_5_PREFIX)) {
+    		return LANDSAT_5_DATASET;
+    	} else if(imageName.startsWith(LANDSAT_7_PREFIX)) {
+    		return LANDSAT_7_DATASET;
+    	} else if(imageName.startsWith(LANDSAT_8_PREFIX)) {
+    		return LANDSAT_8_DATASET;
+    	}
+    	
+        return null;
     }
 
     protected Response usgsDownloadURL(String dataset, String sceneId, String node, String product)
             throws IOException, InterruptedException {
 
         //usgs download-url [dataset] [entity/scene id] --node [node] --product [product]
-        //FIXME: is it possible to download a list of scenes at once?    
+        //FIXME: is it possible to download a list of scenes at once?
         
         // GET DOWNLOAD LINKS
         ProcessBuilder builder = new ProcessBuilder(this.usgsCLIPath, "download-url", dataset, sceneId, "--node", node, "--product", product);        
