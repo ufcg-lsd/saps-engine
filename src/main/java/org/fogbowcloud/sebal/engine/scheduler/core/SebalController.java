@@ -111,7 +111,7 @@ public class SebalController extends BlowoutController {
 			public void run() {
 				try {
 					addSebalTasks(properties, sebalSpec, ImageState.DOWNLOADED);
-				} catch (InterruptedException e) {
+				} catch (Exception e) {
 					LOGGER.error("Error while adding R tasks", e);
 				}
 			}
@@ -129,7 +129,7 @@ public class SebalController extends BlowoutController {
 	
 	private void addSebalTasks(final Properties properties,
 			final Specification sebalSpec, ImageState imageState)
-			throws InterruptedException {
+			throws InterruptedException, SebalException {
 
 		try {
 			List<ImageData> imagesToProcess = imageStore.getIn(imageState,
@@ -174,7 +174,8 @@ public class SebalController extends BlowoutController {
 					imageData.setState(ImageState.QUEUED);
 
 					imageData.setBlowoutVersion(getBlowoutVersion(properties));
-					getBlowoutPool().putTask(taskImpl);
+					
+					addTask(taskImpl);
 
 					imageStore.updateImage(imageData);
 					imageData.setUpdateTime(imageStore.getImage(
@@ -196,6 +197,14 @@ public class SebalController extends BlowoutController {
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting image.", e);
 		}
+	}
+
+	private void addTask(TaskImpl taskImpl) throws SebalException {
+		if (!started) {
+			throw new SebalException(
+					"Error while adding new task. BlowoutController not started yet.");
+		}
+		getBlowoutPool().putTask(taskImpl);
 	}
 	
 	private Specification generateModifiedSpec(ImageData imageData,
@@ -240,7 +249,7 @@ public class SebalController extends BlowoutController {
 			}
 		}
 
-		return "";
+		return null;
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {
