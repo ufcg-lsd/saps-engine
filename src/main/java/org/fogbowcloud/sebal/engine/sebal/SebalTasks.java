@@ -26,6 +26,7 @@ public class SebalTasks {
 	public static final String R_SCRIPT_PHASE = "rscript";
 	
 	private static final String SEBAL_SANDBOX = "sebal_sandbox";
+	private static final String SEBAL_RASTER_TMP_DIR = "sebal_raster_tmp_dir";
 	private static final String SEBAL_MOUNT_POINT = "sebal_mount_point";
 	private static final String SEBAL_TASK_TIMEOUT = "sebal_task_timeout";
 	private static final String SEBAL_LOCAL_OUTPUT_DIR = "sebal_local_output_dir";
@@ -94,6 +95,10 @@ public class SebalTasks {
 		String cleanEnvironment = "sudo rm -rf "
 				+ properties.getProperty(SEBAL_SANDBOX);
 		rTaskImpl.addCommand(new Command(cleanEnvironment, Command.Type.REMOTE));
+		
+		String cleanRaster = "sudo rm -rf "
+				+ properties.getProperty(SEBAL_RASTER_TMP_DIR);
+		rTaskImpl.addCommand(new Command(cleanRaster, Command.Type.REMOTE));
 
 		// creating sandbox
 		String mkdirCommand = "mkdir -p "
