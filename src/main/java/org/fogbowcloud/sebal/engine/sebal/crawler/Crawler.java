@@ -281,19 +281,34 @@ public class Crawler {
 
 	protected boolean imageNeedsToBeDownloaded(Properties properties,
 			ImageData imageData) {
+		
+		File imageDir = getImageDir(properties, imageData);
+		
+		if(isThereImageInputs(imageDir)) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	protected File getImageDir(Properties properties, ImageData imageData) {
 		String exportPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
 		String imageDirPath = exportPath + File.separator + "images" + File.separator + imageData.getName();
 		File imageDir = new File(imageDirPath);
+		return imageDir;
+	}
+	
+	protected boolean isThereImageInputs(File imageDir) {
 		
 		if(imageDir.exists() && imageDir.list().length > 0) {
 			for(File file : imageDir.listFiles()) {
 				if(file.getName().endsWith("MTLFmask")) {
-					return false;
+					return true;
 				}
 			}
 		}
 		
-		return true;
+		return false;
 	}
 
 	protected void download(long maxImagesToDownload) throws SQLException,

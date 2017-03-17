@@ -50,7 +50,6 @@ public class TestCrawlerIntegration {
 		}
 	}
 
-	// TODO: run test
 	@Test
 	public void testReSubmitImages() throws SQLException {
 		
@@ -58,39 +57,69 @@ public class TestCrawlerIntegration {
 		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		FMask fmask = mock(FMask.class);
-		String crawlerFederation = "lsd-federation";
-		String oldDownloadLinkOne = "new-download-link-one";
-		String oldDownloadLinkTwo = "new-download-link-two";
-		String oldDownloadLinkThree = "new-download-link-three";
+		String crawlerIp = "fake-crawler-ip";
+		String nfsPort = "fake-nfs-port";
+		String oldDownloadLinkOne = "old-download-link-one";
+		String oldDownloadLinkTwo = "old-download-link-two";
+		String oldDownloadLinkThree = "old-download-link-three";
 		
 		String newDownloadLinkTwo = "new-download-link-two";
+		
+		Date date = new Date(10000854);
 
 		ImageData errorImageOne = new ImageData("error-image-one",
-				oldDownloadLinkOne, ImageState.ERROR, "lsd-federation", 0,
-				null, null, null, null, null, null, null, null, null, null,
+				oldDownloadLinkOne, ImageState.ERROR,
+				SebalPropertiesConstants.LSD_FEDERATION_MEMBER, 0,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), ImageData.NON_EXISTENT,
 				"fake-error-msg-one");
 		ImageData errorImageTwo = new ImageData("error-image-two",
-				oldDownloadLinkTwo, ImageState.ERROR, "azure-federation", 0,
-				null, null, null, null, null, null, null, null, null, null,
+				oldDownloadLinkTwo, ImageState.ERROR,
+				SebalPropertiesConstants.AZURE_FEDERATION_MEMBER, 0,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), ImageData.NON_EXISTENT,
 				"fake-error-msg-two");
 		ImageData errorImageThree = new ImageData("error-image-three",
 				oldDownloadLinkThree, ImageState.ERROR, "rnp-federation", 0,
-				null, null, null, null, null, null, null, null, null, null,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
+				ImageData.NON_EXISTENT, new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), ImageData.NON_EXISTENT,
 				"fake-error-msg-three");
 		
 		List<ImageData> errorImages = new ArrayList<ImageData>();
 		errorImages.add(errorImageOne);
 		errorImages.add(errorImageTwo);
 		errorImages.add(errorImageThree);
+
+		File imageOneDir = mock(File.class);
+		File imageTwoDir = mock(File.class);
+
+		Crawler crawler = spy(new Crawler(properties, imageStore,
+				usgsRepository, crawlerIp, nfsPort,
+				SebalPropertiesConstants.LSD_FEDERATION_MEMBER, fmask));
 		
 		doReturn(errorImages).when(imageStore).getIn(ImageState.ERROR);
-		doReturn(newDownloadLinkTwo).when(usgsRepository).getImageDownloadLink(errorImageTwo.getName());
+		
+		doReturn(imageOneDir).when(crawler).getImageDir(properties, errorImageOne);
+		doReturn(true).when(crawler).isThereImageInputs(imageOneDir);
+		doReturn(errorImageOne).when(imageStore).getImage(errorImageOne.getName());
 		doNothing().when(imageStore).updateImage(errorImageOne);
-		doNothing().when(imageStore).updateImage(errorImageTwo);
+		doNothing().when(imageStore).addStateStamp(errorImageOne.getName(), errorImageOne.getState(), errorImageOne.getUpdateTime());
 
-		Crawler crawler = new Crawler(properties, imageStore, usgsRepository, null, null, crawlerFederation, fmask);
-		doReturn(false).when(crawler).imageNeedsToBeDownloaded(properties, errorImageOne);
-		doReturn(true).when(crawler).imageNeedsToBeDownloaded(properties, errorImageTwo);
+		doReturn(imageTwoDir).when(crawler).getImageDir(properties, errorImageTwo);
+		doReturn(false).when(crawler).isThereImageInputs(imageTwoDir);
+		doReturn(newDownloadLinkTwo).when(usgsRepository).getImageDownloadLink(errorImageTwo.getName());		
+		doReturn(errorImageTwo).when(imageStore).getImage(errorImageTwo.getName());
+		doNothing().when(imageStore).updateImage(errorImageTwo);
+		doNothing().when(imageStore).addStateStamp(errorImageTwo.getName(), errorImageTwo.getState(), errorImageTwo.getUpdateTime());
 		
 		// exercise
 		crawler.reSubmitErrorImages(properties);
