@@ -121,6 +121,8 @@ public class TestCrawlerIntegration {
 		doNothing().when(imageStore).updateImage(errorImageTwo);
 		doNothing().when(imageStore).addStateStamp(errorImageTwo.getName(), errorImageTwo.getState(), errorImageTwo.getUpdateTime());
 		
+		doReturn("10").when(properties).getProperty(SebalPropertiesConstants.MAX_USGS_DOWNLOAD_LINK_REQUESTS);
+		
 		// exercise
 		crawler.reSubmitErrorImages(properties);
 		
@@ -427,27 +429,5 @@ public class TestCrawlerIntegration {
 		File file = new File(
 				"sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
 		file.delete();
-	}
-
-	@Test
-	public void testGetFmaskVersion() throws IOException {
-		Properties properties = mock(Properties.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
-		FMask fmask = mock(FMask.class);
-		String crawlerIP = "fake-crawler-ip";
-		String nfsPort = "fake-nfs-port";
-		String federationMember = "fake-fed-member";
-
-		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				crawlerIP, nfsPort, federationMember, fmask);
-
-		// exercise
-		String versionReturn = crawler.getFmaskVersion();
-
-		// expect
-		Assert.assertEquals(
-				"http://ftp-earth.bu.edu/public/zhuzhe/Fmask_Linux_3.2v/Fmask_pkg.zip",
-				versionReturn);
 	}
 }

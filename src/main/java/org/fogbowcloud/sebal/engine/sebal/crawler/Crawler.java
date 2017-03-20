@@ -46,6 +46,8 @@ public class Crawler {
 	private String crawlerVersion;
 	private String fmaskVersion;
 
+	private int numberOfDownloadLinkRequests = 0;
+
 	// Image dir size in bytes
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 356 * FileUtils.ONE_MB;
 
@@ -97,7 +99,7 @@ public class Crawler {
 			LOGGER.info("Loading map of pending images to download");
 			this.pendingImageDownloadMap = pendingImageDownloadDB
 					.getHashMap("map");
-		}		
+		}
 	}
 
 	private void checkProperties(Properties properties,
@@ -266,17 +268,16 @@ public class Crawler {
 			throws SQLException {
 		
 		if (imageNeedsToBeDownloaded(properties, imageData)) {
-			imageData.setDownloadLink(usgsRepository.getImageDownloadLink(imageData.getName()));
-			imageData.setState(ImageState.NOT_DOWNLOADED);
+			if(numberOfDownloadLinkRequests < Integer.valueOf(properties.getProperty(SebalPropertiesConstants.MAX_USGS_DOWNLOAD_LINK_REQUESTS))) {
+				imageData.setDownloadLink(usgsRepository.getImageDownloadLink(imageData.getName()));
+				imageData.setState(ImageState.NOT_DOWNLOADED);
+				updateErrorImage(imageData);
+				numberOfDownloadLinkRequests++;
+			}
 		} else {
 			imageData.setState(ImageState.DOWNLOADED);
+			updateErrorImage(imageData);
 		}
-		
-		imageData.setImageError(ImageData.NON_EXISTENT);
-		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-		imageStore.updateImage(imageData);
-		imageStore.addStateStamp(imageData.getName(),
-				imageData.getState(), imageData.getUpdateTime());
 	}
 
 	protected boolean imageNeedsToBeDownloaded(Properties properties,
@@ -309,6 +310,15 @@ public class Crawler {
 		}
 		
 		return false;
+	}
+	
+	private void updateErrorImage(ImageData imageData) throws SQLException {
+		
+		imageData.setImageError(ImageData.NON_EXISTENT);
+		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageStore.updateImage(imageData);
+		imageStore.addStateStamp(imageData.getName(),
+				imageData.getState(), imageData.getUpdateTime());
 	}
 
 	protected void download(long maxImagesToDownload) throws SQLException,
@@ -417,6 +427,7 @@ public class Crawler {
 			pendingImageDownloadMap.remove(imageData.getName());
 			pendingImageDownloadDB.commit();
 
+			numberOfDownloadLinkRequests--;
 			LOGGER.info("Image " + imageData + " was downloaded");
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageData, e);

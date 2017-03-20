@@ -9,6 +9,9 @@ public class SebalPropertiesConstants {
 	// Federation constants
 	public static final String LSD_FEDERATION_MEMBER = "lsd.manager.naf.lsd.ufcg.edu.br";
 	public static final String AZURE_FEDERATION_MEMBER = "azure.lsd.ufcg.edu.br";
+	
+	// USGS constants
+	public static final String MAX_USGS_DOWNLOAD_LINK_REQUESTS = "max_usgs_download_link_requests";
 
 	// Swift constants
 	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
