@@ -428,6 +428,10 @@ public class Crawler {
 			pendingImageDownloadMap.remove(imageData.getName());
 			pendingImageDownloadDB.commit();
 
+			if (numberOfDownloadLinkRequests > 0) {
+				numberOfDownloadLinkRequests--;
+			}
+			
 			LOGGER.info("Image " + imageData + " was downloaded");
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageData, e);
