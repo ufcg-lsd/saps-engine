@@ -165,6 +165,7 @@ public class Crawler {
 				} else {
 					Thread.sleep(Long.valueOf(properties
 							.getProperty(SebalPropertiesConstants.DEFAULT_CRAWLER_PERIOD)));
+					numberOfDownloadLinkRequests = 0;
 				}
 			}
 		} catch (Throwable e) {
@@ -427,7 +428,6 @@ public class Crawler {
 			pendingImageDownloadMap.remove(imageData.getName());
 			pendingImageDownloadDB.commit();
 
-			numberOfDownloadLinkRequests--;
 			LOGGER.info("Image " + imageData + " was downloaded");
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageData, e);
