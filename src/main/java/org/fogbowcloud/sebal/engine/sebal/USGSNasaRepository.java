@@ -11,10 +11,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -59,8 +61,8 @@ public class USGSNasaRepository implements NASARepository {
     
     // conf constants
     private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
-    private static final String USGS_LOGIN_URL = "nasa_login_url";
-    private static final String USGS_JSON_URL = "nasa_json_url";
+    private static final String USGS_LOGIN_URL = "usgs_login_url";
+    private static final String USGS_JSON_URL = "usgs_json_url";
     private static final String USGS_USERNAME = "usgs_username";
     private static final String USGS_PASSWORD = "usgs_password";
     private static final String USGS_API_KEY_PERIOD = "usgs_api_key_period";
@@ -92,15 +94,13 @@ public class USGSNasaRepository implements NASARepository {
         this.usgsJsonUrl = usgsJsonUrl;
         this.usgsUserName = usgsUserName;
         this.usgsPassword = usgsPassword;
-        this.usgsAPIKeyPeriod = usgsAPIKeyPeriod;
+        this.usgsAPIKeyPeriod = usgsAPIKeyPeriod;   
 
         Validate.isTrue(directoryExists(sebalExportPath),
                 "Sebal sebalExportPath directory " + sebalExportPath + "does not exist.");
-        
-		handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
     }
 
-	private void handleAPIKeyUpdate(
+	public void handleAPIKeyUpdate(
 			ScheduledExecutorService handleAPIKeyUpdateExecutor) {
 		LOGGER.debug("Turning on handle USGS API key update.");
 
@@ -113,22 +113,11 @@ public class USGSNasaRepository implements NASARepository {
 		}, 0, Integer.parseInt(usgsAPIKeyPeriod), TimeUnit.MILLISECONDS);
 	}
 
-	private String generateAPIKey() {
+	protected String generateAPIKey() {
 
 		try {
-			BasicCookieStore cookieStore = new BasicCookieStore();
-			HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
-			
-			String loginJsonRequest = "{\"username\":\"" + usgsUserName
-					+ "\",\"password\":\"" + usgsPassword
-					+ "\",\"authType\":\"EROS\"}";
-			
-			HttpGet homeGet = new HttpGet(usgsJsonUrl + File.separator
-					+ "login?jsonRequest=" + loginJsonRequest);
-	        httpClient.execute(homeGet);
-	        
-	        HttpResponse response = httpClient.execute(homeGet);
-			JSONObject apiKeyRequestResponse = new JSONObject(response);
+			HttpResponse response = getLoginHttpResponse();
+			JSONObject apiKeyRequestResponse = new JSONObject(EntityUtils.toString(response.getEntity(), Charsets.UTF_8));
 
 			return apiKeyRequestResponse.getString("data");
 		} catch (Throwable e) {
@@ -137,8 +126,24 @@ public class USGSNasaRepository implements NASARepository {
 
 		return null;
 	}
+
+	protected HttpResponse getLoginHttpResponse() throws IOException,
+			ClientProtocolException {
+		BasicCookieStore cookieStore = new BasicCookieStore();
+		HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
+		
+		String loginJsonRequest = "{\"username\":\"" + usgsUserName
+				+ "\",\"password\":\"" + usgsPassword
+				+ "\",\"authType\":\"EROS\"}";
+		
+		HttpGet homeGet = new HttpGet(usgsJsonUrl + File.separator
+				+ "login?jsonRequest=" + loginJsonRequest);
+		
+		HttpResponse response = httpClient.execute(homeGet);
+		return response;
+	}
     
-	private boolean directoryExists(String path) {
+	protected boolean directoryExists(String path) {
         File f = new File(path);
         return (f.exists() && f.isDirectory());
     }
@@ -262,21 +267,10 @@ public class USGSNasaRepository implements NASARepository {
 	protected String usgsDownloadURL(String dataset, String sceneId,
 			String node, String product) throws IOException,
 			InterruptedException, JSONException {
-
-		BasicCookieStore cookieStore = new BasicCookieStore();
-		HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
-		String downloadJsonRequest = "{\"datasetName\":\"" + dataset
-				+ "\",\"apiKey\":\"" + usgsAPIKey + "\",\"node\":\"" + node
-				+ "\",\"entityIds\":[\"" + sceneId + "\"],\"products\":[\""
-				+ product + "\"]}";
-
-		// GET DOWNLOAD LINKS
-		HttpGet homeGet = new HttpGet(usgsJsonUrl + File.separator
-				+ "download?jsonRequest=" + downloadJsonRequest);
-        httpClient.execute(homeGet);
-        
-        HttpResponse response = httpClient.execute(homeGet);
-		JSONObject downloadRequestResponse = new JSONObject(response);
+		
+		// GET DOWNLOAD LINKS        
+		HttpResponse response = getDownloadHttpResponse(dataset, sceneId, node, product);
+		JSONObject downloadRequestResponse = new JSONObject(EntityUtils.toString(response.getEntity(), Charsets.UTF_8));
 
 		int firstDownloadUrl = 0;
 		String formatedResponse = downloadRequestResponse.getJSONArray("data")
@@ -290,8 +284,28 @@ public class USGSNasaRepository implements NASARepository {
 		
 		return null;
 	}
+
+	protected HttpResponse getDownloadHttpResponse(String dataset,
+			String sceneId, String node, String product) throws IOException,
+			ClientProtocolException {
+		BasicCookieStore cookieStore = new BasicCookieStore();
+		HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
+		String downloadJsonRequest = "{\"datasetName\":\"" + dataset
+				+ "\",\"apiKey\":\"" + usgsAPIKey + "\",\"node\":\"" + node
+				+ "\",\"entityIds\":[\"" + sceneId + "\"],\"products\":[\""
+				+ product + "\"]}";
+
+		HttpGet homeGet = new HttpGet(usgsJsonUrl + File.separator
+				+ "download?jsonRequest=" + downloadJsonRequest);
+		HttpResponse response = httpClient.execute(homeGet);
+		return response;
+	}
     
 	private void setUSGSAPIKey(String usgsAPIKey) {
 		this.usgsAPIKey = usgsAPIKey;
+	}
+	
+	protected String getUSGSAPIKey() {
+		return this.usgsAPIKey;
 	}
 }

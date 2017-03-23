@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -42,7 +43,8 @@ public class DBUtilsImpl implements DBUtils {
         this.properties = properties;
         this.imageStore = new JDBCImageDataStore(this.properties);
         this.nasaRepository = new DefaultNASARepository(properties);
-		this.usgsRepository = new USGSNasaRepository(properties);
+		this.usgsRepository = new USGSNasaRepository(properties);		
+		this.usgsRepository.handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
     }
     
 	@Override
