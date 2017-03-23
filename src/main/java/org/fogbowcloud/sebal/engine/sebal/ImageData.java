@@ -30,6 +30,8 @@ public class ImageData implements Serializable {
 	
 	public static final String AVAILABLE = "available";
 	public static final String PURGED = "purged";
+	
+	public static final String NON_EXISTENT = "NE";
 
 	public ImageData(String name, String downloadLink, ImageState state,
 			String federationMember, int priority, String stationId,

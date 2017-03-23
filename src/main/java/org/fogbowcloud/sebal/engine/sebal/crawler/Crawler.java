@@ -26,8 +26,6 @@ import org.mapdb.DBMaker;
 
 public class Crawler {
 	
-	private static final String FMASK_VERSION_FILE_PATH = "crawler/fmask-version";
-	
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
 	
 	private String crawlerIp;
@@ -48,7 +46,8 @@ public class Crawler {
 	private String crawlerVersion;
 	private String fmaskVersion;
 
-	private static final long DEFAULT_SCHEDULER_PERIOD = 300000; // 5 minutes
+	private int numberOfDownloadLinkRequests = 0;
+
 	// Image dir size in bytes
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 356 * FileUtils.ONE_MB;
 
@@ -70,6 +69,44 @@ public class Crawler {
 			USGSNasaRepository usgsRepository, String crawlerIP,
 			String nfsPort, String federationMember, FMask fmask) {
 
+		try {
+			checkProperties(properties, imageStore, usgsRepository, crawlerIP,
+					nfsPort, federationMember, fmask);
+		} catch (IllegalArgumentException e) {
+			LOGGER.error("Error while getting properties", e);
+			System.exit(1);
+		}
+		
+		this.crawlerIp = crawlerIP;
+		this.nfsPort = nfsPort;
+		
+		this.properties = properties;
+		this.imageStore = imageStore;
+		this.usgsRepository = usgsRepository;
+		this.federationMember = federationMember;
+		this.fmask = fmask;
+
+		this.pendingImageDownloadFile = new File("pending-image-download.db");
+		this.pendingImageDownloadDB = DBMaker.newFileDB(
+				pendingImageDownloadFile).make();
+
+		if (!pendingImageDownloadFile.exists()
+				|| !pendingImageDownloadFile.isFile()) {
+			LOGGER.info("Creating map of pending images to download");
+			this.pendingImageDownloadMap = pendingImageDownloadDB
+					.createHashMap("map").make();
+		} else {
+			LOGGER.info("Loading map of pending images to download");
+			this.pendingImageDownloadMap = pendingImageDownloadDB
+					.getHashMap("map");
+		}
+	}
+
+	private void checkProperties(Properties properties,
+			ImageDataStore imageStore, USGSNasaRepository usgsRepository,
+			String crawlerIP, String nfsPort, String federationMember,
+			FMask fmask) throws IllegalArgumentException {
+		
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
@@ -108,30 +145,6 @@ public class Crawler {
 		if (fmask == null) {
 			throw new IllegalArgumentException("Fmask arg must not be empty.");
 		}
-		
-		this.crawlerIp = crawlerIP;
-		this.nfsPort = nfsPort;
-		
-		this.properties = properties;
-		this.imageStore = imageStore;
-		this.usgsRepository = usgsRepository;
-		this.federationMember = federationMember;
-		this.fmask = fmask;
-
-		this.pendingImageDownloadFile = new File("pending-image-download.db");
-		this.pendingImageDownloadDB = DBMaker.newFileDB(
-				pendingImageDownloadFile).make();
-
-		if (!pendingImageDownloadFile.exists()
-				|| !pendingImageDownloadFile.isFile()) {
-			LOGGER.info("Creating map of pending images to download");
-			this.pendingImageDownloadMap = pendingImageDownloadDB
-					.createHashMap("map").make();
-		} else {
-			LOGGER.info("Loading map of pending images to download");
-			this.pendingImageDownloadMap = pendingImageDownloadDB
-					.getHashMap("map");
-		}		
 	}
 
 	public void exec() throws InterruptedException, IOException {
@@ -142,6 +155,7 @@ public class Crawler {
 
 		try {			
 			while (true) {
+				reSubmitErrorImages(properties);
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
@@ -149,8 +163,11 @@ public class Crawler {
 				if (numToDownload > 0) {
 					download(numToDownload);
 				} else {
-					Thread.sleep(DEFAULT_SCHEDULER_PERIOD);
+					Thread.sleep(Long.valueOf(properties
+							.getProperty(SebalPropertiesConstants.DEFAULT_CRAWLER_PERIOD)));
 				}
+				
+				numberOfDownloadLinkRequests = 0;
 			}
 		} catch (Throwable e) {
 			LOGGER.error("Failed while downloading images", e);
@@ -221,6 +238,90 @@ public class Crawler {
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}
+	
+	protected void reSubmitErrorImages(Properties properties) {
+
+		try {
+			List<ImageData> errorImages = imageStore.getIn(ImageState.ERROR);
+
+			for (ImageData imageData : errorImages) {
+				treatAndSubmit(properties, imageData);
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Error while re submitting images with error", e);
+		}
+	}
+
+	protected void treatAndSubmit(Properties properties, ImageData imageData)
+			throws SQLException {
+		
+		if (imageData.getFederationMember().equals(
+				SebalPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
+			imageData.setFederationMember(this.federationMember);
+		}
+
+		if (imageData.getFederationMember().equals(
+				this.federationMember)) {
+			reSubmitImage(properties, imageData);
+		}
+	}
+
+	protected void reSubmitImage(Properties properties, ImageData imageData)
+			throws SQLException {
+		
+		if (imageNeedsToBeDownloaded(properties, imageData)) {
+			if(numberOfDownloadLinkRequests < Integer.valueOf(properties.getProperty(SebalPropertiesConstants.MAX_USGS_DOWNLOAD_LINK_REQUESTS))) {
+				imageData.setDownloadLink(usgsRepository.getImageDownloadLink(imageData.getName()));
+				imageData.setState(ImageState.NOT_DOWNLOADED);
+				updateErrorImage(imageData);
+				numberOfDownloadLinkRequests++;
+			}
+		} else {
+			imageData.setState(ImageState.DOWNLOADED);
+			updateErrorImage(imageData);
+		}
+	}
+
+	protected boolean imageNeedsToBeDownloaded(Properties properties,
+			ImageData imageData) {
+		
+		File imageDir = getImageDir(properties, imageData);
+		
+		if(isThereImageInputs(imageDir)) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	protected File getImageDir(Properties properties, ImageData imageData) {
+		String exportPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
+		String imageDirPath = exportPath + File.separator + "images" + File.separator + imageData.getName();
+		File imageDir = new File(imageDirPath);
+		return imageDir;
+	}
+	
+	protected boolean isThereImageInputs(File imageDir) {
+		
+		if(imageDir.exists() && imageDir.list().length > 0) {
+			for(File file : imageDir.listFiles()) {
+				if(file.getName().endsWith("MTLFmask")) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	private void updateErrorImage(ImageData imageData) throws SQLException {
+		
+		imageData.setImageError(ImageData.NON_EXISTENT);
+		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageStore.updateImage(imageData);
+		imageStore.addStateStamp(imageData.getName(),
+				imageData.getState(), imageData.getUpdateTime());
+	}
 
 	protected void download(long maxImagesToDownload) throws SQLException,
 			IOException {
@@ -279,7 +380,6 @@ public class Crawler {
 			long numberOfImagesToDownload = availableVolumeSpace
 					/ DEFAULT_IMAGE_DIR_SIZE;
 
-			// FIXME: ceil para o inteiro inferior
 			return numberOfImagesToDownload;
 		} else {
 			throw new RuntimeException("VolumePath: " + volumeDirPath
@@ -328,7 +428,7 @@ public class Crawler {
 
 			pendingImageDownloadMap.remove(imageData.getName());
 			pendingImageDownloadDB.commit();
-
+			
 			LOGGER.info("Image " + imageData + " was downloaded");
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageData, e);
@@ -371,7 +471,7 @@ public class Crawler {
 	}
 
 	protected String getFmaskVersion() throws IOException {
-		File fmaskVersionFile = new File(FMASK_VERSION_FILE_PATH);
+		File fmaskVersionFile = new File(properties.getProperty(SebalPropertiesConstants.FMASK_VERSION_FILE_PATH));
 		FileInputStream fileInputStream = new FileInputStream(fmaskVersionFile);
 		BufferedReader br = new BufferedReader(new InputStreamReader(fileInputStream));
 		 
@@ -572,5 +672,13 @@ public class Crawler {
 		}
 		
 		return null;
+	}
+
+	public USGSNasaRepository getUsgsRepository() {
+		return usgsRepository;
+	}
+
+	public void setUsgsRepository(USGSNasaRepository usgsRepository) {
+		this.usgsRepository = usgsRepository;
 	}
 }
