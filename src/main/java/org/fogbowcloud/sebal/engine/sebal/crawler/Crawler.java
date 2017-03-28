@@ -49,9 +49,11 @@ public class Crawler {
 	private int numberOfDownloadLinkRequests = 0;
 
 	// Image dir size in bytes
+	private static final long FREE_DISK_SPACE_OUTPUT_DEDICATED = 54 * FileUtils.ONE_MB;
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 356 * FileUtils.ONE_MB;
 
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
+
 
 	public Crawler(Properties properties, String imageStoreIP,
 			String imageStorePort, String crawlerIP, String nfsPort,
@@ -155,6 +157,7 @@ public class Crawler {
 
 		try {			
 			while (true) {
+				cleanUnfinishedQueuedOutput(properties);
 				reSubmitErrorImages(properties);
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
@@ -175,27 +178,10 @@ public class Crawler {
 			pendingImageDownloadDB.close();
 		}
 	}
-
+	
 	private void checkVersionFileExists() {
 		if(!crawlerVersionFileExists() || !fmaskVersionFileExists()) {
 			System.exit(1);
-		}
-	}
-
-	private void registerDeployConfig() {
-		try {
-			if (imageStore.deployConfigExists(federationMember)) {
-				imageStore.removeDeployConfig(federationMember);
-			}
-
-			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
-		} catch (SQLException e) {
-			final String ss = e.getSQLState();
-			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {
-				LOGGER.error("Error while adding crawler configuration in DB",
-						e);
-				System.exit(1);
-			}
 		}
 	}
 	
@@ -229,6 +215,23 @@ public class Crawler {
 		
 		return true;
 	}
+	
+	private void registerDeployConfig() {
+		try {
+			if (imageStore.deployConfigExists(federationMember)) {
+				imageStore.removeDeployConfig(federationMember);
+			}
+
+			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
+		} catch (SQLException e) {
+			final String ss = e.getSQLState();
+			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {
+				LOGGER.error("Error while adding crawler configuration in DB",
+						e);
+				System.exit(1);
+			}
+		}
+	}
 
 	protected void cleanUnfinishedDownloadedData(Properties properties)
 			throws IOException {
@@ -236,6 +239,14 @@ public class Crawler {
 		Collection<ImageData> data = pendingImageDownloadMap.values();
 		for (ImageData imageData : data) {
 			removeFromPendingAndUpdateState(imageData, properties);
+		}
+	}
+
+	private void cleanUnfinishedQueuedOutput(Properties properties2)
+			throws SQLException, IOException {
+		List<ImageData> data = imageStore.getIn(ImageState.QUEUED);
+		for (ImageData imageData : data) {
+			deleteResultsFromDisk(imageData, properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
 		}
 	}
 	
@@ -376,10 +387,14 @@ public class Crawler {
 		String volumeDirPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
 		File volumePath = getExportDirPath(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
-			long availableVolumeSpace = volumePath.getFreeSpace();
+			long availableVolumeSpace = volumePath.getFreeSpace() - FREE_DISK_SPACE_OUTPUT_DEDICATED;
 			long numberOfImagesToDownload = availableVolumeSpace
 					/ DEFAULT_IMAGE_DIR_SIZE;
 
+			if(numberOfImagesToDownload < 0) {
+				return 0;
+			}
+			
 			return numberOfImagesToDownload;
 		} else {
 			throw new RuntimeException("VolumePath: " + volumeDirPath
@@ -621,7 +636,7 @@ public class Crawler {
 			return;
 		}
 
-		LOGGER.debug("Deleting image " + imageData + " from " + resultsDirPath);
+		LOGGER.debug("Deleting results for " + imageData + " from " + resultsDirPath);
 		FileUtils.deleteDirectory(resultsDir);
 	}
 
