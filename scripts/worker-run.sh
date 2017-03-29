@@ -4,7 +4,7 @@
 IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
 BIN_RUN_SCRIPT="bin/run.sh"
-OLDER_LOGS_DIR=older_logs
+ERROR_LOGS_DIR=error_logs
 PROCESS_OUTPUT=
 
 function executeRunScript {
@@ -43,14 +43,14 @@ function checkProcessOutput {
   if [ $PROCESS_OUTPUT -ne 0 ]
   then
     echo "PROCESS_OUTPUT = $PROCESS_OUTPUT"
-    if [ ! -d "${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR" ]
+    if [ ! -d "${SEBAL_MOUNT_POINT}/$ERROR_LOGS_DIR/${IMAGE_NAME}" ]
     then
-      sudo mkdir ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR      
+      sudo mkdir -p ${SEBAL_MOUNT_POINT}/$ERROR_LOGS_DIR/${IMAGE_NAME}
     fi
 
-    echo "Copying temporary out and err files to ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR"
-    sudo cp ${SANDBOX}/*out ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR
-    sudo cp ${SANDBOX}/*err ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/$OLDER_LOGS_DIR
+    echo "Copying temporary out and err files to ${SEBAL_MOUNT_POINT}/$ERROR_LOGS_DIR/${IMAGE_NAME}"
+    sudo cp ${SANDBOX}/*out ${SEBAL_MOUNT_POINT}/$ERROR_LOGS_DIR/${IMAGE_NAME}
+    sudo cp ${SANDBOX}/*err ${SEBAL_MOUNT_POINT}/$ERROR_LOGS_DIR/${IMAGE_NAME}
     finally
   fi
 }
