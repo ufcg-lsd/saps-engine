@@ -49,7 +49,7 @@ public class Crawler {
 	private int numberOfDownloadLinkRequests = 0;
 
 	// Image dir size in bytes
-	private static final long FREE_DISK_SPACE_OUTPUT_DEDICATED = 54 * FileUtils.ONE_MB;
+	private static final long FREE_DISK_SPACE_OUTPUT_DEDICATED = 54 * FileUtils.ONE_GB;
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 356 * FileUtils.ONE_MB;
 
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);

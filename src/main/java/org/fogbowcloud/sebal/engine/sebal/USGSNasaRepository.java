@@ -25,6 +25,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -60,20 +61,15 @@ public class USGSNasaRepository implements NASARepository {
     
     // conf constants
     private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
-    private static final String USGS_LOGIN_URL = "usgs_login_url";
-    private static final String USGS_JSON_URL = "usgs_json_url";
-    private static final String USGS_USERNAME = "usgs_username";
-    private static final String USGS_PASSWORD = "usgs_password";
-    private static final String USGS_API_KEY_PERIOD = "usgs_api_key_period";
 
     
     public USGSNasaRepository(Properties properties) {
-		this(properties.getProperty(SEBAL_EXPORT_PATH), properties
-				.getProperty(USGS_LOGIN_URL), properties
-				.getProperty(USGS_JSON_URL), properties
-				.getProperty(USGS_USERNAME), properties
-				.getProperty(USGS_PASSWORD), properties
-				.getProperty(USGS_API_KEY_PERIOD));
+		this(properties.getProperty(SEBAL_EXPORT_PATH),
+				properties.getProperty(SebalPropertiesConstants.USGS_LOGIN_URL),
+				properties.getProperty(SebalPropertiesConstants.USGS_JSON_URL),
+				properties.getProperty(SebalPropertiesConstants.USGS_USERNAME),
+				properties.getProperty(SebalPropertiesConstants.USGS_PASSWORD),
+				properties.getProperty(SebalPropertiesConstants.USGS_API_KEY_PERIOD));
     }
 
 	protected USGSNasaRepository(String sebalExportPath, String usgsLoginUrl,

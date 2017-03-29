@@ -12,6 +12,11 @@ public class SebalPropertiesConstants {
 	
 	// USGS constants
 	public static final String MAX_USGS_DOWNLOAD_LINK_REQUESTS = "max_usgs_download_link_requests";
+	public static final String USGS_LOGIN_URL = "usgs_login_url";
+	public static final String USGS_JSON_URL = "usgs_json_url";
+	public static final String USGS_USERNAME = "usgs_username";
+	public static final String USGS_PASSWORD = "usgs_password";
+	public static final String USGS_API_KEY_PERIOD = "usgs_api_key_period";
 
 	// Swift constants
 	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
