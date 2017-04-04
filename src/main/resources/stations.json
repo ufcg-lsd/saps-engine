@@ -1,0 +1,662 @@
+{
+   "stations":[
+      {
+         "id":"82294",
+         "lon":-40.13333333,
+         "altitude":16.5,
+         "name":"ACARAU - CE",
+         "lat":-2.88333333
+      },
+      {
+         "id":"82989",
+         "lon":-37.9,
+         "altitude":605.34,
+         "name":"AGUA BRANCA - AL",
+         "lat":-9.28333333
+      },
+      {
+         "id":"83249",
+         "lon":-38.55,
+         "altitude":130.92,
+         "name":"ALAGOINHAS - BA",
+         "lat":-12.28333333
+      },
+      {
+         "id":"82970",
+         "lon":-45.93333333,
+         "altitude":285.05,
+         "name":"ALTO PARNAIBA - MA",
+         "lat":-9.1
+      },
+      {
+         "id":"82590",
+         "lon":-37.81666666,
+         "altitude":150,
+         "name":"APODI - RN",
+         "lat":-5.61666666
+      },
+      {
+         "id":"83096",
+         "lon":-37.05,
+         "altitude":4.72,
+         "name":"ARACAJU - SE",
+         "lat":-10.95
+      },
+      {
+         "id":"82890",
+         "lon":-37.08333333,
+         "altitude":680.7,
+         "name":"ARCOVERDE - PE",
+         "lat":-8.41666666
+      },
+      {
+         "id":"82696",
+         "lon":-35.68333333,
+         "altitude":574.62,
+         "name":"AREIA - PB",
+         "lat":-6.96666667
+      },
+      {
+         "id":"82460",
+         "lon":-44.76666667,
+         "altitude":25.07,
+         "name":"BACABAL - MA",
+         "lat":-4.21666667
+      },
+      {
+         "id":"82768",
+         "lon":-46.03333333,
+         "altitude":259.38,
+         "name":"BALSAS - MA",
+         "lat":-7.53333333
+      },
+      {
+         "id":"82784",
+         "lon":-39.3,
+         "altitude":409.03,
+         "name":"BARBALHA - CE",
+         "lat":-7.31666667
+      },
+      {
+         "id":"83179",
+         "lon":-43.16666667,
+         "altitude":401.58,
+         "name":"BARRA - BA",
+         "lat":-11.08333333
+      },
+      {
+         "id":"82571",
+         "lon":-45.23333333,
+         "altitude":153,
+         "name":"BARRA DO CORDA - MA",
+         "lat":-5.5
+      },
+      {
+         "id":"83236",
+         "lon":-45,
+         "altitude":439.29,
+         "name":"BARREIRAS - BA",
+         "lat":-12.15
+      },
+      {
+         "id":"83288",
+         "lon":-43.41666667,
+         "altitude":439.96,
+         "name":"BOM JESUS DA LAPA - BA",
+         "lat":-13.26666667
+      },
+      {
+         "id":"82975",
+         "lon":-44.11666666,
+         "altitude":331.74,
+         "name":"BOM JESUS DO PIAUI - PI",
+         "lat":-9.1
+      },
+      {
+         "id":"82886",
+         "lon":-39.33333333,
+         "altitude":341.46,
+         "name":"CABROBO - PE",
+         "lat":-8.51666666
+      },
+      {
+         "id":"83339",
+         "lon":-42.48333333,
+         "altitude":882.47,
+         "name":"CAETITE - BA",
+         "lat":-14.06666667
+      },
+      {
+         "id":"82474",
+         "lon":-41.8,
+         "altitude":160,
+         "name":"CALDEIRAO - PI",
+         "lat":-4.28333333
+      },
+      {
+         "id":"82795",
+         "lon":-35.88333333,
+         "altitude":547.56,
+         "name":"CAMPINA GRANDE - PB",
+         "lat":-7.21666667
+      },
+      {
+         "id":"82777",
+         "lon":-40.38333333,
+         "altitude":583.5,
+         "name":"CAMPOS SALES - CE",
+         "lat":-7
+      },
+      {
+         "id":"83398",
+         "lon":-38.95,
+         "altitude":3.87,
+         "name":"CANAVIEIRAS - BA",
+         "lat":-15.66666667
+      },
+      {
+         "id":"82976",
+         "lon":-43.33333333,
+         "altitude":522.77,
+         "name":"CARACOL - PI",
+         "lat":-9.28333333
+      },
+      {
+         "id":"83498",
+         "lon":-39.25,
+         "altitude":2.88,
+         "name":"CARAVELAS - BA",
+         "lat":-17.73333333
+      },
+      {
+         "id":"83408",
+         "lon":-43.76666666,
+         "altitude":450.18,
+         "name":"CARINHANHA - BA",
+         "lat":-14.28333333
+      },
+      {
+         "id":"82765",
+         "lon":-47.46666667,
+         "altitude":192.83,
+         "name":"CAROLINA - MA",
+         "lat":-7.33333333
+      },
+      {
+         "id":"82476",
+         "lon":-43.35,
+         "altitude":103.56,
+         "name":"CAXIAS - MA",
+         "lat":-4.86666667
+      },
+      {
+         "id":"82596",
+         "lon":-35.65,
+         "altitude":61.35,
+         "name":"CEARA MIRIM - RN",
+         "lat":-5.65
+      },
+      {
+         "id":"82382",
+         "lon":-43.35,
+         "altitude":103.5,
+         "name":"CHAPADINHA - MA",
+         "lat":-3.73333333
+      },
+      {
+         "id":"83192",
+         "lon":-38.51666667,
+         "altitude":145.31,
+         "name":"CIPO - BA",
+         "lat":-11.08333333
+      },
+      {
+         "id":"82676",
+         "lon":-44.25,
+         "altitude":179.75,
+         "name":"COLINAS - MA",
+         "lat":-6.03333333
+      },
+      {
+         "id":"83286",
+         "lon":-44.61666666,
+         "altitude":549.47,
+         "name":"CORRENTINA - BA",
+         "lat":-13.33333333
+      },
+      {
+         "id":"82583",
+         "lon":-40.66666667,
+         "altitude":296.82,
+         "name":"CRATEUS - CE",
+         "lat":-5.16666667
+      },
+      {
+         "id":"83222",
+         "lon":-39.08333333,
+         "altitude":225.87,
+         "name":"CRUZ DAS ALMAS - BA",
+         "lat":-12.66666666
+      },
+      {
+         "id":"82693",
+         "lon":-36.58333333,
+         "altitude":226.46,
+         "name":"CRUZETA - RN",
+         "lat":-6.43333333
+      },
+      {
+         "id":"82298",
+         "lon":-42.25,
+         "altitude":87.05,
+         "name":"ESPERANTINA - PI",
+         "lat":-3.9
+      },
+      {
+         "id":"83221",
+         "lon":-38.96666667,
+         "altitude":230.68,
+         "name":"FEIRA DE SANTANA - BA",
+         "lat":-12.18333333
+      },
+      {
+         "id":"82691",
+         "lon":-36.81666666,
+         "altitude":324.45,
+         "name":"FLORANIA - RN",
+         "lat":-6.11666666
+      },
+      {
+         "id":"82678",
+         "lon":-43.01666666,
+         "altitude":123.27,
+         "name":"FLORIANO - PI",
+         "lat":-6.76666666
+      },
+      {
+         "id":"82397",
+         "lon":-38.55,
+         "altitude":26.45,
+         "name":"FORTALEZA - CE",
+         "lat":-3.75
+      },
+      {
+         "id":"82893",
+         "lon":-36.51666666,
+         "altitude":822.76,
+         "name":"GARANHUNS - PE",
+         "lat":-8.88333333
+      },
+      {
+         "id":"82487",
+         "lon":-39,
+         "altitude":870.67,
+         "name":"GUARAMIRANGA - CE",
+         "lat":-4.28333333
+      },
+      {
+         "id":"83446",
+         "lon":-39.55,
+         "altitude":194.67,
+         "name":"GUARATINGA - BA",
+         "lat":-16.73333333
+      },
+      {
+         "id":"82686",
+         "lon":-39.3,
+         "altitude":217.67,
+         "name":"IGUATU - CE",
+         "lat":-6.36666666
+      },
+      {
+         "id":"82564",
+         "lon":-47.48333333,
+         "altitude":123.3,
+         "name":"IMPERATRIZ - MA",
+         "lat":-5.53333333
+      },
+      {
+         "id":"83182",
+         "lon":-41.86666667,
+         "altitude":747.16,
+         "name":"IRECE - BA",
+         "lat":-11.3
+      },
+      {
+         "id":"83195",
+         "lon":-37.81666667,
+         "altitude":208,
+         "name":"ITABAIANINHA - SE",
+         "lat":-11.11666667
+      },
+      {
+         "id":"83244",
+         "lon":-40.28333333,
+         "altitude":249.89,
+         "name":"ITABERABA - BA",
+         "lat":-12.51666667
+      },
+      {
+         "id":"83295",
+         "lon":-40.11666667,
+         "altitude":755.61,
+         "name":"ITIRUCU (JAGUAQUARA) - BA",
+         "lat":-13.35
+      },
+      {
+         "id":"83292",
+         "lon":-41.3,
+         "altitude":531.43,
+         "name":"ITUACU - BA",
+         "lat":-13.81666667
+      },
+      {
+         "id":"83186",
+         "lon":-40.46666667,
+         "altitude":484.74,
+         "name":"JACOBINA - BA",
+         "lat":-11.18333333
+      },
+      {
+         "id":"82493",
+         "lon":-37.76666667,
+         "altitude":11.71,
+         "name":"JAGUARUANA - CE",
+         "lat":-4.78333333
+      },
+      {
+         "id":"82798",
+         "lon":-34.86666667,
+         "altitude":7.43,
+         "name":"JOAO PESSOA - PB",
+         "lat":-7.1
+      },
+      {
+         "id":"83242",
+         "lon":-41.38333333,
+         "altitude":438.74,
+         "name":"LENCOIS - BA",
+         "lat":-12.56666667
+      },
+      {
+         "id":"82296",
+         "lon":-42.28333333,
+         "altitude":49,
+         "name":"LUZILANDIA(LAG.DO PIAUI) - PI",
+         "lat":-3.41666667
+      },
+      {
+         "id":"82594",
+         "lon":-36.76666666,
+         "altitude":3.43,
+         "name":"MACAU - RN",
+         "lat":-5.11666666
+      },
+      {
+         "id":"82994",
+         "lon":-35.7,
+         "altitude":64.5,
+         "name":"MACEIO - AL",
+         "lat":-9.66666667
+      },
+      {
+         "id":"83090",
+         "lon":-39.3,
+         "altitude":464.6,
+         "name":"MONTE SANTO - BA",
+         "lat":-10.43333333
+      },
+      {
+         "id":"82792",
+         "lon":-37.06666667,
+         "altitude":603.66,
+         "name":"MONTEIRO - PB",
+         "lat":-7.88333333
+      },
+      {
+         "id":"82588",
+         "lon":-38.36666666,
+         "altitude":43.62,
+         "name":"MORADA NOVA - CE",
+         "lat":-5.11666666
+      },
+      {
+         "id":"83184",
+         "lon":-41.21666667,
+         "altitude":1003.27,
+         "name":"MORRO DO CHAPEU - BA",
+         "lat":-11.21666667
+      },
+      {
+         "id":"82598",
+         "lon":-35.2,
+         "altitude":48.6,
+         "name":"NATAL - RN",
+         "lat":-5.91666667
+      },
+      {
+         "id":"82753",
+         "lon":-40.05,
+         "altitude":459.28,
+         "name":"OURICURI - PE",
+         "lat":-7.9
+      },
+      {
+         "id":"82992",
+         "lon":-36.7,
+         "altitude":274.9,
+         "name":"PALMEIRA DOS INDIOS - AL",
+         "lat":-9.45
+      },
+      {
+         "id":"82990",
+         "lon":-37.43333333,
+         "altitude":19.1,
+         "name":"PAO DE ACUCAR - AL",
+         "lat":-9.75
+      },
+      {
+         "id":"82287",
+         "lon":-41.76666666,
+         "altitude":79.5,
+         "name":"PARNAIBA - PI",
+         "lat":-3.08333333
+      },
+      {
+         "id":"82791",
+         "lon":-37.26666667,
+         "altitude":249.09,
+         "name":"PATOS - PB",
+         "lat":-7.01666667
+      },
+      {
+         "id":"82882",
+         "lon":-41.13333333,
+         "altitude":374.22,
+         "name":"PAULISTANA - PI",
+         "lat":-8.13333333
+      },
+      {
+         "id":"82986",
+         "lon":-38.21666666,
+         "altitude":252.69,
+         "name":"PAULO AFONSO - BA",
+         "lat":-9.36666666
+      },
+      {
+         "id":"82983",
+         "lon":-40.46666667,
+         "altitude":370.46,
+         "name":"PETROLINA - PE",
+         "lat":-9.36666667
+      },
+      {
+         "id":"82780",
+         "lon":-41.48333333,
+         "altitude":207.93,
+         "name":"PICOS - PI",
+         "lat":-7.03333333
+      },
+      {
+         "id":"82480",
+         "lon":-41.78333333,
+         "altitude":161.12,
+         "name":"PIRIPIRI - PI",
+         "lat":-4.26666666
+      },
+      {
+         "id":"82996",
+         "lon":-35.43333333,
+         "altitude":50.02,
+         "name":"PORTO DE PEDRAS - AL",
+         "lat":-9.18333333
+      },
+      {
+         "id":"83097",
+         "lon":-36.86666667,
+         "altitude":19.92,
+         "name":"PROPRIA - SE",
+         "lat":-10.2
+      },
+      {
+         "id":"82586",
+         "lon":-39.28333333,
+         "altitude":79.5,
+         "name":"QUIXERAMOBIM - CE",
+         "lat":-5.16666666
+      },
+      {
+         "id":"82900",
+         "lon":-34.95,
+         "altitude":10,
+         "name":"RECIFE (CURADO) - PE",
+         "lat":-8.05
+      },
+      {
+         "id":"82979",
+         "lon":-42.1,
+         "altitude":400.51,
+         "name":"REMANSO - BA",
+         "lat":-9.63333333
+      },
+      {
+         "id":"82689",
+         "lon":-38.21666667,
+         "altitude":233.06,
+         "name":"S?O GONCALO - PB",
+         "lat":-6.75
+      },
+      {
+         "id":"83229",
+         "lon":-38.5,
+         "altitude":51.41,
+         "name":"SALVADOR (ONDINA) - BA",
+         "lat":-13
+      },
+      {
+         "id":"82879",
+         "lon":-42.25,
+         "altitude":235.33,
+         "name":"SAO JOAO DO PIAUI - PI",
+         "lat":-8.35
+      },
+      {
+         "id":"82280",
+         "lon":-44.21666667,
+         "altitude":50.86,
+         "name":"SAO LUIS - MA",
+         "lat":-2.53333333
+      },
+      {
+         "id":"83088",
+         "lon":-40.18333333,
+         "altitude":558.24,
+         "name":"SENHOR DO BONFIM - BA",
+         "lat":-10.46666667
+      },
+      {
+         "id":"82690",
+         "lon":-37.08333333,
+         "altitude":169.85,
+         "name":"SERIDO (CAICO) - RN",
+         "lat":-6.46666667
+      },
+      {
+         "id":"83190",
+         "lon":-38.96666667,
+         "altitude":359.63,
+         "name":"SERRINHA - BA",
+         "lat":-11.63333333
+      },
+      {
+         "id":"82392",
+         "lon":-40.33333333,
+         "altitude":109.62,
+         "name":"SOBRAL - CE",
+         "lat":-3.73333333
+      },
+      {
+         "id":"83076",
+         "lon":-44.51666667,
+         "altitude":450.3,
+         "name":"STa. R. DE CASSIA (IBIPETUBA) - BA",
+         "lat":-11.01666667
+      },
+      {
+         "id":"82797",
+         "lon":-35.71666666,
+         "altitude":418.32,
+         "name":"SURUBIM - PE",
+         "lat":-7.83333333
+      },
+      {
+         "id":"82683",
+         "lon":-40.41666666,
+         "altitude":398.77,
+         "name":"TAUA - CE",
+         "lat":-6
+      },
+      {
+         "id":"82578",
+         "lon":-42.81666666,
+         "altitude":74.36,
+         "name":"TERESINA - PI",
+         "lat":-5.08333333
+      },
+      {
+         "id":"82789",
+         "lon":-38.11666667,
+         "altitude":1105,
+         "name":"TRIUNFO - PE",
+         "lat":-7.81666667
+      },
+      {
+         "id":"82198",
+         "lon":-45.36666667,
+         "altitude":44.06,
+         "name":"TURIACU - MA",
+         "lat":-1.56666667
+      },
+      {
+         "id":"82870",
+         "lon":-43.71666667,
+         "altitude":265,
+         "name":"VALE DO GURGUEIA (CRISTIANO CASTRO) - PI",
+         "lat":-8.41666667
+      },
+      {
+         "id":"83344",
+         "lon":-40.8,
+         "altitude":874.81,
+         "name":"VITORIA DA CONQUISTA - BA",
+         "lat":-14.88333333
+      },
+      {
+         "id":"82376",
+         "lon":-45.65,
+         "altitude":45.28,
+         "name":"ZE DOCA - MA",
+         "lat":-3.26666667
+      }
+   ]
+}

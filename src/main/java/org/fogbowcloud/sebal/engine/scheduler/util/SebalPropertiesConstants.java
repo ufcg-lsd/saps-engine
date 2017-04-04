@@ -29,6 +29,7 @@ public class SebalPropertiesConstants {
 	public static final String SWIFT_AUTH_URL = "swift_auth_url";
 	public static final String SWIFT_IMAGE_EXTENSION = "swift_image_extension";
 	public static final String SWIFT_PSEUDO_FOLDER_PREFIX = "swift_pseudo_folder_prefix";
+	public static final String SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX = "swift_stations_pseudo_folder_prefix";
 	
 	// Restlet constants
 	public static final String DB_REST_SERVER_PORT = "db_rest_server_port";
@@ -59,6 +60,9 @@ public class SebalPropertiesConstants {
 	public static final String AZURE_FTP_SERVER_USER = "azure_ftp_server_user";
 	public static final String AZURE_FTP_SERVER_PORT = "azure_ftp_server_port";
 
+	// NOAA constants
+	public static final String NOAA_FTP_URL = "noaa_ftp_url";
+
 	// Script path constants
 	public static final String SEBAL_SFTP_SCRIPT_PATH = "sebal_sftp_script_path";
 	public static final String FMASK_SCRIPT_PATH = "fmask_script_path";
@@ -70,4 +74,6 @@ public class SebalPropertiesConstants {
 	public static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
+	public static final String STATIONS_FILE_PATH = "stations_file_path";
+	public static final String BASE_YEAR_DIR_PATH = "base_year_dir_path";
 }
