@@ -258,6 +258,32 @@ public class SwiftAPIClient {
 		}        
 	}
 	
+	public List<String> listFilesWithPrefix(String containerName, String prefix) {
+		LOGGER.info("Listing files in container " + containerName + " with prefix " + prefix);
+		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", 
+				properties.getProperty(SebalPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL),
+				"list", "-p", prefix, containerName);
+		LOGGER.debug("Executing command " + builder.command());
+        
+        Process p;
+        String output;
+        
+        try {
+			p = builder.start();
+			p.waitFor();
+
+			output = ProcessUtil.getOutput(p);
+
+			return getOutputLinesIntoList(output);
+		} catch (IOException e) {
+			LOGGER.error("Error while listing files from " + containerName);
+			return new ArrayList<String>();
+		} catch (InterruptedException e) {
+			LOGGER.error("Error while listing files from " + containerName);
+			return new ArrayList<String>();
+		}        
+	}
+	
 	private List<String> getOutputLinesIntoList(String fileNames) throws IOException {
 		List<String> fileNamesList = new ArrayList<String>();
 		
