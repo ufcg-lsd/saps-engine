@@ -29,7 +29,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -114,7 +113,7 @@ public class USGSNasaRepository implements NASARepository {
 	protected String generateAPIKey() {
 
 		try {
-			String response = getLoginHttpResponse();
+			String response = getLoginResponse();
 			JSONObject apiKeyRequestResponse = new JSONObject(response);
 
 			return apiKeyRequestResponse.getString("data");
@@ -125,15 +124,16 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 
-	protected String getLoginHttpResponse() throws IOException,
+	protected String getLoginResponse() throws IOException,
 			ClientProtocolException {		
 		String loginJsonRequest = "jsonRequest={\"username\":\"" + usgsUserName
 				+ "\",\"password\":\"" + usgsPassword
 				+ "\",\"authType\":\"EROS\"}";
 		
 		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
-				"--data", "'" + loginJsonRequest + "'", usgsJsonUrl
+				"--data", loginJsonRequest, usgsJsonUrl
 						+ File.separator + "login");
+		LOGGER.debug("Command=" + builder.command());
 
 		try {
 			Process p = builder.start();
@@ -256,19 +256,14 @@ public class USGSNasaRepository implements NASARepository {
 		String link = null;
 		List<String> possibleStations = getPossibleStations();
 
-		try {
-			for (String station : possibleStations) {
-				String imageNameConcat = imageName.concat(station);
-				link = usgsDownloadURL(getDataSet(imageNameConcat),
-						imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
-				if (link != null && !link.isEmpty()) {
-					imageName = imageNameConcat;
-					return link;
-				}
+		for (String station : possibleStations) {
+			String imageNameConcat = imageName.concat(station);
+			link = usgsDownloadURL(getDataSet(imageNameConcat),
+					imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+			if (link != null && !link.isEmpty()) {
+				imageName = imageNameConcat;
+				return link;
 			}
-		} catch (Throwable e) {
-			LOGGER.error("Error while getting download link for image "
-					+ imageName, e);
 		}
 
 		return null;
@@ -307,43 +302,58 @@ public class USGSNasaRepository implements NASARepository {
 	}
 
 	protected String usgsDownloadURL(String dataset, String sceneId,
-			String node, String product) throws IOException,
-			InterruptedException, JSONException {
+			String node, String product) {
 		
 		// GET DOWNLOAD LINKS        
-		HttpResponse response = getDownloadHttpResponse(dataset, sceneId, node, product);
-		JSONObject downloadRequestResponse = new JSONObject(EntityUtils.toString(response.getEntity(), Charsets.UTF_8));
+		String response = getDownloadHttpResponse(dataset, sceneId, node, product);
+		
+		try {
+			JSONObject downloadRequestResponse = new JSONObject(response);
 
-		int firstDownloadUrl = 0;
-		String formatedResponse = downloadRequestResponse.getJSONArray("data")
-				.getString(firstDownloadUrl).replace("\\/", "/");
-		String downloadLink = downloadRequestResponse.getJSONArray("data").getString(firstDownloadUrl);
+			int firstDownloadUrl = 0;
+			String formatedResponse = downloadRequestResponse
+					.getJSONArray("data").getString(firstDownloadUrl)
+					.replace("\\/", "/");
+			String downloadLink = downloadRequestResponse.getJSONArray("data")
+					.getString(firstDownloadUrl);
+			LOGGER.debug("downloadLink=" + downloadLink);
 
-		if(formatedResponse != null && !formatedResponse.isEmpty()) {
-			LOGGER.debug("Image " + sceneId + "download link" + downloadLink + " obtained");
-			return downloadLink;
-		}
+			if (formatedResponse != null && !formatedResponse.isEmpty()) {
+				LOGGER.debug("Image " + sceneId + "download link"
+						+ downloadLink + " obtained");
+				return downloadLink;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while formating request response", e);
+		}		
 		
 		return null;
 	}
 
-	protected HttpResponse getDownloadHttpResponse(String dataset,
-			String sceneId, String node, String product) throws IOException,
-			ClientProtocolException {
-		BasicCookieStore cookieStore = new BasicCookieStore();
-		HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
-		String downloadJsonRequest = "{\"datasetName\":\"" + dataset
-				+ "\",\"apiKey\":\"" + usgsAPIKey + "\",\"node\":\"" + node
-				+ "\",\"entityIds\":[\"" + sceneId + "\"],\"products\":[\""
-				+ product + "\"]}";
+	protected String getDownloadHttpResponse(String dataset, String sceneId,
+			String node, String product) {
+		String downloadJsonRequest = "jsonRequest={\"datasetName\":\""
+				+ dataset + "\",\"apiKey\":\"" + usgsAPIKey + "\",\"node\":\""
+				+ node + "\",\"entityIds\":[\"" + sceneId
+				+ "\"],\"products\":[\"" + product + "\"]}";
 
-		HttpGet homeGet = new HttpGet(usgsJsonUrl + File.separator
-				+ "download?jsonRequest=" + downloadJsonRequest);
-		HttpResponse response = httpClient.execute(homeGet);
-		return response;
+		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
+				"--data", downloadJsonRequest, usgsJsonUrl + File.separator
+						+ "download");
+		LOGGER.debug("Command=" + builder.command());
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			return getProcessOutput(p);
+		} catch (Exception e) {
+			LOGGER.error("Error while logging in USGS", e);
+		}
+
+		return null;
 	}
     
-	private void setUSGSAPIKey(String usgsAPIKey) {
+	protected void setUSGSAPIKey(String usgsAPIKey) {
 		this.usgsAPIKey = usgsAPIKey;
 	}
 	

@@ -41,7 +41,6 @@ public class TestUSGSNasaRepository {
 		sebalExportPath = "/tmp";
 	}
 	
-	// TODO: Update this test
 	@Test
 	public void testGenerateAPIKeyResponse() throws ClientProtocolException, IOException {
 		// set up
@@ -62,8 +61,7 @@ public class TestUSGSNasaRepository {
 				sebalExportPath, usgsLoginUrl, usgsJsonUrl, usgsUserName,
 				usgsPassword, usgsAPIPeriod));
 
-		// FIXME
-		//doReturn(httpResponse).when(usgsNasaRepository).getLoginResponse();
+		doReturn(content).when(usgsNasaRepository).getLoginResponse();
 
 	    // exercise
 		String apiKey = usgsNasaRepository.generateAPIKey();
@@ -73,9 +71,8 @@ public class TestUSGSNasaRepository {
 	    Assert.assertEquals("9ccf44a1c7e74d7f94769956b54cd889", apiKey);
 	}
 	
-	// TODO: Update this test
 	@Test
-	public void testGetDownloadLinkResponse() throws ClientProtocolException,
+	public void testGetDownloadLinkResponseFormat() throws ClientProtocolException,
 			IOException, InterruptedException, JSONException {
 		// set up
 		String dataset = "fake-data-set";
@@ -106,9 +103,8 @@ public class TestUSGSNasaRepository {
 				sebalExportPath, usgsLoginUrl, usgsJsonUrl, usgsUserName,
 				usgsPassword, usgsAPIPeriod));
 
-		// FIXME
-		//doReturn(httpResponse).when(usgsNasaRepository)
-		//		.getDownloadResponse(dataset, sceneId, node, product);
+		doReturn(httpResponse).when(usgsNasaRepository)
+				.getDownloadHttpResponse(dataset, sceneId, node, product);
 
 		// exercise
 		String formatedDownloadLink = usgsNasaRepository.usgsDownloadURL(
