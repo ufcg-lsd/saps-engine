@@ -269,19 +269,16 @@ public class DBUtilsImpl implements DBUtils {
 
     protected String createImageList(String region, int year, String dataSet) {
         StringBuilder imageList = new StringBuilder();
-        for (int day = 1; day < 366; day++) {
+        for (int day = 1; day < 366; day+=16) {
             NumberFormat formatter = new DecimalFormat("000");
             String imageName = new String();
             
 			if (dataSet.equals(DATASET_LT5_TYPE)) {
-				imageName = "LT5" + region + year + formatter.format(day)
-						+ "CUB00";
+				imageName = "LT5" + region + year + formatter.format(day);
 			} else if(dataSet.equals(DATASET_LE7_TYPE)) {
-				imageName = "LE7" + region + year + formatter.format(day)
-						+ "CUB00";
+				imageName = "LE7" + region + year + formatter.format(day);
 			} else if(dataSet.equals(DATASET_LE8_TYPE)) {
-				imageName = "LE8" + region + year + formatter.format(day)
-						+ "CUB00";
+				imageName = "LE8" + region + year + formatter.format(day); 
 			}
             
             imageList.append(imageName + "\n");

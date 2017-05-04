@@ -1,8 +1,11 @@
 package org.fogbowcloud.sebal.engine.sebal;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,8 +114,8 @@ public class USGSNasaRepository implements NASARepository {
 	protected String generateAPIKey() {
 
 		try {
-			HttpResponse response = getLoginHttpResponse();
-			JSONObject apiKeyRequestResponse = new JSONObject(EntityUtils.toString(response.getEntity(), Charsets.UTF_8));
+			String response = getLoginHttpResponse();
+			JSONObject apiKeyRequestResponse = new JSONObject(response);
 
 			return apiKeyRequestResponse.getString("data");
 		} catch (Throwable e) {
@@ -122,20 +125,36 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 
-	protected HttpResponse getLoginHttpResponse() throws IOException,
-			ClientProtocolException {
-		BasicCookieStore cookieStore = new BasicCookieStore();
-		HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
-		
-		String loginJsonRequest = "{\"username\":\"" + usgsUserName
+	protected String getLoginHttpResponse() throws IOException,
+			ClientProtocolException {		
+		String loginJsonRequest = "jsonRequest={\"username\":\"" + usgsUserName
 				+ "\",\"password\":\"" + usgsPassword
 				+ "\",\"authType\":\"EROS\"}";
 		
-		HttpGet homeGet = new HttpGet(usgsJsonUrl + File.separator
-				+ "login?jsonRequest=" + loginJsonRequest);
-		
-		HttpResponse response = httpClient.execute(homeGet);
-		return response;
+		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
+				"--data", "'" + loginJsonRequest + "'", usgsJsonUrl
+						+ File.separator + "login");
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			return getProcessOutput(p);
+		} catch (Exception e) {
+			LOGGER.error("Error while logging in USGS", e);
+		}
+
+		return null;
+	}
+	
+	private String getProcessOutput(Process p) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		StringBuilder stringBuilder = new StringBuilder();
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			stringBuilder.append(line);
+			stringBuilder.append(System.getProperty("line.separator"));
+		}
+		return stringBuilder.toString();
 	}
     
 	protected boolean directoryExists(String path) {
@@ -235,29 +254,57 @@ public class USGSNasaRepository implements NASARepository {
 	private String doGetDownloadLink(String imageName) {
 
 		String link = null;
+		List<String> possibleStations = getPossibleStations();
 
 		try {
-			link = usgsDownloadURL(getDataSet(imageName), imageName,
-					EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+			for (String station : possibleStations) {
+				String imageNameConcat = imageName.concat(station);
+				link = usgsDownloadURL(getDataSet(imageNameConcat),
+						imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+				if (link != null && !link.isEmpty()) {
+					imageName = imageNameConcat;
+					return link;
+				}
+			}
 		} catch (Throwable e) {
 			LOGGER.error("Error while getting download link for image "
 					+ imageName, e);
 		}
 
-		return link;
+		return null;
+	}
+	
+	private List<String> getPossibleStations() {
+		List<String> possibleStations = new ArrayList<String>();
+
+		try {
+			File file = new File(
+					SebalPropertiesConstants.POSSIBLE_STATIONS_FILE_PATH);
+			FileReader fileReader = new FileReader(file);
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			String line;
+			while ((line = bufferedReader.readLine()) != null) {
+				possibleStations.add(line);
+			}
+			fileReader.close();
+		} catch (IOException e) {
+			LOGGER.error("Error while getting possible stations from file", e);
+		}
+
+		return possibleStations;
 	}
 
-    private String getDataSet(String imageName) {
-    	if(imageName.startsWith(LANDSAT_5_PREFIX)) {
-    		return LANDSAT_5_DATASET;
-    	} else if(imageName.startsWith(LANDSAT_7_PREFIX)) {
-    		return LANDSAT_7_DATASET;
-    	} else if(imageName.startsWith(LANDSAT_8_PREFIX)) {
-    		return LANDSAT_8_DATASET;
-    	}
-    	
-        return null;
-    }
+	private String getDataSet(String imageName) {
+		if (imageName.startsWith(LANDSAT_5_PREFIX)) {
+			return LANDSAT_5_DATASET;
+		} else if (imageName.startsWith(LANDSAT_7_PREFIX)) {
+			return LANDSAT_7_DATASET;
+		} else if (imageName.startsWith(LANDSAT_8_PREFIX)) {
+			return LANDSAT_8_DATASET;
+		}
+
+		return null;
+	}
 
 	protected String usgsDownloadURL(String dataset, String sceneId,
 			String node, String product) throws IOException,
