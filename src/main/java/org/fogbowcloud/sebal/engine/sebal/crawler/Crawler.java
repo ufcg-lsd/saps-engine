@@ -393,7 +393,9 @@ public class Crawler {
 			String imageDownloadLink = getUSGSRepository().getImageDownloadLink(imageData.getName());
 			imageData.setDownloadLink(imageDownloadLink);
 			
-			updateToDownloadingState(imageData);			
+			LOGGER.debug("Image download link is " + imageData.getDownloadLink());
+			
+			updateToDownloadingState(imageData);
 			usgsRepository.downloadImage(imageData);
 
 			// running Fmask
