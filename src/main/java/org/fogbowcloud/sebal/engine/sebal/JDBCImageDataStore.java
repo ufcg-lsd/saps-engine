@@ -75,6 +75,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		String dbDrive = properties.getProperty(DATASTORE_DRIVER);
 		String dbName = properties.getProperty(DATASTORE_NAME);
 
+		LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort);
 		init(imageStoreIP, imageStorePort, imageStoreURLPrefix, dbUserName,
 				dbUserPass, dbDrive, dbName);
 	}

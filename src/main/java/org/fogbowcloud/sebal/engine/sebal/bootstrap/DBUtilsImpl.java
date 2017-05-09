@@ -228,7 +228,7 @@ public class DBUtilsImpl implements DBUtils {
                 	if(imageDownloadLink != null && !imageDownloadLink.isEmpty()) {                		
                 		try {
                 			getImageStore().addImage(imageName,
-                					imageDownloadLink, priority, sebalVersion, sebalTag);
+                					"None", priority, sebalVersion, sebalTag);
                 		} catch (SQLException e) {
                 			LOGGER.error("Error while adding image at data base.", e);
                 		}
