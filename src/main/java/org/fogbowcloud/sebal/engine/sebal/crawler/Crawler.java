@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -78,9 +79,11 @@ public class Crawler {
 		
 		this.properties = properties;
 		this.imageStore = imageStore;
-		this.usgsRepository = usgsRepository;
 		this.federationMember = federationMember;
 		this.fmask = fmask;
+		
+		this.usgsRepository = usgsRepository;
+		this.usgsRepository.handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
 
 		this.pendingImageDownloadFile = new File("pending-image-download.db");
 		this.pendingImageDownloadDB = DBMaker.newFileDB(
