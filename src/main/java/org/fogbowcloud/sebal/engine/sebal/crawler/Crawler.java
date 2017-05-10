@@ -393,7 +393,7 @@ public class Crawler {
 	protected void downloadImage(final ImageData imageData)
 			throws SQLException, IOException {
 		try {
-			String imageDownloadLink = getUSGSRepository().getImageDownloadLink(imageData.getName());
+			String imageDownloadLink = usgsRepository.getImageDownloadLink(imageData.getName());
 			imageData.setDownloadLink(imageDownloadLink);
 			
 			LOGGER.debug("Image download link is " + imageData.getDownloadLink());
@@ -665,7 +665,7 @@ public class Crawler {
 	}
 
 	public USGSNasaRepository getUSGSRepository() {
-		return usgsRepository;
+		return this.usgsRepository;
 	}
 
 	public void setUsgsRepository(USGSNasaRepository usgsRepository) {
