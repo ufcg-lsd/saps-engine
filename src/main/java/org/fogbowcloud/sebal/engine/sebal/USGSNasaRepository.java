@@ -332,16 +332,11 @@ public class USGSNasaRepository implements NASARepository {
 		
 		try {
 			JSONObject downloadRequestResponse = new JSONObject(response);
-
-			int firstDownloadUrl = 0;
-			String formatedResponse = downloadRequestResponse
-					.getJSONArray("data").getString(firstDownloadUrl)
+			String downloadLink = downloadRequestResponse.getString("data")
 					.replace("\\/", "/");
-			String downloadLink = downloadRequestResponse.getJSONArray("data")
-					.getString(firstDownloadUrl);
+			
 			LOGGER.debug("downloadLink=" + downloadLink);
-
-			if (formatedResponse != null && !formatedResponse.isEmpty()) {
+			if (downloadLink != null && !downloadLink.isEmpty()) {
 				LOGGER.debug("Image " + sceneId + "download link"
 						+ downloadLink + " obtained");
 				return downloadLink;
