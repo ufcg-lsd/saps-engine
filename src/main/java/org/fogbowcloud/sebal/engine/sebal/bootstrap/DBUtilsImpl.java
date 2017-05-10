@@ -222,8 +222,9 @@ public class DBUtilsImpl implements DBUtils {
 
                 imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
                 for(String imageName : imageNames) {
-                	LOGGER.debug("Getting download link for " + imageName);
-                	String imageDownloadLink = getUSGSRepository().getImageDownloadLink(imageName);
+                	LOGGER.debug("Getting download link for " + imageName);                	
+					String imageDownloadLink = getUSGSRepository().getImageDownloadLink(imageName,
+									getUSGSRepository().getPossibleStations());
                 	
                 	if(imageDownloadLink != null && !imageDownloadLink.isEmpty()) {                		
                 		try {

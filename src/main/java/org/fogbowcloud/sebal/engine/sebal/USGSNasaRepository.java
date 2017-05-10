@@ -250,12 +250,35 @@ public class USGSNasaRepository implements NASARepository {
 
 		return null;
 	}
+	
+	public String getImageDownloadLink(String imageName, List<String> possibleStations) {
 
+		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
+			String link = doGetDownloadLink(imageName, possibleStations);
+			if (link != null && !link.isEmpty()) {
+				return link;
+			}
+		} else {
+			LOGGER.error("USGS API key invalid");
+		}
+
+		return null;
+	}
+	
 	private String doGetDownloadLink(String imageName) {
-
 		String link = null;
-		List<String> possibleStations = getPossibleStations();
+		link = usgsDownloadURL(getDataSet(imageName), imageName,
+				EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+		
+		if (link != null && !link.isEmpty()) {
+			return link;
+		}
 
+		return null;
+	}
+	
+	private String doGetDownloadLink(String imageName, List<String> possibleStations) {
+		String link = null;
 		for (String station : possibleStations) {
 			String imageNameConcat = imageName.concat(station);
 			link = usgsDownloadURL(getDataSet(imageNameConcat),
@@ -269,7 +292,7 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 	
-	private List<String> getPossibleStations() {
+	public List<String> getPossibleStations() {
 		List<String> possibleStations = new ArrayList<String>();
 
 		try {
