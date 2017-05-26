@@ -215,28 +215,35 @@ public class DBUtilsImpl implements DBUtils {
         int priority = 0;
         for (String region : regions) {
             for (int year = firstYear; year <= lastYear; year++) {
-            	String imageList = createImageList(region, year, dataSet);
-
-                File imageListFile = new File("images-" + year + ".txt");
-                FileUtils.write(imageListFile, imageList);
-
-                imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
-                for(String imageName : imageNames) {
-                	LOGGER.debug("Getting download link for " + imageName);                	
-					String imageDownloadLink = getUSGSRepository().getImageDownloadLink(imageName,
-									getUSGSRepository().getPossibleStations());
-                	
-                	if(imageDownloadLink != null && !imageDownloadLink.isEmpty()) {                		
-                		try {
-                			getImageStore().addImage(imageName,
-                					"None", priority, sebalVersion, sebalTag);
-                		} catch (SQLException e) {
-                			LOGGER.error("Error while adding image at data base.", e);
-                		}
-                	}
-                }
-                
-                imageListFile.delete();
+            	//String imageList = createImageList(region, year, dataSet);
+				StringBuilder imageList = new StringBuilder();
+				for (int day = 1; day < 366; day += 16) {
+					NumberFormat formatter = new DecimalFormat("000");
+		            String imageName = new String();
+		            
+					if (dataSet.equals(DATASET_LT5_TYPE)) {
+						imageName = "LT5";
+					} else if(dataSet.equals(DATASET_LE7_TYPE)) {
+						imageName = "LE7";
+					} else if(dataSet.equals(DATASET_LE8_TYPE)) {
+						imageName = "LE8"; 
+					}
+					
+					//TODO: change day format
+					String imageDownloadLink = getUSGSRepository()
+							.getImageDownloadLink(imageName, region, String.valueOf(year), "month",
+									formatter.format(day),
+									getUSGSRepository().getPossibleProcessingCorrectionLevels());
+					
+					if(imageDownloadLink != null && !imageDownloadLink.isEmpty()) {                		
+						try {
+							getImageStore().addImage(imageName,
+									"None", priority, sebalVersion, sebalTag);
+						} catch (SQLException e) {
+							LOGGER.error("Error while adding image at data base.", e);
+						}
+					}
+				}
             }
             priority++;
         }

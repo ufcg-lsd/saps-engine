@@ -64,6 +64,20 @@ public class USGSNasaRepository implements NASARepository {
     // conf constants
     private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 
+	private static final Object CORRECTION_LEVEL_L1TP = null;
+
+	private static final Object CORRECTION_LEVEL_L1GS = null;
+
+	private static final Object CORRECTION_LEVEL_L1GT = null;
+
+	private static final String COLLECTION_ONE = null;
+
+	private static final String COLLECTION_CATHEGORY_L1TP = null;
+
+	private static final String COLLECTION_CATHEGORY_L1GS = null;
+
+	private static final String COLLECTION_CATHEGORY_L1GT = null;
+
     
     public USGSNasaRepository(Properties properties) {
 		this(properties.getProperty(SEBAL_EXPORT_PATH),
@@ -251,10 +265,10 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 	
-	public String getImageDownloadLink(String imageName, List<String> possibleStations) {
+	public String getImageDownloadLink(String imageNamePrefix, String region, String year, String month, String day, List<String> processingCorrectionLevels) {
 
 		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
-			String link = doGetDownloadLink(imageName, possibleStations);
+			String link = doGetDownloadLink(imageNamePrefix, region, year, month, day, processingCorrectionLevels);
 			if (link != null && !link.isEmpty()) {
 				return link;
 			}
@@ -277,22 +291,45 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 	
-	private String doGetDownloadLink(String imageName, List<String> possibleStations) {
+	private String doGetDownloadLink(String imageNamePrefix, String region,
+			String year, String month, String day,
+			List<String> processingCorrectionLevels) {
 		String link = null;
-		for (String station : possibleStations) {
-			String imageNameConcat = imageName.concat(station);
-			link = usgsDownloadURL(getDataSet(imageNameConcat),
-					imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+		for (String correctionLevel : processingCorrectionLevels) {
+			String imageFullName = constructImageFullName(imageNamePrefix, region, year, month,
+					day, correctionLevel);
+			
+			link = usgsDownloadURL(getDataSet(imageFullName),
+					imageFullName, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 			if (link != null && !link.isEmpty()) {
-				imageName = imageNameConcat;
+				imageNamePrefix = imageFullName;
 				return link;
 			}
 		}
 
 		return null;
 	}
+
+	private String constructImageFullName(String imageNamePrefix, String region,
+			String year, String month, String day, String correctionLevel) {
+		if (correctionLevel.equals(CORRECTION_LEVEL_L1TP)) {
+			return imageNamePrefix + "_" + correctionLevel + "_" + region + "_"
+					+ year + month + day + COLLECTION_ONE
+					+ COLLECTION_CATHEGORY_L1TP;
+		} else if (correctionLevel.equals(CORRECTION_LEVEL_L1GS)) {
+			return imageNamePrefix + "_" + correctionLevel + "_" + region + "_"
+					+ year + month + day + COLLECTION_ONE
+					+ COLLECTION_CATHEGORY_L1GS;
+		} else if (correctionLevel.equals(CORRECTION_LEVEL_L1GT)) {
+			return imageNamePrefix + "_" + correctionLevel + "_" + region + "_"
+					+ year + month + day + COLLECTION_ONE
+					+ COLLECTION_CATHEGORY_L1GT;
+		}
+
+		return null;
+	}
 	
-	public List<String> getPossibleStations() {
+	public List<String> getPossibleProcessingCorrectionLevels() {
 		List<String> possibleStations = new ArrayList<String>();
 
 		try {
