@@ -13,7 +13,6 @@ import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.http.HttpResponse;
@@ -50,11 +49,14 @@ public class USGSNasaRepository implements NASARepository {
     private static final String LANDSAT_5_PREFIX = "LT5";
     private static final String LANDSAT_7_PREFIX = "LE7";
     private static final String LANDSAT_8_PREFIX = "LT8";
+    private static final String LANDSAT_5_NEW_COLLECTION_PREFIX = "LT05";
+    private static final String LANDSAT_7_NEW_COLLECTION_PREFIX = "LE07";
+    private static final String LANDSAT_8_NEW_COLLECTION_PREFIX = "LC08";
 
     //dataset
-    private static final String LANDSAT_5_DATASET = "LANDSAT_TM";
-    private static final String LANDSAT_7_DATASET = "LSR_LANDSAT_ETM_COMBINED";
-    private static final String LANDSAT_8_DATASET = "LANDSAT_8";
+    private static final String LANDSAT_5_DATASET = "LANDSAT_TM_C1";
+    private static final String LANDSAT_7_DATASET = "LANDSAT_ETM_C1";
+    private static final String LANDSAT_8_DATASET = "LANDSAT_8_C1";
     
     // nodes
     private static final String EARTH_EXPLORER_NODE = "EE";
@@ -63,20 +65,6 @@ public class USGSNasaRepository implements NASARepository {
     
     // conf constants
     private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
-
-	private static final Object CORRECTION_LEVEL_L1TP = null;
-
-	private static final Object CORRECTION_LEVEL_L1GS = null;
-
-	private static final Object CORRECTION_LEVEL_L1GT = null;
-
-	private static final String COLLECTION_ONE = null;
-
-	private static final String COLLECTION_CATHEGORY_L1TP = null;
-
-	private static final String COLLECTION_CATHEGORY_L1GS = null;
-
-	private static final String COLLECTION_CATHEGORY_L1GT = null;
 
     
     public USGSNasaRepository(Properties properties) {
@@ -265,10 +253,10 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 	
-	public String getImageDownloadLink(String imageNamePrefix, String region, String year, String month, String day, List<String> processingCorrectionLevels) {
+	public String getImageDownloadLink(String imageName, List<String> possibleStations) {
 
 		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
-			String link = doGetDownloadLink(imageNamePrefix, region, year, month, day, processingCorrectionLevels);
+			String link = doGetDownloadLink(imageName, possibleStations);
 			if (link != null && !link.isEmpty()) {
 				return link;
 			}
@@ -281,7 +269,7 @@ public class USGSNasaRepository implements NASARepository {
 	
 	private String doGetDownloadLink(String imageName) {
 		String link = null;
-		link = usgsDownloadURL(getDataSet(imageName), imageName,
+		link = usgsDownloadURL(getNewSceneDataSet(imageName), imageName,
 				EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 		
 		if (link != null && !link.isEmpty()) {
@@ -290,46 +278,83 @@ public class USGSNasaRepository implements NASARepository {
 
 		return null;
 	}
-	
-	private String doGetDownloadLink(String imageNamePrefix, String region,
-			String year, String month, String day,
-			List<String> processingCorrectionLevels) {
+
+	private String getNewSceneDataSet(String imageName) {
+		if (imageName.startsWith(LANDSAT_5_NEW_COLLECTION_PREFIX)) {
+			return LANDSAT_5_DATASET;
+		} else if (imageName.startsWith(LANDSAT_7_NEW_COLLECTION_PREFIX)) {
+			return LANDSAT_7_DATASET;
+		} else if (imageName.startsWith(LANDSAT_8_NEW_COLLECTION_PREFIX)) {
+			return LANDSAT_8_DATASET;
+		}
+
+		return null;
+	}
+
+	private String doGetDownloadLink(String imageName,
+			List<String> possibleStations) {
 		String link = null;
-		for (String correctionLevel : processingCorrectionLevels) {
-			String imageFullName = constructImageFullName(imageNamePrefix, region, year, month,
-					day, correctionLevel);
-			
-			link = usgsDownloadURL(getDataSet(imageFullName),
-					imageFullName, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+		for (String station : possibleStations) {
+			String imageNameConcat = imageName.concat(station);
+			link = usgsDownloadURL(getDataSet(imageNameConcat),
+					imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 			if (link != null && !link.isEmpty()) {
-				imageNamePrefix = imageFullName;
+				imageName = getCollectionOneSceneId(
+						getDataSet(imageNameConcat), imageNameConcat,
+						EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 				return link;
 			}
 		}
 
 		return null;
 	}
+	
+	private String getCollectionOneSceneId(String dataset, String oldSceneId,
+			String node, String product) {
+		// GET NEW SCENE ID        
+		String response = getMetadataHttpResponse(dataset, oldSceneId, node, product);
+		
+		try {
+			JSONObject metadataRequestResponse = new JSONObject(response);
+			String newSceneId = metadataRequestResponse.getJSONObject("data").getString("displayId");
+			
+			
+			LOGGER.debug("newSceneId=" + newSceneId);
+			if (newSceneId != null && !newSceneId.isEmpty()) {
+				LOGGER.debug("Image " + newSceneId + "download link"
+						+ newSceneId + " obtained");
+				return newSceneId;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while formating request response", e);
+		}		
+		
+		return null;
+	}
 
-	private String constructImageFullName(String imageNamePrefix, String region,
-			String year, String month, String day, String correctionLevel) {
-		if (correctionLevel.equals(CORRECTION_LEVEL_L1TP)) {
-			return imageNamePrefix + "_" + correctionLevel + "_" + region + "_"
-					+ year + month + day + COLLECTION_ONE
-					+ COLLECTION_CATHEGORY_L1TP;
-		} else if (correctionLevel.equals(CORRECTION_LEVEL_L1GS)) {
-			return imageNamePrefix + "_" + correctionLevel + "_" + region + "_"
-					+ year + month + day + COLLECTION_ONE
-					+ COLLECTION_CATHEGORY_L1GS;
-		} else if (correctionLevel.equals(CORRECTION_LEVEL_L1GT)) {
-			return imageNamePrefix + "_" + correctionLevel + "_" + region + "_"
-					+ year + month + day + COLLECTION_ONE
-					+ COLLECTION_CATHEGORY_L1GT;
+	private String getMetadataHttpResponse(String dataset, String sceneId,
+			String node, String product) {
+		String metadataJsonRequest = "jsonRequest={\"apiKey\":\"" + usgsAPIKey
+				+ "\",\"datasetName\":\"" + dataset + "\",\"node\":\"" + node
+				+ "\",\"entityIds\":[\"" + sceneId + "\"]}";
+
+		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
+				"--data", metadataJsonRequest, usgsJsonUrl + File.separator
+						+ "metadata");
+		LOGGER.debug("Command=" + builder.command());
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			return getProcessOutput(p);
+		} catch (Exception e) {
+			LOGGER.error("Error while logging in USGS", e);
 		}
 
 		return null;
 	}
-	
-	public List<String> getPossibleProcessingCorrectionLevels() {
+
+	public List<String> getPossibleStations() {
 		List<String> possibleStations = new ArrayList<String>();
 
 		try {

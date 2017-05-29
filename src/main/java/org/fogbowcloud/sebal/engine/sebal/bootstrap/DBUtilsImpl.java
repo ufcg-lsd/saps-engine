@@ -1,6 +1,5 @@
 package org.fogbowcloud.sebal.engine.sebal.bootstrap;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -16,8 +15,6 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.sebal.DefaultNASARepository;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
@@ -231,9 +228,8 @@ public class DBUtilsImpl implements DBUtils {
 					
 					//TODO: change day format
 					String imageDownloadLink = getUSGSRepository()
-							.getImageDownloadLink(imageName, region, String.valueOf(year), "month",
-									formatter.format(day),
-									getUSGSRepository().getPossibleProcessingCorrectionLevels());
+							.getImageDownloadLink(imageName,
+									getUSGSRepository().getPossibleStations());
 					
 					if(imageDownloadLink != null && !imageDownloadLink.isEmpty()) {                		
 						try {
