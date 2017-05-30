@@ -1,5 +1,6 @@
 package org.fogbowcloud.sebal.engine.sebal.bootstrap;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -15,6 +16,8 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.sebal.DefaultNASARepository;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
@@ -207,44 +210,37 @@ public class DBUtilsImpl implements DBUtils {
 			List<String> regions, String dataSet, String sebalVersion,
 			String sebalTag) throws IOException {
 
-        LOGGER.debug("Regions: " + regions);
-        List<String> imageNames = new ArrayList<String>();
-        int priority = 0;
-        for (String region : regions) {
-            for (int year = firstYear; year <= lastYear; year++) {
-            	//String imageList = createImageList(region, year, dataSet);
-				StringBuilder imageList = new StringBuilder();
-				for (int day = 1; day < 366; day += 16) {
-					NumberFormat formatter = new DecimalFormat("000");
-		            String imageName = new String();
-		            
-					if (dataSet.equals(DATASET_LT5_TYPE)) {
-						imageName = "LT5";
-					} else if(dataSet.equals(DATASET_LE7_TYPE)) {
-						imageName = "LE7";
-					} else if(dataSet.equals(DATASET_LE8_TYPE)) {
-						imageName = "LE8"; 
-					}
-					
-					//TODO: change day format
+		LOGGER.debug("Regions: " + regions);
+		List<String> imageNames = new ArrayList<String>();
+		int priority = 0;
+		for (String region : regions) {
+			for (int year = firstYear; year <= lastYear; year++) {
+				String imageList = createImageList(region, year, dataSet);
+				File imageListFile = new File("images-" + year + ".txt");
+				FileUtils.write(imageListFile, imageList);
+
+				imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
+				for (String imageName : imageNames) {
+					LOGGER.debug("Getting download link for " + imageName);
 					String imageDownloadLink = getUSGSRepository()
 							.getImageDownloadLink(imageName,
 									getUSGSRepository().getPossibleStations());
-					
-					if(imageDownloadLink != null && !imageDownloadLink.isEmpty()) {                		
+
+					if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
 						try {
-							getImageStore().addImage(imageName,
-									"None", priority, sebalVersion, sebalTag);
+							getImageStore().addImage(imageName, "None", priority, sebalVersion, sebalTag,
+									getUSGSRepository().getNewSceneId(imageName));
 						} catch (SQLException e) {
-							LOGGER.error("Error while adding image at data base.", e);
+							LOGGER.error(
+									"Error while adding image at data base.", e);
 						}
 					}
 				}
-            }
-            priority++;
-        }
-        return imageNames;
-    }
+			}
+			priority++;
+		}
+		return imageNames;
+	}
 
     public List<ImageData> getImagesInDB() throws SQLException, ParseException {
     	
@@ -282,7 +278,7 @@ public class DBUtilsImpl implements DBUtils {
 			} else if(dataSet.equals(DATASET_LE7_TYPE)) {
 				imageName = "LE7" + region + year + formatter.format(day);
 			} else if(dataSet.equals(DATASET_LE8_TYPE)) {
-				imageName = "LE8" + region + year + formatter.format(day); 
+				imageName = "LC8" + region + year + formatter.format(day); 
 			}
             
             imageList.append(imageName + "\n");

@@ -57,7 +57,7 @@ public class TestFetcherIntegration {
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 
 		Mockito.doReturn(fetcherVolumeInputPath).when(fetcherHelper).getLocalImageInputsPath(imageData, properties);
 
@@ -95,7 +95,7 @@ public class TestFetcherIntegration {
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
@@ -140,11 +140,11 @@ public class TestFetcherIntegration {
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 		ImageData imageData2 = new ImageData("image2", "link2",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 
 		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
@@ -187,11 +187,11 @@ public class TestFetcherIntegration {
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 		ImageData imageData2 = new ImageData("image2", "link2",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
@@ -243,11 +243,11 @@ public class TestFetcherIntegration {
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 		ImageData imageData2 = new ImageData("image2", "link2",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
@@ -301,7 +301,7 @@ public class TestFetcherIntegration {
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 
 		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		Mockito.doReturn(sebalResultsExportPath).when(fetcherHelper)
@@ -346,7 +346,7 @@ public class TestFetcherIntegration {
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "");
+						date.getTime()), "available", "", "None");
 
 		Mockito.doReturn(sebalInputExportPath).when(fetcherHelper)
 				.getRemoteImageInputsPath(imageData, properties);

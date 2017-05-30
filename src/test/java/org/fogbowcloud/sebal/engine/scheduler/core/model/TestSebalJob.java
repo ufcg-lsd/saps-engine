@@ -43,7 +43,7 @@ public class TestSebalJob {
 		ImageData imageData = new ImageData("fakeimagename", "link1",
 				ImageState.NOT_DOWNLOADED, "fake-federation", 0, "NE", "NE",
 				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				new Timestamp(date.getTime()), "available", "", "None");
 		
 		doNothing().when(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
 		Map<String, ImageState> fakePendingMap = new HashMap<String, ImageState>();
@@ -61,7 +61,7 @@ public class TestSebalJob {
 		ImageData imageData = new ImageData("fakeimagename", "link1",
 				ImageState.NOT_DOWNLOADED, "fake-federation", 0, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				new Timestamp(date.getTime()), "available", "", "None");
 		
 		doReturn(imageData).when(dstore).getImage(fakeImageName);
 		doNothing().when(dstore).updateImageState(fakeImageName, ImageState.FINISHED);
@@ -71,7 +71,7 @@ public class TestSebalJob {
 		ImageData pendingImageData = new ImageData("pendingImage", "link2",
 				ImageState.NOT_DOWNLOADED, "fake-federation", 0, "NE", "NE", "NE",
 				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				new Timestamp(date.getTime()), "available", "", "None");
 		
 		doReturn(pendingImageData).when(dstore).getImage(pendingImageName);
 		doNothing().when(dstore).updateImageState(pendingImageName, ImageState.FINISHED);

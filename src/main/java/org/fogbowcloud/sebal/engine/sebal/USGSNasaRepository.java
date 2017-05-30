@@ -299,9 +299,7 @@ public class USGSNasaRepository implements NASARepository {
 			link = usgsDownloadURL(getDataSet(imageNameConcat),
 					imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 			if (link != null && !link.isEmpty()) {
-				imageName = getCollectionOneSceneId(
-						getDataSet(imageNameConcat), imageNameConcat,
-						EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+				imageName = imageNameConcat;
 				return link;
 			}
 		}
@@ -439,5 +437,10 @@ public class USGSNasaRepository implements NASARepository {
 	
 	protected String getUSGSAPIKey() {
 		return this.usgsAPIKey;
+	}
+
+	public String getNewSceneId(String imageName) {
+		return getCollectionOneSceneId(getDataSet(imageName),
+				imageName, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 	}
 }

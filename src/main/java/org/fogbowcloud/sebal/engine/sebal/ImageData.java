@@ -26,6 +26,8 @@ public class ImageData implements Serializable {
 	private Timestamp updateTime;
 	private String status;
 	private String error;
+	private String collectionTierName;
+
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
 	
 	public static final String AVAILABLE = "available";
@@ -37,7 +39,8 @@ public class ImageData implements Serializable {
 			String federationMember, int priority, String stationId,
 			String sebalVersion, String sebalTag, String crawlerVersion,
 			String fetcherVersion, String blowoutVersion, String fmaskVersion,
-			Timestamp creationTime, Timestamp updateTime, String status, String error) {
+			Timestamp creationTime, Timestamp updateTime, String status,
+			String error, String collectionTierName) {
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -54,6 +57,7 @@ public class ImageData implements Serializable {
 		this.updateTime = updateTime;
 		this.status = status;
 		this.error = error;
+		this.collectionTierName = collectionTierName;
 	}
 
 	public String getName() {
@@ -120,6 +124,10 @@ public class ImageData implements Serializable {
 		return error;
 	}
 	
+	public String getCollectionTierName() {
+		return collectionTierName;
+	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -184,13 +192,17 @@ public class ImageData implements Serializable {
 		this.error = error;
 	}
 
+	public void setCollectionTierName(String collectionTierName) {
+		this.collectionTierName = collectionTierName;
+	}
+
 	public String toString() {
 		return "[" + name + ", " + downloadLink + ", " + state.getValue() + ", "
 				+ federationMember + ", " + priority + ", " + stationId + ", "
 				+ sebalVersion + ", " + sebalTag + ", " + crawlerVersion + ", "
 				+ fetcherVersion + ", " + blowoutVersion + ", " + fmaskVersion
 				+ ", " + creationTime + ", " + updateTime + ", " + status
-				+ ", " + error + "]";
+				+ ", " + error + ", " + collectionTierName + "]";
 	}
 	
 	public String formatedToString() {
@@ -207,7 +219,8 @@ public class ImageData implements Serializable {
 				+ "[ FmaskVersion = " + fmaskVersion + " ]\n"
 				+ "[ CreationTime = " + creationTime + " ]\n"
 				+ "[ UpdateTime = " + updateTime + " ]\n" + "[ Status = "
-				+ status + " ]\n" + "[ Error = " + error + " ]";
+				+ status + " ]\n" + "[ Error = " + error + " ]\n"
+				+ "[ CollectionTierImageName = " + collectionTierName + " ]";
 	}
 	
 	public JSONObject toJSON() throws JSONException {
@@ -228,7 +241,8 @@ public class ImageData implements Serializable {
 		json.put("creationTime", creationTime);
 		json.put("updateTime", updateTime);
 		json.put("status", status);
-		json.put("error", error);		
+		json.put("error", error);
+		json.put("collectionTierName", collectionTierName);
 		
 		return json;
 	}
@@ -247,7 +261,8 @@ public class ImageData implements Serializable {
 			ImageData other = (ImageData) o;
 			return getName().equals(other.getName())
 					&& getDownloadLink().equals(other.getDownloadLink())
-					&& getState().equals(other.getState()) && getPriority() == other.getPriority()
+					&& getState().equals(other.getState())
+					&& getPriority() == other.getPriority()
 					&& getFederationMember().equals(other.getFederationMember())
 					&& getStationId().equals(other.getStationId())
 					&& getSebalVersion().equals(other.getSebalVersion())
@@ -259,7 +274,8 @@ public class ImageData implements Serializable {
 					&& getCreationTime().equals(other.getCreationTime())
 					&& getUpdateTime().equals(other.getUpdateTime())
 					&& getImageStatus().equals(other.getImageStatus())
-					&& getImageError().equals(other.getImageError());
+					&& getImageError().equals(other.getImageError())
+					&& getCollectionTierName().equals(other.getCollectionTierName());
 		}
 		return false;
 	}

@@ -40,6 +40,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String UPDATED_TIME_COL = "utime";
 	private static final String IMAGE_STATUS_COL = "status";
 	private static final String ERROR_MSG_COL = "error_msg";
+	private static final String COLLECTION_TIER_IMAGE_NAME_COL = "tier_collection_image_name";
 
 	private static final String USERS_TABLE_NAME = "sebal_users";
 	private static final String USER_EMAIL_COL = "user_email";
@@ -118,6 +119,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ FMASK_VERSION_COL + " VARCHAR(255), " + CREATION_TIME_COL
 					+ " TIMESTAMP, " + UPDATED_TIME_COL + " TIMESTAMP, "
 					+ IMAGE_STATUS_COL + " VARCHAR(255), " + ERROR_MSG_COL
+					+ " VARCHAR(255), " + COLLECTION_TIER_IMAGE_NAME_COL
 					+ " VARCHAR(255))");
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME
@@ -215,15 +217,16 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	private static final String INSERT_IMAGE_SQL = "INSERT INTO "
 			+ IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?, ?)";
 
 	@Override
 	public void addImage(String imageName, String downloadLink, int priority,
-			String sebalVersion, String sebalTag) throws SQLException {
+			String sebalVersion, String sebalTag, String collectionTierImageName) throws SQLException {
 		LOGGER.info("Adding image " + imageName + " with download link "
 				+ downloadLink + " and priority " + priority);
 		if (imageName == null || imageName.isEmpty() || downloadLink == null
-				|| downloadLink.isEmpty()) {
+				|| downloadLink.isEmpty() || collectionTierImageName == null
+				|| collectionTierImageName.isEmpty()) {
 			LOGGER.error("Invalid image name " + imageName);
 			throw new IllegalArgumentException("Invalid image name "
 					+ imageName);
@@ -250,6 +253,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(12, "NE");
 			insertStatement.setString(13, ImageData.AVAILABLE);
 			insertStatement.setString(14, "no_errors");
+			insertStatement.setString(15, collectionTierImageName);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -1105,7 +1109,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 							.getTimestamp(CREATION_TIME_COL), rs
 							.getTimestamp(UPDATED_TIME_COL), rs
 							.getString(IMAGE_STATUS_COL), rs
-							.getString(ERROR_MSG_COL)));
+							.getString(ERROR_MSG_COL), rs
+							.getString(COLLECTION_TIER_IMAGE_NAME_COL)));
 		}
 		return imageDatas;
 	}
