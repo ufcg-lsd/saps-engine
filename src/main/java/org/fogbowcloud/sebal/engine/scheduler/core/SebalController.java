@@ -133,7 +133,7 @@ public class SebalController extends BlowoutController {
 
 		try {
 			List<ImageData> imagesToProcess = imageStore.getIn(imageState,
-					ImageDataStore.UNLIMITED);			
+					ImageDataStore.UNLIMITED);
 			for (ImageData imageData : imagesToProcess) {
 				LOGGER.debug("The image " + imageData.getName()
 						+ " is in the execution state "
@@ -167,22 +167,20 @@ public class SebalController extends BlowoutController {
 					LOGGER.debug("Creating Sebal task " + taskImpl.getId());
 
 					taskImpl = SebalTasks.createSebalTask(taskImpl, properties,
-							imageData.getName(), specWithFederation,
+							imageData.getCollectionTierName(), specWithFederation,
 							imageData.getFederationMember(), nfsServerIP,
 							nfsServerPort, imageData.getSebalVersion(),
 							imageData.getSebalTag());
-					imageData.setState(ImageState.QUEUED);
-
-					imageData.setBlowoutVersion(getBlowoutVersion(properties));
 					
+					imageData.setState(ImageState.QUEUED);
+					imageData.setBlowoutVersion(getBlowoutVersion(properties));					
 					addTask(taskImpl);
 
 					imageStore.updateImage(imageData);
 					imageData.setUpdateTime(imageStore.getImage(
 							imageData.getName()).getUpdateTime());
 					try {
-						imageStore
-								.addStateStamp(imageData.getName(),
+						imageStore.addStateStamp(imageData.getName(),
 										imageData.getState(),
 										imageData.getUpdateTime());
 					} catch (SQLException e) {
