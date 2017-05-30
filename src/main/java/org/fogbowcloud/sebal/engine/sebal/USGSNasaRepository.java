@@ -49,9 +49,6 @@ public class USGSNasaRepository implements NASARepository {
     private static final String LANDSAT_5_PREFIX = "LT5";
     private static final String LANDSAT_7_PREFIX = "LE7";
     private static final String LANDSAT_8_PREFIX = "LT8";
-    private static final String LANDSAT_5_NEW_COLLECTION_PREFIX = "LT05";
-    private static final String LANDSAT_7_NEW_COLLECTION_PREFIX = "LE07";
-    private static final String LANDSAT_8_NEW_COLLECTION_PREFIX = "LC08";
 
     //dataset
     private static final String LANDSAT_5_DATASET = "LANDSAT_TM_C1";
@@ -269,23 +266,11 @@ public class USGSNasaRepository implements NASARepository {
 	
 	private String doGetDownloadLink(String imageName) {
 		String link = null;
-		link = usgsDownloadURL(getNewSceneDataSet(imageName), imageName,
+		link = usgsDownloadURL(getDataSet(imageName), imageName,
 				EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 		
 		if (link != null && !link.isEmpty()) {
 			return link;
-		}
-
-		return null;
-	}
-
-	private String getNewSceneDataSet(String imageName) {
-		if (imageName.startsWith(LANDSAT_5_NEW_COLLECTION_PREFIX)) {
-			return LANDSAT_5_DATASET;
-		} else if (imageName.startsWith(LANDSAT_7_NEW_COLLECTION_PREFIX)) {
-			return LANDSAT_7_DATASET;
-		} else if (imageName.startsWith(LANDSAT_8_NEW_COLLECTION_PREFIX)) {
-			return LANDSAT_8_DATASET;
 		}
 
 		return null;
@@ -330,7 +315,7 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 
-	private String getMetadataHttpResponse(String dataset, String sceneId,
+	protected String getMetadataHttpResponse(String dataset, String sceneId,
 			String node, String product) {
 		String metadataJsonRequest = "jsonRequest={\"apiKey\":\"" + usgsAPIKey
 				+ "\",\"datasetName\":\"" + dataset + "\",\"node\":\"" + node

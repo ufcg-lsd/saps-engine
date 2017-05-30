@@ -16,7 +16,6 @@ import java.util.concurrent.Executors;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
-import org.fogbowcloud.sebal.engine.sebal.FMask;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
@@ -40,9 +39,7 @@ public class Crawler {
 	protected ConcurrentMap<String, ImageData> pendingImageDownloadMap;
 
 	private USGSNasaRepository usgsRepository;
-	private final ImageDataStore imageStore;
-	
-	private FMask fmask;
+	private final ImageDataStore imageStore;	
 
 	private String crawlerVersion;
 	private String fmaskVersion;
@@ -58,17 +55,17 @@ public class Crawler {
 	public Crawler(Properties properties, String crawlerIP, String nfsPort,
 			String federationMember) throws SQLException {
 		this(properties, new JDBCImageDataStore(properties), new USGSNasaRepository(properties),
-				crawlerIP, nfsPort, federationMember, new FMask());
+				crawlerIP, nfsPort, federationMember);
 
 		LOGGER.info("Creating crawler in federation " + federationMember);
 	}
 
 	protected Crawler(Properties properties, ImageDataStore imageStore,
 			USGSNasaRepository usgsRepository, String crawlerIP,
-			String nfsPort, String federationMember, FMask fmask) {
+			String nfsPort, String federationMember) {
 		try {
 			checkProperties(properties, imageStore, usgsRepository, crawlerIP,
-					nfsPort, federationMember, fmask);
+					nfsPort, federationMember);
 		} catch (IllegalArgumentException e) {
 			LOGGER.error("Error while getting properties", e);
 			System.exit(1);
@@ -80,7 +77,6 @@ public class Crawler {
 		this.properties = properties;
 		this.imageStore = imageStore;
 		this.federationMember = federationMember;
-		this.fmask = fmask;
 		
 		this.usgsRepository = usgsRepository;
 		this.usgsRepository.handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
@@ -103,8 +99,8 @@ public class Crawler {
 
 	private void checkProperties(Properties properties,
 			ImageDataStore imageStore, USGSNasaRepository usgsRepository,
-			String crawlerIP, String nfsPort, String federationMember,
-			FMask fmask) throws IllegalArgumentException {
+			String crawlerIP, String nfsPort, String federationMember)
+			throws IllegalArgumentException {
 		if (properties == null) {
 			throw new IllegalArgumentException(
 					"Properties arg must not be null.");
@@ -138,10 +134,6 @@ public class Crawler {
 		if (federationMember.isEmpty()) {
 			throw new IllegalArgumentException(
 					"Federation member arg must not be empty.");
-		}
-
-		if (fmask == null) {
-			throw new IllegalArgumentException("Fmask arg must not be empty.");
 		}
 	}
 
@@ -400,29 +392,8 @@ public class Crawler {
 			
 			updateToDownloadingState(imageData);
 			usgsRepository.downloadImage(imageData);
-
-			// running Fmask
-			LOGGER.debug("Running Fmask for image " + imageData.getName());
-			int exitValue = 0;			
-			try {
-				exitValue = fmask.runFmask(imageData,
-						properties.getProperty(SebalPropertiesConstants.FMASK_SCRIPT_PATH),
-						properties.getProperty(SebalPropertiesConstants.FMASK_TOOL_PATH),
-						properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
-			} catch (Exception e) {
-				LOGGER.error("Error while running Fmask", e);
-			}
-			
-			if (exitValue != 0) {
-				LOGGER.error("It was not possible run Fmask for image "
-						+ imageData);
-				markImageWithErrorAndUpdateState(imageData, properties);
-				return;
-			}
 			
 			imageData.setCrawlerVersion(crawlerVersion);
-			imageData.setFmaskVersion(fmaskVersion);
-
 			updateToDownloadedState(imageData);
 
 			pendingImageDownloadMap.remove(imageData.getName());
@@ -480,30 +451,6 @@ public class Crawler {
 	 
 		br.close();
 		return fmaskVersion;
-	}
-
-	private void markImageWithErrorAndUpdateState(ImageData imageData,
-			Properties properties) throws IOException {
-		try {
-			if (imageData.getFederationMember().equals(federationMember)) {
-				imageData.setState(ImageState.ERROR);
-				imageData.setImageError("It was not possible run Fmask for image");			
-				
-				imageStore.updateImage(imageData);
-				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-
-				deleteImageFromDisk(imageData,
-						properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
-
-				LOGGER.debug("Removing image " + imageData
-						+ " from pending image map");
-				pendingImageDownloadMap.remove(imageData.getName());
-				pendingImageDownloadDB.commit();
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while updating image data: " + imageData.getName(), e);
-			removeFromPendingAndUpdateState(imageData, properties);
-		}
 	}
 
 	private void removeFromPendingAndUpdateState(final ImageData imageData,
