@@ -1019,7 +1019,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " WHERE "
 			+ STATE_COL
 			+ " = ? AND "
-			+ IMAGE_STATUS_COL + " = ? AND " + FEDERATION_MEMBER_COL + " = ?";
+			+ IMAGE_STATUS_COL + " = ? AND " + FEDERATION_MEMBER_COL + " = ? LIMIT ?";
 
 	/**
 	 * This method selects and locks all images marked as NOT_DOWNLOADED and
@@ -1068,6 +1068,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.setString(1, ImageState.SELECTED.getValue());
 			selectStatement.setString(2, ImageData.AVAILABLE);
 			selectStatement.setString(3, federationMember);
+			selectStatement.setInt(4, limit);
 			selectStatement.setQueryTimeout(300);
 			selectStatement.execute();
 

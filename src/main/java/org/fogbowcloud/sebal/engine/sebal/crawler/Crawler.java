@@ -47,7 +47,7 @@ public class Crawler {
 	private int numberOfDownloadLinkRequests = 0;
 
 	// Image dir size in bytes
-	private static final long DEFAULT_IMAGE_DIR_SIZE = 356 * FileUtils.ONE_MB;
+	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
 
 	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
 
@@ -150,7 +150,7 @@ public class Crawler {
 				purgeImagesFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
-				long numToDownload = numberOfImagesToDownload();
+				double numToDownload = numberOfImagesToDownload();
 				if (numToDownload > 0) {
 					download(numToDownload);
 				} else {
@@ -315,8 +315,9 @@ public class Crawler {
 				imageData.getState(), imageData.getUpdateTime());
 	}
 
-	protected void download(long maxImagesToDownload) throws SQLException,
+	protected void download(double maxImagesToDownload) throws SQLException,
 			IOException {
+		LOGGER.debug("maxImagesToDownload=" + (int) maxImagesToDownload);
 		List<ImageData> imageDataList = new ArrayList<ImageData>();
 
 		try {
@@ -331,7 +332,7 @@ public class Crawler {
 		}
 
 		for (ImageData imageData : imageDataList) {
-			if(imageData.getFederationMember().equals(federationMember)) {				
+			if(imageData.getFederationMember().equals(federationMember)) {
 				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 				
 				if (imageData != null) {
@@ -361,15 +362,21 @@ public class Crawler {
 		}
 	}
 
-	protected long numberOfImagesToDownload() throws NumberFormatException,
+	protected double numberOfImagesToDownload() throws NumberFormatException,
 			InterruptedException, IOException, SQLException {
 		String volumeDirPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
-		File volumePath = getExportDirPath(volumeDirPath);
-		if (volumePath.exists() && volumePath.isDirectory()) {
-			long freeVolumeSpaceOutputDedicated = (volumePath.getTotalSpace() * 20)/100;
-			long availableVolumeSpace = volumePath.getFreeSpace() - freeVolumeSpaceOutputDedicated;
-			long numberOfImagesToDownload = availableVolumeSpace
+		File volumePath = new File(volumeDirPath);
+ 		if (volumePath.exists() && volumePath.isDirectory()) {			
+ 			double freeVolumeSpaceOutputDedicated = Double.valueOf(volumePath.getTotalSpace()) * 0.2;
+ 			double availableVolumeSpace = volumePath.getUsableSpace() - freeVolumeSpaceOutputDedicated;
+ 			double numberOfImagesToDownload = availableVolumeSpace
 					/ DEFAULT_IMAGE_DIR_SIZE;
+ 			
+ 			LOGGER.debug("totalDisk=" + Double.valueOf(volumePath.getTotalSpace()));
+ 			LOGGER.debug("freeVolumeSpaceOutputDedicated=" + freeVolumeSpaceOutputDedicated);
+ 			LOGGER.debug("freeDisk=" + Double.valueOf(volumePath.getUsableSpace()));
+ 			LOGGER.debug("availableVolumeSpace=" + availableVolumeSpace);
+ 			LOGGER.debug("numberOfImagesToDownload=" + numberOfImagesToDownload);
 			
 			return numberOfImagesToDownload;
 		} else {
@@ -535,6 +542,7 @@ public class Crawler {
 					LOGGER.info("Removing" + imageData);
 
 					try {
+						deleteInputsFromDisk(imageData, exportPath);
 						deleteResultsFromDisk(imageData, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageData, e);
@@ -550,13 +558,26 @@ public class Crawler {
 		}
 	}
 
+	private void deleteInputsFromDisk(ImageData imageData, String exportPath)
+			throws IOException {
+		String inputsDirPath = exportPath + "/images/" + imageData.getName();
+		File inputsDir = new File(inputsDirPath);
+
+		if (!inputsDir.exists() || !inputsDir.isDirectory()) {
+			return;
+		}
+
+		LOGGER.debug("Deleting inputs for " + imageData + " from "
+				+ inputsDirPath);
+		FileUtils.deleteDirectory(inputsDir);
+	}
+
 	private void deleteResultsFromDisk(ImageData imageData, String exportPath)
 			throws IOException {
 		String resultsDirPath = exportPath + "/results/" + imageData.getName();
 		File resultsDir = new File(resultsDirPath);
 
-		if (!resultsDir.exists() || !resultsDir.isDirectory()) {
-			LOGGER.debug("Path" + resultsDirPath + " does not exist or is not a directory");
+		if (!resultsDir.exists() || !resultsDir.isDirectory()) {			
 			return;
 		}
 
