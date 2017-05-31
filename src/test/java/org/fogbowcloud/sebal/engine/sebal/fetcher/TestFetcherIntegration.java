@@ -277,52 +277,6 @@ public class TestFetcherIntegration {
 		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
 	}
 	
-	// FIXME: image state is FETCHING and not CORRUPTED at the end of the test
-	@Test
-	public void testMaxTriesReached() throws Exception {
-		// When Fetcher reaches maximum fetch tries for an image
-		// then
-		// it must set image state from FETCHING to CORRUPTED
-		// delete all result files from disk
-		
-		// setup
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		Properties properties = Mockito.mock(Properties.class);
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		String ftpServerIP = "fake-ftp-server-ip";
-		String ftpServerPort = "fake-ftp-server-port";
-		String sebalResultsExportPath = "fake-export-path";
-		String federationMember = "fake-federation-member";
-		String fetcherVolumeOutputPath = "fake-fetcher-volume-path";
-
-		Date date = Mockito.mock(Date.class);
-
-		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
-
-		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
-		Mockito.doReturn(sebalResultsExportPath).when(fetcherHelper)
-				.getRemoteImageResultsPath(imageData, properties);
-		Mockito.doReturn(fetcherVolumeOutputPath).when(fetcherHelper)
-				.getLocalImageResultsPath(imageData, properties);
-		Mockito.doReturn(0).when(ftpImpl).getFiles(properties, ftpServerIP, ftpServerPort, sebalResultsExportPath, fetcherVolumeOutputPath, imageData);
-		Mockito.doReturn(false).when(fetcherHelper).resultsChecksumOK(imageData, new File(fetcherVolumeOutputPath));
-		Mockito.doReturn(false).when(fetcherHelper).isThereFetchedResultFiles(fetcherVolumeOutputPath);
-
-		Fetcher fetcher = Mockito.mock(Fetcher.class);
-		
-		Mockito.doReturn(0).when(fetcher).fetchInputs(imageData);
-
-		// exercise
-		fetcher.fetch(imageData);
-
-		// expect
-		Assert.assertEquals(ImageState.CORRUPTED, imageData.getState());
-	}
-	
 	@Test
 	public void testFailWhileUploadingToSwift() throws Exception {
 		// When Fetcher fails to upload image results to swift

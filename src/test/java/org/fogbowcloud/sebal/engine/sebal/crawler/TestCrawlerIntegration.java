@@ -175,6 +175,8 @@ public class TestCrawlerIntegration {
 				federationMember, maxImagesToDownload);
 		doReturn(image1).when(imageStore).getImage(image1.getName());
 		doReturn(image2).when(imageStore).getImage(image2.getName());
+		doReturn("link-1").when(usgsRepository).getImageDownloadLink(image1.getName());
+		doReturn("link-2").when(usgsRepository).getImageDownloadLink(image2.getName());
 		doThrow(new IOException()).when(usgsRepository).downloadImage(image1);
 		doNothing().when(usgsRepository).downloadImage(image2);
 
@@ -191,74 +193,6 @@ public class TestCrawlerIntegration {
 		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image1.getState());
 		Assert.assertEquals(ImageState.DOWNLOADED, image2.getState());
 		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
-	}
-
-	@Test
-	public void testErrorOnFmask() throws SQLException, IOException,
-			InterruptedException {
-		// 1. we have 2 NOT_DOWNLOADED images
-		// 2. the 2 images are downloaded
-		// 2. run fmask for both images
-		// 3. fmask return error in execution of image 1
-		// 4. image 1 is marked as with error and is put to ERROR state along
-		// with an error message
-		// 5. image 2 is downloaded and marked as DOWNLOADED
-
-		// setup
-		Properties properties = mock(Properties.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
-		String crawlerIP = "fake-crawler-ip";
-		String nfsPort = "fake-nfs-port";
-		String federationMember = "fake-fed-member";
-		String fmaskScriptPath = "fake-script-path";
-		String fmaskToolsPath = "fake-tool-path";
-		String sebalExportPath = "fake-export-path";
-		int maxImagesToDownload = 5;
-
-		Date date = new Date(10000854);
-
-		List<ImageData> imageList = new ArrayList<ImageData>();
-		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "", "None");
-		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "", "None");
-
-		imageList.add(image1);
-		imageList.add(image2);
-
-		doReturn(fmaskScriptPath).when(properties).getProperty(
-				SebalPropertiesConstants.FMASK_SCRIPT_PATH);
-		doReturn(fmaskToolsPath).when(properties).getProperty(
-				SebalPropertiesConstants.FMASK_TOOL_PATH);
-		doReturn(sebalExportPath).when(properties).getProperty(
-				SebalPropertiesConstants.SEBAL_EXPORT_PATH);
-
-		doReturn(imageList).when(imageStore).getImagesToDownload(
-				federationMember, maxImagesToDownload);
-		doReturn(image1).when(imageStore).getImage(image1.getName());
-		doNothing().when(usgsRepository).downloadImage(image1);
-
-		doReturn(image2).when(imageStore).getImage(image2.getName());
-		doNothing().when(usgsRepository).downloadImage(image2);
-
-		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
-				crawlerIP, nfsPort, federationMember);
-		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image1.getState());
-		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image2.getState());
-		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
-
-		// exercise
-		crawler.download(maxImagesToDownload);
-
-		// expect
-		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
-		Assert.assertEquals(ImageState.ERROR, image1.getState());
-		Assert.assertEquals(ImageState.DOWNLOADED, image2.getState());
 	}
 
 	@Test

@@ -70,49 +70,4 @@ public class TestUSGSNasaRepository {
 	    Assert.assertNotNull(apiKey);
 	    Assert.assertEquals("9ccf44a1c7e74d7f94769956b54cd889", apiKey);
 	}
-	
-	@Test
-	public void testGetDownloadLinkResponseFormat() throws ClientProtocolException,
-			IOException, InterruptedException, JSONException {
-		// set up
-		String dataset = "fake-data-set";
-		String sceneId = "fake-scene-id";
-		String node = "fake-node";
-		String product = "fake-product";
-
-		HttpResponse httpResponse = mock(HttpResponse.class);
-		HttpEntity httpEntity = mock(HttpEntity.class);
-
-		String returnedDownloadLink = "http:\\/\\/fake-download-link.com\\/";
-
-		String content = "{\"errorCode\":null,\"error\":\"\",\"data\":[\""
-				+ returnedDownloadLink
-				+ "\"],\"api_version\":\"1.2.1\",\"executionTime\":1.6076831817627}";
-
-		InputStream contentInputStream = new ByteArrayInputStream(
-				content.getBytes(UTF_8));
-		doReturn(contentInputStream).when(httpEntity).getContent();
-		doReturn(httpEntity).when(httpResponse).getEntity();
-
-		BasicStatusLine basicStatus = new BasicStatusLine(new ProtocolVersion(
-				"", 0, 0), HttpStatus.SC_OK, "");
-		doReturn(basicStatus).when(httpResponse).getStatusLine();
-		doReturn(new Header[0]).when(httpResponse).getAllHeaders();
-
-		USGSNasaRepository usgsNasaRepository = spy(new USGSNasaRepository(
-				sebalExportPath, usgsLoginUrl, usgsJsonUrl, usgsUserName,
-				usgsPassword, usgsAPIPeriod));
-
-		doReturn(httpResponse).when(usgsNasaRepository)
-				.getDownloadHttpResponse(dataset, sceneId, node, product);
-
-		// exercise
-		String formatedDownloadLink = usgsNasaRepository.usgsDownloadURL(
-				dataset, sceneId, node, product);
-
-		// expect
-		Assert.assertNotNull(formatedDownloadLink);
-		Assert.assertEquals("http://fake-download-link.com/",
-				formatedDownloadLink);
-	}
 }
