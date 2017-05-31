@@ -179,7 +179,7 @@ public class USGSNasaRepository implements NASARepository {
                 localImageFile.delete();
             }
 
-            LOGGER.info("Downloading image " + imageData.getName() + " into file " + localImageFilePath);
+            LOGGER.info("Downloading image " + imageData.getCollectionTierName() + " into file " + localImageFilePath);
 
             File file = new File(localImageFilePath);
             downloadInto(imageData, file);
@@ -189,11 +189,11 @@ public class USGSNasaRepository implements NASARepository {
     }
 
     protected String imageFilePath(ImageData imageData, String imageDirPath) {
-        return imageDirPath + File.separator + imageData.getName() + ".tar.gz";
+        return imageDirPath + File.separator + imageData.getCollectionTierName() + ".tar.gz";
     }
 
     protected String imageDirPath(ImageData imageData) {
-        return sebalExportPath + File.separator + "images" + File.separator + imageData.getName();
+        return sebalExportPath + File.separator + "images" + File.separator + imageData.getCollectionTierName();
     }
 
     private void downloadInto(ImageData imageData, File targetFile) throws IOException {

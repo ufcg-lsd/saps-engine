@@ -290,7 +290,7 @@ public class Crawler {
 
 	protected File getImageDir(Properties properties, ImageData imageData) {
 		String exportPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
-		String imageDirPath = exportPath + File.separator + "images" + File.separator + imageData.getName();
+		String imageDirPath = exportPath + File.separator + "images" + File.separator + imageData.getCollectionTierName();
 		File imageDir = new File(imageDirPath);
 		return imageDir;
 	}
@@ -338,7 +338,7 @@ public class Crawler {
 				if (imageData != null) {
 					addStateStamp(imageData);
 					
-					LOGGER.debug("Adding image " + imageData.getName()
+					LOGGER.debug("Adding image " + imageData.getCollectionTierName()
 							+ " to pending database");
 					pendingImageDownloadMap.put(imageData.getName(), imageData);
 					pendingImageDownloadDB.commit();
@@ -484,7 +484,7 @@ public class Crawler {
 				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 			} catch (SQLException e) {
 				Crawler.LOGGER.error("Error while updating image data "
-						+ imageData.getName(), e);
+						+ imageData.getCollectionTierName(), e);
 				imageData.setFederationMember(federationMember);
 				imageData.setState(ImageState.SELECTED);
 			}
@@ -502,7 +502,7 @@ public class Crawler {
 
 	protected void deleteImageFromDisk(final ImageData imageData,
 			String exportPath) throws IOException {
-		String imageDirPath = exportPath + "/images/" + imageData.getName();
+		String imageDirPath = exportPath + "/images/" + imageData.getCollectionTierName();
 		File imageDir = new File(imageDirPath);
 
 		LOGGER.info("Removing image " + imageData + " data under path "
@@ -532,13 +532,13 @@ public class Crawler {
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : setOfImageData) {
 				String imageResultsPath = resultsPath + File.separator
-						+ imageData.getName();
+						+ imageData.getCollectionTierName();
 				File imageResultsDir = new File(imageResultsPath);
 
 				if (imageData.getState().equals(ImageState.FETCHED)
 						&& imageData.getFederationMember().equals(
 								federationMember) && imageResultsDir.exists()) {
-					LOGGER.debug("Image " + imageData.getName() + " fetched");
+					LOGGER.debug("Image " + imageData.getCollectionTierName() + " fetched");
 					LOGGER.info("Removing" + imageData);
 
 					try {
@@ -560,7 +560,7 @@ public class Crawler {
 
 	private void deleteInputsFromDisk(ImageData imageData, String exportPath)
 			throws IOException {
-		String inputsDirPath = exportPath + "/images/" + imageData.getName();
+		String inputsDirPath = exportPath + "/images/" + imageData.getCollectionTierName();
 		File inputsDir = new File(inputsDirPath);
 
 		if (!inputsDir.exists() || !inputsDir.isDirectory()) {
@@ -574,7 +574,7 @@ public class Crawler {
 
 	private void deleteResultsFromDisk(ImageData imageData, String exportPath)
 			throws IOException {
-		String resultsDirPath = exportPath + "/results/" + imageData.getName();
+		String resultsDirPath = exportPath + "/results/" + imageData.getCollectionTierName();
 		File resultsDir = new File(resultsDirPath);
 
 		if (!resultsDir.exists() || !resultsDir.isDirectory()) {			
