@@ -40,6 +40,7 @@ public class SebalTasks {
 	private static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
 	
 	public static final String METADATA_IMAGE_NAME = "image_name";
+	public static final String METADATA_IMAGE_NEW_COLLECTION_NAME = "image_new_collection_name";
 	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
 	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
 
@@ -63,7 +64,8 @@ public class SebalTasks {
 	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
 	
 	public static TaskImpl createSebalTask(TaskImpl rTaskImpl,
-			Properties properties, String imageName, Specification spec,
+			Properties properties, String imageName,
+			String imageNewCollectionName, Specification spec,
 			String federationMember, String nfsServerIP, String nfsServerPort,
 			String sebalVersion, String sebalTag) {
 		LOGGER.debug("Creating R task for image " + imageName);
@@ -75,6 +77,7 @@ public class SebalTasks {
 		rTaskImpl.putMetadata(METADATA_SEBAL_TAG, sebalTag);
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
+		rTaskImpl.putMetadata(METADATA_IMAGE_NEW_COLLECTION_NAME, imageNewCollectionName);
 		rTaskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
 				properties.getProperty(SEBAL_EXPORT_PATH));
 		rTaskImpl.putMetadata(METADATA_SEBAL_LOCAL_SCRIPTS_DIR,
@@ -279,6 +282,8 @@ public class SebalTasks {
 		// common variables for both scripts
 		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
 				task.getMetadata(METADATA_IMAGE_NAME));
+		command = command.replaceAll(Pattern.quote("${IMAGE_NEW_COLLECTION_NAME}"),
+				task.getMetadata(METADATA_IMAGE_NEW_COLLECTION_NAME));
 		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
 				task.getMetadata(METADATA_SEBAL_VERSION));
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),

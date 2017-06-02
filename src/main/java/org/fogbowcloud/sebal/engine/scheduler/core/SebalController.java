@@ -167,10 +167,9 @@ public class SebalController extends BlowoutController {
 					LOGGER.debug("Creating Sebal task " + taskImpl.getId());
 
 					taskImpl = SebalTasks.createSebalTask(taskImpl, properties,
-							imageData.getCollectionTierName(), specWithFederation,
-							imageData.getFederationMember(), nfsServerIP,
-							nfsServerPort, imageData.getSebalVersion(),
-							imageData.getSebalTag());
+							imageData.getName(), imageData.getCollectionTierName(), 
+							specWithFederation, imageData.getFederationMember(), nfsServerIP,
+							nfsServerPort, imageData.getSebalVersion(), imageData.getSebalTag());
 					
 					imageData.setState(ImageState.QUEUED);
 					imageData.setBlowoutVersion(getBlowoutVersion(properties));					
