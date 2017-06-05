@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +30,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -250,12 +253,12 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 	
-	public String getImageDownloadLink(String imageName, List<String> possibleStations) {
+	public Map<String, String> getImageDownloadLink(String imageName, List<String> possibleStations) {
 
 		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
-			String link = doGetDownloadLink(imageName, possibleStations);
-			if (link != null && !link.isEmpty()) {
-				return link;
+			Map<String, String> imageNameDownloadLink = doGetDownloadLink(imageName, possibleStations);
+			if (imageNameDownloadLink.values() != null && !imageNameDownloadLink.isEmpty()) {
+				return imageNameDownloadLink;
 			}
 		} else {
 			LOGGER.error("USGS API key invalid");
@@ -276,31 +279,33 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 
-	private String doGetDownloadLink(String imageName,
+	private Map<String, String> doGetDownloadLink(String imageName,
 			List<String> possibleStations) {
 		String link = null;
 		for (String station : possibleStations) {
-			String imageNameConcat = imageName.concat(station);
+			String imageNameConcat = imageName.concat(station + "00");
 			link = usgsDownloadURL(getDataSet(imageNameConcat),
 					imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
 			if (link != null && !link.isEmpty()) {
-				imageName = imageNameConcat;
-				return link;
+				Map<String, String> imageNameDownloadLink = new HashMap<String, String>();
+				imageNameDownloadLink.put(imageNameConcat, link);
+				return imageNameDownloadLink;
 			}
 		}
 
 		return null;
 	}
 	
-	private String getCollectionOneSceneId(String dataset, String oldSceneId,
+	protected String getCollectionOneSceneId(String dataset, String oldSceneId,
 			String node, String product) {
 		// GET NEW SCENE ID        
 		String response = getMetadataHttpResponse(dataset, oldSceneId, node, product);
 		
 		try {
 			JSONObject metadataRequestResponse = new JSONObject(response);
-			String newSceneId = metadataRequestResponse.getJSONObject("data").getString("displayId");
-			
+			JSONArray dataJSONArray = metadataRequestResponse.getJSONArray("data");
+			JSONObject jsonObject = dataJSONArray.getJSONObject(0);
+			String newSceneId = jsonObject.getString("displayId");			
 			
 			LOGGER.debug("newSceneId=" + newSceneId);
 			if (newSceneId != null && !newSceneId.isEmpty()) {
@@ -381,7 +386,7 @@ public class USGSNasaRepository implements NASARepository {
 					.replace("\\/", "/");
 			
 			LOGGER.debug("downloadLink=" + downloadLink);
-			if (downloadLink != null && !downloadLink.isEmpty()) {
+			if (downloadLink != null && !downloadLink.isEmpty() && !downloadLink.equals("[]")) {
 				LOGGER.debug("Image " + sceneId + "download link"
 						+ downloadLink + " obtained");
 				return downloadLink;

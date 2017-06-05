@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
@@ -222,9 +223,14 @@ public class DBUtilsImpl implements DBUtils {
 				imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
 				for (String imageName : imageNames) {
 					LOGGER.debug("Getting download link for " + imageName);
-					String imageDownloadLink = getUSGSRepository()
-							.getImageDownloadLink(imageName,
+					Map<String, String> imageNameDownloadLink = getUSGSRepository().getImageDownloadLink(imageName,
 									getUSGSRepository().getPossibleStations());
+					
+					String imageDownloadLink = null;
+					for (Map.Entry<String, String> entry : imageNameDownloadLink.entrySet()) {
+						imageName = entry.getKey();
+						imageDownloadLink = entry.getValue();
+					}
 
 					if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
 						try {
