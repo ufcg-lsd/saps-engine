@@ -1,5 +1,10 @@
 package org.fogbowcloud.sebal.engine.sebal.fetcher;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -21,7 +26,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mapdb.DB;
-import org.mockito.Mockito;
 
 public class TestFetcherIntegration {
 	
@@ -46,24 +50,24 @@ public class TestFetcherIntegration {
 		// and (if exists) delete fetched result files
 		
 		// setup
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		Properties properties = Mockito.mock(Properties.class);
+		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
+		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		Properties properties = mock(Properties.class);
 		String federationMember = "fake-federation-member";
 		String fetcherVolumeInputPath = "fake-fetcher-volume-input-path";
 
-		Date date = Mockito.mock(Date.class);
+		Date date = mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_1");
 
-		Mockito.doReturn(fetcherVolumeInputPath).when(fetcherHelper).getLocalImageInputsPath(imageData, properties);
+		doReturn(fetcherVolumeInputPath).when(fetcherHelper).getLocalImageInputsPath(imageData, properties);
 
-		Fetcher fetcher = Mockito.mock(Fetcher.class);
-		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
-		Mockito.doReturn(1).when(fetcher).fetchInputs(imageData);
+		Fetcher fetcher = mock(Fetcher.class);
+		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doReturn(1).when(fetcher).fetchInputs(imageData);
 
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 
@@ -81,31 +85,31 @@ public class TestFetcherIntegration {
 		// finishFetch must roll back image from FETCHING to FINISHED
 		
 		// setup
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
-		Properties properties = Mockito.mock(Properties.class);
+		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
+		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
+		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+		Properties properties = mock(Properties.class);
 		String sebalExportPath = "fake-export-path";
 		String federationMember = "fake-federation-member";
 		String fetcherVolumePath = "fake-fetcher-volume-path";
 
-		Date date = Mockito.mock(Date.class);
+		Date date = mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_1");
 
-		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
-		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
+		doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
+		doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
-		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
-		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper)
+		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doReturn(fetcherVolumePath).when(fetcherHelper)
 				.getLocalImageResultsPath(imageData, properties);
-		Mockito.doReturn(false).when(fetcherHelper)
+		doReturn(false).when(fetcherHelper)
 				.isThereFetchedResultFiles(sebalExportPath);
 
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
@@ -126,32 +130,32 @@ public class TestFetcherIntegration {
 		// the two images (that were not able to be in list) will remain as FINISHED
 		
 		// setup
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
-		Properties properties = Mockito.mock(Properties.class);
+		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
+		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
+		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+		Properties properties = mock(Properties.class);
 		String sebalExportPath = "fake-export-path";
 		String federationMember = "fake-federation-member";
 		String fetcherVolumePath = "fake-fetcher-volume-path";
 
-		Date date = Mockito.mock(Date.class);
+		Date date = mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_1");
 		ImageData imageData2 = new ImageData("image2", "link2",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_2");
 
-		Mockito.doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
-		Mockito.doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
+		doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
+		doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 
-		Mockito.doThrow(new SQLException()).when(imageStore).getIn(ImageState.FINISHED);
+		doThrow(new SQLException()).when(imageStore).getIn(ImageState.FINISHED);
 
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
@@ -173,40 +177,40 @@ public class TestFetcherIntegration {
 		//	remove image from pending map/DB
 
 		// setup
-		ConcurrentMap<String, ImageData> pendingImageFetchMap = Mockito.mock(ConcurrentMap.class);
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
-		Properties properties = Mockito.mock(Properties.class);
-		DB pendingImageFetchDB = Mockito.mock(DB.class);
+		ConcurrentMap<String, ImageData> pendingImageFetchMap = mock(ConcurrentMap.class);
+		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
+		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
+		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+		Properties properties = mock(Properties.class);
+		DB pendingImageFetchDB = mock(DB.class);
 		String federationMember = "fake-federation-member";
 
-		Date date = Mockito.mock(Date.class);
+		Date date = mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_1");
 		ImageData imageData2 = new ImageData("image2", "link2",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_2");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
-		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doReturn(imageData).when(imageStore).getImage(imageData.getName());
 
-		Mockito.doReturn(true).when(imageStore).lockImage(imageData.getName());
-		Mockito.doThrow(new SQLException()).when(imageStore)
+		doReturn(true).when(imageStore).lockImage(imageData.getName());
+		doThrow(new SQLException()).when(imageStore)
 				.updateImage(imageData);
 		
-		Mockito.doReturn(imageData2).when(imageStore).getImage(imageData2.getName());
+		doReturn(imageData2).when(imageStore).getImage(imageData2.getName());
 		
-		Mockito.doReturn(true).when(imageStore).lockImage(imageData2.getName());
-		Mockito.doNothing().when(fetcherHelper).updatePendingMapAndDB(imageData2, 
+		doReturn(true).when(imageStore).lockImage(imageData2.getName());
+		doNothing().when(fetcherHelper).updatePendingMapAndDB(imageData2, 
 				pendingImageFetchDB, pendingImageFetchMap);
-		Mockito.doNothing().when(imageStore).updateImage(imageData2);
+		doNothing().when(imageStore).updateImage(imageData2);
 		
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
@@ -228,42 +232,41 @@ public class TestFetcherIntegration {
 		// (if it not succeed) prepareToFetch must leave image state as FETCHING for posterity
 		
 		// setup
-		ConcurrentMap<String, ImageData> pendingImageFetchMap = Mockito
-				.mock(ConcurrentMap.class);
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
-		Properties properties = Mockito.mock(Properties.class);
-		DB pendingImageFetchDB = Mockito.mock(DB.class);
+		ConcurrentMap<String, ImageData> pendingImageFetchMap = mock(ConcurrentMap.class);
+		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
+		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
+		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+		Properties properties = mock(Properties.class);
+		DB pendingImageFetchDB = mock(DB.class);
 		String federationMember = "fake-federation-member";
 
-		Date date = Mockito.mock(Date.class);
+		Date date = mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_1");
 		ImageData imageData2 = new ImageData("image2", "link2",
 				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_2");
 
 		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
-		Mockito.doReturn(imageData).when(imageStore).getImage(imageData.getName());
-		Mockito.doReturn(true).when(imageStore).lockImage(imageData.getName());
-		Mockito.doNothing().when(imageStore).updateImage(imageData);
-		Mockito.doThrow(new SQLException()).when(imageStore)
+		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doReturn(true).when(imageStore).lockImage(imageData.getName());
+		doNothing().when(imageStore).updateImage(imageData);
+		doThrow(new SQLException()).when(imageStore)
 				.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 
-		Mockito.doReturn(imageData2).when(imageStore).getImage(imageData2.getName());
-		Mockito.doReturn(true).when(imageStore).lockImage(imageData2.getName());
-		Mockito.doNothing()
+		doReturn(imageData2).when(imageStore).getImage(imageData2.getName());
+		doReturn(true).when(imageStore).lockImage(imageData2.getName());
+		doNothing()
 				.when(fetcherHelper)
 				.updatePendingMapAndDB(imageData2, pendingImageFetchDB,
 						pendingImageFetchMap);
-		Mockito.doNothing().when(imageStore).updateImage(imageData2);
+		doNothing().when(imageStore).updateImage(imageData2);
 
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
@@ -286,37 +289,37 @@ public class TestFetcherIntegration {
 		// delete results from disk
 		
 		// setup
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		Properties properties = Mockito.mock(Properties.class);
+		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
+		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		Properties properties = mock(Properties.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
 		String sebalInputExportPath = "fake-input-export-path";
 		String federationMember = "fake-federation-member";
 		String fetcherVolumeInputPath = "fake-fetcher-volume-input-path";
 
-		Date date = Mockito.mock(Date.class);
+		Date date = mock(Date.class);
 
 		ImageData imageData = new ImageData("image1", "link1",
 				ImageState.FETCHING, federationMember, 0, "NE", "NE", "NE", "NE",
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "None");
+						date.getTime()), "available", "", "image_1");
 
-		Mockito.doReturn(sebalInputExportPath).when(fetcherHelper)
+		doReturn(sebalInputExportPath).when(fetcherHelper)
 				.getRemoteImageInputsPath(imageData, properties);
-		Mockito.doReturn(fetcherVolumeInputPath).when(fetcherHelper)
+		doReturn(fetcherVolumeInputPath).when(fetcherHelper)
 				.getLocalImageInputsPath(imageData, properties);
-		Mockito.doReturn(0)
+		doReturn(0)
 				.when(ftpImpl)
 				.getFiles(properties, ftpServerIP, ftpServerPort,
 						sebalInputExportPath, fetcherVolumeInputPath, imageData);
-		File fetcherVolumeInputsDir = Mockito.mock(File.class);
-		Mockito.doReturn(true).when(fetcherHelper)
+		File fetcherVolumeInputsDir = mock(File.class);
+		doReturn(true).when(fetcherHelper)
 				.resultsChecksumOK(imageData, fetcherVolumeInputsDir);
 		
-		Fetcher fetcher = Mockito.mock(Fetcher.class);
+		Fetcher fetcher = mock(Fetcher.class);
 		
-		Mockito.doReturn(false).when(fetcher).uploadInputFilesToSwift(imageData, fetcherVolumeInputsDir);
+		doReturn(false).when(fetcher).uploadInputFilesToSwift(imageData, fetcherVolumeInputsDir);
 
 		// exercise
 		fetcher.fetch(imageData);
@@ -328,13 +331,11 @@ public class TestFetcherIntegration {
 	@Test
 	public void testGetFetcherVersion() throws SQLException, IOException, InterruptedException {
 		// setup
-		Properties properties = Mockito.mock(Properties.class);
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		FTPIntegrationImpl ftpImpl = Mockito.mock(FTPIntegrationImpl.class);
-		FetcherHelper fetcherHelper = Mockito.mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = Mockito.mock(SwiftAPIClient.class);
-		String ftpServerIP = "fake-IP";
-		String ftpServerPort = "fake-PORT";
+		Properties properties = mock(Properties.class);
+		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
+		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
+		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
 		
 		PrintWriter writer = new PrintWriter("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a", "UTF-8");
 		writer.println("0c26f092e976389c593953a1ad8ddaadb5c2ab2a");

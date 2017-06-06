@@ -79,7 +79,6 @@ public class USGSNasaRepository implements NASARepository {
 	protected USGSNasaRepository(String sebalExportPath, String usgsLoginUrl,
 			String usgsJsonUrl, String usgsUserName, String usgsPassword,
 			String usgsAPIKeyPeriod) {
-
         Validate.notNull(sebalExportPath, "sebalExportPath cannot be null");
 
         Validate.notNull(usgsLoginUrl, "usgsLoginUrl cannot be null");
@@ -113,7 +112,6 @@ public class USGSNasaRepository implements NASARepository {
 	}
 
 	protected String generateAPIKey() {
-
 		try {
 			String response = getLoginResponse();
 			JSONObject apiKeyRequestResponse = new JSONObject(response);
@@ -166,7 +164,6 @@ public class USGSNasaRepository implements NASARepository {
 
     @Override
     public void downloadImage(ImageData imageData) throws IOException {
-
         //create target directory to store image
         String imageDirPath = imageDirPath(imageData);
 
@@ -200,7 +197,6 @@ public class USGSNasaRepository implements NASARepository {
     }
 
     private void downloadInto(ImageData imageData, File targetFile) throws IOException {
-
         HttpClient httpClient = initClient();
 
         HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
@@ -208,8 +204,7 @@ public class USGSNasaRepository implements NASARepository {
 
         OutputStream outStream = new FileOutputStream(targetFile);
 		IOUtils.copy(response.getEntity().getContent(), outStream);
-		outStream.close();
-        
+		outStream.close();        
     }
 
     protected boolean createDirectoryToImage(String imageDirPath) {
@@ -218,7 +213,6 @@ public class USGSNasaRepository implements NASARepository {
     }
 
     private HttpClient initClient() throws IOException {
-
         BasicCookieStore cookieStore = new BasicCookieStore();
         HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
 
@@ -240,7 +234,6 @@ public class USGSNasaRepository implements NASARepository {
     }
 	
 	public String getImageDownloadLink(String imageName) {
-
 		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
 			String link = doGetDownloadLink(imageName);
 			if (link != null && !link.isEmpty()) {
@@ -254,7 +247,6 @@ public class USGSNasaRepository implements NASARepository {
 	}
 	
 	public Map<String, String> getImageDownloadLink(String imageName, List<String> possibleStations) {
-
 		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
 			Map<String, String> imageNameDownloadLink = doGetDownloadLink(imageName, possibleStations);
 			if (imageNameDownloadLink.values() != null && !imageNameDownloadLink.isEmpty()) {
@@ -375,8 +367,7 @@ public class USGSNasaRepository implements NASARepository {
 	}
 
 	protected String usgsDownloadURL(String dataset, String sceneId,
-			String node, String product) {
-		
+			String node, String product) {	
 		// GET DOWNLOAD LINKS        
 		String response = getDownloadHttpResponse(dataset, sceneId, node, product);
 		
