@@ -9,7 +9,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,11 +20,16 @@ import java.util.concurrent.Future;
 
 import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskProcess;
+import org.fogbowcloud.blowout.core.model.TaskProcessImpl;
 import org.fogbowcloud.blowout.core.model.TaskState;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
 import org.fogbowcloud.blowout.pool.AbstractResource;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
+import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
+import org.fogbowcloud.sebal.engine.sebal.ImageState;
+import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,7 +57,7 @@ public class TestSebalTaskMonitor {
 	}
 	
 	@Test
-	public void testProcMonImageToRunning() {
+	public void testProcMonTaskRunning() {
 		TaskProcess fakeProcess = mock(TaskProcess.class);
 		
 		doReturn(TaskState.RUNNING).when(fakeProcess).getStatus();
@@ -68,7 +75,7 @@ public class TestSebalTaskMonitor {
 	}
 	
 	@Test
-	public void testProcMonImageToFailed() throws SQLException {				
+	public void testProcMonTaskFailed() throws SQLException {				
 		Task fakeTask = mock(Task.class);
 		TaskProcess fakeProcess = mock(TaskProcess.class);
 		
@@ -97,7 +104,7 @@ public class TestSebalTaskMonitor {
 	}
 	
 	@Test
-	public void testProcMonProcFinnished() throws SQLException {
+	public void testProcMonTaskFinnished() throws SQLException {
 		Task fakeTask = mock(Task.class);
 		TaskProcess fakeProcess = mock(TaskProcess.class);
 		
@@ -147,5 +154,69 @@ public class TestSebalTaskMonitor {
 		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
 		
 		this.sebalTaskMonitor.runTask(fakeTask, fakeResource);
+	}
+	
+	@Test
+	public void testProcMonImageRunning() throws SQLException {
+		ImageData imageData = new ImageData("imageName", "NE", ImageState.QUEUED, "NE", 0, 
+				"NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), 
+				"NE", "NE", "image_name");
+		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
+		
+		doReturn(imageData.getName()).when(sebalTaskMonitor).getImageFromTaskProcess(fakeTaskProcess);
+		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doNothing().when(imageStore).updateImage(imageData);
+		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
+		
+		this.sebalTaskMonitor.updateImageToRunning(fakeTaskProcess);
+		Assert.assertEquals(ImageState.RUNNING, imageData.getState());
+	}
+	
+	@Test
+	public void testProcMonImageFinished() throws SQLException {
+		ImageData imageData = new ImageData("imageName", "NE", ImageState.RUNNING, "NE", 0, 
+				"NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), 
+				"NE", "NE", "image_name");
+		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
+		
+		doReturn(imageData.getName()).when(sebalTaskMonitor).getImageFromTaskProcess(fakeTaskProcess);
+		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doNothing().when(imageStore).updateImage(imageData);
+		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
+		
+		this.sebalTaskMonitor.updateImageToFinished(fakeTaskProcess);
+		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
+	}
+	
+	@Test
+	public void testProcMonImageFailed() throws SQLException {
+		ImageData imageData = new ImageData("imageName", "NE", ImageState.RUNNING, "NE", 0, 
+				"NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), 
+				"NE", "NE", "image_name");
+		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
+		
+		doReturn(imageData.getName()).when(sebalTaskMonitor).getImageFromTaskProcess(fakeTaskProcess);
+		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doNothing().when(imageStore).updateImage(imageData);
+		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
+		
+		this.sebalTaskMonitor.updateImageToError(fakeTaskProcess);
+		Assert.assertEquals(ImageState.ERROR, imageData.getState());
+	}
+	
+	@Test
+	public void testProcMonImageQueued() throws SQLException {
+		ImageData imageData = new ImageData("imageName", "NE", ImageState.RUNNING, "NE", 0, 
+				"NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), 
+				"NE", "NE", "image_name");
+		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
+		
+		doReturn(imageData.getName()).when(sebalTaskMonitor).getImageFromTaskProcess(fakeTaskProcess);
+		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doNothing().when(imageStore).updateImage(imageData);
+		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
+		
+		this.sebalTaskMonitor.updateImageToQueued(fakeTaskProcess);
+		Assert.assertEquals(ImageState.QUEUED, imageData.getState());
 	}
 }
