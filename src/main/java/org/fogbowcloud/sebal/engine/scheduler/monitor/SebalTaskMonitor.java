@@ -69,7 +69,7 @@ public class SebalTaskMonitor extends TaskMonitor {
 
 	protected void imageToTimedout(TaskProcess tp) {		
 		try {
-			updateImageToError(tp);
+			updateImageToQueued(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
 			if (tp.getResource()!= null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
@@ -81,7 +81,7 @@ public class SebalTaskMonitor extends TaskMonitor {
 	
 	protected void imageToFailed(TaskProcess tp) {
 		try {
-			updateImageToQueued(tp);
+			updateImageToError(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
 			if (tp.getResource() != null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
