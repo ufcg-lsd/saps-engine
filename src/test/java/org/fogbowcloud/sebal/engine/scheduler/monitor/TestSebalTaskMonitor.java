@@ -75,6 +75,35 @@ public class TestSebalTaskMonitor {
 	}
 	
 	@Test
+	public void testProcMonTaskTimedout() throws SQLException {				
+		Task fakeTask = mock(Task.class);
+		TaskProcess fakeProcess = mock(TaskProcess.class);
+		
+		doReturn(TaskState.TIMEDOUT).when(fakeProcess).getStatus();
+		
+		AbstractResource fakeResource = mock(AbstractResource.class);
+		doReturn(FAKE_ID).when(fakeTask).getId();
+		doReturn(FAKE_ID).when(fakeProcess).getTaskId();
+		doReturn(fakeTask).when(this.sebalTaskMonitor).getTaskById(FAKE_ID);
+		doReturn(fakeResource).when(fakeProcess).getResource();
+		
+		List<TaskProcess> runningProcesses = new ArrayList<TaskProcess>();
+		runningProcesses.add(fakeProcess);
+		doReturn(runningProcesses).when(this.sebalTaskMonitor).getRunningProcesses();
+		
+		Map<Task, TaskProcess> runningTasks = new HashMap<Task, TaskProcess>();
+		runningTasks.put(fakeTask, fakeProcess);
+		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
+		
+		doNothing().when(sebalTaskMonitor).updateImageToQueued(fakeProcess);
+
+		this.sebalTaskMonitor.procMon();
+		
+		verify(pool).updateResource(fakeResource, ResourceState.IDLE);
+		verify(pool, never()).updateResource(fakeResource, ResourceState.FAILED);
+	}
+	
+	@Test
 	public void testProcMonTaskFailed() throws SQLException {				
 		Task fakeTask = mock(Task.class);
 		TaskProcess fakeProcess = mock(TaskProcess.class);
@@ -95,12 +124,12 @@ public class TestSebalTaskMonitor {
 		runningTasks.put(fakeTask, fakeProcess);
 		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
 		
-		doNothing().when(sebalTaskMonitor).updateImageToQueued(fakeProcess);
+		doNothing().when(sebalTaskMonitor).updateImageToError(fakeProcess);
 
 		this.sebalTaskMonitor.procMon();
 		
-		verify(pool).updateResource(fakeResource, ResourceState.FAILED);
-		verify(pool, never()).updateResource(fakeResource, ResourceState.IDLE);
+		verify(pool).updateResource(fakeResource, ResourceState.IDLE);
+		verify(pool, never()).updateResource(fakeResource, ResourceState.FAILED);
 	}
 	
 	@Test
