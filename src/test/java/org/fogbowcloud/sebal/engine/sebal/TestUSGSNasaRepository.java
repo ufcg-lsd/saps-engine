@@ -5,8 +5,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -21,6 +27,7 @@ import org.junit.Test;
 
 public class TestUSGSNasaRepository {
 	
+	private static final String TEST_USGS_NASA_REPOSITORY_CONF_PATH = "src/test/resources/TestUSGSNasaRepository.conf";
 	private static final String UTF_8 = "UTF-8";
 	
 	private String usgsUserName;
@@ -68,6 +75,32 @@ public class TestUSGSNasaRepository {
 	    // expect
 	    Assert.assertNotNull(apiKey);
 	    Assert.assertEquals("9ccf44a1c7e74d7f94769956b54cd889", apiKey);
+	}
+	
+	@Test
+	public void testDoGetDownloadLink() throws IOException {
+		// set up
+		Properties properties = new Properties();
+		FileInputStream input = new FileInputStream(TEST_USGS_NASA_REPOSITORY_CONF_PATH);
+		properties.load(input);
+		
+		String imageName = "LT52160661994219";
+		String stationOne = "LGN";
+		String stationTwo = "CUB";
+		
+		List<String> possibleStations = new ArrayList<String>();
+		possibleStations.add(stationOne);
+		possibleStations.add(stationTwo);
+				
+		USGSNasaRepository usgsNasaRepository = new USGSNasaRepository(properties);
+		usgsNasaRepository.setUSGSAPIKey(usgsNasaRepository.generateAPIKey());
+		
+		// exercise
+		Map<String, String> downloadLinks = usgsNasaRepository.doGetDownloadLink(imageName, possibleStations);
+		
+		// expect
+		Assert.assertNotNull(downloadLinks.get(imageName + stationTwo + "00"));
+		Assert.assertFalse(downloadLinks.get(imageName + stationTwo + "00").isEmpty());
 	}
 	
 	@Test

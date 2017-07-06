@@ -38,7 +38,9 @@ import org.json.JSONObject;
  */
 public class USGSNasaRepository implements NASARepository {
 
-    private static final Logger LOGGER = Logger.getLogger(USGSNasaRepository.class);
+    private static final String USGS_NULL_RESPONSE = "null";
+
+	private static final Logger LOGGER = Logger.getLogger(USGSNasaRepository.class);
     
     private final String sebalExportPath;
 
@@ -98,8 +100,7 @@ public class USGSNasaRepository implements NASARepository {
                 "Sebal sebalExportPath directory " + sebalExportPath + "does not exist.");
     }
 
-	public void handleAPIKeyUpdate(
-			ScheduledExecutorService handleAPIKeyUpdateExecutor) {
+	public void handleAPIKeyUpdate(ScheduledExecutorService handleAPIKeyUpdateExecutor) {
 		LOGGER.debug("Turning on handle USGS API key update.");
 
 		handleAPIKeyUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
@@ -271,14 +272,14 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
 
-	private Map<String, String> doGetDownloadLink(String imageName,
+	protected Map<String, String> doGetDownloadLink(String imageName,
 			List<String> possibleStations) {
 		String link = null;
 		for (String station : possibleStations) {
 			String imageNameConcat = imageName.concat(station + "00");
 			link = usgsDownloadURL(getDataSet(imageNameConcat),
 					imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
-			if (link != null && !link.isEmpty()) {
+			if (link != null && !link.isEmpty() && !link.equals(USGS_NULL_RESPONSE)) {
 				Map<String, String> imageNameDownloadLink = new HashMap<String, String>();
 				imageNameDownloadLink.put(imageNameConcat, link);
 				return imageNameDownloadLink;

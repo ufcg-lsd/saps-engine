@@ -20,7 +20,6 @@ import java.util.concurrent.Future;
 
 import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskProcess;
-import org.fogbowcloud.blowout.core.model.TaskProcessImpl;
 import org.fogbowcloud.blowout.core.model.TaskState;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
 import org.fogbowcloud.blowout.pool.AbstractResource;
@@ -28,7 +27,6 @@ import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
-import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
