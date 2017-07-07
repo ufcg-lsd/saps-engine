@@ -6,7 +6,6 @@ import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -78,7 +77,7 @@ public class TestUSGSNasaRepository {
 	}
 	
 	@Test
-	public void testDoGetDownloadLink() throws IOException {
+	public void testDoGetDownloadLinkLT5() throws IOException {
 		// set up
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(TEST_USGS_NASA_REPOSITORY_CONF_PATH);
@@ -101,6 +100,34 @@ public class TestUSGSNasaRepository {
 		// expect
 		Assert.assertNotNull(downloadLinks.get(imageName + stationTwo + "00"));
 		Assert.assertFalse(downloadLinks.get(imageName + stationTwo + "00").isEmpty());
+	}
+	
+	@Test
+	public void testDoGetDownloadLinkLE7() throws IOException {
+		// set up
+		Properties properties = new Properties();
+		FileInputStream input = new FileInputStream(TEST_USGS_NASA_REPOSITORY_CONF_PATH);
+		properties.load(input);
+		
+		String imageName = "LE70160392004262";
+		String stationOne = "LGN";
+		String stationTwo = "CUB";
+		String stationThree = "EDC";
+		
+		List<String> possibleStations = new ArrayList<String>();
+		possibleStations.add(stationOne);
+		possibleStations.add(stationTwo);
+		possibleStations.add(stationThree);
+				
+		USGSNasaRepository usgsNasaRepository = new USGSNasaRepository(properties);
+		usgsNasaRepository.setUSGSAPIKey(usgsNasaRepository.generateAPIKey());
+		
+		// exercise
+		Map<String, String> downloadLinks = usgsNasaRepository.doGetDownloadLink(imageName, possibleStations);
+		
+		// expect
+		Assert.assertNotNull(downloadLinks.get(imageName + stationThree + "02"));
+		Assert.assertFalse(downloadLinks.get(imageName + stationThree + "02").isEmpty());
 	}
 	
 	@Test
