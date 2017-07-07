@@ -77,49 +77,6 @@ public class TestFetcherIntegration {
 		// expect
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 	}
-
-	@Test
-	public void testNoResultFilesToFetch() throws Exception {
-		// When there is no file to fetch in finishFetch
-		// then
-		// finishFetch must roll back image from FETCHING to FINISHED
-		
-		// setup
-		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
-		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
-		Properties properties = mock(Properties.class);
-		String sebalExportPath = "fake-export-path";
-		String federationMember = "fake-federation-member";
-		String fetcherVolumePath = "fake-fetcher-volume-path";
-
-		Date date = mock(Date.class);
-
-		ImageData imageData = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
-						date.getTime()), "available", "", "image_1");
-
-		doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
-		doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
-
-		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
-		
-		doReturn(imageData).when(imageStore).getImage(imageData.getName());
-		doReturn(fetcherVolumePath).when(fetcherHelper)
-				.getLocalImageResultsPath(imageData, properties);
-		doReturn(false).when(fetcherHelper)
-				.isThereNonFetchedResultFiles(sebalExportPath);
-
-		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
-
-		// exercise
-		fetcher.finishFetch(imageData);
-
-		// expect
-		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
-	}
 	
 	@Test
 	public void testFetcherErrorWhileGettingImagesToFetch() throws SQLException, IOException {

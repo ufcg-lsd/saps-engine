@@ -159,7 +159,6 @@ public class Fetcher {
 			LOGGER.info("Path " + inputsDirPath
 					+ " does not exist or is not a directory!");
 		}
-
 	}
 
 	protected void deleteResultsFromDisk(final ImageData imageData,
@@ -204,24 +203,9 @@ public class Fetcher {
 			}
 		} catch (Exception e) {
 			LOGGER.error("Could not fetch image " + imageData.getName(), e);
-			handleFetchError(imageData);
-		}
-	}
-
-	private void handleFetchError(ImageData imageData) throws IOException {
-		rollBackFetch(imageData);
-		
-		if (fetcherHelper.isThereNonFetchedInputFiles(properties
-				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ File.separator
-				+ "images" + File.separator + imageData.getName())) {
 			deleteInputsFromDisk(imageData, properties);
-		}
-		if (fetcherHelper.isThereNonFetchedResultFiles(properties
-				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ File.separator
-				+ "results" + File.separator + imageData.getName())) {
 			deleteResultsFromDisk(imageData, properties);
+			rollBackFetch(imageData);
 		}
 	}
 
@@ -278,58 +262,45 @@ public class Fetcher {
 
 	protected void finishFetch(ImageData imageData) throws IOException,
 			SQLException {
-		
-		String localImageInputsPath = fetcherHelper.getLocalImageInputsPath(
-				imageData, properties);
 
-		String localImageResultsPath = fetcherHelper.getLocalImageResultsPath(
-				imageData, properties);
+		LOGGER.debug("Finishing fetch for image " + imageData);
+		imageData.setState(ImageState.FETCHED);
 
-		if (fetcherHelper.isThereNonFetchedInputFiles(localImageInputsPath)
-				&& fetcherHelper.isThereNonFetchedResultFiles(localImageResultsPath)) {
+		String stationId = fetcherHelper.getStationId(imageData, properties);
 
-			LOGGER.debug("Finishing fetch for image " + imageData);
-			imageData.setState(ImageState.FETCHED);
+		imageData.setStationId(stationId);
+		imageData.setFetcherVersion(fetcherVersion);
 
-			String stationId = fetcherHelper
-					.getStationId(imageData, properties);
-			
-			imageData.setStationId(stationId);
-			imageData.setFetcherVersion(fetcherVersion);
-
-			try {
-				LOGGER.info("Updating image data in DB");
-				imageStore.updateImage(imageData);
-				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-			} catch (SQLException e) {
-				LOGGER.error("Error while updating image " + imageData
-						+ " in DB", e);
-				rollBackFetch(imageData);
-				deleteInputsFromDisk(imageData, properties);
-				deleteResultsFromDisk(imageData, properties);
-			}
-
-			try {
-				imageStore.addStateStamp(imageData.getName(),
-						imageData.getState(), imageData.getUpdateTime());
-			} catch (SQLException e) {
-				LOGGER.error("Error while adding state " + imageData.getState()
-						+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
-			}
-			
-			LOGGER.debug("Deleting local results file for "
-					+ imageData.getName());
-			
+		try {
+			LOGGER.info("Updating image data in DB");
+			imageStore.updateImage(imageData);
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName())
+					.getUpdateTime());
+		} catch (SQLException e) {
+			LOGGER.error("Error while updating image " + imageData + " in DB",
+					e);
+			rollBackFetch(imageData);
 			deleteInputsFromDisk(imageData, properties);
 			deleteResultsFromDisk(imageData, properties);
-
-			fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB, pendingImageFetchMap);
-
-			LOGGER.debug("Image " + imageData.getName() + " fetched");
-		} else {
-			LOGGER.debug("No " + imageData + " result files fetched");
-			rollBackFetch(imageData);
 		}
+
+		try {
+			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
+					imageData.getUpdateTime());
+		} catch (SQLException e) {
+			LOGGER.error("Error while adding state " + imageData.getState()
+					+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
+		}
+
+		LOGGER.debug("Deleting local results file for " + imageData.getName());
+
+		deleteInputsFromDisk(imageData, properties);
+		deleteResultsFromDisk(imageData, properties);
+
+		fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB,
+				pendingImageFetchMap);
+
+		LOGGER.debug("Image " + imageData.getName() + " fetched");
 	}
 
 	protected void rollBackFetch(ImageData imageData) {
@@ -393,10 +364,8 @@ public class Fetcher {
 					return 0;
 				}
 			} else {
+				deleteInputsFromDisk(imageData, properties);
 				rollBackFetch(imageData);
-				if (fetcherHelper.isThereNonFetchedInputFiles(localImageInputsPath)) {
-					deleteInputsFromDisk(imageData, properties);
-				}
 			}
 		}
 		
@@ -456,15 +425,11 @@ public class Fetcher {
 						return;
 					}
 				} else {
-					if(fetcherHelper.isThereNonFetchedResultFiles(localImageResultsPath)) {
-						deleteResultsFromDisk(imageData, properties);
-					}
+					deleteResultsFromDisk(imageData, properties);
 				}
 			} else {
 				rollBackFetch(imageData);
-				if (fetcherHelper.isThereNonFetchedResultFiles(localImageResultsPath)) {
-					deleteResultsFromDisk(imageData, properties);
-				}
+				deleteResultsFromDisk(imageData, properties);
 				break;
 			}
 		}

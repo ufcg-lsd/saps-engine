@@ -119,42 +119,10 @@ public class FetcherHelper {
 		return false;
 	}
 	
-	protected boolean isThereNonFetchedInputFiles(String localImageInputsPath) {
-		File localImageInputsDir = new File(localImageInputsPath);
-
-		if (localImageInputsDir.exists() && localImageInputsDir.isDirectory()) {
-			if (localImageInputsDir.list().length >= NUMBER_OF_INPUT_FILES) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		return false;
-	}
-
-	protected boolean isThereNonFetchedResultFiles(String localImageResultsPath) {
-		File localImageResultsDir = new File(localImageResultsPath);
-
-		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {
-			if (localImageResultsDir.list().length >= NUMBER_OF_RESULT_FILES) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		return false;
-	}
-	
 	protected boolean resultsChecksumOK(ImageData imageData,
 			File localImageResultsDir) throws Exception {
 		LOGGER.info("Checksum of " + imageData + " result files");
-		if(isThereNonFetchedResultFiles(localImageResultsDir.getAbsolutePath())) {
-			if (CheckSumMD5ForFile.isFileCorrupted(localImageResultsDir)) {
-				return false;
-			}
-		} else {
+		if (CheckSumMD5ForFile.isFileCorrupted(localImageResultsDir)) {
 			return false;
 		}
 		
