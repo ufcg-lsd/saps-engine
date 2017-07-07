@@ -192,7 +192,7 @@ public class Fetcher {
 		try {
 			if(prepareFetch(imageData)) {				
 				fetch(imageData);
-				if (!fetcherHelper.isFileCorrupted(imageData, pendingImageFetchMap,
+				if (!fetcherHelper.isImageCorrupted(imageData, pendingImageFetchMap,
 						imageStore) && !fetcherHelper.isImageRolledBack(imageData)) {
 					finishFetch(imageData);
 				} else {
@@ -211,13 +211,13 @@ public class Fetcher {
 	private void handleFetchError(ImageData imageData) throws IOException {
 		rollBackFetch(imageData);
 		
-		if (fetcherHelper.isThereFetchedInputFiles(properties
+		if (fetcherHelper.isThereNonFetchedInputFiles(properties
 				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
 				+ "images" + File.separator + imageData.getName())) {
 			deleteInputsFromDisk(imageData, properties);
 		}
-		if (fetcherHelper.isThereFetchedResultFiles(properties
+		if (fetcherHelper.isThereNonFetchedResultFiles(properties
 				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
 				+ "results" + File.separator + imageData.getName())) {
@@ -285,8 +285,8 @@ public class Fetcher {
 		String localImageResultsPath = fetcherHelper.getLocalImageResultsPath(
 				imageData, properties);
 
-		if (fetcherHelper.isThereFetchedInputFiles(localImageInputsPath)
-				&& fetcherHelper.isThereFetchedResultFiles(localImageResultsPath)) {
+		if (fetcherHelper.isThereNonFetchedInputFiles(localImageInputsPath)
+				&& fetcherHelper.isThereNonFetchedResultFiles(localImageResultsPath)) {
 
 			LOGGER.debug("Finishing fetch for image " + imageData);
 			imageData.setState(ImageState.FETCHED);
@@ -394,7 +394,7 @@ public class Fetcher {
 				}
 			} else {
 				rollBackFetch(imageData);
-				if (fetcherHelper.isThereFetchedResultFiles(localImageInputsPath)) {
+				if (fetcherHelper.isThereNonFetchedInputFiles(localImageInputsPath)) {
 					deleteInputsFromDisk(imageData, properties);
 				}
 			}
@@ -456,13 +456,13 @@ public class Fetcher {
 						return;
 					}
 				} else {
-					if(fetcherHelper.isThereFetchedResultFiles(localImageResultsPath)) {
+					if(fetcherHelper.isThereNonFetchedResultFiles(localImageResultsPath)) {
 						deleteResultsFromDisk(imageData, properties);
 					}
 				}
 			} else {
 				rollBackFetch(imageData);
-				if (fetcherHelper.isThereFetchedResultFiles(localImageResultsPath)) {
+				if (fetcherHelper.isThereNonFetchedResultFiles(localImageResultsPath)) {
 					deleteResultsFromDisk(imageData, properties);
 				}
 				break;

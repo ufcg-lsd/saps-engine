@@ -110,7 +110,7 @@ public class TestFetcherIntegration {
 		doReturn(fetcherVolumePath).when(fetcherHelper)
 				.getLocalImageResultsPath(imageData, properties);
 		doReturn(false).when(fetcherHelper)
-				.isThereFetchedResultFiles(sebalExportPath);
+				.isThereNonFetchedResultFiles(sebalExportPath);
 
 		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
 

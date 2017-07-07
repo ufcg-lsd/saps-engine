@@ -100,7 +100,7 @@ public class FetcherHelper {
 	}
 
 	// TODO: see how to deal with this exception
-	protected boolean isFileCorrupted(ImageData imageData,
+	protected boolean isImageCorrupted(ImageData imageData,
 			ConcurrentMap<String, ImageData> pendingImageFetchMap,
 			ImageDataStore imageStore) throws SQLException {
 		if (imageData.getState().equals(ImageState.CORRUPTED)) {
@@ -119,7 +119,7 @@ public class FetcherHelper {
 		return false;
 	}
 	
-	protected boolean isThereFetchedInputFiles(String localImageInputsPath) {
+	protected boolean isThereNonFetchedInputFiles(String localImageInputsPath) {
 		File localImageInputsDir = new File(localImageInputsPath);
 
 		if (localImageInputsDir.exists() && localImageInputsDir.isDirectory()) {
@@ -133,7 +133,7 @@ public class FetcherHelper {
 		return false;
 	}
 
-	protected boolean isThereFetchedResultFiles(String localImageResultsPath) {
+	protected boolean isThereNonFetchedResultFiles(String localImageResultsPath) {
 		File localImageResultsDir = new File(localImageResultsPath);
 
 		if (localImageResultsDir.exists() && localImageResultsDir.isDirectory()) {
@@ -150,7 +150,7 @@ public class FetcherHelper {
 	protected boolean resultsChecksumOK(ImageData imageData,
 			File localImageResultsDir) throws Exception {
 		LOGGER.info("Checksum of " + imageData + " result files");
-		if(isThereFetchedResultFiles(localImageResultsDir.getAbsolutePath())) {
+		if(isThereNonFetchedResultFiles(localImageResultsDir.getAbsolutePath())) {
 			if (CheckSumMD5ForFile.isFileCorrupted(localImageResultsDir)) {
 				return false;
 			}
