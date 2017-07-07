@@ -219,8 +219,9 @@ public class DBUtilsImpl implements DBUtils {
 				String imageList = createImageList(region, year, dataSet);
 				File imageListFile = new File("images-" + year + ".txt");
 				FileUtils.write(imageListFile, imageList);
-
 				imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
+				
+				int elementCount = 0;
 				for (String imageName : imageNames) {
 					LOGGER.debug("Getting download link for " + imageName);
 					Map<String, String> imageNameDownloadLink = getUSGSRepository().getImageDownloadLink(imageName,
@@ -231,7 +232,8 @@ public class DBUtilsImpl implements DBUtils {
 						imageName = entry.getKey();
 						imageDownloadLink = entry.getValue();
 					}
-
+					
+					imageNames.set(elementCount, imageName);
 					if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
 						try {
 							getImageStore().addImage(imageName, "None", priority, sebalVersion, sebalTag,
@@ -241,6 +243,7 @@ public class DBUtilsImpl implements DBUtils {
 									"Error while adding image at data base.", e);
 						}
 					}
+					elementCount++;
 				}
 			}
 			priority++;
