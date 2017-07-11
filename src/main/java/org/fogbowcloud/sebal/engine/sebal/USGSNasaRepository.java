@@ -181,9 +181,7 @@ public class USGSNasaRepository implements NASARepository {
             }
 
             LOGGER.info("Downloading image " + imageData.getCollectionTierName() + " into file " + localImageFilePath);
-
-            File file = new File(localImageFilePath);
-            downloadInto(imageData, file);
+            downloadInto(imageData, localImageFilePath);
         } else {
             throw new IOException("An error occurred while creating " + imageDirPath + " directory");
         }
@@ -197,41 +195,23 @@ public class USGSNasaRepository implements NASARepository {
         return sebalExportPath + File.separator + "images" + File.separator + imageData.getCollectionTierName();
     }
 
-    private void downloadInto(ImageData imageData, File targetFile) throws IOException {
-        HttpClient httpClient = initClient();
+    private void downloadInto(ImageData imageData, String targetFilePath) throws IOException {
+		ProcessBuilder builder = new ProcessBuilder("curl", "-L", "-o",
+				targetFilePath, "-X", "GET", imageData.getDownloadLink());
+		LOGGER.debug("Command=" + builder.command());
 
-        HttpGet homeGet = new HttpGet(imageData.getDownloadLink());
-        HttpResponse response = httpClient.execute(homeGet);
-
-        OutputStream outStream = new FileOutputStream(targetFile);
-		IOUtils.copy(response.getEntity().getContent(), outStream);
-		outStream.close();        
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			LOGGER.debug("ProcessOutput=" + p.exitValue());
+		} catch (Exception e) {
+			LOGGER.error("Error while downloading image " + imageData.getCollectionTierName() + " from USGS", e);
+		}
     }
 
     protected boolean createDirectoryToImage(String imageDirPath) {
         File imageDir = new File(imageDirPath);
         return imageDir.mkdirs();
-    }
-
-    private HttpClient initClient() throws IOException {
-        BasicCookieStore cookieStore = new BasicCookieStore();
-        HttpClient httpClient = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
-
-        HttpGet homeGet = new HttpGet(this.usgsLoginUrl);
-        httpClient.execute(homeGet);
-
-        HttpPost homePost = new HttpPost(usgsLoginUrl);
-
-        List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-
-        nvps.add(new BasicNameValuePair("username", this.usgsUserName));
-        nvps.add(new BasicNameValuePair("password", this.usgsPassword));
-        nvps.add(new BasicNameValuePair("rememberMe", "0"));
-
-        homePost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
-        HttpResponse homePostResponse = httpClient.execute(homePost);
-        EntityUtils.toString(homePostResponse.getEntity());
-        return httpClient;
     }
 	
 	public String getImageDownloadLink(String imageName) {
@@ -276,15 +256,15 @@ public class USGSNasaRepository implements NASARepository {
 			List<String> possibleStations) {
 		String link = null;
 		for (String station : possibleStations) {
-			for(int level = 0; level < 10; level++) {				
-				String imageNameConcat = imageName.concat(station + "0" + level);
-				link = usgsDownloadURL(getDataSet(imageNameConcat),
-						imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
-				if (link != null && !link.isEmpty() && !link.equals(USGS_NULL_RESPONSE)) {
-					Map<String, String> imageNameDownloadLink = new HashMap<String, String>();
-					imageNameDownloadLink.put(imageNameConcat, link);
-					return imageNameDownloadLink;
-				}
+			// String imageNameConcat = imageName.concat(station + "0" + level);
+			String imageNameConcat = imageName.concat(station + "00");
+			link = usgsDownloadURL(getDataSet(imageNameConcat),
+					imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+			if (link != null && !link.isEmpty()
+					&& !link.equals(USGS_NULL_RESPONSE)) {
+				Map<String, String> imageNameDownloadLink = new HashMap<String, String>();
+				imageNameDownloadLink.put(imageNameConcat, link);
+				return imageNameDownloadLink;
 			}
 		}
 
@@ -378,6 +358,9 @@ public class USGSNasaRepository implements NASARepository {
 			JSONObject downloadRequestResponse = new JSONObject(response);
 			String downloadLink = downloadRequestResponse.getString("data")
 					.replace("\\/", "/");
+			downloadLink = downloadLink.replace("[", "");
+			downloadLink = downloadLink.replace("]", "");
+			downloadLink = downloadLink.replace("\"", "");
 			
 			LOGGER.debug("downloadLink=" + downloadLink);
 			if (downloadLink != null && !downloadLink.isEmpty() && !downloadLink.equals("[]")) {

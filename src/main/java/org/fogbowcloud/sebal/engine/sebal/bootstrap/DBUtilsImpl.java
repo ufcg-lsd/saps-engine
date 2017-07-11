@@ -280,7 +280,8 @@ public class DBUtilsImpl implements DBUtils {
 
     protected String createImageList(String region, int year, String dataSet) {
         StringBuilder imageList = new StringBuilder();
-        for (int day = 1; day < 366; day+=16) {
+        //for (int day = 1; day < 366; day+=16) {
+        for (int day = 1; day < 366; day++) {
             NumberFormat formatter = new DecimalFormat("000");
             String imageName = new String();
             

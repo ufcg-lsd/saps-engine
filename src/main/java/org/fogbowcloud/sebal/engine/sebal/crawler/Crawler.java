@@ -400,17 +400,35 @@ public class Crawler {
 			updateToDownloadingState(imageData);
 			usgsRepository.downloadImage(imageData);
 			
-			imageData.setCrawlerVersion(crawlerVersion);
-			updateToDownloadedState(imageData);
-
-			pendingImageDownloadMap.remove(imageData.getName());
-			pendingImageDownloadDB.commit();
-			
-			LOGGER.info("Image " + imageData + " was downloaded");
+			if(checkIfImageFileExists(imageData)) {				
+				imageData.setCrawlerVersion(crawlerVersion);
+				updateToDownloadedState(imageData);
+				
+				pendingImageDownloadMap.remove(imageData.getName());
+				pendingImageDownloadDB.commit();
+				
+				LOGGER.info("Image " + imageData + " was downloaded");
+			} else {
+				LOGGER.debug("Error when downloading image " + imageData);
+				removeFromPendingAndUpdateState(imageData, properties);
+			}
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageData, e);
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
+	}
+
+	private boolean checkIfImageFileExists(ImageData imageData) {
+		String imageInputFilePath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH) + 
+				File.separator + "images" + File.separator + imageData.getCollectionTierName() + 
+				File.separator + imageData.getCollectionTierName() + ".tar.gz";
+		File imageInputFile = new File(imageInputFilePath);
+		
+		if(imageInputFile != null && imageInputFile.exists()) {
+			return true;
+		}
+		
+		return false;
 	}
 
 	private void updateToDownloadedState(final ImageData imageData)
