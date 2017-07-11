@@ -250,7 +250,7 @@ public class USGSNasaRepository implements NASARepository {
 	public Map<String, String> getImageDownloadLink(String imageName, List<String> possibleStations) {
 		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
 			Map<String, String> imageNameDownloadLink = doGetDownloadLink(imageName, possibleStations);
-			if (imageNameDownloadLink.values() != null && !imageNameDownloadLink.isEmpty()) {
+			if (imageNameDownloadLink != null && !imageNameDownloadLink.isEmpty()) {
 				return imageNameDownloadLink;
 			}
 		} else {
