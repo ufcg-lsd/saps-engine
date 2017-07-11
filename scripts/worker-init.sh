@@ -49,13 +49,13 @@ function prepareDependencies {
 function checkMissingDependenciesFile {
   if [ -f ${SANDBOX}/$repositoryName/missing_dependencies ];
   then
-    echo "Transfering missing_dependencies file to ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME} directory"
-    sudo mv ${SANDBOX}/$repositoryName/missing_dependencies ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}
+    echo "Transfering missing_dependencies file to ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME} directory"
+    sudo mv ${SANDBOX}/$repositoryName/missing_dependencies ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}
   else
     echo "No missing dependencies"
-    if [ -f ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/missing_dependencies ]
+    if [ -f ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/missing_dependencies ]
     then
-      sudo rm ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NAME}/missing_dependencies
+      sudo rm ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/missing_dependencies
     fi
   fi
 }
@@ -77,14 +77,14 @@ function mountExportsDir {
 }
 
 function garbageCollect {
-  DIRECTORY=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
+  DIRECTORY=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}
   if [ -d "$DIRECTORY" ]; then
     shopt -s nullglob dotglob     # To include hidden files
     files=($DIRECTORY/*)
     if [ ${#files[@]} -gt 0 ];
     then
       echo "Directory contains garbage...cleanning it"
-      sudo rm ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}/*
+      sudo rm ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/*
     fi
   fi
 }
