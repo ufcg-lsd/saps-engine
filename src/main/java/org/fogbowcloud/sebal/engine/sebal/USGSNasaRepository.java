@@ -244,7 +244,7 @@ public class USGSNasaRepository implements NASARepository {
 			LOGGER.error("USGS API key invalid");
 		}
 
-		return null;
+		return new String();
 	}
 	
 	public Map<String, String> getImageDownloadLink(String imageName, List<String> possibleStations) {
@@ -257,7 +257,7 @@ public class USGSNasaRepository implements NASARepository {
 			LOGGER.error("USGS API key invalid");
 		}
 
-		return null;
+		return new HashMap<String, String>();
 	}
 	
 	private String doGetDownloadLink(String imageName) {

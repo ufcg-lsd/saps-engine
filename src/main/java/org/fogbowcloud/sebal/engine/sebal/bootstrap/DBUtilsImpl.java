@@ -227,7 +227,7 @@ public class DBUtilsImpl implements DBUtils {
 					Map<String, String> imageNameDownloadLink = getUSGSRepository().getImageDownloadLink(imageName,
 									getUSGSRepository().getPossibleStations());
 					
-					if(imageNameDownloadLink != null) {						
+					if(imageNameDownloadLink != null && !imageNameDownloadLink.isEmpty()) {
 						String imageDownloadLink = null;
 						for (Map.Entry<String, String> entry : imageNameDownloadLink.entrySet()) {
 							imageName = entry.getKey();
