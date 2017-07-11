@@ -227,23 +227,25 @@ public class DBUtilsImpl implements DBUtils {
 					Map<String, String> imageNameDownloadLink = getUSGSRepository().getImageDownloadLink(imageName,
 									getUSGSRepository().getPossibleStations());
 					
-					String imageDownloadLink = null;
-					for (Map.Entry<String, String> entry : imageNameDownloadLink.entrySet()) {
-						imageName = entry.getKey();
-						imageDownloadLink = entry.getValue();
-					}
-					
-					imageNames.set(elementCount, imageName);
-					if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
-						try {
-							getImageStore().addImage(imageName, "None", priority, sebalVersion, sebalTag,
-									getUSGSRepository().getNewSceneId(imageName));
-						} catch (SQLException e) {
-							LOGGER.error(
-									"Error while adding image at data base.", e);
+					if(imageNameDownloadLink != null) {						
+						String imageDownloadLink = null;
+						for (Map.Entry<String, String> entry : imageNameDownloadLink.entrySet()) {
+							imageName = entry.getKey();
+							imageDownloadLink = entry.getValue();
 						}
-					}
-					elementCount++;
+						
+						imageNames.set(elementCount, imageName);
+						if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
+							try {
+								getImageStore().addImage(imageName, "None", priority, sebalVersion, sebalTag,
+										getUSGSRepository().getNewSceneId(imageName));
+							} catch (SQLException e) {
+								LOGGER.error(
+										"Error while adding image at data base.", e);
+							}
+						}
+						elementCount++;
+					}					
 				}
 			}
 			priority++;
