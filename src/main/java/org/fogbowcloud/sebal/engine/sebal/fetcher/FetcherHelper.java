@@ -48,7 +48,7 @@ public class FetcherHelper {
 	protected String getStationId(ImageData imageData, Properties properties)
 			throws IOException {
 		String stationFilePath = properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ "/results/" + imageData.getName() + "/" + imageData.getName()
+				+ "/results/" + imageData.getCollectionTierName() + "/" + imageData.getCollectionTierName()
 				+ "_station.csv";
 		File stationFile = new File(stationFilePath);
 
@@ -62,7 +62,7 @@ public class FetcherHelper {
 			reader.close();
 			return stationId;
 		} else {
-			LOGGER.debug("Station file for image " + imageData.getName()
+			LOGGER.debug("Station file for image " + imageData.getCollectionTierName()
 					+ " does not exist or is not a file!");
 			return null;
 		}
@@ -72,7 +72,7 @@ public class FetcherHelper {
 			Properties properties) {
 		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator + "images" + File.separator
-				+ imageData.getName();
+				+ imageData.getCollectionTierName();
 	}
 	
 	protected String getLocalImageInputsPath(ImageData imageData,
@@ -80,14 +80,14 @@ public class FetcherHelper {
 		String localImageInputsPath = properties
 				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
-				+ "images" + File.separator + imageData.getName();
+				+ "images" + File.separator + imageData.getCollectionTierName();
 		return localImageInputsPath;
 	}
 
 	protected String getRemoteImageResultsPath(final ImageData imageData,
 			Properties properties) {
 		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH) + "/results/"
-				+ imageData.getName();
+				+ imageData.getCollectionTierName();
 	}
 
 	protected String getLocalImageResultsPath(ImageData imageData,
@@ -95,7 +95,7 @@ public class FetcherHelper {
 		String localImageResultsPath = properties
 				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
-				+ "results" + File.separator + imageData.getName();
+				+ "results" + File.separator + imageData.getCollectionTierName();
 		return localImageResultsPath;
 	}
 
