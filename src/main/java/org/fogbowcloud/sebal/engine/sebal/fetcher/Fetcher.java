@@ -150,7 +150,7 @@ public class Fetcher {
 			Properties properties) throws IOException {
 		String exportPath = properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String inputsDirPath = exportPath + File.separator + "images"
-				+ File.separator + imageData.getName();
+				+ File.separator + imageData.getCollectionTierName();
 		File inputsDir = new File(inputsDirPath);
 
 		if (inputsDir.exists() && inputsDir.isDirectory()) {
@@ -165,7 +165,7 @@ public class Fetcher {
 			Properties properties) throws IOException {
 		String exportPath = properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String resultsDirPath = exportPath + File.separator + "results"
-				+ File.separator + imageData.getName();
+				+ File.separator + imageData.getCollectionTierName();
 		File resultsDir = new File(resultsDirPath);
 
 		if (resultsDir.exists() && resultsDir.isDirectory()) {
@@ -202,7 +202,7 @@ public class Fetcher {
 				LOGGER.error("Could not prepare image " + imageData + " to fetch");
 			}
 		} catch (Exception e) {
-			LOGGER.error("Could not fetch image " + imageData.getName(), e);
+			LOGGER.error("Could not fetch image " + imageData.getCollectionTierName(), e);
 			deleteInputsFromDisk(imageData, properties);
 			deleteResultsFromDisk(imageData, properties);
 			rollBackFetch(imageData);
@@ -211,7 +211,7 @@ public class Fetcher {
 
 	protected boolean prepareFetch(ImageData imageData) throws SQLException,
 			IOException {
-		LOGGER.debug("Preparing image " + imageData.getName() + " to fetch");
+		LOGGER.debug("Preparing image " + imageData.getCollectionTierName() + " to fetch");
 		if (imageStore.lockImage(imageData.getName())) {
 			
 			imageData.setState(ImageState.FETCHING);
@@ -239,7 +239,7 @@ public class Fetcher {
 			}
 			imageStore.unlockImage(imageData.getName());
 
-			LOGGER.debug("Image " + imageData.getName() + " ready to fetch");
+			LOGGER.debug("Image " + imageData.getCollectionTierName() + " ready to fetch");
 		}
 		return true;
 	}
@@ -292,7 +292,7 @@ public class Fetcher {
 					+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
 		}
 
-		LOGGER.debug("Deleting local results file for " + imageData.getName());
+		LOGGER.debug("Deleting local results file for " + imageData.getCollectionTierName());
 
 		deleteInputsFromDisk(imageData, properties);
 		deleteResultsFromDisk(imageData, properties);
@@ -300,7 +300,7 @@ public class Fetcher {
 		fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB,
 				pendingImageFetchMap);
 
-		LOGGER.debug("Image " + imageData.getName() + " fetched");
+		LOGGER.debug("Image " + imageData.getCollectionTierName() + " fetched");
 	}
 
 	protected void rollBackFetch(ImageData imageData) {
@@ -541,7 +541,7 @@ public class Fetcher {
 					String localImageInputsPath = properties
 							.get("fetcher_volume_path")
 							+ File.separator
-							+ "images" + File.separator + imageData.getName();
+							+ "images" + File.separator + imageData.getCollectionTierName();
 					swiftAPIClient.deleteFile(containerName,
 							getOutputPseudoFolder(new File(localImageInputsPath)),
 							file);
@@ -570,7 +570,7 @@ public class Fetcher {
 					String localImageResultsPath = properties
 							.get("fetcher_volume_path")
 							+ File.separator
-							+ "results" + File.separator + imageData.getName();
+							+ "results" + File.separator + imageData.getCollectionTierName();
 					swiftAPIClient.deleteFile(containerName, getOutputPseudoFolder(new File(localImageResultsPath)), file);
 				} catch (Exception e) {
 					LOGGER.error("Error while deleting files from swift", e);

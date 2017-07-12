@@ -6,7 +6,7 @@ FTP_SERVER_PORT=$3
 REMOTE_RESULTS_DIR=$4
 LOCAL_RESULTS_DIR=$5
 IMAGE_NAME=$6
-PRIVATE_KEY_PATH=/tmp/keys/fetcher_key_rsa
+PRIVATE_KEY_PATH=/home/ubuntu/keys/fetcher_key_rsa
 
 #if [ -f $PRIVATE_KEY_PATH ]
 #then
