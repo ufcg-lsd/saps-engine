@@ -22,7 +22,7 @@ public class FTPIntegrationImpl implements FTPIntegration{
 				+ ftpServerIP + ":" + ftpServerPort + " to "
 				+ localImageResultsPath + " in localhost");
 		
-		LOGGER.debug("Image " + imageData.getName());
+		LOGGER.debug("Image " + imageData.getCollectionTierName());
 				
 		ProcessBuilder builder;
 		if (imageData.getFederationMember().equals(SebalPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
@@ -30,13 +30,13 @@ public class FTPIntegrationImpl implements FTPIntegration{
 					properties.getProperty(SebalPropertiesConstants.SEBAL_SFTP_SCRIPT_PATH),
 					properties.getProperty(SebalPropertiesConstants.AZURE_FTP_SERVER_USER), ftpServerIP,
 					ftpServerPort, remoteImageResultsPath,
-					localImageResultsPath, imageData.getName());
+					localImageResultsPath, imageData.getCollectionTierName());
 		} else {
 			builder = new ProcessBuilder("/bin/bash",
 					properties.getProperty(SebalPropertiesConstants.SEBAL_SFTP_SCRIPT_PATH),
 					properties.getProperty(SebalPropertiesConstants.DEFAULT_FTP_SERVER_USER), ftpServerIP,
 					ftpServerPort, remoteImageResultsPath,
-					localImageResultsPath, imageData.getName());
+					localImageResultsPath, imageData.getCollectionTierName());
 		}
 		
 		try {
