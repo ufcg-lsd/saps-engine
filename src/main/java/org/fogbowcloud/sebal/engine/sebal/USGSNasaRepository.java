@@ -256,15 +256,16 @@ public class USGSNasaRepository implements NASARepository {
 			List<String> possibleStations) {
 		String link = null;
 		for (String station : possibleStations) {
-			// String imageNameConcat = imageName.concat(station + "0" + level);
-			String imageNameConcat = imageName.concat(station + "00");
-			link = usgsDownloadURL(getDataSet(imageNameConcat),
-					imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
-			if (link != null && !link.isEmpty()
-					&& !link.equals(USGS_NULL_RESPONSE)) {
-				Map<String, String> imageNameDownloadLink = new HashMap<String, String>();
-				imageNameDownloadLink.put(imageNameConcat, link);
-				return imageNameDownloadLink;
+			for(int level = 0; level < 3; level++) {
+				String imageNameConcat = imageName.concat(station + "0" + level);
+				link = usgsDownloadURL(getDataSet(imageNameConcat),
+						imageNameConcat, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+				if (link != null && !link.isEmpty()
+						&& !link.equals(USGS_NULL_RESPONSE)) {
+					Map<String, String> imageNameDownloadLink = new HashMap<String, String>();
+					imageNameDownloadLink.put(imageNameConcat, link);
+					return imageNameDownloadLink;
+				}
 			}
 		}
 

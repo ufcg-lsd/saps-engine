@@ -213,6 +213,7 @@ public class DBUtilsImpl implements DBUtils {
 
 		LOGGER.debug("Regions: " + regions);
 		List<String> imageNames = new ArrayList<String>();
+		List<String> obtainedImages = new ArrayList<String>();
 		int priority = 0;
 		for (String region : regions) {
 			for (int year = firstYear; year <= lastYear; year++) {
@@ -222,35 +223,37 @@ public class DBUtilsImpl implements DBUtils {
 				imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
 				
 				int elementCount = 0;
-				for (String imageName : imageNames) {
-					LOGGER.debug("Getting download link for " + imageName);
-					Map<String, String> imageNameDownloadLink = getUSGSRepository().getImageDownloadLink(imageName,
+				while(elementCount < imageNames.size()) {
+					LOGGER.debug("Getting download link for " + imageNames.get(elementCount));
+					Map<String, String> imageNameDownloadLink = getUSGSRepository().getImageDownloadLink(imageNames.get(elementCount),
 									getUSGSRepository().getPossibleStations());
 					
 					if(imageNameDownloadLink != null && !imageNameDownloadLink.isEmpty()) {
 						String imageDownloadLink = null;
 						for (Map.Entry<String, String> entry : imageNameDownloadLink.entrySet()) {
-							imageName = entry.getKey();
+							obtainedImages.add(entry.getKey());
 							imageDownloadLink = entry.getValue();
 						}
 						
-						imageNames.set(elementCount, imageName);
 						if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
 							try {
-								getImageStore().addImage(imageName, "None", priority, sebalVersion, sebalTag,
-										getUSGSRepository().getNewSceneId(imageName));
+								getImageStore().addImage(obtainedImages.get(elementCount), "None", priority, sebalVersion, sebalTag, 
+										getUSGSRepository().getNewSceneId(obtainedImages.get(elementCount)));
 							} catch (SQLException e) {
-								LOGGER.error(
-										"Error while adding image at data base.", e);
+								LOGGER.error("Error while adding image at data base.", e);
 							}
+							elementCount += 16;
+						} else {
+							elementCount++;
 						}
+					} else {
 						elementCount++;
-					}					
+					}
 				}
 			}
 			priority++;
 		}
-		return imageNames;
+		return obtainedImages;
 	}
 
     public List<ImageData> getImagesInDB() throws SQLException, ParseException {
@@ -280,7 +283,6 @@ public class DBUtilsImpl implements DBUtils {
 
     protected String createImageList(String region, int year, String dataSet) {
         StringBuilder imageList = new StringBuilder();
-        //for (int day = 1; day < 366; day+=16) {
         for (int day = 1; day < 366; day++) {
             NumberFormat formatter = new DecimalFormat("000");
             String imageName = new String();
