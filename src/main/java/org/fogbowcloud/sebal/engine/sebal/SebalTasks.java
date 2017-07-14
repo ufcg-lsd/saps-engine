@@ -68,7 +68,7 @@ public class SebalTasks {
 			String imageNewCollectionName, Specification spec,
 			String federationMember, String nfsServerIP, String nfsServerPort,
 			String sebalVersion, String sebalTag) {
-		LOGGER.debug("Creating R task for image " + imageName);
+		LOGGER.debug("Creating R task for image " + imageNewCollectionName);
 
 		settingCommonTaskMetadata(properties, rTaskImpl);
 
