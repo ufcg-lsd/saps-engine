@@ -225,27 +225,11 @@ public class DBUtilsImpl implements DBUtils {
 				int elementCount = 0;
 				while(elementCount < imageNames.size()) {
 					LOGGER.debug("Getting download link for " + imageNames.get(elementCount));
-					Map<String, String> imageNameDownloadLink = getUSGSRepository().getImageDownloadLink(imageNames.get(elementCount),
+					Map<String, String> imageNameDownloadLinkMap = getUSGSRepository().getImageDownloadLink(imageNames.get(elementCount),
 									getUSGSRepository().getPossibleStations());
 					
-					if(imageNameDownloadLink != null && !imageNameDownloadLink.isEmpty()) {
-						String imageDownloadLink = null;
-						for (Map.Entry<String, String> entry : imageNameDownloadLink.entrySet()) {
-							obtainedImages.add(entry.getKey());
-							imageDownloadLink = entry.getValue();
-						}
-						
-						if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
-							try {
-								getImageStore().addImage(obtainedImages.get(elementCount), "None", priority, sebalVersion, sebalTag, 
-										getUSGSRepository().getNewSceneId(obtainedImages.get(elementCount)));
-							} catch (SQLException e) {
-								LOGGER.error("Error while adding image at data base.", e);
-							}
-							elementCount += 16;
-						} else {
-							elementCount++;
-						}
+					if(imageNameDownloadLinkMap != null && !imageNameDownloadLinkMap.isEmpty()) {
+						submitImage(sebalVersion, sebalTag, obtainedImages, priority, elementCount, imageNameDownloadLinkMap);
 					} else {
 						elementCount++;
 					}
@@ -254,6 +238,31 @@ public class DBUtilsImpl implements DBUtils {
 			priority++;
 		}
 		return obtainedImages;
+	}
+
+	private void submitImage(String sebalVersion, String sebalTag,
+			List<String> obtainedImages, int priority, int elementCount,
+			Map<String, String> imageNameDownloadLinkMap) {
+		
+		String imageNameUpdated = null;
+		String imageDownloadLink = null;
+		for (Map.Entry<String, String> entry : imageNameDownloadLinkMap.entrySet()) {
+			imageNameUpdated = entry.getKey();
+			imageDownloadLink = entry.getValue();
+			obtainedImages.add(imageNameUpdated);
+		}
+		
+		if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
+			try {
+				getImageStore().addImage(imageNameUpdated, "None", priority, sebalVersion, sebalTag, 
+						getUSGSRepository().getNewSceneId(imageNameUpdated));
+			} catch (SQLException e) {
+				LOGGER.error("Error while adding image at data base.", e);
+			}
+			elementCount += 16;
+		} else {
+			elementCount++;
+		}
 	}
 
     public List<ImageData> getImagesInDB() throws SQLException, ParseException {

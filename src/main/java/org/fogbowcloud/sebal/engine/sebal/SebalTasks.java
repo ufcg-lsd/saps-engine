@@ -280,8 +280,6 @@ public class SebalTasks {
 		}
 		
 		// common variables for both scripts
-		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
-				task.getMetadata(METADATA_IMAGE_NAME));
 		command = command.replaceAll(Pattern.quote("${IMAGE_NEW_COLLECTION_NAME}"),
 				task.getMetadata(METADATA_IMAGE_NEW_COLLECTION_NAME));
 		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
