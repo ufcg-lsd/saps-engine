@@ -252,15 +252,17 @@ public class DBUtilsImpl implements DBUtils {
 			obtainedImages.add(imageNameUpdated);
 		}
 		
-		if (imageDownloadLink != null && !imageDownloadLink.isEmpty()) {
-			try {
-				getImageStore().addImage(imageNameUpdated, "None", priority, sebalVersion, sebalTag, 
+		try {
+			if (imageDownloadLink != null && !imageDownloadLink.isEmpty()
+					&& getImageStore().imageExist(imageNameUpdated)) {
+				getImageStore().addImage(imageNameUpdated, "None", priority, sebalVersion, sebalTag,
 						getUSGSRepository().getNewSceneId(imageNameUpdated));
-			} catch (SQLException e) {
-				LOGGER.error("Error while adding image at data base.", e);
+				elementCount += 16;
+			} else {
+				elementCount++;
 			}
-			elementCount += 16;
-		} else {
+		} catch (SQLException e) {
+			LOGGER.error("Error while adding image at data base.", e);
 			elementCount++;
 		}
 	}

@@ -51,6 +51,8 @@ public interface ImageDataStore {
     boolean isUserNotifiable(String userEmail) throws SQLException;
     
     boolean deployConfigExists(String federationMember) throws SQLException;
+    
+    boolean imageExist(String imageName) throws SQLException;
 
     List<ImageData> getAllImages() throws SQLException;
 

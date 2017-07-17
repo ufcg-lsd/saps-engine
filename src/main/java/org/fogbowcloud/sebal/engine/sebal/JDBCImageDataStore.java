@@ -456,6 +456,30 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(statement, conn);
 		}
 	}
+	
+	private static final String SELECT_CHECK_IMAGE_EXISTS_SQL = "SELECT EXISTS(SELECT 1 FROM "
+			+ IMAGE_TABLE_NAME + " WHERE " + COLLECTION_TIER_IMAGE_NAME_COL + " = ?)";
+	
+	@Override
+	public boolean imageExist(String collectionTierImageName) throws SQLException {
+		LOGGER.debug("Verifying if a image " + collectionTierImageName + " exist in database");
+
+		PreparedStatement statement = null;
+		Connection conn = null;
+		try {
+			conn = getConnection();
+			statement = conn.prepareStatement(SELECT_CHECK_FEDERATION_EXISTS_SQL);
+			statement.setString(1, collectionTierImageName);
+			statement.setQueryTimeout(300);
+			
+			statement.execute();
+
+			ResultSet rs = statement.getResultSet();
+			return rs.next();
+		} finally {
+			close(statement, conn);
+		}
+	}
 
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM "
 			+ USERS_NOTIFY_TABLE_NAME + " WHERE " + JOB_ID_COL + " = ? AND "
