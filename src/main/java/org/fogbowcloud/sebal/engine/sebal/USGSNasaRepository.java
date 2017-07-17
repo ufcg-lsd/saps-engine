@@ -53,7 +53,7 @@ public class USGSNasaRepository implements NASARepository {
     
     private static final String LANDSAT_5_PREFIX = "LT5";
     private static final String LANDSAT_7_PREFIX = "LE7";
-    private static final String LANDSAT_8_PREFIX = "LT8";
+    private static final String LANDSAT_8_PREFIX = "LC8";
 
     //dataset
     private static final String LANDSAT_5_DATASET = "LANDSAT_TM_C1";
