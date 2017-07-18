@@ -222,50 +222,50 @@ public class DBUtilsImpl implements DBUtils {
 				FileUtils.write(imageListFile, imageList);
 				imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
 				
-				int elementCount = 0;
-				while(elementCount < imageNames.size()) {
-					LOGGER.debug("Getting download link for " + imageNames.get(elementCount));
-					Map<String, String> imageNameDownloadLinkMap = getUSGSRepository().getImageDownloadLink(imageNames.get(elementCount),
-									getUSGSRepository().getPossibleStations());
-					
-					if(imageNameDownloadLinkMap != null && !imageNameDownloadLinkMap.isEmpty()) {
-						submitImage(sebalVersion, sebalTag, obtainedImages, priority, elementCount, imageNameDownloadLinkMap);
-					} else {
-						elementCount++;
-					}
-				}
+				startSubmissionForYear(sebalVersion, sebalTag, imageNames,
+						obtainedImages, priority);
 			}
 			priority++;
 		}
 		return obtainedImages;
 	}
 
-	private void submitImage(String sebalVersion, String sebalTag,
-			List<String> obtainedImages, int priority, int elementCount,
-			Map<String, String> imageNameDownloadLinkMap) {
-		
-		String imageNameUpdated = null;
-		String imageDownloadLink = null;
-		for (Map.Entry<String, String> entry : imageNameDownloadLinkMap.entrySet()) {
-			imageNameUpdated = entry.getKey();
-			imageDownloadLink = entry.getValue();
-			obtainedImages.add(imageNameUpdated);
-		}
-		
-		try {
-			if (imageDownloadLink != null && !imageDownloadLink.isEmpty()
-					&& !getImageStore().imageExist(imageNameUpdated)) {
-				getImageStore().addImage(imageNameUpdated, "None", priority, sebalVersion, sebalTag,
-						getUSGSRepository().getNewSceneId(imageNameUpdated));
-				elementCount += 16;
-			} else if(getImageStore().imageExist(imageNameUpdated)){
-				elementCount += 16;
+	private void startSubmissionForYear(String sebalVersion, String sebalTag,
+			List<String> imageNames, List<String> obtainedImages, int priority) {
+		int elementCount = 0;
+		while(elementCount < imageNames.size()) {
+			LOGGER.debug("Getting download link for " + imageNames.get(elementCount));
+			Map<String, String> imageNameDownloadLinkMap = getUSGSRepository().getImageDownloadLink(imageNames.get(elementCount),
+							getUSGSRepository().getPossibleStations());
+			
+			if(imageNameDownloadLinkMap != null && !imageNameDownloadLinkMap.isEmpty()) {
+				String imageNameUpdated = null;
+				String imageDownloadLink = null;
+				for (Map.Entry<String, String> entry : imageNameDownloadLinkMap.entrySet()) {
+					imageNameUpdated = entry.getKey();
+					imageDownloadLink = entry.getValue();
+					obtainedImages.add(imageNameUpdated);
+				}
+				
+				try {
+					if (imageDownloadLink != null && !imageDownloadLink.isEmpty()
+							&& !getImageStore().imageExist(imageNameUpdated)) {
+						getImageStore().addImage(imageNameUpdated, "None", priority, sebalVersion, sebalTag,
+								getUSGSRepository().getNewSceneId(imageNameUpdated));
+						elementCount += 16;
+					} else if(getImageStore().imageExist(imageNameUpdated)){
+						LOGGER.debug("Image " + imageNameUpdated + " already exist in database");
+						elementCount += 16;
+					} else {
+						elementCount++;
+					}
+				} catch (SQLException e) {
+					LOGGER.error("Error while adding image at data base.", e);
+					elementCount++;
+				}
 			} else {
 				elementCount++;
 			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding image at data base.", e);
-			elementCount++;
 		}
 	}
 
