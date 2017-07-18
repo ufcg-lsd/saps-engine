@@ -254,7 +254,7 @@ public class DBUtilsImpl implements DBUtils {
 		
 		try {
 			if (imageDownloadLink != null && !imageDownloadLink.isEmpty()
-					&& getImageStore().imageExist(imageNameUpdated)) {
+					&& !getImageStore().imageExist(imageNameUpdated)) {
 				getImageStore().addImage(imageNameUpdated, "None", priority, sebalVersion, sebalTag,
 						getUSGSRepository().getNewSceneId(imageNameUpdated));
 				elementCount += 16;
