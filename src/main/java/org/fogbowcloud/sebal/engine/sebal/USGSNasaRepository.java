@@ -2,11 +2,9 @@ package org.fogbowcloud.sebal.engine.sebal;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,22 +13,12 @@ import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.Validate;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -44,7 +32,6 @@ public class USGSNasaRepository implements NASARepository {
     
     private final String sebalExportPath;
 
-    private final String usgsLoginUrl;
     private final String usgsJsonUrl;
     private final String usgsUserName;
     private final String usgsPassword;
@@ -90,7 +77,6 @@ public class USGSNasaRepository implements NASARepository {
         Validate.notNull(usgsAPIKeyPeriod, "usgsAPIKeyPeriod cannot be null");
 
         this.sebalExportPath = sebalExportPath;
-        this.usgsLoginUrl = usgsLoginUrl;
         this.usgsJsonUrl = usgsJsonUrl;
         this.usgsUserName = usgsUserName;
         this.usgsPassword = usgsPassword;
@@ -126,7 +112,7 @@ public class USGSNasaRepository implements NASARepository {
 	}
 
 	protected String getLoginResponse() throws IOException,
-			ClientProtocolException {		
+			ClientProtocolException {
 		String loginJsonRequest = "jsonRequest={\"username\":\"" + usgsUserName
 				+ "\",\"password\":\"" + usgsPassword
 				+ "\",\"authType\":\"EROS\"}";
@@ -410,5 +396,39 @@ public class USGSNasaRepository implements NASARepository {
 	public String getNewSceneId(String imageName) {
 		return getCollectionOneSceneId(getDataSet(imageName),
 				imageName, EARTH_EXPLORER_NODE, LEVEL_1_PRODUCT);
+	}
+
+	public JSONArray getAvailableImagesInRange(String dataSet, int firstYear,
+			int lastYear, String region) {
+		return searchForImagesInRange(dataSet, firstYear,
+				lastYear, region);
+	}
+
+	private JSONArray searchForImagesInRange(String dataset, int firstYear, int lastYear,
+			String region) {
+		double lowerLatitude = 0;
+		double lowerLongitude = 0;
+		double upperLatitude = 0;
+		double upperLongitude = 0;
+		String searchJsonRequest = "jsonRequest={\"apiKey\":\"" + usgsAPIKey + "\",\"datasetName\":\"" + dataset + "\","
+				+ "\"spatialFilter\":{\"filterType\":\"mbr\",\"lowerLeft\":{\"latitude\":\"" + lowerLatitude + "\",\"longitude\":\"" + lowerLongitude + "\"},"
+				+ "\"upperRight\":{\"latitude\":\"" + upperLatitude + "\",\"longitude\":\"" + upperLongitude + "\"}},\"temporalFilter\":{\"dateField\":"
+				+ "\"search_date\",\"startDate\":\"" + firstYear + "\",\"endDate\":\"" + lastYear +  "\"},\"sortOrder\":\"ASC\"}";
+
+		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
+				"--data", searchJsonRequest, usgsJsonUrl + File.separator
+						+ "download");
+		LOGGER.debug("Command=" + builder.command());
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			JSONObject searchResponse = new JSONObject(getProcessOutput(p));
+			return searchResponse.getJSONObject("data").getJSONArray("results");
+		} catch (Exception e) {
+			LOGGER.error("Error while logging in USGS", e);
+		}
+
+		return null;
 	}
 }

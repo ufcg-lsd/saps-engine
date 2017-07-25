@@ -1,6 +1,5 @@
 package org.fogbowcloud.sebal.engine.sebal.bootstrap;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -13,13 +12,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.fogbowcloud.sebal.engine.sebal.DefaultNASARepository;
 import org.fogbowcloud.sebal.engine.sebal.ImageData;
 import org.fogbowcloud.sebal.engine.sebal.ImageState;
@@ -27,12 +24,11 @@ import org.fogbowcloud.sebal.engine.sebal.JDBCImageDataStore;
 import org.fogbowcloud.sebal.engine.sebal.USGSNasaRepository;
 import org.fogbowcloud.sebal.engine.sebal.model.SebalUser;
 import org.fogbowcloud.sebal.notifier.Ward;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 public class DBUtilsImpl implements DBUtils {
 
-	private static final String DATASET_LT5_TYPE = "landsat_5";
-	private static final String DATASET_LE7_TYPE = "landsat_7";
-	private static final String DATASET_LE8_TYPE = "landsat_8";
     private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
 
     private final JDBCImageDataStore imageStore;
@@ -212,60 +208,34 @@ public class DBUtilsImpl implements DBUtils {
 			String sebalTag) throws IOException {
 
 		LOGGER.debug("Regions: " + regions);
-		List<String> imageNames = new ArrayList<String>();
 		List<String> obtainedImages = new ArrayList<String>();
 		int priority = 0;
-		for (String region : regions) {
-			for (int year = firstYear; year <= lastYear; year++) {
-				String imageList = createImageList(region, year, dataSet);
-				File imageListFile = new File("images-" + year + ".txt");
-				FileUtils.write(imageListFile, imageList);
-				imageNames = FileUtils.readLines(imageListFile, Charsets.UTF_8);
-				
-				startSubmissionForYear(sebalVersion, sebalTag, imageNames,
-						obtainedImages, priority);
-			}
+		for (String region : regions) {			
+			submitImagesForYears(dataSet, firstYear, lastYear, region, sebalVersion, sebalTag, priority, obtainedImages);
 			priority++;
 		}
 		return obtainedImages;
 	}
 
-	private void startSubmissionForYear(String sebalVersion, String sebalTag,
-			List<String> imageNames, List<String> obtainedImages, int priority) {
-		int elementCount = 0;
-		while(elementCount < imageNames.size()) {
-			LOGGER.debug("Getting download link for " + imageNames.get(elementCount));
-			Map<String, String> imageNameDownloadLinkMap = getUSGSRepository().getImageDownloadLink(imageNames.get(elementCount),
-							getUSGSRepository().getPossibleStations());
-			
-			if(imageNameDownloadLinkMap != null && !imageNameDownloadLinkMap.isEmpty()) {
-				String imageNameUpdated = null;
-				String imageDownloadLink = null;
-				for (Map.Entry<String, String> entry : imageNameDownloadLinkMap.entrySet()) {
-					imageNameUpdated = entry.getKey();
-					imageDownloadLink = entry.getValue();
-					obtainedImages.add(imageNameUpdated);
-				}
+	private void submitImagesForYears(String dataSet, int firstYear,
+			int lastYear, String region, String sebalVersion, String sebalTag,
+			int priority, List<String> obtainedImages) {
+		JSONArray availableImagesJSON = getUSGSRepository()
+				.getAvailableImagesInRange(dataSet, firstYear, lastYear, region);
+
+		try {
+			for (int i = 0; i < availableImagesJSON.length(); i++) {
+				String entityId = availableImagesJSON.getJSONObject(i).getString(SebalPropertiesConstants.ENTITY_ID_JSON_KEY);
+				String displayId = availableImagesJSON.getJSONObject(i).getString(SebalPropertiesConstants.DISPLAY_ID_JSON_KEY);
 				
-				try {
-					if (imageDownloadLink != null && !imageDownloadLink.isEmpty()
-							&& !getImageStore().imageExist(imageNameUpdated)) {
-						getImageStore().addImage(imageNameUpdated, "None", priority, sebalVersion, sebalTag,
-								getUSGSRepository().getNewSceneId(imageNameUpdated));
-						elementCount += 16;
-					} else if(getImageStore().imageExist(imageNameUpdated)){
-						LOGGER.debug("Image " + imageNameUpdated + " already exist in database");
-						elementCount += 16;
-					} else {
-						elementCount++;
-					}
-				} catch (SQLException e) {
-					LOGGER.error("Error while adding image at data base.", e);
-					elementCount++;
-				}
-			} else {
-				elementCount++;
+				getImageStore().addImage(entityId, "None", priority, sebalVersion, sebalTag, displayId);
+				getImageStore().addStateStamp(entityId, ImageState.NOT_DOWNLOADED, getImageStore().getImage(entityId).getUpdateTime());
+				obtainedImages.add(displayId);
 			}
+		} catch (JSONException e) {
+			LOGGER.error("Error while getting entityId and displayId from JSON response", e);
+		} catch (SQLException e) {
+			LOGGER.error("Error while adding image to database", e);
 		}
 	}
 
@@ -300,11 +270,11 @@ public class DBUtilsImpl implements DBUtils {
             NumberFormat formatter = new DecimalFormat("000");
             String imageName = new String();
             
-			if (dataSet.equals(DATASET_LT5_TYPE)) {
+			if (dataSet.equals(SebalPropertiesConstants.DATASET_LT5_TYPE)) {
 				imageName = "LT5" + region + year + formatter.format(day);
-			} else if(dataSet.equals(DATASET_LE7_TYPE)) {
+			} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LE7_TYPE)) {
 				imageName = "LE7" + region + year + formatter.format(day);
-			} else if(dataSet.equals(DATASET_LE8_TYPE)) {
+			} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LE8_TYPE)) {
 				imageName = "LC8" + region + year + formatter.format(day); 
 			}
             

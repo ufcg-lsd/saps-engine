@@ -10,6 +10,13 @@ public class SebalPropertiesConstants {
 	public static final String LSD_FEDERATION_MEMBER = "lsd.manager.naf.lsd.ufcg.edu.br";
 	public static final String AZURE_FEDERATION_MEMBER = "azure.lsd.ufcg.edu.br";
 	
+	// Submission constants
+	public static final String DISPLAY_ID_JSON_KEY = "displayId";
+	public static final String ENTITY_ID_JSON_KEY = "entityId";
+	public static final String DATASET_LT5_TYPE = "landsat_5";
+	public static final String DATASET_LE7_TYPE = "landsat_7";
+	public static final String DATASET_LE8_TYPE = "landsat_8";
+	
 	// USGS constants
 	public static final String MAX_USGS_DOWNLOAD_LINK_REQUESTS = "max_usgs_download_link_requests";
 	public static final String USGS_LOGIN_URL = "usgs_login_url";
