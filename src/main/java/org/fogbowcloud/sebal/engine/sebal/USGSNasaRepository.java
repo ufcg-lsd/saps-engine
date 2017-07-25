@@ -18,7 +18,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -400,8 +399,7 @@ public class USGSNasaRepository implements NASARepository {
 
 	public JSONArray getAvailableImagesInRange(String dataSet, int firstYear,
 			int lastYear, String region) {
-		return searchForImagesInRange(dataSet, firstYear,
-				lastYear, region);
+		return searchForImagesInRange(dataSet, firstYear, lastYear, region);
 	}
 
 	private JSONArray searchForImagesInRange(String dataset, int firstYear, int lastYear,
@@ -410,14 +408,14 @@ public class USGSNasaRepository implements NASARepository {
 		double lowerLongitude = 0;
 		double upperLatitude = 0;
 		double upperLongitude = 0;
+		
+		getRegionCoordinates(lowerLatitude, lowerLongitude, upperLatitude, upperLongitude);
 		String searchJsonRequest = "jsonRequest={\"apiKey\":\"" + usgsAPIKey + "\",\"datasetName\":\"" + dataset + "\","
 				+ "\"spatialFilter\":{\"filterType\":\"mbr\",\"lowerLeft\":{\"latitude\":\"" + lowerLatitude + "\",\"longitude\":\"" + lowerLongitude + "\"},"
 				+ "\"upperRight\":{\"latitude\":\"" + upperLatitude + "\",\"longitude\":\"" + upperLongitude + "\"}},\"temporalFilter\":{\"dateField\":"
 				+ "\"search_date\",\"startDate\":\"" + firstYear + "\",\"endDate\":\"" + lastYear +  "\"},\"sortOrder\":\"ASC\"}";
 
-		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
-				"--data", searchJsonRequest, usgsJsonUrl + File.separator
-						+ "download");
+		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data", searchJsonRequest, usgsJsonUrl + File.separator + "download");
 		LOGGER.debug("Command=" + builder.command());
 
 		try {
@@ -430,5 +428,10 @@ public class USGSNasaRepository implements NASARepository {
 		}
 
 		return null;
+	}
+
+	private void getRegionCoordinates(double lowerLatitude, double lowerLongitude, 
+			double upperLatitude, double upperLongitude) {
+		
 	}
 }

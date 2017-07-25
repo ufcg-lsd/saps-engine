@@ -220,8 +220,7 @@ public class DBUtilsImpl implements DBUtils {
 	private void submitImagesForYears(String dataSet, int firstYear,
 			int lastYear, String region, String sebalVersion, String sebalTag,
 			int priority, List<String> obtainedImages) {
-		JSONArray availableImagesJSON = getUSGSRepository()
-				.getAvailableImagesInRange(dataSet, firstYear, lastYear, region);
+		JSONArray availableImagesJSON = getUSGSRepository().getAvailableImagesInRange(dataSet, firstYear, lastYear, region);
 
 		try {
 			for (int i = 0; i < availableImagesJSON.length(); i++) {
