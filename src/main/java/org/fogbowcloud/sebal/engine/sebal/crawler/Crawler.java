@@ -44,8 +44,6 @@ public class Crawler {
 	private String crawlerVersion;
 	private String fmaskVersion;
 
-	private int numberOfDownloadLinkRequests = 0;
-
 	// Image dir size in bytes
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
 
@@ -143,7 +141,7 @@ public class Crawler {
 		
 		cleanUnfinishedDownloadedData(properties);
 
-		try {			
+		try {
 			while (true) {
 				cleanUnfinishedQueuedOutput(properties);
 				reSubmitErrorImages(properties);
@@ -156,9 +154,7 @@ public class Crawler {
 				} else {
 					Thread.sleep(Long.valueOf(properties
 							.getProperty(SebalPropertiesConstants.DEFAULT_CRAWLER_PERIOD)));
-				}
-				
-				numberOfDownloadLinkRequests = 0;
+				}				
 			}
 		} catch (Throwable e) {
 			LOGGER.error("Failed while downloading images", e);
@@ -264,17 +260,19 @@ public class Crawler {
 
 	protected void reSubmitImage(Properties properties, ImageData imageData)
 			throws SQLException {
-		if (imageNeedsToBeDownloaded(properties, imageData)) {
-			if(numberOfDownloadLinkRequests < Integer.valueOf(properties.getProperty(SebalPropertiesConstants.MAX_USGS_DOWNLOAD_LINK_REQUESTS))) {
-				imageData.setDownloadLink(usgsRepository.getImageDownloadLink(imageData.getName()));
-				imageData.setState(ImageState.NOT_DOWNLOADED);
-				updateErrorImage(imageData);
-				numberOfDownloadLinkRequests++;
-			}
-		} else {
-			imageData.setState(ImageState.DOWNLOADED);
-			updateErrorImage(imageData);
+		try {
+			deleteImageFromDisk(imageData,SebalPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "images" + File.separator + 
+					imageData.getCollectionTierName());
+			deleteResultsFromDisk(imageData,SebalPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "results" + File.separator + 
+					imageData.getCollectionTierName());
+		} catch (IOException e) {
+			LOGGER.error("Error while deleting image " + imageData.getCollectionTierName() + " from disk");
 		}
+		
+		imageData.setImageError(ImageData.NON_EXISTENT);
+		imageData.setFederationMember(ImageData.NON_EXISTENT);
+		imageData.setState(ImageState.NOT_DOWNLOADED);
+		updateErrorImage(imageData);
 	}
 
 	protected boolean imageNeedsToBeDownloaded(Properties properties,
@@ -308,7 +306,6 @@ public class Crawler {
 	}
 	
 	private void updateErrorImage(ImageData imageData) throws SQLException {		
-		imageData.setImageError(ImageData.NON_EXISTENT);
 		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 		imageStore.updateImage(imageData);
 		imageStore.addStateStamp(imageData.getName(),
@@ -520,7 +517,7 @@ public class Crawler {
 
 	protected void deleteImageFromDisk(final ImageData imageData,
 			String exportPath) throws IOException {
-		String imageDirPath = exportPath + "/images/" + imageData.getCollectionTierName();
+		String imageDirPath = exportPath + File.separator + "images" + File.separator + imageData.getCollectionTierName();
 		File imageDir = new File(imageDirPath);
 
 		LOGGER.info("Removing image " + imageData + " data under path "
@@ -592,7 +589,7 @@ public class Crawler {
 
 	private void deleteResultsFromDisk(ImageData imageData, String exportPath)
 			throws IOException {
-		String resultsDirPath = exportPath + "/results/" + imageData.getCollectionTierName();
+		String resultsDirPath = exportPath + File.separator + "results" + File.separator + imageData.getCollectionTierName();
 		File resultsDir = new File(resultsDirPath);
 
 		if (!resultsDir.exists() || !resultsDir.isDirectory()) {			
