@@ -32,7 +32,6 @@ public class SebalTasks {
 	private static final String SEBAL_LOCAL_OUTPUT_DIR = "sebal_local_output_dir";
 	private static final String SEBAL_IMAGES_LOCAL_PATH = "sebal_images_local_path";
 	private static final String SEBAL_RESULTS_LOCAL_PATH = "sebal_results_local_path";
-	private static final String SEBAL_REPOSITORY_USER_PRIVATE_KEY = "sebal_repository_user_private_key";
 	private static final String SEBAL_LOCAL_SCRIPTS_DIR = "sebal_local_scripts_dir";
 
 	private static final String SEBAL_REMOTE_USER = "sebal_remote_user";
@@ -50,8 +49,7 @@ public class SebalTasks {
 	private static final String METADATA_SEBAL_VERSION = "sebal_url";
 	private static final String METADATA_SEBAL_TAG = "sebal_version";
 
-	private static final String METADATA_REPOS_USER = "repository_user";
-	private static final String METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH = "remote_repos_private_key_path";
+	private static final String METADATA_REPOS_USER = "repository_user";	
 
 	private static final String METADATA_MOUNT_POINT = "mount_point";
 	private static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
@@ -107,24 +105,6 @@ public class SebalTasks {
 		String mkdirCommand = "mkdir -p "
 				+ rTaskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
 		rTaskImpl.addCommand(new Command(mkdirCommand, Command.Type.REMOTE));
-
-		// treating repository user private key
-		if (properties.getProperty(SEBAL_REPOSITORY_USER_PRIVATE_KEY) != null) {
-			File privateKeyFile = new File(
-					properties.getProperty(SEBAL_REPOSITORY_USER_PRIVATE_KEY));
-			String remotePrivateKeyPath = rTaskImpl
-					.getMetadata(TaskImpl.METADATA_SANDBOX)
-					+ File.separator
-					+ privateKeyFile.getName();
-
-			rTaskImpl.putMetadata(METADATA_REMOTE_REPOS_PRIVATE_KEY_PATH,
-					remotePrivateKeyPath);
-			String scpUploadCommand = createSCPUploadCommand(
-					privateKeyFile.getAbsolutePath(), remotePrivateKeyPath);
-			LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-			rTaskImpl.addCommand(new Command(scpUploadCommand,
-					Command.Type.LOCAL));
-		}
 
 		// creating init and run R script for this image
 		File localInitScriptFile = createScriptFile(properties, rTaskImpl, INIT_TYPE);
