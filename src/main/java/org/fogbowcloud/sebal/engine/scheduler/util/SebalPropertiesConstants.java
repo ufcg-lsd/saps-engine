@@ -84,4 +84,5 @@ public class SebalPropertiesConstants {
 	public static final String STATIONS_FILE_PATH = "stations_file_path";
 	public static final String BASE_YEAR_DIR_PATH = "base_year_dir_path";
 	public static final String POSSIBLE_STATIONS_FILE_PATH = "src/main/resources/possible_stations";
+	public static final String REGION_COORDINATES_FILE_PATH = "src/main/resources/region_coordinates.json";
 }

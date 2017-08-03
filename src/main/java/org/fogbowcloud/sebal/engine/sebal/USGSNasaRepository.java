@@ -18,6 +18,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.sebal.engine.scheduler.util.SebalPropertiesConstants;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -399,15 +400,53 @@ public class USGSNasaRepository implements NASARepository {
 
 	public JSONArray getAvailableImagesInRange(String dataSet, int firstYear,
 			int lastYear, String region) {
-		return searchForImagesInRange(dataSet, firstYear, lastYear, region);
-	}
-
-	private JSONArray searchForImagesInRange(String dataset, int firstYear, int lastYear,
-			String region) {
 		double lowerLatitude = 0;
 		double lowerLongitude = 0;
 		double upperLatitude = 0;
 		double upperLongitude = 0;
+		
+		try {
+			JSONObject regionJSON = getRegionJSON(region);
+			lowerLatitude = regionJSON.getDouble("lowerLatitude");
+			lowerLongitude = regionJSON.getDouble("lowerLongitude");
+			upperLatitude = regionJSON.getDouble("upperLatitude");
+			upperLongitude = regionJSON.getDouble("upperLongitude");
+		} catch (JSONException e) {
+			LOGGER.error("Error while getting coordinates from region JSON", e);
+			return null;
+		}
+		
+		return searchForImagesInRange(dataSet, firstYear, lastYear, lowerLatitude, lowerLongitude, upperLatitude, upperLongitude);
+	}
+
+	private JSONObject getRegionJSON(String region) throws JSONException {
+		//TODO: verify if this is correct
+		String jsonData = readFile(SebalPropertiesConstants.REGION_COORDINATES_FILE_PATH);
+	    JSONObject regionsJSON = new JSONObject(jsonData);	    
+		return regionsJSON.getJSONObject(region);
+	}
+	
+	private static String readFile(String filename) {
+	    String result = "";
+	    try {
+	        BufferedReader br = new BufferedReader(new FileReader(filename));
+	        StringBuilder sb = new StringBuilder();
+	        String line = br.readLine();
+	        while (line != null) {
+	            sb.append(line);
+	            line = br.readLine();
+	        }
+	        result = sb.toString();
+	        br.close();
+	    } catch(Exception e) {
+	        LOGGER.error("Error while reading regions JSON file", e);
+	    }
+	    
+	    return result;
+	}
+
+	private JSONArray searchForImagesInRange(String dataset, int firstYear, int lastYear,
+			double lowerLatitude, double lowerLongitude, double upperLatitude, double upperLongitude) {
 		
 		getRegionCoordinates(lowerLatitude, lowerLongitude, upperLatitude, upperLongitude);
 		String searchJsonRequest = "jsonRequest={\"apiKey\":\"" + usgsAPIKey + "\",\"datasetName\":\"" + dataset + "\","

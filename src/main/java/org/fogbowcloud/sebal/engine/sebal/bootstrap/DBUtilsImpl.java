@@ -210,7 +210,7 @@ public class DBUtilsImpl implements DBUtils {
 		LOGGER.debug("Regions: " + regions);
 		List<String> obtainedImages = new ArrayList<String>();
 		int priority = 0;
-		for (String region : regions) {			
+		for (String region : regions) {
 			submitImagesForYears(dataSet, firstYear, lastYear, region, sebalVersion, sebalTag, priority, obtainedImages);
 			priority++;
 		}
@@ -221,20 +221,22 @@ public class DBUtilsImpl implements DBUtils {
 			int lastYear, String region, String sebalVersion, String sebalTag,
 			int priority, List<String> obtainedImages) {
 		JSONArray availableImagesJSON = getUSGSRepository().getAvailableImagesInRange(dataSet, firstYear, lastYear, region);
-
-		try {
-			for (int i = 0; i < availableImagesJSON.length(); i++) {
-				String entityId = availableImagesJSON.getJSONObject(i).getString(SebalPropertiesConstants.ENTITY_ID_JSON_KEY);
-				String displayId = availableImagesJSON.getJSONObject(i).getString(SebalPropertiesConstants.DISPLAY_ID_JSON_KEY);
-				
-				getImageStore().addImage(entityId, "None", priority, sebalVersion, sebalTag, displayId);
-				getImageStore().addStateStamp(entityId, ImageState.NOT_DOWNLOADED, getImageStore().getImage(entityId).getUpdateTime());
-				obtainedImages.add(displayId);
-			}
-		} catch (JSONException e) {
-			LOGGER.error("Error while getting entityId and displayId from JSON response", e);
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding image to database", e);
+		
+		if(availableImagesJSON != null) {
+			try {
+				for (int i = 0; i < availableImagesJSON.length(); i++) {
+					String entityId = availableImagesJSON.getJSONObject(i).getString(SebalPropertiesConstants.ENTITY_ID_JSON_KEY);
+					String displayId = availableImagesJSON.getJSONObject(i).getString(SebalPropertiesConstants.DISPLAY_ID_JSON_KEY);
+					
+					getImageStore().addImage(entityId, "None", priority, sebalVersion, sebalTag, displayId);
+					getImageStore().addStateStamp(entityId, ImageState.NOT_DOWNLOADED, getImageStore().getImage(entityId).getUpdateTime());
+					obtainedImages.add(displayId);
+				}
+			} catch (JSONException e) {
+				LOGGER.error("Error while getting entityId and displayId from JSON response", e);
+			} catch (SQLException e) {
+				LOGGER.error("Error while adding image to database", e);
+			}			
 		}
 	}
 
