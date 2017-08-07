@@ -115,10 +115,18 @@ public class USGSNasaRepository implements NASARepository {
 
 	protected String getLoginResponse() throws IOException,
 			ClientProtocolException {
-		String loginJsonRequest = "jsonRequest={\"username\":\"" + usgsUserName
-				+ "\",\"password\":\"" + usgsPassword
-				+ "\",\"authType\":\"EROS\"}";
 		
+		JSONObject loginJSONObj = new JSONObject();		
+		try {
+			loginJSONObj.put("username", usgsUserName);
+			loginJSONObj.put("password", usgsPassword);
+			loginJSONObj.put("authType", "EROS");
+		} catch (JSONException e) {
+			LOGGER.error("Error while formatting login JSON", e);
+			return null;
+		}
+		
+		String loginJsonRequest = "jsonRequest=" + loginJSONObj.toString();
 		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
 				"--data", loginJsonRequest, usgsJsonUrl
 						+ File.separator + "login");
@@ -134,7 +142,7 @@ public class USGSNasaRepository implements NASARepository {
 
 		return null;
 	}
-	
+
 	private String getProcessOutput(Process p) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		StringBuilder stringBuilder = new StringBuilder();
@@ -286,10 +294,16 @@ public class USGSNasaRepository implements NASARepository {
 
 	protected String getMetadataHttpResponse(String dataset, String sceneId,
 			String node, String product) {
-		String metadataJsonRequest = "jsonRequest={\"apiKey\":\"" + usgsAPIKey
-				+ "\",\"datasetName\":\"" + dataset + "\",\"node\":\"" + node
-				+ "\",\"entityIds\":[\"" + sceneId + "\"]}";
-
+		
+		JSONObject metadataJSONObj = new JSONObject();		
+		try {
+			formatMetadataJSON(dataset, sceneId, node, product, metadataJSONObj);
+		} catch (JSONException e) {
+			LOGGER.error("Error while formatting metadata JSON", e);
+			return null;
+		}
+		
+		String metadataJsonRequest = "jsonRequest=" + metadataJSONObj.toString();
 		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
 				"--data", metadataJsonRequest, usgsJsonUrl + File.separator
 						+ "metadata");
@@ -304,6 +318,20 @@ public class USGSNasaRepository implements NASARepository {
 		}
 
 		return null;
+	}
+
+	private void formatMetadataJSON(String dataset, String sceneId,
+			String node, String product, JSONObject metadataJSONObj) throws JSONException {
+		JSONArray entityIDs = new JSONArray();
+		JSONArray products = new JSONArray();
+		entityIDs.put(sceneId);
+		products.put(product);
+		
+		metadataJSONObj.put("datasetName", dataset);
+		metadataJSONObj.put("apiKey", usgsAPIKey);
+		metadataJSONObj.put("node", node);
+		metadataJSONObj.put("entityIds", entityIDs);
+		metadataJSONObj.put("products", products);
 	}
 
 	public List<String> getPossibleStations() {
@@ -366,11 +394,16 @@ public class USGSNasaRepository implements NASARepository {
 
 	protected String getDownloadHttpResponse(String dataset, String sceneId,
 			String node, String product) {
-		String downloadJsonRequest = "jsonRequest={\"datasetName\":\""
-				+ dataset + "\",\"apiKey\":\"" + usgsAPIKey + "\",\"node\":\""
-				+ node + "\",\"entityIds\":[\"" + sceneId
-				+ "\"],\"products\":[\"" + product + "\"]}";
-
+		
+		JSONObject downloadJSONObj = new JSONObject();		
+		try {
+			formatDownloadJSON(dataset, sceneId, node, product, downloadJSONObj);
+		} catch (JSONException e) {
+			LOGGER.error("Error while formatting download JSON", e);
+			return null;
+		}
+		
+		String downloadJsonRequest = "jsonRequest=" + downloadJSONObj.toString();
 		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST",
 				"--data", downloadJsonRequest, usgsJsonUrl + File.separator
 						+ "download");
@@ -387,6 +420,20 @@ public class USGSNasaRepository implements NASARepository {
 		return null;
 	}
     
+	private void formatDownloadJSON(String dataset, String sceneId, String node,
+			String product, JSONObject downloadJSONObj) throws JSONException {
+		JSONArray entityIDs = new JSONArray();
+		JSONArray products = new JSONArray();
+		entityIDs.put(sceneId);
+		products.put(product);
+		
+		downloadJSONObj.put("datasetName", dataset);
+		downloadJSONObj.put("apiKey", usgsAPIKey);
+		downloadJSONObj.put("node", node);
+		downloadJSONObj.put("entityIds", entityIDs);
+		downloadJSONObj.put("products", products);
+	}
+
 	protected void setUSGSAPIKey(String usgsAPIKey) {
 		this.usgsAPIKey = usgsAPIKey;
 	}
@@ -451,12 +498,17 @@ public class USGSNasaRepository implements NASARepository {
 
 	private JSONArray searchForImagesInRange(String dataset, int firstYear, int lastYear,
 			double latitude, double longitude) {
+		
+		JSONObject searchJSONObj = new JSONObject();		
+		try {
+			formatSearchJSON(dataset, firstYear, lastYear, latitude, longitude,
+					searchJSONObj);
+		} catch (JSONException e) {
+			LOGGER.error("Error while formatting search JSON", e);
+			return null;
+		}
 				
-		String searchJsonRequest = "jsonRequest={\"apiKey\":\"" + usgsAPIKey + "\",\"datasetName\":\"" + dataset + "\","
-				+ "\"spatialFilter\":{\"filterType\":\"mbr\",\"lowerLeft\":{\"latitude\":\"" + latitude + "\",\"longitude\":\"" + longitude + "\"},"
-				+ "\"upperRight\":{\"latitude\":\"" + latitude + "\",\"longitude\":\"" + longitude + "\"}},\"temporalFilter\":{\"dateField\":"
-				+ "\"search_date\",\"startDate\":\"" + firstYear + "\",\"endDate\":\"" + lastYear +  "\"},\"maxResults\":" + MAX_RESULTS + ",\"sortOrder\":\"ASC\"}";
-
+		String searchJsonRequest = "jsonRequest=" + searchJSONObj.toString();
 		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data", searchJsonRequest, usgsJsonUrl + File.separator + "download");
 		LOGGER.debug("Command=" + builder.command());
 
@@ -470,5 +522,34 @@ public class USGSNasaRepository implements NASARepository {
 		}
 
 		return null;
+	}
+
+	private void formatSearchJSON(String dataset, int firstYear, int lastYear,
+			double latitude, double longitude, JSONObject searchJSONObj)
+			throws JSONException {
+		JSONObject spatialFilterObj = new JSONObject();
+		JSONObject temporalFilterObj = new JSONObject();
+		JSONObject lowerLeftObj = new JSONObject();
+		JSONObject upperRightObj = new JSONObject();
+		
+		lowerLeftObj.put("latitude", latitude);
+		lowerLeftObj.put("longitude", longitude);
+		upperRightObj.put("latitude", latitude);
+		upperRightObj.put("longitude", longitude);
+		
+		spatialFilterObj.put("filterType", "mbr");
+		spatialFilterObj.put("lowerLeft", lowerLeftObj);
+		spatialFilterObj.put("upperRight", upperRightObj);			
+		
+		temporalFilterObj.put("dateField", "search_date");
+		temporalFilterObj.put("startDate", firstYear);
+		temporalFilterObj.put("endDate", lastYear);
+		
+		searchJSONObj.put("apiKey", usgsAPIKey);
+		searchJSONObj.put("datasetName", dataset);
+		searchJSONObj.put("spatialFilter", spatialFilterObj);
+		searchJSONObj.put("temporalFilter", temporalFilterObj);
+		searchJSONObj.put("maxResults", MAX_RESULTS);
+		searchJSONObj.put("sortOrder", "ASC");
 	}
 }
