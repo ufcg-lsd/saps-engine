@@ -277,7 +277,7 @@ public class USGSNasaRepository implements NASARepository {
 			JSONObject metadataRequestResponse = new JSONObject(response);
 			JSONArray dataJSONArray = metadataRequestResponse.getJSONArray(SebalPropertiesConstants.DATA_JSON_KEY);
 			JSONObject jsonObject = dataJSONArray.getJSONObject(0);
-			String newSceneId = jsonObject.getString("displayId");			
+			String newSceneId = jsonObject.getString(SebalPropertiesConstants.DISPLAY_ID_JSON_KEY);
 			
 			LOGGER.debug("newSceneId=" + newSceneId);
 			if (newSceneId != null && !newSceneId.isEmpty()) {
@@ -467,9 +467,9 @@ public class USGSNasaRepository implements NASARepository {
 	private JSONObject getRegionJSON(String region) throws JSONException {
 		String jsonData = readFile(SebalPropertiesConstants.TILES_COORDINATES_FILE_PATH);
 	    JSONObject regionsJSON = new JSONObject(jsonData);
-	    JSONArray tiles = regionsJSON.getJSONArray("tiles");
+	    JSONArray tiles = regionsJSON.getJSONArray(SebalPropertiesConstants.TILES_JSON_KEY);
 	    for(int i = 0; i < tiles.length(); i++) {
-	    	if(tiles.getJSONObject(i).getString("id").equals(region)) {
+	    	if(tiles.getJSONObject(i).getString(SebalPropertiesConstants.TILE_ID_JSON_KEY).equals(region)) {
 	    		return tiles.getJSONObject(i);
 	    	}
 	    }

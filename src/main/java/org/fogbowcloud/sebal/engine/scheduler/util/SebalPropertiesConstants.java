@@ -16,6 +16,8 @@ public class SebalPropertiesConstants {
 	public static final String DATASET_LE8_TYPE = "landsat_8";
 
 	// JSON constants
+	public static final String TILE_ID_JSON_KEY = "id";
+	public static final String TILES_JSON_KEY = "tiles";
 	public static final String USERNAME_JSON_KEY = "username";
 	public static final String PASSWORD_JSON_KEY = "password";
 	public static final String AUTH_TYPE_JSON_KEY = "authType";
