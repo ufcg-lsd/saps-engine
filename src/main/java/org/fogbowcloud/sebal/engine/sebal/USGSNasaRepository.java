@@ -465,7 +465,7 @@ public class USGSNasaRepository implements NASARepository {
 	}
 
 	private JSONObject getRegionJSON(String region) throws JSONException {
-		String jsonData = readFile(SebalPropertiesConstants.REGION_COORDINATES_FILE_PATH);
+		String jsonData = readFile(SebalPropertiesConstants.TILES_COORDINATES_FILE_PATH);
 	    JSONObject regionsJSON = new JSONObject(jsonData);
 	    JSONArray tiles = regionsJSON.getJSONArray("tiles");
 	    for(int i = 0; i < tiles.length(); i++) {
