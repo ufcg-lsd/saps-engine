@@ -55,6 +55,8 @@ public class USGSNasaRepository implements NASARepository {
     // conf constants
     private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 
+	private static final int MAX_RESULTS = 1000;
+
     
     public USGSNasaRepository(Properties properties) {
 		this(properties.getProperty(SEBAL_EXPORT_PATH),
@@ -400,30 +402,32 @@ public class USGSNasaRepository implements NASARepository {
 
 	public JSONArray getAvailableImagesInRange(String dataSet, int firstYear,
 			int lastYear, String region) {
-		double lowerLatitude = 0;
-		double lowerLongitude = 0;
-		double upperLatitude = 0;
-		double upperLongitude = 0;
+		double latitude = 0;
+		double longitude = 0;
 		
 		try {
 			JSONObject regionJSON = getRegionJSON(region);
-			lowerLatitude = regionJSON.getDouble("lowerLatitude");
-			lowerLongitude = regionJSON.getDouble("lowerLongitude");
-			upperLatitude = regionJSON.getDouble("upperLatitude");
-			upperLongitude = regionJSON.getDouble("upperLongitude");
+			latitude = regionJSON.getDouble("latitude");
+			longitude = regionJSON.getDouble("longitude");
 		} catch (JSONException e) {
 			LOGGER.error("Error while getting coordinates from region JSON", e);
 			return null;
 		}
 		
-		return searchForImagesInRange(dataSet, firstYear, lastYear, lowerLatitude, lowerLongitude, upperLatitude, upperLongitude);
+		return searchForImagesInRange(dataSet, firstYear, lastYear, latitude, longitude);
 	}
 
 	private JSONObject getRegionJSON(String region) throws JSONException {
-		//TODO: verify if this is correct
 		String jsonData = readFile(SebalPropertiesConstants.REGION_COORDINATES_FILE_PATH);
-	    JSONObject regionsJSON = new JSONObject(jsonData);	    
-		return regionsJSON.getJSONObject(region);
+	    JSONObject regionsJSON = new JSONObject(jsonData);
+	    JSONArray tiles = regionsJSON.getJSONArray("tiles");
+	    for(int i = 0; i < tiles.length(); i++) {
+	    	if(tiles.getJSONObject(i).getString("id").equals(region)) {
+	    		return tiles.getJSONObject(i);
+	    	}
+	    }
+	    
+	    return null;
 	}
 	
 	private static String readFile(String filename) {
@@ -446,13 +450,12 @@ public class USGSNasaRepository implements NASARepository {
 	}
 
 	private JSONArray searchForImagesInRange(String dataset, int firstYear, int lastYear,
-			double lowerLatitude, double lowerLongitude, double upperLatitude, double upperLongitude) {
-		
-		getRegionCoordinates(lowerLatitude, lowerLongitude, upperLatitude, upperLongitude);
+			double latitude, double longitude) {
+				
 		String searchJsonRequest = "jsonRequest={\"apiKey\":\"" + usgsAPIKey + "\",\"datasetName\":\"" + dataset + "\","
-				+ "\"spatialFilter\":{\"filterType\":\"mbr\",\"lowerLeft\":{\"latitude\":\"" + lowerLatitude + "\",\"longitude\":\"" + lowerLongitude + "\"},"
-				+ "\"upperRight\":{\"latitude\":\"" + upperLatitude + "\",\"longitude\":\"" + upperLongitude + "\"}},\"temporalFilter\":{\"dateField\":"
-				+ "\"search_date\",\"startDate\":\"" + firstYear + "\",\"endDate\":\"" + lastYear +  "\"},\"sortOrder\":\"ASC\"}";
+				+ "\"spatialFilter\":{\"filterType\":\"mbr\",\"lowerLeft\":{\"latitude\":\"" + latitude + "\",\"longitude\":\"" + longitude + "\"},"
+				+ "\"upperRight\":{\"latitude\":\"" + latitude + "\",\"longitude\":\"" + longitude + "\"}},\"temporalFilter\":{\"dateField\":"
+				+ "\"search_date\",\"startDate\":\"" + firstYear + "\",\"endDate\":\"" + lastYear +  "\"},\"maxResults\":" + MAX_RESULTS + ",\"sortOrder\":\"ASC\"}";
 
 		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data", searchJsonRequest, usgsJsonUrl + File.separator + "download");
 		LOGGER.debug("Command=" + builder.command());
@@ -467,10 +470,5 @@ public class USGSNasaRepository implements NASARepository {
 		}
 
 		return null;
-	}
-
-	private void getRegionCoordinates(double lowerLatitude, double lowerLongitude, 
-			double upperLatitude, double upperLongitude) {
-		
 	}
 }
