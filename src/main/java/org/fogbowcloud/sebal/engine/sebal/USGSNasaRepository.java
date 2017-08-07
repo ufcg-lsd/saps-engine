@@ -26,7 +26,7 @@ import org.json.JSONObject;
  */
 public class USGSNasaRepository implements NASARepository {
 
-    private static final String USGS_NULL_RESPONSE = "null";
+	private static final String USGS_NULL_RESPONSE = "null";
 
 	private static final Logger LOGGER = Logger.getLogger(USGSNasaRepository.class);
     
@@ -105,7 +105,7 @@ public class USGSNasaRepository implements NASARepository {
 			String response = getLoginResponse();
 			JSONObject apiKeyRequestResponse = new JSONObject(response);
 
-			return apiKeyRequestResponse.getString("data");
+			return apiKeyRequestResponse.getString(SebalPropertiesConstants.DATA_JSON_KEY);
 		} catch (Throwable e) {
 			LOGGER.error("Error while generating USGS API key", e);
 		}
@@ -118,9 +118,9 @@ public class USGSNasaRepository implements NASARepository {
 		
 		JSONObject loginJSONObj = new JSONObject();		
 		try {
-			loginJSONObj.put("username", usgsUserName);
-			loginJSONObj.put("password", usgsPassword);
-			loginJSONObj.put("authType", "EROS");
+			loginJSONObj.put(SebalPropertiesConstants.USERNAME_JSON_KEY, usgsUserName);
+			loginJSONObj.put(SebalPropertiesConstants.PASSWORD_JSON_KEY, usgsPassword);
+			loginJSONObj.put(SebalPropertiesConstants.AUTH_TYPE_JSON_KEY, SebalPropertiesConstants.EROS_JSON_VALUE);
 		} catch (JSONException e) {
 			LOGGER.error("Error while formatting login JSON", e);
 			return null;
@@ -275,7 +275,7 @@ public class USGSNasaRepository implements NASARepository {
 		
 		try {
 			JSONObject metadataRequestResponse = new JSONObject(response);
-			JSONArray dataJSONArray = metadataRequestResponse.getJSONArray("data");
+			JSONArray dataJSONArray = metadataRequestResponse.getJSONArray(SebalPropertiesConstants.DATA_JSON_KEY);
 			JSONObject jsonObject = dataJSONArray.getJSONObject(0);
 			String newSceneId = jsonObject.getString("displayId");			
 			
@@ -327,11 +327,11 @@ public class USGSNasaRepository implements NASARepository {
 		entityIDs.put(sceneId);
 		products.put(product);
 		
-		metadataJSONObj.put("datasetName", dataset);
-		metadataJSONObj.put("apiKey", usgsAPIKey);
-		metadataJSONObj.put("node", node);
-		metadataJSONObj.put("entityIds", entityIDs);
-		metadataJSONObj.put("products", products);
+		metadataJSONObj.put(SebalPropertiesConstants.DATASET_NAME_JSON_KEY, dataset);
+		metadataJSONObj.put(SebalPropertiesConstants.API_KEY_JSON_KEY, usgsAPIKey);
+		metadataJSONObj.put(SebalPropertiesConstants.NODE_JSON_KEY, node);
+		metadataJSONObj.put(SebalPropertiesConstants.ENTITY_IDS_JSON_KEY, entityIDs);
+		metadataJSONObj.put(SebalPropertiesConstants.PRODUCTS_JSON_KEY, products);
 	}
 
 	public List<String> getPossibleStations() {
@@ -373,7 +373,7 @@ public class USGSNasaRepository implements NASARepository {
 		
 		try {
 			JSONObject downloadRequestResponse = new JSONObject(response);
-			String downloadLink = downloadRequestResponse.getString("data")
+			String downloadLink = downloadRequestResponse.getString(SebalPropertiesConstants.DATA_JSON_KEY)
 					.replace("\\/", "/");
 			downloadLink = downloadLink.replace("[", "");
 			downloadLink = downloadLink.replace("]", "");
@@ -427,11 +427,11 @@ public class USGSNasaRepository implements NASARepository {
 		entityIDs.put(sceneId);
 		products.put(product);
 		
-		downloadJSONObj.put("datasetName", dataset);
-		downloadJSONObj.put("apiKey", usgsAPIKey);
-		downloadJSONObj.put("node", node);
-		downloadJSONObj.put("entityIds", entityIDs);
-		downloadJSONObj.put("products", products);
+		downloadJSONObj.put(SebalPropertiesConstants.DATASET_NAME_JSON_KEY, dataset);
+		downloadJSONObj.put(SebalPropertiesConstants.API_KEY_JSON_KEY, usgsAPIKey);
+		downloadJSONObj.put(SebalPropertiesConstants.NODE_JSON_KEY, node);
+		downloadJSONObj.put(SebalPropertiesConstants.ENTITY_IDS_JSON_KEY, entityIDs);
+		downloadJSONObj.put(SebalPropertiesConstants.PRODUCTS_JSON_KEY, products);
 	}
 
 	protected void setUSGSAPIKey(String usgsAPIKey) {
@@ -454,8 +454,8 @@ public class USGSNasaRepository implements NASARepository {
 		
 		try {
 			JSONObject regionJSON = getRegionJSON(region);
-			latitude = regionJSON.getDouble("latitude");
-			longitude = regionJSON.getDouble("longitude");
+			latitude = regionJSON.getDouble(SebalPropertiesConstants.LATITUDE_JSON_KEY);
+			longitude = regionJSON.getDouble(SebalPropertiesConstants.LONGITUDE_JSON_KEY);
 		} catch (JSONException e) {
 			LOGGER.error("Error while getting coordinates from region JSON", e);
 			return null;
@@ -516,7 +516,7 @@ public class USGSNasaRepository implements NASARepository {
 			Process p = builder.start();
 			p.waitFor();
 			JSONObject searchResponse = new JSONObject(getProcessOutput(p));
-			return searchResponse.getJSONObject("data").getJSONArray("results");
+			return searchResponse.getJSONObject(SebalPropertiesConstants.DATA_JSON_KEY).getJSONArray("results");
 		} catch (Exception e) {
 			LOGGER.error("Error while logging in USGS", e);
 		}
@@ -532,24 +532,24 @@ public class USGSNasaRepository implements NASARepository {
 		JSONObject lowerLeftObj = new JSONObject();
 		JSONObject upperRightObj = new JSONObject();
 		
-		lowerLeftObj.put("latitude", latitude);
-		lowerLeftObj.put("longitude", longitude);
-		upperRightObj.put("latitude", latitude);
-		upperRightObj.put("longitude", longitude);
+		lowerLeftObj.put(SebalPropertiesConstants.LATITUDE_JSON_KEY, latitude);
+		lowerLeftObj.put(SebalPropertiesConstants.LONGITUDE_JSON_KEY, longitude);
+		upperRightObj.put(SebalPropertiesConstants.LATITUDE_JSON_KEY, latitude);
+		upperRightObj.put(SebalPropertiesConstants.LONGITUDE_JSON_KEY, longitude);
 		
-		spatialFilterObj.put("filterType", "mbr");
-		spatialFilterObj.put("lowerLeft", lowerLeftObj);
-		spatialFilterObj.put("upperRight", upperRightObj);			
+		spatialFilterObj.put(SebalPropertiesConstants.FILTER_TYPE_JSON_KEY, SebalPropertiesConstants.MBR_JSON_VALUE);
+		spatialFilterObj.put(SebalPropertiesConstants.LOWER_LEFT_JSON_KEY, lowerLeftObj);
+		spatialFilterObj.put(SebalPropertiesConstants.UPPER_RIGHT_JSON_KEY, upperRightObj);			
 		
-		temporalFilterObj.put("dateField", "search_date");
-		temporalFilterObj.put("startDate", firstYear);
-		temporalFilterObj.put("endDate", lastYear);
+		temporalFilterObj.put(SebalPropertiesConstants.DATE_FIELD_JSON_KEY, SebalPropertiesConstants.SEARCH_DATE_JSON_VALUE);
+		temporalFilterObj.put(SebalPropertiesConstants.START_DATE_JSON_KEY, firstYear);
+		temporalFilterObj.put(SebalPropertiesConstants.END_DATE_JSON_KEY, lastYear);
 		
-		searchJSONObj.put("apiKey", usgsAPIKey);
-		searchJSONObj.put("datasetName", dataset);
-		searchJSONObj.put("spatialFilter", spatialFilterObj);
-		searchJSONObj.put("temporalFilter", temporalFilterObj);
-		searchJSONObj.put("maxResults", MAX_RESULTS);
-		searchJSONObj.put("sortOrder", "ASC");
+		searchJSONObj.put(SebalPropertiesConstants.API_KEY_JSON_KEY, usgsAPIKey);
+		searchJSONObj.put(SebalPropertiesConstants.DATASET_NAME_JSON_KEY, dataset);
+		searchJSONObj.put(SebalPropertiesConstants.SPATIAL_FILTER_JSON_KEY, spatialFilterObj);
+		searchJSONObj.put(SebalPropertiesConstants.TEMPORAL_FILTER_JSON_KEY, temporalFilterObj);
+		searchJSONObj.put(SebalPropertiesConstants.MAX_RESULTS_JSON_KEY, MAX_RESULTS);
+		searchJSONObj.put(SebalPropertiesConstants.SORT_ORDER_JSON_KEY, SebalPropertiesConstants.ASC_JSON_VALUE);
 	}
 }

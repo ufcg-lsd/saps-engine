@@ -11,11 +11,38 @@ public class SebalPropertiesConstants {
 	public static final String AZURE_FEDERATION_MEMBER = "azure.lsd.ufcg.edu.br";
 	
 	// Submission constants
-	public static final String DISPLAY_ID_JSON_KEY = "displayId";
-	public static final String ENTITY_ID_JSON_KEY = "entityId";
 	public static final String DATASET_LT5_TYPE = "landsat_5";
 	public static final String DATASET_LE7_TYPE = "landsat_7";
 	public static final String DATASET_LE8_TYPE = "landsat_8";
+
+	// JSON constants
+	public static final String USERNAME_JSON_KEY = "username";
+	public static final String PASSWORD_JSON_KEY = "password";
+	public static final String AUTH_TYPE_JSON_KEY = "authType";
+	public static final String API_KEY_JSON_KEY = "apiKey";
+	public static final String NODE_JSON_KEY = "node";
+	public static final String DATASET_NAME_JSON_KEY = "datasetName";
+	public static final String DISPLAY_ID_JSON_KEY = "displayId";
+	public static final String ENTITY_ID_JSON_KEY = "entityId";
+    public static final String LONGITUDE_JSON_KEY = "longitude";
+	public static final String LATITUDE_JSON_KEY = "latitude";
+	public static final String SORT_ORDER_JSON_KEY = "sortOrder";
+	public static final String MAX_RESULTS_JSON_KEY = "maxResults";
+	public static final String TEMPORAL_FILTER_JSON_KEY = "temporalFilter";
+	public static final String SPATIAL_FILTER_JSON_KEY = "spatialFilter";
+	public static final String START_DATE_JSON_KEY = "startDate";
+	public static final String END_DATE_JSON_KEY = "endDate";
+	public static final String DATE_FIELD_JSON_KEY = "dateField";
+	public static final String UPPER_RIGHT_JSON_KEY = "upperRight";
+	public static final String LOWER_LEFT_JSON_KEY = "lowerLeft";
+	public static final String FILTER_TYPE_JSON_KEY = "filterType";
+	public static final String DATA_JSON_KEY = "data";
+	public static final String PRODUCTS_JSON_KEY = "products";
+	public static final String ENTITY_IDS_JSON_KEY = "entityIds";
+	public static final String EROS_JSON_VALUE = "EROS";
+	public static final String ASC_JSON_VALUE = "ASC";
+	public static final String SEARCH_DATE_JSON_VALUE = "search_date";
+	public static final String MBR_JSON_VALUE = "mbr";
 	
 	// USGS constants
 	public static final String MAX_USGS_DOWNLOAD_LINK_REQUESTS = "max_usgs_download_link_requests";
