@@ -530,17 +530,4 @@ public class USGSNasaRepository implements NASARepository {
 		searchJSONObj.put(SebalPropertiesConstants.MAX_RESULTS_JSON_KEY, MAX_RESULTS);
 		searchJSONObj.put(SebalPropertiesConstants.SORT_ORDER_JSON_KEY, SebalPropertiesConstants.ASC_JSON_VALUE);
 	}
-	
-	public static void main(String[] args) {
-		Properties properties = new Properties();
-		properties.put("sebal_export_path", "/local/exports");
-		properties.put("usgs_login_url", "https://ers.cr.usgs.gov/login/");
-		properties.put("usgs_json_url", "https://earthexplorer.usgs.gov/inventory/json");
-		properties.put("usgs_username", "lsd_ufcg");
-		properties.put("usgs_password", "SE17_15d_ufcg");
-		properties.put("usgs_api_key_period", "300000");
-		USGSNasaRepository usgsNasaRepository = new USGSNasaRepository(properties);
-		
-		usgsNasaRepository.getAvailableImagesInRange("landsat_5", firstYear, lastYear, region);
-	}
 }
