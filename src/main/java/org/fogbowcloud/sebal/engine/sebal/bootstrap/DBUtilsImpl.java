@@ -33,10 +33,7 @@ public class DBUtilsImpl implements DBUtils {
     private DefaultNASARepository nasaRepository;
     private USGSNasaRepository usgsRepository;
     private Properties properties;
-
-    private static final String UNPARSED_LANDSAT_8 = "landsat_8";
-    private static final String UNPARSED_LANDSAT_7 = "landsat_7";
-    private static final String UNPARSED_LANDSAT_5 = "landsat_5";
+    
     private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
 
     public DBUtilsImpl(Properties properties) throws SQLException {
@@ -223,11 +220,11 @@ public class DBUtilsImpl implements DBUtils {
 	}
 
 	private String parseDataset(String dataSet) {
-		if(dataSet.equals(UNPARSED_LANDSAT_5)) {
+		if(dataSet.equals(SebalPropertiesConstants.DATASET_LT5_TYPE)) {
 			return SebalPropertiesConstants.LANDSAT_5_DATASET;
-		} else if(dataSet.equals(UNPARSED_LANDSAT_7)) {
+		} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LE7_TYPE)) {
 			return SebalPropertiesConstants.LANDSAT_7_DATASET;
-		} else if(dataSet.equals(UNPARSED_LANDSAT_8)) {
+		} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LC8_TYPE)) {
 			return SebalPropertiesConstants.LANDSAT_8_DATASET;
 		}
 		
@@ -292,7 +289,7 @@ public class DBUtilsImpl implements DBUtils {
 				imageName = "LT5" + region + year + formatter.format(day);
 			} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LE7_TYPE)) {
 				imageName = "LE7" + region + year + formatter.format(day);
-			} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LE8_TYPE)) {
+			} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LC8_TYPE)) {
 				imageName = "LC8" + region + year + formatter.format(day); 
 			}
             

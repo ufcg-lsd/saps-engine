@@ -13,7 +13,7 @@ public class SebalPropertiesConstants {
 	// Submission constants
 	public static final String DATASET_LT5_TYPE = "landsat_5";
 	public static final String DATASET_LE7_TYPE = "landsat_7";
-	public static final String DATASET_LE8_TYPE = "landsat_8";
+	public static final String DATASET_LC8_TYPE = "landsat_8";
 
 	// JSON constants
 	public static final String TILE_ID_JSON_KEY = "id";
