@@ -29,12 +29,15 @@ import org.json.JSONException;
 
 public class DBUtilsImpl implements DBUtils {
 
-    private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
-
     private final JDBCImageDataStore imageStore;
     private DefaultNASARepository nasaRepository;
     private USGSNasaRepository usgsRepository;
     private Properties properties;
+
+    private static final String UNPARSED_LANDSAT_8 = "landsat_8";
+    private static final String UNPARSED_LANDSAT_7 = "landsat_7";
+    private static final String UNPARSED_LANDSAT_5 = "landsat_5";
+    private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
 
     public DBUtilsImpl(Properties properties) throws SQLException {
         this.properties = properties;
@@ -209,12 +212,26 @@ public class DBUtilsImpl implements DBUtils {
 
 		LOGGER.debug("Regions: " + regions);
 		List<String> obtainedImages = new ArrayList<String>();
-		int priority = 0;
+		String parsedDataSet = parseDataset(dataSet);
+		
+		int priority = 0;		
 		for (String region : regions) {
-			submitImagesForYears(dataSet, firstYear, lastYear, region, sebalVersion, sebalTag, priority, obtainedImages);
+			submitImagesForYears(parsedDataSet, firstYear, lastYear, region, sebalVersion, sebalTag, priority, obtainedImages);
 			priority++;
 		}
 		return obtainedImages;
+	}
+
+	private String parseDataset(String dataSet) {
+		if(dataSet.equals(UNPARSED_LANDSAT_5)) {
+			return SebalPropertiesConstants.LANDSAT_5_DATASET;
+		} else if(dataSet.equals(UNPARSED_LANDSAT_7)) {
+			return SebalPropertiesConstants.LANDSAT_7_DATASET;
+		} else if(dataSet.equals(UNPARSED_LANDSAT_8)) {
+			return SebalPropertiesConstants.LANDSAT_8_DATASET;
+		}
+		
+		return null;
 	}
 
 	private void submitImagesForYears(String dataSet, int firstYear,

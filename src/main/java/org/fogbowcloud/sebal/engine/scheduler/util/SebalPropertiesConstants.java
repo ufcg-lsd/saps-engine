@@ -46,6 +46,14 @@ public class SebalPropertiesConstants {
 	public static final String SEARCH_DATE_JSON_VALUE = "search_date";
 	public static final String MBR_JSON_VALUE = "mbr";
 	
+	// Dataset constants
+    public static final String LANDSAT_5_PREFIX = "LT5";
+    public static final String LANDSAT_7_PREFIX = "LE7";
+    public static final String LANDSAT_8_PREFIX = "LC8";
+    public static final String LANDSAT_5_DATASET = "LANDSAT_TM_C1";
+    public static final String LANDSAT_7_DATASET = "LANDSAT_ETM_C1";
+    public static final String LANDSAT_8_DATASET = "LANDSAT_8_C1";
+	
 	// USGS constants
 	public static final String MAX_USGS_DOWNLOAD_LINK_REQUESTS = "max_usgs_download_link_requests";
 	public static final String USGS_LOGIN_URL = "usgs_login_url";

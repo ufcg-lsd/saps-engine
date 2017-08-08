@@ -38,15 +38,6 @@ public class USGSNasaRepository implements NASARepository {
     private final String usgsAPIKeyPeriod;
     private String usgsAPIKey;
     
-    private static final String LANDSAT_5_PREFIX = "LT5";
-    private static final String LANDSAT_7_PREFIX = "LE7";
-    private static final String LANDSAT_8_PREFIX = "LC8";
-
-    //dataset
-    private static final String LANDSAT_5_DATASET = "LANDSAT_TM_C1";
-    private static final String LANDSAT_7_DATASET = "LANDSAT_ETM_C1";
-    private static final String LANDSAT_8_DATASET = "LANDSAT_8_C1";
-    
     // nodes
     private static final String EARTH_EXPLORER_NODE = "EE";
     // products
@@ -223,19 +214,6 @@ public class USGSNasaRepository implements NASARepository {
 		return new String();
 	}
 	
-	public Map<String, String> getImageDownloadLink(String imageName, List<String> possibleStations) {
-		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
-			Map<String, String> imageNameDownloadLink = doGetDownloadLink(imageName, possibleStations);
-			if (imageNameDownloadLink != null && !imageNameDownloadLink.isEmpty()) {
-				return imageNameDownloadLink;
-			}
-		} else {
-			LOGGER.error("USGS API key invalid");
-		}
-
-		return new HashMap<String, String>();
-	}
-	
 	private String doGetDownloadLink(String imageName) {
 		String link = null;
 		link = usgsDownloadURL(getDataSet(imageName), imageName,
@@ -355,12 +333,12 @@ public class USGSNasaRepository implements NASARepository {
 	}
 
 	private String getDataSet(String imageName) {
-		if (imageName.startsWith(LANDSAT_5_PREFIX)) {
-			return LANDSAT_5_DATASET;
-		} else if (imageName.startsWith(LANDSAT_7_PREFIX)) {
-			return LANDSAT_7_DATASET;
-		} else if (imageName.startsWith(LANDSAT_8_PREFIX)) {
-			return LANDSAT_8_DATASET;
+		if (imageName.startsWith(SebalPropertiesConstants.LANDSAT_5_PREFIX)) {
+			return SebalPropertiesConstants.LANDSAT_5_DATASET;
+		} else if (imageName.startsWith(SebalPropertiesConstants.LANDSAT_7_PREFIX)) {
+			return SebalPropertiesConstants.LANDSAT_7_DATASET;
+		} else if (imageName.startsWith(SebalPropertiesConstants.LANDSAT_8_PREFIX)) {
+			return SebalPropertiesConstants.LANDSAT_8_DATASET;
 		}
 
 		return null;
@@ -551,5 +529,18 @@ public class USGSNasaRepository implements NASARepository {
 		searchJSONObj.put(SebalPropertiesConstants.TEMPORAL_FILTER_JSON_KEY, temporalFilterObj);
 		searchJSONObj.put(SebalPropertiesConstants.MAX_RESULTS_JSON_KEY, MAX_RESULTS);
 		searchJSONObj.put(SebalPropertiesConstants.SORT_ORDER_JSON_KEY, SebalPropertiesConstants.ASC_JSON_VALUE);
+	}
+	
+	public static void main(String[] args) {
+		Properties properties = new Properties();
+		properties.put("sebal_export_path", "/local/exports");
+		properties.put("usgs_login_url", "https://ers.cr.usgs.gov/login/");
+		properties.put("usgs_json_url", "https://earthexplorer.usgs.gov/inventory/json");
+		properties.put("usgs_username", "lsd_ufcg");
+		properties.put("usgs_password", "SE17_15d_ufcg");
+		properties.put("usgs_api_key_period", "300000");
+		USGSNasaRepository usgsNasaRepository = new USGSNasaRepository(properties);
+		
+		usgsNasaRepository.getAvailableImagesInRange("landsat_5", firstYear, lastYear, region);
 	}
 }
