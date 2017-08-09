@@ -118,7 +118,7 @@ public class SebalTaskMonitor extends TaskMonitor {
 	protected void updateImageToError(TaskProcess tp) throws SQLException {
 		ImageData imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
 		imageData.setState(ImageState.ERROR);
-		imageData.setImageError("Image " +  getImageFromTaskProcess(tp) + " process timedout");
+		imageData.setImageError("Image " +  getImageFromTaskProcess(tp) + " process failed");
 		imageStore.updateImage(imageData);
 		
 		// Inserting update time into stateStamps table in DB

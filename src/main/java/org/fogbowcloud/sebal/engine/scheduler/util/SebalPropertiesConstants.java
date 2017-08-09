@@ -45,6 +45,7 @@ public class SebalPropertiesConstants {
 	public static final String ASC_JSON_VALUE = "ASC";
 	public static final String SEARCH_DATE_JSON_VALUE = "search_date";
 	public static final String MBR_JSON_VALUE = "mbr";
+	public static final String RESULTS_JSON_KEY = "results";
 	
 	// Dataset constants
     public static final String LANDSAT_5_PREFIX = "LT5";
