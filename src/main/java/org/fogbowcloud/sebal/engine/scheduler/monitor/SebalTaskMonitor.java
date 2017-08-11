@@ -15,12 +15,11 @@ import org.fogbowcloud.sebal.engine.sebal.ImageState;
 import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
 public class SebalTaskMonitor extends TaskMonitor {
-
-	private static final Logger LOGGER = Logger.getLogger(SebalTaskMonitor.class);
 	
-	private ImageDataStore imageStore;
-	
+	private ImageDataStore imageStore;	
 	private static long timeout = 10000;
+	
+	private static final Logger LOGGER = Logger.getLogger(SebalTaskMonitor.class);
 	
 	public SebalTaskMonitor(BlowoutPool blowoutpool, ImageDataStore imageStore) {
 		super(blowoutpool, timeout);
@@ -98,8 +97,7 @@ public class SebalTaskMonitor extends TaskMonitor {
 			imageStore.updateImage(imageData);
 
 			// Inserting update time into stateStamps table in DB
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName())
-					.getUpdateTime());
+			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
 					imageData.getUpdateTime());
 		}
@@ -112,13 +110,14 @@ public class SebalTaskMonitor extends TaskMonitor {
 		
 		// Inserting update time into stateStamps table in DB
 		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
+		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
+				imageData.getUpdateTime());
 	}
 
 	protected void updateImageToError(TaskProcess tp) throws SQLException {
 		ImageData imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
 		imageData.setState(ImageState.ERROR);
-		imageData.setImageError("Image " +  getImageFromTaskProcess(tp) + " process failed");
+		imageData.setImageError("Image " + getImageFromTaskProcess(tp) + " process failed");
 		imageStore.updateImage(imageData);
 		
 		// Inserting update time into stateStamps table in DB

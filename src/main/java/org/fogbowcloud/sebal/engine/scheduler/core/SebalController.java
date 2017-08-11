@@ -30,7 +30,7 @@ import org.fogbowcloud.sebal.engine.sebal.SebalTasks;
 
 
 public class SebalController extends BlowoutController {
-	
+
 	// Constants
 	public static final Logger LOGGER = Logger.getLogger(SebalController.class);
 	
@@ -62,8 +62,7 @@ public class SebalController extends BlowoutController {
 	public void start(boolean removePreviousResouces) throws Exception {
 		try {
 			imageStore = new JDBCImageDataStore(getProperties());
-			LOGGER.debug("Imagestore "
-					+ SebalPropertiesConstants.IMAGE_DATASTORE_IP + ":"
+			LOGGER.debug("Imagestore " + SebalPropertiesConstants.IMAGE_DATASTORE_IP + ":"
 					+ SebalPropertiesConstants.IMAGE_DATASTORE_IP);
 
 			final Specification sebalSpec = getSebalSpecFromFile(getProperties());
@@ -87,8 +86,7 @@ public class SebalController extends BlowoutController {
 		}
 	}
 
-	private void blowoutControllerStart(boolean removePreviousResouces)
-			throws Exception {
+	private void blowoutControllerStart(boolean removePreviousResouces) throws Exception {
 		setStarted(true);
 
 		setBlowoutPool(createBlowoutInstance());
@@ -127,34 +125,26 @@ public class SebalController extends BlowoutController {
 		}
 	}
 	
-	private void addSebalTasks(final Properties properties,
-			final Specification sebalSpec, ImageState imageState)
-			throws InterruptedException, SebalException {
+	private void addSebalTasks(final Properties properties, final Specification sebalSpec,
+			ImageState imageState) throws InterruptedException, SebalException {
 
 		try {
 			List<ImageData> imagesToProcess = imageStore.getIn(imageState,
 					ImageDataStore.UNLIMITED);
 			for (ImageData imageData : imagesToProcess) {
-				LOGGER.debug("The image " + imageData.getName()
-						+ " is in the execution state "
+				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
-
-				LOGGER.debug("Adding " + imageState + " task for image "
-						+ imageData.getName());
-
+				LOGGER.debug("Adding " + imageState + " task for image " + imageData.getName());
+				
 				Specification specWithFederation = generateModifiedSpec(imageData, sebalSpec);
-
 				LOGGER.debug("specWithFederation " + specWithFederation.toString());
-
+				
 				if (ImageState.QUEUED.equals(imageState)
 						|| ImageState.DOWNLOADED.equals(imageState)) {
-
-					TaskImpl taskImpl = new TaskImpl(UUID.randomUUID()
-							.toString(), specWithFederation);
-
-					Map<String, String> nfsConfig = imageStore
-							.getFederationNFSConfig(imageData
-									.getFederationMember());
+					TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(),
+							specWithFederation);
+					Map<String, String> nfsConfig = imageStore.getFederationNFSConfig(imageData
+							.getFederationMember());
 
 					Iterator it = nfsConfig.entrySet().iterator();
 					while (it.hasNext()) {
@@ -167,7 +157,7 @@ public class SebalController extends BlowoutController {
 					LOGGER.debug("Creating Sebal task " + taskImpl.getId());
 
 					taskImpl = SebalTasks.createSebalTask(taskImpl, properties,
-							imageData.getName(), imageData.getCollectionTierName(), 
+							imageData.getName(), imageData.getCollectionTierName(),
 							specWithFederation, imageData.getFederationMember(), nfsServerIP,
 							nfsServerPort, imageData.getSebalVersion(), imageData.getSebalTag());
 					
@@ -176,18 +166,14 @@ public class SebalController extends BlowoutController {
 					addTask(taskImpl);
 
 					imageStore.updateImage(imageData);
-					imageData.setUpdateTime(imageStore.getImage(
-							imageData.getName()).getUpdateTime());
+					imageData.setUpdateTime(imageStore.getImage(imageData.getName())
+							.getUpdateTime());
 					try {
-						imageStore.addStateStamp(imageData.getName(),
-										imageData.getState(),
-										imageData.getUpdateTime());
+						imageStore.addStateStamp(imageData.getName(), imageData.getState(),
+								imageData.getUpdateTime());
 					} catch (SQLException e) {
-						LOGGER.error(
-								"Error while adding state "
-										+ imageData.getState() + " timestamp "
-										+ imageData.getUpdateTime() + " in DB",
-								e);
+						LOGGER.error("Error while adding state " + imageData.getState()
+								+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
 					}
 				}
 			}
@@ -198,49 +184,41 @@ public class SebalController extends BlowoutController {
 
 	private void addTask(TaskImpl taskImpl) throws SebalException {
 		if (!started) {
-			throw new SebalException(
-					"Error while adding new task. BlowoutController not started yet.");
+			throw new SebalException("Error while adding new task. BlowoutController not started yet.");
 		}
 		getBlowoutPool().putTask(taskImpl);
 	}
 	
-	private Specification generateModifiedSpec(ImageData imageData,
-			Specification sebalSpec) {
-		Specification specWithFederation = new Specification(
-				sebalSpec.getImage(), sebalSpec.getUsername(),
-				sebalSpec.getPublicKey(), sebalSpec.getPrivateKeyFilePath(),
-				sebalSpec.getUserDataFile(), sebalSpec.getUserDataType());
+	private Specification generateModifiedSpec(ImageData imageData, Specification sebalSpec) {
+		Specification specWithFederation = new Specification(sebalSpec.getImage(),
+				sebalSpec.getUsername(), sebalSpec.getPublicKey(),
+				sebalSpec.getPrivateKeyFilePath(), sebalSpec.getUserDataFile(),
+				sebalSpec.getUserDataType());
 		specWithFederation.putAllRequirements(sebalSpec.getAllRequirements());
-		setFederationMemberIntoSpec(sebalSpec, specWithFederation,
-				imageData.getFederationMember());
+		setFederationMemberIntoSpec(sebalSpec, specWithFederation, imageData.getFederationMember());
 		
 		return specWithFederation;
 	}
 
-	private static void setFederationMemberIntoSpec(Specification spec,
-			Specification tempSpec, String federationMember) {
-		String fogbowRequirements = spec
-				.getRequirementValue("FogbowRequirements");
-		LOGGER.debug("Setting federationmember " + federationMember
-				+ " into FogbowRequirements");
-		String requestType = spec.getRequirementValue("RequestType");
-		String newRequirements = fogbowRequirements
-				+ " && Glue2CloudComputeManagerID==\"" + federationMember
-				+ "\"";
-		tempSpec.addRequirement("FogbowRequirements", newRequirements);
-		tempSpec.addRequirement("RequestType", requestType);
+	private static void setFederationMemberIntoSpec(Specification spec, Specification tempSpec,
+			String federationMember) {
+		String fogbowRequirements = spec.getRequirementValue(SebalPropertiesConstants.SPEC_FOGBOW_REQUIREMENTS);
+		LOGGER.debug("Setting federationmember " + federationMember + " into FogbowRequirements");
+		String requestType = spec.getRequirementValue(SebalPropertiesConstants.SPEC_REQUEST_TYPE);
+		String newRequirements = fogbowRequirements + " && " + SebalPropertiesConstants.SPEC_GLUE2_CLOUD_COMPUTE_MANAGER_ID
+				+ "==\"" + federationMember + "\"";
+		tempSpec.addRequirement(SebalPropertiesConstants.SPEC_FOGBOW_REQUIREMENTS, newRequirements);
+		tempSpec.addRequirement(SebalPropertiesConstants.SPEC_REQUEST_TYPE, requestType);
 	}
 	
 	private static String getBlowoutVersion(Properties properties) {
-
 		String blowoutDirPath = properties.getProperty(SebalPropertiesConstants.BLOWOUT_DIR_PATH);
 		File blowoutDir = new File(blowoutDirPath);
 
 		if (blowoutDir.exists() && blowoutDir.isDirectory()) {
 			for (File file : blowoutDir.listFiles()) {
-				if (file.getName().startsWith("blowout.version.")) {
-					String[] blowoutVersionFileSplit = file.getName().split(
-							"\\.");
+				if (file.getName().startsWith(SebalPropertiesConstants.BLOWOUT_VERSION_PREFIX)) {
+					String[] blowoutVersionFileSplit = file.getName().split("\\.");
 					return blowoutVersionFileSplit[2];
 				}
 			}
@@ -250,9 +228,9 @@ public class SebalController extends BlowoutController {
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {
-		String sebalSpecFile = properties
-				.getProperty(SebalPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
+		String sebalSpecFile = properties.getProperty(SebalPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
 		List<Specification> specs = new ArrayList<Specification>();
+		
 		try {
 			specs = Specification.getSpecificationsFromJSonFile(sebalSpecFile);
 			if (specs != null && !specs.isEmpty()) {
@@ -260,8 +238,7 @@ public class SebalController extends BlowoutController {
 			}
 			return null;
 		} catch (IOException e) {
-			LOGGER.error("Error while getting spec from file " + sebalSpecFile,
-					e);
+			LOGGER.error("Error while getting spec from file " + sebalSpecFile, e);
 			return null;
 		}
 	}

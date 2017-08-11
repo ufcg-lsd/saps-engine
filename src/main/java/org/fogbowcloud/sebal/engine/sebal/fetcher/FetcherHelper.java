@@ -23,38 +23,32 @@ public class FetcherHelper {
 
 	public static final Logger LOGGER = Logger.getLogger(FetcherHelper.class);
 	
-	protected void updatePendingMapAndDB(ImageData imageData,
-			DB pendingImageFetchDB,
+	protected void updatePendingMapAndDB(ImageData imageData, DB pendingImageFetchDB,
 			ConcurrentMap<String, ImageData> pendingImageFetchMap) {
-
 		LOGGER.debug("Adding image " + imageData + " to pending database");
 		pendingImageFetchMap.put(imageData.getName(), imageData);
 		pendingImageFetchDB.commit();
 	}
 	
-	protected void removeImageFromPendingMap(ImageData imageData,
-			DB pendingImageFetchDB,
+	protected void removeImageFromPendingMap(ImageData imageData, DB pendingImageFetchDB,
 			ConcurrentMap<String, ImageData> pendingImageFetchMap) {		
 		LOGGER.info("Removing image " + imageData + " from pending map.");
 		pendingImageFetchMap.remove(imageData.getName());
 		pendingImageFetchDB.commit();
 		
 		if(pendingImageFetchMap.containsKey(imageData.getName())) {
-			LOGGER.debug("There is still register for image " + imageData
-					+ " into Map DB");
+			LOGGER.debug("There is still register for image " + imageData + " into Map DB");
 		}
 	}
 
-	protected String getStationId(ImageData imageData, Properties properties)
-			throws IOException {
+	protected String getStationId(ImageData imageData, Properties properties) throws IOException {
 		String stationFilePath = properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ "/results/" + imageData.getCollectionTierName() + "/" + imageData.getCollectionTierName()
+				+ "/results/" + imageData.getCollectionTierName() + "/" + imageData.getCollectionTierName() 
 				+ "_station.csv";
 		File stationFile = new File(stationFilePath);
 
 		if (stationFile.exists() && stationFile.isFile()) {
-			BufferedReader reader = new BufferedReader(new FileReader(
-					stationFile));
+			BufferedReader reader = new BufferedReader(new FileReader(stationFile));
 			String lineOne = reader.readLine();
 			String[] stationAtt = lineOne.split(";");
 
@@ -68,15 +62,12 @@ public class FetcherHelper {
 		}
 	}
 	
-	protected String getRemoteImageInputsPath(final ImageData imageData,
-			Properties properties) {
+	protected String getRemoteImageInputsPath(final ImageData imageData, Properties properties) {
 		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ File.separator + "images" + File.separator
-				+ imageData.getCollectionTierName();
+				+ File.separator + "images" + File.separator + imageData.getCollectionTierName();
 	}
 	
-	protected String getLocalImageInputsPath(ImageData imageData,
-			Properties properties) {
+	protected String getLocalImageInputsPath(ImageData imageData, Properties properties) {
 		String localImageInputsPath = properties
 				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
@@ -84,14 +75,12 @@ public class FetcherHelper {
 		return localImageInputsPath;
 	}
 
-	protected String getRemoteImageResultsPath(final ImageData imageData,
-			Properties properties) {
-		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH) + "/results/"
-				+ imageData.getCollectionTierName();
+	protected String getRemoteImageResultsPath(final ImageData imageData, Properties properties) {
+		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+				+ "/results/" + imageData.getCollectionTierName();
 	}
 
-	protected String getLocalImageResultsPath(ImageData imageData,
-			Properties properties) {
+	protected String getLocalImageResultsPath(ImageData imageData, Properties properties) {
 		String localImageResultsPath = properties
 				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
@@ -101,8 +90,8 @@ public class FetcherHelper {
 
 	// TODO: see how to deal with this exception
 	protected boolean isImageCorrupted(ImageData imageData,
-			ConcurrentMap<String, ImageData> pendingImageFetchMap,
-			ImageDataStore imageStore) throws SQLException {
+			ConcurrentMap<String, ImageData> pendingImageFetchMap, ImageDataStore imageStore)
+			throws SQLException {
 		if (imageData.getState().equals(ImageState.CORRUPTED)) {
 			pendingImageFetchMap.remove(imageData.getName());
 			imageStore.updateImage(imageData);
@@ -119,8 +108,8 @@ public class FetcherHelper {
 		return false;
 	}
 	
-	protected boolean resultsChecksumOK(ImageData imageData,
-			File localImageResultsDir) throws Exception {
+	protected boolean resultsChecksumOK(ImageData imageData, File localImageResultsDir)
+			throws Exception {
 		LOGGER.info("Checksum of " + imageData + " result files");
 		if (CheckSumMD5ForFile.isFileCorrupted(localImageResultsDir)) {
 			return false;
@@ -135,14 +124,15 @@ public class FetcherHelper {
 		Process p;
 		
 		for(File file : localImageResultsDir.listFiles()) {
-			if(file.getName().startsWith("temp-worker-run-") && file.getName().endsWith(".out")) {
-				
+			if (file.getName().startsWith("temp-worker-run-") && file.getName().endsWith(".out")) {				
 				try {
-					builder = new ProcessBuilder("/bin/bash", "scripts/create_timeout_file.sh", file.getAbsolutePath());
+					builder = new ProcessBuilder("/bin/bash", "scripts/create_timeout_file.sh",
+							file.getAbsolutePath());
 					p = builder.start();
 					p.waitFor();
 					
-					builder = new ProcessBuilder("/bin/bash", "scripts/create_max_tries_file.sh", file.getAbsolutePath());
+					builder = new ProcessBuilder("/bin/bash", "scripts/create_max_tries_file.sh",
+							file.getAbsolutePath());
 					p = builder.start();
 					p.waitFor();
 				} catch (Exception e) {

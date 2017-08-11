@@ -36,8 +36,7 @@ public class DBImageResource extends BaseResource {
 	private static final String DAY = "day";
 	private static final String FORCE = "force";
 
-	private static final Logger LOGGER = Logger
-			.getLogger(DBImageResource.class);
+	private static final Logger LOGGER = Logger.getLogger(DBImageResource.class);
 
 	private static final String ADD_IMAGES_MESSAGE_OK = "Images successfully added";
 	private static final CharSequence UPDATE_IMAGE_MESSAGE_OK = "Image successfully updated";
@@ -71,8 +70,7 @@ public class DBImageResource extends BaseResource {
 		LOGGER.debug("ImageName is " + imageName);
 
 		if (imageName != null) {
-			ImageData imageData = ((DatabaseApplication) getApplication())
-					.getImage(imageName);
+			ImageData imageData = ((DatabaseApplication) getApplication()).getImage(imageName);
 			JSONArray image = new JSONArray();
 			try {
 				image.put(imageData.toJSON());
@@ -81,14 +79,12 @@ public class DBImageResource extends BaseResource {
 						+ imageData, e);
 			}
 
-			return new StringRepresentation(image.toString(),
-					MediaType.APPLICATION_JSON);
+			return new StringRepresentation(image.toString(), MediaType.APPLICATION_JSON);
 		}
 
 		LOGGER.info("Getting all images");
 
-		List<ImageData> listOfImages = ((DatabaseApplication) getApplication())
-				.getImages();
+		List<ImageData> listOfImages = ((DatabaseApplication) getApplication()).getImages();
 		JSONArray images = new JSONArray();
 
 		for (ImageData imageData : listOfImages) {
@@ -100,14 +96,11 @@ public class DBImageResource extends BaseResource {
 			}
 		}
 
-		return new StringRepresentation(images.toString(),
-				MediaType.APPLICATION_JSON);
+		return new StringRepresentation(images.toString(), MediaType.APPLICATION_JSON);
 	}
 
 	@Post
-	public StringRepresentation insertImages(Representation entity)
-			throws Exception {
-		
+	public StringRepresentation insertImages(Representation entity) throws Exception {		
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(DEFAULT_CONF_PATH);
 		properties.load(input);
@@ -130,10 +123,8 @@ public class DBImageResource extends BaseResource {
 		String sebalTag = form.getFirstValue(SEBAL_TAG);
 		LOGGER.debug("FirstYear " + firstYear + " LastYear " + lastYear + " Region " + region);
 		
-		try {		
-			
-			if (region == null || region.isEmpty() || dataSet == null
-					|| dataSet.isEmpty()) {
+		try {
+			if (region == null || region.isEmpty() || dataSet == null || dataSet.isEmpty()) {
 				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
 			}
 			
@@ -148,10 +139,9 @@ public class DBImageResource extends BaseResource {
 				}
 			}
 			
-			List<String> imageNames = application.addImages(firstYear,
-					lastYear, region, dataSet, sebalVersion, sebalTag);
-			if (application.isUserNotifiable(userEmail)) {
-				
+			List<String> imageNames = application.addImages(firstYear, lastYear, region, dataSet,
+					sebalVersion, sebalTag);
+			if (application.isUserNotifiable(userEmail)) {				
 				String jobId = UUID.randomUUID().toString();
 				for (String imageName : imageNames) {
 					application.addUserNotify(jobId, imageName, userEmail);
@@ -162,14 +152,11 @@ public class DBImageResource extends BaseResource {
 			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
 		}
 
-		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK,
-				MediaType.APPLICATION_JSON);
+		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK, MediaType.APPLICATION_JSON);
 	}
 	
 	@Put
-	public StringRepresentation updateSebalVersion(Representation entity)
-			throws Exception {
-		
+	public StringRepresentation updateSebalVersion(Representation entity) throws Exception {
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(DEFAULT_CONF_PATH);
 		properties.load(input);
@@ -187,14 +174,12 @@ public class DBImageResource extends BaseResource {
 		String imageName = form.getFirstValue(IMAGE_NAME);
 		String sebalVersion = form.getFirstValue(SEBAL_VERSION);
 		String sebalTag = form.getFirstValue(SEBAL_TAG);
-		LOGGER.debug("ImageName " + imageName + " SebalVersion " + sebalVersion
-				+ " SebalTag " + sebalTag);
+		LOGGER.debug("ImageName " + imageName + " SebalVersion " + sebalVersion + " SebalTag "
+				+ sebalTag);
 		
-		try {
-			
-			if (imageName == null || imageName.isEmpty()
-					|| sebalVersion == null || sebalVersion.isEmpty()
-					|| sebalTag == null || sebalTag.isEmpty()) {
+		try {			
+			if (imageName == null || imageName.isEmpty() || sebalVersion == null
+					|| sebalVersion.isEmpty() || sebalTag == null || sebalTag.isEmpty()) {
 				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
 			}
 
@@ -209,14 +194,11 @@ public class DBImageResource extends BaseResource {
 			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
 		}
 
-		return new StringRepresentation(UPDATE_IMAGE_MESSAGE_OK,
-				MediaType.APPLICATION_JSON);
+		return new StringRepresentation(UPDATE_IMAGE_MESSAGE_OK, MediaType.APPLICATION_JSON);
 	}
 
 	@Delete
-	public StringRepresentation purgeImage(Representation entity)
-			throws Exception {
-
+	public StringRepresentation purgeImage(Representation entity) throws Exception {
 		Form form = new Form(entity);
 
 		String userEmail = form.getFirstValue(USER_EMAIL, true);
@@ -242,8 +224,6 @@ public class DBImageResource extends BaseResource {
 			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
 		}
 
-		return new StringRepresentation(PURGE_MESSAGE_OK,
-				MediaType.APPLICATION_JSON);
+		return new StringRepresentation(PURGE_MESSAGE_OK, MediaType.APPLICATION_JSON);
 	}
-
 }

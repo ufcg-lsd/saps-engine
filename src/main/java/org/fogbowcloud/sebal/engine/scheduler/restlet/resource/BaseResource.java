@@ -17,8 +17,7 @@ public class BaseResource extends ServerResource {
 	}
 	
 	protected boolean authenticateUser(String userEmail, String userPass, boolean mustBeAdmin) {
-		if (userEmail == null || userEmail.isEmpty() || userPass == null
-				|| userPass.isEmpty()) {
+		if (userEmail == null || userEmail.isEmpty() || userPass == null || userPass.isEmpty()) {
 			return false;
 		}
 		

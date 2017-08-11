@@ -45,13 +45,10 @@ public class DBUtilsImpl implements DBUtils {
     }
     
 	@Override
-	public void addUserInDB(String userEmail, String userName, String userPass,
-			boolean userState, boolean userNotify, boolean adminRole)
-			throws SQLException {
-
+	public void addUserInDB(String userEmail, String userName, String userPass, boolean userState,
+			boolean userNotify, boolean adminRole) throws SQLException {
 		try {
-			imageStore.addUser(userEmail, userName, userPass, userState,
-					userNotify, adminRole);
+			imageStore.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
 		} catch (SQLException e) {
 			LOGGER.error("Error while adding user " + userEmail + " in DB", e);
 			throw new SQLException(e);
@@ -59,8 +56,7 @@ public class DBUtilsImpl implements DBUtils {
 	}
 	
 	@Override
-	public void updateUserState(String userEmail, boolean userState) throws SQLException {
-		
+	public void updateUserState(String userEmail, boolean userState) throws SQLException {		
 		try {
 			imageStore.updateUserState(userEmail, userState);
 		} catch (SQLException e) {
@@ -81,7 +77,6 @@ public class DBUtilsImpl implements DBUtils {
 	
 	@Override
 	public void addUserInNotifyDB(String jobId, String imageName, String userEmail) throws SQLException {
-		
 		try {
 			imageStore.addUserNotify(jobId, imageName, userEmail);
 		} catch (SQLException e) {
@@ -90,20 +85,17 @@ public class DBUtilsImpl implements DBUtils {
 	}
 	
 	@Override
-	public void removeUserNotify(String jobId, String imageName, String userEmail)
-			throws SQLException {
-
+	public void removeUserNotify(String jobId, String imageName, String userEmail) throws SQLException {
 		try {
 			imageStore.removeUserNotify(jobId, imageName, userEmail);
 		} catch (SQLException e) {
-			LOGGER.error("Error while removing image " + imageName + " user "
-					+ userEmail + " from notify DB", e);
+			LOGGER.error("Error while removing image " + imageName + " user " + userEmail
+					+ " from notify DB", e);
 		}
 	}
 	
 	@Override
-	public boolean isUserNotifiable(String userEmail) throws SQLException {
-		
+	public boolean isUserNotifiable(String userEmail) throws SQLException {		
 		try {
 			return imageStore.isUserNotifiable(userEmail);
 		} catch(SQLException e) {
@@ -115,13 +107,11 @@ public class DBUtilsImpl implements DBUtils {
 
     @Override
     public void setImagesToPurge(String day, boolean force) throws SQLException, ParseException {
-
-        List<ImageData> imagesToPurge =
-                force ? imageStore.getAllImages() : imageStore.getIn(ImageState.FETCHED);
+		List<ImageData> imagesToPurge = force ? imageStore.getAllImages() : imageStore
+				.getIn(ImageState.FETCHED);
 
         for (ImageData imageData : imagesToPurge) {
             long date = 0;
-            // FIXME: deal with this better
             try {
                 date = parseStringToDate(day).getTime();
             } catch (ParseException e) {
@@ -131,7 +121,7 @@ public class DBUtilsImpl implements DBUtils {
                 imageData.setImageStatus(ImageData.PURGED);
                 
                 imageStore.updateImage(imageData);
-                imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
             }
         }
     }
@@ -149,7 +139,6 @@ public class DBUtilsImpl implements DBUtils {
 
     @Override
     public void listImagesInDB() throws SQLException, ParseException {
-
         List<ImageData> allImageData = imageStore.getAllImages();
         for (int i = 0; i < allImageData.size(); i++) {
             System.out.println(allImageData.get(i).toString());
@@ -158,7 +147,6 @@ public class DBUtilsImpl implements DBUtils {
 
     @Override
     public void listCorruptedImages() throws ParseException {
-
         List<ImageData> allImageData;
         try {
             allImageData = imageStore.getIn(ImageState.CORRUPTED);
@@ -169,30 +157,12 @@ public class DBUtilsImpl implements DBUtils {
             LOGGER.error("Error while gettin images in " + ImageState.CORRUPTED + " state from DB", e);
         }
     }
-
-    @Override
-    public void getRegionImages(int firstYear, int lastYear, String region) throws SQLException, ParseException {
-
-        for (int year = firstYear; year <= lastYear; year++) {
-            List<String> imageList = new ArrayList<String>();
-
-            for (int day = 1; day < 366; day++) {
-                //FIXME: extract the join stuff to an aux method
-                NumberFormat formatter = new DecimalFormat("000");
-                String imageName = "LT5" + region + year + formatter.format(day) + "CUB00";
-                imageList.add(imageName);
-                if (imageStore.getImage(imageName) != null) {
-                    imageStore.getImage(imageName).toString();
-                }
-            }
-        }
-    }
     
     // TODO: test
     @Override
     public void setImageForPhase2(String imageName, String sebalVersion, String sebalTag) throws SQLException {
-		LOGGER.debug("Updating image " + imageName + " with sebalVersion "
-				+ sebalVersion + " and tag " + sebalTag + " to execute phase 2");
+		LOGGER.debug("Updating image " + imageName + " with sebalVersion " + sebalVersion
+				+ " and tag " + sebalTag + " to execute phase 2");
 		
 		try {
 			getImageStore().updateImageForPhase2(imageName, sebalVersion, sebalTag);
@@ -203,17 +173,16 @@ public class DBUtilsImpl implements DBUtils {
     }
 
     @Override
-	public List<String> fillDB(int firstYear, int lastYear,
-			List<String> regions, String dataSet, String sebalVersion,
-			String sebalTag) throws IOException {
-
+	public List<String> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
+			String sebalVersion, String sebalTag) throws IOException {
 		LOGGER.debug("Regions: " + regions);
 		List<String> obtainedImages = new ArrayList<String>();
 		String parsedDataSet = parseDataset(dataSet);
 		
 		int priority = 0;		
 		for (String region : regions) {
-			submitImagesForYears(parsedDataSet, firstYear, lastYear, region, sebalVersion, sebalTag, priority, obtainedImages);
+			submitImagesForYears(parsedDataSet, firstYear, lastYear, region, sebalVersion,
+					sebalTag, priority, obtainedImages);
 			priority++;
 		}
 		return obtainedImages;
@@ -231,19 +200,23 @@ public class DBUtilsImpl implements DBUtils {
 		return null;
 	}
 
-	private void submitImagesForYears(String dataSet, int firstYear,
-			int lastYear, String region, String sebalVersion, String sebalTag,
-			int priority, List<String> obtainedImages) {
-		JSONArray availableImagesJSON = getUSGSRepository().getAvailableImagesInRange(dataSet, firstYear, lastYear, region);
+	private void submitImagesForYears(String dataSet, int firstYear, int lastYear, String region,
+			String sebalVersion, String sebalTag, int priority, List<String> obtainedImages) {
+		JSONArray availableImagesJSON = getUSGSRepository().getAvailableImagesInRange(dataSet,
+				firstYear, lastYear, region);
 		
 		if(availableImagesJSON != null) {
 			try {
 				for (int i = 0; i < availableImagesJSON.length(); i++) {
-					String entityId = availableImagesJSON.getJSONObject(i).getString(SebalPropertiesConstants.ENTITY_ID_JSON_KEY);
-					String displayId = availableImagesJSON.getJSONObject(i).getString(SebalPropertiesConstants.DISPLAY_ID_JSON_KEY);
+					String entityId = availableImagesJSON.getJSONObject(i).getString(
+							SebalPropertiesConstants.ENTITY_ID_JSON_KEY);
+					String displayId = availableImagesJSON.getJSONObject(i).getString(
+							SebalPropertiesConstants.DISPLAY_ID_JSON_KEY);
 					
-					getImageStore().addImage(entityId, "None", priority, sebalVersion, sebalTag, displayId);
-					getImageStore().addStateStamp(entityId, ImageState.NOT_DOWNLOADED, getImageStore().getImage(entityId).getUpdateTime());
+					getImageStore().addImage(entityId, "None", priority, sebalVersion, sebalTag,
+							displayId);
+					getImageStore().addStateStamp(entityId, ImageState.NOT_DOWNLOADED,
+							getImageStore().getImage(entityId).getUpdateTime());
 					obtainedImages.add(displayId);
 				}
 			} catch (JSONException e) {
@@ -254,14 +227,12 @@ public class DBUtilsImpl implements DBUtils {
 		}
 	}
 
-    public List<ImageData> getImagesInDB() throws SQLException, ParseException {
-    	
+    public List<ImageData> getImagesInDB() throws SQLException, ParseException {    	
     	return imageStore.getAllImages();        
     }
     
     @Override
-    public List<Ward> getUsersToNotify() throws SQLException {    	
-    	
+    public List<Ward> getUsersToNotify() throws SQLException {
     	List<Ward> wards = imageStore.getUsersToNotify();    	
     	return wards;    	
     }
@@ -278,24 +249,24 @@ public class DBUtilsImpl implements DBUtils {
     	return null;
     }
 
-    protected String createImageList(String region, int year, String dataSet) {
-        StringBuilder imageList = new StringBuilder();
-        for (int day = 1; day < 366; day++) {
-            NumberFormat formatter = new DecimalFormat("000");
-            String imageName = new String();
-            
+	protected String createImageList(String region, int year, String dataSet) {
+		StringBuilder imageList = new StringBuilder();
+		for (int day = 1; day < 366; day++) {
+			NumberFormat formatter = new DecimalFormat("000");
+			String imageName = new String();
+
 			if (dataSet.equals(SebalPropertiesConstants.DATASET_LT5_TYPE)) {
 				imageName = "LT5" + region + year + formatter.format(day);
-			} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LE7_TYPE)) {
+			} else if (dataSet.equals(SebalPropertiesConstants.DATASET_LE7_TYPE)) {
 				imageName = "LE7" + region + year + formatter.format(day);
-			} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LC8_TYPE)) {
-				imageName = "LC8" + region + year + formatter.format(day); 
+			} else if (dataSet.equals(SebalPropertiesConstants.DATASET_LC8_TYPE)) {
+				imageName = "LC8" + region + year + formatter.format(day);
 			}
-            
-            imageList.append(imageName + "\n");
-        }
-        return imageList.toString().trim();
-    }
+
+			imageList.append(imageName + "\n");
+		}
+		return imageList.toString().trim();
+	}
 
     public JDBCImageDataStore getImageStore() {
         return imageStore;

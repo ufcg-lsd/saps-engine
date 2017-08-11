@@ -6,7 +6,6 @@ import org.fogbowcloud.sebal.engine.sebal.ImageData;
 
 public interface FTPIntegration {
 	
-	public int getFiles(Properties properties, String ftpServerIP,
-			String ftpServerPort, String remoteImageResultsPath,
-			String localImageResultsPath, ImageData imageData);
+	public int getFiles(Properties properties, String ftpServerIP, String ftpServerPort,
+			String remoteImageResultsPath, String localImageResultsPath, ImageData imageData);
 }

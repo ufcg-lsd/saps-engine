@@ -79,6 +79,12 @@ public class SebalPropertiesConstants {
 	// Restlet constants
 	public static final String DB_REST_SERVER_PORT = "db_rest_server_port";
 	
+	// Specification constants
+	public static final String SPEC_FOGBOW_REQUIREMENTS = "FogbowRequirements";
+	public static final String SPEC_REQUEST_TYPE = "RequestType";
+	public static final String SPEC_GLUE2_CLOUD_COMPUTE_MANAGER_ID = "Glue2CloudComputeManagerID";
+	public static final String BLOWOUT_VERSION_PREFIX = "blowout.version.";
+	
 	// Infrastructure constants
 	public static final String INFRA_SPECS_BLOCK_CREATING = "infra_specs_block_creating";
 	public static final String INFRA_INITIAL_SPECS_FILE_PATH = "infra_initial_specs_file_path";

@@ -25,7 +25,6 @@ public class CrawlerMain {
 			crawler.exec();
 		} catch(NullPointerException e) {
 			LOGGER.error("Invalid args", e);
-		}
-		
+		}		
 	}
 }

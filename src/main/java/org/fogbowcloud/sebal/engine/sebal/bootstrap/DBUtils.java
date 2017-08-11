@@ -19,13 +19,12 @@ public interface DBUtils {
 	
 	void addUserInNotifyDB(String jobId, String imageName, String userEmail) throws SQLException;
 
-	List<String> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet, String sebalVersion, String sebalTag) throws IOException;
+	List<String> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
+			String sebalVersion, String sebalTag) throws IOException;
 
 	List<Ward> getUsersToNotify() throws SQLException;
 	
-	SebalUser getUser(String userEmail);	
-
-	void getRegionImages(int firstYear, int lastYear, String region) throws SQLException, ParseException;
+	SebalUser getUser(String userEmail);
 	
 	void setImageForPhase2(String imageName, String sebalVersion, String sebalTag) throws SQLException;
 			
