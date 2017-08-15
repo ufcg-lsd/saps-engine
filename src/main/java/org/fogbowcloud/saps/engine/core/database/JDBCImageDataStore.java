@@ -17,7 +17,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.core.model.SebalUser;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.notifier.Ward;
 
 public class JDBCImageDataStore implements ImageDataStore {
@@ -827,7 +827,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ USERS_TABLE_NAME + " WHERE " + USER_EMAIL_COL + " = ?";
 
 	@Override
-	public SebalUser getUser(String userEmail) throws SQLException {
+	public SapsUser getUser(String userEmail) throws SQLException {
 
 		if (userEmail == null || userEmail.isEmpty()) {
 			LOGGER.error("Invalid userEmail " + userEmail);
@@ -847,7 +847,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			ResultSet rs = selectStatement.getResultSet();
 			if (rs.next()) {
-				SebalUser sebalUser = extractSebalUserFrom(rs);
+				SapsUser sebalUser = extractSebalUserFrom(rs);
 				return sebalUser;
 			}
 			rs.close();
@@ -1108,9 +1108,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static SebalUser extractSebalUserFrom(ResultSet rs)
+	private static SapsUser extractSebalUserFrom(ResultSet rs)
 			throws SQLException {
-		SebalUser sebalUser = new SebalUser(rs.getString(USER_EMAIL_COL),
+		SapsUser sebalUser = new SapsUser(rs.getString(USER_EMAIL_COL),
 				rs.getString(USER_NAME_COL), rs.getString(USER_PASSWORD_COL),
 				rs.getBoolean(USER_STATE_COL), rs.getBoolean(USER_NOTIFY_COL),
 				rs.getBoolean(ADMIN_ROLE_COL));

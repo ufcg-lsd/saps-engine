@@ -11,11 +11,11 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
-import org.fogbowcloud.saps.engine.core.model.SebalUser;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.DBImageResource;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.DBMainResource;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.UserResource;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Restlet;
@@ -39,13 +39,13 @@ public class DatabaseApplication extends Application {
 	
 	public void startServer() throws Exception {
 		Properties properties = this.dbUtilsImpl.getProperties();
-		if (!properties.containsKey(SebalPropertiesConstants.DB_REST_SERVER_PORT)) {
+		if (!properties.containsKey(SapsPropertiesConstants.DB_REST_SERVER_PORT)) {
 			throw new IllegalArgumentException(
-					SebalPropertiesConstants.DB_REST_SERVER_PORT
+					SapsPropertiesConstants.DB_REST_SERVER_PORT
 							+ " is missing on properties.");
 		}
 		Integer restServerPort = Integer.valueOf((String) properties
-				.get(SebalPropertiesConstants.DB_REST_SERVER_PORT));
+				.get(SapsPropertiesConstants.DB_REST_SERVER_PORT));
 
 		LOGGER.info("Starting service on port: " + restServerPort);
 
@@ -150,7 +150,7 @@ public class DatabaseApplication extends Application {
 		return dbUtilsImpl.isUserNotifiable(userEmail);
 	}
 
-	public SebalUser getUser(String userEmail) {
+	public SapsUser getUser(String userEmail) {
 		return dbUtilsImpl.getUser(userEmail);
 	}
 	

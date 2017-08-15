@@ -6,7 +6,7 @@ import java.util.Properties;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
-import org.fogbowcloud.saps.engine.core.model.SebalUser;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;
 
 public class DBRestMain {
 
@@ -30,7 +30,7 @@ public class DBRestMain {
 		databaseApplication.startServer();
 
 		String userEmail = properties.getProperty(ADMIN_EMAIL);
-		SebalUser user = databaseApplication.getUser(userEmail);
+		SapsUser user = databaseApplication.getUser(userEmail);
 		if (user == null) {
 			String userName = properties.getProperty(ADMIN_USER);
 			String userPass = DigestUtils.md5Hex(properties

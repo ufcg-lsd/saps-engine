@@ -14,11 +14,11 @@ import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.FMask;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.downloader.Crawler;
+import org.fogbowcloud.saps.engine.core.downloader.InputDownloader;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-public class TestCrawlerIntegration {
+public class TestInputDownloaderIntegration {
 	
 	Properties properties;
 	
@@ -69,7 +69,7 @@ public class TestCrawlerIntegration {
 
 		ImageData errorImageOne = new ImageData("error-image-one",
 				oldDownloadLinkOne, ImageState.ERROR,
-				SebalPropertiesConstants.LSD_FEDERATION_MEMBER, 0,
+				SapsPropertiesConstants.LSD_FEDERATION_MEMBER, 0,
 				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
 				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
 				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
@@ -78,7 +78,7 @@ public class TestCrawlerIntegration {
 				"fake-error-msg-one", "None");
 		ImageData errorImageTwo = new ImageData("error-image-two",
 				oldDownloadLinkTwo, ImageState.ERROR,
-				SebalPropertiesConstants.AZURE_FEDERATION_MEMBER, 0,
+				SapsPropertiesConstants.AZURE_FEDERATION_MEMBER, 0,
 				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
 				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
 				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
@@ -102,9 +102,9 @@ public class TestCrawlerIntegration {
 		File imageOneDir = mock(File.class);
 		File imageTwoDir = mock(File.class);
 
-		Crawler crawler = spy(new Crawler(properties, imageStore,
+		InputDownloader crawler = spy(new InputDownloader(properties, imageStore,
 				usgsRepository, crawlerIp, nfsPort,
-				SebalPropertiesConstants.LSD_FEDERATION_MEMBER));
+				SapsPropertiesConstants.LSD_FEDERATION_MEMBER));
 		
 		doReturn(errorImages).when(imageStore).getIn(ImageState.ERROR);
 		
@@ -121,7 +121,7 @@ public class TestCrawlerIntegration {
 		doNothing().when(imageStore).updateImage(errorImageTwo);
 		doNothing().when(imageStore).addStateStamp(errorImageTwo.getName(), errorImageTwo.getState(), errorImageTwo.getUpdateTime());
 		
-		doReturn("10").when(properties).getProperty(SebalPropertiesConstants.MAX_USGS_DOWNLOAD_LINK_REQUESTS);
+		doReturn("10").when(properties).getProperty(SapsPropertiesConstants.MAX_USGS_DOWNLOAD_LINK_REQUESTS);
 		
 		// exercise
 		crawler.reSubmitErrorImages(properties);
@@ -181,7 +181,7 @@ public class TestCrawlerIntegration {
 		doThrow(new IOException()).when(usgsRepository).downloadImage(image1);
 		doNothing().when(usgsRepository).downloadImage(image2);
 
-		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
 				crawlerIP, nfsPort, federationMember);
 		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image1.getState());
 		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image2.getState());
@@ -223,7 +223,7 @@ public class TestCrawlerIntegration {
 		imageList.add(image1);
 		imageList.add(image2);
 
-		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
 				crawlerIP, nfsPort, federationMember);
 
 		doThrow(new SQLException()).when(imageStore).getImagesToDownload(
@@ -270,9 +270,9 @@ public class TestCrawlerIntegration {
 		doReturn(imageList).when(imageStore).getIn(ImageState.FINISHED);
 
 		doReturn(sebalExportPath).when(properties).getProperty(
-				SebalPropertiesConstants.SEBAL_EXPORT_PATH);
+				SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 
-		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
 				crawlerIP, nfsPort, federationMember);
 
 		// exercise
@@ -308,11 +308,11 @@ public class TestCrawlerIntegration {
 		imageList.add(image2);
 
 		doReturn(sebalExportPath).when(properties).getProperty(
-				SebalPropertiesConstants.SEBAL_EXPORT_PATH);
+				SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		doReturn(imageList).when(imageStore).getAllImages();
 
-		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
 				crawlerIP, nfsPort, federationMember1);
 
 		// exercise
@@ -340,7 +340,7 @@ public class TestCrawlerIntegration {
 		writer.println("0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
 		writer.close();
 
-		Crawler crawler = new Crawler(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
 				crawlerIP, nfsPort, federationMember);
 
 		// exercise

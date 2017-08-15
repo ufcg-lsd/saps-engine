@@ -22,7 +22,7 @@ import org.junit.rules.ExpectedException;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
 
-public class TestFetcher {
+public class TestArchiver {
 	
 	private Properties properties;
 	private DB pendingImageFetchDBMock;

@@ -3,7 +3,7 @@ package org.fogbowcloud.saps.engine.core.model;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class SebalUser {
+public class SapsUser {
 	
 	private String userEmail;
 	private String userName;
@@ -12,7 +12,7 @@ public class SebalUser {
 	private boolean userNotify;
 	private boolean adminRole;
 	
-	public SebalUser(String userEmail, String userName, String userPassword,
+	public SapsUser(String userEmail, String userName, String userPassword,
 			boolean active, boolean userNotify, boolean adminRole) {
 		this.userEmail = userEmail;
 		this.userName = userName;
@@ -91,7 +91,7 @@ public class SebalUser {
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof ImageData) {
-			SebalUser other = (SebalUser) o;
+			SapsUser other = (SapsUser) o;
 			return getUserEmail().equals(other.getUserEmail())
 					&& getUserName().equals(other.getUserName())
 					&& getUserPassword().equals(other.getUserPassword())

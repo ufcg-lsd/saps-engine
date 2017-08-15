@@ -27,7 +27,7 @@ import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.scheduler.monitor.SebalTaskMonitor;
+import org.fogbowcloud.saps.engine.scheduler.monitor.SapsTaskMonitor;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,13 +35,13 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 
-public class TestSebalTaskMonitor {
+public class TestSapsTaskMonitor {
 	
 	private static final String FAKE_ID = "fakeId";
 	
 	public long timeout;
 	public ImageDataStore imageStore;
-	public SebalTaskMonitor sebalTaskMonitor;
+	public SapsTaskMonitor sebalTaskMonitor;
 	public BlowoutPool pool;
 	
 	@Rule
@@ -52,7 +52,7 @@ public class TestSebalTaskMonitor {
 		timeout = 10000;
 		pool = mock(BlowoutPool.class);
 		imageStore = mock(ImageDataStore.class);
-		sebalTaskMonitor = spy(new SebalTaskMonitor(pool, imageStore));
+		sebalTaskMonitor = spy(new SapsTaskMonitor(pool, imageStore));
 	}
 	
 	@Test

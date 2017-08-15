@@ -16,7 +16,7 @@ import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
 
-public class SebalTasks {
+public class SapsTasks {
 	
 	private static final String INIT_TYPE = "init";
 	private static final String RUN_TYPE = "run";
@@ -57,7 +57,7 @@ public class SebalTasks {
 
 	public static final String METADATA_PHASE = "phase";
 
-	private static final Logger LOGGER = Logger.getLogger(SebalTasks.class);
+	private static final Logger LOGGER = Logger.getLogger(SapsTasks.class);
 	private static final String METADATA_IMAGES_LOCAL_PATH = "images_local_path";
 	public static final String METADATA_RESULTS_LOCAL_PATH = "results_local_path";
 	

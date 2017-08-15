@@ -12,16 +12,16 @@ import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.core.model.SebalTasks;
+import org.fogbowcloud.saps.engine.core.model.SapsTasks;
 
-public class SebalTaskMonitor extends TaskMonitor {
+public class SapsTaskMonitor extends TaskMonitor {
 	
 	private ImageDataStore imageStore;	
 	private static long timeout = 10000;
 	
-	private static final Logger LOGGER = Logger.getLogger(SebalTaskMonitor.class);
+	private static final Logger LOGGER = Logger.getLogger(SapsTaskMonitor.class);
 	
-	public SebalTaskMonitor(BlowoutPool blowoutpool, ImageDataStore imageStore) {
+	public SapsTaskMonitor(BlowoutPool blowoutpool, ImageDataStore imageStore) {
 		super(blowoutpool, timeout);
 		this.imageStore = imageStore;
 	}
@@ -136,6 +136,6 @@ public class SebalTaskMonitor extends TaskMonitor {
 	}
 
 	public String getImageFromTaskProcess(TaskProcess tp) {
-		return getBlowoutPool().getTaskById(tp.getTaskId()).getMetadata(SebalTasks.METADATA_IMAGE_NAME);
+		return getBlowoutPool().getTaskById(tp.getTaskId()).getMetadata(SapsTasks.METADATA_IMAGE_NAME);
 	}
 }

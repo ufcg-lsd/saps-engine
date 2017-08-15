@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.List;
 
-import org.fogbowcloud.saps.engine.core.model.SebalUser;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.notifier.Ward;
 
 public interface SubmissionDispatcher {
@@ -24,7 +24,7 @@ public interface SubmissionDispatcher {
 
 	List<Ward> getUsersToNotify() throws SQLException;
 	
-	SebalUser getUser(String userEmail);
+	SapsUser getUser(String userEmail);
 	
 	void setImageForPhase2(String imageName, String sebalVersion, String sebalTag) throws SQLException;
 			

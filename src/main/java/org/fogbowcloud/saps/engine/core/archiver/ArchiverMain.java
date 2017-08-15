@@ -3,7 +3,7 @@ package org.fogbowcloud.saps.engine.core.archiver;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-public class FetcherMain {
+public class ArchiverMain {
 
 	public static void main(String[] args) throws Exception {
 		Properties properties = new Properties();
@@ -16,7 +16,7 @@ public class FetcherMain {
 		properties.put("datastore_ip", imageStoreIP);
 		properties.put("datastore_port", imageStorePort);
 		
-		Fetcher Fetcher = new Fetcher(properties);
+		Archiver Fetcher = new Archiver(properties);
 		Fetcher.exec();
 	}
 }

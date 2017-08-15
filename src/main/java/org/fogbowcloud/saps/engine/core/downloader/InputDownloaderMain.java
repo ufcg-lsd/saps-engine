@@ -7,9 +7,9 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-public class CrawlerMain {
+public class InputDownloaderMain {
 	
-	public static final Logger LOGGER = Logger.getLogger(CrawlerMain.class);
+	public static final Logger LOGGER = Logger.getLogger(InputDownloaderMain.class);
 
 	public static void main(String[] args) throws IOException, InterruptedException, SQLException {
 		Properties properties = new Properties();
@@ -21,7 +21,7 @@ public class CrawlerMain {
 			String nfsPort = args[2];
 			String federationMember = args[3];
 
-			Crawler crawler = new Crawler(properties, crawlerIp, nfsPort, federationMember);
+			InputDownloader crawler = new InputDownloader(properties, crawlerIp, nfsPort, federationMember);
 			crawler.exec();
 		} catch(NullPointerException e) {
 			LOGGER.error("Invalid args", e);

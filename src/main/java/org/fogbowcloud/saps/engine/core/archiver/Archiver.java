@@ -15,12 +15,12 @@ import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
-public class Fetcher {
+public class Archiver {
 
 	private final Properties properties;
 	private final ImageDataStore imageStore;
@@ -29,7 +29,7 @@ public class Fetcher {
 	private DB pendingImageFetchDB;
 	private ConcurrentMap<String, ImageData> pendingImageFetchMap;
 	private FTPIntegrationImpl ftpImpl;
-	private FetcherHelper fetcherHelper;
+	private ArchiverHelper fetcherHelper;
 	private String fetcherVersion;
 
 	private String ftpServerIP;
@@ -38,11 +38,11 @@ public class Fetcher {
 	private static int MAX_FETCH_TRIES = 2;
 	private static int MAX_SWIFT_UPLOAD_TRIES = 2;
 	
-	public static final Logger LOGGER = Logger.getLogger(Fetcher.class);
+	public static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
-	public Fetcher(Properties properties) throws SQLException {
+	public Archiver(Properties properties) throws SQLException {
 		this(properties, new JDBCImageDataStore(properties), new SwiftAPIClient(properties),
-				new FTPIntegrationImpl(), new FetcherHelper());
+				new FTPIntegrationImpl(), new ArchiverHelper());
 
 		LOGGER.info("Creating fetcher");
 		LOGGER.debug("Imagestore " + properties.getProperty("datastore_ip") + ":"
@@ -50,8 +50,8 @@ public class Fetcher {
 				+ ftpServerPort);
 	}
 
-	protected Fetcher(Properties properties, ImageDataStore imageStore,
-			SwiftAPIClient swiftAPIClient, FTPIntegrationImpl ftpImpl, FetcherHelper fetcherHelper) {
+	protected Archiver(Properties properties, ImageDataStore imageStore,
+			SwiftAPIClient swiftAPIClient, FTPIntegrationImpl ftpImpl, ArchiverHelper fetcherHelper) {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
@@ -96,7 +96,7 @@ public class Fetcher {
 					}
 				}
 				Thread.sleep(Long.valueOf(properties
-						.getProperty(SebalPropertiesConstants.DEFAULT_FETCHER_PERIOD)));
+						.getProperty(SapsPropertiesConstants.DEFAULT_FETCHER_PERIOD)));
 			}
 		} catch (InterruptedException e) {
 			LOGGER.error("Error while fetching images", e);
@@ -142,7 +142,7 @@ public class Fetcher {
 	protected void deleteInputsFromDisk(final ImageData imageData, Properties properties)
 			throws IOException {
 		String exportPath = properties
-				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
+				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String inputsDirPath = exportPath + File.separator + "images" + File.separator
 				+ imageData.getCollectionTierName();
 		File inputsDir = new File(inputsDirPath);
@@ -157,7 +157,7 @@ public class Fetcher {
 	protected void deleteResultsFromDisk(final ImageData imageData, Properties properties)
 			throws IOException {
 		String exportPath = properties
-				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
+				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String resultsDirPath = exportPath + File.separator + "results" + File.separator
 				+ imageData.getCollectionTierName();
 		File resultsDir = new File(resultsDirPath);
@@ -238,10 +238,10 @@ public class Fetcher {
 		ftpServerIP = imageStore.getNFSServerIP(imageData.getFederationMember());
 
 		LOGGER.debug("Federation member is " + imageData.getFederationMember());
-		if (imageData.getFederationMember().equals(SebalPropertiesConstants.AZURE_FEDERATION_MEMBER)) {			
-			ftpServerPort = properties.getProperty(SebalPropertiesConstants.AZURE_FTP_SERVER_PORT);
+		if (imageData.getFederationMember().equals(SapsPropertiesConstants.AZURE_FEDERATION_MEMBER)) {			
+			ftpServerPort = properties.getProperty(SapsPropertiesConstants.AZURE_FTP_SERVER_PORT);
 		} else {
-			ftpServerPort = properties.getProperty(SebalPropertiesConstants.DEFAULT_FTP_SERVER_PORT);
+			ftpServerPort = properties.getProperty(SapsPropertiesConstants.DEFAULT_FTP_SERVER_PORT);
 		}
 		
 		LOGGER.debug("Using FTP Server IP " + ftpServerIP + " and port " + ftpServerPort);		
@@ -546,30 +546,30 @@ public class Fetcher {
 	}
 
 	private String getContainerName() {
-		return properties.getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
+		return properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
 	}
 	
 	private String getInputPseudoFolder(File localImageInputsDir) {		
-		if (properties.getProperty(SebalPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+		if (properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {			
 			return properties
-					.getProperty(SebalPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+					.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
 					+ localImageInputsDir.getName() + File.separator;
 		}
 		
-		return properties.getProperty(SebalPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+		return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
 				+ File.separator + localImageInputsDir.getName() + File.separator;
 	}
 
 	private String getOutputPseudoFolder(File localImageResultsDir) {
-		if (properties.getProperty(SebalPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
+		if (properties.getProperty(SapsPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {
 			return properties
-					.getProperty(SebalPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
+					.getProperty(SapsPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
 					+ localImageResultsDir.getName() + File.separator;
 		}
 
-		return properties.getProperty(SebalPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
+		return properties.getProperty(SapsPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
 				+ File.separator + localImageResultsDir.getName() + File.separator;
 	}
 	

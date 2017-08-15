@@ -1,17 +1,17 @@
 package org.fogbowcloud.saps.engine.scheduler.core.exception;
 
-public class SebalException extends Exception {
+public class SapsException extends Exception {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2520888793776997437L;
 	
-	public SebalException (String msg){
+	public SapsException (String msg){
 		super(msg);
 	}
 	
-	public SebalException (String msg, Exception e){
+	public SapsException (String msg, Exception e){
 		super(msg, e);
 	}
 }

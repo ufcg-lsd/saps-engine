@@ -1,7 +1,7 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.fogbowcloud.saps.engine.core.model.SebalUser;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
 import org.restlet.resource.ServerResource;
 
@@ -21,7 +21,7 @@ public class BaseResource extends ServerResource {
 			return false;
 		}
 		
-		SebalUser user = application.getUser(userEmail);
+		SapsUser user = application.getUser(userEmail);
 		String md5Pass = DigestUtils.md5Hex(userPass);
 		if (user != null && user.getUserPassword().equals(md5Pass) && user.getActive()) {
 			if (mustBeAdmin && !user.getAdminRole()) {

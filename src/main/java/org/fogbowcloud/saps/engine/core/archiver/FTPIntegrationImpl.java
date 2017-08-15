@@ -5,7 +5,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class FTPIntegrationImpl implements FTPIntegration{
 	
@@ -23,16 +23,16 @@ public class FTPIntegrationImpl implements FTPIntegration{
 				
 		ProcessBuilder builder;
 		if (imageData.getFederationMember()
-				.equals(SebalPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
+				.equals(SapsPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
 			builder = new ProcessBuilder("/bin/bash",
-					properties.getProperty(SebalPropertiesConstants.SEBAL_SFTP_SCRIPT_PATH),
-					properties.getProperty(SebalPropertiesConstants.AZURE_FTP_SERVER_USER),
+					properties.getProperty(SapsPropertiesConstants.SEBAL_SFTP_SCRIPT_PATH),
+					properties.getProperty(SapsPropertiesConstants.AZURE_FTP_SERVER_USER),
 					ftpServerIP, ftpServerPort, remoteImageResultsPath, localImageResultsPath,
 					imageData.getCollectionTierName());
 		} else {
 			builder = new ProcessBuilder("/bin/bash",
-					properties.getProperty(SebalPropertiesConstants.SEBAL_SFTP_SCRIPT_PATH),
-					properties.getProperty(SebalPropertiesConstants.DEFAULT_FTP_SERVER_USER),
+					properties.getProperty(SapsPropertiesConstants.SEBAL_SFTP_SCRIPT_PATH),
+					properties.getProperty(SapsPropertiesConstants.DEFAULT_FTP_SERVER_USER),
 					ftpServerIP, ftpServerPort, remoteImageResultsPath, localImageResultsPath,
 					imageData.getCollectionTierName());
 		}

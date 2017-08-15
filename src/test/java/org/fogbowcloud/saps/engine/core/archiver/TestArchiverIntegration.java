@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.archiver.FTPIntegrationImpl;
-import org.fogbowcloud.saps.engine.core.archiver.Fetcher;
-import org.fogbowcloud.saps.engine.core.archiver.FetcherHelper;
+import org.fogbowcloud.saps.engine.core.archiver.Archiver;
+import org.fogbowcloud.saps.engine.core.archiver.ArchiverHelper;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mapdb.DB;
 
-public class TestFetcherIntegration {
+public class TestArchiverIntegration {
 	
 	@Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -54,7 +54,7 @@ public class TestFetcherIntegration {
 		
 		// setup
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		ArchiverHelper fetcherHelper = mock(ArchiverHelper.class);
 		Properties properties = mock(Properties.class);
 		String federationMember = "fake-federation-member";
 		String fetcherVolumeInputPath = "fake-fetcher-volume-input-path";
@@ -68,7 +68,7 @@ public class TestFetcherIntegration {
 
 		doReturn(fetcherVolumeInputPath).when(fetcherHelper).getLocalImageInputsPath(imageData, properties);
 
-		Fetcher fetcher = mock(Fetcher.class);
+		Archiver fetcher = mock(Archiver.class);
 		doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		doReturn(1).when(fetcher).fetchInputs(imageData);
 
@@ -92,7 +92,7 @@ public class TestFetcherIntegration {
 		// setup
 		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		ArchiverHelper fetcherHelper = mock(ArchiverHelper.class);
 		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
 		Properties properties = mock(Properties.class);
 		String sebalExportPath = "fake-export-path";
@@ -113,7 +113,7 @@ public class TestFetcherIntegration {
 		doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData, properties);
 		doReturn(fetcherVolumePath).when(fetcherHelper).getLocalImageResultsPath(imageData, properties);
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
+		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 
 		doThrow(new SQLException()).when(imageStore).getIn(ImageState.FINISHED);
 
@@ -140,7 +140,7 @@ public class TestFetcherIntegration {
 		ConcurrentMap<String, ImageData> pendingImageFetchMap = mock(ConcurrentMap.class);
 		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		ArchiverHelper fetcherHelper = mock(ArchiverHelper.class);
 		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
 		Properties properties = mock(Properties.class);
 		DB pendingImageFetchDB = mock(DB.class);
@@ -157,7 +157,7 @@ public class TestFetcherIntegration {
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "available", "", "image_2");
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
+		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		doReturn(imageData).when(imageStore).getImage(imageData.getName());
 
@@ -195,7 +195,7 @@ public class TestFetcherIntegration {
 		ConcurrentMap<String, ImageData> pendingImageFetchMap = mock(ConcurrentMap.class);
 		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		ArchiverHelper fetcherHelper = mock(ArchiverHelper.class);
 		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
 		Properties properties = mock(Properties.class);
 		DB pendingImageFetchDB = mock(DB.class);
@@ -212,7 +212,7 @@ public class TestFetcherIntegration {
 				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(
 						date.getTime()), "available", "", "image_2");
 
-		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
+		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		doReturn(imageData).when(imageStore).getImage(imageData.getName());
 		doReturn(true).when(imageStore).lockImage(imageData.getName());
@@ -250,7 +250,7 @@ public class TestFetcherIntegration {
 		
 		// setup
 		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
-		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		ArchiverHelper fetcherHelper = mock(ArchiverHelper.class);
 		Properties properties = mock(Properties.class);
 		String ftpServerIP = "fake-IP";
 		String ftpServerPort = "fake-PORT";
@@ -277,7 +277,7 @@ public class TestFetcherIntegration {
 		doReturn(true).when(fetcherHelper)
 				.resultsChecksumOK(imageData, fetcherVolumeInputsDir);
 		
-		Fetcher fetcher = mock(Fetcher.class);
+		Archiver fetcher = mock(Archiver.class);
 		
 		doReturn(false).when(fetcher).uploadInputFilesToSwift(imageData, fetcherVolumeInputsDir);
 
@@ -294,14 +294,14 @@ public class TestFetcherIntegration {
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
 		FTPIntegrationImpl ftpImpl = mock(FTPIntegrationImpl.class);
-		FetcherHelper fetcherHelper = mock(FetcherHelper.class);
+		ArchiverHelper fetcherHelper = mock(ArchiverHelper.class);
 		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
 		
 		PrintWriter writer = new PrintWriter("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a", "UTF-8");
 		writer.println("0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
 		writer.close();
 		
-		Fetcher fetcher = new Fetcher(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
+		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl, fetcherHelper);
 		
 		// exercise
 		String versionReturn = fetcher.getFetcherVersion();

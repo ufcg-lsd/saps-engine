@@ -19,10 +19,10 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.core.model.SebalUser;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.repository.DefaultImageRepository;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.notifier.Ward;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -66,7 +66,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 	
 	@Override
-	public SebalUser getUser(String userEmail) {
+	public SapsUser getUser(String userEmail) {
 		try {
 			return imageStore.getUser(userEmail);
 		} catch (SQLException e) {
@@ -189,12 +189,12 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	private String parseDataset(String dataSet) {
-		if(dataSet.equals(SebalPropertiesConstants.DATASET_LT5_TYPE)) {
-			return SebalPropertiesConstants.LANDSAT_5_DATASET;
-		} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LE7_TYPE)) {
-			return SebalPropertiesConstants.LANDSAT_7_DATASET;
-		} else if(dataSet.equals(SebalPropertiesConstants.DATASET_LC8_TYPE)) {
-			return SebalPropertiesConstants.LANDSAT_8_DATASET;
+		if(dataSet.equals(SapsPropertiesConstants.DATASET_LT5_TYPE)) {
+			return SapsPropertiesConstants.LANDSAT_5_DATASET;
+		} else if(dataSet.equals(SapsPropertiesConstants.DATASET_LE7_TYPE)) {
+			return SapsPropertiesConstants.LANDSAT_7_DATASET;
+		} else if(dataSet.equals(SapsPropertiesConstants.DATASET_LC8_TYPE)) {
+			return SapsPropertiesConstants.LANDSAT_8_DATASET;
 		}
 		
 		return null;
@@ -209,9 +209,9 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			try {
 				for (int i = 0; i < availableImagesJSON.length(); i++) {
 					String entityId = availableImagesJSON.getJSONObject(i).getString(
-							SebalPropertiesConstants.ENTITY_ID_JSON_KEY);
+							SapsPropertiesConstants.ENTITY_ID_JSON_KEY);
 					String displayId = availableImagesJSON.getJSONObject(i).getString(
-							SebalPropertiesConstants.DISPLAY_ID_JSON_KEY);
+							SapsPropertiesConstants.DISPLAY_ID_JSON_KEY);
 					
 					getImageStore().addImage(entityId, "None", priority, sebalVersion, sebalTag,
 							displayId);
@@ -255,11 +255,11 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			NumberFormat formatter = new DecimalFormat("000");
 			String imageName = new String();
 
-			if (dataSet.equals(SebalPropertiesConstants.DATASET_LT5_TYPE)) {
+			if (dataSet.equals(SapsPropertiesConstants.DATASET_LT5_TYPE)) {
 				imageName = "LT5" + region + year + formatter.format(day);
-			} else if (dataSet.equals(SebalPropertiesConstants.DATASET_LE7_TYPE)) {
+			} else if (dataSet.equals(SapsPropertiesConstants.DATASET_LE7_TYPE)) {
 				imageName = "LE7" + region + year + formatter.format(day);
-			} else if (dataSet.equals(SebalPropertiesConstants.DATASET_LC8_TYPE)) {
+			} else if (dataSet.equals(SapsPropertiesConstants.DATASET_LC8_TYPE)) {
 				imageName = "LC8" + region + year + formatter.format(day);
 			}
 

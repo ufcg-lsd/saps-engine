@@ -23,16 +23,16 @@ import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.core.model.SebalTasks;
-import org.fogbowcloud.saps.engine.scheduler.core.exception.SebalException;
-import org.fogbowcloud.saps.engine.scheduler.monitor.SebalTaskMonitor;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.core.model.SapsTasks;
+import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
+import org.fogbowcloud.saps.engine.scheduler.monitor.SapsTaskMonitor;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 
-public class SebalController extends BlowoutController {
+public class SapsController extends BlowoutController {
 
 	// Constants
-	public static final Logger LOGGER = Logger.getLogger(SebalController.class);
+	public static final Logger LOGGER = Logger.getLogger(SapsController.class);
 	
 	// Sebal Controller Variables
 	private static String nfsServerIP;
@@ -41,19 +41,19 @@ public class SebalController extends BlowoutController {
 	private static ImageDataStore imageStore;
 	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(Executors.newScheduledThreadPool(1));
 	
-	public SebalController(Properties properties) throws SebalException, BlowoutException {
+	public SapsController(Properties properties) throws SapsException, BlowoutException {
 		super(properties);
 		
 		this.setProperties(properties);
 		try {			
 			if (!checkProperties(properties)) {
-				throw new SebalException("Error on validate the file");
+				throw new SapsException("Error on validate the file");
 			} else if (getBlowoutVersion(properties).isEmpty()
 					|| getBlowoutVersion(properties) == null) {
-				throw new SebalException("Error while reading blowout version file");
+				throw new SapsException("Error while reading blowout version file");
 			}
 		} catch (Exception e) {
-			throw new SebalException(
+			throw new SapsException(
 					"Error while initializing Sebal Controller.", e);
 		}
 	}
@@ -62,8 +62,8 @@ public class SebalController extends BlowoutController {
 	public void start(boolean removePreviousResouces) throws Exception {
 		try {
 			imageStore = new JDBCImageDataStore(getProperties());
-			LOGGER.debug("Imagestore " + SebalPropertiesConstants.IMAGE_DATASTORE_IP + ":"
-					+ SebalPropertiesConstants.IMAGE_DATASTORE_IP);
+			LOGGER.debug("Imagestore " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + ":"
+					+ SapsPropertiesConstants.IMAGE_DATASTORE_IP);
 
 			final Specification sebalSpec = getSebalSpecFromFile(getProperties());
 
@@ -91,7 +91,7 @@ public class SebalController extends BlowoutController {
 
 		setBlowoutPool(createBlowoutInstance());
 		setInfraProvider(createInfraProviderInstance(removePreviousResouces));
-		setTaskMonitor(new SebalTaskMonitor(getBlowoutPool(), imageStore));
+		setTaskMonitor(new SapsTaskMonitor(getBlowoutPool(), imageStore));
 		getTaskMonitor().start();
 		
 		setResourceMonitor(new ResourceMonitor(getInfraProvider(), getBlowoutPool(), getProperties()));
@@ -114,7 +114,7 @@ public class SebalController extends BlowoutController {
 				}
 			}
 
-		}, 0, Integer.parseInt(properties.getProperty(SebalPropertiesConstants.SEBAL_EXECUTION_PERIOD)));
+		}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SEBAL_EXECUTION_PERIOD)));
 	}
 
 	private static void resetImagesRunningToQueued() throws SQLException {
@@ -126,7 +126,7 @@ public class SebalController extends BlowoutController {
 	}
 	
 	private void addSebalTasks(final Properties properties, final Specification sebalSpec,
-			ImageState imageState) throws InterruptedException, SebalException {
+			ImageState imageState) throws InterruptedException, SapsException {
 
 		try {
 			List<ImageData> imagesToProcess = imageStore.getIn(imageState,
@@ -156,7 +156,7 @@ public class SebalController extends BlowoutController {
 
 					LOGGER.debug("Creating Sebal task " + taskImpl.getId());
 
-					taskImpl = SebalTasks.createSebalTask(taskImpl, properties,
+					taskImpl = SapsTasks.createSebalTask(taskImpl, properties,
 							imageData.getName(), imageData.getCollectionTierName(),
 							specWithFederation, imageData.getFederationMember(), nfsServerIP,
 							nfsServerPort, imageData.getSebalVersion(), imageData.getSebalTag());
@@ -182,9 +182,9 @@ public class SebalController extends BlowoutController {
 		}
 	}
 
-	private void addTask(TaskImpl taskImpl) throws SebalException {
+	private void addTask(TaskImpl taskImpl) throws SapsException {
 		if (!started) {
-			throw new SebalException("Error while adding new task. BlowoutController not started yet.");
+			throw new SapsException("Error while adding new task. BlowoutController not started yet.");
 		}
 		getBlowoutPool().putTask(taskImpl);
 	}
@@ -202,22 +202,22 @@ public class SebalController extends BlowoutController {
 
 	private static void setFederationMemberIntoSpec(Specification spec, Specification tempSpec,
 			String federationMember) {
-		String fogbowRequirements = spec.getRequirementValue(SebalPropertiesConstants.SPEC_FOGBOW_REQUIREMENTS);
+		String fogbowRequirements = spec.getRequirementValue(SapsPropertiesConstants.SPEC_FOGBOW_REQUIREMENTS);
 		LOGGER.debug("Setting federationmember " + federationMember + " into FogbowRequirements");
-		String requestType = spec.getRequirementValue(SebalPropertiesConstants.SPEC_REQUEST_TYPE);
-		String newRequirements = fogbowRequirements + " && " + SebalPropertiesConstants.SPEC_GLUE2_CLOUD_COMPUTE_MANAGER_ID
+		String requestType = spec.getRequirementValue(SapsPropertiesConstants.SPEC_REQUEST_TYPE);
+		String newRequirements = fogbowRequirements + " && " + SapsPropertiesConstants.SPEC_GLUE2_CLOUD_COMPUTE_MANAGER_ID
 				+ "==\"" + federationMember + "\"";
-		tempSpec.addRequirement(SebalPropertiesConstants.SPEC_FOGBOW_REQUIREMENTS, newRequirements);
-		tempSpec.addRequirement(SebalPropertiesConstants.SPEC_REQUEST_TYPE, requestType);
+		tempSpec.addRequirement(SapsPropertiesConstants.SPEC_FOGBOW_REQUIREMENTS, newRequirements);
+		tempSpec.addRequirement(SapsPropertiesConstants.SPEC_REQUEST_TYPE, requestType);
 	}
 	
 	private static String getBlowoutVersion(Properties properties) {
-		String blowoutDirPath = properties.getProperty(SebalPropertiesConstants.BLOWOUT_DIR_PATH);
+		String blowoutDirPath = properties.getProperty(SapsPropertiesConstants.BLOWOUT_DIR_PATH);
 		File blowoutDir = new File(blowoutDirPath);
 
 		if (blowoutDir.exists() && blowoutDir.isDirectory()) {
 			for (File file : blowoutDir.listFiles()) {
-				if (file.getName().startsWith(SebalPropertiesConstants.BLOWOUT_VERSION_PREFIX)) {
+				if (file.getName().startsWith(SapsPropertiesConstants.BLOWOUT_VERSION_PREFIX)) {
 					String[] blowoutVersionFileSplit = file.getName().split("\\.");
 					return blowoutVersionFileSplit[2];
 				}
@@ -228,7 +228,7 @@ public class SebalController extends BlowoutController {
 	}
 	
 	private static Specification getSebalSpecFromFile(Properties properties) {
-		String sebalSpecFile = properties.getProperty(SebalPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
+		String sebalSpecFile = properties.getProperty(SapsPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
 		List<Specification> specs = new ArrayList<Specification>();
 		
 		try {
@@ -244,44 +244,44 @@ public class SebalController extends BlowoutController {
 	}
 	
 	protected static boolean checkProperties(Properties properties) {
-		if (!properties.containsKey(SebalPropertiesConstants.IMAGE_DATASTORE_IP)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.IMAGE_DATASTORE_IP + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_IP)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.IMAGE_DATASTORE_PORT)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.IMAGE_DATASTORE_PORT + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_PORT)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_PORT + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.INFRA_SPECS_BLOCK_CREATING)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.INFRA_SPECS_BLOCK_CREATING + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.INFRA_SPECS_BLOCK_CREATING)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.INFRA_SPECS_BLOCK_CREATING + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.INFRA_PROVIDER_CLASS_NAME)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.INFRA_PROVIDER_CLASS_NAME + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.INFRA_PROVIDER_CLASS_NAME)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.INFRA_PROVIDER_CLASS_NAME + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.INFRA_IS_STATIC)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.INFRA_IS_STATIC + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.INFRA_IS_STATIC)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.INFRA_IS_STATIC + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.EXECUTION_MONITOR_PERIOD)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.EXECUTION_MONITOR_PERIOD + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.EXECUTION_MONITOR_PERIOD)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.EXECUTION_MONITOR_PERIOD + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.SEBAL_EXECUTION_PERIOD)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.SEBAL_EXECUTION_PERIOD + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.SEBAL_EXECUTION_PERIOD)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SEBAL_EXECUTION_PERIOD + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.SEBAL_EXPORT_PATH)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.SEBAL_EXPORT_PATH + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.SEBAL_EXPORT_PATH)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SEBAL_EXPORT_PATH + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SebalPropertiesConstants.BLOWOUT_DIR_PATH)) {
-			LOGGER.error("Required property " + SebalPropertiesConstants.BLOWOUT_DIR_PATH + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.BLOWOUT_DIR_PATH)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.BLOWOUT_DIR_PATH + " was not set");
 			return false;
 		}
 		
@@ -294,6 +294,6 @@ public class SebalController extends BlowoutController {
 	}
 
 	public void setProperties(Properties properties) {
-		SebalController.properties = properties;
+		SapsController.properties = properties;
 	}
 }

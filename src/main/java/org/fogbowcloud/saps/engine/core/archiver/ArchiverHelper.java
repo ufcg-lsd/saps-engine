@@ -13,15 +13,15 @@ import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.fogbowcloud.saps.engine.core.util.CheckSumMD5ForFile;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.mapdb.DB;
 
-public class FetcherHelper {
+public class ArchiverHelper {
 
 	protected static final int NUMBER_OF_INPUT_FILES = 11;
 	protected static final int NUMBER_OF_RESULT_FILES = 7;
 
-	public static final Logger LOGGER = Logger.getLogger(FetcherHelper.class);
+	public static final Logger LOGGER = Logger.getLogger(ArchiverHelper.class);
 	
 	protected void updatePendingMapAndDB(ImageData imageData, DB pendingImageFetchDB,
 			ConcurrentMap<String, ImageData> pendingImageFetchMap) {
@@ -42,7 +42,7 @@ public class FetcherHelper {
 	}
 
 	protected String getStationId(ImageData imageData, Properties properties) throws IOException {
-		String stationFilePath = properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+		String stationFilePath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ "/results/" + imageData.getCollectionTierName() + "/" + imageData.getCollectionTierName() 
 				+ "_station.csv";
 		File stationFile = new File(stationFilePath);
@@ -63,26 +63,26 @@ public class FetcherHelper {
 	}
 	
 	protected String getRemoteImageInputsPath(final ImageData imageData, Properties properties) {
-		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator + "images" + File.separator + imageData.getCollectionTierName();
 	}
 	
 	protected String getLocalImageInputsPath(ImageData imageData, Properties properties) {
 		String localImageInputsPath = properties
-				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
 				+ "images" + File.separator + imageData.getCollectionTierName();
 		return localImageInputsPath;
 	}
 
 	protected String getRemoteImageResultsPath(final ImageData imageData, Properties properties) {
-		return properties.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ "/results/" + imageData.getCollectionTierName();
 	}
 
 	protected String getLocalImageResultsPath(ImageData imageData, Properties properties) {
 		String localImageResultsPath = properties
-				.getProperty(SebalPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
 				+ "results" + File.separator + imageData.getCollectionTierName();
 		return localImageResultsPath;

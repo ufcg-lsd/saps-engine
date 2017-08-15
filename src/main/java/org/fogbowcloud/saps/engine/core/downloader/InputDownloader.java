@@ -20,11 +20,11 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
-public class Crawler {
+public class InputDownloader {
 		
 	private String crawlerIp;
 	private String nfsPort;
@@ -45,17 +45,17 @@ public class Crawler {
 	// Image dir size in bytes
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
-	public static final Logger LOGGER = Logger.getLogger(Crawler.class);
+	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
 
 
-	public Crawler(Properties properties, String crawlerIP, String nfsPort, String federationMember)
+	public InputDownloader(Properties properties, String crawlerIP, String nfsPort, String federationMember)
 			throws SQLException {
 		this(properties, new JDBCImageDataStore(properties), new USGSNasaRepository(properties),
 				crawlerIP, nfsPort, federationMember);
 		LOGGER.info("Creating crawler in federation " + federationMember);
 	}
 
-	protected Crawler(Properties properties, ImageDataStore imageStore,
+	protected InputDownloader(Properties properties, ImageDataStore imageStore,
 			USGSNasaRepository usgsRepository, String crawlerIP, String nfsPort,
 			String federationMember) {
 		try {
@@ -137,7 +137,7 @@ public class Crawler {
 					download(numToDownload);
 				} else {
 					Thread.sleep(Long.valueOf(properties
-							.getProperty(SebalPropertiesConstants.DEFAULT_CRAWLER_PERIOD)));
+							.getProperty(SapsPropertiesConstants.DEFAULT_CRAWLER_PERIOD)));
 				}				
 			}
 		} catch (Throwable e) {
@@ -212,7 +212,7 @@ public class Crawler {
 		List<ImageData> data = imageStore.getIn(ImageState.QUEUED);
 		for (ImageData imageData : data) {
 			deleteResultsFromDisk(imageData,
-					properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
+					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 		}
 	}
 	
@@ -230,7 +230,7 @@ public class Crawler {
 
 	protected void treatAndSubmit(Properties properties, ImageData imageData) throws SQLException {
 		if (imageData.getFederationMember()
-				.equals(SebalPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
+				.equals(SapsPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
 			imageData.setFederationMember(this.federationMember);
 		}
 
@@ -243,10 +243,10 @@ public class Crawler {
 	protected void reSubmitImage(Properties properties, ImageData imageData) throws SQLException {
 		try {
 			deleteImageFromDisk(imageData,
-					SebalPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "images"
+					SapsPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "images"
 							+ File.separator + imageData.getCollectionTierName());
 			deleteResultsFromDisk(imageData,
-					SebalPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "results"
+					SapsPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "results"
 							+ File.separator + imageData.getCollectionTierName());
 		} catch (IOException e) {
 			LOGGER.error("Error while deleting image " + imageData.getCollectionTierName()
@@ -270,7 +270,7 @@ public class Crawler {
 	}
 
 	protected File getImageDir(Properties properties, ImageData imageData) {
-		String exportPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 		String imageDirPath = exportPath + File.separator + "images" + File.separator
 				+ imageData.getCollectionTierName();
 		File imageDir = new File(imageDirPath);
@@ -343,7 +343,7 @@ public class Crawler {
 
 	protected double numberOfImagesToDownload() throws NumberFormatException, InterruptedException,
 			IOException, SQLException {
-		String volumeDirPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
+		String volumeDirPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 		File volumePath = new File(volumeDirPath);
  		if (volumePath.exists() && volumePath.isDirectory()) {			
 			double freeVolumeSpaceOutputDedicated = Double.valueOf(volumePath.getTotalSpace()) * 0.2;
@@ -396,7 +396,7 @@ public class Crawler {
 	}
 
 	private boolean checkIfImageFileExists(ImageData imageData) {
-		String imageInputFilePath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH)
+		String imageInputFilePath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH)
 				+ File.separator + "images" + File.separator + imageData.getCollectionTierName()
 				+ File.separator + imageData.getCollectionTierName() + ".tar.gz";
 		File imageInputFile = new File(imageInputFilePath);
@@ -439,7 +439,7 @@ public class Crawler {
 	}
 
 	protected String getFmaskVersion() throws IOException {
-		File fmaskVersionFile = new File(properties.getProperty(SebalPropertiesConstants.FMASK_VERSION_FILE_PATH));
+		File fmaskVersionFile = new File(properties.getProperty(SapsPropertiesConstants.FMASK_VERSION_FILE_PATH));
 		FileInputStream fileInputStream = new FileInputStream(fmaskVersionFile);
 		BufferedReader br = new BufferedReader(new InputStreamReader(fileInputStream));
 		 
@@ -481,7 +481,7 @@ public class Crawler {
 			}
 
 			deleteImageFromDisk(imageData,
-					properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
+					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 
 			LOGGER.debug("Removing image " + imageData + " from pending image map");
 			pendingImageDownloadMap.remove(imageData.getName());
@@ -515,7 +515,7 @@ public class Crawler {
 	protected void deleteFetchedResultsFromVolume(Properties properties) throws IOException,
 			InterruptedException, SQLException {
 		List<ImageData> setOfImageData = imageStore.getAllImages();
-		String exportPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 		String resultsPath = exportPath + File.separator + "results";
 
 		if (!exportPath.isEmpty() && exportPath != null) {
@@ -577,7 +577,7 @@ public class Crawler {
 			InterruptedException, SQLException {
 		List<ImageData> imagesToPurge = imageStore.getAllImages();
 
-		String exportPath = properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageData imageData : imagesToPurge) {
@@ -587,7 +587,7 @@ public class Crawler {
 
 					try {
 						deleteImageFromDisk(imageData,
-								properties.getProperty(SebalPropertiesConstants.SEBAL_EXPORT_PATH));
+								properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 						deleteResultsFromDisk(imageData, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageData, e);

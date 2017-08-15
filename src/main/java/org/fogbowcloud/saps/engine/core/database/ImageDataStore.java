@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.core.model.SebalUser;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.notifier.Ward;
 
 public interface ImageDataStore {
@@ -68,7 +68,7 @@ public interface ImageDataStore {
 
     ImageData getImage(String imageName) throws SQLException;
     
-    SebalUser getUser(String userEmail) throws SQLException;
+    SapsUser getUser(String userEmail) throws SQLException;
     
     String getNFSServerIP(String federationMember) throws SQLException;
 

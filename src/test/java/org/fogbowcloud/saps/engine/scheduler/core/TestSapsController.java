@@ -16,14 +16,14 @@ import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
 import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
-import org.fogbowcloud.saps.engine.scheduler.core.SebalController;
+import org.fogbowcloud.saps.engine.scheduler.core.SapsController;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class TestSebalController {
+public class TestSapsController {
 	
 	public Properties properties;
 	public BlowoutPool blowoutPool;
@@ -55,7 +55,7 @@ public class TestSebalController {
 	@Test
 	public void testSebalControllerStartNotNull() throws Exception {
 		// set up		
-		SebalController sebalController = mock(SebalController.class);
+		SapsController sebalController = mock(SapsController.class);
 		
 		doReturn(properties).when(sebalController).getProperties();
 		doReturn(blowoutPool).when(sebalController).getBlowoutPool();
@@ -80,7 +80,7 @@ public class TestSebalController {
 	@Test
 	public void testSebalControllerBlowoutPoolAccess() throws Exception {
 		// set up
-		SebalController sebalController = mock(SebalController.class);
+		SapsController sebalController = mock(SapsController.class);
 		TaskImpl taskImpl = mock(TaskImpl.class);
 		
 		doReturn(properties).when(sebalController).getProperties();

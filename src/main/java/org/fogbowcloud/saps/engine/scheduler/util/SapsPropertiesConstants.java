@@ -1,6 +1,6 @@
 package org.fogbowcloud.saps.engine.scheduler.util;
 
-public class SebalPropertiesConstants {
+public class SapsPropertiesConstants {
 
 	// Image database constants
 	public static final String IMAGE_DATASTORE_IP = "datastore_ip";

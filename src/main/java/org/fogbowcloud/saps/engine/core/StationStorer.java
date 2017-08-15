@@ -15,7 +15,7 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 
 public class StationStorer {
@@ -33,7 +33,7 @@ public class StationStorer {
 		Validate.notNull(properties);
 		
 		this.properties = properties;
-		this.noaaFTPUrl = properties.getProperty(SebalPropertiesConstants.NOAA_FTP_URL);
+		this.noaaFTPUrl = properties.getProperty(SapsPropertiesConstants.NOAA_FTP_URL);
 		this.swiftAPIClient = new SwiftAPIClient(properties);
 	}
 	
@@ -57,7 +57,7 @@ public class StationStorer {
 	private List<String> getStations(List<String> stations) {
 		try {
 			String stationsFilePath = properties
-					.getProperty(SebalPropertiesConstants.STATIONS_FILE_PATH);
+					.getProperty(SapsPropertiesConstants.STATIONS_FILE_PATH);
 
 			File stationsFile = new File(stationsFilePath);
 
@@ -78,7 +78,7 @@ public class StationStorer {
 	private void downloadUploadStationFiles(List<String> stations) throws Exception {
 		for(int year = FIRST_RECORD_YEAR; year <= LAST_RECORD_YEAR; year++) {
 			
-	        String yearDirPath = getYearDirPath(properties.getProperty(SebalPropertiesConstants.BASE_YEAR_DIR_PATH), year);
+	        String yearDirPath = getYearDirPath(properties.getProperty(SapsPropertiesConstants.BASE_YEAR_DIR_PATH), year);
 			File yearDir = new File(yearDirPath);
 	        yearDir.mkdirs();
 	        
@@ -101,9 +101,9 @@ public class StationStorer {
 		LOGGER.info("Downloading station file " + stations.get(j) + " into " + yearDirPath);
 		
 		String containerName = properties
-				.getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
+				.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
 		String pseudoFolder = properties
-				.getProperty(SebalPropertiesConstants.SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX)
+				.getProperty(SapsPropertiesConstants.SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX)
 				+ File.separator + year;
 		
 			swiftAPIClient.downloadFile(containerName, stations.get(j) + "0-99999-" + year, pseudoFolder, yearDirPath);
@@ -176,9 +176,9 @@ public class StationStorer {
 	
 	private boolean isStationFileAlreadyStored(String stationId, int year) {
 		String containerName = properties
-				.getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
+				.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
 		String pseudoFolder = properties
-				.getProperty(SebalPropertiesConstants.SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX)
+				.getProperty(SapsPropertiesConstants.SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX)
 				+ File.separator + year;
 		
 		List<String> filesWithPrefix = swiftAPIClient.listFilesWithPrefix(
@@ -223,9 +223,9 @@ public class StationStorer {
 	private void uploadStationFileToSwift(File localStationFile, int year)
 			throws Exception {
 		String containerName = properties
-				.getProperty(SebalPropertiesConstants.SWIFT_CONTAINER_NAME);
+				.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
 		String pseudoFolder = properties
-				.getProperty(SebalPropertiesConstants.SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX)
+				.getProperty(SapsPropertiesConstants.SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX)
 				+ File.separator + year;
 
 		swiftAPIClient.uploadFile(containerName, localStationFile, pseudoFolder);
