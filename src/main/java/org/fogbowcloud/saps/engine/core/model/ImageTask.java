@@ -8,8 +8,9 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ImageData implements Serializable {
+public class ImageTask implements Serializable {
 
+	private String taskId;
 	private String name;
 	private String downloadLink;
 	private ImageState state;
@@ -35,12 +36,12 @@ public class ImageData implements Serializable {
 	
 	public static final String NON_EXISTENT = "NE";
 
-	public ImageData(String name, String downloadLink, ImageState state,
-			String federationMember, int priority, String stationId,
-			String sebalVersion, String sebalTag, String crawlerVersion,
-			String fetcherVersion, String blowoutVersion, String fmaskVersion,
-			Timestamp creationTime, Timestamp updateTime, String status,
+	public ImageTask(String taskId, String name, String downloadLink, ImageState state,
+			String federationMember, int priority, String stationId, String sebalVersion,
+			String sebalTag, String crawlerVersion, String fetcherVersion, String blowoutVersion,
+			String fmaskVersion, Timestamp creationTime, Timestamp updateTime, String status,
 			String error, String collectionTierName) {
+		this.taskId = taskId;
 		this.name = name;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -58,6 +59,14 @@ public class ImageData implements Serializable {
 		this.status = status;
 		this.error = error;
 		this.collectionTierName = collectionTierName;
+	}
+
+	public String getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
 	}
 
 	public String getName() {
@@ -197,35 +206,32 @@ public class ImageData implements Serializable {
 	}
 
 	public String toString() {
-		return "[" + name + ", " + downloadLink + ", " + state.getValue() + ", "
-				+ federationMember + ", " + priority + ", " + stationId + ", "
-				+ sebalVersion + ", " + sebalTag + ", " + crawlerVersion + ", "
-				+ fetcherVersion + ", " + blowoutVersion + ", " + fmaskVersion
-				+ ", " + creationTime + ", " + updateTime + ", " + status
-				+ ", " + error + ", " + collectionTierName + "]";
+		return "[" + taskId + ", " + name + ", " + downloadLink + ", " + state.getValue() + ", "
+				+ federationMember + ", " + priority + ", " + stationId + ", " + sebalVersion
+				+ ", " + sebalTag + ", " + crawlerVersion + ", " + fetcherVersion + ", "
+				+ blowoutVersion + ", " + fmaskVersion + ", " + creationTime + ", " + updateTime
+				+ ", " + status + ", " + error + ", " + collectionTierName + "]";
 	}
 	
 	public String formatedToString() {
 
-		return "[ ImageName = " + name + " ]\n" + "[ DownloadLink = "
-				+ downloadLink + " ]\n" + "[ ImageState = " + state.getValue()
-				+ " ]\n" + "[ FederationMember = " + federationMember + " ]\n"
-				+ "[ Priority = " + priority + " ]\n" + "[ StationId = "
-				+ stationId + " ]\n" + "[ SebalVersion = " + sebalVersion
-				+ " ]\n" + "[ SebalTag = " + sebalTag + " ]\n"
-				+ "[ CrawlerVersion = " + crawlerVersion + " ]\n"
-				+ "[ FetcherVersion = " + fetcherVersion + " ]\n"
-				+ "[ BlowoutVersion = " + blowoutVersion + " ]\n"
-				+ "[ FmaskVersion = " + fmaskVersion + " ]\n"
-				+ "[ CreationTime = " + creationTime + " ]\n"
-				+ "[ UpdateTime = " + updateTime + " ]\n" + "[ Status = "
-				+ status + " ]\n" + "[ Error = " + error + " ]\n"
-				+ "[ CollectionTierImageName = " + collectionTierName + " ]";
+		return "[ TaskId = " + taskId + " ]\n" + "[ ImageName = " + name + " ]\n"
+				+ "[ DownloadLink = " + downloadLink + " ]\n" + "[ ImageState = "
+				+ state.getValue() + " ]\n" + "[ FederationMember = " + federationMember + " ]\n"
+				+ "[ Priority = " + priority + " ]\n" + "[ StationId = " + stationId + " ]\n"
+				+ "[ SebalVersion = " + sebalVersion + " ]\n" + "[ SebalTag = " + sebalTag + " ]\n"
+				+ "[ CrawlerVersion = " + crawlerVersion + " ]\n" + "[ FetcherVersion = "
+				+ fetcherVersion + " ]\n" + "[ BlowoutVersion = " + blowoutVersion + " ]\n"
+				+ "[ FmaskVersion = " + fmaskVersion + " ]\n" + "[ CreationTime = " + creationTime
+				+ " ]\n" + "[ UpdateTime = " + updateTime + " ]\n" + "[ Status = " + status
+				+ " ]\n" + "[ Error = " + error + " ]\n" + "[ CollectionTierImageName = "
+				+ collectionTierName + " ]";
 	}
 	
 	public JSONObject toJSON() throws JSONException {
 		JSONObject json = new JSONObject();
-		
+
+		json.put("taskId", taskId);
 		json.put("name", name);
 		json.put("downloadLink", downloadLink);
 		json.put("state", state.getValue());
@@ -243,7 +249,7 @@ public class ImageData implements Serializable {
 		json.put("status", status);
 		json.put("error", error);
 		json.put("collectionTierName", collectionTierName);
-		
+
 		return json;
 	}
 	
@@ -257,12 +263,11 @@ public class ImageData implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if (o instanceof ImageData) {
-			ImageData other = (ImageData) o;
-			return getName().equals(other.getName())
+		if (o instanceof ImageTask) {
+			ImageTask other = (ImageTask) o;
+			return getTaskId().equals(other.getTaskId()) && getName().equals(other.getName())
 					&& getDownloadLink().equals(other.getDownloadLink())
-					&& getState().equals(other.getState())
-					&& getPriority() == other.getPriority()
+					&& getState().equals(other.getState()) && getPriority() == other.getPriority()
 					&& getFederationMember().equals(other.getFederationMember())
 					&& getStationId().equals(other.getStationId())
 					&& getSebalVersion().equals(other.getSebalVersion())

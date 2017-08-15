@@ -18,10 +18,11 @@ public class InputDownloaderMain {
 		
 		try {
 			String crawlerIp = args[1];
-			String nfsPort = args[2];
-			String federationMember = args[3];
+			String nfsSshPort = args[2];
+			String nfsPort = args[3];
+			String federationMember = args[4];
 
-			InputDownloader crawler = new InputDownloader(properties, crawlerIp, nfsPort, federationMember);
+			InputDownloader crawler = new InputDownloader(properties, crawlerIp, nfsSshPort, nfsPort, federationMember);
 			crawler.exec();
 		} catch(NullPointerException e) {
 			LOGGER.error("Invalid args", e);

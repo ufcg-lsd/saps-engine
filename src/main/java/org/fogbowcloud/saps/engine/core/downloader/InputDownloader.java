@@ -17,8 +17,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.mapdb.DB;
@@ -28,13 +28,14 @@ public class InputDownloader {
 		
 	private String crawlerIp;
 	private String nfsPort;
+	private String nfsSshPort;
 	private String federationMember;
 	
 	private final Properties properties;
 
 	private File pendingImageDownloadFile;
 	protected DB pendingImageDownloadDB;
-	protected ConcurrentMap<String, ImageData> pendingImageDownloadMap;
+	protected ConcurrentMap<String, ImageTask> pendingImageDownloadMap;
 
 	private USGSNasaRepository usgsRepository;
 	private final ImageDataStore imageStore;	
@@ -48,8 +49,8 @@ public class InputDownloader {
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
 
 
-	public InputDownloader(Properties properties, String crawlerIP, String nfsPort, String federationMember)
-			throws SQLException {
+	public InputDownloader(Properties properties, String crawlerIP, String nfsSshPort,
+			String nfsPort, String federationMember) throws SQLException {
 		this(properties, new JDBCImageDataStore(properties), new USGSNasaRepository(properties),
 				crawlerIP, nfsPort, federationMember);
 		LOGGER.info("Creating crawler in federation " + federationMember);
@@ -67,6 +68,7 @@ public class InputDownloader {
 		}
 		
 		this.crawlerIp = crawlerIP;
+		this.nfsSshPort = nfsSshPort;
 		this.nfsPort = nfsPort;
 		
 		this.properties = properties;
@@ -190,7 +192,7 @@ public class InputDownloader {
 				imageStore.removeDeployConfig(federationMember);
 			}
 
-			imageStore.addDeployConfig(crawlerIp, nfsPort, federationMember);
+			imageStore.addDeployConfig(crawlerIp, nfsSshPort, nfsPort, federationMember);
 		} catch (SQLException e) {
 			final String ss = e.getSQLState();
 			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {
@@ -201,16 +203,16 @@ public class InputDownloader {
 	}
 
 	protected void cleanUnfinishedDownloadedData(Properties properties) throws IOException {
-		Collection<ImageData> data = pendingImageDownloadMap.values();
-		for (ImageData imageData : data) {
+		Collection<ImageTask> data = pendingImageDownloadMap.values();
+		for (ImageTask imageData : data) {
 			removeFromPendingAndUpdateState(imageData, properties);
 		}
 	}
 
 	private void cleanUnfinishedQueuedOutput(Properties properties) throws SQLException,
 			IOException {
-		List<ImageData> data = imageStore.getIn(ImageState.QUEUED);
-		for (ImageData imageData : data) {
+		List<ImageTask> data = imageStore.getIn(ImageState.QUEUED);
+		for (ImageTask imageData : data) {
 			deleteResultsFromDisk(imageData,
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 		}
@@ -218,9 +220,9 @@ public class InputDownloader {
 	
 	protected void reSubmitErrorImages(Properties properties) {
 		try {
-			List<ImageData> errorImages = imageStore.getIn(ImageState.ERROR);
+			List<ImageTask> errorImages = imageStore.getIn(ImageState.ERROR);
 
-			for (ImageData imageData : errorImages) {
+			for (ImageTask imageData : errorImages) {
 				treatAndSubmit(properties, imageData);
 			}
 		} catch (SQLException e) {
@@ -228,7 +230,7 @@ public class InputDownloader {
 		}
 	}
 
-	protected void treatAndSubmit(Properties properties, ImageData imageData) throws SQLException {
+	protected void treatAndSubmit(Properties properties, ImageTask imageData) throws SQLException {
 		if (imageData.getFederationMember()
 				.equals(SapsPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
 			imageData.setFederationMember(this.federationMember);
@@ -240,7 +242,7 @@ public class InputDownloader {
 		}
 	}
 
-	protected void reSubmitImage(Properties properties, ImageData imageData) throws SQLException {
+	protected void reSubmitImage(Properties properties, ImageTask imageData) throws SQLException {
 		try {
 			deleteImageFromDisk(imageData,
 					SapsPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "images"
@@ -253,13 +255,13 @@ public class InputDownloader {
 					+ " from disk");
 		}
 		
-		imageData.setImageError(ImageData.NON_EXISTENT);
-		imageData.setFederationMember(ImageData.NON_EXISTENT);
+		imageData.setImageError(ImageTask.NON_EXISTENT);
+		imageData.setFederationMember(ImageTask.NON_EXISTENT);
 		imageData.setState(ImageState.NOT_DOWNLOADED);
 		updateErrorImage(imageData);
 	}
 
-	protected boolean imageNeedsToBeDownloaded(Properties properties, ImageData imageData) {
+	protected boolean imageNeedsToBeDownloaded(Properties properties, ImageTask imageData) {
 		File imageDir = getImageDir(properties, imageData);
 		
 		if(isThereImageInputs(imageDir)) {
@@ -269,7 +271,7 @@ public class InputDownloader {
 		return true;
 	}
 
-	protected File getImageDir(Properties properties, ImageData imageData) {
+	protected File getImageDir(Properties properties, ImageTask imageData) {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 		String imageDirPath = exportPath + File.separator + "images" + File.separator
 				+ imageData.getCollectionTierName();
@@ -289,7 +291,7 @@ public class InputDownloader {
 		return false;
 	}
 	
-	private void updateErrorImage(ImageData imageData) throws SQLException {		
+	private void updateErrorImage(ImageTask imageData) throws SQLException {		
 		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 		imageStore.updateImage(imageData);
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
@@ -298,7 +300,7 @@ public class InputDownloader {
 
 	protected void download(double maxImagesToDownload) throws SQLException, IOException {
 		LOGGER.debug("maxImagesToDownload=" + (int) maxImagesToDownload);
-		List<ImageData> imageDataList = new ArrayList<ImageData>();
+		List<ImageTask> imageDataList = new ArrayList<ImageTask>();
 
 		try {
 			// This updates images in NOT_DOWNLOADED state to SELECTED
@@ -311,7 +313,7 @@ public class InputDownloader {
 			LOGGER.error("Error while accessing not downloaded images in DB", e);
 		}
 
-		for (ImageData imageData : imageDataList) {
+		for (ImageTask imageData : imageDataList) {
 			if(imageData.getFederationMember().equals(federationMember)) {
 				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
 				
@@ -331,7 +333,7 @@ public class InputDownloader {
 
 	}
 
-	private void addStateStamp(ImageData imageData) {
+	private void addStateStamp(ImageTask imageData) {
 		try {
 			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
 					imageData.getUpdateTime());
@@ -367,7 +369,7 @@ public class InputDownloader {
 		return new File(volumeDirPath);
 	}
 
-	protected void downloadImage(final ImageData imageData) throws SQLException, IOException {
+	protected void downloadImage(final ImageTask imageData) throws SQLException, IOException {
 		try {
 			String imageDownloadLink = usgsRepository.getImageDownloadLink(imageData.getName());
 			imageData.setDownloadLink(imageDownloadLink);
@@ -395,7 +397,7 @@ public class InputDownloader {
 		}
 	}
 
-	private boolean checkIfImageFileExists(ImageData imageData) {
+	private boolean checkIfImageFileExists(ImageTask imageData) {
 		String imageInputFilePath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH)
 				+ File.separator + "images" + File.separator + imageData.getCollectionTierName()
 				+ File.separator + imageData.getCollectionTierName() + ".tar.gz";
@@ -408,7 +410,7 @@ public class InputDownloader {
 		return false;
 	}
 
-	private void updateToDownloadedState(final ImageData imageData) throws IOException {
+	private void updateToDownloadedState(final ImageTask imageData) throws IOException {
 		imageData.setState(ImageState.DOWNLOADED);
 		
 		try {
@@ -423,7 +425,7 @@ public class InputDownloader {
 		addStateStamp(imageData);
 	}
 
-	private void updateToDownloadingState(final ImageData imageData) throws IOException {
+	private void updateToDownloadingState(final ImageTask imageData) throws IOException {
 		imageData.setState(ImageState.DOWNLOADING);
 		
 		try {
@@ -453,7 +455,7 @@ public class InputDownloader {
 		return fmaskVersion;
 	}
 
-	private void removeFromPendingAndUpdateState(final ImageData imageData, Properties properties)
+	private void removeFromPendingAndUpdateState(final ImageTask imageData, Properties properties)
 			throws IOException {
 		if (imageData.getFederationMember().equals(federationMember)) {
 
@@ -490,7 +492,7 @@ public class InputDownloader {
 		}
 	}
 
-	protected void deleteImageFromDisk(final ImageData imageData, String exportPath)
+	protected void deleteImageFromDisk(final ImageTask imageData, String exportPath)
 			throws IOException {
 		String imageDirPath = exportPath + File.separator + "images" + File.separator
 				+ imageData.getCollectionTierName();
@@ -514,12 +516,12 @@ public class InputDownloader {
 
 	protected void deleteFetchedResultsFromVolume(Properties properties) throws IOException,
 			InterruptedException, SQLException {
-		List<ImageData> setOfImageData = imageStore.getAllImages();
+		List<ImageTask> setOfImageData = imageStore.getAllImages();
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 		String resultsPath = exportPath + File.separator + "results";
 
 		if (!exportPath.isEmpty() && exportPath != null) {
-			for (ImageData imageData : setOfImageData) {
+			for (ImageTask imageData : setOfImageData) {
 				String imageResultsPath = resultsPath + File.separator
 						+ imageData.getCollectionTierName();
 				File imageResultsDir = new File(imageResultsPath);
@@ -547,7 +549,7 @@ public class InputDownloader {
 		}
 	}
 
-	private void deleteInputsFromDisk(ImageData imageData, String exportPath) throws IOException {
+	private void deleteInputsFromDisk(ImageTask imageData, String exportPath) throws IOException {
 		String inputsDirPath = exportPath + File.separator + "images" + File.separator
 				+ imageData.getCollectionTierName();
 		File inputsDir = new File(inputsDirPath);
@@ -560,7 +562,7 @@ public class InputDownloader {
 		FileUtils.deleteDirectory(inputsDir);
 	}
 
-	private void deleteResultsFromDisk(ImageData imageData, String exportPath) throws IOException {
+	private void deleteResultsFromDisk(ImageTask imageData, String exportPath) throws IOException {
 		String resultsDirPath = exportPath + File.separator + "results" + File.separator
 				+ imageData.getCollectionTierName();
 		File resultsDir = new File(resultsDirPath);
@@ -575,13 +577,13 @@ public class InputDownloader {
 
 	protected void purgeImagesFromVolume(Properties properties) throws IOException,
 			InterruptedException, SQLException {
-		List<ImageData> imagesToPurge = imageStore.getAllImages();
+		List<ImageTask> imagesToPurge = imageStore.getAllImages();
 
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		if (!exportPath.isEmpty() && exportPath != null) {
-			for (ImageData imageData : imagesToPurge) {
-				if (imageData.getImageStatus().equals(ImageData.PURGED)
+			for (ImageTask imageData : imagesToPurge) {
+				if (imageData.getImageStatus().equals(ImageTask.PURGED)
 						&& imageData.getFederationMember().equals(federationMember)) {
 					LOGGER.debug("Purging image " + imageData);
 

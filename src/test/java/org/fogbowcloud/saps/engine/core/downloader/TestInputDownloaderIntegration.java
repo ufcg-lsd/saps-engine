@@ -1,5 +1,11 @@
 package org.fogbowcloud.saps.engine.core.downloader;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -11,31 +17,20 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
-import org.fogbowcloud.saps.engine.core.FMask;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.downloader.InputDownloader;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-
 public class TestInputDownloaderIntegration {
-	
+
 	Properties properties;
-	
+
 	@Before
 	public void setUp() {
 		properties = mock(Properties.class);
@@ -53,7 +48,7 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testReSubmitImages() throws SQLException {
-		
+
 		// set up
 		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		ImageDataStore imageStore = mock(ImageDataStore.class);
@@ -62,39 +57,32 @@ public class TestInputDownloaderIntegration {
 		String oldDownloadLinkOne = "old-download-link-one";
 		String oldDownloadLinkTwo = "old-download-link-two";
 		String oldDownloadLinkThree = "old-download-link-three";
-		
+
 		String newDownloadLinkTwo = "new-download-link-two";
-		
+
 		Date date = new Date(10000854);
 
-		ImageData errorImageOne = new ImageData("error-image-one",
-				oldDownloadLinkOne, ImageState.ERROR,
-				SapsPropertiesConstants.LSD_FEDERATION_MEMBER, 0,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), ImageData.NON_EXISTENT,
-				"fake-error-msg-one", "None");
-		ImageData errorImageTwo = new ImageData("error-image-two",
-				oldDownloadLinkTwo, ImageState.ERROR,
-				SapsPropertiesConstants.AZURE_FEDERATION_MEMBER, 0,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), ImageData.NON_EXISTENT,
-				"fake-error-msg-two", "None");
-		ImageData errorImageThree = new ImageData("error-image-three",
+		ImageTask errorImageOne = new ImageTask("task-id-1", "error-image-one", oldDownloadLinkOne,
+				ImageState.ERROR, SapsPropertiesConstants.LSD_FEDERATION_MEMBER, 0,
+				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT, new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), ImageTask.NON_EXISTENT, "fake-error-msg-one", "None");
+		ImageTask errorImageTwo = new ImageTask("task-id-2", "error-image-two", oldDownloadLinkTwo,
+				ImageState.ERROR, SapsPropertiesConstants.AZURE_FEDERATION_MEMBER, 0,
+				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT, new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), ImageTask.NON_EXISTENT, "fake-error-msg-two", "None");
+		ImageTask errorImageThree = new ImageTask("task-id-3", "error-image-three",
 				oldDownloadLinkThree, ImageState.ERROR, "rnp-federation", 0,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, ImageData.NON_EXISTENT,
-				ImageData.NON_EXISTENT, new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), ImageData.NON_EXISTENT,
-				"fake-error-msg-three", "None");
-		
-		List<ImageData> errorImages = new ArrayList<ImageData>();
+				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT, new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), ImageTask.NON_EXISTENT, "fake-error-msg-three",
+				"None");
+
+		List<ImageTask> errorImages = new ArrayList<ImageTask>();
 		errorImages.add(errorImageOne);
 		errorImages.add(errorImageTwo);
 		errorImages.add(errorImageThree);
@@ -102,43 +90,46 @@ public class TestInputDownloaderIntegration {
 		File imageOneDir = mock(File.class);
 		File imageTwoDir = mock(File.class);
 
-		InputDownloader crawler = spy(new InputDownloader(properties, imageStore,
-				usgsRepository, crawlerIp, nfsPort,
-				SapsPropertiesConstants.LSD_FEDERATION_MEMBER));
-		
+		InputDownloader crawler = spy(new InputDownloader(properties, imageStore, usgsRepository,
+				crawlerIp, nfsPort, SapsPropertiesConstants.LSD_FEDERATION_MEMBER));
+
 		doReturn(errorImages).when(imageStore).getIn(ImageState.ERROR);
-		
+
 		doReturn(imageOneDir).when(crawler).getImageDir(properties, errorImageOne);
 		doReturn(true).when(crawler).isThereImageInputs(imageOneDir);
 		doReturn(errorImageOne).when(imageStore).getImage(errorImageOne.getName());
 		doNothing().when(imageStore).updateImage(errorImageOne);
-		doNothing().when(imageStore).addStateStamp(errorImageOne.getName(), errorImageOne.getState(), errorImageOne.getUpdateTime());
+		doNothing().when(imageStore).addStateStamp(errorImageOne.getName(),
+				errorImageOne.getState(), errorImageOne.getUpdateTime());
 
 		doReturn(imageTwoDir).when(crawler).getImageDir(properties, errorImageTwo);
 		doReturn(false).when(crawler).isThereImageInputs(imageTwoDir);
-		doReturn(newDownloadLinkTwo).when(usgsRepository).getImageDownloadLink(errorImageTwo.getName());		
+		doReturn(newDownloadLinkTwo).when(usgsRepository).getImageDownloadLink(
+				errorImageTwo.getName());
 		doReturn(errorImageTwo).when(imageStore).getImage(errorImageTwo.getName());
 		doNothing().when(imageStore).updateImage(errorImageTwo);
-		doNothing().when(imageStore).addStateStamp(errorImageTwo.getName(), errorImageTwo.getState(), errorImageTwo.getUpdateTime());
-		
-		doReturn("10").when(properties).getProperty(SapsPropertiesConstants.MAX_USGS_DOWNLOAD_LINK_REQUESTS);
-		
+		doNothing().when(imageStore).addStateStamp(errorImageTwo.getName(),
+				errorImageTwo.getState(), errorImageTwo.getUpdateTime());
+
+		doReturn("10").when(properties).getProperty(
+				SapsPropertiesConstants.MAX_USGS_DOWNLOAD_LINK_REQUESTS);
+
 		// exercise
 		crawler.reSubmitErrorImages(properties);
-		
+
 		// expect
 		Assert.assertEquals(ImageState.DOWNLOADED, errorImageOne.getState());
 		Assert.assertEquals(ImageState.NOT_DOWNLOADED, errorImageTwo.getState());
 		Assert.assertEquals(ImageState.ERROR, errorImageThree.getState());
-		
+
 		Assert.assertEquals(oldDownloadLinkOne, errorImageOne.getDownloadLink());
 		Assert.assertNotEquals(oldDownloadLinkTwo, errorImageTwo.getDownloadLink());
 		Assert.assertEquals(oldDownloadLinkThree, errorImageThree.getDownloadLink());
 	}
 
 	@Test
-	public void testStepOverImageWhenDownloadFails() throws SQLException,
-			IOException, InterruptedException {
+	public void testStepOverImageWhenDownloadFails() throws SQLException, IOException,
+			InterruptedException {
 
 		// 1. we have 2 NOT_DOWNLOADED images, pendingDB is empty
 		// 2. we proceed to download them
@@ -159,21 +150,19 @@ public class TestInputDownloaderIntegration {
 
 		Date date = new Date(10000854);
 
-		List<ImageData> imageList = new ArrayList<ImageData>();
-		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "", "None");
-		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "", "None");
+		List<ImageTask> imageList = new ArrayList<ImageTask>();
+		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageState.NOT_DOWNLOADED,
+				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
+						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
+		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageState.NOT_DOWNLOADED,
+				federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
+						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 
 		imageList.add(image1);
 		imageList.add(image2);
 
-		doReturn(imageList).when(imageStore).getImagesToDownload(
-				federationMember, maxImagesToDownload);
+		doReturn(imageList).when(imageStore).getImagesToDownload(federationMember,
+				maxImagesToDownload);
 		doReturn(image1).when(imageStore).getImage(image1.getName());
 		doReturn(image2).when(imageStore).getImage(image2.getName());
 		doReturn("link-1").when(usgsRepository).getImageDownloadLink(image1.getName());
@@ -197,8 +186,7 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testCrawlerErrorWhileGetImagesNotDownloaded()
-			throws SQLException, IOException {
+	public void testCrawlerErrorWhileGetImagesNotDownloaded() throws SQLException, IOException {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -210,15 +198,13 @@ public class TestInputDownloaderIntegration {
 
 		Date date = new Date(10000854);
 
-		List<ImageData> imageList = new ArrayList<ImageData>();
-		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.NOT_DOWNLOADED, federationMember, 0, "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "", "None");
-		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.NOT_DOWNLOADED, federationMember, 1, "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "", "None");
+		List<ImageTask> imageList = new ArrayList<ImageTask>();
+		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageState.NOT_DOWNLOADED,
+				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
+						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
+		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageState.NOT_DOWNLOADED,
+				federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
+						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -226,8 +212,8 @@ public class TestInputDownloaderIntegration {
 		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
 				crawlerIP, nfsPort, federationMember);
 
-		doThrow(new SQLException()).when(imageStore).getImagesToDownload(
-				federationMember, maxImagesToDownload);
+		doThrow(new SQLException()).when(imageStore).getImagesToDownload(federationMember,
+				maxImagesToDownload);
 		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
 
 		// exercise
@@ -240,8 +226,7 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testPurgeImagesFromVolume() throws SQLException, IOException,
-			InterruptedException {
+	public void testPurgeImagesFromVolume() throws SQLException, IOException, InterruptedException {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -253,16 +238,14 @@ public class TestInputDownloaderIntegration {
 
 		Date date = new Date(10000854);
 
-		List<ImageData> imageList = new ArrayList<ImageData>();
-		ImageData image1 = new ImageData("image1", "link1",
-				ImageState.FINISHED, federationMember, 0, "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "", "None");
-		image1.setImageStatus(ImageData.PURGED);
-		ImageData image2 = new ImageData("image2", "link2",
-				ImageState.FINISHED, federationMember, 1, "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "", "None");
+		List<ImageTask> imageList = new ArrayList<ImageTask>();
+		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageState.FINISHED,
+				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
+						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
+		image1.setImageStatus(ImageTask.PURGED);
+		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageState.FINISHED,
+				federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
+						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -280,8 +263,7 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testFederationMemberCheck() throws SQLException, IOException,
-			InterruptedException {
+	public void testFederationMemberCheck() throws SQLException, IOException, InterruptedException {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -294,15 +276,13 @@ public class TestInputDownloaderIntegration {
 
 		Date date = new Date(10000854);
 
-		List<ImageData> imageList = new ArrayList<ImageData>();
-		ImageData image1 = new ImageData("image1", "link1", ImageState.FETCHED,
-				federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"available", "", "None");
-		ImageData image2 = new ImageData("image2", "link2", ImageState.FETCHED,
-				federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"available", "", "None");
+		List<ImageTask> imageList = new ArrayList<ImageTask>();
+		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageState.FETCHED,
+				federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
+						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
+		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageState.FETCHED,
+				federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
+						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 
 		imageList.add(image1);
 		imageList.add(image2);
@@ -319,13 +299,11 @@ public class TestInputDownloaderIntegration {
 		crawler.deleteFetchedResultsFromVolume(properties);
 
 		// expect
-		Assert.assertNotEquals(image1.getFederationMember(),
-				image2.getFederationMember());
+		Assert.assertNotEquals(image1.getFederationMember(), image2.getFederationMember());
 	}
 
 	@Test
-	public void testGetCrawlerVersion() throws SQLException, IOException,
-			InterruptedException {
+	public void testGetCrawlerVersion() throws SQLException, IOException, InterruptedException {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -335,8 +313,7 @@ public class TestInputDownloaderIntegration {
 		String federationMember = "fake-fed-member";
 
 		PrintWriter writer = new PrintWriter(
-				"sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a",
-				"UTF-8");
+				"sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a", "UTF-8");
 		writer.println("0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
 		writer.close();
 
@@ -347,11 +324,9 @@ public class TestInputDownloaderIntegration {
 		String versionReturn = crawler.getCrawlerVersion();
 
 		// expect
-		Assert.assertEquals("0c26f092e976389c593953a1ad8ddaadb5c2ab2a",
-				versionReturn);
+		Assert.assertEquals("0c26f092e976389c593953a1ad8ddaadb5c2ab2a", versionReturn);
 
-		File file = new File(
-				"sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
+		File file = new File("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
 		file.delete();
 	}
 }

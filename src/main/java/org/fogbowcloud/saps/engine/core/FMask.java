@@ -9,14 +9,14 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
 
 public class FMask {
 	
 	public static final Logger LOGGER = Logger.getLogger(FMask.class);
 	
-	public int runFmask(final ImageData imageData, String fmaskScriptPath, String fmaskToolsPath, String sebalExportPath) throws IOException,
+	public int runFmask(final ImageTask imageData, String fmaskScriptPath, String fmaskToolsPath, String sebalExportPath) throws IOException,
 			FileNotFoundException, InterruptedException {
 		
 		LOGGER.debug("fmaskScriptPath " + fmaskScriptPath + " fmaskToolsPath " + fmaskToolsPath + " sebalExportPath " + sebalExportPath);
@@ -59,7 +59,7 @@ public class FMask {
 		return p.exitValue();
 	}
 
-	private String replaceVariables(String command, ImageData imageData, String fmaskToolsPath, String sebalExportPath) {
+	private String replaceVariables(String command, ImageTask imageData, String fmaskToolsPath, String sebalExportPath) {
 		command = command.replaceAll(Pattern.quote("${IMAGE_NAME}"),
 				imageData.getName());
 		command = command.replaceAll(Pattern.quote("${IMAGES_MOUNT_POINT}"),

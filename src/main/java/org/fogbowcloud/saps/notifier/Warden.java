@@ -1,6 +1,6 @@
 package org.fogbowcloud.saps.notifier;
 
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 
 public interface Warden {
 	
@@ -10,6 +10,6 @@ public interface Warden {
 	 * @param jobId
 	 * @param context
 	 */
-	boolean doNotify(String email, String jobId, ImageData context);
+	boolean doNotify(String email, String jobId, ImageTask context);
 	
 }

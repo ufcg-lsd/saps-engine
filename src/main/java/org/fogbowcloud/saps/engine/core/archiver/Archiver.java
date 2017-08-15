@@ -13,7 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
@@ -27,7 +27,7 @@ public class Archiver {
 	private final SwiftAPIClient swiftAPIClient;
 	private File pendingImageFetchFile;
 	private DB pendingImageFetchDB;
-	private ConcurrentMap<String, ImageData> pendingImageFetchMap;
+	private ConcurrentMap<String, ImageTask> pendingImageFetchMap;
 	private FTPIntegrationImpl ftpImpl;
 	private ArchiverHelper fetcherHelper;
 	private String fetcherVersion;
@@ -89,9 +89,9 @@ public class Archiver {
 			
 			while (true) {
 				cleanUnfinishedFetchedData(properties);
-				List<ImageData> imagesToFetch = imagesToFetch();
-				for (ImageData imageData : imagesToFetch) {
-					if (!imageData.getImageStatus().equals(ImageData.PURGED)) {
+				List<ImageTask> imagesToFetch = imagesToFetch();
+				for (ImageTask imageData : imagesToFetch) {
+					if (!imageData.getImageStatus().equals(ImageTask.PURGED)) {
 						fetchAndUpdateImage(imageData);
 					}
 				}
@@ -122,8 +122,8 @@ public class Archiver {
 
 	protected void cleanUnfinishedFetchedData(Properties properties) throws Exception {
 		LOGGER.info("Starting garbage collector");
-		Collection<ImageData> data = pendingImageFetchMap.values();
-		for (ImageData imageData : data) {
+		Collection<ImageTask> data = pendingImageFetchMap.values();
+		for (ImageTask imageData : data) {
 			rollBackFetch(imageData);
 			deleteInputsFromDisk(imageData, properties);
 			deleteResultsFromDisk(imageData, properties);
@@ -133,13 +133,13 @@ public class Archiver {
 		LOGGER.info("Garbage collect finished");
 	}
 
-	private void deletePendingResultsFromSwift(ImageData imageData, Properties properties)
+	private void deletePendingResultsFromSwift(ImageTask imageData, Properties properties)
 			throws Exception {
 		LOGGER.debug("Pending image" + imageData + " still have files in swift");
 		deleteResultFilesFromSwift(imageData, properties);
 	}
 	
-	protected void deleteInputsFromDisk(final ImageData imageData, Properties properties)
+	protected void deleteInputsFromDisk(final ImageTask imageData, Properties properties)
 			throws IOException {
 		String exportPath = properties
 				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
@@ -154,7 +154,7 @@ public class Archiver {
 		}
 	}
 
-	protected void deleteResultsFromDisk(final ImageData imageData, Properties properties)
+	protected void deleteResultsFromDisk(final ImageTask imageData, Properties properties)
 			throws IOException {
 		String exportPath = properties
 				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
@@ -170,7 +170,7 @@ public class Archiver {
 
 	}
 
-	protected List<ImageData> imagesToFetch() {
+	protected List<ImageTask> imagesToFetch() {
 		try {
 			return imageStore.getIn(ImageState.FINISHED);
 		} catch (SQLException e) {
@@ -179,7 +179,7 @@ public class Archiver {
 		return Collections.EMPTY_LIST;
 	}
 
-	protected void fetchAndUpdateImage(ImageData imageData) throws IOException,
+	protected void fetchAndUpdateImage(ImageTask imageData) throws IOException,
 			InterruptedException {
 		try {
 			if(prepareFetch(imageData)) {				
@@ -202,7 +202,7 @@ public class Archiver {
 		}
 	}
 
-	protected boolean prepareFetch(ImageData imageData) throws SQLException, IOException {
+	protected boolean prepareFetch(ImageTask imageData) throws SQLException, IOException {
 		LOGGER.debug("Preparing image " + imageData.getCollectionTierName() + " to fetch");
 		if (imageStore.lockImage(imageData.getName())) {			
 			imageData.setState(ImageState.FETCHING);
@@ -234,7 +234,7 @@ public class Archiver {
 		return true;
 	}
 	
-	protected void fetch(final ImageData imageData) throws Exception {
+	protected void fetch(final ImageTask imageData) throws Exception {
 		ftpServerIP = imageStore.getNFSServerIP(imageData.getFederationMember());
 
 		LOGGER.debug("Federation member is " + imageData.getFederationMember());
@@ -250,7 +250,7 @@ public class Archiver {
 		}
 	}
 
-	protected void finishFetch(ImageData imageData) throws IOException, SQLException {
+	protected void finishFetch(ImageTask imageData) throws IOException, SQLException {
 		LOGGER.debug("Finishing fetch for image " + imageData);
 		imageData.setState(ImageState.FETCHED);
 
@@ -289,7 +289,7 @@ public class Archiver {
 		LOGGER.debug("Image " + imageData.getCollectionTierName() + " fetched");
 	}
 
-	protected void rollBackFetch(ImageData imageData) {
+	protected void rollBackFetch(ImageTask imageData) {
 		LOGGER.debug("Rolling back Fetcher for image " + imageData);
 		fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB,
 				pendingImageFetchMap);
@@ -313,7 +313,7 @@ public class Archiver {
 		}
 	}
 	
-	protected int fetchInputs(final ImageData imageData) throws Exception {
+	protected int fetchInputs(final ImageTask imageData) throws Exception {
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
 		
 		int i;
@@ -362,7 +362,7 @@ public class Archiver {
 		return 1;
 	}
 
-	protected void fetchOutputs(final ImageData imageData) throws Exception, IOException,
+	protected void fetchOutputs(final ImageTask imageData) throws Exception, IOException,
 			SQLException {
 		// FIXME: doc-it (we want to know the max tries logic)
 		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
@@ -420,7 +420,7 @@ public class Archiver {
 		}
 	}
 
-	protected boolean uploadInputFilesToSwift(ImageData imageData, File localImageInputFilesDir)
+	protected boolean uploadInputFilesToSwift(ImageTask imageData, File localImageInputFilesDir)
 			throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);				
 		String pseudoFolder = getInputPseudoFolder(localImageInputFilesDir);
@@ -455,7 +455,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean uploadOutputFilesToSwift(ImageData imageData, File localImageOutputFilesDir)
+	protected boolean uploadOutputFilesToSwift(ImageTask imageData, File localImageOutputFilesDir)
 			throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);				
 		String pseudoFolder = getOutputPseudoFolder(localImageOutputFilesDir);		
@@ -490,7 +490,7 @@ public class Archiver {
 		return true;
 	}
 	
-	protected boolean deletePendingInputFilesFromSwift(ImageData imageData, Properties properties)
+	protected boolean deletePendingInputFilesFromSwift(ImageTask imageData, Properties properties)
 			throws Exception {
 		LOGGER.debug("Deleting " + imageData + " input files from swift");
 		String containerName = getContainerName();
@@ -517,7 +517,7 @@ public class Archiver {
 		return true;
 	}
 	
-	protected boolean deleteResultFilesFromSwift(ImageData imageData, Properties properties)
+	protected boolean deleteResultFilesFromSwift(ImageTask imageData, Properties properties)
 			throws Exception {
 		LOGGER.debug("Deleting " + imageData + " result files from swift");
 		String containerName = getContainerName();

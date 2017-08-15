@@ -30,7 +30,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -44,7 +44,7 @@ public class DefaultImageRepository implements INPERepository {
 		this.properties = properties;
 	}
 
-	public void downloadImage(final ImageData imageData) throws IOException {
+	public void downloadImage(final ImageTask imageData) throws IOException {
 
 		HttpClient httpClient = initClient();
 		HttpGet homeGet = new HttpGet(imageData.getDownloadLink());

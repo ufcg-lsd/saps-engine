@@ -21,9 +21,9 @@ import org.fogbowcloud.blowout.core.util.ManagerTimer;
 import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.core.model.SapsTasks;
+import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.monitor.SapsTaskMonitor;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
@@ -118,8 +118,8 @@ public class SapsController extends BlowoutController {
 	}
 
 	private static void resetImagesRunningToQueued() throws SQLException {
-		List<ImageData> imagesRunning = imageStore.getIn(ImageState.RUNNING);
-		for (ImageData imageData : imagesRunning) {
+		List<ImageTask> imagesRunning = imageStore.getIn(ImageState.RUNNING);
+		for (ImageTask imageData : imagesRunning) {
 			imageData.setState(ImageState.QUEUED);
 			imageStore.updateImage(imageData);
 		}
@@ -129,9 +129,9 @@ public class SapsController extends BlowoutController {
 			ImageState imageState) throws InterruptedException, SapsException {
 
 		try {
-			List<ImageData> imagesToProcess = imageStore.getIn(imageState,
+			List<ImageTask> imagesToProcess = imageStore.getIn(imageState,
 					ImageDataStore.UNLIMITED);
-			for (ImageData imageData : imagesToProcess) {
+			for (ImageTask imageData : imagesToProcess) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
 				LOGGER.debug("Adding " + imageState + " task for image " + imageData.getName());
@@ -156,7 +156,7 @@ public class SapsController extends BlowoutController {
 
 					LOGGER.debug("Creating Sebal task " + taskImpl.getId());
 
-					taskImpl = SapsTasks.createSebalTask(taskImpl, properties,
+					taskImpl = SapsTask.createSebalTask(taskImpl, properties,
 							imageData.getName(), imageData.getCollectionTierName(),
 							specWithFederation, imageData.getFederationMember(), nfsServerIP,
 							nfsServerPort, imageData.getSebalVersion(), imageData.getSebalTag());
@@ -189,7 +189,7 @@ public class SapsController extends BlowoutController {
 		getBlowoutPool().putTask(taskImpl);
 	}
 	
-	private Specification generateModifiedSpec(ImageData imageData, Specification sebalSpec) {
+	private Specification generateModifiedSpec(ImageTask imageData, Specification sebalSpec) {
 		Specification specWithFederation = new Specification(sebalSpec.getImage(),
 				sebalSpec.getUsername(), sebalSpec.getPublicKey(),
 				sebalSpec.getPrivateKeyFilePath(), sebalSpec.getUserDataFile(),

@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.repository.DefaultImageRepository;
@@ -76,18 +77,18 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 	
 	@Override
-	public void addUserInNotifyDB(String jobId, String imageName, String userEmail) throws SQLException {
+	public void addUserInNotifyDB(String submissionId, String imageName, String userEmail) throws SQLException {
 		try {
-			imageStore.addUserNotify(jobId, imageName, userEmail);
+			imageStore.addUserNotify(submissionId, imageName, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while adding image " + imageName + " user " + userEmail + " in notify DB", e);
 		}
 	}
 	
 	@Override
-	public void removeUserNotify(String jobId, String imageName, String userEmail) throws SQLException {
+	public void removeUserNotify(String submissionId, String imageName, String userEmail) throws SQLException {
 		try {
-			imageStore.removeUserNotify(jobId, imageName, userEmail);
+			imageStore.removeUserNotify(submissionId, imageName, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while removing image " + imageName + " user " + userEmail
 					+ " from notify DB", e);
@@ -107,10 +108,10 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
     @Override
     public void setImagesToPurge(String day, boolean force) throws SQLException, ParseException {
-		List<ImageData> imagesToPurge = force ? imageStore.getAllImages() : imageStore
+		List<ImageTask> imagesToPurge = force ? imageStore.getAllImages() : imageStore
 				.getIn(ImageState.FETCHED);
 
-        for (ImageData imageData : imagesToPurge) {
+        for (ImageTask imageData : imagesToPurge) {
             long date = 0;
             try {
                 date = parseStringToDate(day).getTime();
@@ -118,7 +119,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
             	LOGGER.error("Error while parsing string to date", e);
             }
             if (isBeforeDay(date, imageData.getUpdateTime())) {
-                imageData.setImageStatus(ImageData.PURGED);
+                imageData.setImageStatus(ImageTask.PURGED);
                 
                 imageStore.updateImage(imageData);
 				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
@@ -139,7 +140,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
     @Override
     public void listImagesInDB() throws SQLException, ParseException {
-        List<ImageData> allImageData = imageStore.getAllImages();
+        List<ImageTask> allImageData = imageStore.getAllImages();
         for (int i = 0; i < allImageData.size(); i++) {
             System.out.println(allImageData.get(i).toString());
         }
@@ -147,7 +148,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
     @Override
     public void listCorruptedImages() throws ParseException {
-        List<ImageData> allImageData;
+        List<ImageTask> allImageData;
         try {
             allImageData = imageStore.getIn(ImageState.CORRUPTED);
             for (int i = 0; i < allImageData.size(); i++) {
@@ -156,20 +157,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         } catch (SQLException e) {
             LOGGER.error("Error while gettin images in " + ImageState.CORRUPTED + " state from DB", e);
         }
-    }
-    
-    // TODO: test
-    @Override
-    public void setImageForPhase2(String imageName, String sebalVersion, String sebalTag) throws SQLException {
-		LOGGER.debug("Updating image " + imageName + " with sebalVersion " + sebalVersion
-				+ " and tag " + sebalTag + " to execute phase 2");
-		
-		try {
-			getImageStore().updateImageForPhase2(imageName, sebalVersion, sebalTag);
-		} catch(SQLException e) {
-			LOGGER.error("Error while updating image " + imageName + " with sebalVersion "
-					+ sebalVersion + " and tag " + sebalTag + " to execute phase 2");
-		}
     }
 
     @Override
@@ -213,8 +200,8 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 					String displayId = availableImagesJSON.getJSONObject(i).getString(
 							SapsPropertiesConstants.DISPLAY_ID_JSON_KEY);
 					
-					getImageStore().addImage(entityId, "None", priority, sebalVersion, sebalTag,
-							displayId);
+					getImageStore().addImageTask(String.valueOf(UUID.randomUUID()), entityId,
+							"None", priority, sebalVersion, sebalTag, displayId);
 					getImageStore().addStateStamp(entityId, ImageState.NOT_DOWNLOADED,
 							getImageStore().getImage(entityId).getUpdateTime());
 					obtainedImages.add(displayId);
@@ -227,7 +214,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		}
 	}
 
-    public List<ImageData> getImagesInDB() throws SQLException, ParseException {    	
+    public List<ImageTask> getImagesInDB() throws SQLException, ParseException {    	
     	return imageStore.getAllImages();        
     }
     
@@ -237,10 +224,10 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
     	return wards;    	
     }
     
-    public ImageData getImageInDB(String imageName) throws SQLException {
-    	List<ImageData> allImages = imageStore.getAllImages();
+    public ImageTask getImageInDB(String imageName) throws SQLException {
+    	List<ImageTask> allImages = imageStore.getAllImages();
     	
-    	for(ImageData imageData : allImages) {
+    	for(ImageTask imageData : allImages) {
     		if(imageData.getName().equals(imageName)) {
     			return imageData;
     		}

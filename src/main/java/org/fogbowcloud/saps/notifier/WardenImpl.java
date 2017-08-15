@@ -14,7 +14,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 
 public class WardenImpl implements Warden {
 
@@ -54,7 +54,7 @@ public class WardenImpl implements Warden {
 		while (true) {
 			Collection<Ward> notified = new LinkedList<Ward>();
 			for (Ward ward : getPending()) {
-				ImageData imageData = getImageData(ward.getImageName());
+				ImageTask imageData = getImageData(ward.getImageName());
 				if(imageData == null) {
 					LOGGER.debug("Image " +  ward.getImageName() + " does not exist in main database anymore");
 					removeNonExistentWard(ward);
@@ -84,7 +84,7 @@ public class WardenImpl implements Warden {
 	}
 
 	@Override
-	public boolean doNotify(String email, String jobId, ImageData context) {
+	public boolean doNotify(String email, String jobId, ImageTask context) {
 
 		String subject = "IMAGE " + context.getName() + " WITH JOB_ID " + jobId
 				+ " FETCHED";
@@ -131,7 +131,7 @@ public class WardenImpl implements Warden {
 		}
 	}
 
-	protected ImageData getImageData(String imageName) {
+	protected ImageTask getImageData(String imageName) {
 
 		try {
 			return dbUtilsImpl.getImageInDB(imageName);
@@ -155,7 +155,7 @@ public class WardenImpl implements Warden {
 		return wards;
 	}
 
-	protected boolean reached(Ward ward, ImageData imageData) {
+	protected boolean reached(Ward ward, ImageTask imageData) {
 
 		return (imageData.getState().ordinal() == ward.getTargetState()
 				.ordinal());

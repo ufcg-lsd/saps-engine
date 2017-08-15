@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.Validate;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -155,7 +155,7 @@ public class USGSNasaRepository implements INPERepository {
     }
 
     @Override
-    public void downloadImage(ImageData imageData) throws IOException {
+    public void downloadImage(ImageTask imageData) throws IOException {
         //create target directory to store image
         String imageDirPath = imageDirPath(imageData);
 
@@ -178,15 +178,15 @@ public class USGSNasaRepository implements INPERepository {
         }
     }
 
-    protected String imageFilePath(ImageData imageData, String imageDirPath) {
+    protected String imageFilePath(ImageTask imageData, String imageDirPath) {
         return imageDirPath + File.separator + imageData.getCollectionTierName() + ".tar.gz";
     }
 
-    protected String imageDirPath(ImageData imageData) {
+    protected String imageDirPath(ImageTask imageData) {
         return sebalExportPath + File.separator + "images" + File.separator + imageData.getCollectionTierName();
     }
 
-    private void downloadInto(ImageData imageData, String targetFilePath) throws IOException {
+    private void downloadInto(ImageTask imageData, String targetFilePath) throws IOException {
 		ProcessBuilder builder = new ProcessBuilder("curl", "-L", "-o",
 				targetFilePath, "-X", "GET", imageData.getDownloadLink());
 		LOGGER.debug("Command=" + builder.command());

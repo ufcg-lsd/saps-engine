@@ -13,7 +13,7 @@ import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,7 +29,7 @@ public class TestArchiver {
 	private ImageDataStore imageStoreMock;
 	private String imageStoreIPMock = "fake-store-IP";
 	private String imageStorePortMock = "fake-store-Port";
-	private HTreeMap<String, ImageData> pendingImageFetchMapMock;
+	private HTreeMap<String, ImageTask> pendingImageFetchMapMock;
 	
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -54,8 +54,8 @@ public class TestArchiver {
 		
 		imageStoreMock = mock(JDBCImageDataStore.class);
 		
-		ImageData imageData1 = mock(ImageData.class);
-		ImageData imageData2 = mock(ImageData.class);
+		ImageTask imageData1 = mock(ImageTask.class);
+		ImageTask imageData2 = mock(ImageTask.class);
 		
 		doNothing().when(pendingImageFetchMapMock).put(eq("image-data-1"), eq(imageData1));
 		doNothing().when(pendingImageFetchMapMock).put(eq("image-data-2"), eq(imageData2));
@@ -78,8 +78,8 @@ public class TestArchiver {
 		
 		imageStoreMock = mock(JDBCImageDataStore.class);
 
-		ImageData imageDataMock = mock(ImageData.class);
-		ImageData imageDataMock2 = mock(ImageData.class);
+		ImageTask imageDataMock = mock(ImageTask.class);
+		ImageTask imageDataMock2 = mock(ImageTask.class);
 		
 		doReturn(true).when(imageStoreMock).lockImage(imageDataMock.getName());
 		doNothing().when(imageDataMock).setState(ImageState.FETCHING);
@@ -106,8 +106,8 @@ public class TestArchiver {
 		
 		imageStoreMock = mock(JDBCImageDataStore.class);
 		
-		ImageData imageDataMock = mock(ImageData.class);
-		ImageData imageDataMock2 = mock(ImageData.class);
+		ImageTask imageDataMock = mock(ImageTask.class);
+		ImageTask imageDataMock2 = mock(ImageTask.class);
 		
 		doNothing().when(imageDataMock).setState(ImageState.FETCHED);
 		doNothing().when(imageStoreMock).updateImage(imageDataMock);
@@ -126,8 +126,8 @@ public class TestArchiver {
 		
 		imageStoreMock = mock(JDBCImageDataStore.class);
 		
-		ImageData imageDataMock = mock(ImageData.class);
-		ImageData imageDataMock2 = mock(ImageData.class);
+		ImageTask imageDataMock = mock(ImageTask.class);
+		ImageTask imageDataMock2 = mock(ImageTask.class);
 		
 		doReturn(imageDataMock).when(pendingImageFetchMapMock).remove(imageDataMock.getName(), imageDataMock);
 		doNothing().when(pendingImageFetchDBMock).commit();

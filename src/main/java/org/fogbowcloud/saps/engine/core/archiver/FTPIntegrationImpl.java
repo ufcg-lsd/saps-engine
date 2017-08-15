@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class FTPIntegrationImpl implements FTPIntegration{
@@ -12,7 +12,7 @@ public class FTPIntegrationImpl implements FTPIntegration{
 	public static final Logger LOGGER = Logger.getLogger(FTPIntegrationImpl.class);
 	
 	public int getFiles(Properties properties, String ftpServerIP, String ftpServerPort,
-			String remoteImageResultsPath, String localImageResultsPath, ImageData imageData) {
+			String remoteImageResultsPath, String localImageResultsPath, ImageTask imageData) {
 		if(localImageResultsPath == null || remoteImageResultsPath == null) {
 			return 1;
 		}

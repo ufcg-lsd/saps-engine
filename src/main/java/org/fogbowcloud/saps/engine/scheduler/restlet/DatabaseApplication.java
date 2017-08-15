@@ -10,7 +10,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.DBImageResource;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.DBMainResource;
@@ -79,11 +79,11 @@ public class DatabaseApplication extends Application {
 		return router;
 	}
 	
-	public List<ImageData> getImages() throws SQLException, ParseException {
+	public List<ImageTask> getImages() throws SQLException, ParseException {
 		return dbUtilsImpl.getImagesInDB();
 	}
 	
-	public ImageData getImage(String imageName) throws SQLException {
+	public ImageTask getImage(String imageName) throws SQLException {
 		return dbUtilsImpl.getImageInDB(imageName);
 	}
 	
@@ -126,12 +126,6 @@ public class DatabaseApplication extends Application {
 
 		dbUtilsImpl.addUserInDB(userEmail, userName, userPass, userState,
 				userNotify, adminRole);
-	}
-	
-	public void updateImageToPhase2(String imageName, String sebalVersion,
-			String sebalTag) throws SQLException {
-		
-		dbUtilsImpl.setImageForPhase2(imageName, sebalVersion, sebalTag);
 	}
 	
 	public void updateUserState(String userEmail, boolean userState)

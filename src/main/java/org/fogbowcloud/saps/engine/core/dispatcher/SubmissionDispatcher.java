@@ -25,8 +25,6 @@ public interface SubmissionDispatcher {
 	List<Ward> getUsersToNotify() throws SQLException;
 	
 	SapsUser getUser(String userEmail);
-	
-	void setImageForPhase2(String imageName, String sebalVersion, String sebalTag) throws SQLException;
 			
 	void setImagesToPurge(String day, boolean forceRemoveNonFetched) throws SQLException, ParseException;
 	

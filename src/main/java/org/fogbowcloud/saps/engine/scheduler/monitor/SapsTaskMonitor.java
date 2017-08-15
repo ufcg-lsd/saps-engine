@@ -10,9 +10,9 @@ import org.fogbowcloud.blowout.core.monitor.TaskMonitor;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.core.model.SapsTasks;
+import org.fogbowcloud.saps.engine.core.model.SapsTask;
 
 public class SapsTaskMonitor extends TaskMonitor {
 	
@@ -91,7 +91,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 	}
 	
 	protected void updateImageToRunning(TaskProcess tp) throws SQLException {
-		ImageData imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
+		ImageTask imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
 		if (!imageData.getState().equals(ImageState.RUNNING)) {
 			imageData.setState(ImageState.RUNNING);
 			imageStore.updateImage(imageData);
@@ -104,7 +104,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 	}
 	
 	protected void updateImageToFinished(TaskProcess tp) throws SQLException {
-		ImageData imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
+		ImageTask imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
 		imageData.setState(ImageState.FINISHED);
 		imageStore.updateImage(imageData);
 		
@@ -115,7 +115,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 	}
 
 	protected void updateImageToError(TaskProcess tp) throws SQLException {
-		ImageData imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
+		ImageTask imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
 		imageData.setState(ImageState.ERROR);
 		imageData.setImageError("Image " + getImageFromTaskProcess(tp) + " process failed");
 		imageStore.updateImage(imageData);
@@ -126,7 +126,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 	}	
 
 	protected void updateImageToQueued(TaskProcess tp) throws SQLException {
-		ImageData imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
+		ImageTask imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
 		imageData.setState(ImageState.QUEUED);
 		imageStore.updateImage(imageData);
 		
@@ -136,6 +136,6 @@ public class SapsTaskMonitor extends TaskMonitor {
 	}
 
 	public String getImageFromTaskProcess(TaskProcess tp) {
-		return getBlowoutPool().getTaskById(tp.getTaskId()).getMetadata(SapsTasks.METADATA_IMAGE_NAME);
+		return getBlowoutPool().getTaskById(tp.getTaskId()).getMetadata(SapsTask.METADATA_IMAGE_NAME);
 	}
 }

@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageData;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.fogbowcloud.saps.engine.core.util.CheckSumMD5ForFile;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
@@ -23,15 +23,15 @@ public class ArchiverHelper {
 
 	public static final Logger LOGGER = Logger.getLogger(ArchiverHelper.class);
 	
-	protected void updatePendingMapAndDB(ImageData imageData, DB pendingImageFetchDB,
-			ConcurrentMap<String, ImageData> pendingImageFetchMap) {
+	protected void updatePendingMapAndDB(ImageTask imageData, DB pendingImageFetchDB,
+			ConcurrentMap<String, ImageTask> pendingImageFetchMap) {
 		LOGGER.debug("Adding image " + imageData + " to pending database");
 		pendingImageFetchMap.put(imageData.getName(), imageData);
 		pendingImageFetchDB.commit();
 	}
 	
-	protected void removeImageFromPendingMap(ImageData imageData, DB pendingImageFetchDB,
-			ConcurrentMap<String, ImageData> pendingImageFetchMap) {		
+	protected void removeImageFromPendingMap(ImageTask imageData, DB pendingImageFetchDB,
+			ConcurrentMap<String, ImageTask> pendingImageFetchMap) {		
 		LOGGER.info("Removing image " + imageData + " from pending map.");
 		pendingImageFetchMap.remove(imageData.getName());
 		pendingImageFetchDB.commit();
@@ -41,7 +41,7 @@ public class ArchiverHelper {
 		}
 	}
 
-	protected String getStationId(ImageData imageData, Properties properties) throws IOException {
+	protected String getStationId(ImageTask imageData, Properties properties) throws IOException {
 		String stationFilePath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ "/results/" + imageData.getCollectionTierName() + "/" + imageData.getCollectionTierName() 
 				+ "_station.csv";
@@ -62,12 +62,12 @@ public class ArchiverHelper {
 		}
 	}
 	
-	protected String getRemoteImageInputsPath(final ImageData imageData, Properties properties) {
+	protected String getRemoteImageInputsPath(final ImageTask imageData, Properties properties) {
 		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator + "images" + File.separator + imageData.getCollectionTierName();
 	}
 	
-	protected String getLocalImageInputsPath(ImageData imageData, Properties properties) {
+	protected String getLocalImageInputsPath(ImageTask imageData, Properties properties) {
 		String localImageInputsPath = properties
 				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
@@ -75,12 +75,12 @@ public class ArchiverHelper {
 		return localImageInputsPath;
 	}
 
-	protected String getRemoteImageResultsPath(final ImageData imageData, Properties properties) {
+	protected String getRemoteImageResultsPath(final ImageTask imageData, Properties properties) {
 		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ "/results/" + imageData.getCollectionTierName();
 	}
 
-	protected String getLocalImageResultsPath(ImageData imageData, Properties properties) {
+	protected String getLocalImageResultsPath(ImageTask imageData, Properties properties) {
 		String localImageResultsPath = properties
 				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator
@@ -89,8 +89,8 @@ public class ArchiverHelper {
 	}
 
 	// TODO: see how to deal with this exception
-	protected boolean isImageCorrupted(ImageData imageData,
-			ConcurrentMap<String, ImageData> pendingImageFetchMap, ImageDataStore imageStore)
+	protected boolean isImageCorrupted(ImageTask imageData,
+			ConcurrentMap<String, ImageTask> pendingImageFetchMap, ImageDataStore imageStore)
 			throws SQLException {
 		if (imageData.getState().equals(ImageState.CORRUPTED)) {
 			pendingImageFetchMap.remove(imageData.getName());
@@ -101,14 +101,14 @@ public class ArchiverHelper {
 		return false;
 	}
 	
-	protected boolean isImageRolledBack(ImageData imageData) {
+	protected boolean isImageRolledBack(ImageTask imageData) {
 		if(imageData.getState().equals(ImageState.FINISHED)){
 			return true;
 		}
 		return false;
 	}
 	
-	protected boolean resultsChecksumOK(ImageData imageData, File localImageResultsDir)
+	protected boolean resultsChecksumOK(ImageTask imageData, File localImageResultsDir)
 			throws Exception {
 		LOGGER.info("Checksum of " + imageData + " result files");
 		if (CheckSumMD5ForFile.isFileCorrupted(localImageResultsDir)) {

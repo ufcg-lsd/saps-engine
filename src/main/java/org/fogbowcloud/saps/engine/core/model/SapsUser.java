@@ -90,7 +90,7 @@ public class SapsUser {
 	
 	@Override
 	public boolean equals(Object o) {
-		if (o instanceof ImageData) {
+		if (o instanceof ImageTask) {
 			SapsUser other = (SapsUser) o;
 			return getUserEmail().equals(other.getUserEmail())
 					&& getUserName().equals(other.getUserName())
