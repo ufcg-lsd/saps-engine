@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.bootstrap.DBUtilsImpl;
+import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.SebalUser;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.DBImageResource;
@@ -29,11 +29,11 @@ public class DatabaseApplication extends Application {
 
 	public static final Logger LOGGER = Logger.getLogger(DatabaseApplication.class);
 	
-	private DBUtilsImpl dbUtilsImpl;
+	private SubmissionDispatcherImpl dbUtilsImpl;
 	private Component restletComponent;
 	
 	
-	public DatabaseApplication(DBUtilsImpl dbUtilsImpl) throws Exception {
+	public DatabaseApplication(SubmissionDispatcherImpl dbUtilsImpl) throws Exception {
 		this.dbUtilsImpl = dbUtilsImpl;
 	}
 	

@@ -5,7 +5,7 @@ import java.util.Properties;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.bootstrap.DBUtilsImpl;
+import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.model.SebalUser;
 
 public class DBRestMain {
@@ -23,7 +23,7 @@ public class DBRestMain {
 		FileInputStream input = new FileInputStream(confPath);
 		properties.load(input);
 
-		DBUtilsImpl dbUtilsImpl = new DBUtilsImpl(properties);
+		SubmissionDispatcherImpl dbUtilsImpl = new SubmissionDispatcherImpl(properties);
 
 		DatabaseApplication databaseApplication = new DatabaseApplication(
 				dbUtilsImpl);

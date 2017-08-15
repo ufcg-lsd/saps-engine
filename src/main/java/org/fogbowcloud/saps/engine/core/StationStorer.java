@@ -16,7 +16,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
-import org.fogbowcloud.saps.engine.swift.SwiftAPIClient;
+import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 
 public class StationStorer {
 		

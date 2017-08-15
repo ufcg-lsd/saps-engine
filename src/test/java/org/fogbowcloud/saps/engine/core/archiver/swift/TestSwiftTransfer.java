@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.swift;
+package org.fogbowcloud.saps.engine.core.archiver.swift;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Properties;
 
-import org.fogbowcloud.saps.engine.swift.SwiftClient;
+import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftClient;
 
 public class TestSwiftTransfer {
 

@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.crawler;
+package org.fogbowcloud.saps.engine.core.downloader;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,9 +12,9 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.FMask;
-import org.fogbowcloud.saps.engine.core.crawler.Crawler;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
+import org.fogbowcloud.saps.engine.core.downloader.Crawler;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;

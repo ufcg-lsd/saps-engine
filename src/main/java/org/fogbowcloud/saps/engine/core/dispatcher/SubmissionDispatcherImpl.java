@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.bootstrap;
+package org.fogbowcloud.saps.engine.core.dispatcher;
 
 import java.io.IOException;
 import java.sql.Date;
@@ -27,16 +27,16 @@ import org.fogbowcloud.saps.notifier.Ward;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-public class DBUtilsImpl implements DBUtils {
+public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
     private final JDBCImageDataStore imageStore;
     private DefaultImageRepository nasaRepository;
     private USGSNasaRepository usgsRepository;
     private Properties properties;
     
-    private static final Logger LOGGER = Logger.getLogger(DBUtilsImpl.class);
+    private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcherImpl.class);
 
-    public DBUtilsImpl(Properties properties) throws SQLException {
+    public SubmissionDispatcherImpl(Properties properties) throws SQLException {
         this.properties = properties;
         this.imageStore = new JDBCImageDataStore(this.properties);
         this.nasaRepository = new DefaultImageRepository(properties);

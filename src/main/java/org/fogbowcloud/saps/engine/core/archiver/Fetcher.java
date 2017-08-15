@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.fetcher;
+package org.fogbowcloud.saps.engine.core.archiver;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +16,7 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
 import org.fogbowcloud.saps.engine.scheduler.util.SebalPropertiesConstants;
-import org.fogbowcloud.saps.engine.swift.SwiftAPIClient;
+import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 

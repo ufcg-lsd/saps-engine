@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.crawler;
+package org.fogbowcloud.saps.engine.core.downloader;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.fogbowcloud.saps.engine.core.bootstrap.DBUtilsImpl;
+import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.notifier.Ward;
 import org.fogbowcloud.saps.notifier.WardenImpl;
 import org.junit.Assert;
@@ -29,7 +29,7 @@ public class WardenImplTest {
 	// 9) removeNotified() behaving correctly
 	
 	private Properties properties;
-	private DBUtilsImpl dbUtilsImpl;
+	private SubmissionDispatcherImpl dbUtilsImpl;
 	private WardenImpl wardenImpl;
 	
 	@Rule
@@ -38,7 +38,7 @@ public class WardenImplTest {
 	@Before
 	public void setUp() {
 		properties = Mockito.mock(Properties.class);
-		dbUtilsImpl = Mockito.mock(DBUtilsImpl.class);
+		dbUtilsImpl = Mockito.mock(SubmissionDispatcherImpl.class);
 		wardenImpl = new WardenImpl(properties, dbUtilsImpl);
 	}
 	

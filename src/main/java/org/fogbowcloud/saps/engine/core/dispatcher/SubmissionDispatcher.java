@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.bootstrap;
+package org.fogbowcloud.saps.engine.core.dispatcher;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -8,7 +8,7 @@ import java.util.List;
 import org.fogbowcloud.saps.engine.core.model.SebalUser;
 import org.fogbowcloud.saps.notifier.Ward;
 
-public interface DBUtils {
+public interface SubmissionDispatcher {
 
 	void listImagesInDB() throws SQLException, ParseException;
 

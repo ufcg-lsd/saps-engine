@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.fetcher;
+package org.fogbowcloud.saps.engine.core.archiver;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;

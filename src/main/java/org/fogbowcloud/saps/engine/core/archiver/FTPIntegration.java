@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.fetcher;
+package org.fogbowcloud.saps.engine.core.archiver;
 
 import java.util.Properties;
 

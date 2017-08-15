@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.fetcher;
+package org.fogbowcloud.saps.engine.core.archiver;
 
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -15,14 +15,14 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
+import org.fogbowcloud.saps.engine.core.archiver.FTPIntegrationImpl;
+import org.fogbowcloud.saps.engine.core.archiver.Fetcher;
+import org.fogbowcloud.saps.engine.core.archiver.FetcherHelper;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.fetcher.FTPIntegrationImpl;
-import org.fogbowcloud.saps.engine.core.fetcher.Fetcher;
-import org.fogbowcloud.saps.engine.core.fetcher.FetcherHelper;
 import org.fogbowcloud.saps.engine.core.model.ImageData;
 import org.fogbowcloud.saps.engine.core.model.ImageState;
-import org.fogbowcloud.saps.engine.swift.SwiftAPIClient;
+import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
