@@ -117,7 +117,7 @@ public class DatabaseApplication extends Application {
 			forceValue = false;
 		}
 		
-		dbUtilsImpl.setImagesToPurge(day, forceValue);		
+		dbUtilsImpl.setTasksToPurge(day, forceValue);		
 	}
 
 	public void createUser(String userEmail, String userName, String userPass,

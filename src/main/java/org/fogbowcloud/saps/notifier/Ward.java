@@ -1,16 +1,16 @@
 package org.fogbowcloud.saps.notifier;
 
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 
 public class Ward {
 
 	private final String imageName;
-	private final ImageState targetState;
+	private final ImageTaskState targetState;
 	private final String submissionId;
 	private final String taskId;
 	private final String email;
 
-	public Ward(String imageName, ImageState targetState, String submissionId, String taskId,
+	public Ward(String imageName, ImageTaskState targetState, String submissionId, String taskId,
 			String email) {
 		this.imageName = imageName;
 		this.targetState = targetState;
@@ -41,7 +41,7 @@ public class Ward {
 		return imageName;
 	}
 
-	public ImageState getTargetState() {
+	public ImageTaskState getTargetState() {
 		return targetState;
 	}
 

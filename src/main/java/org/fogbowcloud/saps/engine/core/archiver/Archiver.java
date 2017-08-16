@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.mapdb.DB;
@@ -172,9 +172,9 @@ public class Archiver {
 
 	protected List<ImageTask> imagesToFetch() {
 		try {
-			return imageStore.getIn(ImageState.FINISHED);
+			return imageStore.getIn(ImageTaskState.FINISHED);
 		} catch (SQLException e) {
-			LOGGER.error("Error getting " + ImageState.FINISHED + " images from DB", e);
+			LOGGER.error("Error getting " + ImageTaskState.FINISHED + " images from DB", e);
 		}
 		return Collections.EMPTY_LIST;
 	}
@@ -204,16 +204,16 @@ public class Archiver {
 
 	protected boolean prepareFetch(ImageTask imageData) throws SQLException, IOException {
 		LOGGER.debug("Preparing image " + imageData.getCollectionTierName() + " to fetch");
-		if (imageStore.lockImage(imageData.getName())) {			
-			imageData.setState(ImageState.FETCHING);
+		if (imageStore.lockTask(imageData.getName())) {			
+			imageData.setState(ImageTaskState.FETCHING);
 			
 			fetcherHelper.updatePendingMapAndDB(imageData,
 					pendingImageFetchDB, pendingImageFetchMap);
 
 			try {
 				LOGGER.info("Updating image data in DB");
-				imageStore.updateImage(imageData);
-				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+				imageStore.updateImageTask(imageData);
+				imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image " + imageData + " in DB", e);
 				rollBackFetch(imageData);
@@ -228,7 +228,7 @@ public class Archiver {
 						+ imageData.getUpdateTime() + " in DB", e);
 			}
 			
-			imageStore.unlockImage(imageData.getName());
+			imageStore.unlockTask(imageData.getName());
 			LOGGER.debug("Image " + imageData.getCollectionTierName() + " ready to fetch");
 		}
 		return true;
@@ -252,7 +252,7 @@ public class Archiver {
 
 	protected void finishFetch(ImageTask imageData) throws IOException, SQLException {
 		LOGGER.debug("Finishing fetch for image " + imageData);
-		imageData.setState(ImageState.FETCHED);
+		imageData.setState(ImageTaskState.FETCHED);
 
 		String stationId = fetcherHelper.getStationId(imageData, properties);
 
@@ -261,8 +261,8 @@ public class Archiver {
 
 		try {
 			LOGGER.info("Updating image data in DB");
-			imageStore.updateImage(imageData);
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			imageStore.updateImageTask(imageData);
+			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image " + imageData + " in DB", e);
 			rollBackFetch(imageData);
@@ -301,14 +301,14 @@ public class Archiver {
 			LOGGER.error("Error while removing state " + imageData.getState() + " timestamp", e);
 		}
 		
-		imageData.setState(ImageState.FINISHED);
+		imageData.setState(ImageTaskState.FINISHED);
 		
 		try {
-			imageStore.updateImage(imageData);
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			imageStore.updateImageTask(imageData);
+			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image data.", e);
-			imageData.setState(ImageState.FETCHING);
+			imageData.setState(ImageTaskState.FETCHING);
 			fetcherHelper.updatePendingMapAndDB(imageData, pendingImageFetchDB, pendingImageFetchMap);
 		}
 	}
@@ -351,12 +351,12 @@ public class Archiver {
 		
 		if (i >= MAX_FETCH_TRIES) {
 			LOGGER.info("Max tries was reached. Marking " + imageData + " as corrupted.");
-			imageData.setState(ImageState.CORRUPTED);
+			imageData.setState(ImageTaskState.CORRUPTED);
 			fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB,
 					pendingImageFetchMap);
 			deleteInputsFromDisk(imageData, properties);
-			imageStore.updateImage(imageData);
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			imageStore.updateImageTask(imageData);
+			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		}		
 
 		return 1;
@@ -410,13 +410,13 @@ public class Archiver {
 		
 		if (i >= MAX_FETCH_TRIES) {
 			LOGGER.info("Max tries was reached. Marking " + imageData + " as corrupted.");
-			imageData.setState(ImageState.CORRUPTED);
+			imageData.setState(ImageTaskState.CORRUPTED);
 			fetcherHelper.removeImageFromPendingMap(imageData, pendingImageFetchDB,
 					pendingImageFetchMap);
 			deleteResultsFromDisk(imageData, properties);
 			// TODO: see if this have to be in try-catch
-			imageStore.updateImage(imageData);
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			imageStore.updateImageTask(imageData);
+			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		}
 	}
 

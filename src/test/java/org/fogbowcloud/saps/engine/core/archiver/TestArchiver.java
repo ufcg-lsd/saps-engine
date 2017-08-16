@@ -14,7 +14,7 @@ import java.util.Properties;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,13 +61,13 @@ public class TestArchiver {
 		doNothing().when(pendingImageFetchMapMock).put(eq("image-data-2"), eq(imageData2));
 		doNothing().when(pendingImageFetchDBMock).commit();
 
-		imageData1.setState(ImageState.FINISHED);
-		imageStoreMock.updateImage(imageData1);
+		imageData1.setState(ImageTaskState.FINISHED);
+		imageStoreMock.updateImageTask(imageData1);
 		verify(pendingImageFetchMapMock, times(4)).remove(imageData1);
 		doNothing().when(pendingImageFetchDBMock).commit();
 		
-		imageData2.setState(ImageState.FINISHED);
-		imageStoreMock.updateImage(imageData2);
+		imageData2.setState(ImageTaskState.FINISHED);
+		imageStoreMock.updateImageTask(imageData2);
 		verify(pendingImageFetchMapMock, times(4)).remove(imageData2);
 		doNothing().when(pendingImageFetchDBMock).commit();
 	}
@@ -81,23 +81,23 @@ public class TestArchiver {
 		ImageTask imageDataMock = mock(ImageTask.class);
 		ImageTask imageDataMock2 = mock(ImageTask.class);
 		
-		doReturn(true).when(imageStoreMock).lockImage(imageDataMock.getName());
-		doNothing().when(imageDataMock).setState(ImageState.FETCHING);
+		doReturn(true).when(imageStoreMock).lockTask(imageDataMock.getName());
+		doNothing().when(imageDataMock).setState(ImageTaskState.FETCHING);
 		doNothing().when(imageDataMock).setFederationMember("fake-federation-member-1");
 		doReturn(imageDataMock).when(pendingImageFetchMapMock).put(imageDataMock.getName(), imageDataMock);
 		doNothing().when(pendingImageFetchDBMock).commit();
 
-		imageStoreMock.updateImage(imageDataMock);
-		imageStoreMock.unlockImage(imageDataMock.getName());
+		imageStoreMock.updateImageTask(imageDataMock);
+		imageStoreMock.unlockTask(imageDataMock.getName());
 		
-		doReturn(true).when(imageStoreMock).lockImage(imageDataMock2.getName());
-		doNothing().when(imageDataMock2).setState(ImageState.FETCHING);
+		doReturn(true).when(imageStoreMock).lockTask(imageDataMock2.getName());
+		doNothing().when(imageDataMock2).setState(ImageTaskState.FETCHING);
 		doNothing().when(imageDataMock2).setFederationMember("fake-federation-member-2");
 		doReturn(imageDataMock2).when(pendingImageFetchMapMock).put(imageDataMock2.getName(), imageDataMock2);
 		doNothing().when(pendingImageFetchDBMock).commit();
 		
-		imageStoreMock.updateImage(imageDataMock2);
-		imageStoreMock.unlockImage(imageDataMock2.getName());
+		imageStoreMock.updateImageTask(imageDataMock2);
+		imageStoreMock.unlockTask(imageDataMock2.getName());
 	}
 	
 	@Test
@@ -109,13 +109,13 @@ public class TestArchiver {
 		ImageTask imageDataMock = mock(ImageTask.class);
 		ImageTask imageDataMock2 = mock(ImageTask.class);
 		
-		doNothing().when(imageDataMock).setState(ImageState.FETCHED);
-		doNothing().when(imageStoreMock).updateImage(imageDataMock);
+		doNothing().when(imageDataMock).setState(ImageTaskState.FETCHED);
+		doNothing().when(imageStoreMock).updateImageTask(imageDataMock);
 		doReturn(imageDataMock).when(pendingImageFetchMapMock).remove(imageDataMock.getName(), imageDataMock);
 		doNothing().when(pendingImageFetchDBMock).commit();
 		
-		doNothing().when(imageDataMock2).setState(ImageState.FETCHED);
-		doNothing().when(imageStoreMock).updateImage(imageDataMock2);
+		doNothing().when(imageDataMock2).setState(ImageTaskState.FETCHED);
+		doNothing().when(imageStoreMock).updateImageTask(imageDataMock2);
 		doReturn(imageDataMock2).when(pendingImageFetchMapMock).remove(imageDataMock2.getName(), imageDataMock2);
 		doNothing().when(pendingImageFetchDBMock).commit();
 	}
@@ -131,12 +131,12 @@ public class TestArchiver {
 		
 		doReturn(imageDataMock).when(pendingImageFetchMapMock).remove(imageDataMock.getName(), imageDataMock);
 		doNothing().when(pendingImageFetchDBMock).commit();
-		doNothing().when(imageDataMock).setState(ImageState.FINISHED);
-		doNothing().when(imageStoreMock).updateImage(imageDataMock);
+		doNothing().when(imageDataMock).setState(ImageTaskState.FINISHED);
+		doNothing().when(imageStoreMock).updateImageTask(imageDataMock);
 		
 		doReturn(imageDataMock2).when(pendingImageFetchMapMock).remove(imageDataMock2.getName(), imageDataMock2);
 		doNothing().when(pendingImageFetchDBMock).commit();
-		doNothing().when(imageDataMock2).setState(ImageState.FINISHED);
-		doNothing().when(imageStoreMock).updateImage(imageDataMock2);
+		doNothing().when(imageDataMock2).setState(ImageTaskState.FINISHED);
+		doNothing().when(imageStoreMock).updateImageTask(imageDataMock2);
 	}
 }

@@ -3,7 +3,7 @@ package org.fogbowcloud.saps.engine.core.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public enum ImageState {
+public enum ImageTaskState {
 
 	NOT_DOWNLOADED("not_downloaded"), SELECTED("selected"), DOWNLOADING(
 			"downloading"), DOWNLOADED("downloaded"), QUEUED("queued"), RUNNING(
@@ -12,7 +12,7 @@ public enum ImageState {
 
 	private String value;
 
-	private ImageState(String value) {
+	private ImageTaskState(String value) {
 		this.value = value;
 	}
 
@@ -20,8 +20,8 @@ public enum ImageState {
 		return value;
 	}
 	
-	public boolean in(ImageState... imageStates) {
-		for (ImageState imageState : imageStates) {
+	public boolean in(ImageTaskState... imageStates) {
+		for (ImageTaskState imageState : imageStates) {
 			if (imageState.equals(this)){
 				return true;
 			}
@@ -29,9 +29,9 @@ public enum ImageState {
 		return false;
 	}
 	
-	public static ImageState getStateFromStr(String stateStr) {
-		ImageState[] elements = values();
-		for (ImageState currentState : elements) {
+	public static ImageTaskState getStateFromStr(String stateStr) {
+		ImageTaskState[] elements = values();
+		for (ImageTaskState currentState : elements) {
 			if (currentState.getValue().equals(stateStr) ||
 					currentState.name().equals(stateStr)) {
 				return currentState;
@@ -44,7 +44,7 @@ public enum ImageState {
 		
 		List<String> values = new ArrayList<String>();
 		
-		for (ImageState currentState : values()) {
+		for (ImageTaskState currentState : values()) {
 			values.add(currentState.name());
 		}
 		

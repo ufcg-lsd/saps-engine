@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.repository.DefaultImageRepository;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
@@ -91,7 +91,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	public void removeUserNotify(String submissionId, String taskId, String imageName,
 			String userEmail) throws SQLException {
 		try {
-			imageStore.removeUserNotify(submissionId, taskId, imageName, userEmail);
+			imageStore.removeNotification(submissionId, taskId, imageName, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while removing image " + imageName + " user " + userEmail
 					+ " from notify DB", e);
@@ -110,22 +110,22 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	@Override
-	public void setImagesToPurge(String day, boolean force) throws SQLException, ParseException {
-		List<ImageTask> imagesToPurge = force ? imageStore.getAllImages() : imageStore
-				.getIn(ImageState.FETCHED);
+	public void setTasksToPurge(String day, boolean force) throws SQLException, ParseException {
+		List<ImageTask> tasksToPurge = force ? imageStore.getAllImages() : imageStore
+				.getIn(ImageTaskState.FETCHED);
 
-		for (ImageTask imageData : imagesToPurge) {
+		for (ImageTask imageTask : tasksToPurge) {
 			long date = 0;
 			try {
 				date = parseStringToDate(day).getTime();
 			} catch (ParseException e) {
 				LOGGER.error("Error while parsing string to date", e);
 			}
-			if (isBeforeDay(date, imageData.getUpdateTime())) {
-				imageData.setImageStatus(ImageTask.PURGED);
+			if (isBeforeDay(date, imageTask.getUpdateTime())) {
+				imageTask.setImageStatus(ImageTask.PURGED);
 
-				imageStore.updateImage(imageData);
-				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+				imageStore.updateImageTask(imageTask);
+				imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
 			}
 		}
 	}
@@ -153,12 +153,12 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	public void listCorruptedImages() throws ParseException {
 		List<ImageTask> allImageData;
 		try {
-			allImageData = imageStore.getIn(ImageState.CORRUPTED);
+			allImageData = imageStore.getIn(ImageTaskState.CORRUPTED);
 			for (int i = 0; i < allImageData.size(); i++) {
 				System.out.println(allImageData.get(i).toString());
 			}
 		} catch (SQLException e) {
-			LOGGER.error("Error while gettin images in " + ImageState.CORRUPTED + " state from DB",
+			LOGGER.error("Error while gettin images in " + ImageTaskState.CORRUPTED + " state from DB",
 					e);
 		}
 	}
@@ -206,8 +206,8 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 					getImageStore().addImageTask(String.valueOf(UUID.randomUUID()), entityId,
 							"None", priority, sebalVersion, sebalTag, displayId);
-					getImageStore().addStateStamp(entityId, ImageState.NOT_DOWNLOADED,
-							getImageStore().getImage(entityId).getUpdateTime());
+					getImageStore().addStateStamp(entityId, ImageTaskState.NOT_DOWNLOADED,
+							getImageStore().getTask(entityId).getUpdateTime());
 					obtainedImages.add(displayId);
 				}
 			} catch (JSONException e) {

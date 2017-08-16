@@ -11,7 +11,7 @@ import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
 
 public class SapsTaskMonitor extends TaskMonitor {
@@ -91,47 +91,47 @@ public class SapsTaskMonitor extends TaskMonitor {
 	}
 	
 	protected void updateImageToRunning(TaskProcess tp) throws SQLException {
-		ImageTask imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
-		if (!imageData.getState().equals(ImageState.RUNNING)) {
-			imageData.setState(ImageState.RUNNING);
-			imageStore.updateImage(imageData);
+		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
+		if (!imageData.getState().equals(ImageTaskState.RUNNING)) {
+			imageData.setState(ImageTaskState.RUNNING);
+			imageStore.updateImageTask(imageData);
 
 			// Inserting update time into stateStamps table in DB
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
 					imageData.getUpdateTime());
 		}
 	}
 	
 	protected void updateImageToFinished(TaskProcess tp) throws SQLException {
-		ImageTask imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
-		imageData.setState(ImageState.FINISHED);
-		imageStore.updateImage(imageData);
+		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
+		imageData.setState(ImageTaskState.FINISHED);
+		imageStore.updateImageTask(imageData);
 		
 		// Inserting update time into stateStamps table in DB
-		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
 				imageData.getUpdateTime());
 	}
 
 	protected void updateImageToError(TaskProcess tp) throws SQLException {
-		ImageTask imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
-		imageData.setState(ImageState.ERROR);
+		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
+		imageData.setState(ImageTaskState.ERROR);
 		imageData.setImageError("Image " + getImageFromTaskProcess(tp) + " process failed");
-		imageStore.updateImage(imageData);
+		imageStore.updateImageTask(imageData);
 		
 		// Inserting update time into stateStamps table in DB
-		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 	}	
 
 	protected void updateImageToQueued(TaskProcess tp) throws SQLException {
-		ImageTask imageData = this.imageStore.getImage(getImageFromTaskProcess(tp));
-		imageData.setState(ImageState.QUEUED);
-		imageStore.updateImage(imageData);
+		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
+		imageData.setState(ImageTaskState.QUEUED);
+		imageStore.updateImageTask(imageData);
 		
 		// Inserting update time into stateStamps table in DB
-		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(), imageData.getUpdateTime());
 	}
 

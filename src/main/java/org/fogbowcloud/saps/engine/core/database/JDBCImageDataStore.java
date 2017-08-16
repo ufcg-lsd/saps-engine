@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.notifier.Ward;
 
@@ -231,7 +231,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, taskId);
 			insertStatement.setString(2, imageName);
 			insertStatement.setString(3, downloadLink);
-			insertStatement.setString(4, ImageState.NOT_DOWNLOADED.getValue());
+			insertStatement.setString(4, ImageTaskState.NOT_DOWNLOADED.getValue());
 			insertStatement.setString(5, ImageDataStore.NONE);
 			insertStatement.setInt(6, priority);
 			insertStatement.setString(7, "NE");
@@ -375,7 +375,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		List<Ward> wards = new ArrayList<Ward>();
 
 		while (rs.next()) {
-			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageState.FETCHED, rs
+			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageTaskState.FETCHED, rs
 					.getString(SUBMISSION_ID_COL), rs.getString(TASK_ID_COL), rs
 					.getString(USER_EMAIL_COL)));
 		}
@@ -443,9 +443,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String SELECT_CHECK_IMAGE_EXISTS_SQL = "SELECT EXISTS(SELECT 1 FROM "
-			+ IMAGE_TABLE_NAME + " WHERE " + COLLECTION_TIER_IMAGE_NAME_COL + " = ?)";
-
 	// TODO: verify this later
 	@Override
 	public boolean imageExist(String collectionTierImageName) throws SQLException {
@@ -473,7 +470,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " = ? AND " + USER_EMAIL_COL + " = ?";
 
 	@Override
-	public void removeUserNotify(String submissionId, String taskId, String imageName,
+	public void removeNotification(String submissionId, String taskId, String imageName,
 			String userEmail) throws SQLException {
 		LOGGER.debug("Removing image " + imageName + " notification for " + userEmail);
 		if (submissionId == null || submissionId.isEmpty() || taskId == null || taskId.isEmpty()
@@ -531,7 +528,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " VALUES(?, ?, ?)";
 
 	@Override
-	public void addStateStamp(String imageName, ImageState state, Timestamp timestamp)
+	public void addStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
 			throws SQLException {
 		LOGGER.info("Adding image " + imageName + " state " + state.getValue() + " with timestamp "
 				+ timestamp + " into DB");
@@ -623,7 +620,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " SET state = ?, utime = now() WHERE image_name = ?";
 
 	@Override
-	public void updateImageState(String taskId, ImageState state) throws SQLException {
+	public void updateTaskState(String taskId, ImageTaskState state) throws SQLException {
 
 		if (taskId == null || taskId.isEmpty() || state == null) {
 			LOGGER.error("Invalid image task " + taskId + " or state " + state);
@@ -655,10 +652,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " error_msg = ?, tier_collection_image_name = ? WHERE task_id = ?";
 
 	@Override
-	public void updateImage(ImageTask imageData) throws SQLException {
-		if (imageData == null) {
-			LOGGER.error("Invalid image " + imageData);
-			throw new IllegalArgumentException("Invalid image data " + imageData);
+	public void updateImageTask(ImageTask imagetask) throws SQLException {
+		if (imagetask == null) {
+			LOGGER.error("Invalid image " + imagetask);
+			throw new IllegalArgumentException("Invalid image data " + imagetask);
 		}
 
 		PreparedStatement updateStatement = null;
@@ -668,22 +665,22 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 
 			updateStatement = connection.prepareStatement(UPDATE_IMAGEDATA_SQL);
-			updateStatement.setString(1, imageData.getName());
-			updateStatement.setString(2, imageData.getDownloadLink());
-			updateStatement.setString(3, imageData.getState().getValue());
-			updateStatement.setString(4, imageData.getFederationMember());
-			updateStatement.setInt(5, imageData.getPriority());
-			updateStatement.setString(6, imageData.getStationId());
-			updateStatement.setString(7, imageData.getSebalVersion());
-			updateStatement.setString(8, imageData.getSebalTag());
-			updateStatement.setString(9, imageData.getCrawlerVersion());
-			updateStatement.setString(10, imageData.getFetcherVersion());
-			updateStatement.setString(11, imageData.getBlowoutVersion());
-			updateStatement.setString(12, imageData.getFmaskVersion());
-			updateStatement.setString(13, imageData.getImageStatus());
-			updateStatement.setString(14, imageData.getImageError());
-			updateStatement.setString(15, imageData.getCollectionTierName());
-			updateStatement.setString(16, imageData.getTaskId());
+			updateStatement.setString(1, imagetask.getName());
+			updateStatement.setString(2, imagetask.getDownloadLink());
+			updateStatement.setString(3, imagetask.getState().getValue());
+			updateStatement.setString(4, imagetask.getFederationMember());
+			updateStatement.setInt(5, imagetask.getPriority());
+			updateStatement.setString(6, imagetask.getStationId());
+			updateStatement.setString(7, imagetask.getSebalVersion());
+			updateStatement.setString(8, imagetask.getSebalTag());
+			updateStatement.setString(9, imagetask.getCrawlerVersion());
+			updateStatement.setString(10, imagetask.getFetcherVersion());
+			updateStatement.setString(11, imagetask.getBlowoutVersion());
+			updateStatement.setString(12, imagetask.getFmaskVersion());
+			updateStatement.setString(13, imagetask.getImageStatus());
+			updateStatement.setString(14, imagetask.getImageError());
+			updateStatement.setString(15, imagetask.getCollectionTierName());
+			updateStatement.setString(16, imagetask.getTaskId());
 			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
@@ -745,7 +742,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			statement.execute(SELECT_ALL_IMAGES_SQL);
 			ResultSet rs = statement.getResultSet();
-			List<ImageTask> imageDatas = extractImageDataFrom(rs);
+			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
 			return imageDatas;
 		} finally {
 			close(statement, conn);
@@ -776,7 +773,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			ResultSet rs = selectStatement.getResultSet();
 			if (rs.next()) {
-				SapsUser sebalUser = extractSebalUserFrom(rs);
+				SapsUser sebalUser = extractSapsUserFrom(rs);
 				return sebalUser;
 			}
 			rs.close();
@@ -793,7 +790,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ IMAGE_TABLE_NAME + " WHERE state = ? ORDER BY priority ASC LIMIT ?";
 
 	@Override
-	public List<ImageTask> getIn(ImageState state, int limit) throws SQLException {
+	public List<ImageTask> getIn(ImageTaskState state, int limit) throws SQLException {
 		if (state == null) {
 			LOGGER.error("Invalid state " + state);
 			throw new IllegalArgumentException("Invalid state " + state);
@@ -820,7 +817,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			}
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageDataFrom(rs);
+			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -836,8 +833,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " ctime BETWEEN ? AND ? ";
 
 	@Override
-	public List<ImageTask> getImagesByFilter(ImageState state, String name, long processDateInit,
-			long processDateEnd) throws SQLException {
+	public List<ImageTask> getTasksByFilter(ImageTaskState state, String name,
+			long processDateInit, long processDateEnd) throws SQLException {
 
 		PreparedStatement selectStatement = null;
 		Connection connection = null;
@@ -899,7 +896,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageDataFrom(rs);
+			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -908,7 +905,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	@Override
-	public List<ImageTask> getIn(ImageState state) throws SQLException {
+	public List<ImageTask> getIn(ImageTaskState state) throws SQLException {
 		return getIn(state, UNLIMITED);
 	}
 
@@ -916,7 +913,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " WHERE status = ? ORDER BY priority, image_name";
 
 	@Override
-	public List<ImageTask> getPurgedImages() throws SQLException {
+	public List<ImageTask> getPurgedTasks() throws SQLException {
 		PreparedStatement selectStatement = null;
 		Connection connection = null;
 
@@ -930,7 +927,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageDataFrom(rs);
+			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -982,9 +979,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			lockAndUpdateStatement = connection
 					.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
-			lockAndUpdateStatement.setString(1, ImageState.SELECTED.getValue());
+			lockAndUpdateStatement.setString(1, ImageTaskState.SELECTED.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);
-			lockAndUpdateStatement.setString(3, ImageState.NOT_DOWNLOADED.getValue());
+			lockAndUpdateStatement.setString(3, ImageTaskState.NOT_DOWNLOADED.getValue());
 			lockAndUpdateStatement.setString(4, ImageTask.AVAILABLE);
 			lockAndUpdateStatement.setInt(5, limit);
 			lockAndUpdateStatement.setQueryTimeout(300);
@@ -992,7 +989,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			selectStatement = connection
 					.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
-			selectStatement.setString(1, ImageState.SELECTED.getValue());
+			selectStatement.setString(1, ImageTaskState.SELECTED.getValue());
 			selectStatement.setString(2, ImageTask.AVAILABLE);
 			selectStatement.setString(3, federationMember);
 			selectStatement.setInt(4, limit);
@@ -1000,7 +997,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageDataFrom(rs);
+			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -1009,7 +1006,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static SapsUser extractSebalUserFrom(ResultSet rs) throws SQLException {
+	private static SapsUser extractSapsUserFrom(ResultSet rs) throws SQLException {
 		SapsUser sebalUser = new SapsUser(rs.getString(USER_EMAIL_COL),
 				rs.getString(USER_NAME_COL), rs.getString(USER_PASSWORD_COL),
 				rs.getBoolean(USER_STATE_COL), rs.getBoolean(USER_NOTIFY_COL),
@@ -1018,11 +1015,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return sebalUser;
 	}
 
-	private static List<ImageTask> extractImageDataFrom(ResultSet rs) throws SQLException {
+	private static List<ImageTask> extractImageTaskFrom(ResultSet rs) throws SQLException {
 		List<ImageTask> imageDatas = new ArrayList<ImageTask>();
 		while (rs.next()) {
 			imageDatas.add(new ImageTask(rs.getString(TASK_ID_COL), rs.getString(IMAGE_NAME_COL),
-					rs.getString(DOWNLOAD_LINK_COL), ImageState.getStateFromStr(rs
+					rs.getString(DOWNLOAD_LINK_COL), ImageTaskState.getStateFromStr(rs
 							.getString(STATE_COL)), rs.getString(FEDERATION_MEMBER_COL), rs
 							.getInt(PRIORITY_COL), rs.getString(STATION_ID_COL), rs
 							.getString(SEBAL_VERSION_COL), rs.getString(SEBAL_TAG_COL), rs
@@ -1039,7 +1036,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " WHERE task_id = ?";
 
 	@Override
-	public ImageTask getImage(String taskId) throws SQLException {
+	public ImageTask getTask(String taskId) throws SQLException {
 		if (taskId == null) {
 			LOGGER.error("Invalid image task " + taskId);
 			throw new IllegalArgumentException("Invalid image task " + taskId);
@@ -1057,7 +1054,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageDataFrom(rs);
+			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas.get(0);
 		} finally {
@@ -1101,7 +1098,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " WHERE image_name = ?";
 
 	@Override
-	public boolean lockImage(String imageName) throws SQLException {
+	public boolean lockTask(String imageName) throws SQLException {
 		if (imageName == null) {
 			LOGGER.error("Invalid imageName " + imageName);
 			throw new IllegalArgumentException("Invalid state " + imageName);
@@ -1138,7 +1135,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private final String UNLOCK_IMAGE_SQL = "SELECT pg_advisory_unlock(?)";
 
 	@Override
-	public boolean unlockImage(String imageName) throws SQLException {
+	public boolean unlockTask(String imageName) throws SQLException {
 		if (imageName == null) {
 			LOGGER.error("Invalid imageName " + imageName);
 			throw new IllegalArgumentException("Invalid state " + imageName);
@@ -1172,7 +1169,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " WHERE image_name = ? AND state = ? AND utime = ?";
 
 	@Override
-	public void removeStateStamp(String imageName, ImageState state, Timestamp timestamp)
+	public void removeStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
 			throws SQLException {
 		LOGGER.info("Removing image " + imageName + " state " + state.getValue()
 				+ " with timestamp " + timestamp);

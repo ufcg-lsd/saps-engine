@@ -13,7 +13,7 @@ public class ImageTask implements Serializable {
 	private String taskId;
 	private String name;
 	private String downloadLink;
-	private ImageState state;
+	private ImageTaskState state;
 	private String federationMember;
 	private int priority;
 	private String stationId;
@@ -36,7 +36,7 @@ public class ImageTask implements Serializable {
 	
 	public static final String NON_EXISTENT = "NE";
 
-	public ImageTask(String taskId, String name, String downloadLink, ImageState state,
+	public ImageTask(String taskId, String name, String downloadLink, ImageTaskState state,
 			String federationMember, int priority, String stationId, String sebalVersion,
 			String sebalTag, String crawlerVersion, String fetcherVersion, String blowoutVersion,
 			String fmaskVersion, Timestamp creationTime, Timestamp updateTime, String status,
@@ -77,7 +77,7 @@ public class ImageTask implements Serializable {
 		return downloadLink;
 	}
 
-	public ImageState getState() {
+	public ImageTaskState getState() {
 		return state;
 	}
 
@@ -145,7 +145,7 @@ public class ImageTask implements Serializable {
 		this.downloadLink = downloadLink;
 	}
 
-	public void setState(ImageState state) {
+	public void setState(ImageTaskState state) {
 		this.state = state;
 	}
 

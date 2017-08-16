@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.CheckSumMD5ForFile;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.mapdb.DB;
@@ -92,17 +92,17 @@ public class ArchiverHelper {
 	protected boolean isImageCorrupted(ImageTask imageData,
 			ConcurrentMap<String, ImageTask> pendingImageFetchMap, ImageDataStore imageStore)
 			throws SQLException {
-		if (imageData.getState().equals(ImageState.CORRUPTED)) {
+		if (imageData.getState().equals(ImageTaskState.CORRUPTED)) {
 			pendingImageFetchMap.remove(imageData.getName());
-			imageStore.updateImage(imageData);
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			imageStore.updateImageTask(imageData);
+			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 			return true;
 		}
 		return false;
 	}
 	
 	protected boolean isImageRolledBack(ImageTask imageData) {
-		if(imageData.getState().equals(ImageState.FINISHED)){
+		if(imageData.getState().equals(ImageTaskState.FINISHED)){
 			return true;
 		}
 		return false;

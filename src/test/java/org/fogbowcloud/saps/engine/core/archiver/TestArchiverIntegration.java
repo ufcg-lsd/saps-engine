@@ -21,7 +21,7 @@ import org.fogbowcloud.saps.engine.core.archiver.ArchiverHelper;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,7 +61,7 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageState.FINISHED,
+		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
 
@@ -69,16 +69,16 @@ public class TestArchiverIntegration {
 				properties);
 
 		Archiver fetcher = mock(Archiver.class);
-		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doReturn(1).when(fetcher).fetchInputs(imageData);
 
-		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
 
 		// exercise
 		fetcher.fetch(imageData);
 
 		// expect
-		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
 	}
 
 	@Test
@@ -102,10 +102,10 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageState.FINISHED,
+		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
-		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageState.FINISHED,
+		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FINISHED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_2");
 
@@ -117,17 +117,17 @@ public class TestArchiverIntegration {
 		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl,
 				fetcherHelper);
 
-		doThrow(new SQLException()).when(imageStore).getIn(ImageState.FINISHED);
+		doThrow(new SQLException()).when(imageStore).getIn(ImageTaskState.FINISHED);
 
-		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
-		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData2.getState());
 
 		// exercise
 		fetcher.imagesToFetch();
 
 		// expect
-		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
-		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData2.getState());
 	}
 
 	@Test
@@ -150,38 +150,38 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageState.FINISHED,
+		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
-		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageState.FINISHED,
+		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FINISHED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_2");
 
 		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl,
 				fetcherHelper);
 
-		doReturn(imageData).when(imageStore).getImage(imageData.getName());
+		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 
-		doReturn(true).when(imageStore).lockImage(imageData.getName());
-		doThrow(new SQLException()).when(imageStore).updateImage(imageData);
+		doReturn(true).when(imageStore).lockTask(imageData.getName());
+		doThrow(new SQLException()).when(imageStore).updateImageTask(imageData);
 
-		doReturn(imageData2).when(imageStore).getImage(imageData2.getName());
+		doReturn(imageData2).when(imageStore).getTask(imageData2.getName());
 
-		doReturn(true).when(imageStore).lockImage(imageData2.getName());
+		doReturn(true).when(imageStore).lockTask(imageData2.getName());
 		doNothing().when(fetcherHelper).updatePendingMapAndDB(imageData2, pendingImageFetchDB,
 				pendingImageFetchMap);
-		doNothing().when(imageStore).updateImage(imageData2);
+		doNothing().when(imageStore).updateImageTask(imageData2);
 
-		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
-		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData2.getState());
 
 		// exercise
 		fetcher.prepareFetch(imageData);
 		fetcher.prepareFetch(imageData2);
 
 		// expect
-		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
-		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
+		Assert.assertEquals(ImageTaskState.FETCHING, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FETCHING, imageData2.getState());
 	}
 
 	@Test
@@ -204,38 +204,38 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageState.FINISHED,
+		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
-		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageState.FINISHED,
+		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FINISHED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_2");
 
 		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl,
 				fetcherHelper);
 
-		doReturn(imageData).when(imageStore).getImage(imageData.getName());
-		doReturn(true).when(imageStore).lockImage(imageData.getName());
-		doNothing().when(imageStore).updateImage(imageData);
+		doReturn(imageData).when(imageStore).getTask(imageData.getName());
+		doReturn(true).when(imageStore).lockTask(imageData.getName());
+		doNothing().when(imageStore).updateImageTask(imageData);
 		doThrow(new SQLException()).when(imageStore).addStateStamp(imageData.getName(),
 				imageData.getState(), imageData.getUpdateTime());
 
-		doReturn(imageData2).when(imageStore).getImage(imageData2.getName());
-		doReturn(true).when(imageStore).lockImage(imageData2.getName());
+		doReturn(imageData2).when(imageStore).getTask(imageData2.getName());
+		doReturn(true).when(imageStore).lockTask(imageData2.getName());
 		doNothing().when(fetcherHelper).updatePendingMapAndDB(imageData2, pendingImageFetchDB,
 				pendingImageFetchMap);
-		doNothing().when(imageStore).updateImage(imageData2);
+		doNothing().when(imageStore).updateImageTask(imageData2);
 
-		Assert.assertEquals(ImageState.FINISHED, imageData.getState());
-		Assert.assertEquals(ImageState.FINISHED, imageData2.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageData2.getState());
 
 		// exercise
 		fetcher.prepareFetch(imageData);
 		fetcher.prepareFetch(imageData2);
 
 		// expect
-		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
-		Assert.assertEquals(ImageState.FETCHING, imageData2.getState());
+		Assert.assertEquals(ImageTaskState.FETCHING, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FETCHING, imageData2.getState());
 	}
 
 	@Test
@@ -258,7 +258,7 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageState.FETCHING,
+		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FETCHING,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
 
@@ -279,7 +279,7 @@ public class TestArchiverIntegration {
 		fetcher.fetch(imageData);
 
 		// expect
-		Assert.assertEquals(ImageState.FETCHING, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FETCHING, imageData.getState());
 	}
 
 	@Test

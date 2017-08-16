@@ -14,7 +14,7 @@ import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,7 +81,7 @@ public class TestJDBCImageDataStore {
 		doReturn(preparedStatement).when(connection).prepareStatement(eq(INSERT_IMAGE_SQL));
 		doNothing().when(preparedStatement).setString(eq(1), eq(fakeImageName));
 		doNothing().when(preparedStatement).setString(eq(2), eq(fakeDownloadLink));
-		doNothing().when(preparedStatement).setString(eq(3), eq(ImageState.NOT_DOWNLOADED.getValue()));
+		doNothing().when(preparedStatement).setString(eq(3), eq(ImageTaskState.NOT_DOWNLOADED.getValue()));
 		doNothing().when(preparedStatement).setString(eq(4), eq(ImageDataStore.NONE));
 		doNothing().when(preparedStatement).setInt(eq(5), eq(fakePriority));
 		doNothing().when(preparedStatement).setString(eq(6), eq(fakeStationId));
@@ -109,7 +109,7 @@ public class TestJDBCImageDataStore {
 		
 		doReturn(insertStatement).when(connection).prepareStatement(eq(INSERT_STATE_TIMESTAMP_SQL));
 		doNothing().when(insertStatement).setString(eq(1), eq(fakeImageName));
-		doNothing().when(insertStatement).setString(eq(2), eq(ImageState.DOWNLOADING.getValue()));
+		doNothing().when(insertStatement).setString(eq(2), eq(ImageTaskState.DOWNLOADING.getValue()));
 		doNothing().when(insertStatement).setDate(eq(3), eq(fakeUpdatedTime));
 		
 		doReturn(true).when(insertStatement).execute();
@@ -133,7 +133,7 @@ public class TestJDBCImageDataStore {
 		
 		doReturn(insertStatement).when(connection).prepareStatement(eq(INSERT_STATE_TIMESTAMP_SQL));
 		doNothing().when(insertStatement).setString(eq(1), eq(fakeImageName));
-		doNothing().when(insertStatement).setString(eq(2), eq(ImageState.DOWNLOADING.getValue()));
+		doNothing().when(insertStatement).setString(eq(2), eq(ImageTaskState.DOWNLOADING.getValue()));
 		doNothing().when(insertStatement).setDate(eq(3), eq(fakeUpdatedTime));
 		
 		doReturn(true).when(insertStatement).execute();
@@ -144,7 +144,7 @@ public class TestJDBCImageDataStore {
 		
 		doReturn(removeStatement).when(connection).prepareStatement(eq(REMOVE_STATE_TIMESTAMP_SQL));
 		doNothing().when(removeStatement).setString(eq(1), eq(fakeImageName));
-		doNothing().when(removeStatement).setString(eq(2), eq(ImageState.DOWNLOADING.getValue()));
+		doNothing().when(removeStatement).setString(eq(2), eq(ImageTaskState.DOWNLOADING.getValue()));
 		doNothing().when(removeStatement).setDate(eq(3), eq(fakeUpdatedTime));
 		
 		doReturn(true).when(removeStatement).execute();

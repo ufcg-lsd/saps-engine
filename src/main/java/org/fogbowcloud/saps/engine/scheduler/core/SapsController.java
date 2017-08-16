@@ -22,7 +22,7 @@ import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.monitor.SapsTaskMonitor;
@@ -80,7 +80,7 @@ public class SapsController extends BlowoutController {
 		// in the next restart all images in running state will be reseted to queued state
 		try {
 			resetImagesRunningToQueued();
-			addSebalTasks(properties, sebalSpec, ImageState.QUEUED);
+			addSebalTasks(properties, sebalSpec, ImageTaskState.QUEUED);
 		} catch (Exception e) {
 			LOGGER.error("Error while adding previous tasks", e);
 		}
@@ -108,7 +108,7 @@ public class SapsController extends BlowoutController {
 			@Override
 			public void run() {
 				try {
-					addSebalTasks(properties, sebalSpec, ImageState.DOWNLOADED);
+					addSebalTasks(properties, sebalSpec, ImageTaskState.DOWNLOADED);
 				} catch (Exception e) {
 					LOGGER.error("Error while adding R tasks", e);
 				}
@@ -118,15 +118,15 @@ public class SapsController extends BlowoutController {
 	}
 
 	private static void resetImagesRunningToQueued() throws SQLException {
-		List<ImageTask> imagesRunning = imageStore.getIn(ImageState.RUNNING);
+		List<ImageTask> imagesRunning = imageStore.getIn(ImageTaskState.RUNNING);
 		for (ImageTask imageData : imagesRunning) {
-			imageData.setState(ImageState.QUEUED);
-			imageStore.updateImage(imageData);
+			imageData.setState(ImageTaskState.QUEUED);
+			imageStore.updateImageTask(imageData);
 		}
 	}
 	
 	private void addSebalTasks(final Properties properties, final Specification sebalSpec,
-			ImageState imageState) throws InterruptedException, SapsException {
+			ImageTaskState imageState) throws InterruptedException, SapsException {
 
 		try {
 			List<ImageTask> imagesToProcess = imageStore.getIn(imageState,
@@ -139,8 +139,8 @@ public class SapsController extends BlowoutController {
 				Specification specWithFederation = generateModifiedSpec(imageData, sebalSpec);
 				LOGGER.debug("specWithFederation " + specWithFederation.toString());
 				
-				if (ImageState.QUEUED.equals(imageState)
-						|| ImageState.DOWNLOADED.equals(imageState)) {
+				if (ImageTaskState.QUEUED.equals(imageState)
+						|| ImageTaskState.DOWNLOADED.equals(imageState)) {
 					TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(),
 							specWithFederation);
 					Map<String, String> nfsConfig = imageStore.getFederationNFSConfig(imageData
@@ -161,12 +161,12 @@ public class SapsController extends BlowoutController {
 							specWithFederation, imageData.getFederationMember(), nfsServerIP,
 							nfsServerPort, imageData.getSebalVersion(), imageData.getSebalTag());
 					
-					imageData.setState(ImageState.QUEUED);
+					imageData.setState(ImageTaskState.QUEUED);
 					imageData.setBlowoutVersion(getBlowoutVersion(properties));					
 					addTask(taskImpl);
 
-					imageStore.updateImage(imageData);
-					imageData.setUpdateTime(imageStore.getImage(imageData.getName())
+					imageStore.updateImageTask(imageData);
+					imageData.setUpdateTime(imageStore.getTask(imageData.getName())
 							.getUpdateTime());
 					try {
 						imageStore.addStateStamp(imageData.getName(), imageData.getState(),

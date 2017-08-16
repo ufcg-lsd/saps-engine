@@ -19,7 +19,7 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
@@ -63,19 +63,19 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		ImageTask errorImageOne = new ImageTask("task-id-1", "error-image-one", oldDownloadLinkOne,
-				ImageState.ERROR, SapsPropertiesConstants.LSD_FEDERATION_MEMBER, 0,
+				ImageTaskState.ERROR, SapsPropertiesConstants.LSD_FEDERATION_MEMBER, 0,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, new Timestamp(date.getTime()),
 				new Timestamp(date.getTime()), ImageTask.NON_EXISTENT, "fake-error-msg-one", "None");
 		ImageTask errorImageTwo = new ImageTask("task-id-2", "error-image-two", oldDownloadLinkTwo,
-				ImageState.ERROR, SapsPropertiesConstants.AZURE_FEDERATION_MEMBER, 0,
+				ImageTaskState.ERROR, SapsPropertiesConstants.AZURE_FEDERATION_MEMBER, 0,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, new Timestamp(date.getTime()),
 				new Timestamp(date.getTime()), ImageTask.NON_EXISTENT, "fake-error-msg-two", "None");
 		ImageTask errorImageThree = new ImageTask("task-id-3", "error-image-three",
-				oldDownloadLinkThree, ImageState.ERROR, "rnp-federation", 0,
+				oldDownloadLinkThree, ImageTaskState.ERROR, "rnp-federation", 0,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, new Timestamp(date.getTime()),
@@ -93,12 +93,12 @@ public class TestInputDownloaderIntegration {
 		InputDownloader crawler = spy(new InputDownloader(properties, imageStore, usgsRepository,
 				crawlerIp, nfsPort, SapsPropertiesConstants.LSD_FEDERATION_MEMBER));
 
-		doReturn(errorImages).when(imageStore).getIn(ImageState.ERROR);
+		doReturn(errorImages).when(imageStore).getIn(ImageTaskState.ERROR);
 
 		doReturn(imageOneDir).when(crawler).getImageDir(properties, errorImageOne);
 		doReturn(true).when(crawler).isThereImageInputs(imageOneDir);
-		doReturn(errorImageOne).when(imageStore).getImage(errorImageOne.getName());
-		doNothing().when(imageStore).updateImage(errorImageOne);
+		doReturn(errorImageOne).when(imageStore).getTask(errorImageOne.getName());
+		doNothing().when(imageStore).updateImageTask(errorImageOne);
 		doNothing().when(imageStore).addStateStamp(errorImageOne.getName(),
 				errorImageOne.getState(), errorImageOne.getUpdateTime());
 
@@ -106,8 +106,8 @@ public class TestInputDownloaderIntegration {
 		doReturn(false).when(crawler).isThereImageInputs(imageTwoDir);
 		doReturn(newDownloadLinkTwo).when(usgsRepository).getImageDownloadLink(
 				errorImageTwo.getName());
-		doReturn(errorImageTwo).when(imageStore).getImage(errorImageTwo.getName());
-		doNothing().when(imageStore).updateImage(errorImageTwo);
+		doReturn(errorImageTwo).when(imageStore).getTask(errorImageTwo.getName());
+		doNothing().when(imageStore).updateImageTask(errorImageTwo);
 		doNothing().when(imageStore).addStateStamp(errorImageTwo.getName(),
 				errorImageTwo.getState(), errorImageTwo.getUpdateTime());
 
@@ -118,9 +118,9 @@ public class TestInputDownloaderIntegration {
 		crawler.reSubmitErrorImages(properties);
 
 		// expect
-		Assert.assertEquals(ImageState.DOWNLOADED, errorImageOne.getState());
-		Assert.assertEquals(ImageState.NOT_DOWNLOADED, errorImageTwo.getState());
-		Assert.assertEquals(ImageState.ERROR, errorImageThree.getState());
+		Assert.assertEquals(ImageTaskState.DOWNLOADED, errorImageOne.getState());
+		Assert.assertEquals(ImageTaskState.NOT_DOWNLOADED, errorImageTwo.getState());
+		Assert.assertEquals(ImageTaskState.ERROR, errorImageThree.getState());
 
 		Assert.assertEquals(oldDownloadLinkOne, errorImageOne.getDownloadLink());
 		Assert.assertNotEquals(oldDownloadLinkTwo, errorImageTwo.getDownloadLink());
@@ -151,10 +151,10 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageState.NOT_DOWNLOADED,
+		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.NOT_DOWNLOADED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
-		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageState.NOT_DOWNLOADED,
+		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.NOT_DOWNLOADED,
 				federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 
@@ -163,8 +163,8 @@ public class TestInputDownloaderIntegration {
 
 		doReturn(imageList).when(imageStore).getImagesToDownload(federationMember,
 				maxImagesToDownload);
-		doReturn(image1).when(imageStore).getImage(image1.getName());
-		doReturn(image2).when(imageStore).getImage(image2.getName());
+		doReturn(image1).when(imageStore).getTask(image1.getName());
+		doReturn(image2).when(imageStore).getTask(image2.getName());
 		doReturn("link-1").when(usgsRepository).getImageDownloadLink(image1.getName());
 		doReturn("link-2").when(usgsRepository).getImageDownloadLink(image2.getName());
 		doThrow(new IOException()).when(usgsRepository).downloadImage(image1);
@@ -172,16 +172,16 @@ public class TestInputDownloaderIntegration {
 
 		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
 				crawlerIP, nfsPort, federationMember);
-		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image1.getState());
-		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image2.getState());
+		Assert.assertEquals(ImageTaskState.NOT_DOWNLOADED, image1.getState());
+		Assert.assertEquals(ImageTaskState.NOT_DOWNLOADED, image2.getState());
 		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
 
 		// exercise
 		crawler.download(maxImagesToDownload);
 
 		// expect
-		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image1.getState());
-		Assert.assertEquals(ImageState.DOWNLOADED, image2.getState());
+		Assert.assertEquals(ImageTaskState.NOT_DOWNLOADED, image1.getState());
+		Assert.assertEquals(ImageTaskState.DOWNLOADED, image2.getState());
 		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
 	}
 
@@ -199,10 +199,10 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageState.NOT_DOWNLOADED,
+		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.NOT_DOWNLOADED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
-		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageState.NOT_DOWNLOADED,
+		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.NOT_DOWNLOADED,
 				federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 
@@ -221,8 +221,8 @@ public class TestInputDownloaderIntegration {
 
 		// expect
 		Assert.assertTrue(crawler.pendingImageDownloadMap.isEmpty());
-		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image1.getState());
-		Assert.assertEquals(ImageState.NOT_DOWNLOADED, image2.getState());
+		Assert.assertEquals(ImageTaskState.NOT_DOWNLOADED, image1.getState());
+		Assert.assertEquals(ImageTaskState.NOT_DOWNLOADED, image2.getState());
 	}
 
 	@Test
@@ -239,18 +239,18 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageState.FINISHED,
+		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 		image1.setImageStatus(ImageTask.PURGED);
-		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageState.FINISHED,
+		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FINISHED,
 				federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 
 		imageList.add(image1);
 		imageList.add(image2);
 
-		doReturn(imageList).when(imageStore).getIn(ImageState.FINISHED);
+		doReturn(imageList).when(imageStore).getIn(ImageTaskState.FINISHED);
 
 		doReturn(sebalExportPath).when(properties).getProperty(
 				SapsPropertiesConstants.SEBAL_EXPORT_PATH);
@@ -277,10 +277,10 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageState.FETCHED,
+		ImageTask image1 = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FETCHED,
 				federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
-		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageState.FETCHED,
+		ImageTask image2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FETCHED,
 				federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "None");
 

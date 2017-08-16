@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.notifier.Ward;
 
@@ -27,7 +27,7 @@ public interface ImageDataStore {
 			String sebalVersion, String sebalTag, String collectionTierImageName)
 			throws SQLException;
 
-	void addStateStamp(String imageName, ImageState state, Timestamp timestamp) throws SQLException;
+	void addStateStamp(String imageName, ImageTaskState state, Timestamp timestamp) throws SQLException;
 
 	void addUser(String userEmail, String userName, String userPass, boolean userState,
 			boolean userNotify, boolean adminRole) throws SQLException;
@@ -42,9 +42,9 @@ public interface ImageDataStore {
 
 	void updateUserState(String userEmail, boolean state) throws SQLException;
 
-	void updateImage(ImageTask imageData) throws SQLException;
+	void updateImageTask(ImageTask imageData) throws SQLException;
 
-	void updateImageState(String imageName, ImageState state) throws SQLException;
+	void updateTaskState(String imageName, ImageTaskState state) throws SQLException;
 
 	void updateImageMetadata(String imageName, String stationId, String sebalVersion)
 			throws SQLException;
@@ -57,15 +57,15 @@ public interface ImageDataStore {
 
 	List<ImageTask> getAllImages() throws SQLException;
 
-	List<ImageTask> getIn(ImageState state) throws SQLException;
+	List<ImageTask> getIn(ImageTaskState state) throws SQLException;
 
-	List<ImageTask> getIn(ImageState state, int limit) throws SQLException;
+	List<ImageTask> getIn(ImageTaskState state, int limit) throws SQLException;
 
-	List<ImageTask> getPurgedImages() throws SQLException;
+	List<ImageTask> getPurgedTasks() throws SQLException;
 
 	List<ImageTask> getImagesToDownload(String federationMember, int limit) throws SQLException;
 
-	ImageTask getImage(String imageName) throws SQLException;
+	ImageTask getTask(String imageName) throws SQLException;
 
 	SapsUser getUser(String userEmail) throws SQLException;
 
@@ -73,17 +73,17 @@ public interface ImageDataStore {
 
 	void dispose();
 
-	boolean lockImage(String imageName) throws SQLException;
+	boolean lockTask(String imageName) throws SQLException;
 
-	boolean unlockImage(String imageName) throws SQLException;
+	boolean unlockTask(String imageName) throws SQLException;
 
-	void removeUserNotify(String submissionId, String taskId, String imageName, String userEmail) throws SQLException;
+	void removeNotification(String submissionId, String taskId, String imageName, String userEmail) throws SQLException;
 
-	void removeStateStamp(String imageName, ImageState state, Timestamp timestamp)
+	void removeStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
 			throws SQLException;
 
 	void removeDeployConfig(String federationMember) throws SQLException;
 
-	List<ImageTask> getImagesByFilter(ImageState state, String name, long processDateInit,
+	List<ImageTask> getTasksByFilter(ImageTaskState state, String name, long processDateInit,
 			long processDateEnd) throws SQLException;
 }

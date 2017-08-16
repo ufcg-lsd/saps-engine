@@ -17,7 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageState;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
@@ -211,7 +211,7 @@ public class InputDownloader {
 
 	private void cleanUnfinishedQueuedOutput(Properties properties) throws SQLException,
 			IOException {
-		List<ImageTask> data = imageStore.getIn(ImageState.QUEUED);
+		List<ImageTask> data = imageStore.getIn(ImageTaskState.QUEUED);
 		for (ImageTask imageData : data) {
 			deleteResultsFromDisk(imageData,
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
@@ -220,7 +220,7 @@ public class InputDownloader {
 	
 	protected void reSubmitErrorImages(Properties properties) {
 		try {
-			List<ImageTask> errorImages = imageStore.getIn(ImageState.ERROR);
+			List<ImageTask> errorImages = imageStore.getIn(ImageTaskState.ERROR);
 
 			for (ImageTask imageData : errorImages) {
 				treatAndSubmit(properties, imageData);
@@ -257,7 +257,7 @@ public class InputDownloader {
 		
 		imageData.setImageError(ImageTask.NON_EXISTENT);
 		imageData.setFederationMember(ImageTask.NON_EXISTENT);
-		imageData.setState(ImageState.NOT_DOWNLOADED);
+		imageData.setState(ImageTaskState.NOT_DOWNLOADED);
 		updateErrorImage(imageData);
 	}
 
@@ -292,8 +292,8 @@ public class InputDownloader {
 	}
 	
 	private void updateErrorImage(ImageTask imageData) throws SQLException {		
-		imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-		imageStore.updateImage(imageData);
+		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
+		imageStore.updateImageTask(imageData);
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
 				imageData.getUpdateTime());
 	}
@@ -315,7 +315,7 @@ public class InputDownloader {
 
 		for (ImageTask imageData : imageDataList) {
 			if(imageData.getFederationMember().equals(federationMember)) {
-				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+				imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 				
 				if (imageData != null) {
 					addStateStamp(imageData);
@@ -411,11 +411,11 @@ public class InputDownloader {
 	}
 
 	private void updateToDownloadedState(final ImageTask imageData) throws IOException {
-		imageData.setState(ImageState.DOWNLOADED);
+		imageData.setState(ImageTaskState.DOWNLOADED);
 		
 		try {
-			imageStore.updateImage(imageData);
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			imageStore.updateImageTask(imageData);
+			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image " + imageData
 					+ " to DB", e);
@@ -426,11 +426,11 @@ public class InputDownloader {
 	}
 
 	private void updateToDownloadingState(final ImageTask imageData) throws IOException {
-		imageData.setState(ImageState.DOWNLOADING);
+		imageData.setState(ImageTaskState.DOWNLOADING);
 		
 		try {
-			imageStore.updateImage(imageData);
-			imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+			imageStore.updateImageTask(imageData);
+			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image " + imageData
 					+ " to DB", e);
@@ -459,7 +459,7 @@ public class InputDownloader {
 			throws IOException {
 		if (imageData.getFederationMember().equals(federationMember)) {
 
-			LOGGER.debug("Rolling back " + imageData + " to " + ImageState.NOT_DOWNLOADED
+			LOGGER.debug("Rolling back " + imageData + " to " + ImageTaskState.NOT_DOWNLOADED
 					+ " state");
 
 			try {
@@ -471,15 +471,15 @@ public class InputDownloader {
 			}
 
 			imageData.setFederationMember(ImageDataStore.NONE);
-			imageData.setState(ImageState.NOT_DOWNLOADED);
+			imageData.setState(ImageTaskState.NOT_DOWNLOADED);
 
 			try {
-				imageStore.updateImage(imageData);
-				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
+				imageStore.updateImageTask(imageData);
+				imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image data " + imageData.getCollectionTierName(), e);
 				imageData.setFederationMember(federationMember);
-				imageData.setState(ImageState.SELECTED);
+				imageData.setState(ImageTaskState.SELECTED);
 			}
 
 			deleteImageFromDisk(imageData,
@@ -526,7 +526,7 @@ public class InputDownloader {
 						+ imageData.getCollectionTierName();
 				File imageResultsDir = new File(imageResultsPath);
 
-				if (imageData.getState().equals(ImageState.FETCHED)
+				if (imageData.getState().equals(ImageTaskState.FETCHED)
 						&& imageData.getFederationMember().equals(federationMember)
 						&& imageResultsDir.exists()) {
 					LOGGER.debug("Image " + imageData.getCollectionTierName() + " fetched");

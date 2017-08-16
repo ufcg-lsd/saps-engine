@@ -27,7 +27,7 @@ public interface SubmissionDispatcher {
 
 	SapsUser getUser(String userEmail);
 
-	void setImagesToPurge(String day, boolean forceRemoveNonFetched) throws SQLException,
+	void setTasksToPurge(String day, boolean forceRemoveNonFetched) throws SQLException,
 			ParseException;
 
 	void removeUserNotify(String submissionId, String taskId, String imageName, String userEmail) throws SQLException;
