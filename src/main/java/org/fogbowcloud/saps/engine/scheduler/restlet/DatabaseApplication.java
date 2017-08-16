@@ -84,7 +84,7 @@ public class DatabaseApplication extends Application {
 	}
 	
 	public ImageTask getImage(String imageName) throws SQLException {
-		return dbUtilsImpl.getImageInDB(imageName);
+		return dbUtilsImpl.getTaskInDB(imageName);
 	}
 	
 	/**
@@ -134,9 +134,9 @@ public class DatabaseApplication extends Application {
 		dbUtilsImpl.updateUserState(userEmail, userState);
 	}
 	
-	public void addUserNotify(String jobId, String imageName, String userEmail) throws SQLException {
+	public void addUserNotify(String submissionId, String taskId, String imageName, String userEmail) throws SQLException {
 		
-		dbUtilsImpl.addUserInNotifyDB(jobId, imageName, userEmail);
+		dbUtilsImpl.addTaskNotificationIntoDB(submissionId, taskId, imageName, userEmail);
 	}
 	
 	public boolean isUserNotifiable(String userEmail) throws SQLException {

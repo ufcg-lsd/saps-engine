@@ -5,11 +5,11 @@ import org.fogbowcloud.saps.engine.core.model.ImageTask;
 public interface Warden {
 	
 	/**
-	 * Sends an e-mail to notify the user about the change of an image state
+	 * Sends an e-mail to notify the user about the change of a task state
 	 * @param email
-	 * @param jobId
+	 * @param submissionId
 	 * @param context
 	 */
-	boolean doNotify(String email, String jobId, ImageTask context);
+	boolean doNotify(String email, String submissionId, ImageTask context);
 	
 }

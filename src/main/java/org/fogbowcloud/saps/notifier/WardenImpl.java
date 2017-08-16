@@ -26,14 +26,14 @@ public class WardenImpl implements Warden {
 	private static final String CONF_PATH = "config/sebal.conf";
 	private static final String NOREPLY_EMAIL = "noreply_email";
 	private static final String NOREPLY_PASSWORD = "noreply_password";
-	private static final String DEFAULT_SLEEP_TIME = "default_sleep_time";	
-	
+	private static final String DEFAULT_SLEEP_TIME = "default_sleep_time";
+
 	public WardenImpl() {
-		try {					
+		try {
 			properties = new Properties();
 			FileInputStream input = new FileInputStream(CONF_PATH);
 			properties.load(input);
-						
+
 			dbUtilsImpl = new SubmissionDispatcherImpl(properties);
 		} catch (IOException e) {
 			LOGGER.error("Error while getting properties", e);
@@ -41,7 +41,7 @@ public class WardenImpl implements Warden {
 			LOGGER.error("Error while initializing DBUtilsImpl", e);
 		}
 	}
-	
+
 	// For test only
 	protected WardenImpl(Properties properties, SubmissionDispatcherImpl dbUtilsImpl) {
 		this.properties = properties;
@@ -54,20 +54,20 @@ public class WardenImpl implements Warden {
 		while (true) {
 			Collection<Ward> notified = new LinkedList<Ward>();
 			for (Ward ward : getPending()) {
-				ImageTask imageData = getImageData(ward.getImageName());
-				if(imageData == null) {
-					LOGGER.debug("Image " +  ward.getImageName() + " does not exist in main database anymore");
+				ImageTask imageTask = getImageTask(ward.getTaskId());
+				if (imageTask == null) {
+					LOGGER.debug("Image task " + ward.getTaskId()
+							+ " does not exist in main database anymore");
 					removeNonExistentWard(ward);
 				} else {
-					if (reached(ward, imageData)) {
+					if (reached(ward, imageTask)) {
 						try {
-							if (doNotify(ward.getEmail(), ward.getJobId(),
-									imageData)) {
+							if (doNotify(ward.getEmail(), ward.getSubmissionId(), imageTask)) {
 								notified.add(ward);
 							}
 						} catch (Throwable e) {
-							LOGGER.error("Could not notify the user on: "
-									+ ward.getEmail() + " about " + ward, e);
+							LOGGER.error("Could not notify the user on: " + ward.getEmail()
+									+ " about " + ward, e);
 						}
 					}
 				}
@@ -75,8 +75,7 @@ public class WardenImpl implements Warden {
 
 			removeNotified(notified);
 			try {
-				Thread.sleep(Long.valueOf(properties
-						.getProperty(DEFAULT_SLEEP_TIME)));
+				Thread.sleep(Long.valueOf(properties.getProperty(DEFAULT_SLEEP_TIME)));
 			} catch (InterruptedException e) {
 				LOGGER.error("Thread error while sleep", e);
 			}
@@ -84,18 +83,17 @@ public class WardenImpl implements Warden {
 	}
 
 	@Override
-	public boolean doNotify(String email, String jobId, ImageTask context) {
+	public boolean doNotify(String email, String submissionId, ImageTask context) {
 
-		String subject = "IMAGE " + context.getName() + " WITH JOB_ID " + jobId
-				+ " FETCHED";
+		String subject = "IMAGE " + context.getName() + " TASK " + context.getTaskId()
+				+ " WITH SUBMISSION_ID " + submissionId + " ARCHIVED";
 
-		String message = "The image " + context.getName()
-				+ " was FETCHED into swift.\n" + context.formatedToString();
+		String message = "The image " + context.getName() + " was ARCHIVED into swift.\n"
+				+ context.formatedToString();
 
 		try {
 			GoogleMail.Send(properties.getProperty(NOREPLY_EMAIL),
-					properties.getProperty(NOREPLY_PASSWORD), email, subject,
-					message);
+					properties.getProperty(NOREPLY_PASSWORD), email, subject, message);
 			return true;
 		} catch (AddressException e) {
 			LOGGER.error("Error while sending email to " + email, e);
@@ -105,11 +103,11 @@ public class WardenImpl implements Warden {
 
 		return false;
 	}
-	
+
 	private void removeNonExistentWard(Ward ward) {
 		try {
-			dbUtilsImpl.removeUserNotify(ward.getJobId(), ward.getImageName(),
-					ward.getEmail());
+			dbUtilsImpl.removeUserNotify(ward.getSubmissionId(), ward.getTaskId(),
+					ward.getImageName(), ward.getEmail());
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
 		} catch (NullPointerException e) {
@@ -121,7 +119,7 @@ public class WardenImpl implements Warden {
 
 		try {
 			for (Ward ward : notified) {
-				dbUtilsImpl.removeUserNotify(ward.getJobId(),
+				dbUtilsImpl.removeUserNotify(ward.getSubmissionId(), ward.getTaskId(),
 						ward.getImageName(), ward.getEmail());
 			}
 		} catch (SQLException e) {
@@ -131,10 +129,10 @@ public class WardenImpl implements Warden {
 		}
 	}
 
-	protected ImageTask getImageData(String imageName) {
+	protected ImageTask getImageTask(String taskId) {
 
 		try {
-			return dbUtilsImpl.getImageInDB(imageName);
+			return dbUtilsImpl.getTaskInDB(taskId);
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
 		}
@@ -157,7 +155,6 @@ public class WardenImpl implements Warden {
 
 	protected boolean reached(Ward ward, ImageTask imageData) {
 
-		return (imageData.getState().ordinal() == ward.getTargetState()
-				.ordinal());
+		return (imageData.getState().ordinal() == ward.getTargetState().ordinal());
 	}
 }

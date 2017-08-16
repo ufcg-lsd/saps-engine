@@ -258,7 +258,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public void addUserNotify(String submissionId, String taskId, String imageName, String userEmail)
 			throws SQLException {
-		LOGGER.info("Adding image task " + taskId + " submission " + submissionId
+		LOGGER.info("Adding image task " + taskId + " from submission " + submissionId
 				+ " notification for " + userEmail);
 		if (taskId == null || taskId.isEmpty() || imageName == null || imageName.isEmpty()
 				|| userEmail == null || userEmail.isEmpty()) {
@@ -376,7 +376,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		while (rs.next()) {
 			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageState.FETCHED, rs
-					.getString(SUBMISSION_ID_COL), rs.getString(USER_EMAIL_COL)));
+					.getString(SUBMISSION_ID_COL), rs.getString(TASK_ID_COL), rs
+					.getString(USER_EMAIL_COL)));
 		}
 
 		return wards;

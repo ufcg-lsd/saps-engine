@@ -6,26 +6,31 @@ public class Ward {
 
 	private final String imageName;
 	private final ImageState targetState;
-	private final String jobId;
+	private final String submissionId;
+	private final String taskId;
 	private final String email;
 
-	public Ward(String imageName, ImageState targetState, String jobId,
+	public Ward(String imageName, ImageState targetState, String submissionId, String taskId,
 			String email) {
 		this.imageName = imageName;
 		this.targetState = targetState;
 		this.email = email;
-		this.jobId = jobId;
+		this.submissionId = submissionId;
+		this.taskId = taskId;
 	}
 
 	@Override
 	public String toString() {
-		return "Ward [imageName=" + imageName + ", targetState="
-				+ targetState + ", jobId=" + jobId + ", email=" + email
-				+ "]";
+		return "Ward [imageName=" + imageName + ", targetState=" + targetState + ", submissionId="
+				+ submissionId + ", taskId=" + taskId + ", email=" + email + "]";
 	}
 
-	public String getJobId() {
-		return jobId;
+	public String getSubmissionId() {
+		return submissionId;
+	}
+	
+	public String getTaskId() {
+		return taskId;
 	}
 
 	public String getEmail() {

@@ -30,21 +30,21 @@ import org.json.JSONException;
 
 public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
-    private final JDBCImageDataStore imageStore;
-    private DefaultImageRepository nasaRepository;
-    private USGSNasaRepository usgsRepository;
-    private Properties properties;
-    
-    private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcherImpl.class);
+	private final JDBCImageDataStore imageStore;
+	private DefaultImageRepository nasaRepository;
+	private USGSNasaRepository usgsRepository;
+	private Properties properties;
 
-    public SubmissionDispatcherImpl(Properties properties) throws SQLException {
-        this.properties = properties;
-        this.imageStore = new JDBCImageDataStore(this.properties);
-        this.nasaRepository = new DefaultImageRepository(properties);
-		this.usgsRepository = new USGSNasaRepository(properties);		
+	private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcherImpl.class);
+
+	public SubmissionDispatcherImpl(Properties properties) throws SQLException {
+		this.properties = properties;
+		this.imageStore = new JDBCImageDataStore(this.properties);
+		this.nasaRepository = new DefaultImageRepository(properties);
+		this.usgsRepository = new USGSNasaRepository(properties);
 		this.usgsRepository.handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
-    }
-    
+	}
+
 	@Override
 	public void addUserInDB(String userEmail, String userName, String userPass, boolean userState,
 			boolean userNotify, boolean adminRole) throws SQLException {
@@ -55,9 +55,9 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			throw new SQLException(e);
 		}
 	}
-	
+
 	@Override
-	public void updateUserState(String userEmail, boolean userState) throws SQLException {		
+	public void updateUserState(String userEmail, boolean userState) throws SQLException {
 		try {
 			imageStore.updateUserState(userEmail, userState);
 		} catch (SQLException e) {
@@ -65,7 +65,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			throw new SQLException(e);
 		}
 	}
-	
+
 	@Override
 	public SapsUser getUser(String userEmail) {
 		try {
@@ -75,98 +75,102 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		}
 		return null;
 	}
-	
+
 	@Override
-	public void addUserInNotifyDB(String submissionId, String imageName, String userEmail) throws SQLException {
+	public void addTaskNotificationIntoDB(String submissionId, String taskId, String imageName,
+			String userEmail) throws SQLException {
 		try {
-			imageStore.addUserNotify(submissionId, imageName, userEmail);
+			imageStore.addUserNotify(submissionId, taskId, imageName, userEmail);
 		} catch (SQLException e) {
-			LOGGER.error("Error while adding image " + imageName + " user " + userEmail + " in notify DB", e);
+			LOGGER.error("Error while adding image " + imageName + " user " + userEmail
+					+ " in notify DB", e);
 		}
 	}
-	
+
 	@Override
-	public void removeUserNotify(String submissionId, String imageName, String userEmail) throws SQLException {
+	public void removeUserNotify(String submissionId, String taskId, String imageName,
+			String userEmail) throws SQLException {
 		try {
-			imageStore.removeUserNotify(submissionId, imageName, userEmail);
+			imageStore.removeUserNotify(submissionId, taskId, imageName, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while removing image " + imageName + " user " + userEmail
 					+ " from notify DB", e);
 		}
 	}
-	
+
 	@Override
-	public boolean isUserNotifiable(String userEmail) throws SQLException {		
+	public boolean isUserNotifiable(String userEmail) throws SQLException {
 		try {
 			return imageStore.isUserNotifiable(userEmail);
-		} catch(SQLException e) {
+		} catch (SQLException e) {
 			LOGGER.error("Error while verifying user notify", e);
 		}
-		
+
 		return false;
 	}
 
-    @Override
-    public void setImagesToPurge(String day, boolean force) throws SQLException, ParseException {
+	@Override
+	public void setImagesToPurge(String day, boolean force) throws SQLException, ParseException {
 		List<ImageTask> imagesToPurge = force ? imageStore.getAllImages() : imageStore
 				.getIn(ImageState.FETCHED);
 
-        for (ImageTask imageData : imagesToPurge) {
-            long date = 0;
-            try {
-                date = parseStringToDate(day).getTime();
-            } catch (ParseException e) {
-            	LOGGER.error("Error while parsing string to date", e);
-            }
-            if (isBeforeDay(date, imageData.getUpdateTime())) {
-                imageData.setImageStatus(ImageTask.PURGED);
-                
-                imageStore.updateImage(imageData);
+		for (ImageTask imageData : imagesToPurge) {
+			long date = 0;
+			try {
+				date = parseStringToDate(day).getTime();
+			} catch (ParseException e) {
+				LOGGER.error("Error while parsing string to date", e);
+			}
+			if (isBeforeDay(date, imageData.getUpdateTime())) {
+				imageData.setImageStatus(ImageTask.PURGED);
+
+				imageStore.updateImage(imageData);
 				imageData.setUpdateTime(imageStore.getImage(imageData.getName()).getUpdateTime());
-            }
-        }
-    }
+			}
+		}
+	}
 
-    protected Date parseStringToDate(String day) throws ParseException {
-        DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-        java.util.Date date = format.parse(day);
-        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-        return sqlDate;
-    }
+	protected Date parseStringToDate(String day) throws ParseException {
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+		java.util.Date date = format.parse(day);
+		java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+		return sqlDate;
+	}
 
-    protected boolean isBeforeDay(long date, Timestamp imageDataDay) {
-        return (imageDataDay.getTime() <= date);
-    }
+	protected boolean isBeforeDay(long date, Timestamp imageDataDay) {
+		return (imageDataDay.getTime() <= date);
+	}
 
-    @Override
-    public void listImagesInDB() throws SQLException, ParseException {
-        List<ImageTask> allImageData = imageStore.getAllImages();
-        for (int i = 0; i < allImageData.size(); i++) {
-            System.out.println(allImageData.get(i).toString());
-        }
-    }    
+	@Override
+	public void listImagesInDB() throws SQLException, ParseException {
+		List<ImageTask> allImageData = imageStore.getAllImages();
+		for (int i = 0; i < allImageData.size(); i++) {
+			System.out.println(allImageData.get(i).toString());
+		}
+	}
 
-    @Override
-    public void listCorruptedImages() throws ParseException {
-        List<ImageTask> allImageData;
-        try {
-            allImageData = imageStore.getIn(ImageState.CORRUPTED);
-            for (int i = 0; i < allImageData.size(); i++) {
-                System.out.println(allImageData.get(i).toString());
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Error while gettin images in " + ImageState.CORRUPTED + " state from DB", e);
-        }
-    }
+	@Override
+	public void listCorruptedImages() throws ParseException {
+		List<ImageTask> allImageData;
+		try {
+			allImageData = imageStore.getIn(ImageState.CORRUPTED);
+			for (int i = 0; i < allImageData.size(); i++) {
+				System.out.println(allImageData.get(i).toString());
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Error while gettin images in " + ImageState.CORRUPTED + " state from DB",
+					e);
+		}
+	}
 
-    @Override
+	@Override
 	public List<String> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
 			String sebalVersion, String sebalTag) throws IOException {
 		LOGGER.debug("Regions: " + regions);
 		List<String> obtainedImages = new ArrayList<String>();
 		String parsedDataSet = parseDataset(dataSet);
-		
-		int priority = 0;		
+
+		int priority = 0;
 		for (String region : regions) {
 			submitImagesForYears(parsedDataSet, firstYear, lastYear, region, sebalVersion,
 					sebalTag, priority, obtainedImages);
@@ -176,14 +180,14 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	private String parseDataset(String dataSet) {
-		if(dataSet.equals(SapsPropertiesConstants.DATASET_LT5_TYPE)) {
+		if (dataSet.equals(SapsPropertiesConstants.DATASET_LT5_TYPE)) {
 			return SapsPropertiesConstants.LANDSAT_5_DATASET;
-		} else if(dataSet.equals(SapsPropertiesConstants.DATASET_LE7_TYPE)) {
+		} else if (dataSet.equals(SapsPropertiesConstants.DATASET_LE7_TYPE)) {
 			return SapsPropertiesConstants.LANDSAT_7_DATASET;
-		} else if(dataSet.equals(SapsPropertiesConstants.DATASET_LC8_TYPE)) {
+		} else if (dataSet.equals(SapsPropertiesConstants.DATASET_LC8_TYPE)) {
 			return SapsPropertiesConstants.LANDSAT_8_DATASET;
 		}
-		
+
 		return null;
 	}
 
@@ -191,15 +195,15 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			String sebalVersion, String sebalTag, int priority, List<String> obtainedImages) {
 		JSONArray availableImagesJSON = getUSGSRepository().getAvailableImagesInRange(dataSet,
 				firstYear, lastYear, region);
-		
-		if(availableImagesJSON != null) {
+
+		if (availableImagesJSON != null) {
 			try {
 				for (int i = 0; i < availableImagesJSON.length(); i++) {
 					String entityId = availableImagesJSON.getJSONObject(i).getString(
 							SapsPropertiesConstants.ENTITY_ID_JSON_KEY);
 					String displayId = availableImagesJSON.getJSONObject(i).getString(
 							SapsPropertiesConstants.DISPLAY_ID_JSON_KEY);
-					
+
 					getImageStore().addImageTask(String.valueOf(UUID.randomUUID()), entityId,
 							"None", priority, sebalVersion, sebalTag, displayId);
 					getImageStore().addStateStamp(entityId, ImageState.NOT_DOWNLOADED,
@@ -210,31 +214,31 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 				LOGGER.error("Error while getting entityId and displayId from JSON response", e);
 			} catch (SQLException e) {
 				LOGGER.error("Error while adding image to database", e);
-			}			
+			}
 		}
 	}
 
-    public List<ImageTask> getImagesInDB() throws SQLException, ParseException {    	
-    	return imageStore.getAllImages();        
-    }
-    
-    @Override
-    public List<Ward> getUsersToNotify() throws SQLException {
-    	List<Ward> wards = imageStore.getUsersToNotify();    	
-    	return wards;    	
-    }
-    
-    public ImageTask getImageInDB(String imageName) throws SQLException {
-    	List<ImageTask> allImages = imageStore.getAllImages();
-    	
-    	for(ImageTask imageData : allImages) {
-    		if(imageData.getName().equals(imageName)) {
-    			return imageData;
-    		}
-    	}
-    	
-    	return null;
-    }
+	public List<ImageTask> getImagesInDB() throws SQLException, ParseException {
+		return imageStore.getAllImages();
+	}
+
+	@Override
+	public List<Ward> getUsersToNotify() throws SQLException {
+		List<Ward> wards = imageStore.getUsersToNotify();
+		return wards;
+	}
+
+	public ImageTask getTaskInDB(String taskId) throws SQLException {
+		List<ImageTask> allTasks = imageStore.getAllImages();
+
+		for (ImageTask imageTask : allTasks) {
+			if (imageTask.getTaskId().equals(taskId)) {
+				return imageTask;
+			}
+		}
+
+		return null;
+	}
 
 	protected String createImageList(String region, int year, String dataSet) {
 		StringBuilder imageList = new StringBuilder();
@@ -255,31 +259,31 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		return imageList.toString().trim();
 	}
 
-    public JDBCImageDataStore getImageStore() {
-        return imageStore;
-    }
+	public JDBCImageDataStore getImageStore() {
+		return imageStore;
+	}
 
-    protected void setNasaRepository(DefaultImageRepository nasaRepository) {
-        this.nasaRepository = nasaRepository;
-    }
+	protected void setNasaRepository(DefaultImageRepository nasaRepository) {
+		this.nasaRepository = nasaRepository;
+	}
 
-    protected DefaultImageRepository getNasaRepository() {
-        return nasaRepository;
-    }
-    
-    protected void setUSGSRepository(USGSNasaRepository usgsRepository) {
-    	this.usgsRepository = usgsRepository;
-    }
-    
-    protected USGSNasaRepository getUSGSRepository() {
-    	return usgsRepository;
-    }
+	protected DefaultImageRepository getNasaRepository() {
+		return nasaRepository;
+	}
 
-    public static String getImageRegionFromName(String imageName) {
-        return imageName.substring(3, 9);
-    }
-    
-    public Properties getProperties() {
-    	return properties;
-    }
+	protected void setUSGSRepository(USGSNasaRepository usgsRepository) {
+		this.usgsRepository = usgsRepository;
+	}
+
+	protected USGSNasaRepository getUSGSRepository() {
+		return usgsRepository;
+	}
+
+	public static String getImageRegionFromName(String imageName) {
+		return imageName.substring(3, 9);
+	}
+
+	public Properties getProperties() {
+		return properties;
+	}
 }
