@@ -20,7 +20,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicStatusLine;
-import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

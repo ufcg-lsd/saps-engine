@@ -256,8 +256,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ USERS_NOTIFY_TABLE_NAME + " VALUES(?, ?, ?, ?)";
 
 	@Override
-	public void addUserNotify(String submissionId, String taskId, String imageName, String userEmail)
-			throws SQLException {
+	public void addUserNotification(String submissionId, String taskId, String imageName,
+			String userEmail) throws SQLException {
 		LOGGER.info("Adding image task " + taskId + " from submission " + submissionId
 				+ " notification for " + userEmail);
 		if (taskId == null || taskId.isEmpty() || imageName == null || imageName.isEmpty()

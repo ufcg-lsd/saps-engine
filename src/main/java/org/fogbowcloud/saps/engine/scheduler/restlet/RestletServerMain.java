@@ -8,12 +8,12 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 
-public class DBRestMain {
+public class RestletServerMain {
 
 	private static final String ADMIN_EMAIL = "admin_email";
 	private static final String ADMIN_USER = "admin_user";
 	private static final String ADMIN_PASSWORD = "admin_password";
-	private static final Logger LOGGER = Logger.getLogger(DBRestMain.class);
+	private static final Logger LOGGER = Logger.getLogger(RestletServerMain.class);
 
 	public static void main(String[] args) throws Exception {
 

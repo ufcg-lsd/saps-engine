@@ -17,10 +17,10 @@ public interface SubmissionDispatcher {
 	void addUserInDB(String userEmail, String userName, String userPass, boolean userState,
 			boolean userNotify, boolean adminRole) throws SQLException;
 
-	void addTaskNotificationIntoDB(String submissionId, String taskId, String imageName, String userEmail)
-			throws SQLException;
+	void addTaskNotificationIntoDB(String submissionId, String taskId, String imageName,
+			String userEmail) throws SQLException;
 
-	List<String> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
+	List<Task> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
 			String sebalVersion, String sebalTag) throws IOException;
 
 	List<Ward> getUsersToNotify() throws SQLException;
@@ -30,7 +30,8 @@ public interface SubmissionDispatcher {
 	void setTasksToPurge(String day, boolean forceRemoveNonFetched) throws SQLException,
 			ParseException;
 
-	void removeUserNotify(String submissionId, String taskId, String imageName, String userEmail) throws SQLException;
+	void removeUserNotification(String submissionId, String taskId, String imageName, String userEmail)
+			throws SQLException;
 
 	void updateUserState(String userEmail, boolean userState) throws SQLException;
 

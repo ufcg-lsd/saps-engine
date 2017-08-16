@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
-import org.fogbowcloud.saps.notifier.Ward;
-import org.fogbowcloud.saps.notifier.WardenImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

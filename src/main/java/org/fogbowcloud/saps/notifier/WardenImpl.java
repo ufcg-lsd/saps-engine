@@ -106,7 +106,7 @@ public class WardenImpl implements Warden {
 
 	private void removeNonExistentWard(Ward ward) {
 		try {
-			dbUtilsImpl.removeUserNotify(ward.getSubmissionId(), ward.getTaskId(),
+			dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(),
 					ward.getImageName(), ward.getEmail());
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
@@ -119,7 +119,7 @@ public class WardenImpl implements Warden {
 
 		try {
 			for (Ward ward : notified) {
-				dbUtilsImpl.removeUserNotify(ward.getSubmissionId(), ward.getTaskId(),
+				dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(),
 						ward.getImageName(), ward.getEmail());
 			}
 		} catch (SQLException e) {

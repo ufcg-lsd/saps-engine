@@ -80,7 +80,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	public void addTaskNotificationIntoDB(String submissionId, String taskId, String imageName,
 			String userEmail) throws SQLException {
 		try {
-			imageStore.addUserNotify(submissionId, taskId, imageName, userEmail);
+			imageStore.addUserNotification(submissionId, taskId, imageName, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while adding image " + imageName + " user " + userEmail
 					+ " in notify DB", e);
@@ -88,7 +88,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	@Override
-	public void removeUserNotify(String submissionId, String taskId, String imageName,
+	public void removeUserNotification(String submissionId, String taskId, String imageName,
 			String userEmail) throws SQLException {
 		try {
 			imageStore.removeNotification(submissionId, taskId, imageName, userEmail);
@@ -158,25 +158,25 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 				System.out.println(allImageData.get(i).toString());
 			}
 		} catch (SQLException e) {
-			LOGGER.error("Error while gettin images in " + ImageTaskState.CORRUPTED + " state from DB",
-					e);
+			LOGGER.error("Error while gettin images in " + ImageTaskState.CORRUPTED
+					+ " state from DB", e);
 		}
 	}
 
 	@Override
-	public List<String> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
+	public List<Task> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
 			String sebalVersion, String sebalTag) throws IOException {
 		LOGGER.debug("Regions: " + regions);
-		List<String> obtainedImages = new ArrayList<String>();
+		List<Task> createdTasks = new ArrayList<Task>();
 		String parsedDataSet = parseDataset(dataSet);
 
 		int priority = 0;
 		for (String region : regions) {
-			submitImagesForYears(parsedDataSet, firstYear, lastYear, region, sebalVersion,
-					sebalTag, priority, obtainedImages);
+			createdTasks = submitImagesForYears(parsedDataSet, firstYear, lastYear, region,
+					sebalVersion, sebalTag, priority);
 			priority++;
 		}
-		return obtainedImages;
+		return createdTasks;
 	}
 
 	private String parseDataset(String dataSet) {
@@ -191,8 +191,9 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		return null;
 	}
 
-	private void submitImagesForYears(String dataSet, int firstYear, int lastYear, String region,
-			String sebalVersion, String sebalTag, int priority, List<String> obtainedImages) {
+	private List<Task> submitImagesForYears(String dataSet, int firstYear, int lastYear,
+			String region, String sebalVersion, String sebalTag, int priority) {
+		List<Task> createdTasks = new ArrayList<Task>();
 		JSONArray availableImagesJSON = getUSGSRepository().getAvailableImagesInRange(dataSet,
 				firstYear, lastYear, region);
 
@@ -203,12 +204,17 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 							SapsPropertiesConstants.ENTITY_ID_JSON_KEY);
 					String displayId = availableImagesJSON.getJSONObject(i).getString(
 							SapsPropertiesConstants.DISPLAY_ID_JSON_KEY);
+					String taskId = UUID.randomUUID().toString();
 
-					getImageStore().addImageTask(String.valueOf(UUID.randomUUID()), entityId,
-							"None", priority, sebalVersion, sebalTag, displayId);
+					getImageStore().addImageTask(taskId, entityId, "None", priority, sebalVersion,
+							sebalTag, displayId);
 					getImageStore().addStateStamp(entityId, ImageTaskState.NOT_DOWNLOADED,
 							getImageStore().getTask(entityId).getUpdateTime());
-					obtainedImages.add(displayId);
+
+					Task task = new Task();
+					task.setId(UUID.randomUUID().toString());
+					task.setImageTask(getImageStore().getTask(taskId));
+					createdTasks.add(task);
 				}
 			} catch (JSONException e) {
 				LOGGER.error("Error while getting entityId and displayId from JSON response", e);
@@ -216,6 +222,8 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 				LOGGER.error("Error while adding image to database", e);
 			}
 		}
+
+		return createdTasks;
 	}
 
 	public List<ImageTask> getImagesInDB() throws SQLException, ParseException {

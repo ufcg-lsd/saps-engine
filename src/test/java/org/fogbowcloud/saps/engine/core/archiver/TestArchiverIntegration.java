@@ -15,14 +15,11 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
-import org.fogbowcloud.saps.engine.core.archiver.FTPIntegrationImpl;
-import org.fogbowcloud.saps.engine.core.archiver.Archiver;
-import org.fogbowcloud.saps.engine.core.archiver.ArchiverHelper;
+import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

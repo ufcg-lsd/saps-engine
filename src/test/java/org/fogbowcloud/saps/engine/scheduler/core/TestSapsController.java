@@ -16,7 +16,6 @@ import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
 import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
-import org.fogbowcloud.saps.engine.scheduler.core.SapsController;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

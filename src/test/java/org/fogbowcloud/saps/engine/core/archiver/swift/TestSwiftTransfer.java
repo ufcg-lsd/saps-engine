@@ -7,8 +7,6 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Properties;
 
-import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftClient;
-
 public class TestSwiftTransfer {
 
 	public static void main(String[] args) throws Exception {

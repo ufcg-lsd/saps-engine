@@ -11,12 +11,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
-import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 

@@ -13,8 +13,8 @@ import org.restlet.resource.ResourceException;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 
-public class DBMainResource extends BaseResource {
-	private static final Logger LOGGER = Logger.getLogger(DBMainResource.class);
+public class MainResource extends BaseResource {
+	private static final Logger LOGGER = Logger.getLogger(MainResource.class);
 	private Configuration cfg;
 	
 	private void setUpTemplatesConfiguration() throws IOException {

@@ -12,8 +12,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
-import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.junit.Before;
 import org.junit.Rule;

@@ -32,7 +32,7 @@ public interface ImageDataStore {
 	void addUser(String userEmail, String userName, String userPass, boolean userState,
 			boolean userNotify, boolean adminRole) throws SQLException;
 
-	void addUserNotify(String submissionId, String taskId, String imageName, String userEmail) throws SQLException;
+	void addUserNotification(String submissionId, String taskId, String imageName, String userEmail) throws SQLException;
 
 	void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember) throws SQLException;
 

@@ -27,7 +27,6 @@ import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
-import org.fogbowcloud.saps.engine.scheduler.monitor.SapsTaskMonitor;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

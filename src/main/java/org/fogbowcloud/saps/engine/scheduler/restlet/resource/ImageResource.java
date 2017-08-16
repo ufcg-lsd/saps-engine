@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.dispatcher.Submission;
+import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
 import org.json.JSONArray;
@@ -22,10 +24,9 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.util.Series;
 
-public class DBImageResource extends BaseResource {
+public class ImageResource extends BaseResource {
 
-	private static final String PURGE_MESSAGE_OK = "Images purged from database";
-	private static final String IMAGE_NAME = "imageName";
+	private static final String PURGE_MESSAGE_OK = "Tasks purged from database";
 	private static final String FIRST_YEAR = "firstYear";
 	private static final String LAST_YEAR = "lastYear";
 	private static final String REGION = "region";
@@ -35,10 +36,9 @@ public class DBImageResource extends BaseResource {
 	private static final String DAY = "day";
 	private static final String FORCE = "force";
 
-	private static final Logger LOGGER = Logger.getLogger(DBImageResource.class);
+	private static final Logger LOGGER = Logger.getLogger(ImageResource.class);
 
-	private static final String ADD_IMAGES_MESSAGE_OK = "Images successfully added";
-	private static final CharSequence UPDATE_IMAGE_MESSAGE_OK = "Image successfully updated";
+	private static final String ADD_IMAGES_MESSAGE_OK = "Tasks successfully added";
 
 	private static final String USER_EMAIL = "userEmail";
 	private static final String USER_PASSWORD = "userPass";
@@ -46,7 +46,7 @@ public class DBImageResource extends BaseResource {
 	private static final String DEFAULT_CONF_PATH = "config/sebal.conf";
 	private static final String DEFAULT_SEBAL_VERSION = "default_sebal_version";
 
-	public DBImageResource() {
+	public ImageResource() {
 		super();
 	}
 
@@ -97,7 +97,7 @@ public class DBImageResource extends BaseResource {
 	}
 
 	@Post
-	public StringRepresentation insertImages(Representation entity) throws Exception {
+	public StringRepresentation insertTasks(Representation entity) throws Exception {
 		Properties properties = new Properties();
 		FileInputStream input = new FileInputStream(DEFAULT_CONF_PATH);
 		properties.load(input);
@@ -136,13 +136,14 @@ public class DBImageResource extends BaseResource {
 				}
 			}
 
-			List<String> imageNames = application.addImages(firstYear, lastYear, region, dataSet,
+			List<Task> createdTasks = application.addTasks(firstYear, lastYear, region, dataSet,
 					sebalVersion, sebalTag);
 			if (application.isUserNotifiable(userEmail)) {
-				String submissionId = UUID.randomUUID().toString();
-				String taskId = UUID.randomUUID().toString();
-				for (String imageName : imageNames) {
-					application.addUserNotify(submissionId, taskId, imageName, userEmail);
+				Submission submission = new Submission();
+				submission.setId(UUID.randomUUID().toString());
+				for (Task imageTask : createdTasks) {
+					application.addUserNotify(submission.getId(), imageTask.getId(), imageTask
+							.getImageTask().getCollectionTierName(), userEmail);
 				}
 			}
 		} catch (Exception e) {
@@ -153,53 +154,8 @@ public class DBImageResource extends BaseResource {
 		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK, MediaType.APPLICATION_JSON);
 	}
 
-	// @Put
-	// public StringRepresentation updateSebalVersion(Representation entity)
-	// throws Exception {
-	// Properties properties = new Properties();
-	// FileInputStream input = new FileInputStream(DEFAULT_CONF_PATH);
-	// properties.load(input);
-	//
-	// Form form = new Form(entity);
-	//
-	// String userEmail = form.getFirstValue(USER_EMAIL, true);
-	// String userPass = form.getFirstValue(USER_PASSWORD, true);
-	//
-	// LOGGER.debug("PUT with userEmail " + userEmail);
-	// if (!authenticateUser(userEmail, userPass)) {
-	// throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
-	// }
-	//
-	// String imageName = form.getFirstValue(IMAGE_NAME);
-	// String sebalVersion = form.getFirstValue(SEBAL_VERSION);
-	// String sebalTag = form.getFirstValue(SEBAL_TAG);
-	// LOGGER.debug("ImageName " + imageName + " SebalVersion " + sebalVersion +
-	// " SebalTag "
-	// + sebalTag);
-	//
-	// try {
-	// if (imageName == null || imageName.isEmpty() || sebalVersion == null
-	// || sebalVersion.isEmpty() || sebalTag == null || sebalTag.isEmpty()) {
-	// throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
-	// }
-	//
-	// application.updateImageToPhase2(imageName, sebalVersion, sebalTag);
-	//
-	// if (application.isUserNotifiable(userEmail)) {
-	// String jobId = UUID.randomUUID().toString();
-	// application.addUserNotify(jobId, imageName, userEmail);
-	// }
-	// } catch (Exception e) {
-	// LOGGER.debug(e.getMessage(), e);
-	// throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
-	// }
-	//
-	// return new StringRepresentation(UPDATE_IMAGE_MESSAGE_OK,
-	// MediaType.APPLICATION_JSON);
-	// }
-
 	@Delete
-	public StringRepresentation purgeImage(Representation entity) throws Exception {
+	public StringRepresentation purgeTask(Representation entity) throws Exception {
 		Form form = new Form(entity);
 
 		String userEmail = form.getFirstValue(USER_EMAIL, true);
@@ -215,7 +171,7 @@ public class DBImageResource extends BaseResource {
 		String day = form.getFirstValue(DAY);
 		String force = form.getFirstValue(FORCE);
 
-		LOGGER.debug("Purging images from day " + day);
+		LOGGER.debug("Purging tasks from day " + day);
 		DatabaseApplication application = (DatabaseApplication) getApplication();
 
 		try {
