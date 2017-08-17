@@ -116,7 +116,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 
 	protected void updateImageToError(TaskProcess tp) throws SQLException {
 		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
-		imageData.setState(ImageTaskState.ERROR);
+		imageData.setState(ImageTaskState.FAILED);
 		imageData.setImageError("Image " + getImageFromTaskProcess(tp) + " process failed");
 		imageStore.updateImageTask(imageData);
 		
@@ -127,7 +127,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 
 	protected void updateImageToQueued(TaskProcess tp) throws SQLException {
 		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
-		imageData.setState(ImageTaskState.QUEUED);
+		imageData.setState(ImageTaskState.READY);
 		imageStore.updateImageTask(imageData);
 		
 		// Inserting update time into stateStamps table in DB

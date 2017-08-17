@@ -55,7 +55,7 @@ public interface ImageDataStore {
 
 	boolean imageExist(String imageName) throws SQLException;
 
-	List<ImageTask> getAllImages() throws SQLException;
+	List<ImageTask> getAllTasks() throws SQLException;
 
 	List<ImageTask> getIn(ImageTaskState state) throws SQLException;
 

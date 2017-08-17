@@ -16,7 +16,7 @@ import freemarker.template.TemplateExceptionHandler;
 public class MainResource extends BaseResource {
 	private static final Logger LOGGER = Logger.getLogger(MainResource.class);
 	private Configuration cfg;
-	
+
 	private void setUpTemplatesConfiguration() throws IOException {
 		if (this.cfg == null) {
 			this.cfg = new Configuration();
@@ -33,7 +33,7 @@ public class MainResource extends BaseResource {
 			this.cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
 		}
 	}
-	
+
 	@Get
 	public TemplateRepresentation homeUi() {
 		String requestPath = null;
@@ -45,11 +45,11 @@ public class MainResource extends BaseResource {
 			String templateName = null;
 			if (requestPath == null || requestPath.isEmpty()) {
 				templateName = "main.tpl";
-			} else if(requestPath.equalsIgnoreCase("createAccount")) {
+			} else if (requestPath.equalsIgnoreCase("createAccount")) {
 				templateName = "register.tpl";
-			} else if(requestPath.equalsIgnoreCase("addJob")) {
+			} else if (requestPath.equalsIgnoreCase("addJob")) {
 				templateName = "addJob.tpl";
-			} else if(requestPath.equalsIgnoreCase("listImages")) {
+			} else if (requestPath.equalsIgnoreCase("listImages")) {
 				templateName = "listImages.tpl";
 			}
 			return new TemplateRepresentation(templateName, this.cfg, MediaType.TEXT_HTML);

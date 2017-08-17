@@ -82,7 +82,7 @@ public class TestArchiver {
 		ImageTask imageDataMock2 = mock(ImageTask.class);
 		
 		doReturn(true).when(imageStoreMock).lockTask(imageDataMock.getName());
-		doNothing().when(imageDataMock).setState(ImageTaskState.FETCHING);
+		doNothing().when(imageDataMock).setState(ImageTaskState.ARCHIVING);
 		doNothing().when(imageDataMock).setFederationMember("fake-federation-member-1");
 		doReturn(imageDataMock).when(pendingImageFetchMapMock).put(imageDataMock.getName(), imageDataMock);
 		doNothing().when(pendingImageFetchDBMock).commit();
@@ -91,7 +91,7 @@ public class TestArchiver {
 		imageStoreMock.unlockTask(imageDataMock.getName());
 		
 		doReturn(true).when(imageStoreMock).lockTask(imageDataMock2.getName());
-		doNothing().when(imageDataMock2).setState(ImageTaskState.FETCHING);
+		doNothing().when(imageDataMock2).setState(ImageTaskState.ARCHIVING);
 		doNothing().when(imageDataMock2).setFederationMember("fake-federation-member-2");
 		doReturn(imageDataMock2).when(pendingImageFetchMapMock).put(imageDataMock2.getName(), imageDataMock2);
 		doNothing().when(pendingImageFetchDBMock).commit();
@@ -109,12 +109,12 @@ public class TestArchiver {
 		ImageTask imageDataMock = mock(ImageTask.class);
 		ImageTask imageDataMock2 = mock(ImageTask.class);
 		
-		doNothing().when(imageDataMock).setState(ImageTaskState.FETCHED);
+		doNothing().when(imageDataMock).setState(ImageTaskState.ARCHIVED);
 		doNothing().when(imageStoreMock).updateImageTask(imageDataMock);
 		doReturn(imageDataMock).when(pendingImageFetchMapMock).remove(imageDataMock.getName(), imageDataMock);
 		doNothing().when(pendingImageFetchDBMock).commit();
 		
-		doNothing().when(imageDataMock2).setState(ImageTaskState.FETCHED);
+		doNothing().when(imageDataMock2).setState(ImageTaskState.ARCHIVED);
 		doNothing().when(imageStoreMock).updateImageTask(imageDataMock2);
 		doReturn(imageDataMock2).when(pendingImageFetchMapMock).remove(imageDataMock2.getName(), imageDataMock2);
 		doNothing().when(pendingImageFetchDBMock).commit();

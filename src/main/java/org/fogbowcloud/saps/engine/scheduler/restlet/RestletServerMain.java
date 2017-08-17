@@ -25,20 +25,17 @@ public class RestletServerMain {
 
 		SubmissionDispatcherImpl dbUtilsImpl = new SubmissionDispatcherImpl(properties);
 
-		DatabaseApplication databaseApplication = new DatabaseApplication(
-				dbUtilsImpl);
+		DatabaseApplication databaseApplication = new DatabaseApplication(dbUtilsImpl);
 		databaseApplication.startServer();
 
 		String userEmail = properties.getProperty(ADMIN_EMAIL);
 		SapsUser user = databaseApplication.getUser(userEmail);
 		if (user == null) {
 			String userName = properties.getProperty(ADMIN_USER);
-			String userPass = DigestUtils.md5Hex(properties
-					.getProperty(ADMIN_PASSWORD));
+			String userPass = DigestUtils.md5Hex(properties.getProperty(ADMIN_PASSWORD));
 
 			try {
-				databaseApplication.createUser(userEmail, userName, userPass,
-						true, false, true);
+				databaseApplication.createUser(userEmail, userName, userPass, true, false, true);
 			} catch (Exception e) {
 				LOGGER.error("Error while creating user", e);
 			}

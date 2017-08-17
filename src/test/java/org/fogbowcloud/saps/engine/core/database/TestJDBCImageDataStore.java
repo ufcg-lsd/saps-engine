@@ -79,7 +79,7 @@ public class TestJDBCImageDataStore {
 		doReturn(preparedStatement).when(connection).prepareStatement(eq(INSERT_IMAGE_SQL));
 		doNothing().when(preparedStatement).setString(eq(1), eq(fakeImageName));
 		doNothing().when(preparedStatement).setString(eq(2), eq(fakeDownloadLink));
-		doNothing().when(preparedStatement).setString(eq(3), eq(ImageTaskState.NOT_DOWNLOADED.getValue()));
+		doNothing().when(preparedStatement).setString(eq(3), eq(ImageTaskState.CREATED.getValue()));
 		doNothing().when(preparedStatement).setString(eq(4), eq(ImageDataStore.NONE));
 		doNothing().when(preparedStatement).setInt(eq(5), eq(fakePriority));
 		doNothing().when(preparedStatement).setString(eq(6), eq(fakeStationId));

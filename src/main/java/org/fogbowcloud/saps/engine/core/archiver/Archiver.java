@@ -205,7 +205,7 @@ public class Archiver {
 	protected boolean prepareFetch(ImageTask imageData) throws SQLException, IOException {
 		LOGGER.debug("Preparing image " + imageData.getCollectionTierName() + " to fetch");
 		if (imageStore.lockTask(imageData.getName())) {			
-			imageData.setState(ImageTaskState.FETCHING);
+			imageData.setState(ImageTaskState.ARCHIVING);
 			
 			fetcherHelper.updatePendingMapAndDB(imageData,
 					pendingImageFetchDB, pendingImageFetchMap);
@@ -252,7 +252,7 @@ public class Archiver {
 
 	protected void finishFetch(ImageTask imageData) throws IOException, SQLException {
 		LOGGER.debug("Finishing fetch for image " + imageData);
-		imageData.setState(ImageTaskState.FETCHED);
+		imageData.setState(ImageTaskState.ARCHIVED);
 
 		String stationId = fetcherHelper.getStationId(imageData, properties);
 
@@ -308,7 +308,7 @@ public class Archiver {
 			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image data.", e);
-			imageData.setState(ImageTaskState.FETCHING);
+			imageData.setState(ImageTaskState.ARCHIVING);
 			fetcherHelper.updatePendingMapAndDB(imageData, pendingImageFetchDB, pendingImageFetchMap);
 		}
 	}

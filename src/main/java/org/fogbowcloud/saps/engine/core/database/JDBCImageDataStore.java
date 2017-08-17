@@ -231,7 +231,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, taskId);
 			insertStatement.setString(2, imageName);
 			insertStatement.setString(3, downloadLink);
-			insertStatement.setString(4, ImageTaskState.NOT_DOWNLOADED.getValue());
+			insertStatement.setString(4, ImageTaskState.CREATED.getValue());
 			insertStatement.setString(5, ImageDataStore.NONE);
 			insertStatement.setInt(6, priority);
 			insertStatement.setString(7, "NE");
@@ -375,7 +375,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		List<Ward> wards = new ArrayList<Ward>();
 
 		while (rs.next()) {
-			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageTaskState.FETCHED, rs
+			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageTaskState.ARCHIVED, rs
 					.getString(SUBMISSION_ID_COL), rs.getString(TASK_ID_COL), rs
 					.getString(USER_EMAIL_COL)));
 		}
@@ -732,7 +732,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
 
 	@Override
-	public List<ImageTask> getAllImages() throws SQLException {
+	public List<ImageTask> getAllTasks() throws SQLException {
 		Statement statement = null;
 		Connection conn = null;
 		try {
@@ -948,10 +948,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " = ? AND " + FEDERATION_MEMBER_COL + " = ? LIMIT ?";
 
 	/**
-	 * This method selects and locks all images marked as NOT_DOWNLOADED and
-	 * updates to DOWNLOADING and changes the federation member to the crawler
-	 * ID and then selects and returns the updated images based on the state and
-	 * federation member.
+	 * This method selects and locks all images marked as CREATED and updates to
+	 * DOWNLOADING and changes the federation member to the crawler ID and then
+	 * selects and returns the updated images based on the state and federation
+	 * member.
 	 */
 	@Override
 	public List<ImageTask> getImagesToDownload(String federationMember, int limit)
@@ -979,9 +979,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			lockAndUpdateStatement = connection
 					.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
-			lockAndUpdateStatement.setString(1, ImageTaskState.SELECTED.getValue());
+			lockAndUpdateStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);
-			lockAndUpdateStatement.setString(3, ImageTaskState.NOT_DOWNLOADED.getValue());
+			lockAndUpdateStatement.setString(3, ImageTaskState.CREATED.getValue());
 			lockAndUpdateStatement.setString(4, ImageTask.AVAILABLE);
 			lockAndUpdateStatement.setInt(5, limit);
 			lockAndUpdateStatement.setQueryTimeout(300);
@@ -989,7 +989,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			selectStatement = connection
 					.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
-			selectStatement.setString(1, ImageTaskState.SELECTED.getValue());
+			selectStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
 			selectStatement.setString(2, ImageTask.AVAILABLE);
 			selectStatement.setString(3, federationMember);
 			selectStatement.setInt(4, limit);

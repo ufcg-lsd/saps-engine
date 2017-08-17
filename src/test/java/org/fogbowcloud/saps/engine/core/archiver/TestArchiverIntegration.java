@@ -177,8 +177,8 @@ public class TestArchiverIntegration {
 		fetcher.prepareFetch(imageData2);
 
 		// expect
-		Assert.assertEquals(ImageTaskState.FETCHING, imageData.getState());
-		Assert.assertEquals(ImageTaskState.FETCHING, imageData2.getState());
+		Assert.assertEquals(ImageTaskState.ARCHIVING, imageData.getState());
+		Assert.assertEquals(ImageTaskState.ARCHIVING, imageData2.getState());
 	}
 
 	@Test
@@ -231,8 +231,8 @@ public class TestArchiverIntegration {
 		fetcher.prepareFetch(imageData2);
 
 		// expect
-		Assert.assertEquals(ImageTaskState.FETCHING, imageData.getState());
-		Assert.assertEquals(ImageTaskState.FETCHING, imageData2.getState());
+		Assert.assertEquals(ImageTaskState.ARCHIVING, imageData.getState());
+		Assert.assertEquals(ImageTaskState.ARCHIVING, imageData2.getState());
 	}
 
 	@Test
@@ -255,7 +255,7 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FETCHING,
+		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.ARCHIVING,
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
 
@@ -276,7 +276,7 @@ public class TestArchiverIntegration {
 		fetcher.fetch(imageData);
 
 		// expect
-		Assert.assertEquals(ImageTaskState.FETCHING, imageData.getState());
+		Assert.assertEquals(ImageTaskState.ARCHIVING, imageData.getState());
 	}
 
 	@Test

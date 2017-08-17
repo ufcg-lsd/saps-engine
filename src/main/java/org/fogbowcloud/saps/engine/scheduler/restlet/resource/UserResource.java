@@ -21,11 +21,11 @@ public class UserResource extends BaseResource {
 	private static final CharSequence CREATE_USER_MESSAGE_OK = "User created successfully";
 	private static final CharSequence CREATE_USER_ALREADY_EXISTS = "User already exists";
 	private static final CharSequence UPDATE_USER_MESSAGE_OK = "User state updated";
-	
+
 	private static final Logger LOGGER = Logger.getLogger(UserResource.class);
 	private static final String ADMIN_USER_EMAIL = "adminEmail";
 	private static final String ADMIN_USER_PASSWORD = "adminPass";
-	
+
 	public UserResource() {
 		super();
 	}
@@ -40,46 +40,43 @@ public class UserResource extends BaseResource {
 		String userPass = form.getFirstValue(REQUEST_ATTR_USERPASS);
 		String userPassConfirm = form.getFirstValue(REQUEST_ATTR_USERPASS_CONFIRM);
 		String userNotify = form.getFirstValue(REQUEST_ATTR_USERNOTIFY);
-		
+
 		checkMandatoryAttributes(userName, userEmail, userPass, userPassConfirm);
-		
+
 		LOGGER.debug("Creating user with userEmail " + userEmail + " and userName " + userName);
-		
+
 		try {
 			String md5Pass = DigestUtils.md5Hex(userPass);
 			boolean notify = false;
-			if(userNotify.equals("yes")) {
+			if (userNotify.equals("yes")) {
 				notify = true;
 			}
-			application.createUser(userEmail, userName, md5Pass, false,
-					notify, false);
+			application.createUser(userEmail, userName, md5Pass, false, notify, false);
 		} catch (Exception e) {
 			LOGGER.error("Error while creating user", e);
-			return new StringRepresentation(CREATE_USER_ALREADY_EXISTS,
-					MediaType.TEXT_PLAIN);
+			return new StringRepresentation(CREATE_USER_ALREADY_EXISTS, MediaType.TEXT_PLAIN);
 		}
 
-		return new StringRepresentation(CREATE_USER_MESSAGE_OK,
-				MediaType.TEXT_PLAIN);
+		return new StringRepresentation(CREATE_USER_MESSAGE_OK, MediaType.TEXT_PLAIN);
 	}
 
-	private void checkMandatoryAttributes(String userName, String userEmail, String userPass, String userPassConfirm) {
-		if (userEmail == null || userEmail.isEmpty() || userName == null
-				|| userName.isEmpty() || userPass == null || userPass.isEmpty()
-				|| !userPass.equals(userPassConfirm)) {
+	private void checkMandatoryAttributes(String userName, String userEmail, String userPass,
+			String userPassConfirm) {
+		if (userEmail == null || userEmail.isEmpty() || userName == null || userName.isEmpty()
+				|| userPass == null || userPass.isEmpty() || !userPass.equals(userPassConfirm)) {
 			throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
 		}
 	}
-	
+
 	@Put
 	public Representation updateUserState(Representation entity) throws Exception {
-		
+
 		Form form = new Form(entity);
-		
+
 		String adminUserEmail = form.getFirstValue(ADMIN_USER_EMAIL, true);
 		String adminUserPass = form.getFirstValue(ADMIN_USER_PASSWORD, true);
-		
-		if(!authenticateUser(adminUserEmail, adminUserPass, true)) {
+
+		if (!authenticateUser(adminUserEmail, adminUserPass, true)) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 		}
 
@@ -93,14 +90,13 @@ public class UserResource extends BaseResource {
 			if (userState.equals("yes")) {
 				state = true;
 			}
-			
+
 			application.updateUserState(userEmail, state);
 		} catch (Exception e) {
 			LOGGER.error("Error while updating user state to " + state, e);
 			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
-		}		
-		
-		return new StringRepresentation(UPDATE_USER_MESSAGE_OK,
-				MediaType.TEXT_PLAIN);
+		}
+
+		return new StringRepresentation(UPDATE_USER_MESSAGE_OK, MediaType.TEXT_PLAIN);
 	}
 }

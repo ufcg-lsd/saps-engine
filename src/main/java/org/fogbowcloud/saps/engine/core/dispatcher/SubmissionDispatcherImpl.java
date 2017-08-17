@@ -111,8 +111,8 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 	@Override
 	public void setTasksToPurge(String day, boolean force) throws SQLException, ParseException {
-		List<ImageTask> tasksToPurge = force ? imageStore.getAllImages() : imageStore
-				.getIn(ImageTaskState.FETCHED);
+		List<ImageTask> tasksToPurge = force ? imageStore.getAllTasks() : imageStore
+				.getIn(ImageTaskState.ARCHIVED);
 
 		for (ImageTask imageTask : tasksToPurge) {
 			long date = 0;
@@ -143,7 +143,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 	@Override
 	public void listImagesInDB() throws SQLException, ParseException {
-		List<ImageTask> allImageData = imageStore.getAllImages();
+		List<ImageTask> allImageData = imageStore.getAllTasks();
 		for (int i = 0; i < allImageData.size(); i++) {
 			System.out.println(allImageData.get(i).toString());
 		}
@@ -208,7 +208,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 					getImageStore().addImageTask(taskId, entityId, "None", priority, sebalVersion,
 							sebalTag, displayId);
-					getImageStore().addStateStamp(entityId, ImageTaskState.NOT_DOWNLOADED,
+					getImageStore().addStateStamp(entityId, ImageTaskState.CREATED,
 							getImageStore().getTask(entityId).getUpdateTime());
 
 					Task task = new Task();
@@ -227,7 +227,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	public List<ImageTask> getImagesInDB() throws SQLException, ParseException {
-		return imageStore.getAllImages();
+		return imageStore.getAllTasks();
 	}
 
 	@Override
@@ -237,7 +237,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	public ImageTask getTaskInDB(String taskId) throws SQLException {
-		List<ImageTask> allTasks = imageStore.getAllImages();
+		List<ImageTask> allTasks = imageStore.getAllTasks();
 
 		for (ImageTask imageTask : allTasks) {
 			if (imageTask.getTaskId().equals(taskId)) {

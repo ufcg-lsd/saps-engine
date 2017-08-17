@@ -184,7 +184,7 @@ public class TestSapsTaskMonitor {
 
 	@Test
 	public void testProcMonImageRunning() throws SQLException {
-		ImageTask imageData = new ImageTask("task-id", "imageName", "NE", ImageTaskState.QUEUED, "NE",
+		ImageTask imageData = new ImageTask("task-id", "imageName", "NE", ImageTaskState.READY, "NE",
 				0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(new Date().getTime()),
 				new Timestamp(new Date().getTime()), "NE", "NE", "image_name");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
@@ -233,7 +233,7 @@ public class TestSapsTaskMonitor {
 				imageData.getUpdateTime());
 
 		this.sebalTaskMonitor.updateImageToError(fakeTaskProcess);
-		Assert.assertEquals(ImageTaskState.ERROR, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FAILED, imageData.getState());
 	}
 
 	@Test
@@ -251,6 +251,6 @@ public class TestSapsTaskMonitor {
 				imageData.getUpdateTime());
 
 		this.sebalTaskMonitor.updateImageToQueued(fakeTaskProcess);
-		Assert.assertEquals(ImageTaskState.QUEUED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.READY, imageData.getState());
 	}
 }

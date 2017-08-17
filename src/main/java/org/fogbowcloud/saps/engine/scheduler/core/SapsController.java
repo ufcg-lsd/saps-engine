@@ -80,7 +80,7 @@ public class SapsController extends BlowoutController {
 		// in the next restart all images in running state will be reseted to queued state
 		try {
 			resetImagesRunningToQueued();
-			addSebalTasks(properties, sebalSpec, ImageTaskState.QUEUED);
+			addSebalTasks(properties, sebalSpec, ImageTaskState.READY);
 		} catch (Exception e) {
 			LOGGER.error("Error while adding previous tasks", e);
 		}
@@ -120,7 +120,7 @@ public class SapsController extends BlowoutController {
 	private static void resetImagesRunningToQueued() throws SQLException {
 		List<ImageTask> imagesRunning = imageStore.getIn(ImageTaskState.RUNNING);
 		for (ImageTask imageData : imagesRunning) {
-			imageData.setState(ImageTaskState.QUEUED);
+			imageData.setState(ImageTaskState.READY);
 			imageStore.updateImageTask(imageData);
 		}
 	}
@@ -139,7 +139,7 @@ public class SapsController extends BlowoutController {
 				Specification specWithFederation = generateModifiedSpec(imageData, sebalSpec);
 				LOGGER.debug("specWithFederation " + specWithFederation.toString());
 				
-				if (ImageTaskState.QUEUED.equals(imageState)
+				if (ImageTaskState.READY.equals(imageState)
 						|| ImageTaskState.DOWNLOADED.equals(imageState)) {
 					TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(),
 							specWithFederation);
@@ -161,7 +161,7 @@ public class SapsController extends BlowoutController {
 							specWithFederation, imageData.getFederationMember(), nfsServerIP,
 							nfsServerPort, imageData.getSebalVersion(), imageData.getSebalTag());
 					
-					imageData.setState(ImageTaskState.QUEUED);
+					imageData.setState(ImageTaskState.READY);
 					imageData.setBlowoutVersion(getBlowoutVersion(properties));					
 					addTask(taskImpl);
 

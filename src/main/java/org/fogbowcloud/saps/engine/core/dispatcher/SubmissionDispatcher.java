@@ -30,8 +30,8 @@ public interface SubmissionDispatcher {
 	void setTasksToPurge(String day, boolean forceRemoveNonFetched) throws SQLException,
 			ParseException;
 
-	void removeUserNotification(String submissionId, String taskId, String imageName, String userEmail)
-			throws SQLException;
+	void removeUserNotification(String submissionId, String taskId, String imageName,
+			String userEmail) throws SQLException;
 
 	void updateUserState(String userEmail, boolean userState) throws SQLException;
 
