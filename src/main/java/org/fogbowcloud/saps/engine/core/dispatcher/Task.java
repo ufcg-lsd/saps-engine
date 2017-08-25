@@ -5,7 +5,7 @@ import org.fogbowcloud.saps.engine.core.model.ImageTask;
 public class Task {
 
 	private String id;
-	private ImageTask imageData;
+	private ImageTask imageTask;
 
 	public String getId() {
 		return id;
@@ -16,10 +16,10 @@ public class Task {
 	}
 
 	public ImageTask getImageTask() {
-		return imageData;
+		return imageTask;
 	}
 
 	public void setImageTask(ImageTask imageTask) {
-		this.imageData = imageTask;
+		this.imageTask = imageTask;
 	}
 }

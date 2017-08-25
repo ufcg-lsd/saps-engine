@@ -46,8 +46,8 @@ public class SapsTask {
 	public static final String METADATA_TASK_START_EXECUTION_TIME = "task_execution_time";
 	public static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
 
-	private static final String METADATA_SEBAL_VERSION = "sebal_url";
-	private static final String METADATA_SEBAL_TAG = "sebal_version";
+	private static final String METADATA_CONTAINER_REPOSITORY = "container_repository";
+	private static final String METADATA_CONTAINER_TAG = "container_tag";
 
 	private static final String METADATA_REPOS_USER = "repository_user";
 
@@ -63,15 +63,15 @@ public class SapsTask {
 
 	public static TaskImpl createSebalTask(TaskImpl rTaskImpl, Properties properties,
 			String imageName, String imageNewCollectionName, Specification spec,
-			String federationMember, String nfsServerIP, String nfsServerPort, String sebalVersion,
-			String sebalTag) {
+			String federationMember, String nfsServerIP, String nfsServerPort,
+			String containerRepository, String containerTag) {
 		LOGGER.debug("Creating R task for image " + imageNewCollectionName);
 
 		settingCommonTaskMetadata(properties, rTaskImpl);
 
 		// setting image R execution properties
-		rTaskImpl.putMetadata(METADATA_SEBAL_VERSION, sebalVersion);
-		rTaskImpl.putMetadata(METADATA_SEBAL_TAG, sebalTag);
+		rTaskImpl.putMetadata(METADATA_CONTAINER_REPOSITORY, containerRepository);
+		rTaskImpl.putMetadata(METADATA_CONTAINER_TAG, containerTag);
 		rTaskImpl.putMetadata(METADATA_PHASE, R_SCRIPT_PHASE);
 		rTaskImpl.putMetadata(METADATA_IMAGE_NAME, imageName);
 		rTaskImpl.putMetadata(METADATA_IMAGE_NEW_COLLECTION_NAME, imageNewCollectionName);
@@ -236,8 +236,8 @@ public class SapsTask {
 			String scriptType) {
 
 		if (scriptType.equals(INIT_TYPE)) {
-			command = command.replaceAll(Pattern.quote("${PINPOINTED_SEBAL_TAG}"),
-					task.getMetadata(METADATA_SEBAL_TAG));
+			command = command.replaceAll(Pattern.quote("${CONTAINER_REPOSITORY}"),
+					task.getMetadata(METADATA_CONTAINER_REPOSITORY));
 			command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
 					task.getMetadata(METADATA_NFS_SERVER_IP));
 			command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"),
@@ -249,8 +249,8 @@ public class SapsTask {
 		// common variables for both scripts
 		command = command.replaceAll(Pattern.quote("${IMAGE_NEW_COLLECTION_NAME}"),
 				task.getMetadata(METADATA_IMAGE_NEW_COLLECTION_NAME));
-		command = command.replaceAll(Pattern.quote("${SEBAL_URL}"),
-				task.getMetadata(METADATA_SEBAL_VERSION));
+		command = command.replaceAll(Pattern.quote("${CONTAINER_TAG}"),
+				task.getMetadata(METADATA_CONTAINER_TAG));
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
 		command = command.replaceAll(Pattern.quote("${SEBAL_MOUNT_POINT}"),

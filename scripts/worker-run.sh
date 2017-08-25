@@ -3,17 +3,17 @@
 # Global variables
 IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
+CONTAINER_OUT_DIR=/home/ubuntu/$RESULTS_DIR_NAME
 BIN_RUN_SCRIPT="bin/run.sh"
 ERROR_LOGS_DIR=error_logs
 PROCESS_OUTPUT=
 
 function executeRunScript {
-  #when https://github.com/xpto/foo-baa.git we have foo-baa which is the root dir of the repo
-  repositoryName=`echo ${SEBAL_URL} | rev | cut -d "/" -f1 | cut -d"." -f2 | rev`
-
   cd ${SANDBOX}
 
-  bash -x $repositoryName/$BIN_RUN_SCRIPT ${IMAGE_NEW_COLLECTION_NAME} ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME} ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/${IMAGE_NEW_COLLECTION_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/${IMAGE_NEW_COLLECTION_NAME}"_station.csv"
+  CONTAINER_ID=$(docker ps --filter ancestor=${CONTAINER_TAG})
+
+  docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${IMAGE_NEW_COLLECTION_NAME} ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ $CONTAINER_OUT_DIR $CONTAINER_OUT_DIR/${IMAGE_NEW_COLLECTION_NAME} ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/${IMAGE_NEW_COLLECTION_NAME}"_MTL.txt" $CONTAINER_OUT_DIR/${IMAGE_NEW_COLLECTION_NAME}/${IMAGE_NEW_COLLECTION_NAME}"_station.csv"
 }
 
 # This function do a checksum of all output files in image dir

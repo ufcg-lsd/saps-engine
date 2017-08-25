@@ -21,7 +21,7 @@ public interface SubmissionDispatcher {
 			String userEmail) throws SQLException;
 
 	List<Task> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
-			String sebalVersion, String sebalTag) throws IOException;
+			String containerRepository, String containerTag) throws IOException;
 
 	List<Ward> getUsersToNotify() throws SQLException;
 

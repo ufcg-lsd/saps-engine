@@ -17,8 +17,8 @@ public class ImageTask implements Serializable {
 	private String federationMember;
 	private int priority;
 	private String stationId;
-	private String sebalVersion;
-	private String sebalTag;
+	private String containerRepository;
+	private String containerTag;
 	private String crawlerVersion;
 	private String fetcherVersion;
 	private String blowoutVersion;
@@ -30,17 +30,17 @@ public class ImageTask implements Serializable {
 	private String collectionTierName;
 
 	private Map<String, Integer> tasksStatesCount = new HashMap<String, Integer>();
-	
+
 	public static final String AVAILABLE = "available";
 	public static final String PURGED = "purged";
-	
+
 	public static final String NON_EXISTENT = "NE";
 
 	public ImageTask(String taskId, String name, String downloadLink, ImageTaskState state,
-			String federationMember, int priority, String stationId, String sebalVersion,
-			String sebalTag, String crawlerVersion, String fetcherVersion, String blowoutVersion,
-			String fmaskVersion, Timestamp creationTime, Timestamp updateTime, String status,
-			String error, String collectionTierName) {
+			String federationMember, int priority, String stationId, String containerRepository,
+			String containerTag, String crawlerVersion, String fetcherVersion,
+			String blowoutVersion, String fmaskVersion, Timestamp creationTime,
+			Timestamp updateTime, String status, String error, String collectionTierName) {
 		this.taskId = taskId;
 		this.name = name;
 		this.downloadLink = downloadLink;
@@ -48,8 +48,8 @@ public class ImageTask implements Serializable {
 		this.federationMember = federationMember;
 		this.priority = priority;
 		this.stationId = stationId;
-		this.sebalVersion = sebalVersion;
-		this.sebalTag = sebalTag;
+		this.containerRepository = containerRepository;
+		this.containerTag = containerTag;
 		this.crawlerVersion = crawlerVersion;
 		this.fetcherVersion = fetcherVersion;
 		this.blowoutVersion = blowoutVersion;
@@ -72,7 +72,7 @@ public class ImageTask implements Serializable {
 	public String getName() {
 		return name;
 	}
-	
+
 	public String getDownloadLink() {
 		return downloadLink;
 	}
@@ -88,55 +88,55 @@ public class ImageTask implements Serializable {
 	public int getPriority() {
 		return priority;
 	}
-	
+
 	public String getStationId() {
 		return stationId;
 	}
-	
-	public String getSebalVersion() {
-		return sebalVersion;
+
+	public String getContainerRepository() {
+		return containerRepository;
 	}
-	
-	public String getSebalTag() {
-		return sebalTag;
+
+	public String getContainerTag() {
+		return containerTag;
 	}
-	
+
 	public String getCrawlerVersion() {
 		return crawlerVersion;
 	}
-	
+
 	public String getFetcherVersion() {
 		return fetcherVersion;
 	}
-	
+
 	public String getBlowoutVersion() {
 		return blowoutVersion;
 	}
-	
+
 	public String getFmaskVersion() {
 		return fmaskVersion;
 	}
-	
+
 	public Timestamp getCreationTime() {
 		return creationTime;
 	}
-	
+
 	public Timestamp getUpdateTime() {
 		return updateTime;
 	}
-	
+
 	public String getImageStatus() {
 		return status;
 	}
-	
+
 	public String getImageError() {
 		return error;
 	}
-	
+
 	public String getCollectionTierName() {
 		return collectionTierName;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -156,47 +156,47 @@ public class ImageTask implements Serializable {
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
-	
+
 	public void setStationId(String stationId) {
 		this.stationId = stationId;
 	}
-	
-	public void setSebalVersion(String sebalVersion) {
-		this.sebalVersion = sebalVersion;
+
+	public void setContainerRepository(String containerRepository) {
+		this.containerRepository = containerRepository;
 	}
-	
-	public void setSebalTag(String sebalTag) {
-		this.sebalTag = sebalTag;
+
+	public void setContainerTag(String containerTag) {
+		this.containerTag = containerTag;
 	}
-	
+
 	public void setCrawlerVersion(String crawlerVersion) {
 		this.crawlerVersion = crawlerVersion;
 	}
-	
+
 	public void setFetcherVersion(String fetcherVersion) {
 		this.fetcherVersion = fetcherVersion;
 	}
-	
+
 	public void setBlowoutVersion(String blowoutVersion) {
 		this.blowoutVersion = blowoutVersion;
 	}
-	
+
 	public void setFmaskVersion(String fmaskVersion) {
 		this.fmaskVersion = fmaskVersion;
 	}
-	
+
 	public void setCreationTime(Timestamp creationTime) {
 		this.creationTime = creationTime;
 	}
-	
+
 	public void setUpdateTime(Timestamp updateTime) {
 		this.updateTime = updateTime;
 	}
-	
+
 	public void setImageStatus(String status) {
 		this.status = status;
 	}
-	
+
 	public void setImageError(String error) {
 		this.error = error;
 	}
@@ -207,27 +207,28 @@ public class ImageTask implements Serializable {
 
 	public String toString() {
 		return "[" + taskId + ", " + name + ", " + downloadLink + ", " + state.getValue() + ", "
-				+ federationMember + ", " + priority + ", " + stationId + ", " + sebalVersion
-				+ ", " + sebalTag + ", " + crawlerVersion + ", " + fetcherVersion + ", "
-				+ blowoutVersion + ", " + fmaskVersion + ", " + creationTime + ", " + updateTime
-				+ ", " + status + ", " + error + ", " + collectionTierName + "]";
+				+ federationMember + ", " + priority + ", " + stationId + ", "
+				+ containerRepository + ", " + containerTag + ", " + crawlerVersion + ", "
+				+ fetcherVersion + ", " + blowoutVersion + ", " + fmaskVersion + ", "
+				+ creationTime + ", " + updateTime + ", " + status + ", " + error + ", "
+				+ collectionTierName + "]";
 	}
-	
+
 	public String formatedToString() {
 
 		return "[ TaskId = " + taskId + " ]\n" + "[ ImageName = " + name + " ]\n"
 				+ "[ DownloadLink = " + downloadLink + " ]\n" + "[ ImageState = "
 				+ state.getValue() + " ]\n" + "[ FederationMember = " + federationMember + " ]\n"
 				+ "[ Priority = " + priority + " ]\n" + "[ StationId = " + stationId + " ]\n"
-				+ "[ SebalVersion = " + sebalVersion + " ]\n" + "[ SebalTag = " + sebalTag + " ]\n"
-				+ "[ CrawlerVersion = " + crawlerVersion + " ]\n" + "[ FetcherVersion = "
-				+ fetcherVersion + " ]\n" + "[ BlowoutVersion = " + blowoutVersion + " ]\n"
-				+ "[ FmaskVersion = " + fmaskVersion + " ]\n" + "[ CreationTime = " + creationTime
-				+ " ]\n" + "[ UpdateTime = " + updateTime + " ]\n" + "[ Status = " + status
-				+ " ]\n" + "[ Error = " + error + " ]\n" + "[ CollectionTierImageName = "
-				+ collectionTierName + " ]";
+				+ "[ ContainerRepository = " + containerRepository + " ]\n" + "[ ContainerTag = "
+				+ containerTag + " ]\n" + "[ CrawlerVersion = " + crawlerVersion + " ]\n"
+				+ "[ FetcherVersion = " + fetcherVersion + " ]\n" + "[ BlowoutVersion = "
+				+ blowoutVersion + " ]\n" + "[ FmaskVersion = " + fmaskVersion + " ]\n"
+				+ "[ CreationTime = " + creationTime + " ]\n" + "[ UpdateTime = " + updateTime
+				+ " ]\n" + "[ Status = " + status + " ]\n" + "[ Error = " + error + " ]\n"
+				+ "[ CollectionTierImageName = " + collectionTierName + " ]";
 	}
-	
+
 	public JSONObject toJSON() throws JSONException {
 		JSONObject json = new JSONObject();
 
@@ -238,8 +239,8 @@ public class ImageTask implements Serializable {
 		json.put("federationMember", federationMember);
 		json.put("priority", priority);
 		json.put("stationId", stationId);
-		json.put("sebalVersion", sebalVersion);
-		json.put("sebalTag", sebalTag);
+		json.put("containerRepository", containerRepository);
+		json.put("containerTag", containerTag);
 		json.put("crawlerVersion", crawlerVersion);
 		json.put("fetcherVersion", fetcherVersion);
 		json.put("blowoutVersion", blowoutVersion);
@@ -252,7 +253,7 @@ public class ImageTask implements Serializable {
 
 		return json;
 	}
-	
+
 	public Map<String, Integer> getTasksStatesCount() {
 		return tasksStatesCount;
 	}
@@ -270,8 +271,8 @@ public class ImageTask implements Serializable {
 					&& getState().equals(other.getState()) && getPriority() == other.getPriority()
 					&& getFederationMember().equals(other.getFederationMember())
 					&& getStationId().equals(other.getStationId())
-					&& getSebalVersion().equals(other.getSebalVersion())
-					&& getSebalTag().equals(other.getSebalTag())
+					&& getContainerRepository().equals(other.getContainerRepository())
+					&& getContainerTag().equals(other.getContainerTag())
 					&& getCrawlerVersion().equals(other.getCrawlerVersion())
 					&& getFetcherVersion().equals(other.getFetcherVersion())
 					&& getBlowoutVersion().equals(other.getBlowoutVersion())

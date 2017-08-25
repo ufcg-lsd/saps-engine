@@ -2,6 +2,8 @@
 
 BIN_INIT_SCRIPT="bin/init.sh"
 IMAGES_DIR_NAME=images
+RESULTS_DIR_NAME=results
+CONTAINER_OUT_DIR=/home/ubuntu/$RESULTS_DIR_NAME
 PROCESS_OUTPUT=
 repositoryName=
 
@@ -21,43 +23,6 @@ function prepareDependencies {
 
   # TODO: install in image
   echo -e "Y\n" | sudo apt-get install nfs-common
-
-  # TODO: install in image
-  echo -e "Y\n" | sudo apt-get install git
-
-  cd ${SANDBOX}
-
-  #when https://github.com/xpto/foo-baa.git we have foo-baa which is the root dir of the repo
-  repositoryName=`echo ${SEBAL_URL} | rev | cut -d "/" -f1 | cut -d"." -f2 | rev`
-
-  if [ ${PINPOINTED_SEBAL_TAG} = "NE" ]
-  then
-    git clone ${SEBAL_URL}	
-  else
-    #git clone --branch ${PINPOINTED_SEBAL_TAG} ${SEBAL_URL}
-    git clone ${SEBAL_URL}
-    cd $repositoryName
-    git checkout ${PINPOINTED_SEBAL_TAG}
-    cd ..
-  fi
-
-  bash -x $repositoryName/$BIN_INIT_SCRIPT
-}
-
-# This function checks if there is a missing dependencies file created
-# if it exists, it will be stored in image directory
-function checkMissingDependenciesFile {
-  if [ -f ${SANDBOX}/$repositoryName/missing_dependencies ];
-  then
-    echo "Transfering missing_dependencies file to ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME} directory"
-    sudo mv ${SANDBOX}/$repositoryName/missing_dependencies ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}
-  else
-    echo "No missing dependencies"
-    if [ -f ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/missing_dependencies ]
-    then
-      sudo rm ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/missing_dependencies
-    fi
-  fi
 }
 
 # This function mounts exports dir from NFS server
@@ -74,6 +39,14 @@ function mountExportsDir {
     echo "Directory ${SEBAL_MOUNT_POINT} not mounted yet...proceeding to mount"
     sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${VOLUME_EXPORT_PATH} ${SEBAL_MOUNT_POINT}
   fi
+}
+
+# This function downloads container image and prepare container to execution
+function prepareDockerContainer {
+  cd ${SANDBOX}
+  echo "Pulling docker image from ${CONTAINER_REPOSITORY}/${CONTAINER_TAG}"
+  docker pull ${CONTAINER_REPOSITORY}/${CONTAINER_TAG}
+  docker run -v ${SEBAL_MOUNT_POINT}:$CONTAINER_OUT_DIR ${CONTAINER_TAG}
 }
 
 function garbageCollect {

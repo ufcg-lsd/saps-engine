@@ -165,7 +165,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 	@Override
 	public List<Task> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
-			String sebalVersion, String sebalTag) throws IOException {
+			String containerRepository, String containerTag) throws IOException {
 		LOGGER.debug("Regions: " + regions);
 		List<Task> createdTasks = new ArrayList<Task>();
 		String parsedDataSet = parseDataset(dataSet);
@@ -173,7 +173,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		int priority = 0;
 		for (String region : regions) {
 			createdTasks = submitImagesForYears(parsedDataSet, firstYear, lastYear, region,
-					sebalVersion, sebalTag, priority);
+					containerRepository, containerTag, priority);
 			priority++;
 		}
 		return createdTasks;
@@ -192,7 +192,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	private List<Task> submitImagesForYears(String dataSet, int firstYear, int lastYear,
-			String region, String sebalVersion, String sebalTag, int priority) {
+			String region, String containerRepository, String containerTag, int priority) {
 		List<Task> createdTasks = new ArrayList<Task>();
 		JSONArray availableImagesJSON = getUSGSRepository().getAvailableImagesInRange(dataSet,
 				firstYear, lastYear, region);
@@ -206,8 +206,8 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 							SapsPropertiesConstants.DISPLAY_ID_JSON_KEY);
 					String taskId = UUID.randomUUID().toString();
 
-					getImageStore().addImageTask(taskId, entityId, "None", priority, sebalVersion,
-							sebalTag, displayId);
+					getImageStore().addImageTask(taskId, entityId, "None", priority, containerRepository,
+							containerTag, displayId);
 					getImageStore().addStateStamp(entityId, ImageTaskState.CREATED,
 							getImageStore().getTask(entityId).getUpdateTime());
 

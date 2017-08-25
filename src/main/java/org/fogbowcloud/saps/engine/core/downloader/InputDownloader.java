@@ -55,8 +55,8 @@ public class InputDownloader {
 			USGSNasaRepository usgsRepository, String crawlerIP, String crawlerPort,
 			String nfsPort, String federationMember) {
 		try {
-			checkProperties(properties, imageStore, usgsRepository, crawlerIP, nfsPort,
-					federationMember);
+			checkProperties(properties, imageStore, usgsRepository, crawlerIP, crawlerPort,
+					nfsPort, federationMember);
 		} catch (IllegalArgumentException e) {
 			LOGGER.error("Error while getting properties", e);
 			System.exit(1);
@@ -86,8 +86,8 @@ public class InputDownloader {
 	}
 
 	private void checkProperties(Properties properties, ImageDataStore imageStore,
-			USGSNasaRepository usgsRepository, String crawlerIP, String nfsPort,
-			String federationMember) throws IllegalArgumentException {
+			USGSNasaRepository usgsRepository, String crawlerIP, String crawlerPort,
+			String nfsPort, String federationMember) throws IllegalArgumentException {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
@@ -102,6 +102,14 @@ public class InputDownloader {
 
 		if (crawlerIP == null) {
 			throw new IllegalArgumentException("Crawler IP arg must not be null.");
+		}
+
+		if (crawlerPort == null) {
+			throw new IllegalArgumentException("Crawler Port arg must not be null.");
+		}
+
+		if (crawlerPort.isEmpty()) {
+			throw new IllegalArgumentException("Crawler Port arg must not be null.");
 		}
 
 		if (nfsPort == null) {
@@ -233,17 +241,7 @@ public class InputDownloader {
 		imageTask.setImageError(ImageTask.NON_EXISTENT);
 		imageTask.setFederationMember(ImageTask.NON_EXISTENT);
 		imageTask.setState(ImageTaskState.CREATED);
-		updateErrorImage(imageTask);
-	}
-
-	protected boolean imageNeedsToBeDownloaded(Properties properties, ImageTask imageData) {
-		File imageDir = getImageDir(properties, imageData);
-
-		if (isThereImageInputs(imageDir)) {
-			return false;
-		}
-
-		return true;
+		updateFailedTask(imageTask);
 	}
 
 	protected File getImageDir(Properties properties, ImageTask imageData) {
@@ -266,7 +264,7 @@ public class InputDownloader {
 		return false;
 	}
 
-	private void updateErrorImage(ImageTask imageData) throws SQLException {
+	private void updateFailedTask(ImageTask imageData) throws SQLException {
 		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
 		imageStore.updateImageTask(imageData);
 		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
@@ -358,6 +356,8 @@ public class InputDownloader {
 
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
 			usgsRepository.downloadImage(imageTask);
+			getStationData(imageTask);
+			// TODO: insert here station download code
 
 			if (checkIfImageFileExists(imageTask)) {
 				imageTask.setCrawlerVersion(crawlerVersion);
@@ -381,14 +381,15 @@ public class InputDownloader {
 		return false;
 	}
 
+	private void getStationData(ImageTask imageTask) {
+		// TODO Auto-generated method stub
+	}
+
 	private boolean checkIfImageFileExists(ImageTask imageTask) {
 		String imageInputFilePath = properties
 				.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH)
-				+ File.separator
-				+ "images"
-				+ File.separator
-				+ imageTask.getCollectionTierName()
-				+ File.separator
+				+ File.separator + "images" + File.separator 
+				+ imageTask.getCollectionTierName() + File.separator 
 				+ imageTask.getCollectionTierName() + ".tar.gz";
 		File imageInputFile = new File(imageInputFilePath);
 

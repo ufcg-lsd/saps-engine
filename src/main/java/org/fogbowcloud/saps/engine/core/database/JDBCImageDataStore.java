@@ -32,8 +32,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String FEDERATION_MEMBER_COL = "federation_member";
 	private static final String STATE_COL = "state";
 	private static final String STATION_ID_COL = "station_id";
-	private static final String SEBAL_VERSION_COL = "sebal_version";
-	private static final String SEBAL_TAG_COL = "sebal_tag";
+	private static final String CONTAINER_REPOSITORY_COL = "container_repository";
+	private static final String CONTAINER_TAG_COL = "container_tag";
 	private static final String CRAWLER_VERSION_COL = "crawler_version";
 	private static final String FETCHER_VERSION_COL = "fetcher_version";
 	private static final String BLOWOUT_VERSION_COL = "blowout_version";
@@ -110,13 +110,14 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ " VARCHAR(255) PRIMARY KEY, " + IMAGE_NAME_COL + " VARCHAR(255), "
 					+ DOWNLOAD_LINK_COL + " VARCHAR(255), " + STATE_COL + " VARCHAR(100), "
 					+ FEDERATION_MEMBER_COL + " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
-					+ STATION_ID_COL + " VARCHAR(255), " + SEBAL_VERSION_COL + " VARCHAR(255), "
-					+ SEBAL_TAG_COL + " VARCHAR(255), " + CRAWLER_VERSION_COL + " VARCHAR(255), "
-					+ FETCHER_VERSION_COL + " VARCHAR(255), " + BLOWOUT_VERSION_COL
-					+ " VARCHAR(255), " + FMASK_VERSION_COL + " VARCHAR(255), " + CREATION_TIME_COL
-					+ " TIMESTAMP, " + UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL
-					+ " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255), "
-					+ COLLECTION_TIER_IMAGE_NAME_COL + " VARCHAR(255))");
+					+ STATION_ID_COL + " VARCHAR(255), " + CONTAINER_REPOSITORY_COL
+					+ " VARCHAR(255), " + CONTAINER_TAG_COL + " VARCHAR(255), "
+					+ CRAWLER_VERSION_COL + " VARCHAR(255), " + FETCHER_VERSION_COL
+					+ " VARCHAR(255), " + BLOWOUT_VERSION_COL + " VARCHAR(255), "
+					+ FMASK_VERSION_COL + " VARCHAR(255), " + CREATION_TIME_COL + " TIMESTAMP, "
+					+ UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL + " VARCHAR(255), "
+					+ ERROR_MSG_COL + " VARCHAR(255), " + COLLECTION_TIER_IMAGE_NAME_COL
+					+ " VARCHAR(255))");
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME + "(" + TASK_ID_COL
 					+ " VARCHAR(255), " + IMAGE_NAME_COL + " VARCHAR(255), " + STATE_COL
@@ -210,7 +211,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	@Override
 	public void addImageTask(String taskId, String imageName, String downloadLink, int priority,
-			String sebalVersion, String sebalTag, String collectionTierImageName)
+			String containerRepository, String containerTag, String collectionTierImageName)
 			throws SQLException {
 		LOGGER.info("Adding image task " + taskId + " with name " + imageName + ", download link "
 				+ downloadLink + " and priority " + priority);
@@ -235,8 +236,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(5, ImageDataStore.NONE);
 			insertStatement.setInt(6, priority);
 			insertStatement.setString(7, "NE");
-			insertStatement.setString(8, sebalVersion);
-			insertStatement.setString(9, sebalTag);
+			insertStatement.setString(8, containerRepository);
+			insertStatement.setString(9, containerTag);
 			insertStatement.setString(10, "NE");
 			insertStatement.setString(11, "NE");
 			insertStatement.setString(12, "NE");
@@ -647,7 +648,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE "
 			+ IMAGE_TABLE_NAME
 			+ " SET name = ?, download_link = ?, state = ?, federation_member = ?,"
-			+ " priority = ?, station_id = ?, sebal_version = ?, sebal_tag = ?, crawler_version = ?, fetcher_version = ?,"
+			+ " priority = ?, station_id = ?, container_repository = ?, container_tag = ?, crawler_version = ?, fetcher_version = ?,"
 			+ " blowout_version = ?, fmask_version = ?," + " utime = now(), status = ?,"
 			+ " error_msg = ?, tier_collection_image_name = ? WHERE task_id = ?";
 
@@ -671,8 +672,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(4, imagetask.getFederationMember());
 			updateStatement.setInt(5, imagetask.getPriority());
 			updateStatement.setString(6, imagetask.getStationId());
-			updateStatement.setString(7, imagetask.getSebalVersion());
-			updateStatement.setString(8, imagetask.getSebalTag());
+			updateStatement.setString(7, imagetask.getContainerRepository());
+			updateStatement.setString(8, imagetask.getContainerTag());
 			updateStatement.setString(9, imagetask.getCrawlerVersion());
 			updateStatement.setString(10, imagetask.getFetcherVersion());
 			updateStatement.setString(11, imagetask.getBlowoutVersion());
@@ -690,17 +691,17 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String UPDATE_IMAGE_METADATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET station_id = ?, sebal_version = ?, utime = now() WHERE task_id = ?";
+			+ " SET station_id = ?, container_repository = ?, utime = now() WHERE task_id = ?";
 
 	@Override
-	public void updateImageMetadata(String taskId, String stationId, String sebalVersion)
+	public void updateImageMetadata(String taskId, String stationId, String containerRepository)
 			throws SQLException {
 		if (taskId == null || taskId.isEmpty() || stationId == null || stationId.isEmpty()
-				|| sebalVersion == null || sebalVersion.isEmpty()) {
+				|| containerRepository == null || containerRepository.isEmpty()) {
 			LOGGER.error("Invalid image task " + taskId + ", station ID " + stationId
-					+ " or sebal version " + sebalVersion);
+					+ " or sebal version " + containerRepository);
 			throw new IllegalArgumentException("Invalid image task " + taskId + ", station ID "
-					+ stationId + " or sebal version " + sebalVersion);
+					+ stationId + " or container repository " + containerRepository);
 		}
 		PreparedStatement updateStatement = null;
 		Connection connection = null;
@@ -710,7 +711,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			updateStatement = connection.prepareStatement(UPDATE_IMAGE_METADATA_SQL);
 			updateStatement.setString(1, stationId);
-			updateStatement.setString(2, sebalVersion);
+			updateStatement.setString(2, containerRepository);
 			updateStatement.setString(3, taskId);
 			updateStatement.setQueryTimeout(300);
 
@@ -1022,8 +1023,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					rs.getString(DOWNLOAD_LINK_COL), ImageTaskState.getStateFromStr(rs
 							.getString(STATE_COL)), rs.getString(FEDERATION_MEMBER_COL), rs
 							.getInt(PRIORITY_COL), rs.getString(STATION_ID_COL), rs
-							.getString(SEBAL_VERSION_COL), rs.getString(SEBAL_TAG_COL), rs
-							.getString(CRAWLER_VERSION_COL), rs.getString(FETCHER_VERSION_COL), rs
+							.getString(CONTAINER_REPOSITORY_COL), rs.getString(CONTAINER_TAG_COL),
+					rs.getString(CRAWLER_VERSION_COL), rs.getString(FETCHER_VERSION_COL), rs
 							.getString(BLOWOUT_VERSION_COL), rs.getString(FMASK_VERSION_COL), rs
 							.getTimestamp(CREATION_TIME_COL), rs.getTimestamp(UPDATED_TIME_COL), rs
 							.getString(IMAGE_STATUS_COL), rs.getString(ERROR_MSG_COL), rs
