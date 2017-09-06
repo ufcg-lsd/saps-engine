@@ -133,8 +133,8 @@ public class InputDownloader {
 		try {
 			while (true) {
 				cleanUnfinishedQueuedOutput(properties);
-				reSubmitFailedImages(properties);
 				purgeTasksFromVolume(properties);
+				removeFailedTasksFromVolume(properties);
 				deleteFetchedResultsFromVolume(properties);
 
 				double numToDownload = numberOfImagesToDownload();
@@ -202,52 +202,22 @@ public class InputDownloader {
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 		}
 	}
-
-	protected void reSubmitFailedImages(Properties properties) {
-		try {
-			List<ImageTask> failedTasks = imageStore.getIn(ImageTaskState.FAILED);
-
-			for (ImageTask imageTask : failedTasks) {
-				treatAndSubmit(properties, imageTask);
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while re submitting images with error", e);
-		}
-	}
-
-	protected void treatAndSubmit(Properties properties, ImageTask imageTask) throws SQLException {
-		if (imageTask.getFederationMember().equals(SapsPropertiesConstants.AZURE_FEDERATION_MEMBER)) {
-			imageTask.setFederationMember(this.federationMember);
-		}
-
-		if (imageTask.getFederationMember().equals(this.federationMember)) {
-			reSubmitImage(properties, imageTask);
-		}
-	}
-
-	protected void reSubmitImage(Properties properties, ImageTask imageTask) throws SQLException {
-		try {
-			deleteImageFromDisk(imageTask,
-					SapsPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "images"
-							+ File.separator + imageTask.getCollectionTierName());
+	
+	private void removeFailedTasksFromVolume(Properties properties)
+			throws SQLException, IOException {
+		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.FAILED);
+		for (ImageTask imageTask : tasks) {
+			deleteInputsFromDisk(imageTask,
+					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 			deleteResultsFromDisk(imageTask,
-					SapsPropertiesConstants.SEBAL_EXPORT_PATH + File.separator + "results"
-							+ File.separator + imageTask.getCollectionTierName());
-		} catch (IOException e) {
-			LOGGER.error("Error while deleting image " + imageTask.getCollectionTierName()
-					+ " from disk");
+					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 		}
-
-		imageTask.setImageError(ImageTask.NON_EXISTENT);
-		imageTask.setFederationMember(ImageTask.NON_EXISTENT);
-		imageTask.setState(ImageTaskState.CREATED);
-		updateFailedTask(imageTask);
 	}
 
-	protected File getImageDir(Properties properties, ImageTask imageData) {
+	protected File getImageDir(Properties properties, ImageTask imageTask) {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 		String imageDirPath = exportPath + File.separator + "images" + File.separator
-				+ imageData.getCollectionTierName();
+				+ imageTask.getCollectionTierName();
 		File imageDir = new File(imageDirPath);
 		return imageDir;
 	}
@@ -262,13 +232,6 @@ public class InputDownloader {
 		}
 
 		return false;
-	}
-
-	private void updateFailedTask(ImageTask imageData) throws SQLException {
-		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
-		imageStore.updateImageTask(imageData);
-		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
 	}
 
 	protected void download() throws SQLException, IOException {
@@ -508,16 +471,16 @@ public class InputDownloader {
 		}
 	}
 
-	private void deleteInputsFromDisk(ImageTask imageData, String exportPath) throws IOException {
+	private void deleteInputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
 		String inputsDirPath = exportPath + File.separator + "images" + File.separator
-				+ imageData.getCollectionTierName();
+				+ imageTask.getCollectionTierName();
 		File inputsDir = new File(inputsDirPath);
 
 		if (!inputsDir.exists() || !inputsDir.isDirectory()) {
 			return;
 		}
 
-		LOGGER.debug("Deleting inputs for " + imageData + " from " + inputsDirPath);
+		LOGGER.debug("Deleting inputs for " + imageTask + " from " + inputsDirPath);
 		FileUtils.deleteDirectory(inputsDir);
 	}
 
