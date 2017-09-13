@@ -1,6 +1,8 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -136,22 +138,26 @@ public class ImageResource extends BaseResource {
 				}
 			}
 
-			List<Task> createdTasks = application.addTasks(firstYear, lastYear, region, dataSet,
-					sebalVersion, sebalTag);
-			if (application.isUserNotifiable(userEmail)) {
-				Submission submission = new Submission();
-				submission.setId(UUID.randomUUID().toString());
-				for (Task imageTask : createdTasks) {
-					application.addUserNotify(submission.getId(), imageTask.getId(), imageTask
-							.getImageTask().getCollectionTierName(), userEmail);
-				}
-			}
+			submit(userEmail, firstYear, lastYear, region, dataSet, sebalVersion, sebalTag);
 		} catch (Exception e) {
 			LOGGER.debug(e.getMessage(), e);
 			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
 		}
 
 		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK, MediaType.APPLICATION_JSON);
+	}
+
+	protected void submit(String userEmail, int firstYear, int lastYear, String region,
+			String dataSet, String sebalVersion, String sebalTag) throws SQLException, IOException {
+		List<Task> createdTasks = application.addTasks(firstYear, lastYear, region, dataSet,
+				sebalVersion, sebalTag);
+		if (application.isUserNotifiable(userEmail)) {
+			Submission submission = new Submission(UUID.randomUUID().toString());
+			for (Task imageTask : createdTasks) {
+				application.addUserNotify(submission.getId(), imageTask.getId(),
+						imageTask.getImageTask().getCollectionTierName(), userEmail);
+			}
+		}
 	}
 
 	@Delete

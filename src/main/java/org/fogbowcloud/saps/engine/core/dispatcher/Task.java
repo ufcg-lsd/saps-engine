@@ -6,6 +6,10 @@ public class Task {
 
 	private String id;
 	private ImageTask imageTask;
+	
+	public Task(String id) {
+		this.id = id;
+	}
 
 	public String getId() {
 		return id;

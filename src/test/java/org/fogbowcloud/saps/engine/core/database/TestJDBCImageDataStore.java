@@ -10,7 +10,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.junit.Before;
@@ -22,9 +21,6 @@ public class TestJDBCImageDataStore {
 	
 	private String IMAGE_TABLE_NAME = "FAKE_NASA_IMAGES";
 	private static String STATES_TABLE_NAME = "STATES_TIMESTAMPS";
-	private String fakeImageStoreIP = "fake-IP";
-	private String fakeImageStorePort = "fake-Port";
-	private Properties properties;
 	private JDBCImageDataStore imageDataStore;
 	
 	private String INSERT_IMAGE_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
@@ -34,8 +30,7 @@ public class TestJDBCImageDataStore {
 	public final ExpectedException exception = ExpectedException.none();
 	
 	@Before
-	public void setUp() {
-		properties = new Properties();
+	public void setUp() {		
 		imageDataStore = mock(JDBCImageDataStore.class);
 	}
 	

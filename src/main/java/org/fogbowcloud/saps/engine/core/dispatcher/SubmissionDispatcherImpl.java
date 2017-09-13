@@ -111,8 +111,8 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 	@Override
 	public void setTasksToPurge(String day, boolean force) throws SQLException, ParseException {
-		List<ImageTask> tasksToPurge = force ? imageStore.getAllTasks() : imageStore
-				.getIn(ImageTaskState.ARCHIVED);
+		List<ImageTask> tasksToPurge = force ? imageStore.getAllTasks()
+				: imageStore.getIn(ImageTaskState.ARCHIVED);
 
 		for (ImageTask imageTask : tasksToPurge) {
 			long date = 0;
@@ -158,8 +158,9 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 				System.out.println(allImageData.get(i).toString());
 			}
 		} catch (SQLException e) {
-			LOGGER.error("Error while gettin images in " + ImageTaskState.CORRUPTED
-					+ " state from DB", e);
+			LOGGER.error(
+					"Error while gettin images in " + ImageTaskState.CORRUPTED + " state from DB",
+					e);
 		}
 	}
 
@@ -200,19 +201,18 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		if (availableImagesJSON != null) {
 			try {
 				for (int i = 0; i < availableImagesJSON.length(); i++) {
-					String entityId = availableImagesJSON.getJSONObject(i).getString(
-							SapsPropertiesConstants.ENTITY_ID_JSON_KEY);
-					String displayId = availableImagesJSON.getJSONObject(i).getString(
-							SapsPropertiesConstants.DISPLAY_ID_JSON_KEY);
+					String entityId = availableImagesJSON.getJSONObject(i)
+							.getString(SapsPropertiesConstants.ENTITY_ID_JSON_KEY);
+					String displayId = availableImagesJSON.getJSONObject(i)
+							.getString(SapsPropertiesConstants.DISPLAY_ID_JSON_KEY);
 					String taskId = UUID.randomUUID().toString();
 
-					getImageStore().addImageTask(taskId, entityId, "None", priority, containerRepository,
-							containerTag, displayId);
+					getImageStore().addImageTask(taskId, entityId, "None", priority,
+							containerRepository, containerTag, displayId);
 					getImageStore().addStateStamp(entityId, ImageTaskState.CREATED,
 							getImageStore().getTask(entityId).getUpdateTime());
 
-					Task task = new Task();
-					task.setId(UUID.randomUUID().toString());
+					Task task = new Task(UUID.randomUUID().toString());
 					task.setImageTask(getImageStore().getTask(taskId));
 					createdTasks.add(task);
 				}

@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
+import org.fogbowcloud.saps.engine.core.dispatcher.Submission;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -58,6 +59,8 @@ public interface ImageDataStore {
 
 	boolean imageExist(String imageName) throws SQLException;
 
+	List<Submission> getAllSubmissions() throws SQLException;
+
 	List<ImageTask> getAllTasks() throws SQLException;
 
 	List<ImageTask> getIn(ImageTaskState state) throws SQLException;
@@ -67,6 +70,8 @@ public interface ImageDataStore {
 	List<ImageTask> getPurgedTasks() throws SQLException;
 
 	List<ImageTask> getImagesToDownload(String federationMember, int limit) throws SQLException;
+
+	Submission getSubmission(String submissionId) throws SQLException;
 
 	ImageTask getTask(String imageName) throws SQLException;
 
