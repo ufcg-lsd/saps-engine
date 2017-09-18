@@ -254,6 +254,55 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(insertStatement, connection);
 		}
 	}
+	
+	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	
+	public void addImageTask(ImageTask imageTask) throws SQLException {
+		LOGGER.info("Adding image task " + imageTask.getTaskId() + " with name "
+				+ imageTask.getName() + ", download link " + imageTask.getDownloadLink()
+				+ " and priority " + imageTask.getPriority());
+		if (imageTask.getTaskId() == null || imageTask.getTaskId().isEmpty()
+				|| imageTask.getName() == null || imageTask.getName().isEmpty()
+				|| imageTask.getDownloadLink() == null || imageTask.getDownloadLink().isEmpty()
+				|| imageTask.getCollectionTierName() == null
+				|| imageTask.getCollectionTierName().isEmpty()) {
+			LOGGER.error("Invalid image task " + imageTask.getTaskId());
+			throw new IllegalArgumentException("Invalid image task " + imageTask.getTaskId());
+		}
+
+		PreparedStatement insertStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			insertStatement = connection.prepareStatement(INSERT_FULL_IMAGE_TASK_SQL);
+			insertStatement.setString(1, imageTask.getTaskId());
+			insertStatement.setString(2, imageTask.getName());
+			insertStatement.setString(3, imageTask.getDownloadLink());
+			insertStatement.setString(4, imageTask.getState().getValue());
+			insertStatement.setString(5, imageTask.getFederationMember());
+			insertStatement.setInt(6, imageTask.getPriority());
+			insertStatement.setString(7, imageTask.getStationId());
+			insertStatement.setString(8, imageTask.getContainerRepository());
+			insertStatement.setString(9, imageTask.getContainerTag());
+			insertStatement.setString(10, imageTask.getCrawlerVersion());
+			insertStatement.setString(11, imageTask.getFetcherVersion());
+			insertStatement.setString(12, imageTask.getBlowoutVersion());
+			insertStatement.setString(13, imageTask.getFmaskVersion());
+			insertStatement.setTimestamp(14, imageTask.getCreationTime());
+			insertStatement.setTimestamp(15, imageTask.getUpdateTime());
+			insertStatement.setString(16, imageTask.getImageStatus());
+			insertStatement.setString(17, imageTask.getImageError());
+			insertStatement.setString(18, imageTask.getCollectionTierName());
+			insertStatement.setQueryTimeout(300);
+
+			insertStatement.execute();
+		} finally {
+			close(insertStatement, connection);
+		}
+	}
 
 	private static final String INSERT_USER_NOTIFICATION_SQL = "INSERT INTO "
 			+ USERS_NOTIFY_TABLE_NAME + " VALUES(?, ?, ?, ?)";
@@ -788,16 +837,19 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			preparedStatement.execute();
 			ResultSet rs = preparedStatement.getResultSet();
-			if (rs.next()) {
-				Submission submission = new Submission(rs.getString(SUBMISSION_ID_COL));
-				submission.addTask(new Task(rs.getString(TASK_ID_COL)));
-				return submission;
+			Submission submission = null;
+
+			while (rs.next()) {
+				if (submission == null) {
+					submission = new Submission(rs.getString(SUBMISSION_ID_COL));
+				}
+				submission.addTask(
+						new Task(rs.getString(TASK_ID_COL), getTask(rs.getString(TASK_ID_COL))));
 			}
+			return submission;
 		} finally {
 			close(preparedStatement, connection);
 		}
-
-		return null;
 	}
 
 	private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
@@ -1266,5 +1318,4 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(removeStatement, connection);
 		}
 	}
-
 }

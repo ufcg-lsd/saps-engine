@@ -36,4 +36,13 @@ public class Submission {
 	public void removeTask(Task task) {
 		this.tasks.remove(task);
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Submission) {
+			Submission other = (Submission) o;
+			return getId().equals(other.getId()) && getTasks().equals(other.getTasks());
+		}
+		return false;
+	}
 }

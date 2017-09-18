@@ -36,10 +36,14 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	private Properties properties;
 
 	private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcherImpl.class);
+	
+	public SubmissionDispatcherImpl(JDBCImageDataStore imageStore) {
+		this.imageStore = imageStore;
+	}
 
 	public SubmissionDispatcherImpl(Properties properties) throws SQLException {
 		this.properties = properties;
-		this.imageStore = new JDBCImageDataStore(this.properties);
+		this.imageStore = new JDBCImageDataStore(properties);
 		this.nasaRepository = new DefaultImageRepository(properties);
 		this.usgsRepository = new USGSNasaRepository(properties);
 		this.usgsRepository.handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
