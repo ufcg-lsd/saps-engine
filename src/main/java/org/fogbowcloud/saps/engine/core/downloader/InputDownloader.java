@@ -3,6 +3,7 @@ package org.fogbowcloud.saps.engine.core.downloader;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,11 +53,11 @@ public class InputDownloader {
 	}
 
 	protected InputDownloader(Properties properties, ImageDataStore imageStore,
-			USGSNasaRepository usgsRepository, String crawlerIP, String crawlerPort,
-			String nfsPort, String federationMember) {
+			USGSNasaRepository usgsRepository, String crawlerIP, String crawlerPort, String nfsPort,
+			String federationMember) {
 		try {
-			checkProperties(properties, imageStore, usgsRepository, crawlerIP, crawlerPort,
-					nfsPort, federationMember);
+			checkProperties(properties, imageStore, usgsRepository, crawlerIP, crawlerPort, nfsPort,
+					federationMember);
 		} catch (IllegalArgumentException e) {
 			LOGGER.error("Error while getting properties", e);
 			System.exit(1);
@@ -86,8 +87,8 @@ public class InputDownloader {
 	}
 
 	private void checkProperties(Properties properties, ImageDataStore imageStore,
-			USGSNasaRepository usgsRepository, String crawlerIP, String crawlerPort,
-			String nfsPort, String federationMember) throws IllegalArgumentException {
+			USGSNasaRepository usgsRepository, String crawlerIP, String crawlerPort, String nfsPort,
+			String federationMember) throws IllegalArgumentException {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
@@ -159,7 +160,7 @@ public class InputDownloader {
 	}
 
 	protected boolean crawlerVersionFileExists() {
-		this.crawlerVersion = getCrawlerVersion();
+		this.crawlerVersion = getInputDownloaderVersion();
 
 		if (crawlerVersion == null || crawlerVersion.isEmpty()) {
 			LOGGER.error("Crawler version file does not exist");
@@ -194,15 +195,15 @@ public class InputDownloader {
 		}
 	}
 
-	private void cleanUnfinishedQueuedOutput(Properties properties) throws SQLException,
-			IOException {
+	private void cleanUnfinishedQueuedOutput(Properties properties)
+			throws SQLException, IOException {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.READY);
 		for (ImageTask imageTask : tasks) {
 			deleteResultsFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 		}
 	}
-	
+
 	private void removeFailedTasksFromVolume(Properties properties)
 			throws SQLException, IOException {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.FAILED);
@@ -251,15 +252,14 @@ public class InputDownloader {
 
 		for (ImageTask imageTask : tasksToDownload) {
 			if (imageTask.getFederationMember().equals(federationMember)) {
-				imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
+				imageTask.setUpdateTime(getTaskUpdateTime(imageTask));
 
 				if (imageTask != null) {
 					addStateStamp(imageTask);
 
-					LOGGER.debug("Adding image " + imageTask.getCollectionTierName()
-							+ " from task " + imageTask.getTaskId() + " to pending database");
-					pendingTaskDownloadMap.put(imageTask.getTaskId(), imageTask);
-					pendingTaskDownloadDB.commit();
+					LOGGER.debug("Adding image " + imageTask.getCollectionTierName() + " from task "
+							+ imageTask.getTaskId() + " to pending database");
+					addTaskToPendingMap(imageTask);
 
 					boolean isDownloadCompleted = downloadImage(imageTask);
 					if (isDownloadCompleted) {
@@ -272,10 +272,18 @@ public class InputDownloader {
 				}
 			}
 		}
-
 	}
 
-	private void addStateStamp(ImageTask imageTask) {
+	protected void addTaskToPendingMap(ImageTask imageTask) {
+		pendingTaskDownloadMap.put(imageTask.getTaskId(), imageTask);
+		pendingTaskDownloadDB.commit();
+	}
+
+	protected Timestamp getTaskUpdateTime(ImageTask imageTask) throws SQLException {
+		return imageStore.getTask(imageTask.getName()).getUpdateTime();
+	}
+
+	protected void addStateStamp(ImageTask imageTask) {
 		try {
 			imageStore.addStateStamp(imageTask.getName(), imageTask.getState(),
 					imageTask.getUpdateTime());
@@ -285,12 +293,13 @@ public class InputDownloader {
 		}
 	}
 
-	protected double numberOfImagesToDownload() throws NumberFormatException, InterruptedException,
-			IOException, SQLException {
+	protected double numberOfImagesToDownload()
+			throws NumberFormatException, InterruptedException, IOException, SQLException {
 		String volumeDirPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 		File volumePath = new File(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
-			double freeVolumeSpaceOutputDedicated = Double.valueOf(volumePath.getTotalSpace()) * 0.2;
+			double freeVolumeSpaceOutputDedicated = Double.valueOf(volumePath.getTotalSpace())
+					* 0.2;
 			double availableVolumeSpace = volumePath.getUsableSpace()
 					- freeVolumeSpaceOutputDedicated;
 			double numberOfImagesToDownload = availableVolumeSpace / DEFAULT_IMAGE_DIR_SIZE;
@@ -303,8 +312,8 @@ public class InputDownloader {
 
 			return numberOfImagesToDownload;
 		} else {
-			throw new RuntimeException("VolumePath: " + volumeDirPath
-					+ " is not a directory or does not exist");
+			throw new RuntimeException(
+					"VolumePath: " + volumeDirPath + " is not a directory or does not exist");
 		}
 	}
 
@@ -326,8 +335,7 @@ public class InputDownloader {
 				imageTask.setCrawlerVersion(crawlerVersion);
 				updateToDownloadedState(imageTask);
 
-				pendingTaskDownloadMap.remove(imageTask.getTaskId());
-				pendingTaskDownloadDB.commit();
+				removeTaskFromPendingMap(imageTask);
 
 				LOGGER.info("Image " + imageTask + " was downloaded");
 				return true;
@@ -344,15 +352,19 @@ public class InputDownloader {
 		return false;
 	}
 
+	protected void removeTaskFromPendingMap(final ImageTask imageTask) {
+		pendingTaskDownloadMap.remove(imageTask.getTaskId());
+		pendingTaskDownloadDB.commit();
+	}
+
 	private void getStationData(ImageTask imageTask) {
 		// TODO Auto-generated method stub
 	}
 
 	private boolean checkIfImageFileExists(ImageTask imageTask) {
 		String imageInputFilePath = properties
-				.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH)
-				+ File.separator + "images" + File.separator 
-				+ imageTask.getCollectionTierName() + File.separator 
+				.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH) + File.separator + "images"
+				+ File.separator + imageTask.getCollectionTierName() + File.separator
 				+ imageTask.getCollectionTierName() + ".tar.gz";
 		File imageInputFile = new File(imageInputFilePath);
 
@@ -368,7 +380,7 @@ public class InputDownloader {
 
 		try {
 			imageStore.updateImageTask(imageTask);
-			imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
+			imageTask.setUpdateTime(getTaskUpdateTime(imageTask));
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating task " + imageTask + " to DB", e);
 			removeFromPendingAndUpdateState(imageTask, properties);
@@ -395,7 +407,7 @@ public class InputDownloader {
 
 			try {
 				imageStore.updateImageTask(imageTask);
-				imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
+				imageTask.setUpdateTime(getTaskUpdateTime(imageTask));
 			} catch (SQLException e) {
 				LOGGER.error("Error while updating image " + imageTask.getCollectionTierName()
 						+ " from task " + imageTask.getTaskId(), e);
@@ -408,8 +420,7 @@ public class InputDownloader {
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 
 			LOGGER.debug("Removing image task " + imageTask + " from pending image map");
-			pendingTaskDownloadMap.remove(imageTask.getTaskId());
-			pendingTaskDownloadDB.commit();
+			removeTaskFromPendingMap(imageTask);
 			LOGGER.info("Image task " + imageTask + " rolled back");
 		}
 	}
@@ -435,8 +446,8 @@ public class InputDownloader {
 		return true;
 	}
 
-	protected void deleteFetchedResultsFromVolume(Properties properties) throws IOException,
-			InterruptedException, SQLException {
+	protected void deleteFetchedResultsFromVolume(Properties properties)
+			throws IOException, InterruptedException, SQLException {
 		List<ImageTask> allTasks = imageStore.getAllTasks();
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 		String resultsPath = exportPath + File.separator + "results";
@@ -497,8 +508,8 @@ public class InputDownloader {
 		FileUtils.deleteDirectory(resultsDir);
 	}
 
-	protected void purgeTasksFromVolume(Properties properties) throws IOException,
-			InterruptedException, SQLException {
+	protected void purgeTasksFromVolume(Properties properties)
+			throws IOException, InterruptedException, SQLException {
 		List<ImageTask> tasksToPurge = imageStore.getAllTasks();
 
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
@@ -525,7 +536,7 @@ public class InputDownloader {
 		}
 	}
 
-	protected String getCrawlerVersion() {
+	protected String getInputDownloaderVersion() {
 		String sebalEngineDirPath = System.getProperty("user.dir");
 		File sebalEngineDir = new File(sebalEngineDirPath);
 		String[] sebalEngineVersionFileSplit = null;
@@ -548,5 +559,21 @@ public class InputDownloader {
 
 	public void setUsgsRepository(USGSNasaRepository usgsRepository) {
 		this.usgsRepository = usgsRepository;
+	}
+
+	public DB getPendingTaskDB() {
+		return this.pendingTaskDownloadDB;
+	}
+
+	public void setPendingTaskDB(DB pendingTaskDownloadDB) {
+		this.pendingTaskDownloadDB = pendingTaskDownloadDB;
+	}
+
+	public ConcurrentMap<String, ImageTask> getPendingTaskMap() {
+		return this.pendingTaskDownloadMap;
+	}
+
+	public void setPendingTaskMap(ConcurrentMap<String, ImageTask> pendingTaskDownloadMap) {
+		this.pendingTaskDownloadMap = pendingTaskDownloadMap;
 	}
 }
