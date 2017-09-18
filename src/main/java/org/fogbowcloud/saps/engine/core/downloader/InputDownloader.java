@@ -45,10 +45,10 @@ public class InputDownloader {
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
 
-	public InputDownloader(Properties properties, String crawlerIP, String crawlerPort,
+	public InputDownloader(Properties properties, String inputDownloderIp, String InputDownloaderSshPort,
 			String nfsPort, String federationMember) throws SQLException {
 		this(properties, new JDBCImageDataStore(properties), new USGSNasaRepository(properties),
-				crawlerIP, crawlerPort, nfsPort, federationMember);
+				inputDownloderIp, InputDownloaderSshPort, nfsPort, federationMember);
 		LOGGER.info("Creating crawler in federation " + federationMember);
 	}
 
@@ -353,6 +353,7 @@ public class InputDownloader {
 	}
 
 	protected void removeTaskFromPendingMap(final ImageTask imageTask) {
+		LOGGER.debug("Removing image task " + imageTask + " from pending image map");
 		pendingTaskDownloadMap.remove(imageTask.getTaskId());
 		pendingTaskDownloadDB.commit();
 	}
@@ -419,7 +420,6 @@ public class InputDownloader {
 			deleteImageFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 
-			LOGGER.debug("Removing image task " + imageTask + " from pending image map");
 			removeTaskFromPendingMap(imageTask);
 			LOGGER.info("Image task " + imageTask + " rolled back");
 		}

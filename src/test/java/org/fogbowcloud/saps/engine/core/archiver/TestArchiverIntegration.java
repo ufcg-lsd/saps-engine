@@ -18,8 +18,10 @@ import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
+import org.fogbowcloud.saps.engine.core.downloader.InputDownloader;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -304,5 +306,41 @@ public class TestArchiverIntegration {
 
 		File file = new File("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
 		file.delete();
+	}
+
+	@Test
+	public void testGetInputDownloaderSSHPort() throws Exception {
+		String inputDownloaderIP = "fake-inputDownloader-ip";
+		String inputDownloaderPort = "fake-inputDownloader-port";
+		String nfsPort = "fake-nfs-port";
+		String federationMember = "fake-fed-member";
+
+		Properties properties = new Properties();
+		properties.setProperty("datastore_username", "testdb");
+		properties.setProperty("datastore_password", "testdb");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_name", "testdb");
+		properties.setProperty("datastore_ip", "localhost");
+		properties.setProperty("datastore_port", "8000");
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+		imageStore.addDeployConfig(inputDownloaderIP, inputDownloaderPort, nfsPort,
+				federationMember);
+
+		ImageTask task = mock(ImageTask.class);
+		SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+		FTPIntegrationImpl ftpIntegrationImpl = mock(FTPIntegrationImpl.class);
+		ArchiverHelper archiverHelper = mock(ArchiverHelper.class);
+
+		Archiver archiver = new Archiver(properties, imageStore, swiftAPIClient, ftpIntegrationImpl,
+				archiverHelper);
+
+		doReturn(federationMember).when(task).getFederationMember();
+
+		archiver.getFTPServerInfo(task);
+
+		Assert.assertEquals(inputDownloaderIP, archiver.getFtpServerIP());
+		Assert.assertEquals(inputDownloaderPort, archiver.getFtpServerPort());
 	}
 }
