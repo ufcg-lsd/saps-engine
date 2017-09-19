@@ -151,13 +151,14 @@ public class SapsTask {
 				properties.getProperty(MAX_RESOURCE_CONN_RETRIES));
 
 		// sdexs properties
-		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty(SEBAL_SANDBOX) + "/"
-				+ task.getId());
+		task.putMetadata(TaskImpl.METADATA_SANDBOX,
+				properties.getProperty(SEBAL_SANDBOX) + "/" + task.getId());
 		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,
 				properties.getProperty(SEBAL_SANDBOX) + "/output");
 		task.putMetadata(TaskImpl.METADATA_LOCAL_OUTPUT_FOLDER,
 				properties.getProperty(SEBAL_LOCAL_OUTPUT_DIR));
-		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, properties.getProperty(SEBAL_TASK_TIMEOUT));
+		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT,
+				properties.getProperty(SEBAL_TASK_TIMEOUT));
 
 		// repository properties
 		task.putMetadata(METADATA_REPOS_USER, properties.getProperty(SEBAL_REMOTE_USER));
@@ -182,9 +183,9 @@ public class SapsTask {
 			String initErrName = pathToRemoteScript.getFileName().toString() + "." + "err";
 
 			execScriptCommand = "\"nohup " + remoteScript + " >> "
-					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + File.separator
-					+ initOutName + " 2>> " + taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
-					+ File.separator + initErrName + "\"";
+					+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + File.separator + initOutName
+					+ " 2>> " + taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + File.separator
+					+ initErrName + "\"";
 		} else {
 			String runOutName = pathToRemoteScript.getFileName().toString() + "." + "out";
 			String runErrName = pathToRemoteScript.getFileName().toString() + "." + "err";

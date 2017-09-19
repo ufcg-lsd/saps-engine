@@ -1,9 +1,7 @@
 #!/bin/bash
 
 BIN_INIT_SCRIPT="bin/init.sh"
-IMAGES_DIR_NAME=images
-RESULTS_DIR_NAME=results
-CONTAINER_OUT_DIR=/home/ubuntu/$RESULTS_DIR_NAME
+OUTPUT_DIR_NAME=data/output
 PROCESS_OUTPUT=
 
 # This function removes all garbage from tmp
@@ -48,25 +46,16 @@ function prepareDockerContainer {
 }
 
 function garbageCollect {
-  DIRECTORY=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}
+  DIRECTORY=${SEBAL_MOUNT_POINT}/${IMAGE_NEW_COLLECTION_NAME}/$OUTPUT_DIR_NAME
   if [ -d "$DIRECTORY" ]; then
     shopt -s nullglob dotglob     # To include hidden files
     files=($DIRECTORY/*)
     if [ ${#files[@]} -gt 0 ];
     then
       echo "Directory contains garbage...cleanning it"
-      sudo rm ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/*
+      sudo rm ${SEBAL_MOUNT_POINT}/${IMAGE_NEW_COLLECTION_NAME}/$OUTPUT_DIR_NAME/*
     fi
   fi
-}
-
-# This function executes user's init script
-function executeInitScript {
-  cd ${SANDBOX}
-
-  CONTAINER_ID=$(docker ps | grep "${CONTAINER_REPOSITORY}:${CONTAINER_TAG}" | awk '{print $1}')
-
-  docker exec $CONTAINER_ID bash -x $BIN_INIT_SCRIPT
 }
 
 function checkProcessOutput {
@@ -80,7 +69,7 @@ function checkProcessOutput {
 
 # This function ends the script
 function finally {
-  echo $PROCESS_OUTPUT > ${REMOTE_COMMAND_EXIT_PATH}
+  echo $PROCESS_OUTPUT > ${REMOTE_COMMAND_EXIT_PAT}
   exit $PROCESS_OUTPUT
 }
 
@@ -91,7 +80,5 @@ checkProcessOutput
 prepareDockerContainer
 checkProcessOutput
 garbageCollect
-checkProcessOutput
-executeInitScript
 checkProcessOutput
 finally
