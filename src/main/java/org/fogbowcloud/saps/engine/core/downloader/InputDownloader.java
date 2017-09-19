@@ -1,25 +1,25 @@
 package org.fogbowcloud.saps.engine.core.downloader;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentMap;
 
 public class InputDownloader {
 
@@ -31,7 +31,6 @@ public class InputDownloader {
 	private String federationMember;
 	private String crawlerVersion;
 	private File pendingImageDownloadFile;
-	private USGSNasaRepository usgsRepository;
 
 	protected DB pendingTaskDownloadDB;
 	protected ConcurrentMap<String, ImageTask> pendingTaskDownloadMap;
@@ -46,16 +45,16 @@ public class InputDownloader {
 
 	public InputDownloader(Properties properties, String crawlerIP, String crawlerPort,
 			String nfsPort, String federationMember) throws SQLException {
-		this(properties, new JDBCImageDataStore(properties), new USGSNasaRepository(properties),
+		this(properties, new JDBCImageDataStore(properties),
 				crawlerIP, crawlerPort, nfsPort, federationMember);
 		LOGGER.info("Creating crawler in federation " + federationMember);
 	}
 
 	protected InputDownloader(Properties properties, ImageDataStore imageStore,
-			USGSNasaRepository usgsRepository, String crawlerIP, String crawlerPort,
+			String crawlerIP, String crawlerPort,
 			String nfsPort, String federationMember) {
 		try {
-			checkProperties(properties, imageStore, usgsRepository, crawlerIP, crawlerPort,
+			checkProperties(properties, imageStore, crawlerIP, crawlerPort,
 					nfsPort, federationMember);
 		} catch (IllegalArgumentException e) {
 			LOGGER.error("Error while getting properties", e);
@@ -70,9 +69,6 @@ public class InputDownloader {
 		this.imageStore = imageStore;
 		this.federationMember = federationMember;
 
-		this.usgsRepository = usgsRepository;
-		this.usgsRepository.handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
-
 		this.pendingImageDownloadFile = new File(PENDING_TASK_DOWNLOAD_DB_FILE);
 		this.pendingTaskDownloadDB = DBMaker.newFileDB(pendingImageDownloadFile).make();
 
@@ -86,7 +82,7 @@ public class InputDownloader {
 	}
 
 	private void checkProperties(Properties properties, ImageDataStore imageStore,
-			USGSNasaRepository usgsRepository, String crawlerIP, String crawlerPort,
+			String crawlerIP, String crawlerPort,
 			String nfsPort, String federationMember) throws IllegalArgumentException {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
@@ -94,10 +90,6 @@ public class InputDownloader {
 
 		if (imageStore == null) {
 			throw new IllegalArgumentException("Imagestore arg must not be null.");
-		}
-
-		if (usgsRepository == null) {
-			throw new IllegalArgumentException("USGSRepository arg must not be null.");
 		}
 
 		if (crawlerIP == null) {
@@ -314,11 +306,17 @@ public class InputDownloader {
 
 	protected boolean downloadImage(final ImageTask imageTask) throws SQLException, IOException {
 		try {
-			String imageDownloadLink = usgsRepository.getImageDownloadLink(imageTask.getName());
-			imageTask.setDownloadLink(imageDownloadLink);
-
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
-			usgsRepository.downloadImage(imageTask);
+
+			// Docker
+			String dataHostPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH) + "data";
+			String resultsContainerPath = properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH);
+
+			// TODO: pullDockerImage(repositoryName, tag);
+			String containerId = runMappedContainer(imageTask.getContainerRepository(), imageTask.getContainerTag(), dataHostPath, resultsContainerPath);
+			execDockerCommand(containerId);
+			killDockerContainer(containerId);
+
 			getStationData(imageTask);
 			// TODO: insert here station download code
 
@@ -342,6 +340,85 @@ public class InputDownloader {
 		}
 
 		return false;
+	}
+
+	private boolean pullDockerImage(String repositoryName, String repositoryTag) {
+		ProcessBuilder builder = new ProcessBuilder("docker", "pull", repositoryName + ":" + repositoryTag);
+		LOGGER.debug("Pulling Docker image: " + builder.command());
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			LOGGER.debug("Pull status output: " + p.exitValue());
+			if (p.exitValue() == 0){
+				return true;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error to pull Docker image " + repositoryName + ":" + repositoryTag + ".", e);
+		}
+		return false;
+	}
+
+	private boolean killDockerContainer(String containerId) {
+		ProcessBuilder builder = new ProcessBuilder("docker", "kill", containerId);
+		LOGGER.debug("Killing Docker container: " + builder.command());
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			LOGGER.debug("Kill Docker container status output: " + p.exitValue());
+			if (p.exitValue() == 0){
+				return true;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error to kill Docker container " + containerId + ".", e);
+		}
+		return false;
+	}
+
+	private String runMappedContainer(String repository, String tag, String hostPath, String containerPath){
+		ProcessBuilder builder = new ProcessBuilder("docker", "run", "-td", "-v",
+				hostPath+":"+containerPath, repository);
+		LOGGER.debug("Running container: " + builder.command());
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			LOGGER.debug("Run Docker container output: " + p.exitValue());
+			return getOutput(p);
+		} catch (Exception e) {
+			LOGGER.error("Error while running Docker container " + repository + ":" + tag
+					+ ".", e);
+		}
+		return "";
+	}
+
+	private String execDockerCommand(String containerId) {
+		String fullCommand = "docker" + " " + "exec" + " " + containerId + " " + "run.sh";
+		String[] commandArray = fullCommand.split("\\s+");
+		ProcessBuilder builder = new ProcessBuilder(commandArray);
+		LOGGER.debug("Executing containerized file: " + builder.command());
+
+		try {
+			Process p = builder.start();
+			p.waitFor();
+			LOGGER.debug("Containerized file execution status output:" + p.exitValue());
+			return getOutput(p);
+		} catch (Exception e) {
+			LOGGER.error("Error while executing containerized command: " + "run.sh"
+					+ " on container ID: " + containerId + "", e);
+		}
+		return "";
+	}
+
+	private String getOutput(Process p) throws IOException {
+		StringBuffer output = new StringBuffer();
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line;
+		while((line = bufferedReader.readLine()) != null){
+			output.append(line + System.lineSeparator());
+		}
+		return output.toString();
 	}
 
 	private void getStationData(ImageTask imageTask) {
@@ -540,13 +617,5 @@ public class InputDownloader {
 		}
 
 		return null;
-	}
-
-	public USGSNasaRepository getUSGSRepository() {
-		return this.usgsRepository;
-	}
-
-	public void setUsgsRepository(USGSNasaRepository usgsRepository) {
-		this.usgsRepository = usgsRepository;
 	}
 }

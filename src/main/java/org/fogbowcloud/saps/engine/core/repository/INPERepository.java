@@ -9,11 +9,4 @@ import org.fogbowcloud.saps.engine.core.model.ImageTask;
  */
 public interface INPERepository {
 
-    /**
-     *
-     * @param imageData
-     * @throws IOException
-     */
-    void downloadImage(final ImageTask imageData) throws IOException;
-
 }

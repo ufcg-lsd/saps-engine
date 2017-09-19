@@ -59,7 +59,6 @@ public class TestInputDownloaderIntegration {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		String crawlerIP = "fake-crawler-ip";
 		String crawlerPort = "fake-crawler-port";
 		String nfsPort = "fake-nfs-port";
@@ -76,13 +75,21 @@ public class TestInputDownloaderIntegration {
 
 		imageList.add(image1);
 
+		// aqui a imagelist tem uma imagem, mas imageStore ainda tá vazio, porque os testes estão passando?
+
+		List<ImageTask> emptyImageList = new ArrayList<ImageTask>();
+
+		doReturn(emptyImageList).when(imageStore).getImagesToDownload(federationMember,
+				maxImagesToDownload);
 		doReturn(imageList).when(imageStore).getImagesToDownload(federationMember,
 				maxImagesToDownload);
-		doReturn(image1).when(imageStore).getTask(image1.getName());
-		doReturn("link-1").when(usgsRepository).getImageDownloadLink(image1.getName());
-		doThrow(new IOException()).when(usgsRepository).downloadImage(image1);
 
-		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
+		doReturn(image1).when(imageStore).getTask(image1.getName());
+
+//		doReturn("link-1").when(usgsRepository).getImageDownloadLink(image1.getName());
+//		doThrow(new IOException()).when(usgsRepository).downloadImage(image1);
+
+		InputDownloader crawler = new InputDownloader(properties, imageStore,
 				crawlerIP, crawlerPort, nfsPort, federationMember);
 		Assert.assertEquals(ImageTaskState.CREATED, image1.getState());
 		Assert.assertTrue(crawler.pendingTaskDownloadMap.isEmpty());
@@ -100,7 +107,6 @@ public class TestInputDownloaderIntegration {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		String crawlerIP = "fake-crawler-ip";
 		String crawlerPort = "fake-crawler-port";
 		String nfsPort = "fake-nfs-port";
@@ -122,7 +128,7 @@ public class TestInputDownloaderIntegration {
 		imageList.add(image1);
 		imageList.add(image2);
 
-		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore,
 				crawlerIP, crawlerPort, nfsPort, federationMember);
 
 		doThrow(new SQLException()).when(imageStore).getImagesToDownload(federationMember,
@@ -143,7 +149,6 @@ public class TestInputDownloaderIntegration {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		String crawlerIP = "fake-crawler-ip";
 		String crawlerPort = "fake-crawler-port";
 		String nfsPort = "fake-nfs-port";
@@ -169,7 +174,7 @@ public class TestInputDownloaderIntegration {
 		doReturn(sebalExportPath).when(properties).getProperty(
 				SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 
-		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore,
 				crawlerIP, crawlerPort, nfsPort, federationMember);
 
 		// exercise
@@ -181,7 +186,6 @@ public class TestInputDownloaderIntegration {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		String crawlerIP = "fake-crawler-ip";
 		String crawlerPort = "fake-crawler-port";
 		String nfsPort = "fake-nfs-port";
@@ -207,7 +211,7 @@ public class TestInputDownloaderIntegration {
 
 		doReturn(imageList).when(imageStore).getAllTasks();
 
-		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore,
 				crawlerIP, crawlerPort, nfsPort, federationMember1);
 
 		// exercise
@@ -233,7 +237,7 @@ public class TestInputDownloaderIntegration {
 		writer.println("0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
 		writer.close();
 
-		InputDownloader crawler = new InputDownloader(properties, imageStore, usgsRepository,
+		InputDownloader crawler = new InputDownloader(properties, imageStore,
 				crawlerIP, crawlerPort, nfsPort, federationMember);
 
 		// exercise

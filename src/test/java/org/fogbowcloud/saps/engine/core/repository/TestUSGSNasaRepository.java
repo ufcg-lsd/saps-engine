@@ -57,7 +57,7 @@ public class TestUSGSNasaRepository {
 		doReturn(new Header[0]).when(httpResponse).getAllHeaders();
 
 		USGSNasaRepository usgsNasaRepository = spy(new USGSNasaRepository(
-				sebalExportPath, usgsLoginUrl, usgsJsonUrl, usgsUserName,
+				usgsLoginUrl, usgsJsonUrl, usgsUserName,
 				usgsPassword, usgsAPIPeriod));
 
 		doReturn(content).when(usgsNasaRepository).getLoginResponse();

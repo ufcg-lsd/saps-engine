@@ -25,21 +25,13 @@ import org.json.JSONObject;
  */
 public class USGSNasaRepository implements INPERepository {
 
-	private final String sebalExportPath;
-
 	private final String usgsJsonUrl;
 	private final String usgsUserName;
 	private final String usgsPassword;
 	private final String usgsAPIKeyPeriod;
 	private String usgsAPIKey;
 
-	// nodes
-	private static final String EARTH_EXPLORER_NODE = "EE";
-	// products
-	private static final String LEVEL_1_PRODUCT = "STANDARD";
-
 	// conf constants
-	private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 	private static final String USGS_SEARCH_VERSION = "1.4.0";
 	private static final String FIRST_YEAR_SUFFIX = "-01-01";
 	private static final String LAST_YEAR_SUFFIX = "-12-31";
@@ -48,17 +40,15 @@ public class USGSNasaRepository implements INPERepository {
 	private static final Logger LOGGER = Logger.getLogger(USGSNasaRepository.class);
 
 	public USGSNasaRepository(Properties properties) {
-		this(properties.getProperty(SEBAL_EXPORT_PATH), properties
-				.getProperty(SapsPropertiesConstants.USGS_LOGIN_URL), properties
+		this(properties.getProperty(SapsPropertiesConstants.USGS_LOGIN_URL), properties
 				.getProperty(SapsPropertiesConstants.USGS_JSON_URL), properties
 				.getProperty(SapsPropertiesConstants.USGS_USERNAME), properties
 				.getProperty(SapsPropertiesConstants.USGS_PASSWORD), properties
 				.getProperty(SapsPropertiesConstants.USGS_API_KEY_PERIOD));
 	}
 
-	protected USGSNasaRepository(String sebalExportPath, String usgsLoginUrl, String usgsJsonUrl,
+	protected USGSNasaRepository(String usgsLoginUrl, String usgsJsonUrl,
 			String usgsUserName, String usgsPassword, String usgsAPIKeyPeriod) {
-		Validate.notNull(sebalExportPath, "sebalExportPath cannot be null");
 
 		Validate.notNull(usgsLoginUrl, "usgsLoginUrl cannot be null");
 		Validate.notNull(usgsJsonUrl, "usgsJsonUrl cannot be null");
@@ -66,14 +56,10 @@ public class USGSNasaRepository implements INPERepository {
 		Validate.notNull(usgsPassword, "usgsPassword cannot be null");
 		Validate.notNull(usgsAPIKeyPeriod, "usgsAPIKeyPeriod cannot be null");
 
-		this.sebalExportPath = sebalExportPath;
 		this.usgsJsonUrl = usgsJsonUrl;
 		this.usgsUserName = usgsUserName;
 		this.usgsPassword = usgsPassword;
 		this.usgsAPIKeyPeriod = usgsAPIKeyPeriod;
-
-		Validate.isTrue(directoryExists(sebalExportPath), "Sebal sebalExportPath directory "
-				+ sebalExportPath + "does not exist.");
 	}
 
 	public void handleAPIKeyUpdate(ScheduledExecutorService handleAPIKeyUpdateExecutor) {
@@ -139,228 +125,6 @@ public class USGSNasaRepository implements INPERepository {
 			stringBuilder.append(System.getProperty("line.separator"));
 		}
 		return stringBuilder.toString();
-	}
-
-	protected boolean directoryExists(String path) {
-		File f = new File(path);
-		return (f.exists() && f.isDirectory());
-	}
-
-	@Override
-	public void downloadImage(ImageTask imageData) throws IOException {
-		// create target directory to store image
-		String imageDirPath = imageDirPath(imageData);
-
-		boolean wasCreated = createDirectoryToImage(imageDirPath);
-		if (wasCreated) {
-
-			String localImageFilePath = imageFilePath(imageData, imageDirPath);
-
-			// clean if already exists (garbage collection)
-			File localImageFile = new File(localImageFilePath);
-			if (localImageFile.exists()) {
-				LOGGER.info("File " + localImageFilePath
-						+ " already exists. Will be removed before repeating download");
-				localImageFile.delete();
-			}
-
-			LOGGER.info("Downloading image " + imageData.getCollectionTierName() + " into file "
-					+ localImageFilePath);
-			downloadInto(imageData, localImageFilePath);
-		} else {
-			throw new IOException("An error occurred while creating " + imageDirPath + " directory");
-		}
-	}
-
-	protected String imageFilePath(ImageTask imageData, String imageDirPath) {
-		return imageDirPath + File.separator + imageData.getCollectionTierName() + ".tar.gz";
-	}
-
-	protected String imageDirPath(ImageTask imageData) {
-		return sebalExportPath + File.separator + "images" + File.separator
-				+ imageData.getCollectionTierName();
-	}
-
-	private void downloadInto(ImageTask imageData, String targetFilePath) throws IOException {
-		ProcessBuilder builder = new ProcessBuilder("curl", "-L", "-o", targetFilePath, "-X",
-				"GET", imageData.getDownloadLink());
-		LOGGER.debug("Command=" + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			LOGGER.debug("ProcessOutput=" + p.exitValue());
-		} catch (Exception e) {
-			LOGGER.error("Error while downloading image " + imageData.getCollectionTierName()
-					+ " from USGS", e);
-		}
-	}
-
-	protected boolean createDirectoryToImage(String imageDirPath) {
-		File imageDir = new File(imageDirPath);
-		return imageDir.mkdirs();
-	}
-
-	public String getImageDownloadLink(String imageName) {
-		if (usgsAPIKey != null && !usgsAPIKey.isEmpty()) {
-			String link = doGetDownloadLink(imageName);
-			if (link != null && !link.isEmpty()) {
-				return link;
-			}
-		} else {
-			LOGGER.error("USGS API key invalid");
-		}
-
-		return new String();
-	}
-
-	protected String doGetDownloadLink(String imageName) {
-		String link = null;
-		link = usgsDownloadURL(getDataSet(imageName), imageName, EARTH_EXPLORER_NODE,
-				LEVEL_1_PRODUCT);
-
-		if (link != null && !link.isEmpty()) {
-			return link;
-		}
-
-		return null;
-	}
-
-	protected String getMetadataHttpResponse(String dataset, String sceneId, String node,
-			String product) {
-
-		JSONObject metadataJSONObj = new JSONObject();
-		try {
-			formatMetadataJSON(dataset, sceneId, node, product, metadataJSONObj);
-		} catch (JSONException e) {
-			LOGGER.error("Error while formatting metadata JSON", e);
-			return null;
-		}
-
-		String metadataJsonRequest = "jsonRequest=" + metadataJSONObj.toString();
-		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data",
-				metadataJsonRequest, usgsJsonUrl + File.separator + "metadata");
-		LOGGER.debug("Command=" + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			return getProcessOutput(p);
-		} catch (Exception e) {
-			LOGGER.error("Error while logging in USGS", e);
-		}
-
-		return null;
-	}
-
-	private void formatMetadataJSON(String dataset, String sceneId, String node, String product,
-			JSONObject metadataJSONObj) throws JSONException {
-		JSONArray entityIDs = new JSONArray();
-		JSONArray products = new JSONArray();
-		entityIDs.put(sceneId);
-		products.put(product);
-
-		metadataJSONObj.put(SapsPropertiesConstants.DATASET_NAME_JSON_KEY, dataset);
-		metadataJSONObj.put(SapsPropertiesConstants.API_KEY_JSON_KEY, usgsAPIKey);
-		metadataJSONObj.put(SapsPropertiesConstants.NODE_JSON_KEY, node);
-		metadataJSONObj.put(SapsPropertiesConstants.ENTITY_IDS_JSON_KEY, entityIDs);
-		metadataJSONObj.put(SapsPropertiesConstants.PRODUCTS_JSON_KEY, products);
-	}
-
-	public List<String> getPossibleStations() {
-		List<String> possibleStations = new ArrayList<String>();
-
-		try {
-			File file = new File(SapsPropertiesConstants.POSSIBLE_STATIONS_FILE_PATH);
-			FileReader fileReader = new FileReader(file);
-			BufferedReader bufferedReader = new BufferedReader(fileReader);
-			String line;
-			while ((line = bufferedReader.readLine()) != null) {
-				possibleStations.add(line);
-			}
-			fileReader.close();
-		} catch (IOException e) {
-			LOGGER.error("Error while getting possible stations from file", e);
-		}
-
-		return possibleStations;
-	}
-
-	private String getDataSet(String imageName) {
-		if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_5_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_5_DATASET;
-		} else if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_7_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_7_DATASET;
-		} else if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_8_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_8_DATASET;
-		}
-
-		return null;
-	}
-
-	protected String usgsDownloadURL(String dataset, String sceneId, String node, String product) {
-		// GET DOWNLOAD LINKS
-		String response = getDownloadHttpResponse(dataset, sceneId, node, product);
-
-		try {
-			JSONObject downloadRequestResponse = new JSONObject(response);
-			String downloadLink = downloadRequestResponse.getString(
-					SapsPropertiesConstants.DATA_JSON_KEY).replace("\\/", "/");
-			downloadLink = downloadLink.replace("[", "");
-			downloadLink = downloadLink.replace("]", "");
-			downloadLink = downloadLink.replace("\"", "");
-
-			LOGGER.debug("downloadLink=" + downloadLink);
-			if (downloadLink != null && !downloadLink.isEmpty() && !downloadLink.equals("[]")) {
-				LOGGER.debug("Image " + sceneId + "download link" + downloadLink + " obtained");
-				return downloadLink;
-			}
-		} catch (Exception e) {
-			LOGGER.error("Error while formating request response", e);
-		}
-
-		return null;
-	}
-
-	protected String getDownloadHttpResponse(String dataset, String sceneId, String node,
-			String product) {
-
-		JSONObject downloadJSONObj = new JSONObject();
-		try {
-			formatDownloadJSON(dataset, sceneId, node, product, downloadJSONObj);
-		} catch (JSONException e) {
-			LOGGER.error("Error while formatting download JSON", e);
-			return null;
-		}
-
-		String downloadJsonRequest = "jsonRequest=" + downloadJSONObj.toString();
-		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data",
-				downloadJsonRequest, usgsJsonUrl + File.separator + "download");
-		LOGGER.debug("Command=" + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			return getProcessOutput(p);
-		} catch (Exception e) {
-			LOGGER.error("Error while logging in USGS", e);
-		}
-
-		return null;
-	}
-
-	private void formatDownloadJSON(String dataset, String sceneId, String node, String product,
-			JSONObject downloadJSONObj) throws JSONException {
-		JSONArray entityIDs = new JSONArray();
-		JSONArray products = new JSONArray();
-		entityIDs.put(sceneId);
-		products.put(product);
-
-		downloadJSONObj.put(SapsPropertiesConstants.DATASET_NAME_JSON_KEY, dataset);
-		downloadJSONObj.put(SapsPropertiesConstants.API_KEY_JSON_KEY, usgsAPIKey);
-		downloadJSONObj.put(SapsPropertiesConstants.NODE_JSON_KEY, node);
-		downloadJSONObj.put(SapsPropertiesConstants.ENTITY_IDS_JSON_KEY, entityIDs);
-		downloadJSONObj.put(SapsPropertiesConstants.PRODUCTS_JSON_KEY, products);
 	}
 
 	protected void setUSGSAPIKey(String usgsAPIKey) {
