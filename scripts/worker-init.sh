@@ -5,7 +5,6 @@ IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
 CONTAINER_OUT_DIR=/home/ubuntu/$RESULTS_DIR_NAME
 PROCESS_OUTPUT=
-repositoryName=
 
 # This function removes all garbage from tmp
 function tmpGarbageCollect {
@@ -14,15 +13,6 @@ function tmpGarbageCollect {
   then 
     sudo rm -r /tmp/Rtmp*
   fi
-}
-
-# This function downloads all projects and dependencies
-function prepareDependencies {
-  #installing git
-  sudo apt-get update
-
-  # TODO: install in image
-  echo -e "Y\n" | sudo apt-get install nfs-common
 }
 
 # This function mounts exports dir from NFS server
@@ -44,9 +34,17 @@ function mountExportsDir {
 # This function downloads container image and prepare container to execution
 function prepareDockerContainer {
   cd ${SANDBOX}
-  echo "Pulling docker image from ${CONTAINER_REPOSITORY}/${CONTAINER_TAG}"
-  docker pull ${CONTAINER_REPOSITORY}/${CONTAINER_TAG}
-  docker run -v ${SEBAL_MOUNT_POINT}:$CONTAINER_OUT_DIR ${CONTAINER_TAG}
+
+  echo "Pulling docker image from ${CONTAINER_REPOSITORY}:${CONTAINER_TAG}"
+  docker pull ${CONTAINER_REPOSITORY}:${CONTAINER_TAG}
+
+  if [ "$(docker ps -aq -f status=exited -f name=${CONTAINER_TAG})" ] || [ "$(docker ps -q -f name=${CONTAINER_TAG})" ]
+  then
+    # cleanup
+    docker rm ${CONTAINER_TAG}
+  fi
+
+  docker run -d -v ${SEBAL_MOUNT_POINT}:${SEBAL_MOUNT_POINT} ${CONTAINER_REPOSITORY}:${CONTAINER_TAG} tailf /dev/null
 }
 
 function garbageCollect {
@@ -60,6 +58,15 @@ function garbageCollect {
       sudo rm ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/*
     fi
   fi
+}
+
+# This function executes user's init script
+function executeInitScript {
+  cd ${SANDBOX}
+
+  CONTAINER_ID=$(docker ps | grep "${CONTAINER_REPOSITORY}:${CONTAINER_TAG}" | awk '{print $1}')
+
+  docker exec $CONTAINER_ID bash -x $BIN_INIT_SCRIPT
 }
 
 function checkProcessOutput {
@@ -79,12 +86,12 @@ function finally {
 
 tmpGarbageCollect
 checkProcessOutput
-prepareDependencies
-checkProcessOutput
-checkMissingDependenciesFile
-checkProcessOutput
 mountExportsDir
 checkProcessOutput
+prepareDockerContainer
+checkProcessOutput
 garbageCollect
+checkProcessOutput
+executeInitScript
 checkProcessOutput
 finally

@@ -3,17 +3,23 @@
 # Global variables
 IMAGES_DIR_NAME=images
 RESULTS_DIR_NAME=results
-CONTAINER_OUT_DIR=/home/ubuntu/$RESULTS_DIR_NAME
 BIN_RUN_SCRIPT="bin/run.sh"
 ERROR_LOGS_DIR=error_logs
 PROCESS_OUTPUT=
 
-function executeRunScript {
+function executeDockerContainer {
   cd ${SANDBOX}
 
-  CONTAINER_ID=$(docker ps --filter ancestor=${CONTAINER_TAG})
+  CONTAINER_ID=$(docker ps | grep "${CONTAINER_REPOSITORY}:${CONTAINER_TAG}" | awk '{print $1}')
 
-  docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${IMAGE_NEW_COLLECTION_NAME} ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ $CONTAINER_OUT_DIR $CONTAINER_OUT_DIR/${IMAGE_NEW_COLLECTION_NAME} ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/${IMAGE_NEW_COLLECTION_NAME}"_MTL.txt" $CONTAINER_OUT_DIR/${IMAGE_NEW_COLLECTION_NAME}/${IMAGE_NEW_COLLECTION_NAME}"_station.csv"
+  docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${IMAGE_NEW_COLLECTION_NAME} ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/ ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME} ${SEBAL_MOUNT_POINT}/$IMAGES_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/${IMAGE_NEW_COLLECTION_NAME}"_MTL.txt" ${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NEW_COLLECTION_NAME}/${IMAGE_NEW_COLLECTION_NAME}"_station.csv"
+}
+
+function removeDockerContainer {
+  CONTAINER_ID=$(docker ps -aqf "name=${CONTAINER_TAG}")
+
+  echo "Removing docker container $CONTAINER_ID"
+  docker rm -f $CONTAINER_ID
 }
 
 # This function do a checksum of all output files in image dir
@@ -63,7 +69,9 @@ function finally {
   exit $PROCESS_OUTPUT
 }
 
-executeRunScript
+executeDockerContainer
+checkProcessOutput
+removeDockerContainer
 checkProcessOutput
 checkSum
 checkProcessOutput

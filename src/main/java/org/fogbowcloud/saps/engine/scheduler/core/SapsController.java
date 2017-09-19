@@ -95,8 +95,8 @@ public class SapsController extends BlowoutController {
 		setTaskMonitor(new SapsTaskMonitor(getBlowoutPool(), imageStore));
 		getTaskMonitor().start();
 
-		setResourceMonitor(new ResourceMonitor(getInfraProvider(), getBlowoutPool(),
-				getProperties()));
+		setResourceMonitor(
+				new ResourceMonitor(getInfraProvider(), getBlowoutPool(), getProperties()));
 		getResourceMonitor().start();
 
 		setSchedulerInterface(createSchedulerInstance(getTaskMonitor()));
@@ -116,8 +116,8 @@ public class SapsController extends BlowoutController {
 				}
 			}
 
-		}, 0, Integer.parseInt(properties
-				.getProperty(SapsPropertiesConstants.SEBAL_EXECUTION_PERIOD)));
+		}, 0, Integer
+				.parseInt(properties.getProperty(SapsPropertiesConstants.SEBAL_EXECUTION_PERIOD)));
 	}
 
 	private static void resetImagesRunningToQueued() throws SQLException {
@@ -131,8 +131,8 @@ public class SapsController extends BlowoutController {
 	private void addSebalTasks(final Properties properties, final Specification sebalSpec,
 			ImageTaskState imageState) throws InterruptedException, SapsException {
 		try {
-			List<ImageTask> imagesToProcess = imageStore
-					.getIn(imageState, ImageDataStore.UNLIMITED);
+			List<ImageTask> imagesToProcess = imageStore.getIn(imageState,
+					ImageDataStore.UNLIMITED);
 			for (ImageTask imageData : imagesToProcess) {
 				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
 						+ imageData.getState().getValue() + " (not finished).");
@@ -145,8 +145,8 @@ public class SapsController extends BlowoutController {
 						|| ImageTaskState.DOWNLOADED.equals(imageState)) {
 					TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(),
 							specWithFederation);
-					Map<String, String> nfsConfig = imageStore.getFederationNFSConfig(imageData
-							.getFederationMember());
+					Map<String, String> nfsConfig = imageStore
+							.getFederationNFSConfig(imageData.getFederationMember());
 
 					Iterator it = nfsConfig.entrySet().iterator();
 					while (it.hasNext()) {
