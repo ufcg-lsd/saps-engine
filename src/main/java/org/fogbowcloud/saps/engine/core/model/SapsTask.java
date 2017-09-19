@@ -236,8 +236,6 @@ public class SapsTask {
 			String scriptType) {
 
 		if (scriptType.equals(INIT_TYPE)) {
-			command = command.replaceAll(Pattern.quote("${CONTAINER_REPOSITORY}"),
-					task.getMetadata(METADATA_CONTAINER_REPOSITORY));
 			command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
 					task.getMetadata(METADATA_NFS_SERVER_IP));
 			command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"),
@@ -249,6 +247,8 @@ public class SapsTask {
 		// common variables for both scripts
 		command = command.replaceAll(Pattern.quote("${IMAGE_NEW_COLLECTION_NAME}"),
 				task.getMetadata(METADATA_IMAGE_NEW_COLLECTION_NAME));
+		command = command.replaceAll(Pattern.quote("${CONTAINER_REPOSITORY}"),
+				task.getMetadata(METADATA_CONTAINER_REPOSITORY));
 		command = command.replaceAll(Pattern.quote("${CONTAINER_TAG}"),
 				task.getMetadata(METADATA_CONTAINER_TAG));
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
