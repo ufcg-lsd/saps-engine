@@ -38,7 +38,7 @@ public class InputDownloader {
 	protected ConcurrentMap<String, ImageTask> pendingTaskDownloadMap;
 
 	// Image dir size in bytes
-	private static final int MAX_IMAGES_TO_DOWNLOAD = 1;
+	protected static final int MAX_IMAGES_TO_DOWNLOAD = 1;
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
 	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";

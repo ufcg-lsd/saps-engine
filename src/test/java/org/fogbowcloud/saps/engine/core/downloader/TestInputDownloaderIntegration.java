@@ -65,7 +65,6 @@ public class TestInputDownloaderIntegration {
 		String inputDownloaderPort = "fake-inputDownloader-port";
 		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
-		int maxImagesToDownload = 5;
 
 		Date date = new Date(10000854);
 
@@ -78,7 +77,7 @@ public class TestInputDownloaderIntegration {
 		imageList.add(taskOne);
 
 		doReturn(imageList).when(imageStore).getImagesToDownload(federationMember,
-				maxImagesToDownload);
+				InputDownloader.MAX_IMAGES_TO_DOWNLOAD);
 		doReturn(taskOne).when(imageStore).getTask(taskOne.getName());
 		doReturn("link-1").when(usgsRepository).getImageDownloadLink(taskOne.getName());
 		doThrow(new IOException()).when(usgsRepository).downloadImage(taskOne);
@@ -107,7 +106,6 @@ public class TestInputDownloaderIntegration {
 		String inputDownloaderPort = "fake-inputDownloader-port";
 		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
-		int maxImagesToDownload = 5;
 
 		Date date = new Date(10000854);
 
@@ -116,19 +114,14 @@ public class TestInputDownloaderIntegration {
 				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
 				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "",
 				"None");
-		ImageTask taskTwo = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.CREATED,
-				federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "",
-				"None");
 
 		imageList.add(taskOne);
-		imageList.add(taskTwo);
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
 				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
 
 		doThrow(new SQLException()).when(imageStore).getImagesToDownload(federationMember,
-				maxImagesToDownload);
+				InputDownloader.MAX_IMAGES_TO_DOWNLOAD);
 		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
 
 		// exercise
@@ -137,7 +130,6 @@ public class TestInputDownloaderIntegration {
 		// expect
 		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
 		Assert.assertEquals(ImageTaskState.CREATED, taskOne.getState());
-		Assert.assertEquals(ImageTaskState.CREATED, taskTwo.getState());
 	}
 
 	@Test
