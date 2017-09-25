@@ -38,7 +38,7 @@ public class SapsController extends BlowoutController {
 	private static String nfsServerPort;
 	private static Properties properties;
 	private static ImageDataStore imageStore;
-	private static ManagerTimer sebalExecutionTimer = new ManagerTimer(
+	private static ManagerTimer sapsExecutionTimer = new ManagerTimer(
 			Executors.newScheduledThreadPool(1));
 
 	public SapsController(Properties properties) throws SapsException, BlowoutException {
@@ -106,7 +106,7 @@ public class SapsController extends BlowoutController {
 	}
 
 	private void scheduleTasksPeriodically(final Specification sebalSpec) {
-		sebalExecutionTimer.scheduleAtFixedRate(new Runnable() {
+		sapsExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
 				try {
