@@ -6,6 +6,7 @@ import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.util.DockerUtil;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -36,7 +37,7 @@ public class InputDownloader {
 	protected ConcurrentMap<String, ImageTask> pendingTaskDownloadMap;
 
 	// Image dir size in bytes
-	private static final int MAX_IMAGES_TO_DOWNLOAD = 1;
+	public static final int MAX_IMAGES_TO_DOWNLOAD = 1;
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
 	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";
@@ -308,14 +309,16 @@ public class InputDownloader {
 		try {
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
 
-			// Docker
 			String dataHostPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH) + "data";
-			String resultsContainerPath = properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH);
 
-			// TODO: pullDockerImage(repositoryName, tag);
-			String containerId = runMappedContainer(imageTask.getContainerRepository(), imageTask.getContainerTag(), dataHostPath, resultsContainerPath);
-			execDockerCommand(containerId);
-			killDockerContainer(containerId);
+			DockerUtil.pullImage(imageTask.getContainerRepository(), imageTask.getContainerTag());
+			String containerId = DockerUtil.runMappedContainer(imageTask.getContainerRepository(),
+					imageTask.getContainerTag(), dataHostPath,
+					properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH));
+			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT) + " " + imageTask.getCollectionTierName()
+					+ " " + imageTask.getName() + properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH);
+			DockerUtil.execDockerCommand(containerId, commandToRun);
+			DockerUtil.removeContainer(containerId);
 
 			getStationData(imageTask);
 			// TODO: insert here station download code
@@ -340,85 +343,6 @@ public class InputDownloader {
 		}
 
 		return false;
-	}
-
-	private boolean pullDockerImage(String repositoryName, String repositoryTag) {
-		ProcessBuilder builder = new ProcessBuilder("docker", "pull", repositoryName + ":" + repositoryTag);
-		LOGGER.debug("Pulling Docker image: " + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			LOGGER.debug("Pull status output: " + p.exitValue());
-			if (p.exitValue() == 0){
-				return true;
-			}
-		} catch (Exception e) {
-			LOGGER.error("Error to pull Docker image " + repositoryName + ":" + repositoryTag + ".", e);
-		}
-		return false;
-	}
-
-	private boolean killDockerContainer(String containerId) {
-		ProcessBuilder builder = new ProcessBuilder("docker", "kill", containerId);
-		LOGGER.debug("Killing Docker container: " + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			LOGGER.debug("Kill Docker container status output: " + p.exitValue());
-			if (p.exitValue() == 0){
-				return true;
-			}
-		} catch (Exception e) {
-			LOGGER.error("Error to kill Docker container " + containerId + ".", e);
-		}
-		return false;
-	}
-
-	private String runMappedContainer(String repository, String tag, String hostPath, String containerPath){
-		ProcessBuilder builder = new ProcessBuilder("docker", "run", "-td", "-v",
-				hostPath+":"+containerPath, repository);
-		LOGGER.debug("Running container: " + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			LOGGER.debug("Run Docker container output: " + p.exitValue());
-			return getOutput(p);
-		} catch (Exception e) {
-			LOGGER.error("Error while running Docker container " + repository + ":" + tag
-					+ ".", e);
-		}
-		return "";
-	}
-
-	private String execDockerCommand(String containerId) {
-		String fullCommand = "docker" + " " + "exec" + " " + containerId + " " + "run.sh";
-		String[] commandArray = fullCommand.split("\\s+");
-		ProcessBuilder builder = new ProcessBuilder(commandArray);
-		LOGGER.debug("Executing containerized file: " + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			LOGGER.debug("Containerized file execution status output:" + p.exitValue());
-			return getOutput(p);
-		} catch (Exception e) {
-			LOGGER.error("Error while executing containerized command: " + "run.sh"
-					+ " on container ID: " + containerId + "", e);
-		}
-		return "";
-	}
-
-	private String getOutput(Process p) throws IOException {
-		StringBuffer output = new StringBuffer();
-		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		String line;
-		while((line = bufferedReader.readLine()) != null){
-			output.append(line + System.lineSeparator());
-		}
-		return output.toString();
 	}
 
 	private void getStationData(ImageTask imageTask) {

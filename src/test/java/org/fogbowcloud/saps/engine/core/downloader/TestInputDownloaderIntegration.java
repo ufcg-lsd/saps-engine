@@ -5,6 +5,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Date;
@@ -20,6 +21,7 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
+import org.fogbowcloud.saps.engine.scheduler.restlet.resource.ImageResource;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,7 +65,6 @@ public class TestInputDownloaderIntegration {
 		String crawlerPort = "fake-crawler-port";
 		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
-		int maxImagesToDownload = 5;
 
 		Date date = new Date(10000854);
 
@@ -75,19 +76,10 @@ public class TestInputDownloaderIntegration {
 
 		imageList.add(image1);
 
-		// aqui a imagelist tem uma imagem, mas imageStore ainda tá vazio, porque os testes estão passando?
-
-		List<ImageTask> emptyImageList = new ArrayList<ImageTask>();
-
-		doReturn(emptyImageList).when(imageStore).getImagesToDownload(federationMember,
-				maxImagesToDownload);
 		doReturn(imageList).when(imageStore).getImagesToDownload(federationMember,
-				maxImagesToDownload);
+				InputDownloader.MAX_IMAGES_TO_DOWNLOAD);
 
 		doReturn(image1).when(imageStore).getTask(image1.getName());
-
-//		doReturn("link-1").when(usgsRepository).getImageDownloadLink(image1.getName());
-//		doThrow(new IOException()).when(usgsRepository).downloadImage(image1);
 
 		InputDownloader crawler = new InputDownloader(properties, imageStore,
 				crawlerIP, crawlerPort, nfsPort, federationMember);
