@@ -1060,11 +1060,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE "
-			+ IMAGE_TABLE_NAME + " it SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL
-			+ " = ?, " + UPDATED_TIME_COL + " = now() FROM (SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL
-			+ " = ? LIMIT ? FOR UPDATE) filter WHERE it." + TASK_ID_COL + " = filter."
-			+ TASK_ID_COL;
+			+ IMAGE_TABLE_NAME + " SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ?, "
+			+ UPDATED_TIME_COL + " = now() WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL
+			+ " = ? LIMIT ?";
 
 	private static final String SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER = "SELECT * FROM "
 			+ IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL
