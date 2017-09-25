@@ -218,8 +218,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		LOGGER.info("Adding image task " + taskId + " with name " + imageName + ", download link "
 				+ downloadLink + " and priority " + priority);
 		if (taskId == null || taskId.isEmpty() || imageName == null || imageName.isEmpty()
-				|| downloadLink == null || downloadLink.isEmpty()
-				|| collectionTierImageName == null || collectionTierImageName.isEmpty()) {
+				|| downloadLink == null || downloadLink.isEmpty() || collectionTierImageName == null
+				|| collectionTierImageName.isEmpty()) {
 			LOGGER.error("Invalid image task " + taskId);
 			throw new IllegalArgumentException("Invalid image task " + taskId);
 		}
@@ -254,10 +254,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(insertStatement, connection);
 		}
 	}
-	
+
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
 			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	
+
 	public void addImageTask(ImageTask imageTask) throws SQLException {
 		LOGGER.info("Adding image task " + imageTask.getTaskId() + " with name "
 				+ imageTask.getName() + ", download link " + imageTask.getDownloadLink()
@@ -314,8 +314,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 				+ " notification for " + userEmail);
 		if (taskId == null || taskId.isEmpty() || imageName == null || imageName.isEmpty()
 				|| userEmail == null || userEmail.isEmpty()) {
-			throw new IllegalArgumentException("Invalid image name " + imageName + " or user "
-					+ userEmail);
+			throw new IllegalArgumentException(
+					"Invalid image name " + imageName + " or user " + userEmail);
 		}
 
 		PreparedStatement insertStatement = null;
@@ -337,8 +337,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String INSERT_DEPLOY_CONFIG_SQL = "INSERT INTO "
-			+ DEPLOY_CONFIG_TABLE_NAME + " VALUES(?, ?, ?, ?)";
+	private static final String INSERT_DEPLOY_CONFIG_SQL = "INSERT INTO " + DEPLOY_CONFIG_TABLE_NAME
+			+ " VALUES(?, ?, ?, ?)";
 
 	@Override
 	public void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort,
@@ -348,9 +348,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 		if (nfsIP == null || nfsIP.isEmpty() || nfsSshPort == null || nfsSshPort.isEmpty()
 				|| nfsPort == null || nfsPort.isEmpty() || federationMember == null
 				|| federationMember.isEmpty()) {
-			throw new IllegalArgumentException("Invalid NFS IP " + nfsIP + ", ssh port "
-					+ nfsSshPort + ", port " + nfsPort + " or federation member "
-					+ federationMember);
+			throw new IllegalArgumentException(
+					"Invalid NFS IP " + nfsIP + ", ssh port " + nfsSshPort + ", port " + nfsPort
+							+ " or federation member " + federationMember);
 		}
 
 		PreparedStatement insertStatement = null;
@@ -427,9 +427,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 		List<Ward> wards = new ArrayList<Ward>();
 
 		while (rs.next()) {
-			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageTaskState.ARCHIVED, rs
-					.getString(SUBMISSION_ID_COL), rs.getString(TASK_ID_COL), rs
-					.getString(USER_EMAIL_COL)));
+			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageTaskState.ARCHIVED,
+					rs.getString(SUBMISSION_ID_COL), rs.getString(TASK_ID_COL),
+					rs.getString(USER_EMAIL_COL)));
 		}
 
 		return wards;
@@ -476,7 +476,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	@Override
 	public boolean deployConfigExists(String federationMember) throws SQLException {
-		LOGGER.debug("Verifying if a deploy config for " + federationMember + " exists in database");
+		LOGGER.debug(
+				"Verifying if a deploy config for " + federationMember + " exists in database");
 
 		PreparedStatement statement = null;
 		Connection conn = null;
@@ -551,8 +552,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String REMOVE_DEPLOY_CONFIG_SQL = "DELETE FROM "
-			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?";
+	private static final String REMOVE_DEPLOY_CONFIG_SQL = "DELETE FROM " + DEPLOY_CONFIG_TABLE_NAME
+			+ " WHERE " + FEDERATION_MEMBER_COL + " = ?";
 
 	@Override
 	public void removeDeployConfig(String federationMember) throws SQLException {
@@ -676,8 +677,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		if (taskId == null || taskId.isEmpty() || state == null) {
 			LOGGER.error("Invalid image task " + taskId + " or state " + state);
-			throw new IllegalArgumentException("Invalid image task " + taskId + " or state "
-					+ state);
+			throw new IllegalArgumentException(
+					"Invalid image task " + taskId + " or state " + state);
 		}
 		PreparedStatement updateStatement = null;
 		Connection connection = null;
@@ -696,8 +697,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE "
-			+ IMAGE_TABLE_NAME
+	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
 			+ " SET name = ?, download_link = ?, state = ?, federation_member = ?,"
 			+ " priority = ?, station_id = ?, container_repository = ?, container_tag = ?, crawler_version = ?, fetcher_version = ?,"
 			+ " blowout_version = ?, fmask_version = ?," + " utime = now(), status = ?,"
@@ -780,10 +780,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			LOGGER.error("Error wile closing ConnectionPool", e);
 		}
 	}
-	
+
 	private static final String SELECT_ALL_SUBMISSIONS_SQL = "SELECT " + SUBMISSION_ID_COL
 			+ " FROM " + USERS_NOTIFY_TABLE_NAME;
-	
+
 	@Override
 	public List<Submission> getAllSubmissions() throws SQLException {
 		Statement statement = null;
@@ -956,8 +956,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " ctime BETWEEN ? AND ? ";
 
 	@Override
-	public List<ImageTask> getTasksByFilter(ImageTaskState state, String name,
-			long processDateInit, long processDateEnd) throws SQLException {
+	public List<ImageTask> getTasksByFilter(ImageTaskState state, String name, long processDateInit,
+			long processDateEnd) throws SQLException {
 
 		PreparedStatement selectStatement = null;
 		Connection connection = null;
@@ -1059,10 +1059,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	}
 
-	private static final String SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE "
-			+ IMAGE_TABLE_NAME + " SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ?, "
-			+ UPDATED_TIME_COL + " = now() WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL
-			+ " = ? LIMIT ?";
+	private static final String UPDATE_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME
+			+ " SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ?, " + UPDATED_TIME_COL
+			+ " = now() WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL + " = ? LIMIT ?";
 
 	private static final String SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER = "SELECT * FROM "
 			+ IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL
@@ -1078,12 +1077,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 	public List<ImageTask> getImagesToDownload(String federationMember, int limit)
 			throws SQLException {
 		/*
-		 * In future versions, if the crawler starts to use a multithread
-		 * approach this method needs to be reviewed to avoid concurrency
-		 * problems between its threads. As the crawler selects images where the
-		 * state is DOWNLOADING and federation member is equal to its ID, new
-		 * threads could start to download an image that is already been
-		 * downloaded by the another thread.
+		 * In future versions, if the crawler starts to use a multithread approach this
+		 * method needs to be reviewed to avoid concurrency problems between its
+		 * threads. As the crawler selects images where the state is DOWNLOADING and
+		 * federation member is equal to its ID, new threads could start to download an
+		 * image that is already been downloaded by the another thread.
 		 */
 
 		if (federationMember == null) {
@@ -1098,8 +1096,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			connection = getConnection();
 
-			lockAndUpdateStatement = connection
-					.prepareStatement(SELECT_AND_LOCK_LIMITED_IMAGES_TO_DOWNLOAD);
+			lockAndUpdateStatement = connection.prepareStatement(UPDATE_LIMITED_IMAGES_TO_DOWNLOAD);
 			lockAndUpdateStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);
 			lockAndUpdateStatement.setString(3, ImageTaskState.CREATED.getValue());
@@ -1128,10 +1125,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static SapsUser extractSapsUserFrom(ResultSet rs) throws SQLException {
-		SapsUser sebalUser = new SapsUser(rs.getString(USER_EMAIL_COL),
-				rs.getString(USER_NAME_COL), rs.getString(USER_PASSWORD_COL),
-				rs.getBoolean(USER_STATE_COL), rs.getBoolean(USER_NOTIFY_COL),
-				rs.getBoolean(ADMIN_ROLE_COL));
+		SapsUser sebalUser = new SapsUser(rs.getString(USER_EMAIL_COL), rs.getString(USER_NAME_COL),
+				rs.getString(USER_PASSWORD_COL), rs.getBoolean(USER_STATE_COL),
+				rs.getBoolean(USER_NOTIFY_COL), rs.getBoolean(ADMIN_ROLE_COL));
 
 		return sebalUser;
 	}
@@ -1140,15 +1136,15 @@ public class JDBCImageDataStore implements ImageDataStore {
 		List<ImageTask> imageDatas = new ArrayList<ImageTask>();
 		while (rs.next()) {
 			imageDatas.add(new ImageTask(rs.getString(TASK_ID_COL), rs.getString(IMAGE_NAME_COL),
-					rs.getString(DOWNLOAD_LINK_COL), ImageTaskState.getStateFromStr(rs
-							.getString(STATE_COL)), rs.getString(FEDERATION_MEMBER_COL), rs
-							.getInt(PRIORITY_COL), rs.getString(STATION_ID_COL), rs
-							.getString(CONTAINER_REPOSITORY_COL), rs.getString(CONTAINER_TAG_COL),
-					rs.getString(CRAWLER_VERSION_COL), rs.getString(FETCHER_VERSION_COL), rs
-							.getString(BLOWOUT_VERSION_COL), rs.getString(FMASK_VERSION_COL), rs
-							.getTimestamp(CREATION_TIME_COL), rs.getTimestamp(UPDATED_TIME_COL), rs
-							.getString(IMAGE_STATUS_COL), rs.getString(ERROR_MSG_COL), rs
-							.getString(COLLECTION_TIER_IMAGE_NAME_COL)));
+					rs.getString(DOWNLOAD_LINK_COL),
+					ImageTaskState.getStateFromStr(rs.getString(STATE_COL)),
+					rs.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
+					rs.getString(STATION_ID_COL), rs.getString(CONTAINER_REPOSITORY_COL),
+					rs.getString(CONTAINER_TAG_COL), rs.getString(CRAWLER_VERSION_COL),
+					rs.getString(FETCHER_VERSION_COL), rs.getString(BLOWOUT_VERSION_COL),
+					rs.getString(FMASK_VERSION_COL), rs.getTimestamp(CREATION_TIME_COL),
+					rs.getTimestamp(UPDATED_TIME_COL), rs.getString(IMAGE_STATUS_COL),
+					rs.getString(ERROR_MSG_COL), rs.getString(COLLECTION_TIER_IMAGE_NAME_COL)));
 		}
 		return imageDatas;
 	}
@@ -1214,7 +1210,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(selectStatement, connection);
 		}
 	}
-	
+
 	private static final String SELECT_NFS_SERVER_SSH_PORT_SQL = "SELECT nfs_ssh_port FROM "
 			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE federation_member = ?";
 
