@@ -33,8 +33,8 @@ public class ImageResource extends BaseResource {
 	private static final String LAST_YEAR = "lastYear";
 	private static final String REGION = "region";
 	private static final String DATASET = "dataSet";
-	private static final String SEBAL_VERSION = "sebalVersion";
-	private static final String SEBAL_TAG = "sebalTag";
+	private static final String CONTAINER_REPOSITORY = "containerRepository";
+	private static final String CONTAINER_TAG = "containerTag";
 	private static final String DAY = "day";
 	private static final String FORCE = "force";
 
@@ -46,7 +46,8 @@ public class ImageResource extends BaseResource {
 	private static final String USER_PASSWORD = "userPass";
 
 	private static final String DEFAULT_CONF_PATH = "config/sebal.conf";
-	private static final String DEFAULT_SEBAL_VERSION = "default_sebal_version";
+	private static final String DEFAULT_CONTAINER_REPOSITORY = "default_container_repository";
+	private static final String DEFAULT_CONTAINER_TAG = "default_container_tag";
 
 	public ImageResource() {
 		super();
@@ -55,8 +56,8 @@ public class ImageResource extends BaseResource {
 	@SuppressWarnings("unchecked")
 	@Get
 	public Representation getImages() throws Exception {
-		Series<Header> series = (Series<Header>) getRequestAttributes().get(
-				"org.restlet.http.headers");
+		Series<Header> series = (Series<Header>) getRequestAttributes()
+				.get("org.restlet.http.headers");
 
 		String userEmail = series.getFirstValue(USER_EMAIL, true);
 		String userPass = series.getFirstValue(USER_PASSWORD, true);
@@ -118,8 +119,8 @@ public class ImageResource extends BaseResource {
 		int lastYear = new Integer(form.getFirstValue(LAST_YEAR));
 		String region = form.getFirstValue(REGION);
 		String dataSet = form.getFirstValue(DATASET);
-		String sebalVersion = form.getFirstValue(SEBAL_VERSION);
-		String sebalTag = form.getFirstValue(SEBAL_TAG);
+		String containerRepository = form.getFirstValue(CONTAINER_REPOSITORY);
+		String containerTag = form.getFirstValue(CONTAINER_TAG);
 		LOGGER.debug("FirstYear " + firstYear + " LastYear " + lastYear + " Region " + region);
 
 		try {
@@ -127,18 +128,27 @@ public class ImageResource extends BaseResource {
 				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
 			}
 
-			if (sebalVersion == null || sebalVersion.isEmpty()) {
-				sebalVersion = properties.getProperty(DEFAULT_SEBAL_VERSION);
-				sebalTag = "NE";
+			if (containerRepository == null || containerRepository.isEmpty()) {
+				containerRepository = properties.getProperty(DEFAULT_CONTAINER_REPOSITORY);
+				containerTag = properties.getProperty(DEFAULT_CONTAINER_TAG);
 
-				LOGGER.debug("SebalVersion not passed...using default repository " + sebalVersion);
+				LOGGER.debug("SebalVersion not passed...using default repository "
+						+ containerRepository);
 			} else {
-				if (sebalTag == null || sebalTag.isEmpty()) {
+				if (containerTag == null || containerTag.isEmpty()) {
 					throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
 				}
 			}
-
-			submit(userEmail, firstYear, lastYear, region, dataSet, sebalVersion, sebalTag);
+			
+			List<Task> createdTasks = application.addTasks(firstYear, lastYear, region, dataSet,
+					containerRepository, containerTag);
+			if (application.isUserNotifiable(userEmail)) {
+				Submission submission = new Submission(UUID.randomUUID().toString());
+				for (Task imageTask : createdTasks) {
+					application.addUserNotify(submission.getId(), imageTask.getId(),
+							imageTask.getImageTask().getCollectionTierName(), userEmail);
+				}
+			}
 		} catch (Exception e) {
 			LOGGER.debug(e.getMessage(), e);
 			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
