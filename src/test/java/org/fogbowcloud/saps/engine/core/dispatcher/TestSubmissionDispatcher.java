@@ -35,7 +35,7 @@ public class TestSubmissionDispatcher {
 				new Timestamp(new java.util.Date().getTime()),
 				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT);
-		ImageTask imageTaskTwo = new ImageTask(taskOne.getId(), "dataset-2", "region-2", date,
+		ImageTask imageTaskTwo = new ImageTask(taskTwo.getId(), "dataset-2", "region-2", date,
 				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
@@ -44,7 +44,7 @@ public class TestSubmissionDispatcher {
 				new Timestamp(new java.util.Date().getTime()),
 				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT);
-		ImageTask imageTaskThree = new ImageTask(taskOne.getId(), "dataset-3", "region-3", date,
+		ImageTask imageTaskThree = new ImageTask(taskThree.getId(), "dataset-3", "region-3", date,
 				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,

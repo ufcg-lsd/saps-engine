@@ -96,7 +96,7 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testinputDownloaderErrorWhileGetImagesNotDownloaded()
+	public void testinputDownloaderErrorWhileGetCreatedImages()
 			throws SQLException, IOException {
 		// setup
 		Properties properties = mock(Properties.class);
@@ -106,16 +106,6 @@ public class TestInputDownloaderIntegration {
 		String inputDownloaderPort = "fake-inputDownloader-port";
 		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
-
-		Date date = new Date(10000854);
-
-		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
-				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
-
-		imageList.add(taskOne);
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
 				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
@@ -129,7 +119,6 @@ public class TestInputDownloaderIntegration {
 
 		// expect
 		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
-		Assert.assertEquals(ImageTaskState.CREATED, taskOne.getState());
 	}
 
 	@Test

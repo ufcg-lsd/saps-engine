@@ -272,6 +272,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
 			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+	@Override
 	public void addImageTask(ImageTask imageTask) throws SQLException {
 		LOGGER.info("Adding image task " + imageTask.getTaskId() + " with download link "
 				+ imageTask.getDownloadLink() + " and priority " + imageTask.getPriority());
@@ -1330,8 +1331,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
 			throws SQLException {
-		LOGGER.info("Removing task " + taskId + " state " + state.getValue()
-				+ " with timestamp " + timestamp);
+		LOGGER.info("Removing task " + taskId + " state " + state.getValue() + " with timestamp "
+				+ timestamp);
 		if (taskId == null || taskId.isEmpty() || state == null) {
 			LOGGER.error("Invalid task " + taskId + " or state " + state.getValue());
 			throw new IllegalArgumentException("Invalid task " + taskId);
