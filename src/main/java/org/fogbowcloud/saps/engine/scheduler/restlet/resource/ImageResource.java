@@ -34,7 +34,11 @@ public class ImageResource extends BaseResource {
 	private static final String LAST_YEAR = "lastYear";
 	private static final String REGION = "region";
 	private static final String DATASET = "dataSet";
-	private static final String WORKER_CONTAINER_REPOSITORY = "containerRepository";
+	private static final String DOWNLOADER_CONTAINER_REPOSITORY = "downloaderContainerRepository";
+	private static final String DOWNLOADER_CONTAINER_TAG = "downloaderContainerTag";
+	private static final String PREPROCESSOR_CONTAINER_TAG = "preProcessorContainerRepository";
+	private static final String PREPROCESSOR_CONTAINER_REPOSITORY = "preProcessorContainerTag";
+	private static final String WORKER_CONTAINER_REPOSITORY = "workerContainerRepository";
 	private static final String WORKER_CONTAINER_TAG = "containerTag";
 	private static final String DAY = "day";
 	private static final String FORCE = "force";
@@ -47,12 +51,12 @@ public class ImageResource extends BaseResource {
 	private static final String USER_PASSWORD = "userPass";
 
 	private static final String DEFAULT_CONF_PATH = "config/sebal.conf";
-	private static final String DEFAULT_CONTAINER_REPOSITORY = "default_container_repository";
-	private static final String DEFAULT_CONTAINER_TAG = "default_container_tag";
-	private static final String DOWNLOADER_CONTAINER_REPOSITORY = null;
-	private static final String DOWNLOADER_CONTAINER_TAG = null;
-	private static final String PREPROCESSOR_CONTAINER_TAG = null;
-	private static final String PREPROCESSOR_CONTAINER_REPOSITORY = null;
+	private static final String DEFAULT_DOWNLOADER_CONTAINER_REPOSITORY = "default_downloader_container_repository";
+	private static final String DEFAULT_DOWNLOADER_CONTAINER_TAG = "default_downloader_container_tag";
+	private static final String DEFAULT_PREPROCESSOR_CONTAINER_REPOSITORY = "default_preprocessor_container_repository";
+	private static final String DEFAULT_PREPROCESSOR_CONTAINER_TAG = "default_preprocessor_container_tag";
+	private static final String DEFAULT_WORKER_CONTAINER_REPOSITORY = "default_worker_container_repository";
+	private static final String DEFAULT_WORKER_CONTAINER_TAG = "default_worker_container_tag";
 
 	public ImageResource() {
 		super();
@@ -165,9 +169,36 @@ public class ImageResource extends BaseResource {
 			throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
 		}
 
+		if (downloaderContainerRepository == null || downloaderContainerRepository.isEmpty()) {
+			downloaderContainerRepository = properties
+					.getProperty(DEFAULT_DOWNLOADER_CONTAINER_REPOSITORY);
+			downloaderContainerTag = properties.getProperty(DEFAULT_DOWNLOADER_CONTAINER_TAG);
+
+			LOGGER.debug(
+					"Input Downloader container repository not passed...using default repository "
+							+ downloaderContainerRepository);
+		} else {
+			if (downloaderContainerTag == null || downloaderContainerTag.isEmpty()) {
+				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
+			}
+		}
+
+		if (preProcessorContainerRepository == null || preProcessorContainerRepository.isEmpty()) {
+			preProcessorContainerRepository = properties
+					.getProperty(DEFAULT_PREPROCESSOR_CONTAINER_REPOSITORY);
+			preProcessorContainerTag = properties.getProperty(DEFAULT_PREPROCESSOR_CONTAINER_TAG);
+
+			LOGGER.debug("Pre Processor container repository not passed...using default repository "
+					+ preProcessorContainerRepository);
+		} else {
+			if (preProcessorContainerTag == null || preProcessorContainerTag.isEmpty()) {
+				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
+			}
+		}
+
 		if (workerContainerRepository == null || workerContainerRepository.isEmpty()) {
-			workerContainerRepository = properties.getProperty(DEFAULT_CONTAINER_REPOSITORY);
-			workerContainerTag = properties.getProperty(DEFAULT_CONTAINER_TAG);
+			workerContainerRepository = properties.getProperty(DEFAULT_WORKER_CONTAINER_REPOSITORY);
+			workerContainerTag = properties.getProperty(DEFAULT_WORKER_CONTAINER_TAG);
 
 			LOGGER.debug("SebalVersion not passed...using default repository "
 					+ workerContainerRepository);

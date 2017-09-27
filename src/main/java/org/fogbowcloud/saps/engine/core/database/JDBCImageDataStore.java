@@ -28,13 +28,20 @@ public class JDBCImageDataStore implements ImageDataStore {
 	protected static final String IMAGE_TABLE_NAME = "NASA_IMAGES";
 	protected static final String STATES_TABLE_NAME = "STATES_TIMESTAMPS";
 	private static final String TASK_ID_COL = "task_id";
+	private static final String DATASET_COL = "dataset";
+	private static final String REGION_COL = "region";
+	private static final String IMAGE_DATE_COL = "image_date";
 	private static final String DOWNLOAD_LINK_COL = "download_link";
 	private static final String PRIORITY_COL = "priority";
 	private static final String FEDERATION_MEMBER_COL = "federation_member";
 	private static final String STATE_COL = "state";
 	private static final String STATION_ID_COL = "station_id";
-	private static final String WORKER_CONTAINER_REPOSITORY_COL = "container_repository";
-	private static final String WORKER_CONTAINER_TAG_COL = "container_tag";
+	private static final String DOWNLOADER_CONTAINER_REPOSITORY_COL = "downloader_container_repository";
+	private static final String DOWNLOADER_CONTAINER_TAG_COL = "downloader_container_tag";
+	private static final String PREPROCESSOR_CONTAINER_REPOSITORY_COL = "preprocessor_container_repository";
+	private static final String PREPROCESSOR_CONTAINER_TAG_COL = "preprocessor_container_tag";
+	private static final String WORKER_CONTAINER_REPOSITORY_COL = "worker_container_repository";
+	private static final String WORKER_CONTAINER_TAG_COL = "worker_container_tag";
 	private static final String CRAWLER_VERSION_COL = "crawler_version";
 	private static final String FETCHER_VERSION_COL = "fetcher_version";
 	private static final String BLOWOUT_VERSION_COL = "blowout_version";
@@ -59,13 +66,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String NFS_SERVER_IP_COL = "nfs_ip";
 	private static final String NFS_SERVER_SSH_PORT_COL = "nfs_ssh_port";
 	private static final String NFS_SERVER_PORT_COL = "nfs_port";
-	private static final String DATASET_COL = null;
-	private static final String IMAGE_DATE_COL = null;
-	private static final String REGION_COL = null;
-	private static final String DOWNLOADER_CONTAINER_TAG_COL = null;
-	private static final String DOWNLOADER_CONTAINER_REPOSITORY_COL = null;
-	private static final String PREPROCESSOR_CONTAINER_TAG_COL = null;
-	private static final String PREPROCESSOR_CONTAINER_REPOSITORY_COL = null;
 
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<String, Connection>();
 	private BasicDataSource connectionPool;
@@ -215,7 +215,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
 
 	@Override
 	public void addImageTask(String taskId, String dataSet, String region, String date,
@@ -270,7 +270,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	public void addImageTask(ImageTask imageTask) throws SQLException {
 		LOGGER.info("Adding image task " + imageTask.getTaskId() + " with download link "
@@ -289,25 +289,28 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			insertStatement = connection.prepareStatement(INSERT_FULL_IMAGE_TASK_SQL);
 			insertStatement.setString(1, imageTask.getTaskId());
-			insertStatement.setString(3, imageTask.getDownloadLink());
-			insertStatement.setString(4, imageTask.getState().getValue());
-			insertStatement.setString(5, imageTask.getFederationMember());
-			insertStatement.setInt(6, imageTask.getPriority());
-			insertStatement.setString(7, imageTask.getStationId());
-			insertStatement.setString(8, imageTask.getDownloaderContainerRepository());
-			insertStatement.setString(9, imageTask.getDownloaderContainerTag());
-			insertStatement.setString(10, imageTask.getPreProcessorContainerRepository());
-			insertStatement.setString(11, imageTask.getPreProcessorContainerTag());
-			insertStatement.setString(12, imageTask.getWorkerContainerRepository());
-			insertStatement.setString(13, imageTask.getWorkerContainerTag());
-			insertStatement.setString(14, imageTask.getCrawlerVersion());
-			insertStatement.setString(15, imageTask.getFetcherVersion());
-			insertStatement.setString(16, imageTask.getBlowoutVersion());
-			insertStatement.setString(17, imageTask.getFmaskVersion());
-			insertStatement.setTimestamp(18, imageTask.getCreationTime());
-			insertStatement.setTimestamp(19, imageTask.getUpdateTime());
-			insertStatement.setString(20, imageTask.getImageStatus());
-			insertStatement.setString(21, imageTask.getImageError());
+			insertStatement.setString(2, imageTask.getDataSet());
+			insertStatement.setString(3, imageTask.getRegion());
+			insertStatement.setDate(4, imageTask.getImageDate());
+			insertStatement.setString(5, imageTask.getDownloadLink());
+			insertStatement.setString(6, imageTask.getState().getValue());
+			insertStatement.setString(7, imageTask.getFederationMember());
+			insertStatement.setInt(8, imageTask.getPriority());
+			insertStatement.setString(9, imageTask.getStationId());
+			insertStatement.setString(10, imageTask.getDownloaderContainerRepository());
+			insertStatement.setString(11, imageTask.getDownloaderContainerTag());
+			insertStatement.setString(12, imageTask.getPreProcessorContainerRepository());
+			insertStatement.setString(13, imageTask.getPreProcessorContainerTag());
+			insertStatement.setString(14, imageTask.getWorkerContainerRepository());
+			insertStatement.setString(15, imageTask.getWorkerContainerTag());
+			insertStatement.setString(16, imageTask.getCrawlerVersion());
+			insertStatement.setString(17, imageTask.getFetcherVersion());
+			insertStatement.setString(18, imageTask.getBlowoutVersion());
+			insertStatement.setString(19, imageTask.getFmaskVersion());
+			insertStatement.setTimestamp(20, imageTask.getCreationTime());
+			insertStatement.setTimestamp(21, imageTask.getUpdateTime());
+			insertStatement.setString(22, imageTask.getImageStatus());
+			insertStatement.setString(23, imageTask.getImageError());
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -677,7 +680,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET state = ?, utime = now() WHERE image_name = ?";
+			+ " SET state = ?, utime = now() WHERE task_id = ?";
 
 	@Override
 	public void updateTaskState(String taskId, ImageTaskState state) throws SQLException {
@@ -705,10 +708,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET name = ?, download_link = ?, state = ?, federation_member = ?,"
-			+ " priority = ?, station_id = ?, container_repository = ?, container_tag = ?, crawler_version = ?, fetcher_version = ?,"
-			+ " blowout_version = ?, fmask_version = ?," + " utime = now(), status = ?,"
-			+ " error_msg = ?, tier_collection_image_name = ? WHERE task_id = ?";
+			+ " SET download_link = ?, state = ?, federation_member = ?,"
+			+ " priority = ?, station_id = ?, container_repository = ?, container_tag = ?,"
+			+ " crawler_version = ?, fetcher_version = ?," + " blowout_version = ?,"
+			+ " fmask_version = ?," + " utime = now(), status = ?,"
+			+ " error_msg = ? WHERE task_id = ?";
 
 	@Override
 	public void updateImageTask(ImageTask imagetask) throws SQLException {
@@ -724,20 +728,19 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 
 			updateStatement = connection.prepareStatement(UPDATE_IMAGEDATA_SQL);
-			updateStatement.setString(1, imagetask.getTaskId());
-			updateStatement.setString(2, imagetask.getDownloadLink());
-			updateStatement.setString(3, imagetask.getState().getValue());
-			updateStatement.setString(4, imagetask.getFederationMember());
-			updateStatement.setInt(5, imagetask.getPriority());
-			updateStatement.setString(6, imagetask.getStationId());
-			updateStatement.setString(7, imagetask.getWorkerContainerRepository());
-			updateStatement.setString(8, imagetask.getWorkerContainerTag());
-			updateStatement.setString(9, imagetask.getCrawlerVersion());
-			updateStatement.setString(10, imagetask.getFetcherVersion());
-			updateStatement.setString(11, imagetask.getBlowoutVersion());
-			updateStatement.setString(12, imagetask.getFmaskVersion());
-			updateStatement.setString(13, imagetask.getImageStatus());
-			updateStatement.setString(14, imagetask.getImageError());
+			updateStatement.setString(1, imagetask.getDownloadLink());
+			updateStatement.setString(2, imagetask.getState().getValue());
+			updateStatement.setString(3, imagetask.getFederationMember());
+			updateStatement.setInt(4, imagetask.getPriority());
+			updateStatement.setString(5, imagetask.getStationId());
+			updateStatement.setString(6, imagetask.getWorkerContainerRepository());
+			updateStatement.setString(7, imagetask.getWorkerContainerTag());
+			updateStatement.setString(8, imagetask.getCrawlerVersion());
+			updateStatement.setString(9, imagetask.getFetcherVersion());
+			updateStatement.setString(10, imagetask.getBlowoutVersion());
+			updateStatement.setString(11, imagetask.getFmaskVersion());
+			updateStatement.setString(12, imagetask.getImageStatus());
+			updateStatement.setString(13, imagetask.getImageError());
 			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
@@ -953,7 +956,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SELECT_IMAGES_BY_FILTERS_WHERE_SQL = " WHERE ";
 	private static final String SELECT_IMAGES_BY_FILTERS_STATE_SQL = " state = ? "
 			+ IMAGE_TABLE_NAME;
-	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " name = ? " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " task_id = ? "
+			+ IMAGE_TABLE_NAME;
 	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " ctime BETWEEN ? AND ? ";
 
 	@Override
@@ -1034,7 +1038,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String SELECT_PURGED_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE status = ? ORDER BY priority, image_name";
+			+ " WHERE status = ? ORDER BY priority, task_id";
 
 	@Override
 	public List<ImageTask> getPurgedTasks() throws SQLException {
@@ -1321,16 +1325,16 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME
-			+ " WHERE image_name = ? AND state = ? AND utime = ?";
+			+ " WHERE task_id = ? AND state = ? AND utime = ?";
 
 	@Override
-	public void removeStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
+	public void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
 			throws SQLException {
-		LOGGER.info("Removing image " + imageName + " state " + state.getValue()
+		LOGGER.info("Removing task " + taskId + " state " + state.getValue()
 				+ " with timestamp " + timestamp);
-		if (imageName == null || imageName.isEmpty() || state == null) {
-			LOGGER.error("Invalid image " + imageName + " or state " + state.getValue());
-			throw new IllegalArgumentException("Invalid image " + imageName);
+		if (taskId == null || taskId.isEmpty() || state == null) {
+			LOGGER.error("Invalid task " + taskId + " or state " + state.getValue());
+			throw new IllegalArgumentException("Invalid task " + taskId);
 		}
 
 		PreparedStatement removeStatement = null;
@@ -1340,7 +1344,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 
 			removeStatement = connection.prepareStatement(REMOVE_STATE_SQL);
-			removeStatement.setString(1, imageName);
+			removeStatement.setString(1, taskId);
 			removeStatement.setString(2, state.getValue());
 			removeStatement.setTimestamp(3, timestamp);
 			removeStatement.setQueryTimeout(300);
