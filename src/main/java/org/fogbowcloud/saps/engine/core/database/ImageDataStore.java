@@ -30,6 +30,8 @@ public interface ImageDataStore {
 			String preProcessorContainerTag, String workerContainerRepository,
 			String workerContainerTag) throws SQLException;
 
+	void addImageTask(ImageTask imageTask) throws SQLException;
+
 	void addStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
 			throws SQLException;
 
