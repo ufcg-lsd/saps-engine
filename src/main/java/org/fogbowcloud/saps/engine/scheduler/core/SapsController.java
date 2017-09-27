@@ -161,7 +161,8 @@ public class SapsController extends BlowoutController {
 					taskImpl = SapsTask.createSebalTask(taskImpl, properties, imageData.getName(),
 							imageData.getCollectionTierName(), specWithFederation,
 							imageData.getFederationMember(), nfsServerIP, nfsServerPort,
-							imageData.getContainerRepository(), imageData.getContainerTag());
+							imageData.getWorkerContainerRepository(),
+							imageData.getWorkerContainerTag());
 
 					imageData.setState(ImageTaskState.READY);
 					imageData.setBlowoutVersion(getBlowoutVersion(properties));

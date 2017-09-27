@@ -77,7 +77,7 @@ public class SapsPropertiesConstants {
 	public static final String SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX = "swift_stations_pseudo_folder_prefix";
 	
 	// Restlet constants
-	public static final String DB_REST_SERVER_PORT = "db_rest_server_port";
+	public static final String SUBMISSION_REST_SERVER_PORT = "submission_rest_server_port";
 	
 	// Specification constants
 	public static final String SPEC_FOGBOW_REQUIREMENTS = "FogbowRequirements";

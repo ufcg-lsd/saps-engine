@@ -18,10 +18,8 @@ import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.downloader.InputDownloader;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,9 +58,10 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
-						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
+		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "available", "");
 
 		doReturn(fetcherVolumeInputPath).when(fetcherHelper).getLocalImageInputsPath(imageData,
 				properties);
@@ -101,12 +100,14 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
-						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
-		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FINISHED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
-						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_2");
+		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "available", "");
+		ImageTask imageData2 = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
+				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "available", "");
 
 		doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData,
 				properties);
@@ -149,12 +150,14 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
-						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
-		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FINISHED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
-						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_2");
+		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "available", "");
+		ImageTask imageData2 = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
+				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "available", "");
 
 		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl,
 				fetcherHelper);
@@ -203,12 +206,14 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
-						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
-		ImageTask imageData2 = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FINISHED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
-						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_2");
+		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "available", "");
+		ImageTask imageData2 = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
+				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "available", "");
 
 		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl,
 				fetcherHelper);
@@ -257,9 +262,10 @@ public class TestArchiverIntegration {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageData = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.ARCHIVING,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
-						date.getTime()), new Timestamp(date.getTime()), "available", "", "image_1");
+		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-2", date, "link1",
+				ImageTaskState.ARCHIVING, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()), "available", "");
 
 		doReturn(sebalInputExportPath).when(fetcherHelper).getRemoteImageInputsPath(imageData,
 				properties);

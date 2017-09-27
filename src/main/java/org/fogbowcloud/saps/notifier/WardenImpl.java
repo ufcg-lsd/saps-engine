@@ -48,9 +48,7 @@ public class WardenImpl implements Warden {
 		this.dbUtilsImpl = dbUtilsImpl;
 	}
 
-	// TODO: see if this will be runnable
 	public void init() {
-
 		while (true) {
 			Collection<Ward> notified = new LinkedList<Ward>();
 			for (Ward ward : getPending()) {
@@ -84,11 +82,10 @@ public class WardenImpl implements Warden {
 
 	@Override
 	public boolean doNotify(String email, String submissionId, ImageTask context) {
+		String subject = "TASK " + context.getTaskId() + " WITH SUBMISSION_ID " + submissionId
+				+ " ARCHIVED";
 
-		String subject = "IMAGE " + context.getName() + " TASK " + context.getTaskId()
-				+ " WITH SUBMISSION_ID " + submissionId + " ARCHIVED";
-
-		String message = "The image " + context.getName() + " was ARCHIVED into swift.\n"
+		String message = "The task " + context.getTaskId() + " was ARCHIVED into swift.\n"
 				+ context.formatedToString();
 
 		try {
@@ -107,7 +104,7 @@ public class WardenImpl implements Warden {
 	private void removeNonExistentWard(Ward ward) {
 		try {
 			dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(),
-					ward.getImageName(), ward.getEmail());
+					ward.getEmail());
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
 		} catch (NullPointerException e) {
@@ -116,11 +113,10 @@ public class WardenImpl implements Warden {
 	}
 
 	protected void removeNotified(Collection<Ward> notified) {
-
 		try {
 			for (Ward ward : notified) {
 				dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(),
-						ward.getImageName(), ward.getEmail());
+						ward.getEmail());
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
@@ -130,7 +126,6 @@ public class WardenImpl implements Warden {
 	}
 
 	protected ImageTask getImageTask(String taskId) {
-
 		try {
 			return dbUtilsImpl.getTaskInDB(taskId);
 		} catch (SQLException e) {
@@ -141,7 +136,6 @@ public class WardenImpl implements Warden {
 	}
 
 	protected List<Ward> getPending() {
-
 		List<Ward> wards = new ArrayList<Ward>();
 
 		try {
@@ -154,7 +148,6 @@ public class WardenImpl implements Warden {
 	}
 
 	protected boolean reached(Ward ward, ImageTask imageData) {
-
 		return (imageData.getState().ordinal() == ward.getTargetState().ordinal());
 	}
 }
