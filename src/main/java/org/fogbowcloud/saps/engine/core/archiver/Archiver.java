@@ -255,7 +255,7 @@ public class Archiver {
 		String stationId = archiverHelper.getStationId(imageTask, properties);
 
 		imageTask.setStationId(stationId);
-		imageTask.setFetcherVersion(fetcherVersion);
+		imageTask.setArchiverVersion(fetcherVersion);
 
 		try {
 			LOGGER.info("Updating image data in DB");

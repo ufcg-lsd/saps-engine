@@ -28,10 +28,8 @@ public class ImageTask implements Serializable {
 	private String preProcessorContainerTag;
 	private String workerContainerRepository;
 	private String workerContainerTag;
-	private String crawlerVersion;
-	private String fetcherVersion;
+	private String archiverVersion;
 	private String blowoutVersion;
-	private String fmaskVersion;
 	private Timestamp creationTime;
 	private Timestamp updateTime;
 	private String status;
@@ -48,9 +46,9 @@ public class ImageTask implements Serializable {
 			String downloadLink, ImageTaskState state, String federationMember, int priority,
 			String stationId, String downloaderContainerRepository, String downloaderContainerTag,
 			String preProcessorContainerRepository, String preProcessorContainerTag,
-			String workerContainerRepository, String workerContainerTag, String crawlerVersion,
-			String fetcherVersion, String blowoutVersion, String fmaskVersion,
-			Timestamp creationTime, Timestamp updateTime, String status, String error) {
+			String workerContainerRepository, String workerContainerTag, String archiverVersion,
+			String blowoutVersion, Timestamp creationTime, Timestamp updateTime, String status,
+			String error) {
 		this.taskId = taskId;
 		this.dataSet = dataSet;
 		this.region = region;
@@ -66,10 +64,8 @@ public class ImageTask implements Serializable {
 		this.preProcessorContainerTag = preProcessorContainerTag;
 		this.workerContainerRepository = workerContainerRepository;
 		this.workerContainerTag = workerContainerTag;
-		this.crawlerVersion = crawlerVersion;
-		this.fetcherVersion = fetcherVersion;
+		this.archiverVersion = archiverVersion;
 		this.blowoutVersion = blowoutVersion;
-		this.fmaskVersion = fmaskVersion;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
 		this.status = status;
@@ -79,7 +75,7 @@ public class ImageTask implements Serializable {
 	public String getTaskId() {
 		return taskId;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -144,20 +140,12 @@ public class ImageTask implements Serializable {
 		return workerContainerTag;
 	}
 
-	public String getCrawlerVersion() {
-		return crawlerVersion;
-	}
-
-	public String getFetcherVersion() {
-		return fetcherVersion;
+	public String getArchiverVersion() {
+		return archiverVersion;
 	}
 
 	public String getBlowoutVersion() {
 		return blowoutVersion;
-	}
-
-	public String getFmaskVersion() {
-		return fmaskVersion;
 	}
 
 	public Timestamp getCreationTime() {
@@ -179,11 +167,11 @@ public class ImageTask implements Serializable {
 	public void setTaskId(String taskId) {
 		this.taskId = taskId;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public void setCollectionTierName(String collectionTierName) {
 		this.collectionTierName = collectionTierName;
 	}
@@ -244,20 +232,12 @@ public class ImageTask implements Serializable {
 		this.workerContainerTag = workerContainerTag;
 	}
 
-	public void setCrawlerVersion(String crawlerVersion) {
-		this.crawlerVersion = crawlerVersion;
-	}
-
-	public void setFetcherVersion(String fetcherVersion) {
-		this.fetcherVersion = fetcherVersion;
+	public void setArchiverVersion(String archiverVersion) {
+		this.archiverVersion = archiverVersion;
 	}
 
 	public void setBlowoutVersion(String blowoutVersion) {
 		this.blowoutVersion = blowoutVersion;
-	}
-
-	public void setFmaskVersion(String fmaskVersion) {
-		this.fmaskVersion = fmaskVersion;
 	}
 
 	public void setCreationTime(Timestamp creationTime) {
@@ -282,9 +262,8 @@ public class ImageTask implements Serializable {
 				+ ", " + stationId + ", " + downloaderContainerRepository + ", "
 				+ downloaderContainerTag + ", " + preProcessorContainerRepository + ", "
 				+ preProcessorContainerTag + ", " + workerContainerRepository + ", "
-				+ workerContainerTag + ", " + crawlerVersion + ", " + fetcherVersion + ", "
-				+ blowoutVersion + ", " + fmaskVersion + ", " + creationTime + ", " + updateTime
-				+ ", " + status + ", " + error + "]";
+				+ workerContainerTag + ", " + ", " + archiverVersion + ", " + blowoutVersion + ", "
+				+ creationTime + ", " + updateTime + ", " + status + ", " + error + "]";
 	}
 
 	public String formatedToString() {
@@ -298,12 +277,11 @@ public class ImageTask implements Serializable {
 				+ "[ PreProcessorContainerRepository = " + preProcessorContainerRepository + " ]\n"
 				+ "[ PreProcessorContainerTag = " + preProcessorContainerTag + " ]\n"
 				+ "[ WorkerContainerRepository = " + workerContainerRepository + " ]\n"
-				+ "[ WorkerContainerTag = " + workerContainerTag + " ]\n" + "[ CrawlerVersion = "
-				+ crawlerVersion + " ]\n" + "[ FetcherVersion = " + fetcherVersion + " ]\n"
-				+ "[ BlowoutVersion = " + blowoutVersion + " ]\n" + "[ FmaskVersion = "
-				+ fmaskVersion + " ]\n" + "[ CreationTime = " + creationTime + " ]\n"
-				+ "[ UpdateTime = " + updateTime + " ]\n" + "[ Status = " + status + " ]\n"
-				+ "[ Error = " + error + " ]";
+				+ "[ WorkerContainerTag = " + workerContainerTag + " ]\n" + "[ ArchiverVersion = "
+				+ archiverVersion + " ]\n" + "[ BlowoutVersion = " + blowoutVersion + " ]\n"
+				+ " ]\n" + "[ CreationTime = " + creationTime + " ]\n" + "[ UpdateTime = "
+				+ updateTime + " ]\n" + "[ Status = " + status + " ]\n" + "[ Error = " + error
+				+ " ]";
 	}
 
 	public JSONObject toJSON() throws JSONException {
@@ -324,10 +302,8 @@ public class ImageTask implements Serializable {
 		json.put("preProcessorContainerTag", preProcessorContainerTag);
 		json.put("workerContainerRepository", workerContainerRepository);
 		json.put("workerContainerTag", workerContainerTag);
-		json.put("crawlerVersion", crawlerVersion);
-		json.put("fetcherVersion", fetcherVersion);
+		json.put("archiverVersion", archiverVersion);
 		json.put("blowoutVersion", blowoutVersion);
-		json.put("fmaskVersion", fmaskVersion);
 		json.put("creationTime", creationTime);
 		json.put("updateTime", updateTime);
 		json.put("status", status);
@@ -361,10 +337,8 @@ public class ImageTask implements Serializable {
 					&& getPreProcessorContainerTag().equals(other.getPreProcessorContainerTag())
 					&& getWorkerContainerRepository().equals(other.getWorkerContainerRepository())
 					&& getWorkerContainerTag().equals(other.getWorkerContainerTag())
-					&& getCrawlerVersion().equals(other.getCrawlerVersion())
-					&& getFetcherVersion().equals(other.getFetcherVersion())
+					&& getArchiverVersion().equals(other.getArchiverVersion())
 					&& getBlowoutVersion().equals(other.getBlowoutVersion())
-					&& getFmaskVersion().equals(other.getFmaskVersion())
 					&& getCreationTime().equals(other.getCreationTime())
 					&& getUpdateTime().equals(other.getUpdateTime())
 					&& getImageStatus().equals(other.getImageStatus())

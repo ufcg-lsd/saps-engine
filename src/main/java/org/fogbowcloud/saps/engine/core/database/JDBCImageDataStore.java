@@ -42,10 +42,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String PREPROCESSOR_CONTAINER_TAG_COL = "preprocessor_container_tag";
 	private static final String WORKER_CONTAINER_REPOSITORY_COL = "worker_container_repository";
 	private static final String WORKER_CONTAINER_TAG_COL = "worker_container_tag";
-	private static final String CRAWLER_VERSION_COL = "crawler_version";
-	private static final String FETCHER_VERSION_COL = "fetcher_version";
+	private static final String ARCHIVER_VERSION_COL = "fetcher_version";
 	private static final String BLOWOUT_VERSION_COL = "blowout_version";
-	private static final String FMASK_VERSION_COL = "fmask_version";
 	private static final String CREATION_TIME_COL = "ctime";
 	private static final String UPDATED_TIME_COL = "utime";
 	private static final String IMAGE_STATUS_COL = "status";
@@ -123,11 +121,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ PREPROCESSOR_CONTAINER_REPOSITORY_COL + " VARCHAR(100), "
 					+ PREPROCESSOR_CONTAINER_TAG_COL + " VARCHAR(100), "
 					+ WORKER_CONTAINER_REPOSITORY_COL + " VARCHAR(100), " + WORKER_CONTAINER_TAG_COL
-					+ " VARCHAR(100), " + CRAWLER_VERSION_COL + " VARCHAR(255), "
-					+ FETCHER_VERSION_COL + " VARCHAR(255), " + BLOWOUT_VERSION_COL
-					+ " VARCHAR(255), " + FMASK_VERSION_COL + " VARCHAR(255), " + CREATION_TIME_COL
-					+ " TIMESTAMP, " + UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL
-					+ " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
+					+ " VARCHAR(100), " + ARCHIVER_VERSION_COL + " VARCHAR(255), "
+					+ BLOWOUT_VERSION_COL + " VARCHAR(255), " + CREATION_TIME_COL + " TIMESTAMP, "
+					+ UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL + " VARCHAR(255), "
+					+ ERROR_MSG_COL + " VARCHAR(255))");
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME + "(" + TASK_ID_COL
 					+ " VARCHAR(255), " + STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL
@@ -215,7 +212,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
 
 	@Override
 	public void addImageTask(String taskId, String dataSet, String region, String date,
@@ -257,10 +254,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(15, workerContainerTag);
 			insertStatement.setString(16, "NE");
 			insertStatement.setString(17, "NE");
-			insertStatement.setString(18, "NE");
-			insertStatement.setString(19, "NE");
-			insertStatement.setString(20, ImageTask.AVAILABLE);
-			insertStatement.setString(21, "no_errors");
+			insertStatement.setString(18, ImageTask.AVAILABLE);
+			insertStatement.setString(19, "no_errors");
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -270,7 +265,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	@Override
 	public void addImageTask(ImageTask imageTask) throws SQLException {
@@ -304,14 +299,12 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(13, imageTask.getPreProcessorContainerTag());
 			insertStatement.setString(14, imageTask.getWorkerContainerRepository());
 			insertStatement.setString(15, imageTask.getWorkerContainerTag());
-			insertStatement.setString(16, imageTask.getCrawlerVersion());
-			insertStatement.setString(17, imageTask.getFetcherVersion());
-			insertStatement.setString(18, imageTask.getBlowoutVersion());
-			insertStatement.setString(19, imageTask.getFmaskVersion());
-			insertStatement.setTimestamp(20, imageTask.getCreationTime());
-			insertStatement.setTimestamp(21, imageTask.getUpdateTime());
-			insertStatement.setString(22, imageTask.getImageStatus());
-			insertStatement.setString(23, imageTask.getImageError());
+			insertStatement.setString(16, imageTask.getArchiverVersion());
+			insertStatement.setString(17, imageTask.getBlowoutVersion());
+			insertStatement.setTimestamp(18, imageTask.getCreationTime());
+			insertStatement.setTimestamp(19, imageTask.getUpdateTime());
+			insertStatement.setString(20, imageTask.getImageStatus());
+			insertStatement.setString(21, imageTask.getImageError());
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -711,8 +704,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
 			+ " SET download_link = ?, state = ?, federation_member = ?,"
 			+ " priority = ?, station_id = ?, container_repository = ?, container_tag = ?,"
-			+ " crawler_version = ?, fetcher_version = ?," + " blowout_version = ?,"
-			+ " fmask_version = ?," + " utime = now(), status = ?,"
+			+ " fetcher_version = ?," + " blowout_version = ?," + " utime = now(), status = ?,"
 			+ " error_msg = ? WHERE task_id = ?";
 
 	@Override
@@ -736,10 +728,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(5, imagetask.getStationId());
 			updateStatement.setString(6, imagetask.getWorkerContainerRepository());
 			updateStatement.setString(7, imagetask.getWorkerContainerTag());
-			updateStatement.setString(8, imagetask.getCrawlerVersion());
-			updateStatement.setString(9, imagetask.getFetcherVersion());
+			updateStatement.setString(9, imagetask.getArchiverVersion());
 			updateStatement.setString(10, imagetask.getBlowoutVersion());
-			updateStatement.setString(11, imagetask.getFmaskVersion());
 			updateStatement.setString(12, imagetask.getImageStatus());
 			updateStatement.setString(13, imagetask.getImageError());
 			updateStatement.setQueryTimeout(300);
@@ -1151,9 +1141,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 					rs.getString(PREPROCESSOR_CONTAINER_REPOSITORY_COL),
 					rs.getString(PREPROCESSOR_CONTAINER_TAG_COL),
 					rs.getString(WORKER_CONTAINER_REPOSITORY_COL),
-					rs.getString(WORKER_CONTAINER_TAG_COL), rs.getString(CRAWLER_VERSION_COL),
-					rs.getString(FETCHER_VERSION_COL), rs.getString(BLOWOUT_VERSION_COL),
-					rs.getString(FMASK_VERSION_COL), rs.getTimestamp(CREATION_TIME_COL),
+					rs.getString(WORKER_CONTAINER_TAG_COL), rs.getString(ARCHIVER_VERSION_COL),
+					rs.getString(BLOWOUT_VERSION_COL), rs.getTimestamp(CREATION_TIME_COL),
 					rs.getTimestamp(UPDATED_TIME_COL), rs.getString(IMAGE_STATUS_COL),
 					rs.getString(ERROR_MSG_COL)));
 		}

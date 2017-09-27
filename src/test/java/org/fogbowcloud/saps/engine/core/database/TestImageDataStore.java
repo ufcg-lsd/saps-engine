@@ -28,24 +28,24 @@ public class TestImageDataStore {
 		properties.setProperty("datastore_password", "testuser");
 		properties.setProperty("datastore_driver", "org.h2.Driver");
 		properties.setProperty("datastore_name", "testdb");
-		
+
 		Date date = mock(Date.class);
 
 		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
 		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
 				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(new java.util.Date().getTime()),
+				"NE", new Timestamp(new java.util.Date().getTime()),
 				new Timestamp(new java.util.Date().getTime()), "available", "");
 		ImageTask taskTwo = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link1",
 				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(new java.util.Date().getTime()),
+				"NE", new Timestamp(new java.util.Date().getTime()),
 				new Timestamp(new java.util.Date().getTime()), "available", "");
-		
+
 		imageStore.addImageTask(taskOne);
 		imageStore.addImageTask(taskTwo);
 
 		List<ImageTask> imageTaskList = imageStore.getImagesToDownload(federationMember, limit);
-		
+
 		Assert.assertTrue(imageTaskList.size() == 1);
 	}
 

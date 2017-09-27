@@ -187,12 +187,12 @@ public class TestSapsTaskMonitor {
 		java.sql.Date date = mock(java.sql.Date.class);
 		ImageTask imageData = new ImageTask("task-id", "dataset-1", "region-1", date, "NE",
 				ImageTaskState.READY, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", new Timestamp(new Date().getTime()),
-				new Timestamp(new Date().getTime()), "NE", "NE");
+				new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), "NE",
+				"NE");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
-		doReturn(imageData.getName()).when(sebalTaskMonitor).getImageFromTaskProcess(
-				fakeTaskProcess);
+		doReturn(imageData.getName()).when(sebalTaskMonitor)
+				.getImageFromTaskProcess(fakeTaskProcess);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doNothing().when(imageStore).updateImageTask(imageData);
 		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
@@ -207,12 +207,12 @@ public class TestSapsTaskMonitor {
 		java.sql.Date date = mock(java.sql.Date.class);
 		ImageTask imageData = new ImageTask("task-id", "dataset-1", "region-1", date, "NE",
 				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(new Date().getTime()),
-				new Timestamp(new Date().getTime()), "NE", "NE");
+				"NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()),
+				"NE", "NE");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
-		doReturn(imageData.getName()).when(sebalTaskMonitor).getImageFromTaskProcess(
-				fakeTaskProcess);
+		doReturn(imageData.getName()).when(sebalTaskMonitor)
+				.getImageFromTaskProcess(fakeTaskProcess);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doNothing().when(imageStore).updateImageTask(imageData);
 		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
@@ -227,12 +227,12 @@ public class TestSapsTaskMonitor {
 		java.sql.Date date = mock(java.sql.Date.class);
 		ImageTask imageData = new ImageTask("task-id", "dataset-1", "region-1", date, "NE",
 				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(new Date().getTime()),
-				new Timestamp(new Date().getTime()), "NE", "NE");
+				"NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()),
+				"NE", "NE");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
-		doReturn(imageData.getName()).when(sebalTaskMonitor).getImageFromTaskProcess(
-				fakeTaskProcess);
+		doReturn(imageData.getName()).when(sebalTaskMonitor)
+				.getImageFromTaskProcess(fakeTaskProcess);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doNothing().when(imageStore).updateImageTask(imageData);
 		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
@@ -247,12 +247,12 @@ public class TestSapsTaskMonitor {
 		java.sql.Date date = mock(java.sql.Date.class);
 		ImageTask imageData = new ImageTask("task-id", "dataset-1", "region-1", date, "NE",
 				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(new Date().getTime()),
-				new Timestamp(new Date().getTime()), "NE", "NE");
+				"NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()),
+				"NE", "NE");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
-		doReturn(imageData.getName()).when(sebalTaskMonitor).getImageFromTaskProcess(
-				fakeTaskProcess);
+		doReturn(imageData.getName()).when(sebalTaskMonitor)
+				.getImageFromTaskProcess(fakeTaskProcess);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doNothing().when(imageStore).updateImageTask(imageData);
 		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),

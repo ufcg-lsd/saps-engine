@@ -60,8 +60,8 @@ public class TestArchiverIntegration {
 
 		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
 				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 
 		doReturn(fetcherVolumeInputPath).when(fetcherHelper).getLocalImageInputsPath(imageData,
 				properties);
@@ -102,12 +102,12 @@ public class TestArchiverIntegration {
 
 		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
 				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 		ImageTask imageData2 = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
 				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 
 		doReturn(sebalExportPath).when(fetcherHelper).getRemoteImageResultsPath(imageData,
 				properties);
@@ -152,12 +152,12 @@ public class TestArchiverIntegration {
 
 		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
 				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 		ImageTask imageData2 = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
 				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 
 		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl,
 				fetcherHelper);
@@ -208,12 +208,12 @@ public class TestArchiverIntegration {
 
 		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
 				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 		ImageTask imageData2 = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
 				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 
 		Archiver fetcher = new Archiver(properties, imageStore, swiftAPIClient, ftpImpl,
 				fetcherHelper);
@@ -264,8 +264,8 @@ public class TestArchiverIntegration {
 
 		ImageTask imageData = new ImageTask("task-id-1", "dataset-1", "region-2", date, "link1",
 				ImageTaskState.ARCHIVING, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", "NE", "NE", new Timestamp(date.getTime()),
-				new Timestamp(date.getTime()), "available", "");
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 
 		doReturn(sebalInputExportPath).when(fetcherHelper).getRemoteImageInputsPath(imageData,
 				properties);

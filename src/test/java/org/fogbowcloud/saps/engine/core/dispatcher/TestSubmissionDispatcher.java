@@ -31,7 +31,6 @@ public class TestSubmissionDispatcher {
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				new Timestamp(new java.util.Date().getTime()),
 				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT);
@@ -40,7 +39,6 @@ public class TestSubmissionDispatcher {
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				new Timestamp(new java.util.Date().getTime()),
 				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT);
@@ -49,7 +47,6 @@ public class TestSubmissionDispatcher {
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				new Timestamp(new java.util.Date().getTime()),
 				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT);
