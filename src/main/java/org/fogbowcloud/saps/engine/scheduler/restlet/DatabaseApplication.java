@@ -94,6 +94,11 @@ public class DatabaseApplication extends Application {
 	 * @param firstYear
 	 * @param lastYear
 	 * @param region
+	 * @param dataSet
+	 * @param downloaderContainerRepository
+	 * @param downloaderContainerTag
+	 * @param preProcessorContainerRepository
+	 * @param preProcessorContainerTag
 	 * @param workerContainerRepository
 	 * @param workerContainerTag
 	 * @return List<String> Image names list
