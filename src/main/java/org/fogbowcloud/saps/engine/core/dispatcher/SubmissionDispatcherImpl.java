@@ -176,10 +176,10 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 		int priority = 0;
 		for (String region : regions) {
-			createdTasks = submitImagesForYears(parsedDataSet, firstYear, lastYear, region,
+			createdTasks.addAll(submitImagesForYears(parsedDataSet, firstYear, lastYear, region,
 					downloaderContainerRepository, downloaderContainerTag,
 					preProcessorContainerRepository, preProcessorContainerTag,
-					workerContainerRepository, workerContainerTag, priority);
+					workerContainerRepository, workerContainerTag, priority));
 			priority++;
 		}
 		return createdTasks;
