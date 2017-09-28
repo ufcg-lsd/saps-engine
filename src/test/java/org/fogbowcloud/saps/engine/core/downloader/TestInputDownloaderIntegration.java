@@ -82,7 +82,7 @@ public class TestInputDownloaderIntegration {
 		doThrow(new IOException()).when(usgsRepository).downloadImage(taskOne);
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
+				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
 		Assert.assertEquals(ImageTaskState.CREATED, taskOne.getState());
 		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
 
@@ -99,14 +99,13 @@ public class TestInputDownloaderIntegration {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		String inputDownloaderIP = "fake-inputDownloader-ip";
 		String inputDownloaderPort = "fake-inputDownloader-port";
 		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
+				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
 
 		doThrow(new SQLException()).when(imageStore).getImagesToDownload(federationMember,
 				InputDownloader.MAX_IMAGES_TO_DOWNLOAD);
@@ -124,7 +123,6 @@ public class TestInputDownloaderIntegration {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		String inputDownloaderIP = "fake-inputDownloader-ip";
 		String inputDownloaderPort = "fake-inputDownloader-port";
 		String nfsPort = "fake-nfs-port";
@@ -153,7 +151,7 @@ public class TestInputDownloaderIntegration {
 				.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
+				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
 
 		// exercise
 		inputDownloader.purgeTasksFromVolume(properties);
@@ -164,7 +162,6 @@ public class TestInputDownloaderIntegration {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		String inputDownloaderIP = "fake-inputDownloader-ip";
 		String inputDownloaderPort = "fake-inputDownloader-port";
 		String nfsPort = "fake-nfs-port";
@@ -193,7 +190,7 @@ public class TestInputDownloaderIntegration {
 		doReturn(imageList).when(imageStore).getAllTasks();
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember1);
+				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember1);
 
 		// exercise
 		inputDownloader.deleteFetchedResultsFromVolume(properties);
@@ -206,7 +203,6 @@ public class TestInputDownloaderIntegration {
 	public void testPendingTaskMap() throws SQLException, IOException {
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
 		String inputDownloaderIP = "fake-inputDownloader-ip";
 		String inputDownloaderPort = "fake-inputDownloader-port";
 		String nfsPort = "fake-nfs-port";
@@ -220,7 +216,7 @@ public class TestInputDownloaderIntegration {
 				new Timestamp(new java.util.Date().getTime()), "available", "");
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
+				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
 
 		inputDownloader.addTaskToPendingMap(task);
 		ConcurrentMap<String, ImageTask> pendingTaskMap = inputDownloader.getPendingTaskMap();

@@ -62,6 +62,7 @@ public class SapsPropertiesConstants {
 	public static final String USGS_USERNAME = "usgs_username";
 	public static final String USGS_PASSWORD = "usgs_password";
 	public static final String USGS_API_KEY_PERIOD = "usgs_api_key_period";
+	public static final String CONTAINER_SCRIPT = "container_script";
 
 	// Swift constants
 	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
@@ -123,6 +124,7 @@ public class SapsPropertiesConstants {
 	public static final String FMASK_VERSION_FILE_PATH = "fmask_version_file_path";
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
 	public static final String SEBAL_EXPORT_PATH = "sebal_export_path";
+	public static final String SEBAL_CONTAINER_LINKED_PATH = "sebal_container_linked_path";
 	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 	public static final String STATIONS_FILE_PATH = "stations_file_path";
