@@ -28,23 +28,26 @@ public class JDBCImageDataStore implements ImageDataStore {
 	protected static final String IMAGE_TABLE_NAME = "NASA_IMAGES";
 	protected static final String STATES_TABLE_NAME = "STATES_TIMESTAMPS";
 	private static final String TASK_ID_COL = "task_id";
-	private static final String IMAGE_NAME_COL = "image_name";
+	private static final String DATASET_COL = "dataset";
+	private static final String REGION_COL = "region";
+	private static final String IMAGE_DATE_COL = "image_date";
 	private static final String DOWNLOAD_LINK_COL = "download_link";
 	private static final String PRIORITY_COL = "priority";
 	private static final String FEDERATION_MEMBER_COL = "federation_member";
 	private static final String STATE_COL = "state";
 	private static final String STATION_ID_COL = "station_id";
-	private static final String CONTAINER_REPOSITORY_COL = "container_repository";
-	private static final String CONTAINER_TAG_COL = "container_tag";
-	private static final String CRAWLER_VERSION_COL = "crawler_version";
-	private static final String FETCHER_VERSION_COL = "fetcher_version";
+	private static final String DOWNLOADER_CONTAINER_REPOSITORY_COL = "downloader_container_repository";
+	private static final String DOWNLOADER_CONTAINER_TAG_COL = "downloader_container_tag";
+	private static final String PREPROCESSOR_CONTAINER_REPOSITORY_COL = "preprocessor_container_repository";
+	private static final String PREPROCESSOR_CONTAINER_TAG_COL = "preprocessor_container_tag";
+	private static final String WORKER_CONTAINER_REPOSITORY_COL = "worker_container_repository";
+	private static final String WORKER_CONTAINER_TAG_COL = "worker_container_tag";
+	private static final String ARCHIVER_VERSION_COL = "fetcher_version";
 	private static final String BLOWOUT_VERSION_COL = "blowout_version";
-	private static final String FMASK_VERSION_COL = "fmask_version";
 	private static final String CREATION_TIME_COL = "ctime";
 	private static final String UPDATED_TIME_COL = "utime";
 	private static final String IMAGE_STATUS_COL = "status";
 	private static final String ERROR_MSG_COL = "error_msg";
-	private static final String COLLECTION_TIER_IMAGE_NAME_COL = "tier_collection_image_name";
 
 	private static final String USERS_TABLE_NAME = "sebal_users";
 	private static final String USER_EMAIL_COL = "user_email";
@@ -109,22 +112,23 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 			statement = connection.createStatement();
 			statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME + "(" + TASK_ID_COL
-					+ " VARCHAR(255) PRIMARY KEY, " + IMAGE_NAME_COL + " VARCHAR(255), "
-					+ DOWNLOAD_LINK_COL + " VARCHAR(255), " + STATE_COL + " VARCHAR(100), "
-					+ FEDERATION_MEMBER_COL + " VARCHAR(255), " + PRIORITY_COL + " INTEGER, "
-					+ STATION_ID_COL + " VARCHAR(255), " + CONTAINER_REPOSITORY_COL
-					+ " VARCHAR(255), " + CONTAINER_TAG_COL + " VARCHAR(255), "
-					+ CRAWLER_VERSION_COL + " VARCHAR(255), " + FETCHER_VERSION_COL
-					+ " VARCHAR(255), " + BLOWOUT_VERSION_COL + " VARCHAR(255), "
-					+ FMASK_VERSION_COL + " VARCHAR(255), " + CREATION_TIME_COL + " TIMESTAMP, "
+					+ " VARCHAR(255) PRIMARY KEY, " + DATASET_COL + " VARCHAR(100), " + REGION_COL
+					+ " VARCHAR(100), " + IMAGE_DATE_COL + " VARCHAR(255), " + DOWNLOAD_LINK_COL
+					+ " VARCHAR(255), " + STATE_COL + " VARCHAR(100), " + FEDERATION_MEMBER_COL
+					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER, " + STATION_ID_COL
+					+ " VARCHAR(255), " + DOWNLOADER_CONTAINER_REPOSITORY_COL + " VARCHAR(100), "
+					+ DOWNLOADER_CONTAINER_TAG_COL + " VARCHAR(100), "
+					+ PREPROCESSOR_CONTAINER_REPOSITORY_COL + " VARCHAR(100), "
+					+ PREPROCESSOR_CONTAINER_TAG_COL + " VARCHAR(100), "
+					+ WORKER_CONTAINER_REPOSITORY_COL + " VARCHAR(100), " + WORKER_CONTAINER_TAG_COL
+					+ " VARCHAR(100), " + ARCHIVER_VERSION_COL + " VARCHAR(255), "
+					+ BLOWOUT_VERSION_COL + " VARCHAR(255), " + CREATION_TIME_COL + " TIMESTAMP, "
 					+ UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL + " VARCHAR(255), "
-					+ ERROR_MSG_COL + " VARCHAR(255), " + COLLECTION_TIER_IMAGE_NAME_COL
-					+ " VARCHAR(255))");
+					+ ERROR_MSG_COL + " VARCHAR(255))");
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME + "(" + TASK_ID_COL
-					+ " VARCHAR(255), " + IMAGE_NAME_COL + " VARCHAR(255), " + STATE_COL
-					+ " VARCHAR(100), " + UPDATED_TIME_COL + " TIMESTAMP, " + ERROR_MSG_COL
-					+ " VARCHAR(255))");
+					+ " VARCHAR(255), " + STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL
+					+ " TIMESTAMP, " + ERROR_MSG_COL + " VARCHAR(255))");
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + USERS_TABLE_NAME + "("
 					+ USER_EMAIL_COL + " VARCHAR(255) PRIMARY KEY, " + USER_NAME_COL
@@ -133,9 +137,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + USERS_NOTIFY_TABLE_NAME + "("
 					+ SUBMISSION_ID_COL + " VARCHAR(255), " + TASK_ID_COL + " VARCHAR(255), "
-					+ IMAGE_NAME_COL + " VARCHAR(255), " + USER_EMAIL_COL + " VARCHAR(255), "
-					+ " PRIMARY KEY(" + SUBMISSION_ID_COL + ", " + TASK_ID_COL + ", "
-					+ IMAGE_NAME_COL + ", " + USER_EMAIL_COL + "))");
+					+ USER_EMAIL_COL + " VARCHAR(255), " + " PRIMARY KEY(" + SUBMISSION_ID_COL
+					+ ", " + TASK_ID_COL + ", " + USER_EMAIL_COL + "))");
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + DEPLOY_CONFIG_TABLE_NAME + "("
 					+ NFS_SERVER_IP_COL + " VARCHAR(100), " + NFS_SERVER_SSH_PORT_COL
@@ -209,17 +212,20 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?)";
 
 	@Override
-	public void addImageTask(String taskId, String imageName, String downloadLink, int priority,
-			String containerRepository, String containerTag, String collectionTierImageName)
-			throws SQLException {
-		LOGGER.info("Adding image task " + taskId + " with name " + imageName + ", download link "
-				+ downloadLink + " and priority " + priority);
-		if (taskId == null || taskId.isEmpty() || imageName == null || imageName.isEmpty()
-				|| downloadLink == null || downloadLink.isEmpty() || collectionTierImageName == null
-				|| collectionTierImageName.isEmpty()) {
+	public void addImageTask(String taskId, String dataSet, String region, String date,
+			String downloadLink, int priority, String downloaderContainerRepository,
+			String downloaderContainerTag, String preProcessorContainerRepository,
+			String preProcessorContainerTag, String workerContainerRepository,
+			String workerContainerTag) throws SQLException {
+		LOGGER.info("Adding image task " + taskId + " with dataSet " + dataSet + ", region "
+				+ region + ", date " + date.toString() + ", download link " + downloadLink
+				+ " and priority " + priority);
+		if (taskId == null || taskId.isEmpty() || dataSet == null || dataSet.isEmpty()
+				|| region == null || region.isEmpty() || date == null || downloadLink == null
+				|| downloadLink.isEmpty()) {
 			LOGGER.error("Invalid image task " + taskId);
 			throw new IllegalArgumentException("Invalid image task " + taskId);
 		}
@@ -232,21 +238,24 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			insertStatement = connection.prepareStatement(INSERT_IMAGE_TASK_SQL);
 			insertStatement.setString(1, taskId);
-			insertStatement.setString(2, imageName);
-			insertStatement.setString(3, downloadLink);
-			insertStatement.setString(4, ImageTaskState.CREATED.getValue());
-			insertStatement.setString(5, ImageDataStore.NONE);
-			insertStatement.setInt(6, priority);
-			insertStatement.setString(7, "NE");
-			insertStatement.setString(8, containerRepository);
-			insertStatement.setString(9, containerTag);
-			insertStatement.setString(10, "NE");
-			insertStatement.setString(11, "NE");
-			insertStatement.setString(12, "NE");
-			insertStatement.setString(13, "NE");
-			insertStatement.setString(14, ImageTask.AVAILABLE);
-			insertStatement.setString(15, "no_errors");
-			insertStatement.setString(16, collectionTierImageName);
+			insertStatement.setString(2, dataSet);
+			insertStatement.setString(3, region);
+			insertStatement.setString(4, date);
+			insertStatement.setString(5, downloadLink);
+			insertStatement.setString(6, ImageTaskState.CREATED.getValue());
+			insertStatement.setString(7, ImageDataStore.NONE);
+			insertStatement.setInt(8, priority);
+			insertStatement.setString(9, "NE");
+			insertStatement.setString(10, downloaderContainerRepository);
+			insertStatement.setString(11, downloaderContainerTag);
+			insertStatement.setString(12, preProcessorContainerRepository);
+			insertStatement.setString(13, preProcessorContainerTag);
+			insertStatement.setString(14, workerContainerRepository);
+			insertStatement.setString(15, workerContainerTag);
+			insertStatement.setString(16, "NE");
+			insertStatement.setString(17, "NE");
+			insertStatement.setString(18, ImageTask.AVAILABLE);
+			insertStatement.setString(19, "no_errors");
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -256,17 +265,14 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+	@Override
 	public void addImageTask(ImageTask imageTask) throws SQLException {
-		LOGGER.info("Adding image task " + imageTask.getTaskId() + " with name "
-				+ imageTask.getName() + ", download link " + imageTask.getDownloadLink()
-				+ " and priority " + imageTask.getPriority());
+		LOGGER.info("Adding image task " + imageTask.getTaskId() + " with download link "
+				+ imageTask.getDownloadLink() + " and priority " + imageTask.getPriority());
 		if (imageTask.getTaskId() == null || imageTask.getTaskId().isEmpty()
-				|| imageTask.getName() == null || imageTask.getName().isEmpty()
-				|| imageTask.getDownloadLink() == null || imageTask.getDownloadLink().isEmpty()
-				|| imageTask.getCollectionTierName() == null
-				|| imageTask.getCollectionTierName().isEmpty()) {
+				|| imageTask.getDownloadLink() == null || imageTask.getDownloadLink().isEmpty()) {
 			LOGGER.error("Invalid image task " + imageTask.getTaskId());
 			throw new IllegalArgumentException("Invalid image task " + imageTask.getTaskId());
 		}
@@ -279,23 +285,26 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			insertStatement = connection.prepareStatement(INSERT_FULL_IMAGE_TASK_SQL);
 			insertStatement.setString(1, imageTask.getTaskId());
-			insertStatement.setString(2, imageTask.getName());
-			insertStatement.setString(3, imageTask.getDownloadLink());
-			insertStatement.setString(4, imageTask.getState().getValue());
-			insertStatement.setString(5, imageTask.getFederationMember());
-			insertStatement.setInt(6, imageTask.getPriority());
-			insertStatement.setString(7, imageTask.getStationId());
-			insertStatement.setString(8, imageTask.getContainerRepository());
-			insertStatement.setString(9, imageTask.getContainerTag());
-			insertStatement.setString(10, imageTask.getCrawlerVersion());
-			insertStatement.setString(11, imageTask.getFetcherVersion());
-			insertStatement.setString(12, imageTask.getBlowoutVersion());
-			insertStatement.setString(13, imageTask.getFmaskVersion());
-			insertStatement.setTimestamp(14, imageTask.getCreationTime());
-			insertStatement.setTimestamp(15, imageTask.getUpdateTime());
-			insertStatement.setString(16, imageTask.getImageStatus());
-			insertStatement.setString(17, imageTask.getImageError());
-			insertStatement.setString(18, imageTask.getCollectionTierName());
+			insertStatement.setString(2, imageTask.getDataSet());
+			insertStatement.setString(3, imageTask.getRegion());
+			insertStatement.setDate(4, imageTask.getImageDate());
+			insertStatement.setString(5, imageTask.getDownloadLink());
+			insertStatement.setString(6, imageTask.getState().getValue());
+			insertStatement.setString(7, imageTask.getFederationMember());
+			insertStatement.setInt(8, imageTask.getPriority());
+			insertStatement.setString(9, imageTask.getStationId());
+			insertStatement.setString(10, imageTask.getDownloaderContainerRepository());
+			insertStatement.setString(11, imageTask.getDownloaderContainerTag());
+			insertStatement.setString(12, imageTask.getPreProcessorContainerRepository());
+			insertStatement.setString(13, imageTask.getPreProcessorContainerTag());
+			insertStatement.setString(14, imageTask.getWorkerContainerRepository());
+			insertStatement.setString(15, imageTask.getWorkerContainerTag());
+			insertStatement.setString(16, imageTask.getArchiverVersion());
+			insertStatement.setString(17, imageTask.getBlowoutVersion());
+			insertStatement.setTimestamp(18, imageTask.getCreationTime());
+			insertStatement.setTimestamp(19, imageTask.getUpdateTime());
+			insertStatement.setString(20, imageTask.getImageStatus());
+			insertStatement.setString(21, imageTask.getImageError());
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -305,17 +314,16 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_USER_NOTIFICATION_SQL = "INSERT INTO "
-			+ USERS_NOTIFY_TABLE_NAME + " VALUES(?, ?, ?, ?)";
+			+ USERS_NOTIFY_TABLE_NAME + " VALUES(?, ?, ?)";
 
 	@Override
-	public void addUserNotification(String submissionId, String taskId, String imageName,
-			String userEmail) throws SQLException {
+	public void addUserNotification(String submissionId, String taskId, String userEmail)
+			throws SQLException {
 		LOGGER.info("Adding image task " + taskId + " from submission " + submissionId
 				+ " notification for " + userEmail);
-		if (taskId == null || taskId.isEmpty() || imageName == null || imageName.isEmpty()
-				|| userEmail == null || userEmail.isEmpty()) {
+		if (taskId == null || taskId.isEmpty() || userEmail == null || userEmail.isEmpty()) {
 			throw new IllegalArgumentException(
-					"Invalid image name " + imageName + " or user " + userEmail);
+					"Invalid task id " + taskId + " or user " + userEmail);
 		}
 
 		PreparedStatement insertStatement = null;
@@ -327,8 +335,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement = connection.prepareStatement(INSERT_USER_NOTIFICATION_SQL);
 			insertStatement.setString(1, submissionId);
 			insertStatement.setString(2, taskId);
-			insertStatement.setString(3, imageName);
-			insertStatement.setString(4, userEmail);
+			insertStatement.setString(3, userEmail);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -427,9 +434,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		List<Ward> wards = new ArrayList<Ward>();
 
 		while (rs.next()) {
-			wards.add(new Ward(rs.getString(IMAGE_NAME_COL), ImageTaskState.ARCHIVED,
-					rs.getString(SUBMISSION_ID_COL), rs.getString(TASK_ID_COL),
-					rs.getString(USER_EMAIL_COL)));
+			wards.add(new Ward(rs.getString(SUBMISSION_ID_COL), rs.getString(TASK_ID_COL),
+					ImageTaskState.ARCHIVED, rs.getString(USER_EMAIL_COL)));
 		}
 
 		return wards;
@@ -519,18 +525,17 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME
-			+ " WHERE " + SUBMISSION_ID_COL + " = ?, " + TASK_ID_COL + " = ? AND " + IMAGE_NAME_COL
-			+ " = ? AND " + USER_EMAIL_COL + " = ?";
+			+ " WHERE " + SUBMISSION_ID_COL + " = ? AND " + TASK_ID_COL + " = ? AND "
+			+ USER_EMAIL_COL + " = ?";
 
 	@Override
-	public void removeNotification(String submissionId, String taskId, String imageName,
-			String userEmail) throws SQLException {
-		LOGGER.debug("Removing image " + imageName + " notification for " + userEmail);
+	public void removeNotification(String submissionId, String taskId, String userEmail)
+			throws SQLException {
+		LOGGER.debug("Removing task " + taskId + " notification for " + userEmail);
 		if (submissionId == null || submissionId.isEmpty() || taskId == null || taskId.isEmpty()
-				|| imageName == null || imageName.isEmpty() || userEmail == null
-				|| userEmail.isEmpty()) {
+				|| userEmail == null || userEmail.isEmpty()) {
 			throw new IllegalArgumentException("Invalid submissionId " + submissionId + ", taskId "
-					+ taskId + ", imageName " + imageName + " or user " + userEmail);
+					+ taskId + " or user " + userEmail);
 		}
 
 		PreparedStatement insertStatement = null;
@@ -542,8 +547,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement = connection.prepareStatement(REMOVE_USER_NOTIFY_SQL);
 			insertStatement.setString(1, submissionId);
 			insertStatement.setString(2, taskId);
-			insertStatement.setString(3, imageName);
-			insertStatement.setString(4, userEmail);
+			insertStatement.setString(3, userEmail);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -581,13 +585,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " VALUES(?, ?, ?)";
 
 	@Override
-	public void addStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
+	public void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
 			throws SQLException {
-		LOGGER.info("Adding image " + imageName + " state " + state.getValue() + " with timestamp "
-				+ timestamp + " into DB");
-		if (imageName == null || imageName.isEmpty() || state == null) {
-			LOGGER.error("Invalid image " + imageName + " or state " + state.getValue());
-			throw new IllegalArgumentException("Invalid image " + imageName);
+		LOGGER.info("Adding task " + taskId + " state " + state.getValue() + " with timestamp "
+				+ timestamp + " into Catalogue");
+		if (taskId == null || taskId.isEmpty() || state == null) {
+			LOGGER.error("Invalid task " + taskId + " or state " + state.getValue());
+			throw new IllegalArgumentException("Invalid task " + taskId);
 		}
 
 		PreparedStatement insertStatement = null;
@@ -597,7 +601,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 
 			insertStatement = connection.prepareStatement(INSERT_NEW_STATE_TIMESTAMP_SQL);
-			insertStatement.setString(1, imageName);
+			insertStatement.setString(1, taskId);
 			insertStatement.setString(2, state.getValue());
 			insertStatement.setTimestamp(3, timestamp);
 			insertStatement.setQueryTimeout(300);
@@ -670,7 +674,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET state = ?, utime = now() WHERE image_name = ?";
+			+ " SET state = ?, utime = now() WHERE task_id = ?";
 
 	@Override
 	public void updateTaskState(String taskId, ImageTaskState state) throws SQLException {
@@ -698,10 +702,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET name = ?, download_link = ?, state = ?, federation_member = ?,"
-			+ " priority = ?, station_id = ?, container_repository = ?, container_tag = ?, crawler_version = ?, fetcher_version = ?,"
-			+ " blowout_version = ?, fmask_version = ?," + " utime = now(), status = ?,"
-			+ " error_msg = ?, tier_collection_image_name = ? WHERE task_id = ?";
+			+ " SET download_link = ?, state = ?, federation_member = ?,"
+			+ " priority = ?, station_id = ?, container_repository = ?, container_tag = ?,"
+			+ " fetcher_version = ?," + " blowout_version = ?," + " utime = now(), status = ?,"
+			+ " error_msg = ? WHERE task_id = ?";
 
 	@Override
 	public void updateImageTask(ImageTask imagetask) throws SQLException {
@@ -717,22 +721,17 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 
 			updateStatement = connection.prepareStatement(UPDATE_IMAGEDATA_SQL);
-			updateStatement.setString(1, imagetask.getName());
-			updateStatement.setString(2, imagetask.getDownloadLink());
-			updateStatement.setString(3, imagetask.getState().getValue());
-			updateStatement.setString(4, imagetask.getFederationMember());
-			updateStatement.setInt(5, imagetask.getPriority());
-			updateStatement.setString(6, imagetask.getStationId());
-			updateStatement.setString(7, imagetask.getContainerRepository());
-			updateStatement.setString(8, imagetask.getContainerTag());
-			updateStatement.setString(9, imagetask.getCrawlerVersion());
-			updateStatement.setString(10, imagetask.getFetcherVersion());
-			updateStatement.setString(11, imagetask.getBlowoutVersion());
-			updateStatement.setString(12, imagetask.getFmaskVersion());
-			updateStatement.setString(13, imagetask.getImageStatus());
-			updateStatement.setString(14, imagetask.getImageError());
-			updateStatement.setString(15, imagetask.getCollectionTierName());
-			updateStatement.setString(16, imagetask.getTaskId());
+			updateStatement.setString(1, imagetask.getDownloadLink());
+			updateStatement.setString(2, imagetask.getState().getValue());
+			updateStatement.setString(3, imagetask.getFederationMember());
+			updateStatement.setInt(4, imagetask.getPriority());
+			updateStatement.setString(5, imagetask.getStationId());
+			updateStatement.setString(6, imagetask.getWorkerContainerRepository());
+			updateStatement.setString(7, imagetask.getWorkerContainerTag());
+			updateStatement.setString(9, imagetask.getArchiverVersion());
+			updateStatement.setString(10, imagetask.getBlowoutVersion());
+			updateStatement.setString(12, imagetask.getImageStatus());
+			updateStatement.setString(13, imagetask.getImageError());
 			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
@@ -742,17 +741,14 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String UPDATE_IMAGE_METADATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET station_id = ?, container_repository = ?, utime = now() WHERE task_id = ?";
+			+ " SET station_id = ?, utime = now() WHERE task_id = ?";
 
 	@Override
-	public void updateImageMetadata(String taskId, String stationId, String containerRepository)
-			throws SQLException {
-		if (taskId == null || taskId.isEmpty() || stationId == null || stationId.isEmpty()
-				|| containerRepository == null || containerRepository.isEmpty()) {
-			LOGGER.error("Invalid image task " + taskId + ", station ID " + stationId
-					+ " or sebal version " + containerRepository);
-			throw new IllegalArgumentException("Invalid image task " + taskId + ", station ID "
-					+ stationId + " or container repository " + containerRepository);
+	public void updateImageMetadata(String taskId, String stationId) throws SQLException {
+		if (taskId == null || taskId.isEmpty() || stationId == null || stationId.isEmpty()) {
+			LOGGER.error("Invalid image task " + taskId + " or station ID " + stationId);
+			throw new IllegalArgumentException(
+					"Invalid image task " + taskId + " or station ID " + stationId);
 		}
 		PreparedStatement updateStatement = null;
 		Connection connection = null;
@@ -762,8 +758,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			updateStatement = connection.prepareStatement(UPDATE_IMAGE_METADATA_SQL);
 			updateStatement.setString(1, stationId);
-			updateStatement.setString(2, containerRepository);
-			updateStatement.setString(3, taskId);
+			updateStatement.setString(2, taskId);
 			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
@@ -952,12 +947,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SELECT_IMAGES_BY_FILTERS_WHERE_SQL = " WHERE ";
 	private static final String SELECT_IMAGES_BY_FILTERS_STATE_SQL = " state = ? "
 			+ IMAGE_TABLE_NAME;
-	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " name = ? " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " task_id = ? "
+			+ IMAGE_TABLE_NAME;
 	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " ctime BETWEEN ? AND ? ";
 
 	@Override
-	public List<ImageTask> getTasksByFilter(ImageTaskState state, String name, long processDateInit,
-			long processDateEnd) throws SQLException {
+	public List<ImageTask> getTasksByFilter(ImageTaskState state, String taskId,
+			long processDateInit, long processDateEnd) throws SQLException {
 
 		PreparedStatement selectStatement = null;
 		Connection connection = null;
@@ -975,7 +971,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			paramtersCount++;
 		}
 
-		if (name != null && !name.trim().isEmpty()) {
+		if (taskId != null && !taskId.trim().isEmpty()) {
 			if (paramtersCount == 0) {
 				finalQuery.append(SELECT_IMAGES_BY_FILTERS_WHERE_SQL);
 			} else {
@@ -1006,8 +1002,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 				selectStatement.setString(++paramtersInsertCount, state.getValue());
 			}
 
-			if (name != null && !name.trim().isEmpty()) {
-				selectStatement.setString(++paramtersInsertCount, name);
+			if (taskId != null && !taskId.trim().isEmpty()) {
+				selectStatement.setString(++paramtersInsertCount, taskId);
 			}
 
 			if (processDateInit > 0 && processDateEnd > 0) {
@@ -1033,7 +1029,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String SELECT_PURGED_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE status = ? ORDER BY priority, image_name";
+			+ " WHERE status = ? ORDER BY priority, task_id";
 
 	@Override
 	public List<ImageTask> getPurgedTasks() throws SQLException {
@@ -1133,20 +1129,24 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static List<ImageTask> extractImageTaskFrom(ResultSet rs) throws SQLException {
-		List<ImageTask> imageDatas = new ArrayList<ImageTask>();
+		List<ImageTask> imageTasks = new ArrayList<ImageTask>();
 		while (rs.next()) {
-			imageDatas.add(new ImageTask(rs.getString(TASK_ID_COL), rs.getString(IMAGE_NAME_COL),
+			imageTasks.add(new ImageTask(rs.getString(TASK_ID_COL), rs.getString(DATASET_COL),
+					rs.getString(REGION_COL), rs.getDate(IMAGE_DATE_COL),
 					rs.getString(DOWNLOAD_LINK_COL),
 					ImageTaskState.getStateFromStr(rs.getString(STATE_COL)),
 					rs.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
-					rs.getString(STATION_ID_COL), rs.getString(CONTAINER_REPOSITORY_COL),
-					rs.getString(CONTAINER_TAG_COL), rs.getString(CRAWLER_VERSION_COL),
-					rs.getString(FETCHER_VERSION_COL), rs.getString(BLOWOUT_VERSION_COL),
-					rs.getString(FMASK_VERSION_COL), rs.getTimestamp(CREATION_TIME_COL),
+					rs.getString(STATION_ID_COL), rs.getString(DOWNLOADER_CONTAINER_REPOSITORY_COL),
+					rs.getString(DOWNLOADER_CONTAINER_TAG_COL),
+					rs.getString(PREPROCESSOR_CONTAINER_REPOSITORY_COL),
+					rs.getString(PREPROCESSOR_CONTAINER_TAG_COL),
+					rs.getString(WORKER_CONTAINER_REPOSITORY_COL),
+					rs.getString(WORKER_CONTAINER_TAG_COL), rs.getString(ARCHIVER_VERSION_COL),
+					rs.getString(BLOWOUT_VERSION_COL), rs.getTimestamp(CREATION_TIME_COL),
 					rs.getTimestamp(UPDATED_TIME_COL), rs.getString(IMAGE_STATUS_COL),
-					rs.getString(ERROR_MSG_COL), rs.getString(COLLECTION_TIER_IMAGE_NAME_COL)));
+					rs.getString(ERROR_MSG_COL)));
 		}
-		return imageDatas;
+		return imageTasks;
 	}
 
 	private static final String SELECT_TASK_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
@@ -1244,13 +1244,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME
-			+ " WHERE image_name = ?";
+			+ " WHERE task_id = ?";
 
 	@Override
-	public boolean lockTask(String imageName) throws SQLException {
-		if (imageName == null) {
-			LOGGER.error("Invalid imageName " + imageName);
-			throw new IllegalArgumentException("Invalid state " + imageName);
+	public boolean lockTask(String taskId) throws SQLException {
+		if (taskId == null) {
+			LOGGER.error("Invalid imageName " + taskId);
+			throw new IllegalArgumentException("Invalid state " + taskId);
 		}
 		PreparedStatement lockImageStatement = null;
 		Connection connection = null;
@@ -1259,9 +1259,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			connection = getConnection();
 			lockImageStatement = connection.prepareStatement(LOCK_IMAGE_SQL);
-			final int imageHashCode = imageName.hashCode();
+			final int imageHashCode = taskId.hashCode();
 			lockImageStatement.setInt(1, imageHashCode);
-			lockImageStatement.setString(2, imageName);
+			lockImageStatement.setString(2, taskId);
 			lockImageStatement.setQueryTimeout(300);
 
 			ResultSet rs = lockImageStatement.executeQuery();
@@ -1270,7 +1270,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			}
 
 			if (locked) {
-				lockedImages.put(imageName, connection);
+				lockedImages.put(taskId, connection);
 				close(lockImageStatement);
 			}
 		} finally {
@@ -1284,20 +1284,20 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private final String UNLOCK_IMAGE_SQL = "SELECT pg_advisory_unlock(?)";
 
 	@Override
-	public boolean unlockTask(String imageName) throws SQLException {
-		if (imageName == null) {
-			LOGGER.error("Invalid imageName " + imageName);
-			throw new IllegalArgumentException("Invalid state " + imageName);
+	public boolean unlockTask(String taskId) throws SQLException {
+		if (taskId == null) {
+			LOGGER.error("Invalid imageName " + taskId);
+			throw new IllegalArgumentException("Invalid state " + taskId);
 		}
 		PreparedStatement selectStatement = null;
 		Connection connection = null;
 
 		boolean unlocked = false;
-		if (lockedImages.containsKey(imageName)) {
-			connection = lockedImages.get(imageName);
+		if (lockedImages.containsKey(taskId)) {
+			connection = lockedImages.get(taskId);
 			try {
 				selectStatement = connection.prepareStatement(UNLOCK_IMAGE_SQL);
-				selectStatement.setInt(1, imageName.hashCode());
+				selectStatement.setInt(1, taskId.hashCode());
 				selectStatement.setQueryTimeout(300);
 
 				ResultSet rs = selectStatement.executeQuery();
@@ -1306,7 +1306,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 					unlocked = rs.getBoolean(1);
 				}
 
-				lockedImages.remove(imageName);
+				lockedImages.remove(taskId);
 			} finally {
 				close(selectStatement, connection);
 			}
@@ -1315,16 +1315,16 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME
-			+ " WHERE image_name = ? AND state = ? AND utime = ?";
+			+ " WHERE task_id = ? AND state = ? AND utime = ?";
 
 	@Override
-	public void removeStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
+	public void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
 			throws SQLException {
-		LOGGER.info("Removing image " + imageName + " state " + state.getValue()
-				+ " with timestamp " + timestamp);
-		if (imageName == null || imageName.isEmpty() || state == null) {
-			LOGGER.error("Invalid image " + imageName + " or state " + state.getValue());
-			throw new IllegalArgumentException("Invalid image " + imageName);
+		LOGGER.info("Removing task " + taskId + " state " + state.getValue() + " with timestamp "
+				+ timestamp);
+		if (taskId == null || taskId.isEmpty() || state == null) {
+			LOGGER.error("Invalid task " + taskId + " or state " + state.getValue());
+			throw new IllegalArgumentException("Invalid task " + taskId);
 		}
 
 		PreparedStatement removeStatement = null;
@@ -1334,7 +1334,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 
 			removeStatement = connection.prepareStatement(REMOVE_STATE_SQL);
-			removeStatement.setString(1, imageName);
+			removeStatement.setString(1, taskId);
 			removeStatement.setString(2, state.getValue());
 			removeStatement.setTimestamp(3, timestamp);
 			removeStatement.setQueryTimeout(300);

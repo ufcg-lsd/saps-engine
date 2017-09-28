@@ -1,14 +1,14 @@
 package org.fogbowcloud.saps.engine.core.dispatcher;
 
 import java.io.IOException;
-import java.sql.Date;
+import java.util.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -25,8 +25,6 @@ import org.fogbowcloud.saps.engine.core.repository.DefaultImageRepository;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.notifier.Ward;
-import org.json.JSONArray;
-import org.json.JSONException;
 
 public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
@@ -36,7 +34,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	private Properties properties;
 
 	private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcherImpl.class);
-	
+
 	public SubmissionDispatcherImpl(JDBCImageDataStore imageStore) {
 		this.imageStore = imageStore;
 	}
@@ -55,7 +53,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		try {
 			imageStore.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
 		} catch (SQLException e) {
-			LOGGER.error("Error while adding user " + userEmail + " in DB", e);
+			LOGGER.error("Error while adding user " + userEmail + " in Catalogue", e);
 			throw new SQLException(e);
 		}
 	}
@@ -65,7 +63,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		try {
 			imageStore.updateUserState(userEmail, userState);
 		} catch (SQLException e) {
-			LOGGER.error("Error while adding user " + userEmail + " in DB", e);
+			LOGGER.error("Error while adding user " + userEmail + " in Catalogue", e);
 			throw new SQLException(e);
 		}
 	}
@@ -81,24 +79,24 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	@Override
-	public void addTaskNotificationIntoDB(String submissionId, String taskId, String imageName,
-			String userEmail) throws SQLException {
+	public void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail)
+			throws SQLException {
 		try {
-			imageStore.addUserNotification(submissionId, taskId, imageName, userEmail);
+			imageStore.addUserNotification(submissionId, taskId, userEmail);
 		} catch (SQLException e) {
-			LOGGER.error("Error while adding image " + imageName + " user " + userEmail
-					+ " in notify DB", e);
+			LOGGER.error("Error while adding task " + taskId + " notification for user " + userEmail
+					+ " in Catalogue", e);
 		}
 	}
 
 	@Override
-	public void removeUserNotification(String submissionId, String taskId, String imageName,
-			String userEmail) throws SQLException {
+	public void removeUserNotification(String submissionId, String taskId, String userEmail)
+			throws SQLException {
 		try {
-			imageStore.removeNotification(submissionId, taskId, imageName, userEmail);
+			imageStore.removeNotification(submissionId, taskId, userEmail);
 		} catch (SQLException e) {
-			LOGGER.error("Error while removing image " + imageName + " user " + userEmail
-					+ " from notify DB", e);
+			LOGGER.error("Error while removing task " + taskId + " notification for user "
+					+ userEmail + " from Catalogue", e);
 		}
 	}
 
@@ -129,7 +127,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 				imageTask.setImageStatus(ImageTask.PURGED);
 
 				imageStore.updateImageTask(imageTask);
-				imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
+				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 			}
 		}
 	}
@@ -141,44 +139,47 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		return sqlDate;
 	}
 
-	protected boolean isBeforeDay(long date, Timestamp imageDataDay) {
-		return (imageDataDay.getTime() <= date);
+	protected boolean isBeforeDay(long date, Timestamp imageTaskDay) {
+		return (imageTaskDay.getTime() <= date);
 	}
 
 	@Override
-	public void listImagesInDB() throws SQLException, ParseException {
-		List<ImageTask> allImageData = imageStore.getAllTasks();
-		for (int i = 0; i < allImageData.size(); i++) {
-			System.out.println(allImageData.get(i).toString());
+	public void listTasksInDB() throws SQLException, ParseException {
+		List<ImageTask> allImageTask = imageStore.getAllTasks();
+		for (int i = 0; i < allImageTask.size(); i++) {
+			System.out.println(allImageTask.get(i).toString());
 		}
 	}
 
 	@Override
 	public void listCorruptedImages() throws ParseException {
-		List<ImageTask> allImageData;
+		List<ImageTask> allImageTask;
 		try {
-			allImageData = imageStore.getIn(ImageTaskState.CORRUPTED);
-			for (int i = 0; i < allImageData.size(); i++) {
-				System.out.println(allImageData.get(i).toString());
+			allImageTask = imageStore.getIn(ImageTaskState.CORRUPTED);
+			for (int i = 0; i < allImageTask.size(); i++) {
+				System.out.println(allImageTask.get(i).toString());
 			}
 		} catch (SQLException e) {
-			LOGGER.error(
-					"Error while gettin images in " + ImageTaskState.CORRUPTED + " state from DB",
-					e);
+			LOGGER.error("Error while gettin tasks in " + ImageTaskState.CORRUPTED
+					+ " state from Catalogue", e);
 		}
 	}
 
 	@Override
-	public List<Task> fillDB(int firstYear, int lastYear, List<String> regions, String dataSet,
-			String containerRepository, String containerTag) throws IOException {
+	public List<Task> fillDB(Date firstYear, Date lastYear, List<String> regions, String dataSet,
+			String downloaderContainerRepository, String downloaderContainerTag,
+			String preProcessorContainerRepository, String preProcessorContainerTag,
+			String workerContainerRepository, String workerContainerTag) throws IOException {
 		LOGGER.debug("Regions: " + regions);
 		List<Task> createdTasks = new ArrayList<Task>();
 		String parsedDataSet = parseDataset(dataSet);
 
 		int priority = 0;
 		for (String region : regions) {
-			createdTasks = submitImagesForYears(parsedDataSet, firstYear, lastYear, region,
-					containerRepository, containerTag, priority);
+			createdTasks.addAll(submitImagesForYears(parsedDataSet, firstYear, lastYear, region,
+					downloaderContainerRepository, downloaderContainerTag,
+					preProcessorContainerRepository, preProcessorContainerTag,
+					workerContainerRepository, workerContainerTag, priority));
 			priority++;
 		}
 		return createdTasks;
@@ -196,41 +197,37 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		return null;
 	}
 
-	private List<Task> submitImagesForYears(String dataSet, int firstYear, int lastYear,
-			String region, String containerRepository, String containerTag, int priority) {
+	private List<Task> submitImagesForYears(String dataSet, Date firstDate, Date lastDate,
+			String region, String downloaderContainerRepository, String downloaderContainerTag,
+			String preProcessorContainerRepository, String preProcessorContainerTag,
+			String workerContainerRepository, String workerContainerTag, int priority) {
+		LocalDate startDate = firstDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		LocalDate endDate = lastDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		List<Task> createdTasks = new ArrayList<Task>();
-		JSONArray availableImagesJSON = getUSGSRepository().getAvailableImagesInRange(dataSet,
-				firstYear, lastYear, region);
 
-		if (availableImagesJSON != null) {
-			try {
-				for (int i = 0; i < availableImagesJSON.length(); i++) {
-					String entityId = availableImagesJSON.getJSONObject(i)
-							.getString(SapsPropertiesConstants.ENTITY_ID_JSON_KEY);
-					String displayId = availableImagesJSON.getJSONObject(i)
-							.getString(SapsPropertiesConstants.DISPLAY_ID_JSON_KEY);
-					String taskId = UUID.randomUUID().toString();
+		try {
+			for (LocalDate date = startDate; date.isBefore(endDate); date.plusDays(1)) {
+				String taskId = UUID.randomUUID().toString();
 
-					getImageStore().addImageTask(taskId, entityId, "None", priority,
-							containerRepository, containerTag, displayId);
-					getImageStore().addStateStamp(entityId, ImageTaskState.CREATED,
-							getImageStore().getTask(entityId).getUpdateTime());
+				getImageStore().addImageTask(taskId, dataSet, region, date.toString(), "None",
+						priority, downloaderContainerRepository, downloaderContainerTag,
+						preProcessorContainerRepository, preProcessorContainerTag,
+						workerContainerRepository, workerContainerTag);
+				getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
+						getImageStore().getTask(taskId).getUpdateTime());
 
-					Task task = new Task(UUID.randomUUID().toString());
-					task.setImageTask(getImageStore().getTask(taskId));
-					createdTasks.add(task);
-				}
-			} catch (JSONException e) {
-				LOGGER.error("Error while getting entityId and displayId from JSON response", e);
-			} catch (SQLException e) {
-				LOGGER.error("Error while adding image to database", e);
+				Task task = new Task(UUID.randomUUID().toString());
+				task.setImageTask(getImageStore().getTask(taskId));
+				createdTasks.add(task);
 			}
+		} catch (SQLException e) {
+			LOGGER.error("Error while adding image to database", e);
 		}
 
 		return createdTasks;
 	}
 
-	public List<ImageTask> getImagesInDB() throws SQLException, ParseException {
+	public List<ImageTask> getTaskListInDB() throws SQLException, ParseException {
 		return imageStore.getAllTasks();
 	}
 
@@ -252,25 +249,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		return null;
 	}
 
-	protected String createImageList(String region, int year, String dataSet) {
-		StringBuilder imageList = new StringBuilder();
-		for (int day = 1; day < 366; day++) {
-			NumberFormat formatter = new DecimalFormat("000");
-			String imageName = new String();
-
-			if (dataSet.equals(SapsPropertiesConstants.DATASET_LT5_TYPE)) {
-				imageName = "LT5" + region + year + formatter.format(day);
-			} else if (dataSet.equals(SapsPropertiesConstants.DATASET_LE7_TYPE)) {
-				imageName = "LE7" + region + year + formatter.format(day);
-			} else if (dataSet.equals(SapsPropertiesConstants.DATASET_LC8_TYPE)) {
-				imageName = "LC8" + region + year + formatter.format(day);
-			}
-
-			imageList.append(imageName + "\n");
-		}
-		return imageList.toString().trim();
-	}
-
 	public JDBCImageDataStore getImageStore() {
 		return imageStore;
 	}
@@ -289,10 +267,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 	protected USGSNasaRepository getUSGSRepository() {
 		return usgsRepository;
-	}
-
-	public static String getImageRegionFromName(String imageName) {
-		return imageName.substring(3, 9);
 	}
 
 	public Properties getProperties() {

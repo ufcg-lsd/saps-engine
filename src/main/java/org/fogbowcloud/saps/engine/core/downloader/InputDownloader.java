@@ -127,7 +127,6 @@ public class InputDownloader {
 	}
 
 	public void exec() throws InterruptedException, IOException {
-		checkVersionFileExists();
 		registerDeployConfig();
 		cleanUnfinishedDownloadedData(properties);
 
@@ -152,26 +151,7 @@ public class InputDownloader {
 			pendingTaskDownloadDB.close();
 		}
 	}
-
-	private void checkVersionFileExists() {
-		if (!crawlerVersionFileExists()) {
-			System.exit(1);
-		}
-	}
-
-	protected boolean crawlerVersionFileExists() {
-		this.crawlerVersion = getInputDownloaderVersion();
-
-		if (crawlerVersion == null || crawlerVersion.isEmpty()) {
-			LOGGER.error("Crawler version file does not exist");
-			LOGGER.info("Restart Crawler infrastructure");
-
-			return false;
-		}
-
-		return true;
-	}
-
+	
 	private void registerDeployConfig() {
 		try {
 			if (imageStore.deployConfigExists(federationMember)) {
@@ -332,7 +312,6 @@ public class InputDownloader {
 			// TODO: insert here station download code
 
 			if (checkIfImageFileExists(imageTask)) {
-				imageTask.setCrawlerVersion(crawlerVersion);
 				updateToDownloadedState(imageTask);
 
 				removeTaskFromPendingMap(imageTask);
@@ -534,23 +513,6 @@ public class InputDownloader {
 		} else {
 			LOGGER.error("Export path is null or empty!");
 		}
-	}
-
-	protected String getInputDownloaderVersion() {
-		String sebalEngineDirPath = System.getProperty("user.dir");
-		File sebalEngineDir = new File(sebalEngineDirPath);
-		String[] sebalEngineVersionFileSplit = null;
-
-		if (sebalEngineDir.exists() && sebalEngineDir.isDirectory()) {
-			for (File file : sebalEngineDir.listFiles()) {
-				if (file.getName().startsWith("sebal-engine.version.")) {
-					sebalEngineVersionFileSplit = file.getName().split("\\.");
-					return sebalEngineVersionFileSplit[2];
-				}
-			}
-		}
-
-		return null;
 	}
 
 	public USGSNasaRepository getUSGSRepository() {

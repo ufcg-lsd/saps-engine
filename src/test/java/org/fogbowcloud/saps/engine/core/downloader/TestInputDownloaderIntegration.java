@@ -6,7 +6,6 @@ import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -69,10 +68,10 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.CREATED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "",
-				"None");
+		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 
 		imageList.add(taskOne);
 
@@ -96,8 +95,7 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testinputDownloaderErrorWhileGetImagesNotDownloaded()
-			throws SQLException, IOException {
+	public void testinputDownloaderErrorWhileGetCreatedImages() throws SQLException, IOException {
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -106,16 +104,6 @@ public class TestInputDownloaderIntegration {
 		String inputDownloaderPort = "fake-inputDownloader-port";
 		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
-
-		Date date = new Date(10000854);
-
-		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.CREATED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "",
-				"None");
-
-		imageList.add(taskOne);
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
 				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
@@ -129,7 +117,6 @@ public class TestInputDownloaderIntegration {
 
 		// expect
 		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
-		Assert.assertEquals(ImageTaskState.CREATED, taskOne.getState());
 	}
 
 	@Test
@@ -147,15 +134,15 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.FINISHED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "",
-				"None");
+		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 		taskOne.setImageStatus(ImageTask.PURGED);
-		ImageTask taskTwo = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.FINISHED,
-				federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "",
-				"None");
+		ImageTask taskTwo = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
+				ImageTaskState.FINISHED, federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 
 		imageList.add(taskOne);
 		imageList.add(taskTwo);
@@ -188,14 +175,14 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.ARCHIVED,
-				federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "",
-				"None");
-		ImageTask taskTwo = new ImageTask("task-id-2", "image2", "link2", ImageTaskState.ARCHIVED,
-				federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "",
-				"None");
+		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.ARCHIVED, federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
+		ImageTask taskTwo = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
+				ImageTaskState.ARCHIVED, federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
+				"available", "");
 
 		imageList.add(taskOne);
 		imageList.add(taskTwo);
@@ -216,36 +203,6 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testGetinputDownloaderVersion()
-			throws SQLException, IOException, InterruptedException {
-		// setup
-		Properties properties = mock(Properties.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
-		String inputDownloaderIP = "fake-inputDownloader-ip";
-		String inputDownloaderPort = "fake-inputDownloader-port";
-		String nfsPort = "fake-nfs-port";
-		String federationMember = "fake-fed-member";
-
-		PrintWriter writer = new PrintWriter(
-				"sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a", "UTF-8");
-		writer.println("0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
-		writer.close();
-
-		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
-
-		// exercise
-		String versionReturn = inputDownloader.getInputDownloaderVersion();
-
-		// expect
-		Assert.assertEquals("0c26f092e976389c593953a1ad8ddaadb5c2ab2a", versionReturn);
-
-		File file = new File("sebal-engine.version.0c26f092e976389c593953a1ad8ddaadb5c2ab2a");
-		file.delete();
-	}
-
-	@Test
 	public void testPendingTaskMap() throws SQLException, IOException {
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -255,10 +212,12 @@ public class TestInputDownloaderIntegration {
 		String nfsPort = "fake-nfs-port";
 		String federationMember = "fake-fed-member";
 
-		ImageTask task = new ImageTask("task-id-1", "image1", "link1", ImageTaskState.CREATED,
-				federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), "available", "", "None");
+		Date date = new Date(10000854);
+
+		ImageTask task = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), "available", "");
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
 				usgsRepository, inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);

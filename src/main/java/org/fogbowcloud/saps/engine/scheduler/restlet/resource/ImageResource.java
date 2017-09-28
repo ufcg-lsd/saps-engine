@@ -1,8 +1,9 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.sql.SQLException;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -33,8 +34,12 @@ public class ImageResource extends BaseResource {
 	private static final String LAST_YEAR = "lastYear";
 	private static final String REGION = "region";
 	private static final String DATASET = "dataSet";
-	private static final String CONTAINER_REPOSITORY = "containerRepository";
-	private static final String CONTAINER_TAG = "containerTag";
+	private static final String DOWNLOADER_CONTAINER_REPOSITORY = "downloaderContainerRepository";
+	private static final String DOWNLOADER_CONTAINER_TAG = "downloaderContainerTag";
+	private static final String PREPROCESSOR_CONTAINER_TAG = "preProcessorContainerRepository";
+	private static final String PREPROCESSOR_CONTAINER_REPOSITORY = "preProcessorContainerTag";
+	private static final String WORKER_CONTAINER_REPOSITORY = "workerContainerRepository";
+	private static final String WORKER_CONTAINER_TAG = "containerTag";
 	private static final String DAY = "day";
 	private static final String FORCE = "force";
 
@@ -46,8 +51,12 @@ public class ImageResource extends BaseResource {
 	private static final String USER_PASSWORD = "userPass";
 
 	private static final String DEFAULT_CONF_PATH = "config/sebal.conf";
-	private static final String DEFAULT_CONTAINER_REPOSITORY = "default_container_repository";
-	private static final String DEFAULT_CONTAINER_TAG = "default_container_tag";
+	private static final String DEFAULT_DOWNLOADER_CONTAINER_REPOSITORY = "default_downloader_container_repository";
+	private static final String DEFAULT_DOWNLOADER_CONTAINER_TAG = "default_downloader_container_tag";
+	private static final String DEFAULT_PREPROCESSOR_CONTAINER_REPOSITORY = "default_preprocessor_container_repository";
+	private static final String DEFAULT_PREPROCESSOR_CONTAINER_TAG = "default_preprocessor_container_tag";
+	private static final String DEFAULT_WORKER_CONTAINER_REPOSITORY = "default_worker_container_repository";
+	private static final String DEFAULT_WORKER_CONTAINER_TAG = "default_worker_container_tag";
 
 	public ImageResource() {
 		super();
@@ -55,7 +64,7 @@ public class ImageResource extends BaseResource {
 
 	@SuppressWarnings("unchecked")
 	@Get
-	public Representation getImages() throws Exception {
+	public Representation getTasks() throws Exception {
 		Series<Header> series = (Series<Header>) getRequestAttributes()
 				.get("org.restlet.http.headers");
 
@@ -66,37 +75,37 @@ public class ImageResource extends BaseResource {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 		}
 
-		LOGGER.info("Getting image");
-		String imageName = (String) getRequest().getAttributes().get("imgName");
+		LOGGER.info("Getting task");
+		String taskId = (String) getRequest().getAttributes().get("taskId");
 
-		LOGGER.debug("ImageName is " + imageName);
+		LOGGER.debug("TaskID is " + taskId);
 
-		if (imageName != null) {
-			ImageTask imageData = ((DatabaseApplication) getApplication()).getImage(imageName);
-			JSONArray image = new JSONArray();
+		if (taskId != null) {
+			ImageTask imageTask = ((DatabaseApplication) getApplication()).getTask(taskId);
+			JSONArray taskJSON = new JSONArray();
 			try {
-				image.put(imageData.toJSON());
+				taskJSON.put(imageTask.toJSON());
 			} catch (JSONException e) {
-				LOGGER.error("Error while creating JSON from image data " + imageData, e);
+				LOGGER.error("Error while creating JSON from image task " + imageTask, e);
 			}
 
-			return new StringRepresentation(image.toString(), MediaType.APPLICATION_JSON);
+			return new StringRepresentation(taskJSON.toString(), MediaType.APPLICATION_JSON);
 		}
 
-		LOGGER.info("Getting all images");
+		LOGGER.info("Getting all tasks");
 
-		List<ImageTask> listOfImages = ((DatabaseApplication) getApplication()).getImages();
-		JSONArray images = new JSONArray();
+		List<ImageTask> listOfTasks = ((DatabaseApplication) getApplication()).getTasks();
+		JSONArray tasksJSON = new JSONArray();
 
-		for (ImageTask imageData : listOfImages) {
+		for (ImageTask imageTask : listOfTasks) {
 			try {
-				images.put(imageData.toJSON());
+				tasksJSON.put(imageTask.toJSON());
 			} catch (JSONException e) {
-				LOGGER.error("Error while creating JSON from image data " + imageData, e);
+				LOGGER.error("Error while creating JSON from image task " + imageTask, e);
 			}
 		}
 
-		return new StringRepresentation(images.toString(), MediaType.APPLICATION_JSON);
+		return new StringRepresentation(tasksJSON.toString(), MediaType.APPLICATION_JSON);
 	}
 
 	@Post
@@ -115,38 +124,33 @@ public class ImageResource extends BaseResource {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 		}
 
-		int firstYear = new Integer(form.getFirstValue(FIRST_YEAR));
-		int lastYear = new Integer(form.getFirstValue(LAST_YEAR));
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		Date firstYear = format.parse(form.getFirstValue(FIRST_YEAR));
+		Date lastYear = format.parse(form.getFirstValue(LAST_YEAR));
 		String region = form.getFirstValue(REGION);
 		String dataSet = form.getFirstValue(DATASET);
-		String containerRepository = form.getFirstValue(CONTAINER_REPOSITORY);
-		String containerTag = form.getFirstValue(CONTAINER_TAG);
+		String downloaderContainerRepository = form.getFirstValue(DOWNLOADER_CONTAINER_REPOSITORY);
+		String downloaderContainerTag = form.getFirstValue(DOWNLOADER_CONTAINER_TAG);
+		String preProcessorContainerRepository = form
+				.getFirstValue(PREPROCESSOR_CONTAINER_REPOSITORY);
+		String preProcessorContainerTag = form.getFirstValue(PREPROCESSOR_CONTAINER_TAG);
+		String workerContainerRepository = form.getFirstValue(WORKER_CONTAINER_REPOSITORY);
+		String workerContainerTag = form.getFirstValue(WORKER_CONTAINER_TAG);
 		LOGGER.debug("FirstYear " + firstYear + " LastYear " + lastYear + " Region " + region);
 
 		try {
-			if (region == null || region.isEmpty() || dataSet == null || dataSet.isEmpty()) {
-				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
-			}
+			verifyEntryConsistance(properties, region, dataSet, downloaderContainerRepository,
+					downloaderContainerTag, preProcessorContainerRepository,
+					preProcessorContainerTag, workerContainerRepository, workerContainerTag);
 
-			if (containerRepository == null || containerRepository.isEmpty()) {
-				containerRepository = properties.getProperty(DEFAULT_CONTAINER_REPOSITORY);
-				containerTag = properties.getProperty(DEFAULT_CONTAINER_TAG);
-
-				LOGGER.debug("SebalVersion not passed...using default repository "
-						+ containerRepository);
-			} else {
-				if (containerTag == null || containerTag.isEmpty()) {
-					throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
-				}
-			}
-			
 			List<Task> createdTasks = application.addTasks(firstYear, lastYear, region, dataSet,
-					containerRepository, containerTag);
+					downloaderContainerRepository, downloaderContainerTag,
+					preProcessorContainerRepository, preProcessorContainerTag,
+					workerContainerRepository, workerContainerTag);
 			if (application.isUserNotifiable(userEmail)) {
 				Submission submission = new Submission(UUID.randomUUID().toString());
 				for (Task imageTask : createdTasks) {
-					application.addUserNotify(submission.getId(), imageTask.getId(),
-							imageTask.getImageTask().getCollectionTierName(), userEmail);
+					application.addUserNotify(submission.getId(), imageTask.getId(), userEmail);
 				}
 			}
 		} catch (Exception e) {
@@ -157,15 +161,50 @@ public class ImageResource extends BaseResource {
 		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK, MediaType.APPLICATION_JSON);
 	}
 
-	protected void submit(String userEmail, int firstYear, int lastYear, String region,
-			String dataSet, String sebalVersion, String sebalTag) throws SQLException, IOException {
-		List<Task> createdTasks = application.addTasks(firstYear, lastYear, region, dataSet,
-				sebalVersion, sebalTag);
-		if (application.isUserNotifiable(userEmail)) {
-			Submission submission = new Submission(UUID.randomUUID().toString());
-			for (Task imageTask : createdTasks) {
-				application.addUserNotify(submission.getId(), imageTask.getId(),
-						imageTask.getImageTask().getCollectionTierName(), userEmail);
+	private void verifyEntryConsistance(Properties properties, String region, String dataSet,
+			String downloaderContainerRepository, String downloaderContainerTag,
+			String workerContainerRepository, String preProcessorContainerRepository,
+			String preProcessorContainerTag, String workerContainerTag) {
+		if (region == null || region.isEmpty() || dataSet == null || dataSet.isEmpty()) {
+			throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
+		}
+
+		if (downloaderContainerRepository == null || downloaderContainerRepository.isEmpty()) {
+			downloaderContainerRepository = properties
+					.getProperty(DEFAULT_DOWNLOADER_CONTAINER_REPOSITORY);
+			downloaderContainerTag = properties.getProperty(DEFAULT_DOWNLOADER_CONTAINER_TAG);
+
+			LOGGER.debug(
+					"Input Downloader container repository not passed...using default repository "
+							+ downloaderContainerRepository);
+		} else {
+			if (downloaderContainerTag == null || downloaderContainerTag.isEmpty()) {
+				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
+			}
+		}
+
+		if (preProcessorContainerRepository == null || preProcessorContainerRepository.isEmpty()) {
+			preProcessorContainerRepository = properties
+					.getProperty(DEFAULT_PREPROCESSOR_CONTAINER_REPOSITORY);
+			preProcessorContainerTag = properties.getProperty(DEFAULT_PREPROCESSOR_CONTAINER_TAG);
+
+			LOGGER.debug("Pre Processor container repository not passed...using default repository "
+					+ preProcessorContainerRepository);
+		} else {
+			if (preProcessorContainerTag == null || preProcessorContainerTag.isEmpty()) {
+				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
+			}
+		}
+
+		if (workerContainerRepository == null || workerContainerRepository.isEmpty()) {
+			workerContainerRepository = properties.getProperty(DEFAULT_WORKER_CONTAINER_REPOSITORY);
+			workerContainerTag = properties.getProperty(DEFAULT_WORKER_CONTAINER_TAG);
+
+			LOGGER.debug("SebalVersion not passed...using default repository "
+					+ workerContainerRepository);
+		} else {
+			if (workerContainerTag == null || workerContainerTag.isEmpty()) {
+				throw new ResourceException(HttpStatus.SC_BAD_REQUEST);
 			}
 		}
 	}

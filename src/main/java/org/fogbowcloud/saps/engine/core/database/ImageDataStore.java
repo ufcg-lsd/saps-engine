@@ -24,9 +24,13 @@ public interface ImageDataStore {
 	String DATASTORE_IP = "datastore_ip";
 	String DATASTORE_PORT = "datastore_port";
 
-	void addImageTask(String taskId, String imageName, String downloadLink, int priority,
-			String containerRepository, String containerTag, String collectionTierImageName)
-			throws SQLException;
+	void addImageTask(String taskId, String dataSet, String region, String date,
+			String downloadLink, int priority, String downloaderContainerRepository,
+			String downloaderContainerTag, String preProcessorContainerRepository,
+			String preProcessorContainerTag, String workerContainerRepository,
+			String workerContainerTag) throws SQLException;
+
+	void addImageTask(ImageTask imageTask) throws SQLException;
 
 	void addStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
 			throws SQLException;
@@ -34,7 +38,7 @@ public interface ImageDataStore {
 	void addUser(String userEmail, String userName, String userPass, boolean userState,
 			boolean userNotify, boolean adminRole) throws SQLException;
 
-	void addUserNotification(String submissionId, String taskId, String imageName, String userEmail)
+	void addUserNotification(String submissionId, String taskId, String userEmail)
 			throws SQLException;
 
 	void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember)
@@ -46,12 +50,11 @@ public interface ImageDataStore {
 
 	void updateUserState(String userEmail, boolean state) throws SQLException;
 
-	void updateImageTask(ImageTask imageData) throws SQLException;
+	void updateImageTask(ImageTask imageTask) throws SQLException;
 
-	void updateTaskState(String imageName, ImageTaskState state) throws SQLException;
+	void updateTaskState(String taskId, ImageTaskState state) throws SQLException;
 
-	void updateImageMetadata(String imageName, String stationId, String sebalVersion)
-			throws SQLException;
+	void updateImageMetadata(String taskId, String stationId) throws SQLException;
 
 	boolean isUserNotifiable(String userEmail) throws SQLException;
 
@@ -83,18 +86,18 @@ public interface ImageDataStore {
 
 	void dispose();
 
-	boolean lockTask(String imageName) throws SQLException;
+	boolean lockTask(String taskId) throws SQLException;
 
-	boolean unlockTask(String imageName) throws SQLException;
+	boolean unlockTask(String taskId) throws SQLException;
 
-	void removeNotification(String submissionId, String taskId, String imageName, String userEmail)
+	void removeNotification(String submissionId, String taskId, String userEmail)
 			throws SQLException;
 
-	void removeStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
+	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
 			throws SQLException;
 
 	void removeDeployConfig(String federationMember) throws SQLException;
 
-	List<ImageTask> getTasksByFilter(ImageTaskState state, String name, long processDateInit,
+	List<ImageTask> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
 			long processDateEnd) throws SQLException;
 }
