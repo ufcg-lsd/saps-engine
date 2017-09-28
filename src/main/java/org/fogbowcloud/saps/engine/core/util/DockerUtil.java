@@ -41,7 +41,7 @@ public class DockerUtil {
      */
     public static String runMappedContainer(String repository, String tag, String hostPath, String containerPath) {
         ProcessBuilder builder = new ProcessBuilder("docker", "run", "-td", "-v",
-                hostPath+":"+containerPath, repository);
+                hostPath+":"+containerPath, repository+":"+tag);
         LOGGER.debug("Running container: " + builder.command());
 
         try {
