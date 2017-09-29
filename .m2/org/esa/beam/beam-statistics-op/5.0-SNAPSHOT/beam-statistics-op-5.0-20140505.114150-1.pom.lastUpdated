@@ -1,0 +1,11 @@
+#NOTE: This is an Aether internal implementation file, its format can be changed without prior notice.
+#Mon Aug 31 10:35:19 BRT 2015
+https\://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/.error=
+https\://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/.lastUpdated=1441028118305
+http\://download.osgeo.org/webdav/geotools/.error=
+http\://maven.ourgrid.org/repos/.lastUpdated=1441028116499
+http\://maven.ourgrid.org/repos/.error=
+file\:///local/esdras/git/SEBAL/.m2/.lastUpdated=1441028116505
+http\://www.brockmann-consult.de/mvn/os/.lastUpdated=1441028119165
+file\:///local/esdras/git/SEBAL/.m2/.error=
+http\://download.osgeo.org/webdav/geotools/.lastUpdated=1441028117080

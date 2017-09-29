@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>org.esa.beam</groupId>
+  <artifactId>beam-ui</artifactId>
+  <version>5.0-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <timestamp>20140505.114105</timestamp>
+      <buildNumber>12</buildNumber>
+    </snapshot>
+    <lastUpdated>20140505114105</lastUpdated>
+    <snapshotVersions>
+      <snapshotVersion>
+        <extension>jar</extension>
+        <value>5.0-20140505.114105-12</value>
+        <updated>20140505114105</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>5.0-20140505.114105-12</value>
+        <updated>20140505114105</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <classifier>sources</classifier>
+        <extension>jar</extension>
+        <value>5.0-20140505.114105-12</value>
+        <updated>20140505114105</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <classifier>tests</classifier>
+        <extension>jar</extension>
+        <value>5.0-20140505.114105-12</value>
+        <updated>20140505114105</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+</metadata>
