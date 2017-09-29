@@ -1100,7 +1100,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatementLimit = connection.prepareStatement(SELECT_CREATED_IMAGE);
 			selectStatementLimit.setString(1, ImageTaskState.CREATED.getValue());
 			selectStatementLimit.setString(2, ImageTask.AVAILABLE);
-			selectStatementLimit.setInt(1, limit);
+			selectStatementLimit.setInt(3, limit);
 			selectStatementLimit.setQueryTimeout(300);
 			selectStatementLimit.execute();
 
