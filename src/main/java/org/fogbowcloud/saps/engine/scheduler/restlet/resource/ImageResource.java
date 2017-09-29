@@ -36,7 +36,7 @@ public class ImageResource extends BaseResource {
 	private static final String PREPROCESSOR_CONTAINER_TAG = "preProcessorContainerRepository";
 	private static final String PREPROCESSOR_CONTAINER_REPOSITORY = "preProcessorContainerTag";
 	private static final String WORKER_CONTAINER_REPOSITORY = "workerContainerRepository";
-	private static final String WORKER_CONTAINER_TAG = "containerTag";
+	private static final String WORKER_CONTAINER_TAG = "workerContainerTag";
 	private static final String DAY = "day";
 	private static final String FORCE = "force";
 
