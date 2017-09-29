@@ -1057,11 +1057,14 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	private static final String UPDATE_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME
 			+ " SET " + STATE_COL + " = ?, " + FEDERATION_MEMBER_COL + " = ?, " + UPDATED_TIME_COL
-			+ " = now() WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL + " = ? LIMIT ?";
+			+ " = now() WHERE " + TASK_ID_COL + " = ?";
 
 	private static final String SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER = "SELECT * FROM "
 			+ IMAGE_TABLE_NAME + " WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL
 			+ " = ? AND " + FEDERATION_MEMBER_COL + " = ? LIMIT ?";
+	
+	private static final String SELECT_CREATED_IMAGE = "SELECT * FROM " + IMAGE_TABLE_NAME
+			+ " WHERE " + STATE_COL + " = ? AND " + IMAGE_STATUS_COL + " = ? LIMIT ?";
 
 	/**
 	 * This method selects and locks all images marked as CREATED and updates to
@@ -1071,7 +1074,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	 */
 	@Override
 	public List<ImageTask> getImagesToDownload(String federationMember, int limit)
-			throws SQLException {
+			throws SQLException {	
+		// TODO: fix this method
 		/*
 		 * In future versions, if the crawler starts to use a multithread approach this
 		 * method needs to be reviewed to avoid concurrency problems between its
@@ -1087,17 +1091,28 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		PreparedStatement lockAndUpdateStatement = null;
 		PreparedStatement selectStatement = null;
+		PreparedStatement selectStatementLimit = null;
 		Connection connection = null;
 
 		try {
 			connection = getConnection();
 
+			selectStatementLimit = connection.prepareStatement(SELECT_CREATED_IMAGE);
+			selectStatementLimit.setString(1, ImageTaskState.CREATED.getValue());
+			selectStatementLimit.setString(2, ImageTask.AVAILABLE);
+			selectStatementLimit.setInt(1, limit);
+			selectStatementLimit.setQueryTimeout(300);
+			selectStatementLimit.execute();
+
+			ResultSet rs = selectStatementLimit.getResultSet();
+			List<ImageTask> createdImageTasks = extractImageTaskFrom(rs);
+			rs.close();
+
 			lockAndUpdateStatement = connection.prepareStatement(UPDATE_LIMITED_IMAGES_TO_DOWNLOAD);
 			lockAndUpdateStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);
-			lockAndUpdateStatement.setString(3, ImageTaskState.CREATED.getValue());
-			lockAndUpdateStatement.setString(4, ImageTask.AVAILABLE);
-			lockAndUpdateStatement.setInt(5, limit);
+			lockAndUpdateStatement.setString(3, createdImageTasks.get(0).getTaskId());
+			lockAndUpdateStatement.setInt(4, limit);
 			lockAndUpdateStatement.setQueryTimeout(300);
 			lockAndUpdateStatement.execute();
 
@@ -1110,10 +1125,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.setQueryTimeout(300);
 			selectStatement.execute();
 
-			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
+			rs = selectStatement.getResultSet();
+			List<ImageTask> downloadingImageTasks = extractImageTaskFrom(rs);
 			rs.close();
-			return imageDatas;
+			return downloadingImageTasks;
 		} finally {
 			close(selectStatement, null);
 			close(lockAndUpdateStatement, connection);
