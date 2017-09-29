@@ -6,7 +6,7 @@ print_menu() {
 	echo "Usage: $0 COMMAND [OPTIONS]"
 	echo "Commands are GET, POST or PURGE"
 	echo "GET | GET [image_name] -e | --email email"
-	echo "POST --first-year first-year --last-year last-year --region region --data-set data-set --downloader-repository downloader-repository --worker-repository worker-repository --worker-tag worker-tag -e | --email email"
+	echo "POST --first-year first-year --last-year last-year --region region --data-set data-set --downloader-repository downloader-repository --downloader-tag downloader-tag --preprocessor-repository preprocessor-repository --preprocessor-tag preprocessor-tag --worker-repository worker-repository --worker-tag worker-tag -e | --email email"
 	echo "PUT --image-name image-name --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
 	echo "PURGE [day] -f | --force -e | --email email"
 	echo "CREATEUSER -e | --email email -u | --user user-name -n | --notify yes|no"
@@ -81,6 +81,14 @@ define_parameters() {
                                 shift;
                                 downloader_tag=$1;
                                 ;;
+                        --preprocessor-repository)
+                                shift;
+                                preprocessor_repository=$1;
+                                ;;
+                        --preprocessor-tag)
+                                shift;
+                                preprocessor_tag=$1;
+                                ;;
 			--worker-repository)
 				shift;
 				worker_repository=$1;
@@ -122,7 +130,7 @@ do_post() {
 		echo "ERROR: --first-year, --last-year, --region and --data-set are mandatories"
 		print_menu
 	else
-        	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&dataSet=$data_set&downloaderContainerRepository=$downloader_repository&downloaderContainerTag=$downloader_tag&workerContainerRepository=$worker_repository&workerContainerTag=$worker_repository" "$host/images" 2> /dev/null)
+        	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&dataSet=$data_set&downloaderContainerRepository=$downloader_repository&downloaderContainerTag=$downloader_tag&preProcessorContainerRepository=$preprocessor_repository&preProcessorContainerTag=$preprocessor_tag&workerContainerRepository=$worker_repository&workerContainerTag=$worker_repository" "$host/images" 2> /dev/null)
 		echo $response
 	fi
 }
