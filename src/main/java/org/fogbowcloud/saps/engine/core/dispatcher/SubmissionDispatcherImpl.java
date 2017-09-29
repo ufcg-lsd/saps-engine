@@ -173,29 +173,16 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			throws IOException, ParseException {
 		LOGGER.debug("Regions: " + regions);
 		List<Task> createdTasks = new ArrayList<Task>();
-		String parsedDataSet = parseDataset(dataSet);
 
 		int priority = 0;
 		for (String region : regions) {
-			createdTasks.addAll(submitImagesForYears(parsedDataSet, firstYear, lastYear, region,
+			createdTasks.addAll(submitImagesForYears(dataSet, firstYear, lastYear, region,
 					downloaderContainerRepository, downloaderContainerTag,
 					preProcessorContainerRepository, preProcessorContainerTag,
 					workerContainerRepository, workerContainerTag, priority));
 			priority++;
 		}
 		return createdTasks;
-	}
-
-	private String parseDataset(String dataSet) {
-		if (dataSet.equals(SapsPropertiesConstants.DATASET_LT5_TYPE)) {
-			return SapsPropertiesConstants.LANDSAT_5_DATASET;
-		} else if (dataSet.equals(SapsPropertiesConstants.DATASET_LE7_TYPE)) {
-			return SapsPropertiesConstants.LANDSAT_7_DATASET;
-		} else if (dataSet.equals(SapsPropertiesConstants.DATASET_LC8_TYPE)) {
-			return SapsPropertiesConstants.LANDSAT_8_DATASET;
-		}
-
-		return null;
 	}
 
 	private List<Task> submitImagesForYears(String dataSet, String firstDate, String lastDate,
