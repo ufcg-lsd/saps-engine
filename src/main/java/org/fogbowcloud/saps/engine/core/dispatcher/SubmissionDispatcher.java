@@ -3,7 +3,6 @@ package org.fogbowcloud.saps.engine.core.dispatcher;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
 
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -21,10 +20,11 @@ public interface SubmissionDispatcher {
 	void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail)
 			throws SQLException;
 
-	List<Task> fillDB(Date firstYear, Date lastYear, List<String> regions, String dataSet,
+	List<Task> fillDB(String firstYear, String lastYear, List<String> regions, String dataSet,
 			String downloaderContainerRepository, String downloaderContainerTag,
 			String preProcessorContainerRepository, String preProcessorContainerTag,
-			String workerContainerRepository, String workerContainerTag) throws IOException;
+			String workerContainerRepository, String workerContainerTag)
+			throws IOException, ParseException;
 
 	List<Ward> getUsersToNotify() throws SQLException;
 

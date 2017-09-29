@@ -166,10 +166,11 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	@Override
-	public List<Task> fillDB(Date firstYear, Date lastYear, List<String> regions, String dataSet,
-			String downloaderContainerRepository, String downloaderContainerTag,
+	public List<Task> fillDB(String firstYear, String lastYear, List<String> regions,
+			String dataSet, String downloaderContainerRepository, String downloaderContainerTag,
 			String preProcessorContainerRepository, String preProcessorContainerTag,
-			String workerContainerRepository, String workerContainerTag) throws IOException {
+			String workerContainerRepository, String workerContainerTag)
+			throws IOException, ParseException {
 		LOGGER.debug("Regions: " + regions);
 		List<Task> createdTasks = new ArrayList<Task>();
 		String parsedDataSet = parseDataset(dataSet);
@@ -197,17 +198,21 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		return null;
 	}
 
-	private List<Task> submitImagesForYears(String dataSet, Date firstDate, Date lastDate,
+	private List<Task> submitImagesForYears(String dataSet, String firstDate, String lastDate,
 			String region, String downloaderContainerRepository, String downloaderContainerTag,
 			String preProcessorContainerRepository, String preProcessorContainerTag,
-			String workerContainerRepository, String workerContainerTag, int priority) {
+			String workerContainerRepository, String workerContainerTag, int priority)
+			throws ParseException {
 		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
-		LocalDate startDate = firstDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-		LocalDate endDate = lastDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-		List<Task> createdTasks = new ArrayList<Task>();
+		Date startDate = dateFormater.parse(firstDate);
+		Date endDate = dateFormater.parse(lastDate);
 
+		LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+		List<Task> createdTasks = new ArrayList<Task>();
 		try {
-			for (LocalDate date = startDate; date.isBefore(endDate); date.plusDays(1)) {
+			for (LocalDate date = start; date.isBefore(end); date.plusDays(1)) {
 				String taskId = UUID.randomUUID().toString();
 
 				getImageStore().addImageTask(taskId, dataSet, region, dateFormater.format(date),

@@ -2,7 +2,6 @@ package org.fogbowcloud.saps.engine.scheduler.restlet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -105,12 +104,13 @@ public class DatabaseApplication extends Application {
 	 * @throws SQLException
 	 * @throws NumberFormatException
 	 * @throws IOException
+	 * @throws ParseException 
 	 */
-	public List<Task> addTasks(Date firstYear, Date lastYear, String region, String dataSet,
+	public List<Task> addTasks(String firstYear, String lastYear, String region, String dataSet,
 			String downloaderContainerRepository, String downloaderContainerTag,
 			String preProcessorContainerRepository, String preProcessorContainerTag,
 			String workerContainerRepository, String workerContainerTag)
-			throws SQLException, NumberFormatException, IOException {
+			throws SQLException, NumberFormatException, IOException, ParseException {
 		List<String> regions = new ArrayList<String>();
 		regions.add(region);
 

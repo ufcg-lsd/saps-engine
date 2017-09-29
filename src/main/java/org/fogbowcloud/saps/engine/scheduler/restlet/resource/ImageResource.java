@@ -1,9 +1,6 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 
 import java.io.FileInputStream;
-import java.util.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -124,9 +121,8 @@ public class ImageResource extends BaseResource {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 		}
 
-		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-		Date firstYear = format.parse(form.getFirstValue(FIRST_YEAR));
-		Date lastYear = format.parse(form.getFirstValue(LAST_YEAR));
+		String firstYear = form.getFirstValue(FIRST_YEAR);
+		String lastYear = form.getFirstValue(LAST_YEAR);
 		String region = form.getFirstValue(REGION);
 		String dataSet = form.getFirstValue(DATASET);
 		String downloaderContainerRepository = form.getFirstValue(DOWNLOADER_CONTAINER_REPOSITORY);
