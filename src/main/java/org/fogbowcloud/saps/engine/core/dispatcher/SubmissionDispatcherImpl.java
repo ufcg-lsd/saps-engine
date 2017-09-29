@@ -1,15 +1,15 @@
 package org.fogbowcloud.saps.engine.core.dispatcher;
 
 import java.io.IOException;
-import java.util.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -206,31 +206,66 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		Date startDate = dateFormater.parse(firstDate);
 		Date endDate = dateFormater.parse(lastDate);
-
-		LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-		LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
 		List<Task> createdTasks = new ArrayList<Task>();
-		try {
-			for (LocalDate date = start; date.isBefore(end); date.plusDays(1)) {
-				String taskId = UUID.randomUUID().toString();
-
-				getImageStore().addImageTask(taskId, dataSet, region, dateFormater.format(date),
-						"None", priority, downloaderContainerRepository, downloaderContainerTag,
-						preProcessorContainerRepository, preProcessorContainerTag,
-						workerContainerRepository, workerContainerTag);
-				getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
-						getImageStore().getTask(taskId).getUpdateTime());
-
-				Task task = new Task(UUID.randomUUID().toString());
-				task.setImageTask(getImageStore().getTask(taskId));
-				createdTasks.add(task);
+		
+		for (int year = Integer.parseInt(getYearFromCalendar(startDate)); year <= Integer
+				.parseInt(getYearFromCalendar(endDate)); year++) {
+			GregorianCalendar cal = new GregorianCalendar();
+			int total = 365;
+			cal.set(Calendar.YEAR, year);
+			if (cal.isLeapYear(year)) {
+				total++;
 			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding image to database", e);
+
+			for (int d = 1; d <= total; d++) {
+				cal.set(Calendar.DAY_OF_YEAR, d);
+				Date date = cal.getTime();
+				try {
+					String taskId = UUID.randomUUID().toString();
+
+					getImageStore().addImageTask(taskId, dataSet, region, dateFormater.format(date),
+							"None", priority, downloaderContainerRepository, downloaderContainerTag,
+							preProcessorContainerRepository, preProcessorContainerTag,
+							workerContainerRepository, workerContainerTag);
+					getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
+							getImageStore().getTask(taskId).getUpdateTime());
+
+					Task task = new Task(UUID.randomUUID().toString());
+					task.setImageTask(getImageStore().getTask(taskId));
+					createdTasks.add(task);
+				} catch (SQLException e) {
+					LOGGER.error("Error while adding image to database", e);
+				}
+			}
 		}
 
+
 		return createdTasks;
+	}
+	
+	/**
+	 * Constructs a Calendar object, and then obtains the year
+	 * by using the Calendar.get(...) method for the year.
+	 */
+	public static String getYearFromCalendar(Date dte) throws IllegalArgumentException
+	{
+	    String year = "";
+
+	    if (dte == null) {
+	        throw new IllegalArgumentException("Null date!");
+	    }
+
+	    // get a Calendar
+	    Calendar cal = Calendar.getInstance();
+
+	    // set the Calendar to the specific date; the reason why
+	    // Calendar is deprecated is this mutability
+	    cal.setTime(dte);
+
+	    // get the year using the .get method, and convert to a String
+	    year = String.valueOf(cal.get(Calendar.YEAR));
+
+	    return year;
 	}
 
 	public List<ImageTask> getTaskListInDB() throws SQLException, ParseException {
