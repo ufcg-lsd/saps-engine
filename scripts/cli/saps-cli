@@ -1,12 +1,12 @@
 #!/bin/bash
 
-. sebal.properties
+. saps.properties
 
 print_menu() {
 	echo "Usage: $0 COMMAND [OPTIONS]"
 	echo "Commands are GET, POST or PURGE"
 	echo "GET | GET [image_name] -e | --email email"
-	echo "POST --first-year first-year --last-year last-year --region region --data-set data-set --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
+	echo "POST --first-year first-year --last-year last-year --region region --data-set data-set --downloader-repository downloader-repository --worker-repository worker-repository --worker-tag worker-tag -e | --email email"
 	echo "PUT --image-name image-name --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
 	echo "PURGE [day] -f | --force -e | --email email"
 	echo "CREATEUSER -e | --email email -u | --user user-name -n | --notify yes|no"
@@ -73,13 +73,21 @@ define_parameters() {
                                 shift;
                                 data_set=$1;
                                 ;;
-			--sebal-version)
+                        --downloader-repository)
+                                shift;
+                                downloader_repository=$1;
+                                ;;
+                        --downloader-tag)
+                                shift;
+                                downloader_tag=$1;
+                                ;;
+			--worker-repository)
 				shift;
-				sebal_version=$1;
+				worker_repository=$1;
 				;;
-			--sebal-tag)
+			--worker-tag)
 				shift;
-				sebal_tag=$1;
+				worker_tag=$1;
 				;;
 
 		esac
@@ -114,7 +122,7 @@ do_post() {
 		echo "ERROR: --first-year, --last-year, --region and --data-set are mandatories"
 		print_menu
 	else
-        	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&dataSet=$data_set&sebalVersion=$sebal_version&sebalTag=$sebal_tag" "$host/images" 2> /dev/null)
+        	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&dataSet=$data_set&downloaderContainerRepository=$downloader_repository&downloaderContainerTag=$downloader_tag&workerContainerRepository=$worker_repository&workerContainerTag=$worker_repository" "$host/images" 2> /dev/null)
 		echo $response
 	fi
 }
