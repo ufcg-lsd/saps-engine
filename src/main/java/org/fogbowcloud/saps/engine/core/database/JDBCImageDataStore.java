@@ -1112,7 +1112,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			lockAndUpdateStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);
 			lockAndUpdateStatement.setString(3, createdImageTasks.get(0).getTaskId());
-			lockAndUpdateStatement.setInt(4, limit);
 			lockAndUpdateStatement.setQueryTimeout(300);
 			lockAndUpdateStatement.execute();
 
