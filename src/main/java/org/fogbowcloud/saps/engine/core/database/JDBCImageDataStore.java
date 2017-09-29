@@ -504,7 +504,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	// TODO: verify this later
 	@Override
-	public boolean imageExist(String collectionTierImageName) throws SQLException {
+	public boolean taskExist(String collectionTierImageName) throws SQLException {
 		LOGGER.debug("Verifying if a image " + collectionTierImageName + " exist in database");
 
 		PreparedStatement statement = null;
@@ -1249,9 +1249,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public boolean lockTask(String taskId) throws SQLException {
 		if (taskId == null) {
-			LOGGER.error("Invalid imageName " + taskId);
+			LOGGER.error("Invalid taskId " + taskId);
 			throw new IllegalArgumentException("Invalid state " + taskId);
 		}
+		
 		PreparedStatement lockImageStatement = null;
 		Connection connection = null;
 
@@ -1286,7 +1287,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public boolean unlockTask(String taskId) throws SQLException {
 		if (taskId == null) {
-			LOGGER.error("Invalid imageName " + taskId);
+			LOGGER.error("Invalid taskId " + taskId);
 			throw new IllegalArgumentException("Invalid state " + taskId);
 		}
 		PreparedStatement selectStatement = null;

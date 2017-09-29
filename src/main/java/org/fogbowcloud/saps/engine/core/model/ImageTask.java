@@ -3,6 +3,8 @@ package org.fogbowcloud.saps.engine.core.model;
 import java.io.Serializable;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -257,9 +259,11 @@ public class ImageTask implements Serializable {
 	}
 
 	public String toString() {
-		return "[" + taskId + ", " + dataSet + ", " + region + ", " + imageDate.toString() + ", "
-				+ downloadLink + ", " + state.getValue() + ", " + federationMember + ", " + priority
-				+ ", " + stationId + ", " + downloaderContainerRepository + ", "
+		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
+
+		return "[" + taskId + ", " + dataSet + ", " + region + ", " + dateFormater.format(imageDate)
+				+ ", " + downloadLink + ", " + state.getValue() + ", " + federationMember + ", "
+				+ priority + ", " + stationId + ", " + downloaderContainerRepository + ", "
 				+ downloaderContainerTag + ", " + preProcessorContainerRepository + ", "
 				+ preProcessorContainerTag + ", " + workerContainerRepository + ", "
 				+ workerContainerTag + ", " + ", " + archiverVersion + ", " + blowoutVersion + ", "
@@ -267,8 +271,10 @@ public class ImageTask implements Serializable {
 	}
 
 	public String formatedToString() {
+		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
+
 		return "[ TaskId = " + taskId + " ]\n" + "[ DataSet = " + dataSet + " ]\n" + "[ Region = "
-				+ region + " ]\n" + "[ ImageDate = " + imageDate.toString() + " ]\n"
+				+ region + " ]\n" + "[ ImageDate = " + dateFormater.format(imageDate) + " ]\n"
 				+ "[ DownloadLink = " + downloadLink + " ]\n" + "[ ImageState = " + state.getValue()
 				+ " ]\n" + "[ FederationMember = " + federationMember + " ]\n" + "[ Priority = "
 				+ priority + " ]\n" + "[ StationId = " + stationId + " ]\n"
@@ -285,12 +291,13 @@ public class ImageTask implements Serializable {
 	}
 
 	public JSONObject toJSON() throws JSONException {
+		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		JSONObject json = new JSONObject();
 
 		json.put("taskId", taskId);
 		json.put("dataSet", dataSet);
 		json.put("region", region);
-		json.put("imageDate", imageDate.toString());
+		json.put("imageDate", dateFormater.format(imageDate));
 		json.put("downloadLink", downloadLink);
 		json.put("state", state.getValue());
 		json.put("federationMember", federationMember);

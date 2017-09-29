@@ -32,7 +32,7 @@ public interface ImageDataStore {
 
 	void addImageTask(ImageTask imageTask) throws SQLException;
 
-	void addStateStamp(String imageName, ImageTaskState state, Timestamp timestamp)
+	void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
 			throws SQLException;
 
 	void addUser(String userEmail, String userName, String userPass, boolean userState,
@@ -60,7 +60,7 @@ public interface ImageDataStore {
 
 	boolean deployConfigExists(String federationMember) throws SQLException;
 
-	boolean imageExist(String imageName) throws SQLException;
+	boolean taskExist(String taskId) throws SQLException;
 
 	List<Submission> getAllSubmissions() throws SQLException;
 
@@ -76,7 +76,7 @@ public interface ImageDataStore {
 
 	Submission getSubmission(String submissionId) throws SQLException;
 
-	ImageTask getTask(String imageName) throws SQLException;
+	ImageTask getTask(String taskId) throws SQLException;
 
 	SapsUser getUser(String userEmail) throws SQLException;
 

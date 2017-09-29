@@ -201,6 +201,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			String region, String downloaderContainerRepository, String downloaderContainerTag,
 			String preProcessorContainerRepository, String preProcessorContainerTag,
 			String workerContainerRepository, String workerContainerTag, int priority) {
+		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		LocalDate startDate = firstDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		LocalDate endDate = lastDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		List<Task> createdTasks = new ArrayList<Task>();
@@ -209,8 +210,8 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			for (LocalDate date = startDate; date.isBefore(endDate); date.plusDays(1)) {
 				String taskId = UUID.randomUUID().toString();
 
-				getImageStore().addImageTask(taskId, dataSet, region, date.toString(), "None",
-						priority, downloaderContainerRepository, downloaderContainerTag,
+				getImageStore().addImageTask(taskId, dataSet, region, dateFormater.format(date),
+						"None", priority, downloaderContainerRepository, downloaderContainerTag,
 						preProcessorContainerRepository, preProcessorContainerTag,
 						workerContainerRepository, workerContainerTag);
 				getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,

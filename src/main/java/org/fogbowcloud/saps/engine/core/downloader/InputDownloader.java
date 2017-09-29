@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -124,7 +126,7 @@ public class InputDownloader {
 				cleanUnfinishedQueuedOutput(properties);
 				purgeTasksFromVolume(properties);
 				removeFailedTasksFromVolume(properties);
-				deleteFetchedResultsFromVolume(properties);
+				deleteArchivedOutputsFromDisk(properties);
 
 				double numToDownload = numberOfImagesToDownload();
 				if (numToDownload > 0) {
@@ -168,7 +170,7 @@ public class InputDownloader {
 			throws SQLException, IOException {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.READY);
 		for (ImageTask imageTask : tasks) {
-			deleteResultsFromDisk(imageTask,
+			deleteOutputsFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 		}
 	}
@@ -179,7 +181,7 @@ public class InputDownloader {
 		for (ImageTask imageTask : tasks) {
 			deleteInputsFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
-			deleteResultsFromDisk(imageTask,
+			deleteOutputsFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
 		}
 	}
@@ -249,12 +251,12 @@ public class InputDownloader {
 	}
 
 	protected Timestamp getTaskUpdateTime(ImageTask imageTask) throws SQLException {
-		return imageStore.getTask(imageTask.getName()).getUpdateTime();
+		return imageStore.getTask(imageTask.getTaskId()).getUpdateTime();
 	}
 
 	protected void addStateStamp(ImageTask imageTask) {
 		try {
-			imageStore.addStateStamp(imageTask.getName(), imageTask.getState(),
+			imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
 					imageTask.getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
@@ -291,6 +293,8 @@ public class InputDownloader {
 	}
 
 	protected boolean downloadImage(final ImageTask imageTask) throws SQLException, IOException {
+		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
+
 		try {
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
 
@@ -301,20 +305,16 @@ public class InputDownloader {
 			String containerId = DockerUtil.runMappedContainer(
 					imageTask.getDownloaderContainerRepository(),
 					imageTask.getDownloaderContainerTag(),
-					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH),
+					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH) + "data"
+							+ File.separator + imageTask.getTaskId() + File.separator + "input",
 					properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH));
 
 			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
-					+ " " + imageTask.getCollectionTierName() + " " + imageTask.getName() + " "
+					+ " " + imageTask.getDataSet() + " " + imageTask.getRegion() + " " + " "
+					+ dateFormater.format(imageTask.getImageDate())
 					+ properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH);
 
-			DockerUtil.execDockerCommand(containerId, commandToRun);
-			DockerUtil.removeContainer(containerId);
-
-			getStationData(imageTask);
-			// TODO: insert here station download code
-
-			if (checkIfImageFileExists(imageTask)) {
+			if (DockerUtil.execDockerCommand(containerId, commandToRun) == 0) {
 				updateToDownloadedState(imageTask);
 
 				pendingTaskDownloadMap.remove(imageTask.getTaskId());
@@ -323,10 +323,11 @@ public class InputDownloader {
 				LOGGER.info("Image " + imageTask + " was downloaded");
 				return true;
 			} else {
-				LOGGER.debug("Error while downloading image " + imageTask.getCollectionTierName()
-						+ " from task " + imageTask);
+				LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId());
 				removeFromPendingAndUpdateState(imageTask, properties);
 			}
+
+			DockerUtil.removeContainer(containerId);
 		} catch (Exception e) {
 			LOGGER.error("Error when downloading image " + imageTask, e);
 			removeFromPendingAndUpdateState(imageTask, properties);
@@ -339,24 +340,6 @@ public class InputDownloader {
 		LOGGER.debug("Removing image task " + imageTask + " from pending image map");
 		pendingTaskDownloadMap.remove(imageTask.getTaskId());
 		pendingTaskDownloadDB.commit();
-	}
-
-	private void getStationData(ImageTask imageTask) {
-		// TODO Auto-generated method stub
-	}
-
-	private boolean checkIfImageFileExists(ImageTask imageTask) {
-		String imageInputFilePath = properties
-				.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH) + File.separator + "images"
-				+ File.separator + imageTask.getCollectionTierName() + File.separator
-				+ imageTask.getCollectionTierName() + ".tar.gz";
-		File imageInputFile = new File(imageInputFilePath);
-
-		if (imageInputFile != null && imageInputFile.exists()) {
-			return true;
-		}
-
-		return false;
 	}
 
 	private void updateToDownloadedState(final ImageTask imageTask) throws IOException {
@@ -379,7 +362,7 @@ public class InputDownloader {
 			LOGGER.debug("Rolling back " + imageTask + " to " + ImageTaskState.CREATED + " state");
 
 			try {
-				imageStore.removeStateStamp(imageTask.getName(), imageTask.getState(),
+				imageStore.removeStateStamp(imageTask.getTaskId(), imageTask.getState(),
 						imageTask.getUpdateTime());
 			} catch (SQLException e) {
 				LOGGER.error("Error while removing state " + imageTask.getState() + " timestamp "
@@ -393,8 +376,7 @@ public class InputDownloader {
 				imageStore.updateImageTask(imageTask);
 				imageTask.setUpdateTime(getTaskUpdateTime(imageTask));
 			} catch (SQLException e) {
-				LOGGER.error("Error while updating image " + imageTask.getCollectionTierName()
-						+ " from task " + imageTask.getTaskId(), e);
+				LOGGER.error("Error while updating task " + imageTask.getTaskId(), e);
 				imageTask.setFederationMember(federationMember);
 				imageTask.setState(ImageTaskState.DOWNLOADING);
 				return;
@@ -410,14 +392,14 @@ public class InputDownloader {
 
 	protected void deleteImageFromDisk(final ImageTask imageTask, String exportPath)
 			throws IOException {
-		String imageDirPath = exportPath + File.separator + "images" + File.separator
-				+ imageTask.getCollectionTierName();
-		File imageDir = new File(imageDirPath);
+		String imageDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "input";
+		File taskInputDir = new File(imageDirPath);
 
 		LOGGER.info("Removing task " + imageTask + " data under path " + imageDirPath);
 
-		if (isImageOnDisk(imageDirPath, imageDir)) {
-			FileUtils.deleteDirectory(imageDir);
+		if (isImageOnDisk(imageDirPath, taskInputDir)) {
+			FileUtils.cleanDirectory(taskInputDir);
 		}
 	}
 
@@ -429,28 +411,26 @@ public class InputDownloader {
 		return true;
 	}
 
-	protected void deleteFetchedResultsFromVolume(Properties properties)
+	protected void deleteArchivedOutputsFromDisk(Properties properties)
 			throws IOException, InterruptedException, SQLException {
 		List<ImageTask> allTasks = imageStore.getAllTasks();
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
-		String resultsPath = exportPath + File.separator + "results";
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageTask imageTask : allTasks) {
-				String imageResultsPath = resultsPath + File.separator
-						+ imageTask.getCollectionTierName();
-				File imageResultsDir = new File(imageResultsPath);
+				String taskOutputDirPath = exportPath + File.separator + imageTask.getTaskId()
+						+ File.separator + "data" + File.separator + "output";
+				File taskOutputDir = new File(taskOutputDirPath);
 
 				if (imageTask.getState().equals(ImageTaskState.ARCHIVED)
 						&& imageTask.getFederationMember().equals(federationMember)
-						&& imageResultsDir.exists()) {
-					LOGGER.debug("Image " + imageTask.getCollectionTierName() + " from task "
-							+ imageTask.getTaskId() + " archived");
+						&& taskOutputDir.exists()) {
+					LOGGER.debug("Task " + imageTask.getTaskId() + " already archived");
 					LOGGER.info("Removing " + imageTask);
 
 					try {
 						deleteInputsFromDisk(imageTask, exportPath);
-						deleteResultsFromDisk(imageTask, exportPath);
+						deleteOutputsFromDisk(imageTask, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageTask, e);
 					}
@@ -466,29 +446,29 @@ public class InputDownloader {
 	}
 
 	private void deleteInputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
-		String inputsDirPath = exportPath + File.separator + "images" + File.separator
-				+ imageTask.getCollectionTierName();
-		File inputsDir = new File(inputsDirPath);
+		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "input";
+		File inputDir = new File(inputDirPath);
 
-		if (!inputsDir.exists() || !inputsDir.isDirectory()) {
+		if (!inputDir.exists() || !inputDir.isDirectory()) {
 			return;
 		}
 
-		LOGGER.debug("Deleting inputs for " + imageTask + " from " + inputsDirPath);
-		FileUtils.deleteDirectory(inputsDir);
+		LOGGER.debug("Deleting input for " + imageTask + " from " + inputDirPath);
+		FileUtils.cleanDirectory(inputDir);
 	}
 
-	private void deleteResultsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
-		String resultsDirPath = exportPath + File.separator + "results" + File.separator
-				+ imageTask.getCollectionTierName();
-		File resultsDir = new File(resultsDirPath);
+	private void deleteOutputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
+		String outputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "output";
+		File outputDir = new File(outputDirPath);
 
-		if (!resultsDir.exists() || !resultsDir.isDirectory()) {
+		if (!outputDir.exists() || !outputDir.isDirectory()) {
 			return;
 		}
 
-		LOGGER.debug("Deleting results for " + imageTask + " from " + resultsDirPath);
-		FileUtils.deleteDirectory(resultsDir);
+		LOGGER.debug("Deleting output for " + imageTask + " from " + outputDirPath);
+		FileUtils.cleanDirectory(outputDir);
 	}
 
 	protected void purgeTasksFromVolume(Properties properties)
@@ -506,7 +486,7 @@ public class InputDownloader {
 					try {
 						deleteImageFromDisk(imageTask,
 								properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
-						deleteResultsFromDisk(imageTask, exportPath);
+						deleteOutputsFromDisk(imageTask, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageTask, e);
 					}
