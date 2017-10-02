@@ -19,15 +19,14 @@ import org.fogbowcloud.blowout.core.model.TaskImpl;
 public class SapsTask {
 
 	public static final String METADATA_TASK_ID = "task_id";
-	public static final String METADATA_REPOS_USER = "repository_user";
-	public static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
-	public static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
-	public static final String METADATA_VOLUME_EXPORT_PATH = "volume_export_path";
-	public static final String METADATA_MOUNT_POINT = "mount_point";
-	public static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
-	public static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
-	public static final String METADATA_TASK_START_EXECUTION_TIME = "task_execution_time";
-	public static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
+	private static final String METADATA_REPOS_USER = "repository_user";
+	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
+	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
+	private static final String METADATA_EXPORT_PATH = "volume_export_path";
+	private static final String METADATA_MOUNT_POINT = "mount_point";
+	private static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
+	private static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
+	private static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
 
 	private static final String WORKER_SANDBOX = "worker_sandbox";
 	private static final String WORKER_REMOTE_USER = "worker_remote_user";
@@ -50,8 +49,7 @@ public class SapsTask {
 		taskImpl.putMetadata(METADATA_TASK_ID, taskImpl.getId());
 		taskImpl.putMetadata(METADATA_WORKER_CONTAINER_REPOSITORY, workerContainerRepository);
 		taskImpl.putMetadata(METADATA_WORKER_CONTAINER_TAG, workerContainerTag);
-		taskImpl.putMetadata(METADATA_VOLUME_EXPORT_PATH,
-				properties.getProperty(WORKER_EXPORT_PATH));
+		taskImpl.putMetadata(METADATA_EXPORT_PATH, properties.getProperty(WORKER_EXPORT_PATH));
 		taskImpl.putMetadata(METADATA_MAX_TASK_EXECUTION_TIME,
 				properties.getProperty(METADATA_MAX_TASK_EXECUTION_TIME));
 
@@ -165,19 +163,21 @@ public class SapsTask {
 	}
 
 	public static String replaceVariables(Properties props, TaskImpl task, String command) {
+		command = command.replaceAll(Pattern.quote("${TASK_ID}"),
+				task.getMetadata(METADATA_TASK_ID));
 		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
 				task.getMetadata(TaskImpl.METADATA_SANDBOX));
-		command = command.replaceAll(Pattern.quote("${VOLUME_EXPORT_PATH}"),
-				task.getMetadata(METADATA_VOLUME_EXPORT_PATH));
-		command = command.replaceAll(Pattern.quote("${SEBAL_MOUNT_POINT}"),
+		command = command.replaceAll(Pattern.quote("${EXPORT_PATH}"),
+				task.getMetadata(METADATA_EXPORT_PATH));
+		command = command.replaceAll(Pattern.quote("${SAPS_MOUNT_POINT}"),
 				task.getMetadata(METADATA_MOUNT_POINT));
 		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
 				task.getMetadata(METADATA_NFS_SERVER_IP));
 		command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"),
 				task.getMetadata(METADATA_NFS_SERVER_PORT));
-		command = command.replaceAll(Pattern.quote("${CONTAINER_REPOSITORY}"),
+		command = command.replaceAll(Pattern.quote("${WORKER_CONTAINER_REPOSITORY}"),
 				task.getMetadata(METADATA_WORKER_CONTAINER_REPOSITORY));
-		command = command.replaceAll(Pattern.quote("${CONTAINER_TAG}"),
+		command = command.replaceAll(Pattern.quote("${WORKER_CONTAINER_TAG}"),
 				task.getMetadata(METADATA_WORKER_CONTAINER_TAG));
 		command = command.replaceAll(Pattern.quote("${REMOTE_COMMAND_EXIT_PATH}"),
 				task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH));
