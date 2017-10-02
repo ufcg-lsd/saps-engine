@@ -703,7 +703,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME
 			+ " SET download_link = ?, state = ?, federation_member = ?,"
-			+ " priority = ?, station_id = ?, container_repository = ?, container_tag = ?,"
+			+ " priority = ?, station_id = ?, worker_container_repository = ?, worker_container_tag = ?,"
 			+ " fetcher_version = ?," + " blowout_version = ?," + " utime = now(), status = ?,"
 			+ " error_msg = ? WHERE task_id = ?";
 
@@ -728,10 +728,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(5, imagetask.getStationId());
 			updateStatement.setString(6, imagetask.getWorkerContainerRepository());
 			updateStatement.setString(7, imagetask.getWorkerContainerTag());
-			updateStatement.setString(9, imagetask.getArchiverVersion());
-			updateStatement.setString(10, imagetask.getBlowoutVersion());
-			updateStatement.setString(12, imagetask.getImageStatus());
-			updateStatement.setString(13, imagetask.getImageError());
+			updateStatement.setString(8, imagetask.getArchiverVersion());
+			updateStatement.setString(9, imagetask.getBlowoutVersion());
+			updateStatement.setString(10, imagetask.getImageStatus());
+			updateStatement.setString(11, imagetask.getImageError());
+			updateStatement.setString(12, imagetask.getImageError());
 			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
