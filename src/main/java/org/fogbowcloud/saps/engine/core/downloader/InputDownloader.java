@@ -171,7 +171,7 @@ public class InputDownloader {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.READY);
 		for (ImageTask imageTask : tasks) {
 			deleteOutputsFromDisk(imageTask,
-					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 		}
 	}
 
@@ -180,14 +180,14 @@ public class InputDownloader {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.FAILED);
 		for (ImageTask imageTask : tasks) {
 			deleteInputsFromDisk(imageTask,
-					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 			deleteOutputsFromDisk(imageTask,
-					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 		}
 	}
 
 	protected File getImageDir(Properties properties, ImageTask imageTask) {
-		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 		String imageDirPath = exportPath + File.separator + "images" + File.separator
 				+ imageTask.getCollectionTierName();
 		File imageDir = new File(imageDirPath);
@@ -266,7 +266,7 @@ public class InputDownloader {
 
 	protected double numberOfImagesToDownload()
 			throws NumberFormatException, InterruptedException, IOException, SQLException {
-		String volumeDirPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
+		String volumeDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 		File volumePath = new File(volumeDirPath);
 		if (volumePath.exists() && volumePath.isDirectory()) {
 			double freeVolumeSpaceOutputDedicated = Double.valueOf(volumePath.getTotalSpace())
@@ -305,7 +305,7 @@ public class InputDownloader {
 			String containerId = DockerUtil.runMappedContainer(
 					imageTask.getDownloaderContainerRepository(),
 					imageTask.getDownloaderContainerTag(),
-					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH) + File.separator
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
 							+ "data" + File.separator + imageTask.getTaskId() + File.separator + "input",
 					properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH));
 
@@ -383,7 +383,7 @@ public class InputDownloader {
 			}
 
 			deleteImageFromDisk(imageTask,
-					properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 
 			removeTaskFromPendingMap(imageTask);
 			LOGGER.info("Image task " + imageTask + " rolled back");
@@ -414,7 +414,7 @@ public class InputDownloader {
 	protected void deleteArchivedOutputsFromDisk(Properties properties)
 			throws IOException, InterruptedException, SQLException {
 		List<ImageTask> allTasks = imageStore.getAllTasks();
-		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageTask imageTask : allTasks) {
@@ -475,7 +475,7 @@ public class InputDownloader {
 			throws IOException, InterruptedException, SQLException {
 		List<ImageTask> tasksToPurge = imageStore.getAllTasks();
 
-		String exportPath = properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
+		String exportPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageTask imageTask : tasksToPurge) {
@@ -485,7 +485,7 @@ public class InputDownloader {
 
 					try {
 						deleteImageFromDisk(imageTask,
-								properties.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH));
+								properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 						deleteOutputsFromDisk(imageTask, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageTask, e);

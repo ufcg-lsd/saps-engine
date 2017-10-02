@@ -102,7 +102,7 @@ public class SapsPropertiesConstants {
 	
 	// Monitors constants
 	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
-	public static final String SEBAL_EXECUTION_PERIOD = "sebal_execution_period";
+	public static final String SAPS_EXECUTION_PERIOD = "sebal_execution_period";
 	public static final String DEFAULT_FETCHER_PERIOD = "default_fetcher_period";
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
 	
@@ -123,7 +123,7 @@ public class SapsPropertiesConstants {
 	// Properties file constants
 	public static final String FMASK_VERSION_FILE_PATH = "fmask_version_file_path";
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
-	public static final String SEBAL_EXPORT_PATH = "sebal_export_path";
+	public static final String SAPS_EXPORT_PATH = "sebal_export_path";
 	public static final String SEBAL_CONTAINER_LINKED_PATH = "sebal_container_linked_path";
 	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
