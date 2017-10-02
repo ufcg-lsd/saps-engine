@@ -135,7 +135,8 @@ public class SapsController extends BlowoutController {
 			for (ImageTask imageTask : imageTasksToProcess) {
 				LOGGER.debug("Image task " + imageTask.getTaskId() + " is in the execution state "
 						+ imageTask.getState().getValue() + " (not finished).");
-				LOGGER.debug("Adding " + imageTaskState + " task for task " + imageTask.getTaskId());
+				LOGGER.debug(
+						"Adding " + imageTaskState + " task for task " + imageTask.getTaskId());
 
 				Specification specWithFederation = generateModifiedSpec(imageTask, workerSpec);
 				LOGGER.debug("specWithFederation " + specWithFederation.toString());
@@ -196,7 +197,8 @@ public class SapsController extends BlowoutController {
 				workerSpec.getPrivateKeyFilePath(), workerSpec.getUserDataFile(),
 				workerSpec.getUserDataType());
 		specWithFederation.putAllRequirements(workerSpec.getAllRequirements());
-		setFederationMemberIntoSpec(workerSpec, specWithFederation, imageTask.getFederationMember());
+		setFederationMemberIntoSpec(workerSpec, specWithFederation,
+				imageTask.getFederationMember());
 
 		return specWithFederation;
 	}
