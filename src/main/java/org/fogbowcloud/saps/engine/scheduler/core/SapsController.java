@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
@@ -64,24 +63,24 @@ public class SapsController extends BlowoutController {
 			LOGGER.debug("Imagestore " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + ":"
 					+ SapsPropertiesConstants.IMAGE_DATASTORE_IP);
 
-			final Specification sebalSpec = getSebalSpecFromFile(getProperties());
+			final Specification workerSpec = getWorkerSpecFromFile(getProperties());
 
 			blowoutControllerStart(removePreviousResouces);
-			schedulePreviousTasks(sebalSpec);
-			scheduleTasksPeriodically(sebalSpec);
+			schedulePreviousTasks(workerSpec);
+			scheduleTasksPeriodically(workerSpec);
 		} catch (Exception e) {
 			LOGGER.error("Error while starting SebalController", e);
 		}
 	}
 
-	private void schedulePreviousTasks(final Specification sebalSpec) {
+	private void schedulePreviousTasks(final Specification workerSpec) {
 		// In case of the process has been stopped before finishing the images
 		// running
 		// in the next restart all images in running state will be reseted to
 		// queued state
 		try {
 			resetImagesRunningToQueued();
-			addSebalTasks(properties, sebalSpec, ImageTaskState.READY);
+			addSapsTasks(properties, workerSpec, ImageTaskState.READY);
 		} catch (Exception e) {
 			LOGGER.error("Error while adding previous tasks", e);
 		}
@@ -105,48 +104,47 @@ public class SapsController extends BlowoutController {
 		getBlowoutPool().start(getInfraManager(), getSchedulerInterface());
 	}
 
-	private void scheduleTasksPeriodically(final Specification sebalSpec) {
+	private void scheduleTasksPeriodically(final Specification workerSpec) {
 		sapsExecutionTimer.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					addSebalTasks(properties, sebalSpec, ImageTaskState.DOWNLOADED);
+					addSapsTasks(properties, workerSpec, ImageTaskState.DOWNLOADED);
 				} catch (Exception e) {
-					LOGGER.error("Error while adding R tasks", e);
+					LOGGER.error("Error while adding tasks", e);
 				}
 			}
 
 		}, 0, Integer
-				.parseInt(properties.getProperty(SapsPropertiesConstants.SEBAL_EXECUTION_PERIOD)));
+				.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD)));
 	}
 
 	private static void resetImagesRunningToQueued() throws SQLException {
-		List<ImageTask> imagesRunning = imageStore.getIn(ImageTaskState.RUNNING);
-		for (ImageTask imageData : imagesRunning) {
-			imageData.setState(ImageTaskState.READY);
-			imageStore.updateImageTask(imageData);
+		List<ImageTask> imageTasksRunning = imageStore.getIn(ImageTaskState.RUNNING);
+		for (ImageTask imageTask : imageTasksRunning) {
+			imageTask.setState(ImageTaskState.READY);
+			imageStore.updateImageTask(imageTask);
 		}
 	}
 
-	private void addSebalTasks(final Properties properties, final Specification sebalSpec,
-			ImageTaskState imageState) throws InterruptedException, SapsException {
+	private void addSapsTasks(final Properties properties, final Specification workerSpec,
+			ImageTaskState imageTaskState) throws InterruptedException, SapsException {
 		try {
-			List<ImageTask> imagesToProcess = imageStore.getIn(imageState,
+			List<ImageTask> imageTasksToProcess = imageStore.getIn(imageTaskState,
 					ImageDataStore.UNLIMITED);
-			for (ImageTask imageData : imagesToProcess) {
-				LOGGER.debug("The image " + imageData.getName() + " is in the execution state "
-						+ imageData.getState().getValue() + " (not finished).");
-				LOGGER.debug("Adding " + imageState + " task for image " + imageData.getName());
+			for (ImageTask imageTask : imageTasksToProcess) {
+				LOGGER.debug("Image task " + imageTask.getTaskId() + " is in the execution state "
+						+ imageTask.getState().getValue() + " (not finished).");
+				LOGGER.debug("Adding " + imageTaskState + " task for task " + imageTask.getTaskId());
 
-				Specification specWithFederation = generateModifiedSpec(imageData, sebalSpec);
+				Specification specWithFederation = generateModifiedSpec(imageTask, workerSpec);
 				LOGGER.debug("specWithFederation " + specWithFederation.toString());
 
-				if (ImageTaskState.READY.equals(imageState)
-						|| ImageTaskState.DOWNLOADED.equals(imageState)) {
-					TaskImpl taskImpl = new TaskImpl(UUID.randomUUID().toString(),
-							specWithFederation);
+				if (ImageTaskState.READY.equals(imageTaskState)
+						|| ImageTaskState.DOWNLOADED.equals(imageTaskState)) {
+					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation);
 					Map<String, String> nfsConfig = imageStore
-							.getFederationNFSConfig(imageData.getFederationMember());
+							.getFederationNFSConfig(imageTask.getFederationMember());
 
 					Iterator it = nfsConfig.entrySet().iterator();
 					while (it.hasNext()) {
@@ -156,32 +154,31 @@ public class SapsController extends BlowoutController {
 						it.remove(); // avoids a ConcurrentModificationException
 					}
 
-					LOGGER.debug("Creating Sebal task " + taskImpl.getId());
+					LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
 
-					taskImpl = SapsTask.createSebalTask(taskImpl, properties, imageData.getName(),
-							imageData.getCollectionTierName(), specWithFederation,
-							imageData.getFederationMember(), nfsServerIP, nfsServerPort,
-							imageData.getWorkerContainerRepository(),
-							imageData.getWorkerContainerTag());
+					taskImpl = SapsTask.createSapsTask(taskImpl, properties, specWithFederation,
+							imageTask.getFederationMember(), nfsServerIP, nfsServerPort,
+							imageTask.getWorkerContainerRepository(),
+							imageTask.getWorkerContainerTag());
 
-					imageData.setState(ImageTaskState.READY);
-					imageData.setBlowoutVersion(getBlowoutVersion(properties));
+					imageTask.setState(ImageTaskState.READY);
+					imageTask.setBlowoutVersion(getBlowoutVersion(properties));
 					addTask(taskImpl);
 
-					imageStore.updateImageTask(imageData);
-					imageData
-							.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
+					imageStore.updateImageTask(imageTask);
+					imageTask.setUpdateTime(
+							imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 					try {
-						imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-								imageData.getUpdateTime());
+						imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+								imageTask.getUpdateTime());
 					} catch (SQLException e) {
-						LOGGER.error("Error while adding state " + imageData.getState()
-								+ " timestamp " + imageData.getUpdateTime() + " in DB", e);
+						LOGGER.error("Error while adding state " + imageTask.getState()
+								+ " timestamp " + imageTask.getUpdateTime() + " in Catalogue", e);
 					}
 				}
 			}
 		} catch (SQLException e) {
-			LOGGER.error("Error while getting image.", e);
+			LOGGER.error("Error while getting task.", e);
 		}
 	}
 
@@ -193,13 +190,13 @@ public class SapsController extends BlowoutController {
 		getBlowoutPool().putTask(taskImpl);
 	}
 
-	private Specification generateModifiedSpec(ImageTask imageData, Specification sebalSpec) {
-		Specification specWithFederation = new Specification(sebalSpec.getImage(),
-				sebalSpec.getUsername(), sebalSpec.getPublicKey(),
-				sebalSpec.getPrivateKeyFilePath(), sebalSpec.getUserDataFile(),
-				sebalSpec.getUserDataType());
-		specWithFederation.putAllRequirements(sebalSpec.getAllRequirements());
-		setFederationMemberIntoSpec(sebalSpec, specWithFederation, imageData.getFederationMember());
+	private Specification generateModifiedSpec(ImageTask imageTask, Specification workerSpec) {
+		Specification specWithFederation = new Specification(workerSpec.getImage(),
+				workerSpec.getUsername(), workerSpec.getPublicKey(),
+				workerSpec.getPrivateKeyFilePath(), workerSpec.getUserDataFile(),
+				workerSpec.getUserDataType());
+		specWithFederation.putAllRequirements(workerSpec.getAllRequirements());
+		setFederationMemberIntoSpec(workerSpec, specWithFederation, imageTask.getFederationMember());
 
 		return specWithFederation;
 	}
@@ -233,19 +230,19 @@ public class SapsController extends BlowoutController {
 		return null;
 	}
 
-	private static Specification getSebalSpecFromFile(Properties properties) {
-		String sebalSpecFile = properties
+	private static Specification getWorkerSpecFromFile(Properties properties) {
+		String workerSpecFile = properties
 				.getProperty(SapsPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
 		List<Specification> specs = new ArrayList<Specification>();
 
 		try {
-			specs = Specification.getSpecificationsFromJSonFile(sebalSpecFile);
+			specs = Specification.getSpecificationsFromJSonFile(workerSpecFile);
 			if (specs != null && !specs.isEmpty()) {
 				return specs.get(Constants.LIST_ARRAY_FIRST_ELEMENT);
 			}
 			return null;
 		} catch (IOException e) {
-			LOGGER.error("Error while getting spec from file " + sebalSpecFile, e);
+			LOGGER.error("Error while getting spec from file " + workerSpecFile, e);
 			return null;
 		}
 	}
@@ -286,13 +283,13 @@ public class SapsController extends BlowoutController {
 					+ " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SapsPropertiesConstants.SEBAL_EXECUTION_PERIOD)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.SEBAL_EXECUTION_PERIOD
+		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD
 					+ " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SapsPropertiesConstants.SEBAL_EXPORT_PATH)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.SEBAL_EXPORT_PATH
+		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXPORT_PATH)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXPORT_PATH
 					+ " was not set");
 			return false;
 		}

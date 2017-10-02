@@ -148,7 +148,7 @@ public class TestInputDownloaderIntegration {
 		doReturn(imageList).when(imageStore).getIn(ImageTaskState.FINISHED);
 
 		doReturn(sebalExportPath).when(properties)
-				.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
+				.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
 				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
@@ -185,7 +185,7 @@ public class TestInputDownloaderIntegration {
 		imageList.add(taskTwo);
 
 		doReturn(sebalExportPath).when(properties)
-				.getProperty(SapsPropertiesConstants.SEBAL_EXPORT_PATH);
+				.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 
 		doReturn(imageList).when(imageStore).getAllTasks();
 
