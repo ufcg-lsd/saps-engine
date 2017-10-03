@@ -21,6 +21,7 @@ import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,13 +35,14 @@ public class TestInputDownloaderIntegration {
 		properties = mock(Properties.class);
 	}
 
-	@Before
+	@After
 	public void clean() {
-		String pendingImageFileName = "pending-image-download.db";
-		File pendingImageDBFile = new File(pendingImageFileName);
-
-		if (pendingImageDBFile.exists()) {
-			FileUtils.deleteQuietly(pendingImageDBFile);
+		String[] pendingTasks = {"pending-task-download.db", "pending-task-download.db.p", "pending-task-download.db.t"};
+		for(String pendingTask: pendingTasks){
+			File pendingImageDBFile = new File(pendingTask);
+			if (pendingImageDBFile.exists()) {
+				FileUtils.deleteQuietly(pendingImageDBFile);
+			}
 		}
 	}
 
@@ -77,7 +79,7 @@ public class TestInputDownloaderIntegration {
 
 		doReturn(imageList).when(imageStore).getImagesToDownload(federationMember,
 				InputDownloader.MAX_IMAGES_TO_DOWNLOAD);
-		doReturn(taskOne).when(imageStore).getTask(taskOne.getName());
+		doReturn(taskOne).when(imageStore).getTask(taskOne.getTaskId());
 		doReturn("link-1").when(usgsRepository).getImageDownloadLink(taskOne.getName());
 		doThrow(new IOException()).when(usgsRepository).downloadImage(taskOne);
 
