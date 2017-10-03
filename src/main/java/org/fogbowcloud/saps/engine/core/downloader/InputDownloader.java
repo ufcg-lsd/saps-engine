@@ -191,18 +191,18 @@ public class InputDownloader {
 		}
 	}
 
-	protected File getImageDir(Properties properties, ImageTask imageTask) {
+	protected File getInputDir(Properties properties, ImageTask imageTask) {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-		String imageDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
 				+ "data" + File.separator + "input";
-		File imageDir = new File(imageDirPath);
+		File imageDir = new File(inputDirPath);
 		return imageDir;
 	}
 
-	protected boolean isThereImageInputs(File imageDir) {
-		if (imageDir.exists() && imageDir.list().length > 0) {
-			for (File file : imageDir.listFiles()) {
-				if (file.getName().endsWith("MTLFmask")) {
+	protected boolean isThereTaskInputs(File taskDir) {
+		if (taskDir.exists() && taskDir.list().length > 0) {
+			for (File file : taskDir.listFiles()) {
+				if (file.getName().endsWith("MTL.txt")) {
 					return true;
 				}
 			}
@@ -272,7 +272,7 @@ public class InputDownloader {
 		File exportDir = new File(exportDirPath);
 
 		double maxInputUsage = Integer
-				.valueOf(properties.getProperty(SapsPropertiesConstants.MAX_TASKS_TO_DOWNLOAD))
+				.valueOf(properties.getProperty(SapsPropertiesConstants.MAX_NUMBER_OF_TASKS))
 				* DEFAULT_IMAGE_DIR_SIZE;
 
 		double numberOfImagesToDownload = 0.0;
