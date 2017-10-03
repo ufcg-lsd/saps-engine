@@ -188,8 +188,8 @@ public class InputDownloader {
 
 	protected File getImageDir(Properties properties, ImageTask imageTask) {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-		String imageDirPath = exportPath + File.separator + "images" + File.separator
-				+ imageTask.getCollectionTierName();
+		String imageDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "input";
 		File imageDir = new File(imageDirPath);
 		return imageDir;
 	}
@@ -228,17 +228,14 @@ public class InputDownloader {
 				if (imageTask != null) {
 					addStateStamp(imageTask);
 
-					LOGGER.debug("Adding image " + imageTask.getCollectionTierName() + " from task "
-							+ imageTask.getTaskId() + " to pending database");
+					LOGGER.debug("Adding task " + imageTask.getTaskId() + " to pending database");
 					addTaskToPendingMap(imageTask);
 
 					boolean isDownloadCompleted = downloadImage(imageTask);
 					if (isDownloadCompleted) {
-						LOGGER.info("Image " + imageTask.getCollectionTierName()
-								+ " download for task " + imageTask + " is completed");
+						LOGGER.info("Task " + imageTask.getTaskId() + " download is completed");
 					} else {
-						LOGGER.info("Image " + imageTask.getCollectionTierName()
-								+ " download for task " + imageTask + " failed");
+						LOGGER.info("Task " + imageTask.getTaskId() + " download failed");
 					}
 				}
 			}

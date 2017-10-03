@@ -77,7 +77,7 @@ public class TestInputDownloaderIntegration {
 
 		doReturn(imageList).when(imageStore).getImagesToDownload(federationMember,
 				InputDownloader.MAX_IMAGES_TO_DOWNLOAD);
-		doReturn(taskOne).when(imageStore).getTask(taskOne.getName());
+		doReturn(taskOne).when(imageStore).getTask(taskOne.getTaskId());
 		doReturn("link-1").when(usgsRepository).getImageDownloadLink(taskOne.getName());
 		doThrow(new IOException()).when(usgsRepository).downloadImage(taskOne);
 
