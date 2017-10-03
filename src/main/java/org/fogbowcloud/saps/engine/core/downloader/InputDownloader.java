@@ -29,9 +29,9 @@ public class InputDownloader {
 
 	private final Properties properties;
 	private final ImageDataStore imageStore;
-	private String crawlerIp;
-	private String crawlerPort;
-	private String nfsPort;
+	private String inputDownloaderIp;
+	private String inputDownloaderPort;
+	private String inputDownloaderNfsPort;
 	private String federationMember;
 	private File pendingImageDownloadFile;
 
@@ -46,26 +46,28 @@ public class InputDownloader {
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
 
-	public InputDownloader(Properties properties, String inputDownloderIp, String InputDownloaderSshPort,
-			String nfsPort, String federationMember) throws SQLException {
+	public InputDownloader(Properties properties, String inputDownloderIp,
+			String InputDownloaderSshPort, String inputDownloaderNfsPort, String federationMember)
+			throws SQLException {
 		this(properties, new JDBCImageDataStore(properties), inputDownloderIp,
-				InputDownloaderSshPort, nfsPort, federationMember);
-		LOGGER.info("Creating crawler in federation " + federationMember);
+				InputDownloaderSshPort, inputDownloaderNfsPort, federationMember);
+		LOGGER.info("Creating Input Downloader in federation " + federationMember);
 	}
 
-	protected InputDownloader(Properties properties, ImageDataStore imageStore, String crawlerIP,
-			String crawlerPort, String nfsPort, String federationMember) {
+	protected InputDownloader(Properties properties, ImageDataStore imageStore,
+			String inputDownloaderIP, String inputDownloaderPort, String inputDownloaderNfsPort,
+			String federationMember) {
 		try {
-			checkProperties(properties, imageStore, crawlerIP, crawlerPort, nfsPort,
-					federationMember);
+			checkProperties(properties, imageStore, inputDownloaderIP, inputDownloaderPort,
+					inputDownloaderNfsPort, federationMember);
 		} catch (IllegalArgumentException e) {
 			LOGGER.error("Error while getting properties", e);
 			System.exit(1);
 		}
 
-		this.crawlerIp = crawlerIP;
-		this.crawlerPort = crawlerPort;
-		this.nfsPort = nfsPort;
+		this.inputDownloaderIp = inputDownloaderIP;
+		this.inputDownloaderPort = inputDownloaderPort;
+		this.inputDownloaderNfsPort = inputDownloaderNfsPort;
 
 		this.properties = properties;
 		this.imageStore = imageStore;
@@ -83,9 +85,9 @@ public class InputDownloader {
 		}
 	}
 
-	private void checkProperties(Properties properties, ImageDataStore imageStore, String crawlerIP,
-			String crawlerPort, String nfsPort, String federationMember)
-			throws IllegalArgumentException {
+	private void checkProperties(Properties properties, ImageDataStore imageStore,
+			String inputDownloaderIP, String inputDownloaderPort, String inputDownloaderNfsPort,
+			String federationMember) throws IllegalArgumentException {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
@@ -94,19 +96,19 @@ public class InputDownloader {
 			throw new IllegalArgumentException("Imagestore arg must not be null.");
 		}
 
-		if (crawlerIP == null) {
+		if (inputDownloaderIP == null) {
 			throw new IllegalArgumentException("Crawler IP arg must not be null.");
 		}
 
-		if (crawlerPort == null) {
+		if (inputDownloaderPort == null) {
 			throw new IllegalArgumentException("Crawler Port arg must not be null.");
 		}
 
-		if (crawlerPort.isEmpty()) {
+		if (inputDownloaderPort.isEmpty()) {
 			throw new IllegalArgumentException("Crawler Port arg must not be null.");
 		}
 
-		if (nfsPort == null) {
+		if (inputDownloaderNfsPort == null) {
 			throw new IllegalArgumentException("NFS Port arg must not be null.");
 		}
 
@@ -144,14 +146,15 @@ public class InputDownloader {
 			pendingTaskDownloadDB.close();
 		}
 	}
-	
+
 	private void registerDeployConfig() {
 		try {
 			if (imageStore.deployConfigExists(federationMember)) {
 				imageStore.removeDeployConfig(federationMember);
 			}
 
-			imageStore.addDeployConfig(crawlerIp, crawlerPort, nfsPort, federationMember);
+			imageStore.addDeployConfig(inputDownloaderIp, inputDownloaderPort,
+					inputDownloaderNfsPort, federationMember);
 		} catch (SQLException e) {
 			final String ss = e.getSQLState();
 			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {
@@ -312,7 +315,7 @@ public class InputDownloader {
 
 		return numberOfImagesToDownload;
 	}
-	
+
 	private static String getProcessOutput(Process p) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		StringBuilder stringBuilder = new StringBuilder();
@@ -341,8 +344,9 @@ public class InputDownloader {
 			String containerId = DockerUtil.runMappedContainer(
 					imageTask.getDownloaderContainerRepository(),
 					imageTask.getDownloaderContainerTag(),
-					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
-							+ "data" + File.separator + imageTask.getTaskId() + File.separator + "input",
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+							+ File.separator + "data" + File.separator + imageTask.getTaskId()
+							+ File.separator + "input",
 					properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH));
 
 			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
