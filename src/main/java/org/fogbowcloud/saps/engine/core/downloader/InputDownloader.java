@@ -1,7 +1,9 @@
 package org.fogbowcloud.saps.engine.core.downloader;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -263,26 +265,63 @@ public class InputDownloader {
 
 	protected double numberOfImagesToDownload()
 			throws NumberFormatException, InterruptedException, IOException, SQLException {
-		String volumeDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-		File volumePath = new File(volumeDirPath);
-		if (volumePath.exists() && volumePath.isDirectory()) {
-			double freeVolumeSpaceOutputDedicated = Double.valueOf(volumePath.getTotalSpace())
-					* 0.2;
-			double availableVolumeSpace = volumePath.getUsableSpace()
-					- freeVolumeSpaceOutputDedicated;
-			double numberOfImagesToDownload = availableVolumeSpace / DEFAULT_IMAGE_DIR_SIZE;
+		String exportDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+		File exportDir = new File(exportDirPath);
 
-			LOGGER.debug("totalDisk=" + Double.valueOf(volumePath.getTotalSpace()));
-			LOGGER.debug("freeVolumeSpaceOutputDedicated=" + freeVolumeSpaceOutputDedicated);
-			LOGGER.debug("freeDisk=" + Double.valueOf(volumePath.getUsableSpace()));
-			LOGGER.debug("availableVolumeSpace=" + availableVolumeSpace);
-			LOGGER.debug("numberOfImagesToDownload=" + numberOfImagesToDownload);
+		double maxInputUsage = Integer
+				.valueOf(properties.getProperty(SapsPropertiesConstants.MAX_TASKS_TO_DOWNLOAD))
+				* DEFAULT_IMAGE_DIR_SIZE;
 
-			return numberOfImagesToDownload;
+		double numberOfImagesToDownload = 0.0;
+		double cumulativeInputUsage = 0.0;
+		String actualInputUsage = null;
+
+		if (exportDir.exists() && exportDir.isDirectory()) {
+			String[] taskDirNames = exportDir.list();
+			for (String taskDir : taskDirNames) {
+				String inputDirPath = exportDirPath + File.separator + taskDir + File.separator
+						+ "data" + File.separator + "input";
+
+				ProcessBuilder builder = new ProcessBuilder("du", "-sh", "-b", inputDirPath);
+				LOGGER.debug("Executing command " + builder.command());
+
+				try {
+					Process p = builder.start();
+					p.waitFor();
+
+					actualInputUsage = getProcessOutput(p);
+					String[] splited = actualInputUsage.split("\\s+");
+					actualInputUsage = splited[0];
+
+					cumulativeInputUsage += Double.valueOf(actualInputUsage);
+				} catch (Exception e) {
+					LOGGER.error("Error while getting input disk usage", e);
+				}
+			}
+
+			double freeDisk = maxInputUsage - cumulativeInputUsage;
+			numberOfImagesToDownload = freeDisk / DEFAULT_IMAGE_DIR_SIZE;
+
+			LOGGER.info("maxInputUsage=" + maxInputUsage);
+			LOGGER.info("cumulativeInputUsage=" + cumulativeInputUsage);
+			LOGGER.info("numberOfImagesToDownload=" + numberOfImagesToDownload);
 		} else {
 			throw new RuntimeException(
-					"VolumePath: " + volumeDirPath + " is not a directory or does not exist");
+					"ExportDirPath: " + exportDirPath + " is not a directory or does not exist");
 		}
+
+		return numberOfImagesToDownload;
+	}
+	
+	private static String getProcessOutput(Process p) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		StringBuilder stringBuilder = new StringBuilder();
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			stringBuilder.append(line);
+			stringBuilder.append(System.getProperty("line.separator"));
+		}
+		return stringBuilder.toString();
 	}
 
 	protected File getExportDirPath(String volumeDirPath) {

@@ -120,6 +120,9 @@ public class SapsPropertiesConstants {
 	public static final String FMASK_SCRIPT_PATH = "fmask_script_path";
 	public static final String FMASK_TOOL_PATH = "fmask_tool_path";
 	
+	// Quantities constants
+	public static final String MAX_TASKS_TO_DOWNLOAD = "max_tasks_to_download";
+
 	// Properties file constants
 	public static final String FMASK_VERSION_FILE_PATH = "fmask_version_file_path";
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
