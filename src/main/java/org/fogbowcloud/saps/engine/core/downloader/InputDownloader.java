@@ -401,24 +401,26 @@ public class InputDownloader {
 
 	private void prepareTaskDirStructure(ImageTask imageTask) throws Exception {
 		LOGGER.info("Creating directory structure for task" + imageTask.getTaskId());
-		
+
 		String inputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ imageTask.getTaskId() + File.separator + "data" + File.separator + "input";
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "input";
 		String outputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ imageTask.getTaskId() + File.separator + "data" + File.separator + "output";
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "output";
 		String preProcessDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
 				+ "preprocessing";
 		String metadataDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ imageTask.getTaskId() + File.separator + "metadata";
+				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
 
 		File inputDir = new File(inputDirPath);
 		File outputDir = new File(outputDirPath);
 		File preProcessDir = new File(preProcessDirPath);
 		File metadataDir = new File(metadataDirPath);
 
-		if (inputDir.mkdirs() || outputDir.mkdirs() || preProcessDir.mkdirs()
-				|| metadataDir.mkdirs()) {
+		if (!inputDir.mkdirs() || !outputDir.mkdirs() || !preProcessDir.mkdirs()
+				|| !metadataDir.mkdirs()) {
 			throw new Exception(
 					"Error while creating directories for task " + imageTask.getTaskId());
 		}
