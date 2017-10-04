@@ -1,7 +1,9 @@
 package org.fogbowcloud.saps.engine.core.downloader;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -27,10 +29,10 @@ public class InputDownloader {
 
 	private final Properties properties;
 	private final ImageDataStore imageStore;
+	private String inputDownloaderIp;
+	private String inputDownloaderPort;
+	private String inputDownloaderNfsPort;
 	private final int maxDownloadAttempts;
-	private String crawlerIp;
-	private String crawlerPort;
-	private String nfsPort;
 	private String federationMember;
 	private File pendingImageDownloadFile;
 
@@ -46,26 +48,28 @@ public class InputDownloader {
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
 
-	public InputDownloader(Properties properties, String inputDownloderIp, String InputDownloaderSshPort,
-			String nfsPort, String federationMember) throws SQLException {
+	public InputDownloader(Properties properties, String inputDownloderIp,
+			String InputDownloaderSshPort, String inputDownloaderNfsPort, String federationMember)
+			throws SQLException {
 		this(properties, new JDBCImageDataStore(properties), inputDownloderIp,
-				InputDownloaderSshPort, nfsPort, federationMember);
-		LOGGER.info("Creating crawler in federation " + federationMember);
+				InputDownloaderSshPort, inputDownloaderNfsPort, federationMember);
+		LOGGER.info("Creating Input Downloader in federation " + federationMember);
 	}
 
-	protected InputDownloader(Properties properties, ImageDataStore imageStore, String crawlerIP,
-			String crawlerPort, String nfsPort, String federationMember) {
+	protected InputDownloader(Properties properties, ImageDataStore imageStore,
+			String inputDownloaderIP, String inputDownloaderPort, String inputDownloaderNfsPort,
+			String federationMember) {
 		try {
-			checkProperties(properties, imageStore, crawlerIP, crawlerPort, nfsPort,
-					federationMember);
+			checkProperties(properties, imageStore, inputDownloaderIP, inputDownloaderPort,
+					inputDownloaderNfsPort, federationMember);
 		} catch (IllegalArgumentException e) {
 			LOGGER.error("Error while getting properties", e);
 			System.exit(1);
 		}
 
-		this.crawlerIp = crawlerIP;
-		this.crawlerPort = crawlerPort;
-		this.nfsPort = nfsPort;
+		this.inputDownloaderIp = inputDownloaderIP;
+		this.inputDownloaderPort = inputDownloaderPort;
+		this.inputDownloaderNfsPort = inputDownloaderNfsPort;
 
 		this.properties = properties;
 		this.imageStore = imageStore;
@@ -86,9 +90,9 @@ public class InputDownloader {
 		}
 	}
 
-	private void checkProperties(Properties properties, ImageDataStore imageStore, String crawlerIP,
-			String crawlerPort, String nfsPort, String federationMember)
-			throws IllegalArgumentException {
+	private void checkProperties(Properties properties, ImageDataStore imageStore,
+			String inputDownloaderIP, String inputDownloaderPort, String inputDownloaderNfsPort,
+			String federationMember) throws IllegalArgumentException {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
@@ -97,19 +101,19 @@ public class InputDownloader {
 			throw new IllegalArgumentException("Imagestore arg must not be null.");
 		}
 
-		if (crawlerIP == null) {
+		if (inputDownloaderIP == null) {
 			throw new IllegalArgumentException("Crawler IP arg must not be null.");
 		}
 
-		if (crawlerPort == null) {
+		if (inputDownloaderPort == null) {
 			throw new IllegalArgumentException("Crawler Port arg must not be null.");
 		}
 
-		if (crawlerPort.isEmpty()) {
+		if (inputDownloaderPort.isEmpty()) {
 			throw new IllegalArgumentException("Crawler Port arg must not be null.");
 		}
 
-		if (nfsPort == null) {
+		if (inputDownloaderNfsPort == null) {
 			throw new IllegalArgumentException("NFS Port arg must not be null.");
 		}
 
@@ -147,14 +151,15 @@ public class InputDownloader {
 			pendingTaskDownloadDB.close();
 		}
 	}
-	
+
 	private void registerDeployConfig() {
 		try {
 			if (imageStore.deployConfigExists(federationMember)) {
 				imageStore.removeDeployConfig(federationMember);
 			}
 
-			imageStore.addDeployConfig(crawlerIp, crawlerPort, nfsPort, federationMember);
+			imageStore.addDeployConfig(inputDownloaderIp, inputDownloaderPort,
+					inputDownloaderNfsPort, federationMember);
 		} catch (SQLException e) {
 			final String ss = e.getSQLState();
 			if (!ss.equals(UNIQUE_CONSTRAINT_VIOLATION_CODE)) {
@@ -198,19 +203,19 @@ public class InputDownloader {
 		deleteOutputsFromDisk(imageTask,
 				properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 	}
-
-	protected File getImageDir(Properties properties, ImageTask imageTask) {
+  
+  protected File getInputDir(Properties properties, ImageTask imageTask) {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-		String imageDirPath = exportPath + File.separator + "images" + File.separator
-				+ imageTask.getCollectionTierName();
-		File imageDir = new File(imageDirPath);
+		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "input";
+		File imageDir = new File(inputDirPath);
 		return imageDir;
 	}
 
-	protected boolean isThereImageInputs(File imageDir) {
-		if (imageDir.exists() && imageDir.list().length > 0) {
-			for (File file : imageDir.listFiles()) {
-				if (file.getName().endsWith("MTLFmask")) {
+	protected boolean isThereTaskInputs(File taskDir) {
+		if (taskDir.exists() && taskDir.list().length > 0) {
+			for (File file : taskDir.listFiles()) {
+				if (file.getName().endsWith("MTL.txt")) {
 					return true;
 				}
 			}
@@ -241,17 +246,14 @@ public class InputDownloader {
 				if (imageTask != null) {
 					addStateStamp(imageTask);
 
-					LOGGER.debug("Adding image " + imageTask.getCollectionTierName() + " from task "
-							+ imageTask.getTaskId() + " to pending database");
+					LOGGER.debug("Adding task " + imageTask.getTaskId() + " to pending database");
 					addTaskToPendingMap(imageTask);
 
 					boolean isDownloadCompleted = downloadImage(imageTask);
 					if (isDownloadCompleted) {
-						LOGGER.info("Image " + imageTask.getCollectionTierName()
-								+ " download for task " + imageTask + " is completed");
+						LOGGER.info("Task " + imageTask.getTaskId() + " download is completed");
 					} else {
-						LOGGER.info("Image " + imageTask.getCollectionTierName()
-								+ " download for task " + imageTask + " failed");
+						LOGGER.info("Task " + imageTask.getTaskId() + " download failed");
 					}
 				}
 			}
@@ -279,26 +281,63 @@ public class InputDownloader {
 
 	protected double numberOfImagesToDownload()
 			throws NumberFormatException, InterruptedException, IOException, SQLException {
-		String volumeDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-		File volumePath = new File(volumeDirPath);
-		if (volumePath.exists() && volumePath.isDirectory()) {
-			double freeVolumeSpaceOutputDedicated = Double.valueOf(volumePath.getTotalSpace())
-					* 0.2;
-			double availableVolumeSpace = volumePath.getUsableSpace()
-					- freeVolumeSpaceOutputDedicated;
-			double numberOfImagesToDownload = availableVolumeSpace / DEFAULT_IMAGE_DIR_SIZE;
+		String exportDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+		File exportDir = new File(exportDirPath);
 
-			LOGGER.debug("totalDisk=" + Double.valueOf(volumePath.getTotalSpace()));
-			LOGGER.debug("freeVolumeSpaceOutputDedicated=" + freeVolumeSpaceOutputDedicated);
-			LOGGER.debug("freeDisk=" + Double.valueOf(volumePath.getUsableSpace()));
-			LOGGER.debug("availableVolumeSpace=" + availableVolumeSpace);
-			LOGGER.debug("numberOfImagesToDownload=" + numberOfImagesToDownload);
+		double maxInputUsage = Integer
+				.valueOf(properties.getProperty(SapsPropertiesConstants.MAX_NUMBER_OF_TASKS))
+				* DEFAULT_IMAGE_DIR_SIZE;
 
-			return numberOfImagesToDownload;
+		double numberOfImagesToDownload = 0.0;
+		double cumulativeInputUsage = 0.0;
+		String actualInputUsage = null;
+
+		if (exportDir.exists() && exportDir.isDirectory()) {
+			String[] taskDirNames = exportDir.list();
+			for (String taskDir : taskDirNames) {
+				String inputDirPath = exportDirPath + File.separator + taskDir + File.separator
+						+ "data" + File.separator + "input";
+
+				ProcessBuilder builder = new ProcessBuilder("du", "-sh", "-b", inputDirPath);
+				LOGGER.debug("Executing command " + builder.command());
+
+				try {
+					Process p = builder.start();
+					p.waitFor();
+
+					actualInputUsage = getProcessOutput(p);
+					String[] splited = actualInputUsage.split("\\s+");
+					actualInputUsage = splited[0];
+
+					cumulativeInputUsage += Double.valueOf(actualInputUsage);
+				} catch (Exception e) {
+					LOGGER.error("Error while getting input disk usage", e);
+				}
+			}
+
+			double freeDisk = maxInputUsage - cumulativeInputUsage;
+			numberOfImagesToDownload = freeDisk / DEFAULT_IMAGE_DIR_SIZE;
+
+			LOGGER.info("maxInputUsage=" + maxInputUsage);
+			LOGGER.info("cumulativeInputUsage=" + cumulativeInputUsage);
+			LOGGER.info("numberOfImagesToDownload=" + numberOfImagesToDownload);
 		} else {
 			throw new RuntimeException(
-					"VolumePath: " + volumeDirPath + " is not a directory or does not exist");
+					"ExportDirPath: " + exportDirPath + " is not a directory or does not exist");
 		}
+
+		return numberOfImagesToDownload;
+	}
+
+	private static String getProcessOutput(Process p) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		StringBuilder stringBuilder = new StringBuilder();
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			stringBuilder.append(line);
+			stringBuilder.append(System.getProperty("line.separator"));
+		}
+		return stringBuilder.toString();
 	}
 
 	protected File getExportDirPath(String volumeDirPath) {
@@ -317,8 +356,9 @@ public class InputDownloader {
 			String containerId = DockerUtil.runMappedContainer(
 					imageTask.getDownloaderContainerRepository(),
 					imageTask.getDownloaderContainerTag(),
-					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
-							+ "data" + File.separator + imageTask.getTaskId() + File.separator + "input",
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+							+ File.separator + "data" + File.separator + imageTask.getTaskId()
+							+ File.separator + "input",
 					properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH));
 
 			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
