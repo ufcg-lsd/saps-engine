@@ -63,6 +63,7 @@ public class SapsPropertiesConstants {
 	public static final String USGS_PASSWORD = "usgs_password";
 	public static final String USGS_API_KEY_PERIOD = "usgs_api_key_period";
 	public static final String CONTAINER_SCRIPT = "container_script";
+	public static final String MAX_DOWNLOAD_ATTEMPTS = "max_download_attempts";
 
 	// Swift constants
 	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
