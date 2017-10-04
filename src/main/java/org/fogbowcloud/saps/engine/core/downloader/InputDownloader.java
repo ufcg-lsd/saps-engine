@@ -379,6 +379,8 @@ public class InputDownloader {
 					LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId()
 							+ " in the last try, removing task.");
 					updateTaskStateToFailed(imageTask, errorMsg);
+					pendingTaskDownloadMap.remove(imageTask.getTaskId());
+					pendingTaskDownloadDB.commit();
 				} else {
 					LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId()
 							+ ". Trying " + (currentTry - maxDownloadAttempts) + " more time(s).");
