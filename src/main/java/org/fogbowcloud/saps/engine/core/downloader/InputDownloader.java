@@ -411,6 +411,9 @@ public class InputDownloader {
 		String preProcessDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
 				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
 				+ "preprocessing";
+		String logsDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "logs";
 		String metadataDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
 				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
 
@@ -418,9 +421,10 @@ public class InputDownloader {
 		File outputDir = new File(outputDirPath);
 		File preProcessDir = new File(preProcessDirPath);
 		File metadataDir = new File(metadataDirPath);
+		File logsDir = new File(logsDirPath);
 
 		if (!inputDir.mkdirs() || !outputDir.mkdirs() || !preProcessDir.mkdirs()
-				|| !metadataDir.mkdirs()) {
+				|| !logsDir.mkdirs() || !metadataDir.mkdirs()) {
 			throw new Exception(
 					"Error while creating directories for task " + imageTask.getTaskId());
 		}
