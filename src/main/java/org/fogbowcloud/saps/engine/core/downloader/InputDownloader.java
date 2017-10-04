@@ -386,6 +386,9 @@ public class InputDownloader {
 					updateTaskStateToFailed(imageTask, errorMsg);
 					pendingTaskDownloadMap.remove(imageTask.getTaskId());
 					pendingTaskDownloadDB.commit();
+					
+					deleteAllTaskFiles(imageTask,
+							properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 				} else {
 					LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId()
 							+ ". Trying " + (currentTry - maxDownloadAttempts) + " more time(s).");
@@ -397,6 +400,8 @@ public class InputDownloader {
 	}
 
 	private void prepareTaskDirStructure(ImageTask imageTask) throws Exception {
+		LOGGER.info("Creating directory structure for task" + imageTask.getTaskId());
+		
 		String inputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
 				+ imageTask.getTaskId() + File.separator + "data" + File.separator + "input";
 		String outputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
