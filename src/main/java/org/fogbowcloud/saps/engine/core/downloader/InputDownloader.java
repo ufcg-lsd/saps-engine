@@ -32,6 +32,7 @@ public class InputDownloader {
 	private String inputDownloaderIp;
 	private String inputDownloaderPort;
 	private String inputDownloaderNfsPort;
+	private final int maxDownloadAttempts;
 	private String federationMember;
 	private File pendingImageDownloadFile;
 
@@ -43,6 +44,7 @@ public class InputDownloader {
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
 	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";
+	private static final int DEFAULT_MAX_DOWNLOAD_ATTEMPTS = 3;
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
 
@@ -75,6 +77,9 @@ public class InputDownloader {
 
 		this.pendingImageDownloadFile = new File(PENDING_TASK_DOWNLOAD_DB_FILE);
 		this.pendingTaskDownloadDB = DBMaker.newFileDB(pendingImageDownloadFile).make();
+
+		maxDownloadAttempts = (properties.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS) == null) ?
+				DEFAULT_MAX_DOWNLOAD_ATTEMPTS : Integer.parseInt(properties.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS));
 
 		if (!pendingImageDownloadFile.exists() || !pendingImageDownloadFile.isFile()) {
 			LOGGER.info("Creating map of pending images to download");
@@ -191,7 +196,15 @@ public class InputDownloader {
 		}
 	}
 
-	protected File getInputDir(Properties properties, ImageTask imageTask) {
+	private void removeFailedTaskFromVolume(ImageTask imageTask, Properties properties)
+			throws SQLException, IOException {
+		deleteInputsFromDisk(imageTask,
+				properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
+		deleteOutputsFromDisk(imageTask,
+				properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
+	}
+  
+  protected File getInputDir(Properties properties, ImageTask imageTask) {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
 				+ "data" + File.separator + "input";
@@ -334,10 +347,9 @@ public class InputDownloader {
 	protected boolean downloadImage(final ImageTask imageTask) throws SQLException, IOException {
 		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
 
-		try {
+		for(int currentTry = 0; currentTry < maxDownloadAttempts; currentTry++){
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
 
-			// TODO: modify container repository and tag field
 			DockerUtil.pullImage(imageTask.getDownloaderContainerRepository(),
 					imageTask.getDownloaderContainerTag());
 
@@ -354,7 +366,10 @@ public class InputDownloader {
 					+ dateFormater.format(imageTask.getImageDate()) + " "
 					+ properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH);
 
-			if (DockerUtil.execDockerCommand(containerId, commandToRun) == 0) {
+			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
+			DockerUtil.removeContainer(containerId);
+
+			if (dockerExecExitValue == 0) { // sucessfully downloaded
 				updateToDownloadedState(imageTask);
 
 				pendingTaskDownloadMap.remove(imageTask.getTaskId());
@@ -363,17 +378,35 @@ public class InputDownloader {
 				LOGGER.info("Image " + imageTask + " was downloaded");
 				return true;
 			} else {
-				LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId());
-				removeFromPendingAndUpdateState(imageTask, properties);
+				if(currentTry == maxDownloadAttempts -1){ // error while downloading, in the last try
+					String errorMsg = "Had an error, tried to download " + maxDownloadAttempts + " times, but this limit was exceeded.";
+					LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId() + " in the last try, removing task.");
+					updateTaskStateToFailed(imageTask, errorMsg);
+				} else{
+					LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId() +
+							". Trying " + (currentTry - maxDownloadAttempts) + " more time(s).");
+					removeFromPendingAndUpdateState(imageTask, properties);
+				}
 			}
 
-			DockerUtil.removeContainer(containerId);
-		} catch (Exception e) {
-			LOGGER.error("Error when downloading image " + imageTask, e);
-			removeFromPendingAndUpdateState(imageTask, properties);
 		}
-
 		return false;
+	}
+
+	protected void updateTaskStateToFailed(ImageTask imageTask, String errorMsg){
+		String id = imageTask.getTaskId();
+		LOGGER.debug("Updating image task " + imageTask + " state to Failed.");
+		try {
+			imageStore.updateTaskState(id, ImageTaskState.FAILED);
+		} catch (SQLException e) {
+			LOGGER.debug("Error while updating " + imageTask + " state to Failed.");
+		}
+		try {
+			LOGGER.debug("Updating image task " + imageTask + " with error reason.");
+			imageStore.updateTaskError(id, errorMsg);
+		} catch (SQLException e) {
+			LOGGER.debug("Error while updating " + imageTask + ".");
+		}
 	}
 
 	protected void removeTaskFromPendingMap(final ImageTask imageTask) {

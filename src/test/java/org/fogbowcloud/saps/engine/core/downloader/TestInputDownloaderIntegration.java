@@ -1,10 +1,7 @@
 package org.fogbowcloud.saps.engine.core.downloader;
 
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -21,9 +18,12 @@ import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.mockito.Mockito.*;
 
 public class TestInputDownloaderIntegration {
 
@@ -34,13 +34,14 @@ public class TestInputDownloaderIntegration {
 		properties = mock(Properties.class);
 	}
 
-	@Before
+	@After
 	public void clean() {
-		String pendingImageFileName = "pending-image-download.db";
-		File pendingImageDBFile = new File(pendingImageFileName);
-
-		if (pendingImageDBFile.exists()) {
-			FileUtils.deleteQuietly(pendingImageDBFile);
+		String[] pendingTasks = {"pending-task-download.db", "pending-task-download.db.p", "pending-task-download.db.t"};
+		for(String pendingTask: pendingTasks){
+			File pendingImageDBFile = new File(pendingTask);
+			if (pendingImageDBFile.exists()) {
+				FileUtils.deleteQuietly(pendingImageDBFile);
+			}
 		}
 	}
 
@@ -222,5 +223,57 @@ public class TestInputDownloaderIntegration {
 		ConcurrentMap<String, ImageTask> pendingTaskMap = inputDownloader.getPendingTaskMap();
 
 		Assert.assertEquals(task, pendingTaskMap.get(task.getTaskId()));
+	}
+
+	@Test
+	public void testFailsAndRemovesImage() throws Exception {
+		Properties properties = new Properties();
+		FileInputStream fi = new FileInputStream("config/sebal.conf");
+		properties.load(fi);
+
+		properties.setProperty("datastore_ip", "localhost");
+		properties.setProperty("datastore_port", "8000");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_username", "testuser");
+		properties.setProperty("datastore_password", "testuser");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_name", "testdb");
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+
+		String inputDownloaderIP = "fake-inputDownloader-ip";
+		String inputDownloaderPort = "fake-inputDownloader-port";
+		String nfsPort = "fake-nfs-port";
+		String federationMember = "fake-fed-member";
+
+		Date date = new Date(10000854);
+
+		ImageTask task = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
+				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				"NE", "NE", "NE", new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), "available", "");
+
+		imageStore.addImageTask(task);
+
+		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
+				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
+
+		List<ImageTask> imageList = new ArrayList<ImageTask>();
+		imageList.add(task);
+
+		Assert.assertEquals(0, imageStore.getIn(ImageTaskState.FAILED).size()); // There's no failed image tasks
+		Assert.assertEquals(1, imageStore.getIn(ImageTaskState.CREATED).size()); // There's 1 image created
+		Assert.assertEquals(1, imageStore.getAllTasks().size()); // Total image tasks == 1
+
+		inputDownloader.addTaskToPendingMap(task);
+		inputDownloader.download();
+
+		Assert.assertEquals(1, imageStore.getIn(ImageTaskState.FAILED).size()); // There's 1 failed image tasks after trying download it
+		Assert.assertEquals(0, imageStore.getIn(ImageTaskState.CREATED).size()); // There's 0 image created
+		Assert.assertEquals(1, imageStore.getAllTasks().size()); // Total image tasks == 1
+
+		Assert.assertEquals("Had an error, tried to download " +
+				properties.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS) +
+				" times, but this limit was exceeded.", imageStore.getTask("task-id-1").getImageError());
 	}
 }
