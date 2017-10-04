@@ -8,7 +8,7 @@ OUTPUT_DIR_NAME=data/output
 LOGS_DIR=data/logs
 
 # User Side
-BIN_RUN_SCRIPT="bin/run.sh"
+BIN_RUN_SCRIPT="execs/bin/run.sh"
 PROCESS_OUTPUT=
 
 # This function mounts exports dir from NFS server
