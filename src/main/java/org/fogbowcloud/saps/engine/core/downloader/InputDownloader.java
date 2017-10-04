@@ -379,14 +379,14 @@ public class InputDownloader {
 				return true;
 			} else {
 				if (currentTry == maxDownloadAttempts - 1) {
-					String errorMsg = "Had an error, tried to download " + maxDownloadAttempts
-							+ " times, but this limit was exceeded.";
+					String errorMsg = "Error while downloading task...download retries "
+							+ maxDownloadAttempts + " exceeded.";
 					LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId()
 							+ " in the last try, removing task.");
 					updateTaskStateToFailed(imageTask, errorMsg);
 					pendingTaskDownloadMap.remove(imageTask.getTaskId());
 					pendingTaskDownloadDB.commit();
-					
+
 					deleteAllTaskFiles(imageTask,
 							properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 				} else {
