@@ -5,8 +5,7 @@
 INPUTS_DIR_NAME=data/input
 PREPROCESSING_DIR_NAME=data/preprocessing
 OUTPUT_DIR_NAME=data/output
-ERROR_LOGS_DIR=error_logs
-CONTAINER_ID=
+LOGS_DIR=data/logs
 
 # User Side
 BIN_RUN_SCRIPT="bin/run.sh"
@@ -100,14 +99,14 @@ function checkProcessOutput {
   if [ $PROCESS_OUTPUT -ne 0 ]
   then
     echo "PROCESS_OUTPUT = $PROCESS_OUTPUT"
-    if [ ! -d "${SAPS_MOUNT_POINT}/${TASK_ID}/$ERROR_LOGS_DIR" ]
+    if [ ! -d "${SAPS_MOUNT_POINT}/${TASK_ID}/$LOGS_DIR" ]
     then
-      sudo mkdir -p ${SAPS_MOUNT_POINT}/${TASK_ID}/$ERROR_LOGS_DIR
+      sudo mkdir -p ${SAPS_MOUNT_POINT}/${TASK_ID}/$LOGS_DIR
     fi
 
-    echo "Copying temporary out and err files to ${SAPS_MOUNT_POINT}/${TASK_ID}/$ERROR_LOGS_DIR"
-    sudo cp ${SANDBOX}/*out ${SAPS_MOUNT_POINT}/${TASK_ID}/$ERROR_LOGS_DIR
-    sudo cp ${SANDBOX}/*err ${SAPS_MOUNT_POINT}/${TASK_ID}/$ERROR_LOGS_DIR
+    echo "Copying temporary out and err files to ${SAPS_MOUNT_POINT}/${TASK_ID}/$LOGS_DIR"
+    sudo cp ${SANDBOX}/*out ${SAPS_MOUNT_POINT}/${TASK_ID}/$LOGS_DIR
+    sudo cp ${SANDBOX}/*err ${SAPS_MOUNT_POINT}/${TASK_ID}/$LOGS_DIR
     finally
   fi
 }
