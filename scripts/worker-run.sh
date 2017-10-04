@@ -6,6 +6,7 @@ INPUTS_DIR_NAME=data/input
 PREPROCESSING_DIR_NAME=data/preprocessing
 OUTPUT_DIR_NAME=data/output
 ERROR_LOGS_DIR=error_logs
+CONTAINER_ID=
 
 # User Side
 BIN_RUN_SCRIPT="bin/run.sh"
@@ -40,7 +41,7 @@ function prepareDockerContainer {
     docker rm ${WORKER_CONTAINER_TAG}
   fi
 
-  docker run -d -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG} tailf /dev/null
+  docker run -td -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
 }
 
 # This function cleans previous, and probably failed, output from task output dir
@@ -66,7 +67,7 @@ function executeDockerContainer {
 }
 
 function removeDockerContainer {
-  CONTAINER_ID=$(docker ps -aqf "name=${WORKER_CONTAINER_TAG}")
+  CONTAINER_ID=$(docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
 
   echo "Removing docker container $CONTAINER_ID"
   docker rm -f $CONTAINER_ID
