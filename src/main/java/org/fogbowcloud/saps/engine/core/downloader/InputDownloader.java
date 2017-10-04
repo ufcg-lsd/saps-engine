@@ -138,7 +138,7 @@ public class InputDownloader {
 				cleanUnfinishedQueuedOutput(properties);
 				purgeTasksFromVolume(properties);
 				removeFailedTasksFromVolume(properties);
-				deleteArchivedOutputsFromDisk(properties);
+				deleteArchivedTasksFromDisk(properties);
 
 				double numToDownload = numberOfImagesToDownload();
 				if (numToDownload > 0) {
@@ -192,9 +192,7 @@ public class InputDownloader {
 			throws SQLException, IOException {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.FAILED);
 		for (ImageTask imageTask : tasks) {
-			deleteInputsFromDisk(imageTask,
-					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
-			deleteOutputsFromDisk(imageTask,
+			deleteAllTaskFiles(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 		}
 	}
@@ -340,8 +338,15 @@ public class InputDownloader {
 	}
 
 	protected boolean downloadImage(final ImageTask imageTask) throws SQLException, IOException {
-		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
+		try {
+			prepareTaskDirStructure(imageTask);
+		} catch (Exception e) {
+			LOGGER.error(e);
+			removeFromPendingAndUpdateState(imageTask, properties);
+			return false;
+		}
 
+		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		for (int currentTry = 0; currentTry < maxDownloadAttempts; currentTry++) {
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
 
@@ -386,9 +391,32 @@ public class InputDownloader {
 							+ ". Trying " + (currentTry - maxDownloadAttempts) + " more time(s).");
 				}
 			}
-
 		}
+
 		return false;
+	}
+
+	private void prepareTaskDirStructure(ImageTask imageTask) throws Exception {
+		String inputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ imageTask.getTaskId() + File.separator + "data" + File.separator + "input";
+		String outputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ imageTask.getTaskId() + File.separator + "data" + File.separator + "output";
+		String preProcessDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "preprocessing";
+		String metadataDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ imageTask.getTaskId() + File.separator + "metadata";
+
+		File inputDir = new File(inputDirPath);
+		File outputDir = new File(outputDirPath);
+		File preProcessDir = new File(preProcessDirPath);
+		File metadataDir = new File(metadataDirPath);
+
+		if (inputDir.mkdirs() || outputDir.mkdirs() || preProcessDir.mkdirs()
+				|| metadataDir.mkdirs()) {
+			throw new Exception(
+					"Error while creating directories for task " + imageTask.getTaskId());
+		}
 	}
 
 	protected void updateTaskStateToFailed(ImageTask imageTask, String errorMsg) {
@@ -405,6 +433,19 @@ public class InputDownloader {
 		} catch (SQLException e) {
 			LOGGER.debug("Error while updating " + imageTask + ".");
 		}
+	}
+
+	private void deleteOutputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
+		String outputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "output";
+		File outputDir = new File(outputDirPath);
+
+		if (!outputDir.exists() || !outputDir.isDirectory()) {
+			return;
+		}
+
+		LOGGER.debug("Deleting output for " + imageTask + " from " + outputDirPath);
+		FileUtils.deleteDirectory(outputDir);
 	}
 
 	protected void removeTaskFromPendingMap(final ImageTask imageTask) {
@@ -453,7 +494,7 @@ public class InputDownloader {
 				return;
 			}
 
-			deleteImageFromDisk(imageTask,
+			deleteTaskInputFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 
 			removeTaskFromPendingMap(imageTask);
@@ -461,7 +502,7 @@ public class InputDownloader {
 		}
 	}
 
-	protected void deleteImageFromDisk(final ImageTask imageTask, String exportPath)
+	protected void deleteTaskInputFromDisk(final ImageTask imageTask, String exportPath)
 			throws IOException {
 		String imageDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
 				+ "data" + File.separator + "input";
@@ -470,7 +511,7 @@ public class InputDownloader {
 		LOGGER.info("Removing task " + imageTask + " data under path " + imageDirPath);
 
 		if (isImageOnDisk(imageDirPath, taskInputDir)) {
-			FileUtils.cleanDirectory(taskInputDir);
+			FileUtils.deleteDirectory(taskInputDir);
 		}
 	}
 
@@ -482,7 +523,7 @@ public class InputDownloader {
 		return true;
 	}
 
-	protected void deleteArchivedOutputsFromDisk(Properties properties)
+	protected void deleteArchivedTasksFromDisk(Properties properties)
 			throws IOException, InterruptedException, SQLException {
 		List<ImageTask> allTasks = imageStore.getAllTasks();
 		String exportPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
@@ -500,8 +541,7 @@ public class InputDownloader {
 					LOGGER.info("Removing " + imageTask);
 
 					try {
-						deleteInputsFromDisk(imageTask, exportPath);
-						deleteOutputsFromDisk(imageTask, exportPath);
+						deleteAllTaskFiles(imageTask, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageTask, e);
 					}
@@ -516,30 +556,16 @@ public class InputDownloader {
 		}
 	}
 
-	private void deleteInputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
-		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
-				+ "data" + File.separator + "input";
-		File inputDir = new File(inputDirPath);
+	private void deleteAllTaskFiles(ImageTask imageTask, String exportPath) throws IOException {
+		String taskDirPath = exportPath + File.separator + imageTask.getTaskId();
+		File taskDir = new File(taskDirPath);
 
-		if (!inputDir.exists() || !inputDir.isDirectory()) {
+		if (!taskDir.exists() || !taskDir.isDirectory()) {
 			return;
 		}
 
-		LOGGER.debug("Deleting input for " + imageTask + " from " + inputDirPath);
-		FileUtils.cleanDirectory(inputDir);
-	}
-
-	private void deleteOutputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
-		String outputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
-				+ "data" + File.separator + "output";
-		File outputDir = new File(outputDirPath);
-
-		if (!outputDir.exists() || !outputDir.isDirectory()) {
-			return;
-		}
-
-		LOGGER.debug("Deleting output for " + imageTask + " from " + outputDirPath);
-		FileUtils.cleanDirectory(outputDir);
+		LOGGER.debug("Deleting files for " + imageTask + " from " + taskDirPath);
+		FileUtils.deleteDirectory(taskDir);
 	}
 
 	protected void purgeTasksFromVolume(Properties properties)
@@ -555,9 +581,7 @@ public class InputDownloader {
 					LOGGER.debug("Purging task " + imageTask);
 
 					try {
-						deleteImageFromDisk(imageTask,
-								properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
-						deleteOutputsFromDisk(imageTask, exportPath);
+						deleteAllTaskFiles(imageTask, exportPath);
 					} catch (IOException e) {
 						LOGGER.error("Error while deleting " + imageTask, e);
 					}

@@ -194,7 +194,7 @@ public class TestInputDownloaderIntegration {
 				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember1);
 
 		// exercise
-		inputDownloader.deleteArchivedOutputsFromDisk(properties);
+		inputDownloader.deleteArchivedTasksFromDisk(properties);
 
 		// expect
 		Assert.assertNotEquals(taskOne.getFederationMember(), taskTwo.getFederationMember());
