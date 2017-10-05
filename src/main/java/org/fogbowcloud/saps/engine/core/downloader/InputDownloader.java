@@ -229,7 +229,10 @@ public class InputDownloader {
 			tasksToDownload = imageStore.getImagesToDownload(federationMember,
 					MAX_IMAGES_TO_DOWNLOAD);
 		} catch (SQLException e) {
-			LOGGER.error("Error while accessing created tasks in DB", e);
+			LOGGER.error("Error while accessing created tasks in Catalogue", e);
+		} catch (IndexOutOfBoundsException e) {
+			LOGGER.error("No tasks available to download", e);
+			return;
 		}
 
 		for (ImageTask imageTask : tasksToDownload) {
@@ -288,23 +291,25 @@ public class InputDownloader {
 		if (exportDir.exists() && exportDir.isDirectory()) {
 			String[] taskDirNames = exportDir.list();
 			for (String taskDir : taskDirNames) {
-				String inputDirPath = exportDirPath + File.separator + taskDir + File.separator
-						+ "data" + File.separator + "input";
+				if (!taskDir.equals("lost+found")) {
+					String inputDirPath = exportDirPath + File.separator + taskDir + File.separator
+							+ "data" + File.separator + "input";
 
-				ProcessBuilder builder = new ProcessBuilder("du", "-sh", "-b", inputDirPath);
-				LOGGER.debug("Executing command " + builder.command());
+					ProcessBuilder builder = new ProcessBuilder("du", "-sh", "-b", inputDirPath);
+					LOGGER.debug("Executing command " + builder.command());
 
-				try {
-					Process p = builder.start();
-					p.waitFor();
+					try {
+						Process p = builder.start();
+						p.waitFor();
 
-					actualInputUsage = getProcessOutput(p);
-					String[] splited = actualInputUsage.split("\\s+");
-					actualInputUsage = splited[0];
+						actualInputUsage = getProcessOutput(p);
+						String[] splited = actualInputUsage.split("\\s+");
+						actualInputUsage = splited[0];
 
-					cumulativeInputUsage += Double.valueOf(actualInputUsage);
-				} catch (Exception e) {
-					LOGGER.error("Error while getting input disk usage", e);
+						cumulativeInputUsage += Double.valueOf(actualInputUsage);
+					} catch (Exception e) {
+						LOGGER.error("Error while getting input disk usage", e);
+					}
 				}
 			}
 
