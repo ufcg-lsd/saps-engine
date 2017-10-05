@@ -356,15 +356,15 @@ public class InputDownloader {
 			String containerId = DockerUtil.runMappedContainer(
 					imageTask.getDownloaderContainerRepository(),
 					imageTask.getDownloaderContainerTag(),
-					properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH)
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
 							+ File.separator + imageTask.getTaskId() + File.separator + "data"
 							+ File.separator + "input",
-					properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH));
+					properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH));
 
 			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
 					+ " " + imageTask.getDataSet() + " " + imageTask.getRegion() + " "
 					+ dateFormater.format(imageTask.getImageDate()) + " "
-					+ properties.getProperty(SapsPropertiesConstants.SEBAL_CONTAINER_LINKED_PATH);
+					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
 
 			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
 			DockerUtil.removeContainer(containerId);

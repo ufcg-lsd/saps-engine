@@ -128,7 +128,7 @@ public class SapsPropertiesConstants {
 	public static final String FMASK_VERSION_FILE_PATH = "fmask_version_file_path";
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
 	public static final String SAPS_EXPORT_PATH = "sebal_export_path";
-	public static final String SEBAL_CONTAINER_LINKED_PATH = "sebal_container_linked_path";
+	public static final String SAPS_CONTAINER_LINKED_PATH = "sebal_container_linked_path";
 	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 	public static final String STATIONS_FILE_PATH = "stations_file_path";
