@@ -231,7 +231,7 @@ public class InputDownloader {
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing created tasks in Catalogue", e);
 		} catch (IndexOutOfBoundsException e) {
-			LOGGER.error("No tasks available to download", e);
+			LOGGER.info("No tasks available to download");
 			return;
 		}
 
