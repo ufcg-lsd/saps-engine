@@ -30,7 +30,7 @@ public class SapsTask {
 
 	private static final String WORKER_SANDBOX = "worker_sandbox";
 	private static final String WORKER_REMOTE_USER = "worker_remote_user";
-	private static final String WORKER_EXPORT_PATH = "worker_export_path";
+	private static final String WORKER_EXPORT_PATH = "saps_export_path";
 	private static final String WORKER_MOUNT_POINT = "worker_mount_point";
 	private static final String WORKER_TASK_TIMEOUT = "worker_task_timeout";
 	private static final String SAPS_WORKER_RUN_SCRIPT_PATH = "saps_worker_run_script_path";
