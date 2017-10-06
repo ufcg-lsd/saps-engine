@@ -6,9 +6,10 @@ INPUTS_DIR_NAME=data/input
 PREPROCESSING_DIR_NAME=data/preprocessing
 OUTPUT_DIR_NAME=data/output
 LOGS_DIR=data/logs
+SAPS_TMP=/mnt
 
 # User Side
-BIN_RUN_SCRIPT="execs/bin/run.sh"
+BIN_RUN_SCRIPT="bin/run.sh"
 PROCESS_OUTPUT=
 
 # This function mounts exports dir from NFS server
@@ -40,7 +41,7 @@ function prepareDockerContainer {
     docker rm ${WORKER_CONTAINER_TAG}
   fi
 
-  docker run -td -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
+  docker run -td -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} -v $SAPS_TMP:$SAPS_TMP ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
 }
 
 # This function cleans previous, and probably failed, output from task output dir
