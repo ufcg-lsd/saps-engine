@@ -25,7 +25,7 @@ import org.json.JSONObject;
  */
 public class USGSNasaRepository implements INPERepository {
 
-	private final String sebalExportPath;
+	private final String sapsExportPath;
 
 	private final String usgsJsonUrl;
 	private final String usgsUserName;
@@ -39,7 +39,6 @@ public class USGSNasaRepository implements INPERepository {
 	private static final String LEVEL_1_PRODUCT = "STANDARD";
 
 	// conf constants
-	private static final String SEBAL_EXPORT_PATH = "sebal_export_path";
 	private static final String USGS_SEARCH_VERSION = "1.4.0";
 	private static final String FIRST_YEAR_SUFFIX = "-01-01";
 	private static final String LAST_YEAR_SUFFIX = "-12-31";
@@ -48,17 +47,17 @@ public class USGSNasaRepository implements INPERepository {
 	private static final Logger LOGGER = Logger.getLogger(USGSNasaRepository.class);
 
 	public USGSNasaRepository(Properties properties) {
-		this(properties.getProperty(SEBAL_EXPORT_PATH), properties
-				.getProperty(SapsPropertiesConstants.USGS_LOGIN_URL), properties
-				.getProperty(SapsPropertiesConstants.USGS_JSON_URL), properties
-				.getProperty(SapsPropertiesConstants.USGS_USERNAME), properties
-				.getProperty(SapsPropertiesConstants.USGS_PASSWORD), properties
-				.getProperty(SapsPropertiesConstants.USGS_API_KEY_PERIOD));
+		this(properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH),
+				properties.getProperty(SapsPropertiesConstants.USGS_LOGIN_URL),
+				properties.getProperty(SapsPropertiesConstants.USGS_JSON_URL),
+				properties.getProperty(SapsPropertiesConstants.USGS_USERNAME),
+				properties.getProperty(SapsPropertiesConstants.USGS_PASSWORD),
+				properties.getProperty(SapsPropertiesConstants.USGS_API_KEY_PERIOD));
 	}
 
-	protected USGSNasaRepository(String sebalExportPath, String usgsLoginUrl, String usgsJsonUrl,
+	protected USGSNasaRepository(String sapsExportPath, String usgsLoginUrl, String usgsJsonUrl,
 			String usgsUserName, String usgsPassword, String usgsAPIKeyPeriod) {
-		Validate.notNull(sebalExportPath, "sebalExportPath cannot be null");
+		Validate.notNull(sapsExportPath, "sapsExportPath cannot be null");
 
 		Validate.notNull(usgsLoginUrl, "usgsLoginUrl cannot be null");
 		Validate.notNull(usgsJsonUrl, "usgsJsonUrl cannot be null");
@@ -66,14 +65,14 @@ public class USGSNasaRepository implements INPERepository {
 		Validate.notNull(usgsPassword, "usgsPassword cannot be null");
 		Validate.notNull(usgsAPIKeyPeriod, "usgsAPIKeyPeriod cannot be null");
 
-		this.sebalExportPath = sebalExportPath;
+		this.sapsExportPath = sapsExportPath;
 		this.usgsJsonUrl = usgsJsonUrl;
 		this.usgsUserName = usgsUserName;
 		this.usgsPassword = usgsPassword;
 		this.usgsAPIKeyPeriod = usgsAPIKeyPeriod;
 
-		Validate.isTrue(directoryExists(sebalExportPath), "Sebal sebalExportPath directory "
-				+ sebalExportPath + "does not exist.");
+		Validate.isTrue(directoryExists(sapsExportPath), "Sebal sapsExportPath directory "
+				+ sapsExportPath + "does not exist.");
 	}
 
 	public void handleAPIKeyUpdate(ScheduledExecutorService handleAPIKeyUpdateExecutor) {
@@ -177,7 +176,7 @@ public class USGSNasaRepository implements INPERepository {
 	}
 
 	protected String imageDirPath(ImageTask imageData) {
-		return sebalExportPath + File.separator + "images" + File.separator
+		return sapsExportPath + File.separator + "images" + File.separator
 				+ imageData.getCollectionTierName();
 	}
 
