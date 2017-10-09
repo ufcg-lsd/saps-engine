@@ -14,23 +14,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
-import org.fogbowcloud.saps.engine.core.repository.DefaultImageRepository;
-import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
-import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.notifier.Ward;
 
 public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 	private final JDBCImageDataStore imageStore;
-	private DefaultImageRepository nasaRepository;
-	private USGSNasaRepository usgsRepository;
 	private Properties properties;
 
 	private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcherImpl.class);
@@ -42,9 +36,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	public SubmissionDispatcherImpl(Properties properties) throws SQLException {
 		this.properties = properties;
 		this.imageStore = new JDBCImageDataStore(properties);
-		this.nasaRepository = new DefaultImageRepository(properties);
-		this.usgsRepository = new USGSNasaRepository(properties);
-		this.usgsRepository.handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
 	}
 
 	@Override
@@ -279,22 +270,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 	public JDBCImageDataStore getImageStore() {
 		return imageStore;
-	}
-
-	protected void setNasaRepository(DefaultImageRepository nasaRepository) {
-		this.nasaRepository = nasaRepository;
-	}
-
-	protected DefaultImageRepository getNasaRepository() {
-		return nasaRepository;
-	}
-
-	protected void setUSGSRepository(USGSNasaRepository usgsRepository) {
-		this.usgsRepository = usgsRepository;
-	}
-
-	protected USGSNasaRepository getUSGSRepository() {
-		return usgsRepository;
 	}
 
 	public Properties getProperties() {
