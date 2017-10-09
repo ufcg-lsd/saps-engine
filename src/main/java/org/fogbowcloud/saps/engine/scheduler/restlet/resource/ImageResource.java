@@ -47,7 +47,7 @@ public class ImageResource extends BaseResource {
 	private static final String USER_EMAIL = "userEmail";
 	private static final String USER_PASSWORD = "userPass";
 
-	private static final String DEFAULT_CONF_PATH = "config/sebal.conf";
+	private static final String DEFAULT_CONF_PATH = "config/saps.conf";
 	private static final String DEFAULT_DOWNLOADER_CONTAINER_REPOSITORY = "default_downloader_container_repository";
 	private static final String DEFAULT_DOWNLOADER_CONTAINER_TAG = "default_downloader_container_tag";
 	private static final String DEFAULT_PREPROCESSOR_CONTAINER_REPOSITORY = "default_preprocessor_container_repository";
