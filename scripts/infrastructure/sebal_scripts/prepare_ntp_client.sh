@@ -1,7 +1,7 @@
 #!/bin/bash
 
 apt-get update
-apt install ntp
+apt install -y ntp
 
 sed -i "/server 0.ubuntu.pool.ntp.org/d" /etc/ntp.conf
 sed -i "/server 1.ubuntu.pool.ntp.org/d" /etc/ntp.conf
