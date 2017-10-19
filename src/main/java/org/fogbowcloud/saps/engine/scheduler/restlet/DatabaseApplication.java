@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
@@ -24,6 +22,7 @@ import org.restlet.data.Protocol;
 import org.restlet.resource.Directory;
 import org.restlet.routing.Router;
 import org.restlet.service.ConnectorService;
+import org.restlet.service.CorsService;
 
 public class DatabaseApplication extends Application {
 	private static final String DB_WEB_STATIC_ROOT = "./dbWebHtml/static";
@@ -35,6 +34,12 @@ public class DatabaseApplication extends Application {
 
 	public DatabaseApplication(SubmissionDispatcherImpl submissionDispatcher) throws Exception {
 		this.submissionDispatcher = submissionDispatcher;
+
+		// CORS configuration
+		CorsService cors = new CorsService();
+		cors.setAllowedOrigins(new HashSet<>(Collections.singletonList("*")));
+		cors.setAllowedCredentials(true);
+		getServices().add(cors);
 	}
 
 	public void startServer() throws Exception {
