@@ -15,7 +15,6 @@ import org.fogbowcloud.blowout.core.BlowoutController;
 import org.fogbowcloud.blowout.core.exception.BlowoutException;
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
-import org.fogbowcloud.blowout.core.util.Constants;
 import org.fogbowcloud.blowout.core.util.ManagerTimer;
 import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
@@ -240,7 +239,7 @@ public class SapsController extends BlowoutController {
 		try {
 			specs = Specification.getSpecificationsFromJSonFile(workerSpecFile);
 			if (specs != null && !specs.isEmpty()) {
-				return specs.get(Constants.LIST_ARRAY_FIRST_ELEMENT);
+				return specs.get(0);
 			}
 			return null;
 		} catch (IOException e) {

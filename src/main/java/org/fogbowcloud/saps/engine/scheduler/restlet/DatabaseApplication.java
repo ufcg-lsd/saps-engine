@@ -78,7 +78,6 @@ public class DatabaseApplication extends Application {
 				"file:///" + new File(DB_WEB_STATIC_ROOT).getAbsolutePath()));
 		router.attach("/users", UserResource.class);
 		router.attach("/users/{userEmail}", UserResource.class);
-		router.attach("/user/register", UserResource.class);
 		router.attach("/images", ImageResource.class);
 		router.attach("/images/{imgName}", ImageResource.class);
 
