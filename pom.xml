@@ -1,18 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>sebal-scheduler</groupId>
-	<artifactId>sebal-scheduler</artifactId>
+	<groupId>org.fogbowcloud</groupId>
+	<artifactId>saps-engine</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -68,17 +69,10 @@
 			<name>Restlet repository</name>
 			<url>http://maven.restlet.com</url>
 		</repository>
-		
 		<repository>
 			<id>maven-fogbow</id>
 			<url>https://github.com/fogbow/mvn-repo/raw/master/releases/</url>
 		</repository>
-<!--		<repository>
-			<id>contrail</id>
-			<name>Contrail repository</name>
-			<url>http://contrail.ow2.org/repositories/thirdparty</url>
-		</repository>
--->		
 	</repositories>
 
 	<dependencies>
@@ -131,6 +125,12 @@
 			<version>20090211</version>
 			<type>pom.lastUpdated</type>
 		</dependency>
+		
+		 <dependency>
+         	<groupId>com.googlecode.json-simple</groupId>
+   			<artifactId>json-simple</artifactId>
+   			<version>1.1.1</version>
+		 </dependency>
 
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -152,6 +152,12 @@
 		<dependency>
 			<groupId>org.restlet.jse</groupId>
 			<artifactId>org.restlet.ext.jackson</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.freemarker</artifactId>
 			<version>2.2.0</version>
 		</dependency>
 		
@@ -184,12 +190,6 @@
 			<artifactId>mapdb</artifactId>
 			<version>1.0.9</version>
 		</dependency>
-		
-		 <dependency>
-            <groupId>org.javaswift</groupId>
-            <artifactId>joss</artifactId>
-            <version>0.9.7</version>
-        </dependency>
 		
 	</dependencies>
 </project>

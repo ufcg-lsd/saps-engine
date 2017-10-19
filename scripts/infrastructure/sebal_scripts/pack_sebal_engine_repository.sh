@@ -10,7 +10,7 @@ git clone https://github.com/fogbow/sebal-engine.git
 cd sebal-engine
 # FIXME remember to change this later
 # version used will be master in final sebal-engine
-git checkout sebal-r-tasks
+git checkout develop
 mvn -e install -Dmaven.test.skip=true
 
 SEBAL_ENGINE_VERSION=$(git rev-parse HEAD)

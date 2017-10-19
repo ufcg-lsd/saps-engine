@@ -8,9 +8,12 @@ RESULTS_DIR_NAME=results
 OUTPUT_IMAGE_DIR=${SEBAL_MOUNT_POINT}/$RESULTS_DIR_NAME/${IMAGE_NAME}
 LIBRARY_PATH=/usr/local/lib/${ADDITIONAL_LIBRARY_PATH}
 LOG4J_FILE_PATH=/var/log/sebal/sebal.log
+
+# User's responsability
 R_EXEC_DIR=${SANDBOX}/SEBAL/workspace/R/
 R_ALGORITHM_VERSION=AlgoritmoFinal-v2_01072016.R
 SEBAL_SNAPSHOT_M2_PATH=/home/esdras/.m2/repository/org/fogbowcloud/SEBAL/0.0.1-SNAPSHOT/
+
 SEBAL_DIR_PATH=
 LOG4J_PATH=
 
@@ -22,7 +25,7 @@ function prepareDependencies {
 
   cd ${SANDBOX}
 
-  if [ "${PINPOINTED_SEBAL_TAG}" -eq "NE" ]
+  if [ ${PINPOINTED_SEBAL_TAG} = "NE" ]
   then
     git clone ${SEBAL_URL}
     PROCESS_OUTPUT=$?
