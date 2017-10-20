@@ -69,10 +69,28 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
-				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"available", "");
+		ImageTask taskOne = new ImageTask(
+				"task-id-1",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				federationMember,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
 
 		imageList.add(taskOne);
 
@@ -133,15 +151,51 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
-				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"available", "");
-		taskOne.setImageStatus(ImageTask.PURGED);
-		ImageTask taskTwo = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
-				ImageTaskState.FINISHED, federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"available", "");
+		ImageTask taskOne = new ImageTask(
+				"task-id-1",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link1",
+				ImageTaskState.FINISHED,
+				federationMember,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
+		taskOne.setStatus(ImageTask.PURGED);
+		ImageTask taskTwo = new ImageTask(
+				"task-id-2",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link2",
+				ImageTaskState.FINISHED,
+				federationMember,
+				1,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
 
 		imageList.add(taskOne);
 		imageList.add(taskTwo);
@@ -173,14 +227,50 @@ public class TestInputDownloaderIntegration {
 		Date date = new Date(10000854);
 
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
-				ImageTaskState.ARCHIVED, federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"available", "");
-		ImageTask taskTwo = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link2",
-				ImageTaskState.ARCHIVED, federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"available", "");
+		ImageTask taskOne = new ImageTask(
+				"task-id-1",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link1",
+				ImageTaskState.ARCHIVED,
+				federationMember1,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
+		ImageTask taskTwo = new ImageTask(
+				"task-id-2",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link2",
+				ImageTaskState.ARCHIVED,
+				federationMember2,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
 
 		imageList.add(taskOne);
 		imageList.add(taskTwo);
@@ -211,10 +301,28 @@ public class TestInputDownloaderIntegration {
 
 		Date date = new Date(10000854);
 
-		ImageTask task = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
-				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), "available", "");
+		ImageTask task = new ImageTask(
+				"task-id-1",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				federationMember,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()),
+				"available",
+				""
+		);
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
 				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
@@ -248,10 +356,28 @@ public class TestInputDownloaderIntegration {
 
 		Date date = new Date(10000854);
 
-		ImageTask task = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
-				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", "NE", "NE", new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), "available", "");
+		ImageTask task = new ImageTask(
+				"task-id-1",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				federationMember,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()),
+				"available",
+				""
+		);
 
 		imageStore.addImageTask(task);
 
@@ -274,6 +400,6 @@ public class TestInputDownloaderIntegration {
 
 		Assert.assertEquals("Had an error, tried to download " +
 				properties.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS) +
-				" times, but this limit was exceeded.", imageStore.getTask("task-id-1").getImageError());
+				" times, but this limit was exceeded.", imageStore.getTask("task-id-1").getError());
 	}
 }

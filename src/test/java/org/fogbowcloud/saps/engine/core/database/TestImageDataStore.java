@@ -32,14 +32,50 @@ public class TestImageDataStore {
 		Date date = mock(Date.class);
 
 		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
-		ImageTask taskOne = new ImageTask("task-id-1", "dataset-1", "region-1", date, "link1",
-				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), "available", "");
-		ImageTask taskTwo = new ImageTask("task-id-2", "dataset-1", "region-2", date, "link1",
-				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), "available", "");
+		ImageTask taskOne = new ImageTask(
+				"task-id-1",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				"NE",
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()),
+				"available",
+				""
+		);
+		ImageTask taskTwo = new ImageTask(
+				"task-id-2",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				"NE",
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()),
+				"available",
+				""
+		);
 
 		imageStore.addImageTask(taskOne);
 		imageStore.addImageTask(taskTwo);

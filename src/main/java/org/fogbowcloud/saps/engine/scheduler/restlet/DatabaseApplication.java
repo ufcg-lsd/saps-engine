@@ -1,11 +1,5 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.text.ParseException;
-import java.util.*;
-
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.dispatcher.Task;
@@ -24,16 +18,24 @@ import org.restlet.routing.Router;
 import org.restlet.service.ConnectorService;
 import org.restlet.service.CorsService;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.*;
+
 public class DatabaseApplication extends Application {
 	private static final String DB_WEB_STATIC_ROOT = "./dbWebHtml/static";
 
 	public static final Logger LOGGER = Logger.getLogger(DatabaseApplication.class);
 
+	private Properties properties;
 	private SubmissionDispatcherImpl submissionDispatcher;
 	private Component restletComponent;
 
-	public DatabaseApplication(SubmissionDispatcherImpl submissionDispatcher) throws Exception {
-		this.submissionDispatcher = submissionDispatcher;
+	public DatabaseApplication(Properties properties) throws Exception {
+		this.properties = properties;
+		this.submissionDispatcher = new SubmissionDispatcherImpl(properties);
 
 		// CORS configuration
 		CorsService cors = new CorsService();
@@ -74,11 +76,16 @@ public class DatabaseApplication extends Application {
 		Router router = new Router(getContext());
 		router.attach("/", MainResource.class);
 		router.attach("/ui/{requestPath}", MainResource.class);
-		router.attach("/static", new Directory(getContext(),
-				"file:///" + new File(DB_WEB_STATIC_ROOT).getAbsolutePath()));
+		router.attach(
+				"/static",
+				new Directory(
+						getContext(),
+						"file:///" + new File(DB_WEB_STATIC_ROOT).getAbsolutePath()
+				)
+		);
 		router.attach("/users", UserResource.class);
 		router.attach("/users/{userEmail}", UserResource.class);
-		router.attach("/images", ImageResource.class);
+		router.attach("/processings", ImageResource.class);
 		router.attach("/images/{imgName}", ImageResource.class);
 
 		return router;
@@ -92,36 +99,27 @@ public class DatabaseApplication extends Application {
 		return submissionDispatcher.getTaskInDB(taskId);
 	}
 
-	/**
-	 * 
-	 * @param firstYear
-	 * @param lastYear
-	 * @param region
-	 * @param dataSet
-	 * @param downloaderContainerRepository
-	 * @param downloaderContainerTag
-	 * @param preProcessorContainerRepository
-	 * @param preProcessorContainerTag
-	 * @param workerContainerRepository
-	 * @param workerContainerTag
-	 * @return List<String> Image names list
-	 * @throws SQLException
-	 * @throws NumberFormatException
-	 * @throws IOException
-	 * @throws ParseException 
-	 */
-	public List<Task> addTasks(String firstYear, String lastYear, String region, String dataSet,
-			String downloaderContainerRepository, String downloaderContainerTag,
-			String preProcessorContainerRepository, String preProcessorContainerTag,
-			String workerContainerRepository, String workerContainerTag)
-			throws SQLException, NumberFormatException, IOException, ParseException {
-		List<String> regions = new ArrayList<String>();
-		regions.add(region);
-
-		return submissionDispatcher.fillDB(firstYear, lastYear, regions, dataSet,
-				downloaderContainerRepository, downloaderContainerTag,
-				preProcessorContainerRepository, preProcessorContainerTag,
-				workerContainerRepository, workerContainerTag);
+	public List<Task> addTasks(
+			Double topLeftLat,
+			Double topLeftLon,
+			Double bottomRightLat,
+			Double bottomRightLon,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) {
+		return submissionDispatcher.fillDB(
+				topLeftLat,
+				topLeftLon,
+				bottomRightLat,
+				bottomRightLon,
+				initDate,
+				endDate,
+				inputGathering,
+				inputPreprocessing,
+				algorithmExecution
+		);
 	}
 
 	public void purgeImage(String day, String force) throws SQLException, ParseException {
@@ -158,4 +156,7 @@ public class DatabaseApplication extends Application {
 		return submissionDispatcher.getUser(userEmail);
 	}
 
+	public Properties getProperties() {
+		return properties;
+	}
 }

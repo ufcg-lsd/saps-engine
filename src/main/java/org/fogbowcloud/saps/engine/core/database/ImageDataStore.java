@@ -2,6 +2,7 @@ package org.fogbowcloud.saps.engine.core.database;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -24,11 +25,17 @@ public interface ImageDataStore {
 	String DATASTORE_IP = "datastore_ip";
 	String DATASTORE_PORT = "datastore_port";
 
-	void addImageTask(String taskId, String dataSet, String region, String date,
-			String downloadLink, int priority, String downloaderContainerRepository,
-			String downloaderContainerTag, String preProcessorContainerRepository,
-			String preProcessorContainerTag, String workerContainerRepository,
-			String workerContainerTag) throws SQLException;
+	ImageTask addImageTask(String taskId,
+					  Double topLeftLat,
+					  Double topLeftLon,
+					  Double bottomRightLat,
+					  Double bottomRightLon,
+					  Date date,
+					  String downloadLink,
+					  int priority,
+					  String inputGathering,
+					  String inputPreprocessing,
+					  String algorithmExecution) throws SQLException;
 
 	void addImageTask(ImageTask imageTask) throws SQLException;
 

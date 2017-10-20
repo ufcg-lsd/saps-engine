@@ -355,21 +355,24 @@ public class InputDownloader {
 		for (int currentTry = 0; currentTry < maxDownloadAttempts; currentTry++) {
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
 
-			DockerUtil.pullImage(imageTask.getDownloaderContainerRepository(),
-					imageTask.getDownloaderContainerTag());
+			// TODO update repository
+			DockerUtil.pullImage("", imageTask.getInputGatheringTag());
 
+			// TODO update repository
 			String containerId = DockerUtil.runMappedContainer(
-					imageTask.getDownloaderContainerRepository(),
-					imageTask.getDownloaderContainerTag(),
+					"",
+					imageTask.getInputGatheringTag(),
 					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
 							+ File.separator + imageTask.getTaskId() + File.separator + "data"
 							+ File.separator + "input",
 					properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH));
 
-			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
-					+ " " + imageTask.getDataSet() + " " + imageTask.getRegion() + " "
-					+ dateFormater.format(imageTask.getImageDate()) + " "
-					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
+			// TODO update command
+//			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
+//					+ " " + imageTask.getDataSet() + " " + imageTask.getRegion() + " "
+//					+ dateFormater.format(imageTask.getImageDate()) + " "
+//					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
+			String commandToRun = "";
 
 			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
 			DockerUtil.removeContainer(containerId);
@@ -592,7 +595,7 @@ public class InputDownloader {
 
 		if (!exportPath.isEmpty() && exportPath != null) {
 			for (ImageTask imageTask : tasksToPurge) {
-				if (imageTask.getImageStatus().equals(ImageTask.PURGED)
+				if (imageTask.getStatus().equals(ImageTask.PURGED)
 						&& imageTask.getFederationMember().equals(federationMember)) {
 					LOGGER.debug("Purging task " + imageTask);
 

@@ -1,12 +1,11 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet;
 
-import java.io.FileInputStream;
-import java.util.Properties;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
+
+import java.io.FileInputStream;
+import java.util.Properties;
 
 public class RestletServerMain {
 
@@ -23,9 +22,7 @@ public class RestletServerMain {
 		FileInputStream input = new FileInputStream(confPath);
 		properties.load(input);
 
-		SubmissionDispatcherImpl dbUtilsImpl = new SubmissionDispatcherImpl(properties);
-
-		DatabaseApplication databaseApplication = new DatabaseApplication(dbUtilsImpl);
+		DatabaseApplication databaseApplication = new DatabaseApplication(properties);
 		databaseApplication.startServer();
 
 		String userEmail = properties.getProperty(ADMIN_EMAIL);

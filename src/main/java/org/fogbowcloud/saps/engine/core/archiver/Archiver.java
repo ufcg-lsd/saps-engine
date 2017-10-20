@@ -91,7 +91,7 @@ public class Archiver {
 				cleanUnfinishedFetchedData(properties);
 				List<ImageTask> imagesToFetch = imagesToFetch();
 				for (ImageTask imageData : imagesToFetch) {
-					if (!imageData.getImageStatus().equals(ImageTask.PURGED)) {
+					if (!imageData.getStatus().equals(ImageTask.PURGED)) {
 						fetchAndUpdateImage(imageData);
 					}
 				}

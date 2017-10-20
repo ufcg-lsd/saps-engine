@@ -6,14 +6,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
@@ -24,6 +17,7 @@ import org.fogbowcloud.saps.notifier.Ward;
 
 public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
+	public static final int DEFAULT_PRIORITY = 0;
 	private final JDBCImageDataStore imageStore;
 	private Properties properties;
 
@@ -115,7 +109,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 				LOGGER.error("Error while parsing string to date", e);
 			}
 			if (isBeforeDay(date, imageTask.getUpdateTime())) {
-				imageTask.setImageStatus(ImageTask.PURGED);
+				imageTask.setStatus(ImageTask.PURGED);
 
 				imageStore.updateImageTask(imageTask);
 				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
@@ -157,93 +151,53 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	@Override
-	public List<Task> fillDB(String firstYear, String lastYear, List<String> regions,
-			String dataSet, String downloaderContainerRepository, String downloaderContainerTag,
-			String preProcessorContainerRepository, String preProcessorContainerTag,
-			String workerContainerRepository, String workerContainerTag)
-			throws IOException, ParseException {
-		LOGGER.debug("Regions: " + regions);
-		List<Task> createdTasks = new ArrayList<Task>();
+	public List<Task> fillDB(
+			Double topLeftLat,
+			Double topLeftLon,
+			Double bottomRightLat,
+			Double bottomRightLon,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) {
+		List<Task> createdTasks = new ArrayList<>();
 
-		int priority = 0;
-		for (String region : regions) {
-			createdTasks.addAll(submitImagesForYears(dataSet, firstYear, lastYear, region,
-					downloaderContainerRepository, downloaderContainerTag,
-					preProcessorContainerRepository, preProcessorContainerTag,
-					workerContainerRepository, workerContainerTag, priority));
-			priority++;
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.setTime(initDate);
+		GregorianCalendar endCal = new GregorianCalendar();
+		endCal.setTime(endDate);
+		endCal.add(Calendar.DAY_OF_YEAR, 1);
+		while (cal.before(endCal)) {
+			Date date = cal.getTime();
+			try {
+				String taskId = UUID.randomUUID().toString();
+
+				ImageTask iTask = getImageStore().addImageTask(
+						taskId,
+						topLeftLat,
+						topLeftLon,
+						bottomRightLat,
+						bottomRightLon,
+						date,
+						"None",
+						DEFAULT_PRIORITY,
+						inputGathering,
+						inputPreprocessing,
+						algorithmExecution
+				);
+				Task task = new Task(UUID.randomUUID().toString());
+				task.setImageTask(iTask);
+				getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
+						getImageStore().getTask(taskId).getUpdateTime());
+
+				createdTasks.add(task);
+			} catch (SQLException e) {
+				LOGGER.error("Error while adding image to database", e);
+			}
+			cal.add(Calendar.DAY_OF_YEAR, 1);
 		}
 		return createdTasks;
-	}
-
-	private List<Task> submitImagesForYears(String dataSet, String firstDate, String lastDate,
-			String region, String downloaderContainerRepository, String downloaderContainerTag,
-			String preProcessorContainerRepository, String preProcessorContainerTag,
-			String workerContainerRepository, String workerContainerTag, int priority)
-			throws ParseException {
-		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
-		Date startDate = dateFormater.parse(firstDate);
-		Date endDate = dateFormater.parse(lastDate);
-		List<Task> createdTasks = new ArrayList<Task>();
-		
-		for (int year = Integer.parseInt(getYearFromCalendar(startDate)); year <= Integer
-				.parseInt(getYearFromCalendar(endDate)); year++) {
-			GregorianCalendar cal = new GregorianCalendar();
-			int total = 365;
-			cal.set(Calendar.YEAR, year);
-			if (cal.isLeapYear(year)) {
-				total++;
-			}
-
-			for (int d = 1; d <= total; d++) {
-				cal.set(Calendar.DAY_OF_YEAR, d);
-				Date date = cal.getTime();
-				try {
-					String taskId = UUID.randomUUID().toString();
-
-					getImageStore().addImageTask(taskId, dataSet, region, dateFormater.format(date),
-							"None", priority, downloaderContainerRepository, downloaderContainerTag,
-							preProcessorContainerRepository, preProcessorContainerTag,
-							workerContainerRepository, workerContainerTag);
-					getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
-							getImageStore().getTask(taskId).getUpdateTime());
-
-					Task task = new Task(UUID.randomUUID().toString());
-					task.setImageTask(getImageStore().getTask(taskId));
-					createdTasks.add(task);
-				} catch (SQLException e) {
-					LOGGER.error("Error while adding image to database", e);
-				}
-			}
-		}
-
-
-		return createdTasks;
-	}
-	
-	/**
-	 * Constructs a Calendar object, and then obtains the year
-	 * by using the Calendar.get(...) method for the year.
-	 */
-	public static String getYearFromCalendar(Date dte) throws IllegalArgumentException
-	{
-	    String year = "";
-
-	    if (dte == null) {
-	        throw new IllegalArgumentException("Null date!");
-	    }
-
-	    // get a Calendar
-	    Calendar cal = Calendar.getInstance();
-
-	    // set the Calendar to the specific date; the reason why
-	    // Calendar is deprecated is this mutability
-	    cal.setTime(dte);
-
-	    // get the year using the .get method, and convert to a String
-	    year = String.valueOf(cal.get(Calendar.YEAR));
-
-	    return year;
 	}
 
 	public List<ImageTask> getTaskListInDB() throws SQLException, ParseException {

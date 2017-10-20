@@ -156,10 +156,11 @@ public class SapsController extends BlowoutController {
 
 					LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
 
+					// TODO update algorithm repository
 					taskImpl = SapsTask.createSapsTask(taskImpl, properties, specWithFederation,
 							imageTask.getFederationMember(), nfsServerIP, nfsServerPort,
-							imageTask.getWorkerContainerRepository(),
-							imageTask.getWorkerContainerTag());
+							"",
+							imageTask.getAlgorithmExecutionTag());
 
 					imageTask.setState(ImageTaskState.READY);
 					imageTask.setBlowoutVersion(getBlowoutVersion(properties));

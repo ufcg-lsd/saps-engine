@@ -26,30 +26,72 @@ public class TestSubmissionDispatcher {
 
 		Date date = mock(Date.class);
 
-		ImageTask imageTaskOne = new ImageTask(taskOne.getId(), "dataset-1", "region-1", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+		ImageTask imageTaskOne = new ImageTask(
+				taskOne.getId(),
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				ImageTask.NON_EXISTENT,
+				ImageTaskState.CREATED,
+				ImageTask.NON_EXISTENT,
+				0,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
-		ImageTask imageTaskTwo = new ImageTask(taskTwo.getId(), "dataset-2", "region-2", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
-		ImageTask imageTaskThree = new ImageTask(taskThree.getId(), "dataset-3", "region-3", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT
+		);
+		ImageTask imageTaskTwo = new ImageTask(
+				taskTwo.getId(),
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				ImageTask.NON_EXISTENT,
+				ImageTaskState.CREATED,
+				ImageTask.NON_EXISTENT,
+				0,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
+				new Timestamp(new java.util.Date().getTime()),
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT
+		);
+		ImageTask imageTaskThree = new ImageTask(
+				taskThree.getId(),
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				ImageTask.NON_EXISTENT,
+				ImageTaskState.CREATED,
+				ImageTask.NON_EXISTENT,
+				0,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT,
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()),
+				ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT
+		);
 
 		taskOne.setImageTask(imageTaskOne);
 		taskTwo.setImageTask(imageTaskTwo);

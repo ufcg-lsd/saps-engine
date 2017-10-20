@@ -185,10 +185,28 @@ public class TestSapsTaskMonitor {
 	@Test
 	public void testProcMonImageRunning() throws SQLException {
 		java.sql.Date date = mock(java.sql.Date.class);
-		ImageTask imageData = new ImageTask("task-id", "dataset-1", "region-1", date, "NE",
-				ImageTaskState.READY, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), "NE",
-				"NE");
+		ImageTask imageData = new ImageTask(
+				"task-id",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"NE",
+				ImageTaskState.READY,
+				"NE",
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(new Date().getTime()),
+				new Timestamp(new Date().getTime()),
+				"NE",
+				"NE"
+		);
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
 		doReturn(imageData.getName()).when(sebalTaskMonitor)
@@ -205,10 +223,28 @@ public class TestSapsTaskMonitor {
 	@Test
 	public void testProcMonImageFinished() throws SQLException {
 		java.sql.Date date = mock(java.sql.Date.class);
-		ImageTask imageData = new ImageTask("task-id", "dataset-1", "region-1", date, "NE",
-				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()),
-				"NE", "NE");
+		ImageTask imageData = new ImageTask(
+				"task-id",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"NE",
+				ImageTaskState.RUNNING,
+				"NE",
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(new Date().getTime()),
+				new Timestamp(new Date().getTime()),
+				"NE",
+				"NE"
+		);
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
 		doReturn(imageData.getName()).when(sebalTaskMonitor)
@@ -225,10 +261,28 @@ public class TestSapsTaskMonitor {
 	@Test
 	public void testProcMonImageFailed() throws SQLException {
 		java.sql.Date date = mock(java.sql.Date.class);
-		ImageTask imageData = new ImageTask("task-id", "dataset-1", "region-1", date, "NE",
-				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()),
-				"NE", "NE");
+		ImageTask imageData = new ImageTask(
+				"task-id",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"NE",
+				ImageTaskState.RUNNING,
+				"NE",
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(new Date().getTime()),
+				new Timestamp(new Date().getTime()),
+				"NE",
+				"NE"
+		);
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
 		doReturn(imageData.getName()).when(sebalTaskMonitor)
@@ -245,10 +299,28 @@ public class TestSapsTaskMonitor {
 	@Test
 	public void testProcMonImageQueued() throws SQLException {
 		java.sql.Date date = mock(java.sql.Date.class);
-		ImageTask imageData = new ImageTask("task-id", "dataset-1", "region-1", date, "NE",
-				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", "NE", "NE",
-				"NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()),
-				"NE", "NE");
+		ImageTask imageData = new ImageTask(
+				"task-id",
+				-6.299,
+				-37.464,
+				-8.162,
+				-36.101,
+				date,
+				"NE",
+				ImageTaskState.RUNNING,
+				"NE",
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(new Date().getTime()),
+				new Timestamp(new Date().getTime()),
+				"NE",
+				"NE"
+		);
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
 		doReturn(imageData.getName()).when(sebalTaskMonitor)
