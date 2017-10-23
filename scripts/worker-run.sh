@@ -118,8 +118,6 @@ function finally {
   exit $PROCESS_OUTPUT
 }
 
-tmpGarbageCollect
-checkProcessOutput
 mountExportsDir
 checkProcessOutput
 prepareDockerContainer
