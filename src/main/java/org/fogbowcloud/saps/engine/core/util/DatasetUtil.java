@@ -1,53 +1,59 @@
 package org.fogbowcloud.saps.engine.core.util;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.AbstractMap.SimpleEntry;
 
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class DatasetUtil {
 
-	public static Map<String, Entry<Integer, Integer>> getSatsYearsOfOperation() {
-		Map<String, Entry<Integer, Integer>> satsYears = new HashMap<String, Entry<Integer, Integer>>();
+	public static String[] satsInPresentOperation = new String[] {
+			SapsPropertiesConstants.DATASET_LE7_TYPE, SapsPropertiesConstants.DATASET_LC8_TYPE };
 
-		int currentYear = getCurrentYear();
+	/**
+	 * Returns a list of Satellites in operation by a given year.
+	 * 
+	 * Note that some Satellites (Landsat7 and Landsat8) are still in operation on
+	 * this date.
+	 * 
+	 * @param year
+	 *            - integer that represents the year.
+	 * @return - a list of Satellites names in the Saps definition.
+	 */
+	public static ArrayList<String> getSatsInOperationByYear(int year) {
 
-		satsYears.put(SapsPropertiesConstants.DATASET_LT5_TYPE,
-				new SimpleEntry<>(new Integer(1984), new Integer(2013)));
-		satsYears.put(SapsPropertiesConstants.DATASET_LE7_TYPE,
-				new SimpleEntry<>(new Integer(1999), new Integer(currentYear)));
-		satsYears.put(SapsPropertiesConstants.DATASET_LC8_TYPE,
-				new SimpleEntry<>(new Integer(2013), new Integer(currentYear)));
+		Map<String, Integer> satYearBegin = new HashMap<String, Integer>();
+		Map<String, Integer> satYearEnd = new HashMap<String, Integer>();
 
-		return satsYears;
-	}
+		satYearBegin.put(SapsPropertiesConstants.DATASET_LT5_TYPE, new Integer(1984));
+		satYearEnd.put(SapsPropertiesConstants.DATASET_LT5_TYPE, new Integer(2013));
 
-	public static List<String> getSatsInOperationByYear(int year) {
-		
-		List<String> sats = new ArrayList<String>();
-		Map<String, Entry<Integer, Integer>> satsYears = getSatsYearsOfOperation();
-		
-		for(String sat : satsYears.keySet()) {
-			Entry<Integer, Integer> years = satsYears.get(sat);
-			if(year >= years.getKey() && year <= years.getValue()) {
+		satYearBegin.put(SapsPropertiesConstants.DATASET_LE7_TYPE, new Integer(1999));
+		satYearEnd.put(SapsPropertiesConstants.DATASET_LE7_TYPE, new Integer(Integer.MAX_VALUE));
+
+		satYearBegin.put(SapsPropertiesConstants.DATASET_LC8_TYPE, new Integer(2013));
+		satYearEnd.put(SapsPropertiesConstants.DATASET_LC8_TYPE, new Integer(Integer.MAX_VALUE));
+
+		updateSatsInPresentOperation(satYearEnd);
+
+		ArrayList<String> sats = new ArrayList<String>();
+
+		for (String sat : satYearBegin.keySet()) {
+			Integer yearBegin = satYearBegin.get(sat);
+			Integer yearEnd = satYearEnd.get(sat);
+			if (year >= yearBegin && year <= yearEnd) {
 				sats.add(sat);
 			}
 		}
-		
+
 		return sats;
 	}
 
-	public static int getCurrentYear() {
-		GregorianCalendar calendar = new GregorianCalendar();
-		calendar.setTime(new Date());
-		return calendar.get(Calendar.YEAR);
+	private static void updateSatsInPresentOperation(Map<String, Integer> satYearEnd) {
+		for (String sat : satsInPresentOperation) {
+			satYearEnd.put(sat, new Integer(Integer.MAX_VALUE));
+		}
 	}
 
 }
