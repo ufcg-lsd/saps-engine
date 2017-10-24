@@ -128,9 +128,9 @@ mountExportsDir
 checkProcessOutput
 prepareDockerContainer
 checkProcessOutput
-createOutputDir
-checkProcessOutput
 garbageCollect
+checkProcessOutput
+createOutputDir
 checkProcessOutput
 executeDockerContainer
 checkProcessOutput
