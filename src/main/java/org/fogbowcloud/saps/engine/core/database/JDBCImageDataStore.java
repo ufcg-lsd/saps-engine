@@ -252,7 +252,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return task;
 	}
 
-	// TODO old format, should delete?
 	@Override
 	public void addImageTask(ImageTask imageTask) throws SQLException {
 		if (imageTask.getTaskId() == null || imageTask.getTaskId().isEmpty()) {
@@ -667,8 +666,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME
-			+ " SET state = ?, utime = now() WHERE task_id = ?";
+	private static String UPDATE_IMAGE_STATE_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " +
+			STATE_COL + " = ?, " +
+			UPDATED_TIME_COL + " = now() " +
+			"WHERE " +
+			TASK_ID_COL + " = ?";
 
 	@Override
 	public void updateTaskState(String taskId, ImageTaskState state) throws SQLException {

@@ -22,13 +22,10 @@ public class DockerUtilTests {
 	public void setUp() {
 		repository = "ubuntu";
 		tag = "latest";
-		containerPath = File.separator + "home" + File.separator + "tmp" + File.separator
-				+ "sapsTest";
-		hostPath = System.getProperty("user.dir") + File.separator + "tmp" + File.separator
-				+ "sapsTest";
+		containerPath = File.separator + "tmp" + File.separator + "sapsTest";
+		hostPath = System.getProperty("user.dir") + File.separator + "tmp" + File.separator + "sapsTest";
 		hostDir = new File(hostPath);
 		hostDir.mkdirs();
-
 	}
 
 	@After

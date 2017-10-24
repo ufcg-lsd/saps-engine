@@ -324,11 +324,9 @@ public class TestInputDownloaderIntegration {
 	@Test
 	public void testFailsAndRemovesImage() throws Exception {
 		Properties properties = new Properties();
-		FileInputStream fi = new FileInputStream("./config/saps.conf");
-		properties.load(fi);
-
-		properties.setProperty("datastore_ip", "localhost");
-		properties.setProperty("datastore_port", "8000");
+		properties.setProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS, "3");
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
 		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
 		properties.setProperty("datastore_username", "testuser");
 		properties.setProperty("datastore_password", "testuser");
@@ -359,8 +357,8 @@ public class TestInputDownloaderIntegration {
 				"NE",
 				"NE",
 				"NE",
-				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
 				"available",
 				""
 		);
@@ -369,9 +367,6 @@ public class TestInputDownloaderIntegration {
 
 		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
 				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
-
-		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		imageList.add(task);
 
 		Assert.assertEquals(0, imageStore.getIn(ImageTaskState.FAILED).size()); // There's no failed image tasks
 		Assert.assertEquals(1, imageStore.getIn(ImageTaskState.CREATED).size()); // There's 1 image created
@@ -384,8 +379,13 @@ public class TestInputDownloaderIntegration {
 		Assert.assertEquals(0, imageStore.getIn(ImageTaskState.CREATED).size()); // There's 0 image created
 		Assert.assertEquals(1, imageStore.getAllTasks().size()); // Total image tasks == 1
 
-		Assert.assertEquals("Had an error, tried to download " +
-				properties.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS) +
-				" times, but this limit was exceeded.", imageStore.getTask("task-id-1").getError());
+		Assert.assertEquals(
+				"Error while downloading task...download retries " +
+						properties.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS) +
+						" exceeded."
+				, imageStore.getTask("task-id-1").getError()
+		);
+
+		imageStore.dispose();
 	}
 }
