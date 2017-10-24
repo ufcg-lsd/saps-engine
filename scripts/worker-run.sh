@@ -44,6 +44,12 @@ function prepareDockerContainer {
   docker run -td -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} -v $SAPS_TMP:$SAPS_TMP ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
 }
 
+# This function creates output directory if not exists
+function createOutputDir {
+  echo "Create output directory ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME if it not exists"
+  sudo mkdir -p ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME
+}
+
 # This function cleans previous, and probably failed, output from task output dir
 function garbageCollect {
   DIRECTORY=${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME
@@ -121,6 +127,8 @@ function finally {
 mountExportsDir
 checkProcessOutput
 prepareDockerContainer
+checkProcessOutput
+createOutputDir
 checkProcessOutput
 garbageCollect
 checkProcessOutput
