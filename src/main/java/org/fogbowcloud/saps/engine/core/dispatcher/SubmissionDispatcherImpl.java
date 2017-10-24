@@ -164,7 +164,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			String algorithmExecution) {
 		List<Task> createdTasks = new ArrayList<>();
 
-		// TODO get dataset and region from lat/lon
+		// TODO get region from lat/lon
 		String region = null;
 
 		GregorianCalendar cal = new GregorianCalendar();
