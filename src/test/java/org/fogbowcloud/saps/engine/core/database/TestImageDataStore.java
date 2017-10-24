@@ -2,7 +2,7 @@ package org.fogbowcloud.saps.engine.core.database;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -29,15 +29,13 @@ public class TestImageDataStore {
 		properties.setProperty("datastore_driver", "org.h2.Driver");
 		properties.setProperty("datastore_name", "testdb");
 
-		Date date = mock(Date.class);
+		Date date = new Date();
 
 		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
 		ImageTask taskOne = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.CREATED,
@@ -56,10 +54,8 @@ public class TestImageDataStore {
 		);
 		ImageTask taskTwo = new ImageTask(
 				"task-id-2",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.CREATED,

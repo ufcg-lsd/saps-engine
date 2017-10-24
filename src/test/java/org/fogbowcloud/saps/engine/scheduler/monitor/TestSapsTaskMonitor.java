@@ -187,10 +187,8 @@ public class TestSapsTaskMonitor {
 		java.sql.Date date = mock(java.sql.Date.class);
 		ImageTask imageData = new ImageTask(
 				"task-id",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"NE",
 				ImageTaskState.READY,
@@ -225,10 +223,8 @@ public class TestSapsTaskMonitor {
 		java.sql.Date date = mock(java.sql.Date.class);
 		ImageTask imageData = new ImageTask(
 				"task-id",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"NE",
 				ImageTaskState.RUNNING,
@@ -263,10 +259,8 @@ public class TestSapsTaskMonitor {
 		java.sql.Date date = mock(java.sql.Date.class);
 		ImageTask imageData = new ImageTask(
 				"task-id",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"NE",
 				ImageTaskState.RUNNING,
@@ -301,10 +295,8 @@ public class TestSapsTaskMonitor {
 		java.sql.Date date = mock(java.sql.Date.class);
 		ImageTask imageData = new ImageTask(
 				"task-id",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"NE",
 				ImageTaskState.RUNNING,

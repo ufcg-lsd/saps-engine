@@ -25,17 +25,16 @@ public interface ImageDataStore {
 	String DATASTORE_IP = "datastore_ip";
 	String DATASTORE_PORT = "datastore_port";
 
-	ImageTask addImageTask(String taskId,
-					  Double topLeftLat,
-					  Double topLeftLon,
-					  Double bottomRightLat,
-					  Double bottomRightLon,
-					  Date date,
-					  String downloadLink,
-					  int priority,
-					  String inputGathering,
-					  String inputPreprocessing,
-					  String algorithmExecution) throws SQLException;
+	ImageTask addImageTask(
+			String taskId,
+			String dataset,
+			String region,
+			Date date,
+			String downloadLink,
+			int priority,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) throws SQLException;
 
 	void addImageTask(ImageTask imageTask) throws SQLException;
 

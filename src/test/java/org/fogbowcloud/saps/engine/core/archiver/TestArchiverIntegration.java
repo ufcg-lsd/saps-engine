@@ -8,9 +8,9 @@ import static org.mockito.Mockito.mock;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
@@ -56,14 +56,12 @@ public class TestArchiverIntegration {
 		String federationMember = "fake-federation-member";
 		String fetcherVolumeInputPath = "fake-fetcher-volume-input-path";
 
-		Date date = mock(Date.class);
+		Date date = new Date();
 
 		ImageTask imageData = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.FINISHED,
@@ -120,10 +118,8 @@ public class TestArchiverIntegration {
 
 		ImageTask imageData = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.FINISHED,
@@ -142,10 +138,8 @@ public class TestArchiverIntegration {
 		);
 		ImageTask imageData2 = new ImageTask(
 				"task-id-2",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link2",
 				ImageTaskState.FINISHED,
@@ -202,14 +196,12 @@ public class TestArchiverIntegration {
 		DB pendingImageFetchDB = mock(DB.class);
 		String federationMember = "fake-federation-member";
 
-		Date date = mock(Date.class);
+		Date date = new Date();
 
 		ImageTask imageData = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.FINISHED,
@@ -228,10 +220,8 @@ public class TestArchiverIntegration {
 		);
 		ImageTask imageData2 = new ImageTask(
 				"task-id-2",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link2",
 				ImageTaskState.FINISHED,
@@ -294,14 +284,12 @@ public class TestArchiverIntegration {
 		DB pendingImageFetchDB = mock(DB.class);
 		String federationMember = "fake-federation-member";
 
-		Date date = mock(Date.class);
+		Date date = new Date();
 
 		ImageTask imageData = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.FINISHED,
@@ -320,10 +308,8 @@ public class TestArchiverIntegration {
 		);
 		ImageTask imageData2 = new ImageTask(
 				"task-id-2",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link2",
 				ImageTaskState.FINISHED,
@@ -390,10 +376,8 @@ public class TestArchiverIntegration {
 
 		ImageTask imageData = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.ARCHIVING,

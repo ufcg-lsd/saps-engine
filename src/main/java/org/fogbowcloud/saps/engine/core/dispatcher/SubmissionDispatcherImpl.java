@@ -163,23 +163,24 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			String algorithmExecution) {
 		List<Task> createdTasks = new ArrayList<>();
 
+		// TODO get dataset and region from lat/lon
+		String dataset = null;
+		String region = null;
+
 		GregorianCalendar cal = new GregorianCalendar();
 		cal.setTime(initDate);
 		GregorianCalendar endCal = new GregorianCalendar();
 		endCal.setTime(endDate);
 		endCal.add(Calendar.DAY_OF_YEAR, 1);
 		while (cal.before(endCal)) {
-			Date date = cal.getTime();
 			try {
 				String taskId = UUID.randomUUID().toString();
 
 				ImageTask iTask = getImageStore().addImageTask(
 						taskId,
-						topLeftLat,
-						topLeftLon,
-						bottomRightLat,
-						bottomRightLon,
-						date,
+						dataset,
+						region,
+						cal.getTime(),
 						"None",
 						DEFAULT_PRIORITY,
 						inputGathering,

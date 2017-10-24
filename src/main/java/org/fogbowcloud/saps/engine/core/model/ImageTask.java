@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,12 +19,8 @@ public class ImageTask implements Serializable {
 	public static final String NON_EXISTENT = "NE";
 
 	private String taskId;
-	private String name;
-	private String collectionTierName;
-	private Double topLeftLat;
-	private Double topLeftLon;
-	private Double bottomRightLat;
-	private Double bottomRightLon;
+	private String dataset;
+	private String region;
 	private Date imageDate;
 	private String downloadLink;
 	private ImageTaskState state;
@@ -43,10 +39,8 @@ public class ImageTask implements Serializable {
 
 	public ImageTask(
 			String taskId,
-			Double topLeftLat,
-			Double topLeftLon,
-			Double bottomRightLat,
-			Double bottomRightLon,
+			String dataset,
+			String region,
 			Date imageDate,
 			String downloadLink,
 			ImageTaskState state,
@@ -63,10 +57,8 @@ public class ImageTask implements Serializable {
 			String status,
 			String error) {
 		this.taskId = taskId;
-		this.topLeftLat = topLeftLat;
-		this.topLeftLon = topLeftLon;
-		this.bottomRightLat = bottomRightLat;
-		this.bottomRightLon = bottomRightLon;
+		this.dataset = dataset;
+		this.region = region;
 		this.imageDate = imageDate;
 		this.downloadLink = downloadLink;
 		this.state = state;
@@ -92,52 +84,20 @@ public class ImageTask implements Serializable {
 		this.taskId = taskId;
 	}
 
-	public String getName() {
-		return name;
+	public String getDataset() {
+		return dataset;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setDataset(String dataset) {
+		this.dataset = dataset;
 	}
 
-	public String getCollectionTierName() {
-		return collectionTierName;
+	public String getRegion() {
+		return region;
 	}
 
-	public void setCollectionTierName(String collectionTierName) {
-		this.collectionTierName = collectionTierName;
-	}
-
-	public Double getTopLeftLat() {
-		return topLeftLat;
-	}
-
-	public void setTopLeftLat(Double topLeftLat) {
-		this.topLeftLat = topLeftLat;
-	}
-
-	public Double getTopLeftLon() {
-		return topLeftLon;
-	}
-
-	public void setTopLeftLon(Double topLeftLon) {
-		this.topLeftLon = topLeftLon;
-	}
-
-	public Double getBottomRightLat() {
-		return bottomRightLat;
-	}
-
-	public void setBottomRightLat(Double bottomRightLat) {
-		this.bottomRightLat = bottomRightLat;
-	}
-
-	public Double getBottomRightLon() {
-		return bottomRightLon;
-	}
-
-	public void setBottomRightLon(Double bottomRightLon) {
-		this.bottomRightLon = bottomRightLon;
+	public void setRegion(String region) {
+		this.region = region;
 	}
 
 	public Date getImageDate() {
@@ -260,42 +220,26 @@ public class ImageTask implements Serializable {
 		this.error = error;
 	}
 
-	@Override
-	public String toString() {
-		return "ImageTask{" +
-				"taskId='" + taskId + "'" +
-				", topLeftLat=" + topLeftLat +
-				", topLeftLon=" + topLeftLon +
-				", bottomRightLat=" + bottomRightLat +
-				", bottomRightLon=" + bottomRightLon +
-				", imageDate=" + DATE_FORMATER.format(imageDate) +
-				", downloadLink='" + downloadLink + "'" +
-				", state=" + state +
-				", federationMember='" + federationMember + "'" +
-				", priority=" + priority +
-				", stationId='" + stationId + "'" +
-				", inputGatheringTag='" + inputGatheringTag + "'" +
-				", inputPreprocessingTag='" + inputPreprocessingTag + "'" +
-				", algorithmExecutionTag='" + algorithmExecutionTag + "'" +
-				", archiverVersion='" + archiverVersion + "'" +
-				", blowoutVersion='" + blowoutVersion + "'" +
-				", creationTime=" + creationTime +
-				", updateTime=" + updateTime +
-				", status='" + status + "'" +
-				", error='" + error + "'" +
-				'}';
+	// TODO change to the correct format
+	public String getName() {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(imageDate);
+		return dataset + cal.get(Calendar.DAY_OF_YEAR) + cal.get(Calendar.YEAR);
+	}
+
+	// TODO change to the correct format
+	public String getCollectionTierName() {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(imageDate);
+		return dataset + "_" + cal.get(Calendar.DAY_OF_YEAR) + "_" + cal.get(Calendar.YEAR);
 	}
 
 	public JSONObject toJSON() throws JSONException {
 		JSONObject json = new JSONObject();
 
 		json.put("taskId", taskId);
-		JSONArray topLeft = new JSONArray();
-		topLeft.put(topLeftLat).put(topLeftLon);
-		json.put("topLeft", topLeft);
-		JSONArray bottomRight = new JSONArray();
-		bottomRight.put(bottomRightLat).put(bottomRightLon);
-		json.put("bottomRight", bottomRight);
+		json.put("dataset", dataset);
+		json.put("region", region);
 		json.put("imageDate", DATE_FORMATER.format(imageDate));
 		json.put("downloadLink", downloadLink);
 		json.put("state", state.getValue());
@@ -316,6 +260,30 @@ public class ImageTask implements Serializable {
 	}
 
 	@Override
+	public String toString() {
+		return "ImageTask{" +
+				"taskId='" + taskId + '\'' +
+				", dataset='" + dataset + '\'' +
+				", region='" + region + '\'' +
+				", imageDate=" + DATE_FORMATER.format(imageDate) +
+				", downloadLink='" + downloadLink + '\'' +
+				", state=" + state +
+				", federationMember='" + federationMember + '\'' +
+				", priority=" + priority +
+				", stationId='" + stationId + '\'' +
+				", inputGatheringTag='" + inputGatheringTag + '\'' +
+				", inputPreprocessingTag='" + inputPreprocessingTag + '\'' +
+				", algorithmExecutionTag='" + algorithmExecutionTag + '\'' +
+				", archiverVersion='" + archiverVersion + '\'' +
+				", blowoutVersion='" + blowoutVersion + '\'' +
+				", creationTime=" + creationTime +
+				", updateTime=" + updateTime +
+				", status='" + status + '\'' +
+				", error='" + error + '\'' +
+				'}';
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
@@ -324,13 +292,19 @@ public class ImageTask implements Serializable {
 
 		if (priority != imageTask.priority) return false;
 		if (taskId != null ? !taskId.equals(imageTask.taskId) : imageTask.taskId != null) return false;
-		if (topLeftLat != null ? !topLeftLat.equals(imageTask.topLeftLat) : imageTask.topLeftLat != null) return false;
-		if (topLeftLon != null ? !topLeftLon.equals(imageTask.topLeftLon) : imageTask.topLeftLon != null) return false;
-		if (bottomRightLat != null ? !bottomRightLat.equals(imageTask.bottomRightLat) : imageTask.bottomRightLat != null)
-			return false;
-		if (bottomRightLon != null ? !bottomRightLon.equals(imageTask.bottomRightLon) : imageTask.bottomRightLon != null)
-			return false;
-		if (imageDate != null ? !imageDate.equals(imageTask.imageDate) : imageTask.imageDate != null) return false;
+		if (dataset != null ? !dataset.equals(imageTask.dataset) : imageTask.dataset != null) return false;
+		if (region != null ? !region.equals(imageTask.region) : imageTask.region != null) return false;
+		if (imageDate != null) {
+			if (imageTask.imageDate == null) return false;
+			Calendar it = Calendar.getInstance();
+			it.setTime(imageDate);
+			Calendar oit = Calendar.getInstance();
+			oit.setTime(imageTask.imageDate);
+			if (it.get(Calendar.DAY_OF_YEAR) != oit.get(Calendar.DAY_OF_YEAR)) return false;
+			if (it.get(Calendar.YEAR) != oit.get(Calendar.YEAR)) return false;
+		} else {
+			if (imageTask.imageDate != null) return false;
+		}
 		if (downloadLink != null ? !downloadLink.equals(imageTask.downloadLink) : imageTask.downloadLink != null)
 			return false;
 		if (state != imageTask.state) return false;
@@ -357,10 +331,8 @@ public class ImageTask implements Serializable {
 	@Override
 	public int hashCode() {
 		int result = taskId != null ? taskId.hashCode() : 0;
-		result = 31 * result + (topLeftLat != null ? topLeftLat.hashCode() : 0);
-		result = 31 * result + (topLeftLon != null ? topLeftLon.hashCode() : 0);
-		result = 31 * result + (bottomRightLat != null ? bottomRightLat.hashCode() : 0);
-		result = 31 * result + (bottomRightLon != null ? bottomRightLon.hashCode() : 0);
+		result = 31 * result + (dataset != null ? dataset.hashCode() : 0);
+		result = 31 * result + (region != null ? region.hashCode() : 0);
 		result = 31 * result + (imageDate != null ? imageDate.hashCode() : 0);
 		result = 31 * result + (downloadLink != null ? downloadLink.hashCode() : 0);
 		result = 31 * result + (state != null ? state.hashCode() : 0);

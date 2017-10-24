@@ -5,7 +5,9 @@ import static org.mockito.Mockito.mock;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
@@ -16,6 +18,8 @@ import org.junit.Test;
 
 public class TestSubmissionDispatcher {
 
+	private static final DateFormat DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd");
+
 	@Test
 	public void testInsertTasksWithSubmission() throws SQLException, IOException {
 		Submission submissionOne = new Submission("sub-1");
@@ -24,14 +28,12 @@ public class TestSubmissionDispatcher {
 		Task taskTwo = new Task("task-2");
 		Task taskThree = new Task("task-3");
 
-		Date date = mock(Date.class);
+		Date date = new Date();
 
 		ImageTask imageTaskOne = new ImageTask(
 				taskOne.getId(),
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				ImageTask.NON_EXISTENT,
 				ImageTaskState.CREATED,
@@ -50,10 +52,8 @@ public class TestSubmissionDispatcher {
 		);
 		ImageTask imageTaskTwo = new ImageTask(
 				taskTwo.getId(),
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				ImageTask.NON_EXISTENT,
 				ImageTaskState.CREATED,
@@ -72,10 +72,8 @@ public class TestSubmissionDispatcher {
 		);
 		ImageTask imageTaskThree = new ImageTask(
 				taskThree.getId(),
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				ImageTask.NON_EXISTENT,
 				ImageTaskState.CREATED,

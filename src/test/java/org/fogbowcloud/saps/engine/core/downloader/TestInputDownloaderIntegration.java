@@ -71,10 +71,8 @@ public class TestInputDownloaderIntegration {
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
 		ImageTask taskOne = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.CREATED,
@@ -153,10 +151,8 @@ public class TestInputDownloaderIntegration {
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
 		ImageTask taskOne = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.FINISHED,
@@ -176,10 +172,8 @@ public class TestInputDownloaderIntegration {
 		taskOne.setStatus(ImageTask.PURGED);
 		ImageTask taskTwo = new ImageTask(
 				"task-id-2",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link2",
 				ImageTaskState.FINISHED,
@@ -229,10 +223,8 @@ public class TestInputDownloaderIntegration {
 		List<ImageTask> imageList = new ArrayList<ImageTask>();
 		ImageTask taskOne = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.ARCHIVED,
@@ -251,10 +243,8 @@ public class TestInputDownloaderIntegration {
 		);
 		ImageTask taskTwo = new ImageTask(
 				"task-id-2",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link2",
 				ImageTaskState.ARCHIVED,
@@ -303,10 +293,8 @@ public class TestInputDownloaderIntegration {
 
 		ImageTask task = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.CREATED,
@@ -336,7 +324,7 @@ public class TestInputDownloaderIntegration {
 	@Test
 	public void testFailsAndRemovesImage() throws Exception {
 		Properties properties = new Properties();
-		FileInputStream fi = new FileInputStream("config/sebal.conf");
+		FileInputStream fi = new FileInputStream("./config/saps.conf");
 		properties.load(fi);
 
 		properties.setProperty("datastore_ip", "localhost");
@@ -358,10 +346,8 @@ public class TestInputDownloaderIntegration {
 
 		ImageTask task = new ImageTask(
 				"task-id-1",
-				-6.299,
-				-37.464,
-				-8.162,
-				-36.101,
+				"LT5",
+				"region-53",
 				date,
 				"link1",
 				ImageTaskState.CREATED,
