@@ -13,6 +13,7 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
+import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
 import org.fogbowcloud.saps.notifier.Ward;
 
 public class SubmissionDispatcherImpl implements SubmissionDispatcher {
@@ -164,7 +165,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		List<Task> createdTasks = new ArrayList<>();
 
 		// TODO get dataset and region from lat/lon
-		String dataset = null;
 		String region = null;
 
 		GregorianCalendar cal = new GregorianCalendar();
@@ -175,24 +175,32 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		while (cal.before(endCal)) {
 			try {
 				String taskId = UUID.randomUUID().toString();
+				
+				ArrayList<String> datasets = DatasetUtil
+						.getSatsInOperationByYear(cal.get(Calendar.YEAR));
+				
+				for(String dataset : datasets) {
+					
+					ImageTask iTask = getImageStore().addImageTask(
+							taskId,
+							dataset,
+							region,
+							cal.getTime(),
+							"None",
+							DEFAULT_PRIORITY,
+							inputGathering,
+							inputPreprocessing,
+							algorithmExecution
+					);
+					
+					Task task = new Task(UUID.randomUUID().toString());
+					task.setImageTask(iTask);
+					getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
+							getImageStore().getTask(taskId).getUpdateTime());
 
-				ImageTask iTask = getImageStore().addImageTask(
-						taskId,
-						dataset,
-						region,
-						cal.getTime(),
-						"None",
-						DEFAULT_PRIORITY,
-						inputGathering,
-						inputPreprocessing,
-						algorithmExecution
-				);
-				Task task = new Task(UUID.randomUUID().toString());
-				task.setImageTask(iTask);
-				getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
-						getImageStore().getTask(taskId).getUpdateTime());
-
-				createdTasks.add(task);
+					createdTasks.add(task);
+				}
+				
 			} catch (SQLException e) {
 				LOGGER.error("Error while adding image to database", e);
 			}
