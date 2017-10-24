@@ -174,12 +174,12 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 		endCal.add(Calendar.DAY_OF_YEAR, 1);
 		while (cal.before(endCal)) {
 			try {
-				String taskId = UUID.randomUUID().toString();
-				
 				ArrayList<String> datasets = DatasetUtil
 						.getSatsInOperationByYear(cal.get(Calendar.YEAR));
 				
 				for(String dataset : datasets) {
+					
+					String taskId = UUID.randomUUID().toString();
 					
 					ImageTask iTask = getImageStore().addImageTask(
 							taskId,
