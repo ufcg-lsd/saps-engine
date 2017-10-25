@@ -21,8 +21,8 @@ public class TestImageDataStore {
 		int limit = 1;
 
 		Properties properties = new Properties();
-		properties.setProperty("datastore_ip", "localhost");
-		properties.setProperty("datastore_port", "8000");
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
 		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
 		properties.setProperty("datastore_username", "testuser");
 		properties.setProperty("datastore_password", "testuser");
@@ -79,6 +79,8 @@ public class TestImageDataStore {
 		List<ImageTask> imageTaskList = imageStore.getImagesToDownload(federationMember, limit);
 
 		Assert.assertTrue(imageTaskList.size() == 1);
+
+		imageStore.dispose();
 	}
 
 }

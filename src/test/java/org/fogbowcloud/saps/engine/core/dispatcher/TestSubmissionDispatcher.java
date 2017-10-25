@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
@@ -20,8 +21,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class TestSubmissionDispatcher {
-
-	private static final DateFormat DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd");
 
 	@Test
 	public void testInsertTasksWithSubmission() throws SQLException, IOException {
@@ -103,8 +102,8 @@ public class TestSubmissionDispatcher {
 		submissionTwo.addTask(taskThree);
 
 		Properties properties = new Properties();
-		properties.setProperty("datastore_ip", "localhost");
-		properties.setProperty("datastore_port", "8000");
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
 		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
 		properties.setProperty("datastore_username", "testuser");
 		properties.setProperty("datastore_password", "testuser");
@@ -112,6 +111,7 @@ public class TestSubmissionDispatcher {
 		properties.setProperty("datastore_name", "testdb");
 
 		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+
 		imageStore.addImageTask(imageTaskOne);
 		imageStore.addImageTask(imageTaskTwo);
 		imageStore.addImageTask(imageTaskThree);
@@ -142,5 +142,7 @@ public class TestSubmissionDispatcher {
 		Arrays.sort(sats);
 		Arrays.sort(iTaskDatasets);
 		Assert.assertEquals(Arrays.toString(sats), Arrays.toString(iTaskDatasets));
+
+		imageStore.dispose();
 	}
 }
