@@ -25,8 +25,7 @@ public class FTPIntegrationImpl implements FTPIntegration{
 		builder = new ProcessBuilder("/bin/bash",
 				properties.getProperty(SapsPropertiesConstants.SAPS_SFTP_SCRIPT_PATH),
 				properties.getProperty(SapsPropertiesConstants.DEFAULT_FTP_SERVER_USER),
-				ftpServerIP, ftpServerPort, remoteTaskFilesPath, localTaskFilesPath,
-				imageTask.getTaskId());
+				ftpServerIP, ftpServerPort, remoteTaskFilesPath, localTaskFilesPath);
 
 		try {
 			Process p = builder.start();
