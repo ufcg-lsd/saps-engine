@@ -1,0 +1,21 @@
+#!/bin/bash
+saps_engine_dir_path=
+image_store_ip=
+image_store_db_port=
+
+saps_engine_log_properties_path=
+saps_engine_target_path=
+saps_engine_conf_path=
+
+while [ true ]
+do
+  if pgrep -x "java" > /dev/null
+  then
+    java_pid="$(pidof java)"
+    sudo kill -9 $java_pid
+    sleep 10
+  fi
+
+  sudo java -Dlog4j.configuration=file:$saps_engine_log_properties_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.archiver.ArchiverMain $saps_engine_conf_path $image_store_ip $image_store_db_port &
+  sleep 12h
+done

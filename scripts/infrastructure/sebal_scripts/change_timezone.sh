@@ -1,4 +1,4 @@
 #!/bin/bash
 
-echo "America/Bahia" > /etc/timezone    
+echo "America/Recife" > /etc/timezone    
 dpkg-reconfigure -f noninteractive tzdata

@@ -1,0 +1,153 @@
+#!/bin/bash
+
+. sebal.properties
+
+print_menu() {
+	echo "Usage: $0 COMMAND [OPTIONS]"
+	# TODO: put more options later
+	echo "Commands are POST"
+	echo "POST --image-name image-name --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
+	exit 1
+}
+
+askPassword() {
+	echo -n "Password: "
+	read -s password
+	echo
+}
+
+askPasswordConfirmation() {
+	echo -n "Confirm password: "
+	read -s passwordConfirmation
+	echo
+}
+
+define_parameters() {
+	while [ ! -z $1 ]; do
+		case $1 in
+			--admin-email)
+				shift;
+				admin=$1;
+				;;
+			-e | --email)
+				shift;
+				email=$1;
+				;;
+			-u | --user-name)
+				shift;
+				user=$1;
+				;;
+			-n | --notify)
+				shift;
+				notify=$1;
+				;;
+			-i | --image-name)
+                                shift;
+                                image_name=$1;
+                                ;;
+			--sebal-version)
+				shift;
+				sebal_version=$1;
+				;;
+			--sebal-tag)
+				shift;
+				sebal_tag=$1;
+				;;
+
+		esac
+		shift
+	done
+}
+
+do_post() {
+	define_parameters $@
+	askPassword
+	if [[ "$image_name" == "" || "$sebal_version" == "" || "$sebal_tag" == "" ]]
+	then
+		echo "ERROR: --image-name, --sebal-version and --sebal-tag are mandatories"
+		print_menu
+	else
+        	response=$(curl --data "userEmail=$email&userPass=$password&imageName=$image_name&sebalVersion=$sebal_version&sebalTag=$sebal_tag" "$host/images" 2> /dev/null)
+		echo $response
+	fi
+}
+
+purge_image() {
+	if [ ! $# -lt 1 ]
+	then
+		define_parameters $@
+		askPassword
+		day=$1
+        	response=$(curl -X DELETE --data "userEmail=$email&userPass=$password&day=$day&force=$force" "$host/images" 2> /dev/null)
+                echo $response
+        else
+		print_menu
+		exit 1
+        fi
+}
+
+create_user() {
+	if [ ! $# -lt 6 ]
+	then
+		define_parameters $@
+		askPassword
+		askPasswordConfirmation
+		if [ ! "$password" == "$passwordConfirmation" ]
+		then
+			echo "Password and password confirmation doesn't match"
+		else
+			response=$(curl --data "userEmail=$email&userName=$user&userPass=$password&userPassConfirm=$passwordConfirmation&userNotify=$notify" "$host/user/register" 2> /dev/null)
+			echo $response
+		fi
+	else
+		print_menu
+		exit 1
+	fi
+}
+
+update_state() {
+	if [ ! $# -lt 6 ]
+	then
+		define_parameters $@
+		askPassword
+		response=$(curl -X PUT --data "adminEmail=$admin&adminPass=$password&userEmail=$email&userState=$active" "$host/users/$email" 2> /dev/null)
+		echo $response
+	else
+		print_menu
+		exit 1
+	fi
+}
+
+if [ $# -gt 0 ]
+then
+    op=$1
+    case "$op" in
+        GET)
+            shift
+            do_get $@
+        ;;
+        POST)
+            shift
+            do_post $@
+        ;;
+        PURGE)
+            shift
+            purge_image $@
+        ;;
+        CREATEUSER)
+            shift
+            create_user $@
+        ;;
+	UPDATE_USER_STATE)
+            shift
+            update_state $@
+        ;;
+        *)
+            print_menu
+            exit 1
+        ;;
+    esac
+else
+	print_menu
+	exit 1
+fi
