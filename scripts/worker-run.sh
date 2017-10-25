@@ -28,22 +28,6 @@ function mountExportsDir {
   fi
 }
 
-# This function downloads container image and prepare container to execution
-function prepareDockerContainer {
-  cd ${SANDBOX}
-
-  echo "Pulling docker image from ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}"
-  docker pull ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
-
-  if [ "$(docker ps -aq -f status=exited -f name=${WORKER_CONTAINER_TAG})" ] || [ "$(docker ps -q -f name=${WORKER_CONTAINER_TAG})" ]
-  then
-    # cleanup
-    docker rm ${WORKER_CONTAINER_TAG}
-  fi
-
-  docker run -td -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} -v $SAPS_TMP:$SAPS_TMP ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
-}
-
 # This function install Docker if it's not installed
 function installDocker {
   sudo docker -v
@@ -61,7 +45,7 @@ function installDocker {
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     sudo apt-get -y update
     sudo apt-get -y install docker-ce
-    
+
     docker_version=$(apt-cache madison docker-ce | awk '{print $3}' | sed -n 1p)
     sudo apt-get -y install docker-ce=$docker_version
     sudo docker run hello-world
@@ -69,6 +53,22 @@ function installDocker {
   else
     echo "Docker is already installed...Procceeding with execution."
   fi
+}
+
+# This function downloads container image and prepare container to execution
+function prepareDockerContainer {
+  cd ${SANDBOX}
+
+  echo "Pulling docker image from ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}"
+  sudo docker pull ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
+
+  if [ "$(sudo docker ps -aq -f status=exited -f name=${WORKER_CONTAINER_TAG})" ] || [ "$(sudo docker ps -q -f name=${WORKER_CONTAINER_TAG})" ]
+  then
+    # cleanup
+    sudo docker rm ${WORKER_CONTAINER_TAG}
+  fi
+
+  sudo docker run -td -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} -v $SAPS_TMP:$SAPS_TMP ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
 }
 
 # This function cleans previous, and probably failed, output from task output dir
@@ -94,16 +94,16 @@ function createOutputDir {
 function executeDockerContainer {
   cd ${SANDBOX}
 
-  CONTAINER_ID=$(docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
+  CONTAINER_ID=$(sudo docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
 
-  docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${SAPS_MOUNT_POINT}/${TASK_ID}/$INPUTS_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$PREPROCESSING_DIR_NAME
+  sudo docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${SAPS_MOUNT_POINT}/${TASK_ID}/$INPUTS_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$PREPROCESSING_DIR_NAME
 }
 
 function removeDockerContainer {
   CONTAINER_ID=$(docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
 
   echo "Removing docker container $CONTAINER_ID"
-  docker rm -f $CONTAINER_ID
+  sudo docker rm -f $CONTAINER_ID
 }
 
 # This function do a checksum of all output files in image dir
