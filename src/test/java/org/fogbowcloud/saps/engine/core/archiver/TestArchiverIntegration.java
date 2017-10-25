@@ -84,12 +84,12 @@ public class TestArchiverIntegration {
 
 		Archiver fetcher = mock(Archiver.class);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
-		doReturn(1).when(fetcher).fetchInputs(imageData);
+		doReturn(1).when(fetcher).archiveInputs(imageData);
 
 		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
 
 		// exercise
-		fetcher.fetch(imageData);
+		fetcher.archive(imageData);
 
 		// expect
 		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
@@ -171,7 +171,7 @@ public class TestArchiverIntegration {
 		Assert.assertEquals(ImageTaskState.FINISHED, imageData2.getState());
 
 		// exercise
-		fetcher.imagesToFetch();
+		fetcher.tasksToArchive();
 
 		// expect
 		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
@@ -258,8 +258,8 @@ public class TestArchiverIntegration {
 		Assert.assertEquals(ImageTaskState.FINISHED, imageData2.getState());
 
 		// exercise
-		fetcher.prepareFetch(imageData);
-		fetcher.prepareFetch(imageData2);
+		fetcher.prepareArchive(imageData);
+		fetcher.prepareArchive(imageData2);
 
 		// expect
 		Assert.assertEquals(ImageTaskState.ARCHIVING, imageData.getState());
@@ -346,8 +346,8 @@ public class TestArchiverIntegration {
 		Assert.assertEquals(ImageTaskState.FINISHED, imageData2.getState());
 
 		// exercise
-		fetcher.prepareFetch(imageData);
-		fetcher.prepareFetch(imageData2);
+		fetcher.prepareArchive(imageData);
+		fetcher.prepareArchive(imageData2);
 
 		// expect
 		Assert.assertEquals(ImageTaskState.ARCHIVING, imageData.getState());
@@ -409,7 +409,7 @@ public class TestArchiverIntegration {
 		doReturn(false).when(fetcher).uploadInputFilesToSwift(imageData, fetcherVolumeInputsDir);
 
 		// exercise
-		fetcher.fetch(imageData);
+		fetcher.archive(imageData);
 
 		// expect
 		Assert.assertEquals(ImageTaskState.ARCHIVING, imageData.getState());
@@ -433,7 +433,7 @@ public class TestArchiverIntegration {
 				fetcherHelper);
 
 		// exercise
-		String versionReturn = fetcher.getFetcherVersion();
+		String versionReturn = fetcher.getArchiverVersion();
 
 		// expect
 		Assert.assertEquals("0c26f092e976389c593953a1ad8ddaadb5c2ab2a", versionReturn);
