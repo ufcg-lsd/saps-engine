@@ -9,26 +9,18 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.Validate;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.manager.core.plugins.util.HttpResponseWrapper;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.restlet.engine.util.WrapperScheduledExecutorService;
-import sun.misc.IOUtils;
 
 /**
  * Created by manel on 18/08/16.
@@ -81,6 +73,7 @@ public class USGSNasaRepository implements INPERepository {
 		this.usgsPassword = usgsPassword;
 		this.usgsAPIKeyPeriod = usgsAPIKeyPeriod;
 		setUSGSAPIKey(generateAPIKey());
+		handleAPIKeyUpdate(Executors.newScheduledThreadPool(1));
 
 		Validate.isTrue(directoryExists(sapsExportPath), "Sebal sapsExportPath directory "
 				+ sapsExportPath + "does not exist.");
@@ -103,7 +96,7 @@ public class USGSNasaRepository implements INPERepository {
 			String response = getLoginResponse();
 			JSONObject apiKeyRequestResponse = new JSONObject(response);
 
-			return apiKeyRequestResponse.getString(SapsPropertiesConstants.DATA_JSON_KEY);
+			return apiKeyRequestResponse.optString(SapsPropertiesConstants.DATA_JSON_KEY);
 		} catch (Throwable e) {
 			LOGGER.error("Error while generating USGS API key", e);
 		}
@@ -512,7 +505,7 @@ public class USGSNasaRepository implements INPERepository {
 		return regionsFound;
 	}
 
-	private JSONArray searchForRegionInArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
+	protected JSONArray searchForRegionInArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
 			   String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude) {
 		JSONObject searchJSONObj = new JSONObject();
 		try {
@@ -554,7 +547,7 @@ public class USGSNasaRepository implements INPERepository {
 		try {
 			response = client.execute(request);
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error("Error to send request to USGS.", e);
 		}
 		HttpEntity entity = response.getEntity();
 
@@ -567,13 +560,5 @@ public class USGSNasaRepository implements INPERepository {
 			}
 		}
 		return null;
-	}
-
-	public static void main(String[] args) throws IOException, JSONException, ParseException {
-		InputStream inputStream = new FileInputStream("config/saps.conf");
-		Properties properties = new Properties();
-		properties.load(inputStream);
-		USGSNasaRepository usgsNasaRepository = new USGSNasaRepository(properties);
-		usgsNasaRepository.getRegionsFromArea("LANDSAT_TM_C1", 1985, 1986, "-14.049768", "-54.600601","-14.049768", "-54.600601");
 	}
 }
