@@ -44,6 +44,33 @@ function prepareDockerContainer {
   docker run -td -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} -v $SAPS_TMP:$SAPS_TMP ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
 }
 
+# This function install Docker if it's not installed
+function installDocker {
+  sudo docker -v
+  PROCESS_OUTPUT=$?
+
+  if [ $PROCESS_OUTPUT -ne 0 ]
+  then
+    echo "Docker is not installed...Starting installation process."
+    sudo apt-get -y update
+    sudo apt-get -y install linux-image-extra-$(uname -r) linux-image-extra-virtual
+    sudo apt-get -y update
+    sudo apt-get -y install apt-transport-https ca-certificates curl software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo apt-key fingerprint 0EBFCD88
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt-get -y update
+    sudo apt-get -y install docker-ce
+    
+    docker_version=$(apt-cache madison docker-ce | awk '{print $3}' | sed -n 1p)
+    sudo apt-get -y install docker-ce=$docker_version
+    sudo docker run hello-world
+    checkProcessOutput
+  else
+    echo "Docker is already installed...Procceeding with execution."
+  fi
+}
+
 # This function cleans previous, and probably failed, output from task output dir
 function garbageCollect {
   DIRECTORY=${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME
@@ -56,6 +83,12 @@ function garbageCollect {
       sudo rm ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME/*
     fi
   fi
+}
+
+# This function creates output directory if not exists
+function createOutputDir {
+  echo "Create output directory ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME if it not exists"
+  sudo mkdir -p ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME
 }
 
 function executeDockerContainer {
@@ -122,9 +155,13 @@ tmpGarbageCollect
 checkProcessOutput
 mountExportsDir
 checkProcessOutput
+installDocker
+checkProcessOutput
 prepareDockerContainer
 checkProcessOutput
 garbageCollect
+checkProcessOutput
+createOutputDir
 checkProcessOutput
 executeDockerContainer
 checkProcessOutput
