@@ -104,7 +104,7 @@ public class SapsPropertiesConstants {
 	// Monitors constants
 	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
 	public static final String SAPS_EXECUTION_PERIOD = "saps_execution_period";
-	public static final String DEFAULT_FETCHER_PERIOD = "default_fetcher_period";
+	public static final String DEFAULT_ARCHIVER_PERIOD = "default_fetcher_period";
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
 
 	// FTP constants
@@ -117,7 +117,7 @@ public class SapsPropertiesConstants {
 	public static final String NOAA_FTP_URL = "noaa_ftp_url";
 
 	// Script path constants
-	public static final String SEBAL_SFTP_SCRIPT_PATH = "sebal_sftp_script_path";
+	public static final String SAPS_SFTP_SCRIPT_PATH = "sebal_sftp_script_path";
 	public static final String FMASK_SCRIPT_PATH = "fmask_script_path";
 	public static final String FMASK_TOOL_PATH = "fmask_tool_path";
 

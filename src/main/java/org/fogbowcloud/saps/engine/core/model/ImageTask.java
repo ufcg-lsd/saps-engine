@@ -238,6 +238,8 @@ public class ImageTask implements Serializable {
 		JSONObject json = new JSONObject();
 
 		json.put("taskId", taskId);
+		json.put("name", getName());
+		json.put("collectionTierName", getCollectionTierName());
 		json.put("dataset", dataset);
 		json.put("region", region);
 		json.put("imageDate", DATE_FORMATER.format(imageDate));

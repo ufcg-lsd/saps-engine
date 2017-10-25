@@ -25,17 +25,17 @@ public class Archiver {
 	private final Properties properties;
 	private final ImageDataStore imageStore;
 	private final SwiftAPIClient swiftAPIClient;
-	private File pendingImageFetchFile;
-	private DB pendingImageFetchDB;
-	private ConcurrentMap<String, ImageTask> pendingImageFetchMap;
+	private File pendingTaskArchiveFile;
+	private DB pendingTaskArchiveDB;
+	private ConcurrentMap<String, ImageTask> pendingTaskArchiveMap;
 	private FTPIntegrationImpl ftpImpl;
 	private ArchiverHelper archiverHelper;
-	private String fetcherVersion;
+	private String archiverVersion;
 
 	private String ftpServerIP;
 	private String ftpServerPort;
 
-	private static int MAX_FETCH_TRIES = 2;
+	private static int MAX_ARCHIVE_TRIES = 2;
 	private static int MAX_SWIFT_UPLOAD_TRIES = 2;
 
 	public static final Logger LOGGER = Logger.getLogger(Archiver.class);
@@ -44,14 +44,15 @@ public class Archiver {
 		this(properties, new JDBCImageDataStore(properties), new SwiftAPIClient(properties),
 				new FTPIntegrationImpl(), new ArchiverHelper());
 
-		LOGGER.info("Creating fetcher");
-		LOGGER.debug("Imagestore " + properties.getProperty("datastore_ip") + ":"
-				+ properties.getProperty("datastore_port") + " FTPServer " + ftpServerIP + ":"
-				+ ftpServerPort);
+		LOGGER.info("Creating Archiver");
+		LOGGER.info("Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP)
+						+ ":" + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_PORT)
+						+ " FTPServer " + ftpServerIP + ":" + ftpServerPort);
 	}
 
 	protected Archiver(Properties properties, ImageDataStore imageStore,
-			SwiftAPIClient swiftAPIClient, FTPIntegrationImpl ftpImpl, ArchiverHelper archiverHelper) {
+			SwiftAPIClient swiftAPIClient, FTPIntegrationImpl ftpImpl,
+			ArchiverHelper archiverHelper) {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
@@ -66,15 +67,15 @@ public class Archiver {
 		this.ftpImpl = ftpImpl;
 		this.archiverHelper = archiverHelper;
 
-		this.pendingImageFetchFile = new File("pending-image-fetch.db");
-		this.pendingImageFetchDB = DBMaker.newFileDB(pendingImageFetchFile).make();
+		this.pendingTaskArchiveFile = new File("pending-task-archive.db");
+		this.pendingTaskArchiveDB = DBMaker.newFileDB(pendingTaskArchiveFile).make();
 
-		if (!pendingImageFetchFile.exists() || !pendingImageFetchFile.isFile()) {
-			LOGGER.info("Creating map of pending images to fetch");
-			this.pendingImageFetchMap = pendingImageFetchDB.createHashMap("map").make();
+		if (!pendingTaskArchiveFile.exists() || !pendingTaskArchiveFile.isFile()) {
+			LOGGER.info("Creating map of pending tasks to archive");
+			this.pendingTaskArchiveMap = pendingTaskArchiveDB.createHashMap("map").make();
 		} else {
-			LOGGER.info("Loading map of pending images to fetch");
-			this.pendingImageFetchMap = pendingImageFetchDB.getHashMap("map");
+			LOGGER.info("Loading map of pending tasks to archive");
+			this.pendingTaskArchiveMap = pendingTaskArchiveDB.getHashMap("map");
 		}
 
 		// Creating Swift container
@@ -88,62 +89,60 @@ public class Archiver {
 			}
 
 			while (true) {
-				cleanUnfinishedFetchedData(properties);
-				List<ImageTask> imagesToFetch = imagesToFetch();
-				for (ImageTask imageData : imagesToFetch) {
-					if (!imageData.getStatus().equals(ImageTask.PURGED)) {
-						fetchAndUpdateImage(imageData);
+				cleanUnfinishedArchivedData(properties);
+				List<ImageTask> tasksToArchive = tasksToArchive();
+				for (ImageTask imageTask : tasksToArchive) {
+					if (!imageTask.getStatus().equals(ImageTask.PURGED)) {
+						archiveAndUpdateTask(imageTask);
 					}
 				}
-				Thread.sleep(Long.valueOf(properties
-						.getProperty(SapsPropertiesConstants.DEFAULT_FETCHER_PERIOD)));
+				Thread.sleep(Long.valueOf(
+						properties.getProperty(SapsPropertiesConstants.DEFAULT_ARCHIVER_PERIOD)));
 			}
 		} catch (InterruptedException e) {
-			LOGGER.error("Error while fetching images", e);
+			LOGGER.error("Error while archiving tasks", e);
 		} catch (IOException e) {
-			LOGGER.error("Error while fetching images", e);
+			LOGGER.error("Error while archiving tasks", e);
 		}
 
-		pendingImageFetchDB.close();
+		pendingTaskArchiveDB.close();
 	}
 
 	protected boolean versionFileExists() {
-		this.fetcherVersion = getFetcherVersion();
+		this.archiverVersion = getArchiverVersion();
 
-		if (fetcherVersion == null || fetcherVersion.isEmpty()) {
-			LOGGER.error("Fmask version file does not exist");
-			LOGGER.info("Restart Fetcher infrastructure");
-
+		if (archiverVersion == null || archiverVersion.isEmpty()) {
+			LOGGER.error("Archiver version file does not exist...Restart Archiver infrastructure");
 			return false;
 		}
 
 		return true;
 	}
 
-	protected void cleanUnfinishedFetchedData(Properties properties) throws Exception {
+	protected void cleanUnfinishedArchivedData(Properties properties) throws Exception {
 		LOGGER.info("Starting garbage collector");
-		Collection<ImageTask> data = pendingImageFetchMap.values();
-		for (ImageTask imageData : data) {
-			rollBackFetch(imageData);
-			deleteInputsFromDisk(imageData, properties);
-			deleteResultsFromDisk(imageData, properties);
-			deletePendingInputFilesFromSwift(imageData, properties);
-			deletePendingResultsFromSwift(imageData, properties);
+		Collection<ImageTask> taskList = pendingTaskArchiveMap.values();
+		for (ImageTask imageTask : taskList) {
+			rollBackArchive(imageTask);
+			deleteInputFromDisk(imageTask, properties);
+			deleteOutputFromDisk(imageTask, properties);
+			deletePendingInputFilesFromSwift(imageTask, properties);
+			deletePendingOutputFromSwift(imageTask, properties);
 		}
 		LOGGER.info("Garbage collect finished");
 	}
 
-	private void deletePendingResultsFromSwift(ImageTask imageData, Properties properties)
+	private void deletePendingOutputFromSwift(ImageTask imageTask, Properties properties)
 			throws Exception {
-		LOGGER.debug("Pending image" + imageData + " still have files in swift");
-		deleteResultFilesFromSwift(imageData, properties);
+		LOGGER.debug("Pending task" + imageTask + " still have files in swift");
+		deleteOutputFilesFromSwift(imageTask, properties);
 	}
 
-	protected void deleteInputsFromDisk(final ImageTask imageData, Properties properties)
+	protected void deleteInputFromDisk(final ImageTask imageTask, Properties properties)
 			throws IOException {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
-		String inputsDirPath = exportPath + File.separator + "images" + File.separator
-				+ imageData.getCollectionTierName();
+		String inputsDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "input";
 		File inputsDir = new File(inputsDirPath);
 
 		if (inputsDir.exists() && inputsDir.isDirectory()) {
@@ -153,93 +152,93 @@ public class Archiver {
 		}
 	}
 
-	protected void deleteResultsFromDisk(final ImageTask imageData, Properties properties)
+	protected void deleteOutputFromDisk(final ImageTask imageTask, Properties properties)
 			throws IOException {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
-		String resultsDirPath = exportPath + File.separator + "results" + File.separator
-				+ imageData.getCollectionTierName();
-		File resultsDir = new File(resultsDirPath);
+		String outputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "output";
+		File outputDir = new File(outputDirPath);
 
-		if (resultsDir.exists() && resultsDir.isDirectory()) {
-			FileUtils.deleteDirectory(resultsDir);
+		if (outputDir.exists() && outputDir.isDirectory()) {
+			FileUtils.deleteDirectory(outputDir);
 		} else {
-			LOGGER.info("Path " + resultsDirPath + " does not exist or is not a directory!");
+			LOGGER.info("Path " + outputDirPath + " does not exist or is not a directory!");
 		}
 
 	}
 
-	protected List<ImageTask> imagesToFetch() {
+	protected List<ImageTask> tasksToArchive() {
 		try {
 			return imageStore.getIn(ImageTaskState.FINISHED);
 		} catch (SQLException e) {
-			LOGGER.error("Error getting " + ImageTaskState.FINISHED + " images from DB", e);
+			LOGGER.error("Error getting " + ImageTaskState.FINISHED + " tasks from DB", e);
 		}
 		return Collections.EMPTY_LIST;
 	}
 
-	protected void fetchAndUpdateImage(ImageTask imageData) throws IOException,
-			InterruptedException {
+	protected void archiveAndUpdateTask(ImageTask imageTask)
+			throws IOException, InterruptedException {
 		try {
-			if (prepareFetch(imageData)) {
-				fetch(imageData);
-				if (!archiverHelper.isImageCorrupted(imageData, pendingImageFetchMap, imageStore)
-						&& !archiverHelper.isImageRolledBack(imageData)) {
-					finishFetch(imageData);
+			if (prepareArchive(imageTask)) {
+				archive(imageTask);
+				if (!archiverHelper.isTaskCorrupted(imageTask, pendingTaskArchiveMap, imageStore)
+						&& !archiverHelper.isTaskRolledBack(imageTask)) {
+					finishArchive(imageTask);
 				} else {
-					deleteInputsFromDisk(imageData, properties);
-					deleteResultsFromDisk(imageData, properties);
+					deleteInputFromDisk(imageTask, properties);
+					deleteOutputFromDisk(imageTask, properties);
 				}
 			} else {
-				LOGGER.error("Could not prepare image " + imageData + " to fetch");
+				LOGGER.error("Could not prepare task " + imageTask + " to archive");
 			}
 		} catch (Exception e) {
-			LOGGER.error("Could not fetch image " + imageData.getCollectionTierName(), e);
-			deleteInputsFromDisk(imageData, properties);
-			deleteResultsFromDisk(imageData, properties);
-			rollBackFetch(imageData);
+			LOGGER.error("Could not archive task " + imageTask.getTaskId(), e);
+			deleteInputFromDisk(imageTask, properties);
+			deleteOutputFromDisk(imageTask, properties);
+			rollBackArchive(imageTask);
 		}
 	}
 
-	protected boolean prepareFetch(ImageTask imageData) throws SQLException, IOException {
-		LOGGER.debug("Preparing image " + imageData.getCollectionTierName() + " to fetch");
-		if (imageStore.lockTask(imageData.getName())) {
-			imageData.setState(ImageTaskState.ARCHIVING);
+	protected boolean prepareArchive(ImageTask imageTask) throws SQLException, IOException {
+		LOGGER.debug("Preparing task " + imageTask.getTaskId() + " to archive");
+		if (imageStore.lockTask(imageTask.getTaskId())) {
+			imageTask.setState(ImageTaskState.ARCHIVING);
 
-			archiverHelper.updatePendingMapAndDB(imageData, pendingImageFetchDB,
-					pendingImageFetchMap);
+			archiverHelper.updatePendingMapAndDB(imageTask, pendingTaskArchiveDB,
+					pendingTaskArchiveMap);
 
 			try {
-				LOGGER.info("Updating image data in DB");
-				imageStore.updateImageTask(imageData);
-				imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
+				LOGGER.info("Updating task data in DB");
+				imageStore.updateImageTask(imageTask);
+				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 			} catch (SQLException e) {
-				LOGGER.error("Error while updating image " + imageData + " in DB", e);
-				rollBackFetch(imageData);
+				LOGGER.error("Error while updating task " + imageTask + " in DB", e);
+				rollBackArchive(imageTask);
 				return false;
 			}
 
 			try {
-				imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-						imageData.getUpdateTime());
+				imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+						imageTask.getUpdateTime());
 			} catch (SQLException e) {
-				LOGGER.error("Error while adding state " + imageData.getState() + " timestamp "
-						+ imageData.getUpdateTime() + " in DB", e);
+				LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
+						+ imageTask.getUpdateTime() + " in DB", e);
 			}
 
-			imageStore.unlockTask(imageData.getName());
-			LOGGER.debug("Image " + imageData.getCollectionTierName() + " ready to fetch");
+			imageStore.unlockTask(imageTask.getTaskId());
+			LOGGER.debug("Task " + imageTask.getTaskId() + " ready to archive");
 		}
 		return true;
 	}
 
-	protected void fetch(final ImageTask imageTask) throws Exception {
+	protected void archive(final ImageTask imageTask) throws Exception {
 		LOGGER.debug("Federation member is " + imageTask.getFederationMember());
 
 		getFTPServerInfo(imageTask);
 
 		LOGGER.debug("Using FTP Server IP " + ftpServerIP + " and port " + ftpServerPort);
-		if (fetchInputs(imageTask) == 0) {
-			fetchOutputs(imageTask);
+		if (archiveInputs(imageTask) == 0) {
+			archiveOutputs(imageTask);
 		}
 	}
 
@@ -248,52 +247,52 @@ public class Archiver {
 		ftpServerPort = imageStore.getNFSServerSshPort(imageTask.getFederationMember());
 	}
 
-	protected void finishFetch(ImageTask imageTask) throws IOException, SQLException {
-		LOGGER.debug("Finishing fetch for image " + imageTask);
+	protected void finishArchive(ImageTask imageTask) throws IOException, SQLException {
+		LOGGER.debug("Finishing archive for task " + imageTask);
 		imageTask.setState(ImageTaskState.ARCHIVED);
 
 		String stationId = archiverHelper.getStationId(imageTask, properties);
 
 		imageTask.setStationId(stationId);
-		imageTask.setArchiverVersion(fetcherVersion);
+		imageTask.setArchiverVersion(archiverVersion);
 
 		try {
-			LOGGER.info("Updating image data in DB");
+			LOGGER.info("Updating task data in DB");
 			imageStore.updateImageTask(imageTask);
-			imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
+			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 		} catch (SQLException e) {
-			LOGGER.error("Error while updating image " + imageTask + " in DB", e);
-			rollBackFetch(imageTask);
-			deleteInputsFromDisk(imageTask, properties);
-			deleteResultsFromDisk(imageTask, properties);
+			LOGGER.error("Error while updating task " + imageTask + " in DB", e);
+			rollBackArchive(imageTask);
+			deleteInputFromDisk(imageTask, properties);
+			deleteOutputFromDisk(imageTask, properties);
 		}
 
 		try {
-			imageStore.addStateStamp(imageTask.getName(), imageTask.getState(),
+			imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
 					imageTask.getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
 					+ imageTask.getUpdateTime() + " in DB", e);
 		}
 
-		LOGGER.debug("Deleting local results file for " + imageTask.getCollectionTierName());
+		LOGGER.debug("Deleting local output files for task " + imageTask.getTaskId());
 
-		deleteInputsFromDisk(imageTask, properties);
-		deleteResultsFromDisk(imageTask, properties);
+		deleteInputFromDisk(imageTask, properties);
+		deleteOutputFromDisk(imageTask, properties);
 
-		archiverHelper.removeImageFromPendingMap(imageTask, pendingImageFetchDB,
-				pendingImageFetchMap);
+		archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
+				pendingTaskArchiveMap);
 
-		LOGGER.debug("Image " + imageTask.getCollectionTierName() + " fetched");
+		LOGGER.debug("Task " + imageTask.getTaskId() + " archived");
 	}
 
-	protected void rollBackFetch(ImageTask imageTask) {
-		LOGGER.debug("Rolling back Fetcher for image " + imageTask);
-		archiverHelper.removeImageFromPendingMap(imageTask, pendingImageFetchDB,
-				pendingImageFetchMap);
+	protected void rollBackArchive(ImageTask imageTask) {
+		LOGGER.debug("Rolling back Archiver for task " + imageTask);
+		archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
+				pendingTaskArchiveMap);
 
 		try {
-			imageStore.removeStateStamp(imageTask.getName(), imageTask.getState(),
+			imageStore.removeStateStamp(imageTask.getTaskId(), imageTask.getState(),
 					imageTask.getUpdateTime());
 		} catch (SQLException e) {
 			LOGGER.error("Error while removing state " + imageTask.getState() + " timestamp", e);
@@ -303,126 +302,124 @@ public class Archiver {
 
 		try {
 			imageStore.updateImageTask(imageTask);
-			imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
+			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 		} catch (SQLException e) {
-			LOGGER.error("Error while updating image data.", e);
+			LOGGER.error("Error while updating task.", e);
 			imageTask.setState(ImageTaskState.ARCHIVING);
-			archiverHelper.updatePendingMapAndDB(imageTask, pendingImageFetchDB,
-					pendingImageFetchMap);
+			archiverHelper.updatePendingMapAndDB(imageTask, pendingTaskArchiveDB,
+					pendingTaskArchiveMap);
 		}
 	}
 
-	protected int fetchInputs(final ImageTask imageTask) throws Exception {
-		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
+	protected int archiveInputs(final ImageTask imageTask) throws Exception {
+		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
 		int i;
-		for (i = 0; i < MAX_FETCH_TRIES; i++) {
-			String remoteImageInputsPath = archiverHelper.getRemoteImageInputsPath(imageTask,
+		for (i = 0; i < MAX_ARCHIVE_TRIES; i++) {
+			String remoteTaskInputPath = archiverHelper.getRemoteTaskInputPath(imageTask,
 					properties);
-			String localImageInputsPath = archiverHelper.getLocalImageInputsPath(imageTask,
-					properties);
-			File localImageInputsDir = new File(localImageInputsPath);
+			String localTaskInputPath = archiverHelper.getLocalTaskInputPath(imageTask, properties);
+			File localTaskInputDir = new File(localTaskInputPath);
 
-			if (!localImageInputsDir.exists()) {
-				LOGGER.debug("Path " + localImageInputsPath
-						+ " not valid or nonexistent. Creating " + localImageInputsPath);
-				localImageInputsDir.mkdirs();
-			} else if (!localImageInputsDir.isDirectory()) {
-				LOGGER.debug(localImageInputsPath
+			if (!localTaskInputDir.exists()) {
+				LOGGER.debug("Path " + localTaskInputPath
+						+ " not valid or nonexistent. Creating " + localTaskInputPath);
+				localTaskInputDir.mkdirs();
+			} else if (!localTaskInputDir.isDirectory()) {
+				LOGGER.debug(localTaskInputPath
 						+ " is a file, not a directory. Deleting it and creating a actual directory");
-				localImageInputsDir.delete();
-				localImageInputsDir.mkdirs();
+				localTaskInputDir.delete();
+				localTaskInputDir.mkdirs();
 			}
 
 			int exitValue = ftpImpl.getFiles(properties, ftpServerIP, ftpServerPort,
-					remoteImageInputsPath, localImageInputsPath, imageTask);
+					remoteTaskInputPath, localTaskInputPath, imageTask);
 
 			if (exitValue == 0) {
-				if (uploadInputFilesToSwift(imageTask, localImageInputsDir)) {
-					LOGGER.debug("Inputs from " + localImageInputsPath + " uploaded successfully");
+				if (uploadInputFilesToSwift(imageTask, localTaskInputDir)) {
+					LOGGER.debug("Inputs from " + localTaskInputPath + " uploaded successfully");
 					return 0;
 				}
 			} else {
-				deleteInputsFromDisk(imageTask, properties);
-				rollBackFetch(imageTask);
+				deleteInputFromDisk(imageTask, properties);
+				rollBackArchive(imageTask);
 			}
 		}
 
-		if (i >= MAX_FETCH_TRIES) {
+		if (i >= MAX_ARCHIVE_TRIES) {
 			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
 			imageTask.setState(ImageTaskState.CORRUPTED);
-			archiverHelper.removeImageFromPendingMap(imageTask, pendingImageFetchDB,
-					pendingImageFetchMap);
-			deleteInputsFromDisk(imageTask, properties);
+			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
+					pendingTaskArchiveMap);
+			deleteInputFromDisk(imageTask, properties);
 			imageStore.updateImageTask(imageTask);
-			imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
+			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 		}
 
 		return 1;
 	}
 
-	protected void fetchOutputs(final ImageTask imageTask) throws Exception, IOException,
+	protected void archiveOutputs(final ImageTask imageTask) throws Exception, IOException,
 			SQLException {
 		// FIXME: doc-it (we want to know the max tries logic)
-		LOGGER.debug("MAX_FETCH_TRIES " + MAX_FETCH_TRIES);
+		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
 		int i;
-		for (i = 0; i < MAX_FETCH_TRIES; i++) {
-			String remoteImageResultsPath = archiverHelper.getRemoteImageResultsPath(imageTask,
+		for (i = 0; i < MAX_ARCHIVE_TRIES; i++) {
+			String remoteTaskOutputPath = archiverHelper.getRemoteTaskOutputPath(imageTask,
 					properties);
-			String localImageResultsPath = archiverHelper.getLocalImageResultsPath(imageTask,
+			String localTaskOutputPath = archiverHelper.getLocalTaskOutputPath(imageTask,
 					properties);
-			File localImageResultsDir = new File(localImageResultsPath);
+			File localTaskOutputDir = new File(localTaskOutputPath);
 
-			if (!localImageResultsDir.exists()) {
-				LOGGER.debug("Path " + localImageResultsPath
-						+ " not valid or nonexistent. Creating " + localImageResultsPath);
-				localImageResultsDir.mkdirs();
-			} else if (!localImageResultsDir.isDirectory()) {
-				LOGGER.debug(localImageResultsPath
+			if (!localTaskOutputDir.exists()) {
+				LOGGER.debug("Path " + localTaskOutputPath
+						+ " not valid or nonexistent. Creating " + localTaskOutputPath);
+				localTaskOutputDir.mkdirs();
+			} else if (!localTaskOutputDir.isDirectory()) {
+				LOGGER.debug(localTaskOutputPath
 						+ " is a file, not a directory. Deleting it and creating a actual directory");
-				localImageResultsDir.delete();
-				localImageResultsDir.mkdirs();
+				localTaskOutputDir.delete();
+				localTaskOutputDir.mkdirs();
 			}
 
 			int exitValue = ftpImpl.getFiles(properties, ftpServerIP, ftpServerPort,
-					remoteImageResultsPath, localImageResultsPath, imageTask);
+					remoteTaskOutputPath, localTaskOutputPath, imageTask);
 
 			if (exitValue == 0) {
-				if (archiverHelper.resultsChecksumOK(imageTask, localImageResultsDir)) {
-					archiverHelper.createTimeoutAndMaxTriesFiles(localImageResultsDir);
+				if (archiverHelper.resultsChecksumOK(imageTask, localTaskOutputDir)) {
+					archiverHelper.createTimeoutAndMaxTriesFiles(localTaskOutputDir);
 
-					if (uploadOutputFilesToSwift(imageTask, localImageResultsDir)) {
+					if (uploadOutputFilesToSwift(imageTask, localTaskOutputDir)) {
 						break;
 					} else {
 						return;
 					}
 				} else {
-					deleteResultsFromDisk(imageTask, properties);
+					deleteOutputFromDisk(imageTask, properties);
 				}
 			} else {
-				rollBackFetch(imageTask);
-				deleteResultsFromDisk(imageTask, properties);
+				rollBackArchive(imageTask);
+				deleteOutputFromDisk(imageTask, properties);
 				break;
 			}
 		}
 
-		if (i >= MAX_FETCH_TRIES) {
+		if (i >= MAX_ARCHIVE_TRIES) {
 			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
 			imageTask.setState(ImageTaskState.CORRUPTED);
-			archiverHelper.removeImageFromPendingMap(imageTask, pendingImageFetchDB,
-					pendingImageFetchMap);
-			deleteResultsFromDisk(imageTask, properties);
-			// TODO: see if this have to be in try-catch
+			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
+					pendingTaskArchiveMap);
+			deleteOutputFromDisk(imageTask, properties);
 			imageStore.updateImageTask(imageTask);
-			imageTask.setUpdateTime(imageStore.getTask(imageTask.getName()).getUpdateTime());
+			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 		}
 	}
 
 	protected boolean uploadInputFilesToSwift(ImageTask imageTask, File localImageInputFilesDir)
 			throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
-		String pseudoFolder = getInputPseudoFolder(localImageInputFilesDir);
+		String pseudoFolder = getInputPseudoFolder(imageTask);
 		String containerName = getContainerName();
 
 		for (File actualFile : localImageInputFilesDir.listFiles()) {
@@ -444,8 +441,8 @@ public class Archiver {
 				LOGGER.debug("Upload tries to swift for file " + actualFile + " has passed max "
 						+ MAX_SWIFT_UPLOAD_TRIES);
 
-				rollBackFetch(imageTask);
-				deleteResultsFromDisk(imageTask, properties);
+				rollBackArchive(imageTask);
+				deleteOutputFromDisk(imageTask, properties);
 				return false;
 			}
 		}
@@ -457,7 +454,7 @@ public class Archiver {
 	protected boolean uploadOutputFilesToSwift(ImageTask imageTask, File localImageOutputFilesDir)
 			throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
-		String pseudoFolder = getOutputPseudoFolder(localImageOutputFilesDir);
+		String pseudoFolder = getOutputPseudoFolder(imageTask);
 		String containerName = getContainerName();
 
 		for (File actualFile : localImageOutputFilesDir.listFiles()) {
@@ -479,8 +476,8 @@ public class Archiver {
 				LOGGER.debug("Upload tries to swift for file " + actualFile + " has passed max "
 						+ MAX_SWIFT_UPLOAD_TRIES);
 
-				rollBackFetch(imageTask);
-				deleteResultsFromDisk(imageTask, properties);
+				rollBackArchive(imageTask);
+				deleteOutputFromDisk(imageTask, properties);
 				return false;
 			}
 		}
@@ -497,15 +494,12 @@ public class Archiver {
 		List<String> fileNames = swiftAPIClient.listFilesInContainer(containerName);
 
 		for (String file : fileNames) {
-			if (file.contains(imageTask.getCollectionTierName())
-					&& (file.contains(".TIF") || file.contains("MTL") || file.contains(".tar.gz"))) {
+			if ((file.contains(".TIF") || file.contains("MTL") || file.contains(".tar.gz"))) {
 				try {
 					LOGGER.debug("Trying to delete file " + file + " from " + containerName);
-					String localImageInputsPath = properties.get("fetcher_volume_path")
-							+ File.separator + "images" + File.separator
-							+ imageTask.getCollectionTierName();
-					swiftAPIClient.deleteFile(containerName, getOutputPseudoFolder(new File(
-							localImageInputsPath)), file);
+					String swiftTaskInputPseudoFolder = imageTask.getTaskId() + File.separator
+							+ "data" + File.separator + "input";
+					swiftAPIClient.deleteFile(containerName, swiftTaskInputPseudoFolder, file);
 				} catch (Exception e) {
 					LOGGER.error("Error while deleting files from swift", e);
 					return false;
@@ -516,24 +510,21 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean deleteResultFilesFromSwift(ImageTask imageTask, Properties properties)
+	protected boolean deleteOutputFilesFromSwift(ImageTask imageTask, Properties properties)
 			throws Exception {
-		LOGGER.debug("Deleting " + imageTask + " result files from swift");
+		LOGGER.debug("Deleting " + imageTask + " output files from swift");
 		String containerName = getContainerName();
 
 		List<String> fileNames = swiftAPIClient.listFilesInContainer(containerName);
 
 		for (String file : fileNames) {
-			if (file.contains(imageTask.getCollectionTierName()) && !file.contains(".TIF")
-					&& !file.contains("MTL") && !file.contains(".tar.gz")
+			if (!file.contains(".TIF") && !file.contains("MTL") && !file.contains(".tar.gz")
 					&& !file.contains("README")) {
 				try {
 					LOGGER.debug("Trying to delete file " + file + " from " + containerName);
-					String localImageResultsPath = properties.get("fetcher_volume_path")
-							+ File.separator + "results" + File.separator
-							+ imageTask.getCollectionTierName();
-					swiftAPIClient.deleteFile(containerName, getOutputPseudoFolder(new File(
-							localImageResultsPath)), file);
+					String swiftTaskOutputPseudoFolder = imageTask.getTaskId() + File.separator
+							+ "data" + File.separator + "output";
+					swiftAPIClient.deleteFile(containerName, swiftTaskOutputPseudoFolder, file);
 				} catch (Exception e) {
 					LOGGER.error("Error while deleting files from swift", e);
 					return false;
@@ -548,36 +539,39 @@ public class Archiver {
 		return properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
 	}
 
-	private String getInputPseudoFolder(File localImageInputsDir) {
+	private String getInputPseudoFolder(ImageTask imageTask) {
 		if (properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {
 			return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
-					+ localImageInputsDir.getName() + File.separator;
+					+ imageTask.getTaskId() + File.separator + "data" + File.separator + "input"
+					+ File.separator;
 		}
 
 		return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
-				+ File.separator + localImageInputsDir.getName() + File.separator;
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "input" + File.separator;
 	}
 
-	private String getOutputPseudoFolder(File localImageResultsDir) {
+	private String getOutputPseudoFolder(ImageTask imageTask) {
 		if (properties.getProperty(SapsPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {
-			return properties
-					.getProperty(SapsPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
-					+ localImageResultsDir.getName() + File.separator;
+			return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+					+ imageTask.getTaskId() + File.separator + "data" + File.separator + "output"
+					+ File.separator;
 		}
 
-		return properties.getProperty(SapsPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
-				+ File.separator + localImageResultsDir.getName() + File.separator;
+		return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "output" + File.separator;
 	}
 
-	protected String getFetcherVersion() {
+	protected String getArchiverVersion() {
 		String sebalEngineDirPath = System.getProperty("user.dir");
 		File sebalEngineDir = new File(sebalEngineDirPath);
 
 		if (sebalEngineDir.exists() && sebalEngineDir.isDirectory()) {
 			for (File file : sebalEngineDir.listFiles()) {
-				if (file.getName().startsWith("sebal-engine.version.")) {
+				if (file.getName().startsWith("saps-engine.version.")) {
 					String[] sebalEngineVersionFileSplit = file.getName().split("\\.");
 					return sebalEngineVersionFileSplit[2];
 				}
