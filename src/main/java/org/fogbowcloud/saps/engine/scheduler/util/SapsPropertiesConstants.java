@@ -104,7 +104,7 @@ public class SapsPropertiesConstants {
 	// Monitors constants
 	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
 	public static final String SAPS_EXECUTION_PERIOD = "saps_execution_period";
-	public static final String DEFAULT_FETCHER_PERIOD = "default_fetcher_period";
+	public static final String DEFAULT_ARCHIVER_PERIOD = "default_fetcher_period";
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
 
 	// FTP constants
