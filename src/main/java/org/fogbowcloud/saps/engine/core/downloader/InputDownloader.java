@@ -367,12 +367,10 @@ public class InputDownloader {
 							+ File.separator + "input",
 					properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH));
 
-			// TODO update command
-//			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
-//					+ " " + imageTask.getDataSet() + " " + imageTask.getRegion() + " "
-//					+ dateFormater.format(imageTask.getImageDate()) + " "
-//					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
-			String commandToRun = "";
+			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
+					+ " " + imageTask.getDataset() + " " + imageTask.getRegion() + " "
+					+ dateFormater.format(imageTask.getImageDate()) + " "
+					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
 
 			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
 			DockerUtil.removeContainer(containerId);

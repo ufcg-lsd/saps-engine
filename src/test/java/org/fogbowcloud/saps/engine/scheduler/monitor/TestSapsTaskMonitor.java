@@ -184,7 +184,7 @@ public class TestSapsTaskMonitor {
 
 	@Test
 	public void testProcMonImageRunning() throws SQLException {
-		java.sql.Date date = mock(java.sql.Date.class);
+		Date date = new Date();
 		ImageTask imageData = new ImageTask(
 				"task-id",
 				"LT5",
@@ -220,7 +220,7 @@ public class TestSapsTaskMonitor {
 
 	@Test
 	public void testProcMonImageFinished() throws SQLException {
-		java.sql.Date date = mock(java.sql.Date.class);
+		Date date = new Date();
 		ImageTask imageData = new ImageTask(
 				"task-id",
 				"LT5",
@@ -256,7 +256,7 @@ public class TestSapsTaskMonitor {
 
 	@Test
 	public void testProcMonImageFailed() throws SQLException {
-		java.sql.Date date = mock(java.sql.Date.class);
+		Date date = new Date();
 		ImageTask imageData = new ImageTask(
 				"task-id",
 				"LT5",
@@ -292,7 +292,7 @@ public class TestSapsTaskMonitor {
 
 	@Test
 	public void testProcMonImageQueued() throws SQLException {
-		java.sql.Date date = mock(java.sql.Date.class);
+		Date date = new Date();
 		ImageTask imageData = new ImageTask(
 				"task-id",
 				"LT5",

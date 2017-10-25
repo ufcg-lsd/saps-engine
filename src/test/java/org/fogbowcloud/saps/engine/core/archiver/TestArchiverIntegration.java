@@ -476,5 +476,7 @@ public class TestArchiverIntegration {
 
 		Assert.assertEquals(inputDownloaderIP, archiver.getFtpServerIP());
 		Assert.assertEquals(inputDownloaderPort, archiver.getFtpServerPort());
+
+		imageStore.dispose();
 	}
 }
