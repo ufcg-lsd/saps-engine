@@ -1,0 +1,23 @@
+{
+  "worker":[
+    {
+      "name":"Worker_Saps_Default",
+      "docker_tag":"v1.3",
+      "docker_repository":"fogbow/worker"
+    }
+  ],
+  "pre_processing":[
+    {
+      "name":"",
+      "docker_tag":"",
+      "docker_repository":"fogbow/preprocessing"
+    }
+  ],
+  "input_downloader":[
+    {
+      "name":"USGS",
+      "docker_tag":"usgs_repository_v1.1",
+      "docker_repository":"fogbow/inputdownloader"
+    }
+  ]
+}
