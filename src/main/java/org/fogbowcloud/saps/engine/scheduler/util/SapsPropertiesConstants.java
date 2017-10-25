@@ -117,7 +117,7 @@ public class SapsPropertiesConstants {
 	public static final String NOAA_FTP_URL = "noaa_ftp_url";
 
 	// Script path constants
-	public static final String SEBAL_SFTP_SCRIPT_PATH = "sebal_sftp_script_path";
+	public static final String SAPS_SFTP_SCRIPT_PATH = "sebal_sftp_script_path";
 	public static final String FMASK_SCRIPT_PATH = "fmask_script_path";
 	public static final String FMASK_TOOL_PATH = "fmask_tool_path";
 

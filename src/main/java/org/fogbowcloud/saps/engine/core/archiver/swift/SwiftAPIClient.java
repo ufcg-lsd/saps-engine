@@ -347,31 +347,4 @@ public class SwiftAPIClient {
 		LOGGER.debug("Setting token to " + token);
 		this.token = token;
 	}
-	
-	// This is for test only
-	public static void main(String[] args) throws Exception {				
-		Properties properties = new Properties();
-		FileInputStream input = new FileInputStream(args[0]);
-		properties.load(input);
-		
-		SwiftAPIClient swiftAPIClient = new SwiftAPIClient(properties);
-
-		String containerName = "container-test";
-		String pseudFolder = "/pseudFolder";
-		String localOutputPath = "/tmp/swift-test";
-		File file = new File("/local/esdras/test-swift");
-		
-		swiftAPIClient.createContainer(containerName);
-		
-		if(swiftAPIClient.isContainerEmpty(containerName)) {
-			System.out.println("Container is empty!");
-		} else {
-			System.out.println("Container is not empty!\nNumber of files in container: " + swiftAPIClient.numberOfFilesInContainer(containerName));
-		}
-				
-		swiftAPIClient.uploadFile(containerName, file, pseudFolder);
-		swiftAPIClient.downloadFile(containerName, file.getName(), pseudFolder, localOutputPath);
-		swiftAPIClient.deleteFile(containerName, pseudFolder, file.getName());
-		swiftAPIClient.deleteContainer(containerName);
-	}
 }
