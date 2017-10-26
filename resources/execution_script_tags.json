@@ -16,7 +16,7 @@
   "input_downloader":[
     {
       "name":"USGS",
-      "docker_tag":"usgs_repository_v1.1",
+      "docker_tag":"test_v1.1",
       "docker_repository":"fogbow/inputdownloader"
     }
   ]

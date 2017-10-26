@@ -36,6 +36,12 @@ public class RestletServerMain {
 			} catch (Exception e) {
 				LOGGER.error("Error while creating user", e);
 			}
+
+			try {
+				databaseApplication.createUser("anonymous", "anonymous", DigestUtils.md5Hex("pass"), true, false, false);
+			} catch (Exception e) {
+				LOGGER.error("Error while creating user", e);
+			}
 		}
 	}
 

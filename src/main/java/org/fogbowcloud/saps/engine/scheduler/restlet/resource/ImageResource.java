@@ -113,7 +113,7 @@ public class ImageResource extends BaseResource {
 		String userEmail = form.getFirstValue(USER_EMAIL, true);
 		String userPass = form.getFirstValue(USER_PASSWORD, true);
 		LOGGER.debug("POST with userEmail " + userEmail);
-		if (!authenticateUser(userEmail, userPass)) {
+		if (!authenticateUser(userEmail, userPass) || userEmail.equals("anonymous")) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 		}
 

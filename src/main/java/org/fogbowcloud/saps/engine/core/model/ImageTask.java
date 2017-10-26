@@ -37,25 +37,11 @@ public class ImageTask implements Serializable {
 	private String status;
 	private String error;
 
-	public ImageTask(
-			String taskId,
-			String dataset,
-			String region,
-			Date imageDate,
-			String downloadLink,
-			ImageTaskState state,
-			String federationMember,
-			int priority,
-			String stationId,
-			String inputGatheringTag,
-			String inputPreprocessingTag,
-			String algorithmExecutionTag,
-			String archiverVersion,
-			String blowoutVersion,
-			Timestamp creationTime,
-			Timestamp updateTime,
-			String status,
-			String error) {
+	public ImageTask(String taskId, String dataset, String region, Date imageDate,
+			String downloadLink, ImageTaskState state, String federationMember, int priority,
+			String stationId, String inputGatheringTag, String inputPreprocessingTag,
+			String algorithmExecutionTag, String archiverVersion, String blowoutVersion,
+			Timestamp creationTime, Timestamp updateTime, String status, String error) {
 		this.taskId = taskId;
 		this.dataset = dataset;
 		this.region = region;
@@ -263,70 +249,86 @@ public class ImageTask implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ImageTask{" +
-				"taskId='" + taskId + '\'' +
-				", dataset='" + dataset + '\'' +
-				", region='" + region + '\'' +
-				", imageDate=" + DATE_FORMATER.format(imageDate) +
-				", downloadLink='" + downloadLink + '\'' +
-				", state=" + state +
-				", federationMember='" + federationMember + '\'' +
-				", priority=" + priority +
-				", stationId='" + stationId + '\'' +
-				", inputGatheringTag='" + inputGatheringTag + '\'' +
-				", inputPreprocessingTag='" + inputPreprocessingTag + '\'' +
-				", algorithmExecutionTag='" + algorithmExecutionTag + '\'' +
-				", archiverVersion='" + archiverVersion + '\'' +
-				", blowoutVersion='" + blowoutVersion + '\'' +
-				", creationTime=" + creationTime +
-				", updateTime=" + updateTime +
-				", status='" + status + '\'' +
-				", error='" + error + '\'' +
-				'}';
+		return "ImageTask{" + "taskId='" + taskId + '\'' + ", dataset='" + dataset + '\''
+				+ ", region='" + region + '\'' + ", imageDate=" + DATE_FORMATER.format(imageDate)
+				+ ", downloadLink='" + downloadLink + '\'' + ", state=" + state
+				+ ", federationMember='" + federationMember + '\'' + ", priority=" + priority
+				+ ", stationId='" + stationId + '\'' + ", inputGatheringTag='" + inputGatheringTag
+				+ '\'' + ", inputPreprocessingTag='" + inputPreprocessingTag + '\''
+				+ ", algorithmExecutionTag='" + algorithmExecutionTag + '\'' + ", archiverVersion='"
+				+ archiverVersion + '\'' + ", blowoutVersion='" + blowoutVersion + '\''
+				+ ", creationTime=" + creationTime + ", updateTime=" + updateTime + ", status='"
+				+ status + '\'' + ", error='" + error + '\'' + '}';
 	}
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 
 		ImageTask imageTask = (ImageTask) o;
 
-		if (priority != imageTask.priority) return false;
-		if (taskId != null ? !taskId.equals(imageTask.taskId) : imageTask.taskId != null) return false;
-		if (dataset != null ? !dataset.equals(imageTask.dataset) : imageTask.dataset != null) return false;
-		if (region != null ? !region.equals(imageTask.region) : imageTask.region != null) return false;
+		if (priority != imageTask.priority)
+			return false;
+		if (taskId != null ? !taskId.equals(imageTask.taskId) : imageTask.taskId != null)
+			return false;
+		if (dataset != null ? !dataset.equals(imageTask.dataset) : imageTask.dataset != null)
+			return false;
+		if (region != null ? !region.equals(imageTask.region) : imageTask.region != null)
+			return false;
 		if (imageDate != null) {
-			if (imageTask.imageDate == null) return false;
+			if (imageTask.imageDate == null)
+				return false;
 			Calendar it = Calendar.getInstance();
 			it.setTime(imageDate);
 			Calendar oit = Calendar.getInstance();
 			oit.setTime(imageTask.imageDate);
-			if (it.get(Calendar.DAY_OF_YEAR) != oit.get(Calendar.DAY_OF_YEAR)) return false;
-			if (it.get(Calendar.YEAR) != oit.get(Calendar.YEAR)) return false;
+			if (it.get(Calendar.DAY_OF_YEAR) != oit.get(Calendar.DAY_OF_YEAR))
+				return false;
+			if (it.get(Calendar.YEAR) != oit.get(Calendar.YEAR))
+				return false;
 		} else {
-			if (imageTask.imageDate != null) return false;
+			if (imageTask.imageDate != null)
+				return false;
 		}
-		if (downloadLink != null ? !downloadLink.equals(imageTask.downloadLink) : imageTask.downloadLink != null)
+		if (downloadLink != null ? !downloadLink.equals(imageTask.downloadLink)
+				: imageTask.downloadLink != null)
 			return false;
-		if (state != imageTask.state) return false;
-		if (federationMember != null ? !federationMember.equals(imageTask.federationMember) : imageTask.federationMember != null)
+		if (state != imageTask.state)
 			return false;
-		if (stationId != null ? !stationId.equals(imageTask.stationId) : imageTask.stationId != null) return false;
-		if (inputGatheringTag != null ? !inputGatheringTag.equals(imageTask.inputGatheringTag) : imageTask.inputGatheringTag != null)
+		if (federationMember != null ? !federationMember.equals(imageTask.federationMember)
+				: imageTask.federationMember != null)
 			return false;
-		if (inputPreprocessingTag != null ? !inputPreprocessingTag.equals(imageTask.inputPreprocessingTag) : imageTask.inputPreprocessingTag != null)
+		if (stationId != null ? !stationId.equals(imageTask.stationId)
+				: imageTask.stationId != null)
 			return false;
-		if (algorithmExecutionTag != null ? !algorithmExecutionTag.equals(imageTask.algorithmExecutionTag) : imageTask.algorithmExecutionTag != null)
+		if (inputGatheringTag != null ? !inputGatheringTag.equals(imageTask.inputGatheringTag)
+				: imageTask.inputGatheringTag != null)
 			return false;
-		if (archiverVersion != null ? !archiverVersion.equals(imageTask.archiverVersion) : imageTask.archiverVersion != null)
+		if (inputPreprocessingTag != null
+				? !inputPreprocessingTag.equals(imageTask.inputPreprocessingTag)
+				: imageTask.inputPreprocessingTag != null)
 			return false;
-		if (blowoutVersion != null ? !blowoutVersion.equals(imageTask.blowoutVersion) : imageTask.blowoutVersion != null)
+		if (algorithmExecutionTag != null
+				? !algorithmExecutionTag.equals(imageTask.algorithmExecutionTag)
+				: imageTask.algorithmExecutionTag != null)
 			return false;
-		if (creationTime != null ? !creationTime.equals(imageTask.creationTime) : imageTask.creationTime != null)
+		if (archiverVersion != null ? !archiverVersion.equals(imageTask.archiverVersion)
+				: imageTask.archiverVersion != null)
 			return false;
-		if (updateTime != null ? !updateTime.equals(imageTask.updateTime) : imageTask.updateTime != null) return false;
-		if (status != null ? !status.equals(imageTask.status) : imageTask.status != null) return false;
+		if (blowoutVersion != null ? !blowoutVersion.equals(imageTask.blowoutVersion)
+				: imageTask.blowoutVersion != null)
+			return false;
+		if (creationTime != null ? !creationTime.equals(imageTask.creationTime)
+				: imageTask.creationTime != null)
+			return false;
+		if (updateTime != null ? !updateTime.equals(imageTask.updateTime)
+				: imageTask.updateTime != null)
+			return false;
+		if (status != null ? !status.equals(imageTask.status) : imageTask.status != null)
+			return false;
 		return error != null ? error.equals(imageTask.error) : imageTask.error == null;
 	}
 
@@ -342,8 +344,10 @@ public class ImageTask implements Serializable {
 		result = 31 * result + priority;
 		result = 31 * result + (stationId != null ? stationId.hashCode() : 0);
 		result = 31 * result + (inputGatheringTag != null ? inputGatheringTag.hashCode() : 0);
-		result = 31 * result + (inputPreprocessingTag != null ? inputPreprocessingTag.hashCode() : 0);
-		result = 31 * result + (algorithmExecutionTag != null ? algorithmExecutionTag.hashCode() : 0);
+		result = 31 * result
+				+ (inputPreprocessingTag != null ? inputPreprocessingTag.hashCode() : 0);
+		result = 31 * result
+				+ (algorithmExecutionTag != null ? algorithmExecutionTag.hashCode() : 0);
 		result = 31 * result + (archiverVersion != null ? archiverVersion.hashCode() : 0);
 		result = 31 * result + (blowoutVersion != null ? blowoutVersion.hashCode() : 0);
 		result = 31 * result + (creationTime != null ? creationTime.hashCode() : 0);
