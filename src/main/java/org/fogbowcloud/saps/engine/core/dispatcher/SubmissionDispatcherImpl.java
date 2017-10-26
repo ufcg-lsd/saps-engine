@@ -1,12 +1,18 @@
 package org.fogbowcloud.saps.engine.core.dispatcher;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
@@ -18,7 +24,6 @@ import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
 import org.fogbowcloud.saps.notifier.Ward;
 
 public class SubmissionDispatcherImpl implements SubmissionDispatcher {
-
     public static final int DEFAULT_PRIORITY = 0;
     private final JDBCImageDataStore imageStore;
     private Properties properties;
@@ -138,20 +143,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         List<ImageTask> allImageTask = imageStore.getAllTasks();
         for (int i = 0; i < allImageTask.size(); i++) {
             System.out.println(allImageTask.get(i).toString());
-        }
-    }
-
-    @Override
-    public void listCorruptedImages() throws ParseException {
-        List<ImageTask> allImageTask;
-        try {
-            allImageTask = imageStore.getIn(ImageTaskState.CORRUPTED);
-            for (int i = 0; i < allImageTask.size(); i++) {
-                System.out.println(allImageTask.get(i).toString());
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Error while gettin tasks in " + ImageTaskState.CORRUPTED
-                    + " state from Catalogue", e);
         }
     }
 

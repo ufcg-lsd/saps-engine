@@ -78,6 +78,28 @@ public class ArchiverHelper {
 				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
 				+ "input";
 	}
+	
+	protected String getRemoteTaskPreProcessPath(final ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "preprocessing";
+	}
+	
+	protected String getLocalTaskPreProcessPath(ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "preprocessing";
+	}
+	
+	protected String getRemoteTaskMetadataPath(final ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "metadata";
+	}
+	
+	protected String getLocalTaskMetadataPath(ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
+	}
 
 	protected String getRemoteTaskOutputPath(final ImageTask imageTask, Properties properties) {
 		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
@@ -90,11 +112,10 @@ public class ArchiverHelper {
 				+ "output";
 	}
 
-	// TODO: see how to deal with this exception
-	protected boolean isTaskCorrupted(ImageTask imageTask,
+	protected boolean isTaskFailed(ImageTask imageTask,
 			ConcurrentMap<String, ImageTask> pendingTaskArchiveMap, ImageDataStore imageStore)
 			throws SQLException {
-		if (imageTask.getState().equals(ImageTaskState.CORRUPTED)) {
+		if (imageTask.getState().equals(ImageTaskState.FAILED)) {
 			pendingTaskArchiveMap.remove(imageTask.getTaskId());
 			imageStore.updateImageTask(imageTask);
 			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
