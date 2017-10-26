@@ -1,6 +1,8 @@
 package org.fogbowcloud.saps.engine.core.archiver;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -32,7 +34,8 @@ public class FTPIntegrationImpl implements FTPIntegration{
 			p.waitFor();
 
 			if (p.exitValue() != 0) {
-				LOGGER.error("Error while executing sftp-access script");
+				LOGGER.error(
+						"Error while executing sftp-access script...Error: " + getProcessOutput(p));
 				return 1;
 			}
 		} catch (InterruptedException e) {
@@ -43,5 +46,16 @@ public class FTPIntegrationImpl implements FTPIntegration{
 			return 1;
 		}
 		return 0;
+	}
+	
+	private static String getProcessOutput(Process p) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		StringBuilder stringBuilder = new StringBuilder();
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			stringBuilder.append(line);
+			stringBuilder.append(System.getProperty("line.separator"));
+		}
+		return stringBuilder.toString();
 	}
 }
