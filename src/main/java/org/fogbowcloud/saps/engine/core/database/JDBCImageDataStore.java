@@ -614,7 +614,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		LOGGER.info("Adding user " + userName + " into DB");
 		if (userName == null || userName.isEmpty() || userPass == null || userPass.isEmpty()) {
-			throw new IllegalArgumentException("Invalid user " + userName);
+			throw new IllegalArgumentException("Unable to create user with empty name or password.");
 		}
 
 		PreparedStatement insertStatement = null;
