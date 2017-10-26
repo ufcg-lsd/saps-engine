@@ -22,10 +22,10 @@ public interface SubmissionDispatcher {
 			throws SQLException;
 
 	List<Task> fillDB(
-			Double topLeftLat,
-			Double topLeftLon,
-			Double bottomRightLat,
-			Double bottomRightLon,
+			String lowerLeftLatitude,
+			String lowerLeftLongitude,
+			String upperRightLatitude,
+			String upperRightLongitude,
 			Date initDate,
 			Date endDate,
 			String inputGathering,

@@ -8,9 +8,6 @@ import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class DatasetUtil {
 
-	public static String[] satsInPresentOperation = new String[] {
-			SapsPropertiesConstants.DATASET_LE7_TYPE, SapsPropertiesConstants.DATASET_LC8_TYPE };
-
 	/**
 	 * Returns a list of Satellites in operation by a given year.
 	 * 
@@ -26,16 +23,14 @@ public class DatasetUtil {
 		Map<String, Integer> satYearBegin = new HashMap<String, Integer>();
 		Map<String, Integer> satYearEnd = new HashMap<String, Integer>();
 
-		satYearBegin.put(SapsPropertiesConstants.DATASET_LT5_TYPE, new Integer(1984));
-		satYearEnd.put(SapsPropertiesConstants.DATASET_LT5_TYPE, new Integer(2013));
+		satYearBegin.put(SapsPropertiesConstants.LANDSAT_5_DATASET, new Integer(1984));
+		satYearEnd.put(SapsPropertiesConstants.LANDSAT_5_DATASET, new Integer(2013));
 
-		satYearBegin.put(SapsPropertiesConstants.DATASET_LE7_TYPE, new Integer(1999));
-		satYearEnd.put(SapsPropertiesConstants.DATASET_LE7_TYPE, new Integer(Integer.MAX_VALUE));
+		satYearBegin.put(SapsPropertiesConstants.LANDSAT_7_DATASET, new Integer(1999));
+		satYearEnd.put(SapsPropertiesConstants.LANDSAT_7_DATASET, new Integer(Integer.MAX_VALUE));
 
-		satYearBegin.put(SapsPropertiesConstants.DATASET_LC8_TYPE, new Integer(2013));
-		satYearEnd.put(SapsPropertiesConstants.DATASET_LC8_TYPE, new Integer(Integer.MAX_VALUE));
-
-		updateSatsInPresentOperation(satYearEnd);
+		satYearBegin.put(SapsPropertiesConstants.LANDSAT_8_DATASET, new Integer(2013));
+		satYearEnd.put(SapsPropertiesConstants.LANDSAT_8_DATASET, new Integer(Integer.MAX_VALUE));
 
 		ArrayList<String> sats = new ArrayList<String>();
 
@@ -48,12 +43,6 @@ public class DatasetUtil {
 		}
 
 		return sats;
-	}
-
-	private static void updateSatsInPresentOperation(Map<String, Integer> satYearEnd) {
-		for (String sat : satsInPresentOperation) {
-			satYearEnd.put(sat, new Integer(Integer.MAX_VALUE));
-		}
 	}
 
 }
