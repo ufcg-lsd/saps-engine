@@ -183,146 +183,82 @@ public class TestSapsTaskMonitor {
 	}
 
 	@Test
-	public void testProcMonImageRunning() throws SQLException {
+	public void testProcMonImageTaskRunning() throws SQLException {
 		Date date = new Date();
-		ImageTask imageData = new ImageTask(
-				"task-id",
-				"LT5",
-				"region-53",
-				date,
-				"NE",
-				ImageTaskState.READY,
-				"NE",
-				0,
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				new Timestamp(new Date().getTime()),
-				new Timestamp(new Date().getTime()),
-				"NE",
-				"NE"
-		);
+		ImageTask imageTask = new ImageTask("task-id", "LT5", "region-53", date, "NE",
+				ImageTaskState.READY, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), "NE",
+				"NE");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
-		doReturn(imageData.getName()).when(sebalTaskMonitor)
+		doReturn(imageTask.getTaskId()).when(sebalTaskMonitor)
 				.getImageTaskFromTaskProcess(fakeTaskProcess);
-		doReturn(imageData).when(imageStore).getTask(imageData.getName());
-		doNothing().when(imageStore).updateImageTask(imageData);
-		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
+		doReturn(imageTask).when(imageStore).getTask(imageTask.getTaskId());
+		doNothing().when(imageStore).updateImageTask(imageTask);
+		doNothing().when(imageStore).addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+				imageTask.getUpdateTime());
 
 		this.sebalTaskMonitor.updateImageTaskToRunning(fakeTaskProcess);
-		Assert.assertEquals(ImageTaskState.RUNNING, imageData.getState());
+		Assert.assertEquals(ImageTaskState.RUNNING, imageTask.getState());
 	}
 
 	@Test
-	public void testProcMonImageFinished() throws SQLException {
+	public void testProcMonImageTaskFinished() throws SQLException {
 		Date date = new Date();
-		ImageTask imageData = new ImageTask(
-				"task-id",
-				"LT5",
-				"region-53",
-				date,
-				"NE",
-				ImageTaskState.RUNNING,
-				"NE",
-				0,
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				new Timestamp(new Date().getTime()),
-				new Timestamp(new Date().getTime()),
-				"NE",
-				"NE"
-		);
+		ImageTask imageTask = new ImageTask("task-id", "LT5", "region-53", date, "NE",
+				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), "NE",
+				"NE");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
-		doReturn(imageData.getName()).when(sebalTaskMonitor)
+		doReturn(imageTask.getTaskId()).when(sebalTaskMonitor)
 				.getImageTaskFromTaskProcess(fakeTaskProcess);
-		doReturn(imageData).when(imageStore).getTask(imageData.getName());
-		doNothing().when(imageStore).updateImageTask(imageData);
-		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
+		doReturn(imageTask).when(imageStore).getTask(imageTask.getTaskId());
+		doNothing().when(imageStore).updateImageTask(imageTask);
+		doNothing().when(imageStore).addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+				imageTask.getUpdateTime());
 
 		this.sebalTaskMonitor.updateImageTaskToFinished(fakeTaskProcess);
-		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FINISHED, imageTask.getState());
 	}
 
 	@Test
-	public void testProcMonImageFailed() throws SQLException {
+	public void testProcMonImageTaskFailed() throws SQLException {
 		Date date = new Date();
-		ImageTask imageData = new ImageTask(
-				"task-id",
-				"LT5",
-				"region-53",
-				date,
-				"NE",
-				ImageTaskState.RUNNING,
-				"NE",
-				0,
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				new Timestamp(new Date().getTime()),
-				new Timestamp(new Date().getTime()),
-				"NE",
-				"NE"
-		);
+		ImageTask imageTask = new ImageTask("task-id", "LT5", "region-53", date, "NE",
+				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), "NE",
+				"NE");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
-		doReturn(imageData.getName()).when(sebalTaskMonitor)
+		doReturn(imageTask.getTaskId()).when(sebalTaskMonitor)
 				.getImageTaskFromTaskProcess(fakeTaskProcess);
-		doReturn(imageData).when(imageStore).getTask(imageData.getName());
-		doNothing().when(imageStore).updateImageTask(imageData);
-		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
+		doReturn(imageTask).when(imageStore).getTask(imageTask.getTaskId());
+		doNothing().when(imageStore).updateImageTask(imageTask);
+		doNothing().when(imageStore).addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+				imageTask.getUpdateTime());
 
 		this.sebalTaskMonitor.updateImageTaskToFailed(fakeTaskProcess);
-		Assert.assertEquals(ImageTaskState.FAILED, imageData.getState());
+		Assert.assertEquals(ImageTaskState.FAILED, imageTask.getState());
 	}
 
 	@Test
-	public void testProcMonImageQueued() throws SQLException {
+	public void testProcMonImageTaskReady() throws SQLException {
 		Date date = new Date();
-		ImageTask imageData = new ImageTask(
-				"task-id",
-				"LT5",
-				"region-53",
-				date,
-				"NE",
-				ImageTaskState.RUNNING,
-				"NE",
-				0,
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				new Timestamp(new Date().getTime()),
-				new Timestamp(new Date().getTime()),
-				"NE",
-				"NE"
-		);
+		ImageTask imageTask = new ImageTask("task-id", "LT5", "region-53", date, "NE",
+				ImageTaskState.RUNNING, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()), "NE",
+				"NE");
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
-		doReturn(imageData.getName()).when(sebalTaskMonitor)
+		doReturn(imageTask.getTaskId()).when(sebalTaskMonitor)
 				.getImageTaskFromTaskProcess(fakeTaskProcess);
-		doReturn(imageData).when(imageStore).getTask(imageData.getName());
-		doNothing().when(imageStore).updateImageTask(imageData);
-		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
+		doReturn(imageTask).when(imageStore).getTask(imageTask.getTaskId());
+		doNothing().when(imageStore).updateImageTask(imageTask);
+		doNothing().when(imageStore).addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+				imageTask.getUpdateTime());
 
 		this.sebalTaskMonitor.updateImageTaskToQueued(fakeTaskProcess);
-		Assert.assertEquals(ImageTaskState.READY, imageData.getState());
+		Assert.assertEquals(ImageTaskState.READY, imageTask.getState());
 	}
 }

@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.model.SapsUser;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;																																		
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
 import org.fogbowcloud.saps.notifier.Ward;
