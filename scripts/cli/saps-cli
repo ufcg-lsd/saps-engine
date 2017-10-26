@@ -5,9 +5,8 @@
 print_menu() {
 	echo "Usage: $0 COMMAND [OPTIONS]"
 	echo "Commands are GET, POST or PURGE"
-	echo "GET | GET [image_name] -e | --email email"
-	echo "POST --first-year first-year --last-year last-year --region region --data-set data-set --downloader-repository downloader-repository --downloader-tag downloader-tag --preprocessor-repository preprocessor-repository --preprocessor-tag preprocessor-tag --worker-repository worker-repository --worker-tag worker-tag -e | --email email"
-	echo "PUT --image-name image-name --sebal-version sebal-version --sebal-tag sebal-tag -e | --email email"
+	echo "GET | GET [task-id] -e | --email email"
+	echo "POST --init-date init-date --end-date end-date --lower-left-latitude lower-left-latitude --lower-left-longitude lower-left-longitude --upper-right-latitude upper-right-latitude --upper-right-longitude upper-right-longitude --input-gathering-tag input-gathering-tag --input-reprocessing-tag input-reprocessing-tag --algorithm-execution-tag algorithm-execution-tag -e | --email email"
 	echo "PURGE [day] -f | --force -e | --email email"
 	echo "CREATEUSER -e | --email email -u | --user user-name -n | --notify yes|no"
 	echo "UPDATE_USER_STATE --admin-email admin email -e | --email target user email -a | --active yes|no"
@@ -53,51 +52,46 @@ define_parameters() {
 				shift;
 				force="yes";
 				;;
-			-i | --image-name)
+			-i | --task-id)
 				shift;
-				image_name=$1
+				task_id=$1
 				;;
-			--first-year)
+			--init-date)
 				shift;
-				first_year=$1;
+				init_date=$1;
 				;;
-			--last-year)
+			--end-date)
 				shift;
-				last_year=$1;
+				end_date=$1;
 				;;
-			--region)
+			--lower-left-latitude)
 				shift;
-				region=$1;
+				lower_left_latitude=$1;
 				;;
-                        --data-set)
+			--lower-left-longitude)
                                 shift;
-                                data_set=$1;
+                                lower_left_longitude=$1;
                                 ;;
-                        --downloader-repository)
+                        --upper-right-latitude)
                                 shift;
-                                downloader_repository=$1;
+                                upper_right_latitude=$1;
                                 ;;
-                        --downloader-tag)
+                        --upper-right-longitude)
                                 shift;
-                                downloader_tag=$1;
+                                upper_right_longitude=$1;
                                 ;;
-                        --preprocessor-repository)
+                        --input-gathering-tag)
                                 shift;
-                                preprocessor_repository=$1;
+                                input_gathering_tag=$1;
                                 ;;
-                        --preprocessor-tag)
+                        --input-reprocessing-tag)
                                 shift;
-                                preprocessor_tag=$1;
+                                input_reprocessing_tag=$1;
                                 ;;
-			--worker-repository)
-				shift;
-				worker_repository=$1;
-				;;
-			--worker-tag)
-				shift;
-				worker_tag=$1;
-				;;
-
+                        --algorithm-execution-tag)
+                                shift;
+                                algorithm_execution_tag=$1;
+                                ;;
 		esac
 		shift
 	done
@@ -125,30 +119,17 @@ do_get() {
 do_post() {
 	define_parameters $@
 	askPassword
-	if [[ "$first_year" == "" || "$last_year" == "" || "$region" == "" || "$data_set" == "" ]]
+	if [[ "$init_date" == "" || "$end_date" == "" || "$lower_left_latitude" == "" || "$lower_left_longitude" == "" || "$upper_right_latitude" == "" || "$upper_right_longitude" == "" ]]
 	then
-		echo "ERROR: --first-year, --last-year, --region and --data-set are mandatories"
+		echo "ERROR: --init-date, --end-date, --lower-left-latitude, --lower-left-longitude, --upper-right-latitude and --upper-right-longitude are mandatories"
 		print_menu
 	else
-        	response=$(curl --data "userEmail=$email&userPass=$password&firstYear=$first_year&lastYear=$last_year&region=$region&dataSet=$data_set&downloaderContainerRepository=$downloader_repository&downloaderContainerTag=$downloader_tag&preProcessorContainerRepository=$preprocessor_repository&preProcessorContainerTag=$preprocessor_tag&workerContainerRepository=$worker_repository&workerContainerTag=$worker_repository" "$host/images" 2> /dev/null)
+        	response=$(curl --data "userEmail=$email&userPass=$password&initDate=$init_date&endDate=$end_date&lowerLeftLatitude=$lower_left_latitude&lowerLeftLongitude=$lower_left_longitude&upperRightLatitude=$upper_right_latitude&upperRightLongitude=$upper_right_longitude&inputGathering=$input_gathering_tag&inputPreprocessing=$input_preprocessing_tag&algorithmExecution=$algorithm_execution_tag" "$host/images" 2> /dev/null)
 		echo $response
 	fi
 }
 
-do_put() {
-	define_parameters $@
-        askPassword
-	if [[ "$image_name" == "" || "$sebal_version" == "" || "$sebal_tag" == "" ]]
-	then
-		echo "ERROR: --image-name, --sebal-version and --sebal-tag are mandatories"
-		print_menu
-	else
-		response=$(curl -X PUT --data "userEmail=$email&userPass=$password&imageName=$image_name&sebalVersion=$sebal_version&sebalTag=$sebal_tag" "$host/images" 2> /dev/null)
-		echo $response
-	fi
-}
-
-purge_image() {
+purge_task() {
 	if [ ! $# -lt 1 ]
 	then
 		define_parameters $@
@@ -206,13 +187,9 @@ then
             shift
             do_post $@
         ;;
-	PUT)
-	    shift
-	    do_put $@
-	;;
         PURGE)
             shift
-            purge_image $@
+            purge_task $@
         ;;
         CREATEUSER)
             shift
