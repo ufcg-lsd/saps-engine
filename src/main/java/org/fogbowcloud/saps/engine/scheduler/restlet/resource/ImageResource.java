@@ -1,13 +1,9 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 
 import org.apache.commons.httpclient.HttpStatus;
@@ -36,8 +32,8 @@ public class ImageResource extends BaseResource {
 
 	private static final String USER_EMAIL = "userEmail";
 	private static final String USER_PASSWORD = "userPass";
-	private static final String PROCESSING_TOP_LEFT = "topLeft";
-	private static final String PROCESSING_BOTTOM_RIGHT = "bottomRight";
+	private static final String LOWER_LEFT = "lowerLeft";
+	private static final String UPPER_RIGHT = "upperRight";
 	private static final String PROCESSING_INIT_DATE = "initialDate";
 	private static final String PROCESSING_FINAL_DATE = "finalDate";
 	private static final String PROCESSING_INPUT_GATHERING_TAG = "inputGatheringTag";
@@ -99,9 +95,9 @@ public class ImageResource extends BaseResource {
 		return new StringRepresentation(tasksJSON.toString(), MediaType.APPLICATION_JSON);
 	}
 
-	private Double extractCoordinate(Form form, String name, int index) {
+	private String extractCoordinate(Form form, String name, int index) {
 		String data[] = form.getValuesArray(name + "[]");
-		return Double.parseDouble(data[index]);
+		return data[index];
 	}
 
 	private Date extractDate(Form form, String name) throws ParseException {
@@ -121,15 +117,15 @@ public class ImageResource extends BaseResource {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 		}
 
-		Double topLeftLat;
-		Double topLeftLon;
-		Double bottomRightLat;
-		Double bottomRightLon;
+		String lowerLeftLatitude;
+		String lowerLeftLongitude;
+		String upperRightLatitude;
+		String upperRightLongitude;
 		try {
-			topLeftLat = extractCoordinate(form, PROCESSING_TOP_LEFT, 0);
-			topLeftLon = extractCoordinate(form, PROCESSING_TOP_LEFT, 1);
-			bottomRightLat = extractCoordinate(form, PROCESSING_BOTTOM_RIGHT, 0);
-			bottomRightLon = extractCoordinate(form, PROCESSING_BOTTOM_RIGHT, 1);
+			lowerLeftLatitude = extractCoordinate(form, LOWER_LEFT, 0);
+			lowerLeftLongitude = extractCoordinate(form, LOWER_LEFT, 1);
+			upperRightLatitude = extractCoordinate(form, UPPER_RIGHT, 0);
+			upperRightLongitude = extractCoordinate(form, UPPER_RIGHT, 1);
 		} catch (Exception e) {
 			LOGGER.error("Failed to parse coordinates of new processing.", e);
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "All coordinates must be informed.");
@@ -156,8 +152,8 @@ public class ImageResource extends BaseResource {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Algorithm Execution must be informed.");
 
 		String builder = "Creating new image process with configuration:\n" +
-				"\tTop Left: " + topLeftLat + ", " + topLeftLon + "\n" +
-				"\tBottom Right: " + bottomRightLat + ", " + bottomRightLon + "\n" +
+				"\tLower Left: " + lowerLeftLatitude + ", " + lowerLeftLongitude + "\n" +
+				"\tUpper Right: " + upperRightLatitude + ", " + upperRightLongitude + "\n" +
 				"\tInterval: " + initDate + " - " + endDate + "\n" +
 				"\tGathering: " + inputGathering + "\n" +
 				"\tPreprocessing: " + inputPreprocessing + "\n" +
@@ -166,10 +162,10 @@ public class ImageResource extends BaseResource {
 
 		try {
 			List<Task> createdTasks = application.addTasks(
-					topLeftLat,
-					topLeftLon,
-					bottomRightLat,
-					bottomRightLon,
+					lowerLeftLatitude,
+					lowerLeftLongitude,
+					upperRightLatitude,
+					upperRightLongitude,
 					initDate,
 					endDate,
 					inputGathering,

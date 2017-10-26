@@ -487,7 +487,7 @@ public class USGSNasaRepository implements INPERepository {
 				SapsPropertiesConstants.ASC_JSON_VALUE);
 	}
 
-	public Set getRegionsFromArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
+	public Set<String> getRegionsFromArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
 		  String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude){
 		JSONArray jsonArray = searchForRegionInArea(dataset, firstYear, lastYear, lowerLeftLatitude,
 				lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
@@ -525,7 +525,7 @@ public class USGSNasaRepository implements INPERepository {
 		} catch (Exception e) {
 			LOGGER.error("Error while converting USGS response to JSON object.", e);
 		}
-		return null;
+		return new JSONArray();
 	}
 
 	private InputStream requestForRegions(JSONObject searchJSONObj){

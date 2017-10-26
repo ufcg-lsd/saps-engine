@@ -100,20 +100,20 @@ public class DatabaseApplication extends Application {
 	}
 
 	public List<Task> addTasks(
-			Double topLeftLat,
-			Double topLeftLon,
-			Double bottomRightLat,
-			Double bottomRightLon,
+			String lowerLeftLatitude,
+			String lowerLeftLongitude,
+			String upperRightLatitude,
+			String upperRightLongitude,
 			Date initDate,
 			Date endDate,
 			String inputGathering,
 			String inputPreprocessing,
 			String algorithmExecution) {
 		return submissionDispatcher.fillDB(
-				topLeftLat,
-				topLeftLon,
-				bottomRightLat,
-				bottomRightLon,
+				lowerLeftLatitude,
+				lowerLeftLongitude,
+				upperRightLatitude,
+				upperRightLongitude,
 				initDate,
 				endDate,
 				inputGathering,
