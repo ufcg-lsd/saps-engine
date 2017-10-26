@@ -64,7 +64,7 @@ public class TestSapsTaskMonitor {
 		runningProcesses.add(fakeProcess);
 
 		doReturn(runningProcesses).when(this.sebalTaskMonitor).getRunningProcesses();
-		doNothing().when(sebalTaskMonitor).imageToRunning(fakeProcess);
+		doNothing().when(sebalTaskMonitor).imageTaskToRunning(fakeProcess);
 
 		this.sebalTaskMonitor.procMon();
 		verify(pool, never()).updateResource(fakeResource, ResourceState.FAILED);
@@ -92,7 +92,7 @@ public class TestSapsTaskMonitor {
 		runningTasks.put(fakeTask, fakeProcess);
 		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
 
-		doNothing().when(sebalTaskMonitor).updateImageToQueued(fakeProcess);
+		doNothing().when(sebalTaskMonitor).updateImageTaskToQueued(fakeProcess);
 
 		this.sebalTaskMonitor.procMon();
 
@@ -121,7 +121,7 @@ public class TestSapsTaskMonitor {
 		runningTasks.put(fakeTask, fakeProcess);
 		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
 
-		doNothing().when(sebalTaskMonitor).updateImageToError(fakeProcess);
+		doNothing().when(sebalTaskMonitor).updateImageTaskToFailed(fakeProcess);
 
 		this.sebalTaskMonitor.procMon();
 
@@ -150,7 +150,7 @@ public class TestSapsTaskMonitor {
 		runningTasks.put(fakeTask, fakeProcess);
 		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
 
-		doNothing().when(sebalTaskMonitor).updateImageToFinished(fakeProcess);
+		doNothing().when(sebalTaskMonitor).updateImageTaskToFinished(fakeProcess);
 
 		this.sebalTaskMonitor.procMon();
 
@@ -208,13 +208,13 @@ public class TestSapsTaskMonitor {
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
 		doReturn(imageData.getName()).when(sebalTaskMonitor)
-				.getImageFromTaskProcess(fakeTaskProcess);
+				.getImageTaskFromTaskProcess(fakeTaskProcess);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doNothing().when(imageStore).updateImageTask(imageData);
 		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
 				imageData.getUpdateTime());
 
-		this.sebalTaskMonitor.updateImageToRunning(fakeTaskProcess);
+		this.sebalTaskMonitor.updateImageTaskToRunning(fakeTaskProcess);
 		Assert.assertEquals(ImageTaskState.RUNNING, imageData.getState());
 	}
 
@@ -244,13 +244,13 @@ public class TestSapsTaskMonitor {
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
 		doReturn(imageData.getName()).when(sebalTaskMonitor)
-				.getImageFromTaskProcess(fakeTaskProcess);
+				.getImageTaskFromTaskProcess(fakeTaskProcess);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doNothing().when(imageStore).updateImageTask(imageData);
 		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
 				imageData.getUpdateTime());
 
-		this.sebalTaskMonitor.updateImageToFinished(fakeTaskProcess);
+		this.sebalTaskMonitor.updateImageTaskToFinished(fakeTaskProcess);
 		Assert.assertEquals(ImageTaskState.FINISHED, imageData.getState());
 	}
 
@@ -280,13 +280,13 @@ public class TestSapsTaskMonitor {
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
 		doReturn(imageData.getName()).when(sebalTaskMonitor)
-				.getImageFromTaskProcess(fakeTaskProcess);
+				.getImageTaskFromTaskProcess(fakeTaskProcess);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doNothing().when(imageStore).updateImageTask(imageData);
 		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
 				imageData.getUpdateTime());
 
-		this.sebalTaskMonitor.updateImageToError(fakeTaskProcess);
+		this.sebalTaskMonitor.updateImageTaskToFailed(fakeTaskProcess);
 		Assert.assertEquals(ImageTaskState.FAILED, imageData.getState());
 	}
 
@@ -316,13 +316,13 @@ public class TestSapsTaskMonitor {
 		TaskProcess fakeTaskProcess = mock(TaskProcess.class);
 
 		doReturn(imageData.getName()).when(sebalTaskMonitor)
-				.getImageFromTaskProcess(fakeTaskProcess);
+				.getImageTaskFromTaskProcess(fakeTaskProcess);
 		doReturn(imageData).when(imageStore).getTask(imageData.getName());
 		doNothing().when(imageStore).updateImageTask(imageData);
 		doNothing().when(imageStore).addStateStamp(imageData.getName(), imageData.getState(),
 				imageData.getUpdateTime());
 
-		this.sebalTaskMonitor.updateImageToQueued(fakeTaskProcess);
+		this.sebalTaskMonitor.updateImageTaskToQueued(fakeTaskProcess);
 		Assert.assertEquals(ImageTaskState.READY, imageData.getState());
 	}
 }

@@ -25,6 +25,8 @@ import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.monitor.SapsTaskMonitor;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
 
 public class SapsController extends BlowoutController {
 
@@ -154,13 +156,16 @@ public class SapsController extends BlowoutController {
 						it.remove(); // avoids a ConcurrentModificationException
 					}
 
-					LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
+					// Getting Worker docker repository and tag
+					ExecutionScriptTag workerDockerInfo = ExecutionScriptTagUtil
+							.getExecutionScritpTag(imageTask.getAlgorithmExecutionTag(),
+									ExecutionScriptTagUtil.WORKER);
 
-					// TODO update algorithm repository
+					LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
 					taskImpl = SapsTask.createSapsTask(taskImpl, properties, specWithFederation,
 							imageTask.getFederationMember(), nfsServerIP, nfsServerPort,
-							"",
-							imageTask.getAlgorithmExecutionTag());
+							workerDockerInfo.getDockerRepository(),
+							workerDockerInfo.getDockerTag());
 
 					imageTask.setState(ImageTaskState.READY);
 					imageTask.setBlowoutVersion(getBlowoutVersion(properties));
