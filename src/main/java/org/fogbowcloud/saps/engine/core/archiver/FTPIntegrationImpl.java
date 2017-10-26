@@ -35,7 +35,7 @@ public class FTPIntegrationImpl implements FTPIntegration{
 
 			if (p.exitValue() != 0) {
 				LOGGER.error(
-						"Error while executing sftp-access script...Error: " + getProcessOutput(p));
+						"Error while executing sftp-access script...Error: " + getProcessError(p));
 				return 1;
 			}
 		} catch (InterruptedException e) {
@@ -48,8 +48,8 @@ public class FTPIntegrationImpl implements FTPIntegration{
 		return 0;
 	}
 	
-	private static String getProcessOutput(Process p) throws IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	private static String getProcessError(Process p) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 		StringBuilder stringBuilder = new StringBuilder();
 		String line = null;
 		while ((line = reader.readLine()) != null) {
