@@ -8,9 +8,9 @@
   ],
   "pre_processing":[
     {
-      "name":"",
-      "docker_tag":"",
-      "docker_repository":"fogbow/preprocessing"
+      "name":"pre_processing",
+      "docker_tag":"preprocessor",
+      "docker_repository":"fogbow/preprocessor"
     }
   ],
   "input_downloader":[
