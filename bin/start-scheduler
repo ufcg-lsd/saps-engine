@@ -11,7 +11,7 @@ sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,sus
 
 while [ true ]
 do
-  if (( $(ps -ef | grep -v grep | grep SebalMain | wc -l) > 0 ))
+  if (( $(ps -ef | grep -v grep | grep SchedulerMain | wc -l) > 0 ))
   then
     echo "Scheduler is still running"
   else
