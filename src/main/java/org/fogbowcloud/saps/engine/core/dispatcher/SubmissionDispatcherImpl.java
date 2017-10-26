@@ -1,12 +1,18 @@
 package org.fogbowcloud.saps.engine.core.dispatcher;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
@@ -138,30 +144,9 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 	}
 
 	@Override
-	public void listCorruptedImages() throws ParseException {
-		List<ImageTask> allImageTask;
-		try {
-			allImageTask = imageStore.getIn(ImageTaskState.CORRUPTED);
-			for (int i = 0; i < allImageTask.size(); i++) {
-				System.out.println(allImageTask.get(i).toString());
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while gettin tasks in " + ImageTaskState.CORRUPTED
-					+ " state from Catalogue", e);
-		}
-	}
-
-	@Override
-	public List<Task> fillDB(
-			Double topLeftLat,
-			Double topLeftLon,
-			Double bottomRightLat,
-			Double bottomRightLon,
-			Date initDate,
-			Date endDate,
-			String inputGathering,
-			String inputPreprocessing,
-			String algorithmExecution) {
+	public List<Task> fillDB(Double topLeftLat, Double topLeftLon, Double bottomRightLat,
+			Double bottomRightLon, Date initDate, Date endDate, String inputGathering,
+			String inputPreprocessing, String algorithmExecution) {
 		List<Task> createdTasks = new ArrayList<>();
 
 		// TODO get dataset and region from lat/lon
@@ -176,23 +161,15 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 			try {
 				ArrayList<String> datasets = DatasetUtil
 						.getSatsInOperationByYear(cal.get(Calendar.YEAR));
-				
-				for(String dataset : datasets) {
-					
+
+				for (String dataset : datasets) {
+
 					String taskId = UUID.randomUUID().toString();
-					
-					ImageTask iTask = getImageStore().addImageTask(
-							taskId,
-							dataset,
-							region,
-							cal.getTime(),
-							"None",
-							DEFAULT_PRIORITY,
-							inputGathering,
-							inputPreprocessing,
-							algorithmExecution
-					);
-					
+
+					ImageTask iTask = getImageStore().addImageTask(taskId, dataset, region,
+							cal.getTime(), "None", DEFAULT_PRIORITY, inputGathering,
+							inputPreprocessing, algorithmExecution);
+
 					Task task = new Task(UUID.randomUUID().toString());
 					task.setImageTask(iTask);
 					getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
@@ -200,7 +177,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
 					createdTasks.add(task);
 				}
-				
+
 			} catch (SQLException e) {
 				LOGGER.error("Error while adding image to database", e);
 			}

@@ -45,7 +45,8 @@ public class Archiver {
 				new FTPIntegrationImpl(), new ArchiverHelper());
 
 		LOGGER.info("Creating Archiver");
-		LOGGER.info("Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP)
+		LOGGER.info(
+				"Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP)
 						+ ":" + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_PORT)
 						+ " FTPServer " + ftpServerIP + ":" + ftpServerPort);
 	}
@@ -124,12 +125,24 @@ public class Archiver {
 		Collection<ImageTask> taskList = pendingTaskArchiveMap.values();
 		for (ImageTask imageTask : taskList) {
 			rollBackArchive(imageTask);
-			deleteInputFromDisk(imageTask, properties);
-			deleteOutputFromDisk(imageTask, properties);
+			deleteAllTaskFilesFromDisk(imageTask, properties);
 			deletePendingInputFilesFromSwift(imageTask, properties);
 			deletePendingOutputFromSwift(imageTask, properties);
 		}
 		LOGGER.info("Garbage collect finished");
+	}
+
+	private void deleteAllTaskFilesFromDisk(ImageTask imageTask, Properties properties)
+			throws IOException {
+		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
+		String taskDirPath = exportPath + File.separator + imageTask.getTaskId();
+		File taskDir = new File(taskDirPath);
+
+		if (taskDir.exists() && taskDir.isDirectory()) {
+			FileUtils.deleteDirectory(taskDir);
+		} else {
+			LOGGER.info("Path " + taskDirPath + " does not exist or is not a directory!");
+		}
 	}
 
 	private void deletePendingOutputFromSwift(ImageTask imageTask, Properties properties)
@@ -152,6 +165,20 @@ public class Archiver {
 		}
 	}
 
+	private void deletePreProcessFromDisk(ImageTask imageTask, Properties properties)
+			throws IOException {
+		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
+		String preProcessDirPath = exportPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+		File preProcessDir = new File(preProcessDirPath);
+
+		if (preProcessDir.exists() && preProcessDir.isDirectory()) {
+			FileUtils.deleteDirectory(preProcessDir);
+		} else {
+			LOGGER.info("Path " + preProcessDirPath + " does not exist or is not a directory!");
+		}
+	}
+
 	protected void deleteOutputFromDisk(final ImageTask imageTask, Properties properties)
 			throws IOException {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
@@ -164,7 +191,20 @@ public class Archiver {
 		} else {
 			LOGGER.info("Path " + outputDirPath + " does not exist or is not a directory!");
 		}
+	}
 
+	private void deleteMetadataFromDisk(ImageTask imageTask, Properties properties)
+			throws IOException {
+		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
+		String metadataDirPath = exportPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "metadata";
+		File metadataDir = new File(metadataDirPath);
+
+		if (metadataDir.exists() && metadataDir.isDirectory()) {
+			FileUtils.deleteDirectory(metadataDir);
+		} else {
+			LOGGER.info("Path " + metadataDirPath + " does not exist or is not a directory!");
+		}
 	}
 
 	protected List<ImageTask> tasksToArchive() {
@@ -181,20 +221,18 @@ public class Archiver {
 		try {
 			if (prepareArchive(imageTask)) {
 				archive(imageTask);
-				if (!archiverHelper.isTaskCorrupted(imageTask, pendingTaskArchiveMap, imageStore)
+				if (!archiverHelper.isTaskFailed(imageTask, pendingTaskArchiveMap, imageStore)
 						&& !archiverHelper.isTaskRolledBack(imageTask)) {
 					finishArchive(imageTask);
 				} else {
-					deleteInputFromDisk(imageTask, properties);
-					deleteOutputFromDisk(imageTask, properties);
+					deleteAllTaskFilesFromDisk(imageTask, properties);
 				}
 			} else {
 				LOGGER.error("Could not prepare task " + imageTask + " to archive");
 			}
 		} catch (Exception e) {
 			LOGGER.error("Could not archive task " + imageTask.getTaskId(), e);
-			deleteInputFromDisk(imageTask, properties);
-			deleteOutputFromDisk(imageTask, properties);
+			deleteAllTaskFilesFromDisk(imageTask, properties);
 			rollBackArchive(imageTask);
 		}
 	}
@@ -237,7 +275,8 @@ public class Archiver {
 		getFTPServerInfo(imageTask);
 
 		LOGGER.debug("Using FTP Server IP " + ftpServerIP + " and port " + ftpServerPort);
-		if (archiveInputs(imageTask) == 0) {
+		if (archiveInputs(imageTask) == 0 && archivePreProcess(imageTask) == 0
+				&& archiveMetadata(imageTask) == 0) {
 			archiveOutputs(imageTask);
 		}
 	}
@@ -263,8 +302,7 @@ public class Archiver {
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating task " + imageTask + " in DB", e);
 			rollBackArchive(imageTask);
-			deleteInputFromDisk(imageTask, properties);
-			deleteOutputFromDisk(imageTask, properties);
+			deleteAllTaskFilesFromDisk(imageTask, properties);
 		}
 
 		try {
@@ -276,13 +314,10 @@ public class Archiver {
 		}
 
 		LOGGER.debug("Deleting local output files for task " + imageTask.getTaskId());
-
-		deleteInputFromDisk(imageTask, properties);
-		deleteOutputFromDisk(imageTask, properties);
+		deleteAllTaskFilesFromDisk(imageTask, properties);
 
 		archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
 				pendingTaskArchiveMap);
-
 		LOGGER.debug("Task " + imageTask.getTaskId() + " archived");
 	}
 
@@ -322,8 +357,8 @@ public class Archiver {
 			File localTaskInputDir = new File(localTaskInputPath);
 
 			if (!localTaskInputDir.exists()) {
-				LOGGER.debug("Path " + localTaskInputPath
-						+ " not valid or nonexistent. Creating " + localTaskInputPath);
+				LOGGER.debug("Path " + localTaskInputPath + " not valid or nonexistent. Creating "
+						+ localTaskInputPath);
 				localTaskInputDir.mkdirs();
 			} else if (!localTaskInputDir.isDirectory()) {
 				LOGGER.debug(localTaskInputPath
@@ -347,8 +382,9 @@ public class Archiver {
 		}
 
 		if (i >= MAX_ARCHIVE_TRIES) {
-			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
-			imageTask.setState(ImageTaskState.CORRUPTED);
+			LOGGER.info("Max tries was reached. Marking " + imageTask + " as failed.");
+			imageTask.setState(ImageTaskState.FAILED);
+			imageTask.setError("Max archive tries" + MAX_ARCHIVE_TRIES + " reached");
 			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
 					pendingTaskArchiveMap);
 			deleteInputFromDisk(imageTask, properties);
@@ -359,8 +395,110 @@ public class Archiver {
 		return 1;
 	}
 
-	protected void archiveOutputs(final ImageTask imageTask) throws Exception, IOException,
-			SQLException {
+	private int archivePreProcess(ImageTask imageTask) throws Exception {
+		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
+
+		int i;
+		for (i = 0; i < MAX_ARCHIVE_TRIES; i++) {
+			String remoteTaskPreProcessPath = archiverHelper.getRemoteTaskPreProcessPath(imageTask,
+					properties);
+			String localTaskPreProcessPath = archiverHelper.getLocalTaskPreProcessPath(imageTask,
+					properties);
+			File localTaskPreProcessDir = new File(localTaskPreProcessPath);
+
+			if (!localTaskPreProcessDir.exists()) {
+				LOGGER.debug("Path " + localTaskPreProcessPath
+						+ " not valid or nonexistent. Creating " + localTaskPreProcessPath);
+				localTaskPreProcessDir.mkdirs();
+			} else if (!localTaskPreProcessDir.isDirectory()) {
+				LOGGER.debug(localTaskPreProcessPath
+						+ " is a file, not a directory. Deleting it and creating a actual directory");
+				localTaskPreProcessDir.delete();
+				localTaskPreProcessDir.mkdirs();
+			}
+
+			int exitValue = ftpImpl.getFiles(properties, ftpServerIP, ftpServerPort,
+					remoteTaskPreProcessPath, localTaskPreProcessPath, imageTask);
+
+			if (exitValue == 0) {
+				if (uploadPreProcessFilesToSwift(imageTask, localTaskPreProcessDir)) {
+					LOGGER.debug("PreProcess from " + localTaskPreProcessPath
+							+ " uploaded successfully");
+					return 0;
+				}
+			} else {
+				deletePreProcessFromDisk(imageTask, properties);
+				rollBackArchive(imageTask);
+			}
+		}
+
+		if (i >= MAX_ARCHIVE_TRIES) {
+			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
+			imageTask.setState(ImageTaskState.FAILED);
+			imageTask.setError("Max archive tries" + MAX_ARCHIVE_TRIES + " reached");
+			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
+					pendingTaskArchiveMap);
+			deletePreProcessFromDisk(imageTask, properties);
+			imageStore.updateImageTask(imageTask);
+			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+		}
+
+		return 1;
+	}
+
+	private int archiveMetadata(ImageTask imageTask) throws Exception {
+		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
+
+		int i;
+		for (i = 0; i < MAX_ARCHIVE_TRIES; i++) {
+			String remoteTaskMetadataPath = archiverHelper.getRemoteTaskMetadataPath(imageTask,
+					properties);
+			String localTaskMetadataPath = archiverHelper.getLocalTaskMetadataPath(imageTask,
+					properties);
+			File localTaskMetadataDir = new File(localTaskMetadataPath);
+
+			if (!localTaskMetadataDir.exists()) {
+				LOGGER.debug("Path " + localTaskMetadataPath
+						+ " not valid or nonexistent. Creating " + localTaskMetadataPath);
+				localTaskMetadataDir.mkdirs();
+			} else if (!localTaskMetadataDir.isDirectory()) {
+				LOGGER.debug(localTaskMetadataPath
+						+ " is a file, not a directory. Deleting it and creating a actual directory");
+				localTaskMetadataDir.delete();
+				localTaskMetadataDir.mkdirs();
+			}
+
+			int exitValue = ftpImpl.getFiles(properties, ftpServerIP, ftpServerPort,
+					remoteTaskMetadataPath, localTaskMetadataPath, imageTask);
+
+			if (exitValue == 0) {
+				if (uploadMetadataFilesToSwift(imageTask, localTaskMetadataDir)) {
+					LOGGER.debug(
+							"Metadata from " + localTaskMetadataPath + " uploaded successfully");
+					return 0;
+				}
+			} else {
+				deleteMetadataFromDisk(imageTask, properties);
+				rollBackArchive(imageTask);
+			}
+		}
+
+		if (i >= MAX_ARCHIVE_TRIES) {
+			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
+			imageTask.setState(ImageTaskState.FAILED);
+			imageTask.setError("Max archive tries" + MAX_ARCHIVE_TRIES + " reached");
+			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
+					pendingTaskArchiveMap);
+			deleteMetadataFromDisk(imageTask, properties);
+			imageStore.updateImageTask(imageTask);
+			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+		}
+
+		return 1;
+	}
+
+	protected void archiveOutputs(final ImageTask imageTask)
+			throws Exception, IOException, SQLException {
 		// FIXME: doc-it (we want to know the max tries logic)
 		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
@@ -373,8 +511,8 @@ public class Archiver {
 			File localTaskOutputDir = new File(localTaskOutputPath);
 
 			if (!localTaskOutputDir.exists()) {
-				LOGGER.debug("Path " + localTaskOutputPath
-						+ " not valid or nonexistent. Creating " + localTaskOutputPath);
+				LOGGER.debug("Path " + localTaskOutputPath + " not valid or nonexistent. Creating "
+						+ localTaskOutputPath);
 				localTaskOutputDir.mkdirs();
 			} else if (!localTaskOutputDir.isDirectory()) {
 				LOGGER.debug(localTaskOutputPath
@@ -407,7 +545,8 @@ public class Archiver {
 
 		if (i >= MAX_ARCHIVE_TRIES) {
 			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
-			imageTask.setState(ImageTaskState.CORRUPTED);
+			imageTask.setState(ImageTaskState.FAILED);
+			imageTask.setError("Max archive tries" + MAX_ARCHIVE_TRIES + " reached");
 			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
 					pendingTaskArchiveMap);
 			deleteOutputFromDisk(imageTask, properties);
@@ -443,6 +582,76 @@ public class Archiver {
 
 				rollBackArchive(imageTask);
 				deleteOutputFromDisk(imageTask, properties);
+				return false;
+			}
+		}
+
+		LOGGER.info("Upload to swift succsessfully done");
+		return true;
+	}
+
+	protected boolean uploadPreProcessFilesToSwift(ImageTask imageTask,
+			File localImagePreProcessFilesDir) throws Exception {
+		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
+		String pseudoFolder = getPreProcessPseudoFolder(imageTask);
+		String containerName = getContainerName();
+
+		for (File actualFile : localImagePreProcessFilesDir.listFiles()) {
+			LOGGER.debug("Actual file " + actualFile.getName());
+			int uploadFileTries;
+			for (uploadFileTries = 0; uploadFileTries < MAX_SWIFT_UPLOAD_TRIES; uploadFileTries++) {
+				try {
+					LOGGER.debug("Trying to upload file " + actualFile.getName() + " to "
+							+ pseudoFolder + " in " + containerName);
+					swiftAPIClient.uploadFile(containerName, actualFile, pseudoFolder);
+					break;
+				} catch (Exception e) {
+					LOGGER.error("Error while uploading files to swift", e);
+					continue;
+				}
+			}
+
+			if (uploadFileTries >= MAX_SWIFT_UPLOAD_TRIES) {
+				LOGGER.debug("Upload tries to swift for file " + actualFile + " has passed max "
+						+ MAX_SWIFT_UPLOAD_TRIES);
+
+				rollBackArchive(imageTask);
+				deletePreProcessFromDisk(imageTask, properties);
+				return false;
+			}
+		}
+
+		LOGGER.info("Upload to swift succsessfully done");
+		return true;
+	}
+
+	protected boolean uploadMetadataFilesToSwift(ImageTask imageTask,
+			File localImageMetadataFilesDir) throws Exception {
+		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
+		String pseudoFolder = getMetadataPseudoFolder(imageTask);
+		String containerName = getContainerName();
+
+		for (File actualFile : localImageMetadataFilesDir.listFiles()) {
+			LOGGER.debug("Actual file " + actualFile.getName());
+			int uploadFileTries;
+			for (uploadFileTries = 0; uploadFileTries < MAX_SWIFT_UPLOAD_TRIES; uploadFileTries++) {
+				try {
+					LOGGER.debug("Trying to upload file " + actualFile.getName() + " to "
+							+ pseudoFolder + " in " + containerName);
+					swiftAPIClient.uploadFile(containerName, actualFile, pseudoFolder);
+					break;
+				} catch (Exception e) {
+					LOGGER.error("Error while uploading files to swift", e);
+					continue;
+				}
+			}
+
+			if (uploadFileTries >= MAX_SWIFT_UPLOAD_TRIES) {
+				LOGGER.debug("Upload tries to swift for file " + actualFile + " has passed max "
+						+ MAX_SWIFT_UPLOAD_TRIES);
+
+				rollBackArchive(imageTask);
+				deleteMetadataFromDisk(imageTask, properties);
 				return false;
 			}
 		}
@@ -552,6 +761,30 @@ public class Archiver {
 				+ "input" + File.separator;
 	}
 
+	private String getPreProcessPseudoFolder(ImageTask imageTask) {
+		if (properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+				.endsWith(File.separator)) {
+			return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+					+ imageTask.getTaskId() + File.separator + "data" + File.separator
+					+ "preprocessing" + File.separator;
+		}
+
+		return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "preprocessing" + File.separator;
+	}
+
+	private String getMetadataPseudoFolder(ImageTask imageTask) {
+		if (properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+				.endsWith(File.separator)) {
+			return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+					+ imageTask.getTaskId() + File.separator + "metadata";
+		}
+
+		return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
+				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
+	}
+
 	private String getOutputPseudoFolder(ImageTask imageTask) {
 		if (properties.getProperty(SapsPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {
@@ -580,19 +813,19 @@ public class Archiver {
 
 		return "";
 	}
-	
+
 	public String getFtpServerIP() {
 		return this.ftpServerIP;
 	}
-	
+
 	public void setFtpServerIP(String ftpServerIP) {
 		this.ftpServerIP = ftpServerIP;
 	}
-	
+
 	public String getFtpServerPort() {
 		return this.ftpServerPort;
 	}
-	
+
 	public void setFtpServerPort(String ftpServerPort) {
 		this.ftpServerPort = ftpServerPort;
 	}
