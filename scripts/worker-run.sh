@@ -100,7 +100,7 @@ function executeDockerContainer {
 }
 
 function removeDockerContainer {
-  CONTAINER_ID=$(docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
+  CONTAINER_ID=$(sudo docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
 
   echo "Removing docker container $CONTAINER_ID"
   sudo docker rm -f $CONTAINER_ID
