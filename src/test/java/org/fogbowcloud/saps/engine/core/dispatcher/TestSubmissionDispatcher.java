@@ -7,13 +7,16 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -126,6 +129,19 @@ public class TestSubmissionDispatcher {
 
 		Assert.assertEquals(submissionOne, actualSubmissionOne);
 		Assert.assertEquals(submissionTwo, actualSubmissionTwo);
+		
+		// TODO: put a lat/lon thats references to the same region and are inside of USGS/SAPS regions
+		List<Task> tasks = subDispatcherImpl.fillDB(1.0, 1.0, 1.0, 1.0, new Date(), new Date(),
+				"gathering", "preprocessing", "algorithm");
+		String[] sats = Arrays.copyOf(DatasetUtil.satsInPresentOperation, DatasetUtil.satsInPresentOperation.length);
+		Assert.assertEquals(sats.length, tasks.size());
+		String[] iTaskDatasets = new String[sats.length];
+		for(int i = 0;i < DatasetUtil.satsInPresentOperation.length;i++) {
+			iTaskDatasets[i] = tasks.get(i).getImageTask().getDataset();
+		}
+		Arrays.sort(sats);
+		Arrays.sort(iTaskDatasets);
+		Assert.assertEquals(Arrays.toString(sats), Arrays.toString(iTaskDatasets));
 
 		imageStore.dispose();
 	}
