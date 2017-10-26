@@ -11,6 +11,7 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.DockerUtil;
+import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
@@ -23,20 +24,31 @@ public class PreProcessorImpl implements PreProcessor {
 	public static final Logger LOGGER = Logger.getLogger(PreProcessorImpl.class);
 
 	public PreProcessorImpl(Properties properties) throws SQLException {
+		this(properties, new JDBCImageDataStore(properties));
+	}
+
+	protected PreProcessorImpl(Properties properties, ImageDataStore imageDataStore) {
 		this.properties = properties;
-		this.imageDataStore = new JDBCImageDataStore(properties);
+		this.imageDataStore = imageDataStore;
 	}
 
 	@Override
 	public void preProcessImage(ImageTask imageTask) {
 
 		try {
-			ExecutionScriptTag preProcessorTags = ExecutionScriptTagUtil.getExecutionScritpTag(
-					imageTask.getInputPreprocessingTag(), ExecutionScriptTagUtil.PRE_PROCESSING);
+			ExecutionScriptTag preProcessorTags = this.getContainerImageTags(imageTask);
 
 			this.getDockerImage(preProcessorTags);
 
-			String containerId = this.raiseContainer(preProcessorTags, imageTask);
+			String hostPath = this.getHostPath();
+
+			String containerPath = this.properties
+					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
+
+			this.createPreProcessingHostPath(hostPath);
+
+			String containerId = this.raiseContainer(preProcessorTags, imageTask, hostPath,
+					containerPath);
 
 			String commandToRun = this.properties.getProperty(
 					SapsPropertiesConstants.PREPROCESSOR_CONTAINER_SCRIPT,
@@ -72,14 +84,15 @@ public class PreProcessorImpl implements PreProcessor {
 				LOGGER.error("Failed while getting the Downloaded Images from DataBase", e);
 			} catch (Exception e) {
 				LOGGER.error(
-						"Number format exception at "
+						"Bad number format exception at "
 								+ SapsPropertiesConstants.PREPROCESSOR_EXECUTION_PERIOD + " value",
 						e);
 			}
 		}
 	}
 
-	private void getDockerImage(ExecutionScriptTag preProcessorTags) throws Exception {
+	protected void getDockerImage(ExecutionScriptTag preProcessorTags) throws Exception {
+
 		if (!DockerUtil.pullImage(preProcessorTags.getDockerRepository(),
 				preProcessorTags.getDockerTag())) {
 			throw new Exception("Was not possible get Docker Image from ["
@@ -88,17 +101,8 @@ public class PreProcessorImpl implements PreProcessor {
 		}
 	}
 
-	private String raiseContainer(ExecutionScriptTag preProcessorTags, ImageTask imageTask)
-			throws Exception {
-
-		String hostPath = this.properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
-				+ "preprocessing";
-
-		String containerPath = this.properties
-				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
-
-		this.createPreProcessingHostPath(hostPath);
+	protected String raiseContainer(ExecutionScriptTag preProcessorTags, ImageTask imageTask,
+			String hostPath, String containerPath) throws Exception {
 
 		String containerId = DockerUtil.runMappedContainer(preProcessorTags.getDockerRepository(),
 				preProcessorTags.getDockerTag(), hostPath, containerPath);
@@ -120,7 +124,7 @@ public class PreProcessorImpl implements PreProcessor {
 		}
 	}
 
-	private void executeContainer(String containerId, String commandToRun, ImageTask imageTask)
+	protected void executeContainer(String containerId, String commandToRun, ImageTask imageTask)
 			throws Exception {
 
 		this.imageDataStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.PREPROCESSING);
@@ -142,5 +146,16 @@ public class PreProcessorImpl implements PreProcessor {
 			throw new Exception("Container preprocessing execution failed for ImageTask ["
 					+ imageTask.getTaskId() + "]");
 		}
+	}
+
+	protected ExecutionScriptTag getContainerImageTags(ImageTask imageTask) throws SapsException {
+		return ExecutionScriptTagUtil.getExecutionScritpTag(imageTask.getInputPreprocessingTag(),
+				ExecutionScriptTagUtil.PRE_PROCESSING);
+	}
+
+	protected String getHostPath() {
+		return this.properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "preprocessing";
 	}
 }
