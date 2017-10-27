@@ -28,6 +28,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class TestInputDownloaderIntegration {
 
@@ -252,7 +253,7 @@ public class TestInputDownloaderIntegration {
 		InputDownloader inputDownloader = spy(new InputDownloader(properties, imageStore,
 				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember));
 		
-		doNothing().when(inputDownloader).prepareTaskDirStructure(task);
+		doNothing().when(inputDownloader).prepareTaskDirStructure(Mockito.any(ImageTask.class));
 
 		Assert.assertEquals(0, imageStore.getIn(ImageTaskState.FAILED).size()); // There's no failed
 																				// image tasks
