@@ -226,6 +226,10 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
         return null;
     }
+    
+    public List<ImageTask> getTasksInState(ImageTaskState imageState) throws SQLException {
+    	return this.imageStore.getIn(imageState);
+    }
 
     public JDBCImageDataStore getImageStore() {
         return imageStore;
