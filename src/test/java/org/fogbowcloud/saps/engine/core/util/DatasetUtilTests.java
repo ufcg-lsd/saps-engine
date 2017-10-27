@@ -21,23 +21,23 @@ public class DatasetUtilTests {
         actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(1983));
         Assert.assertEquals(0, actual.size());
 
-        expected = new HashSet<String>(Arrays.asList(new String[]{SapsPropertiesConstants.LANDSAT_5_DATASET}));
+        expected = new HashSet<String>(Arrays.asList(new String[]{SapsPropertiesConstants.DATASET_LT5_TYPE}));
         actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(1984));
         Assert.assertEquals(expected, actual);
 
-        expected = toSet(SapsPropertiesConstants.LANDSAT_5_DATASET,
-                SapsPropertiesConstants.LANDSAT_7_DATASET);
+        expected = toSet(SapsPropertiesConstants.DATASET_LT5_TYPE,
+                SapsPropertiesConstants.DATASET_LE7_TYPE);
         actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(1999));
         Assert.assertEquals(expected, actual);
 
-        expected = toSet(SapsPropertiesConstants.LANDSAT_5_DATASET,
-                SapsPropertiesConstants.LANDSAT_7_DATASET,
-                SapsPropertiesConstants.LANDSAT_8_DATASET);
+        expected = toSet(SapsPropertiesConstants.DATASET_LT5_TYPE,
+                SapsPropertiesConstants.DATASET_LE7_TYPE,
+                SapsPropertiesConstants.DATASET_LC8_TYPE);
         actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(2013));
         Assert.assertEquals(expected, actual);
 
-        expected = toSet(SapsPropertiesConstants.LANDSAT_7_DATASET,
-                SapsPropertiesConstants.LANDSAT_8_DATASET);
+        expected = toSet(SapsPropertiesConstants.DATASET_LE7_TYPE,
+                SapsPropertiesConstants.DATASET_LC8_TYPE);
         actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(Integer.MAX_VALUE - 1));
         Assert.assertEquals(expected, actual);
     }
