@@ -40,7 +40,7 @@ public class PreProcessorImpl implements PreProcessor {
 
 			this.getDockerImage(preProcessorTags);
 
-			String hostPath = this.getHostPath();
+			String hostPath = this.getHostPath(imageTask);
 
 			String containerPath = this.properties
 					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
@@ -153,7 +153,7 @@ public class PreProcessorImpl implements PreProcessor {
 				ExecutionScriptTagUtil.PRE_PROCESSING);
 	}
 
-	protected String getHostPath() {
+	protected String getHostPath(ImageTask imageTask) {
 		return this.properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
 				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
 				+ "preprocessing";
