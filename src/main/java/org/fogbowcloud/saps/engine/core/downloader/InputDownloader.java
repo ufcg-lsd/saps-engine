@@ -221,7 +221,6 @@ public class InputDownloader {
 	}
 
 	protected void download() throws SQLException, IOException, SapsException {
-		LOGGER.debug("maxImagesToDownload=" + MAX_IMAGES_TO_DOWNLOAD);
 		List<ImageTask> tasksToDownload = new ArrayList<ImageTask>();
 
 		try {
@@ -234,7 +233,6 @@ public class InputDownloader {
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing created tasks in Catalogue", e);
 		} catch (IndexOutOfBoundsException e) {
-			LOGGER.info("No tasks available to download");
 			return;
 		}
 
