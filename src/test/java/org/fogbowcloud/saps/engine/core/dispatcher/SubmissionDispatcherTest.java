@@ -41,10 +41,9 @@ public class TestSubmissionDispatcher {
         GregorianCalendar ending = new GregorianCalendar();
         ending.set(endingYear, endingMonth, endingDay);
 
-        SampleInput sampleInput = new SampleInput("-8.676947", "-37.095067",
+        return new SampleInput("-8.676947", "-37.095067",
                 "-8.676947", "-37.095067", starting.getTime(), ending.getTime(),
                 "gathering", "preprocessing", "algorithm");
-        return sampleInput;
     }
 
     @Before

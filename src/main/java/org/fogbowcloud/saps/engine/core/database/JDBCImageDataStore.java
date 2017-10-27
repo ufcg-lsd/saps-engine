@@ -246,7 +246,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, imageTask.getTaskId());
 			insertStatement.setString(2, imageTask.getDataset());
 			insertStatement.setString(3, imageTask.getRegion());
-			insertStatement.setObject(4, imageTask.getImageDate());
+			insertStatement.setDate(4, new java.sql.Date(imageTask.getImageDate().getTime()));
 			insertStatement.setString(5, imageTask.getDownloadLink());
 			insertStatement.setString(6, imageTask.getState().getValue());
 			insertStatement.setString(7, imageTask.getFederationMember());
