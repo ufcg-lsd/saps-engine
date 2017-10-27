@@ -1,24 +1,25 @@
 package org.fogbowcloud.saps.engine.core.dispatcher;
 
-import static org.mockito.Mockito.mock;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
-import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestSubmissionDispatcher {
+public class SubmissionDispatcherTest {
 
     private JDBCImageDataStore imageStore;
     private USGSNasaRepository repository;
