@@ -45,10 +45,9 @@ public class Archiver {
 				new FTPIntegrationImpl(), new ArchiverHelper());
 
 		LOGGER.info("Creating Archiver");
-		LOGGER.info(
-				"Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP)
-						+ ":" + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_PORT)
-						+ " FTPServer " + ftpServerIP + ":" + ftpServerPort);
+		LOGGER.info("Imagestore "
+				+ properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP) + ":"
+				+ properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_PORT));
 	}
 
 	protected Archiver(Properties properties, ImageDataStore imageStore,
