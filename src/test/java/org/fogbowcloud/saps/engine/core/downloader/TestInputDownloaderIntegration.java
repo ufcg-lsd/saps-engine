@@ -324,14 +324,7 @@ public class TestInputDownloaderIntegration {
 	@Test
 	public void testFailsAndRemovesImage() throws Exception {
 		Properties properties = new Properties();
-		properties.setProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS, "3");
-		properties.setProperty("datastore_ip", "");
-		properties.setProperty("datastore_port", "");
-		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
-		properties.setProperty("datastore_username", "testuser");
-		properties.setProperty("datastore_password", "testuser");
-		properties.setProperty("datastore_driver", "org.h2.Driver");
-		properties.setProperty("datastore_name", "testdb");
+		setUpProperties(properties);
 
 		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
 
@@ -387,5 +380,81 @@ public class TestInputDownloaderIntegration {
 		);
 
 		imageStore.dispose();
+	}
+
+
+	@Test
+	public void testTaskChangingState() throws Exception {
+		Properties properties = new Properties();
+		setUpProperties(properties);
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+
+		String inputDownloaderIP = "fake-inputDownloader-ip";
+		String inputDownloaderPort = "fake-inputDownloader-port";
+		String nfsPort = "fake-nfs-port";
+		String federationMember = "fake-fed-member";
+
+		Date date = new Date(10000854);
+
+		ImageTask task = new ImageTask(
+				"task-id-1",
+				"LT5",
+				"region-53",
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				federationMember,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
+
+		imageStore.addImageTask(task);
+
+		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
+				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
+
+		Assert.assertEquals(0, imageStore.getIn(ImageTaskState.FAILED).size()); // There's no failed image tasks
+		Assert.assertEquals(1, imageStore.getIn(ImageTaskState.CREATED).size()); // There's 1 image created
+		Assert.assertEquals(1, imageStore.getAllTasks().size()); // Total image tasks == 1
+		inputDownloader.addTaskToPendingMap(task);
+
+		Assert.assertEquals(1, inputDownloader.getPendingTaskMap().size()); // Total image tasks == 1
+		inputDownloader.removeTaskFromPendingMap(task);
+
+		Assert.assertEquals(0, inputDownloader.getPendingTaskMap().size());
+
+		inputDownloader.addTaskToPendingMap(task);
+		Assert.assertEquals(1, inputDownloader.getPendingTaskMap().size());
+
+		inputDownloader.updateTaskStateToFailed(task, "error");
+		Assert.assertEquals(1, inputDownloader.getPendingTaskMap().size());
+		Assert.assertEquals(1, imageStore.getIn(ImageTaskState.FAILED).size());
+
+		imageStore.dispose();
+	}
+
+	private void setUpProperties(Properties properties){
+		properties.setProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS, "3");
+
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_username", "testuser");
+		properties.setProperty("datastore_password", "testuser");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_name", "testdb");
+
+		properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, "/local/exports");
+		properties.setProperty(SapsPropertiesConstants.MAX_NUMBER_OF_TASKS, "1");
 	}
 }
