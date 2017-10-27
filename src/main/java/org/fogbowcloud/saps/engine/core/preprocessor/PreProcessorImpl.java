@@ -65,6 +65,7 @@ public class PreProcessorImpl implements PreProcessor {
 
 	@Override
 	public void exec() {
+		LOGGER.info("Executing PreProcessor...");
 		while (true) {
 			try {
 				int imagesLimit = 1;
@@ -73,6 +74,7 @@ public class PreProcessorImpl implements PreProcessor {
 						.getIn(ImageTaskState.DOWNLOADED, imagesLimit);
 
 				for (ImageTask imageTask : downloadedImages) {
+					LOGGER.info("Preprocessing Image Task [" + imageTask.getTaskId() + "]");
 					this.preProcessImage(imageTask);
 				}
 
@@ -118,9 +120,12 @@ public class PreProcessorImpl implements PreProcessor {
 
 	private void createPreProcessingHostPath(String hostPath) throws Exception {
 		File file = new File(hostPath);
-		if (!file.mkdirs()) {
-			throw new Exception(
-					"Was not possible create the PreProcessing directory [" + hostPath + "]");
+		if (!file.exists()) {
+			LOGGER.info("Creating directory [" + hostPath + "]");
+			if (!file.mkdirs()) {
+				throw new Exception(
+						"Was not possible create the PreProcessing directory [" + hostPath + "]");
+			}
 		}
 	}
 
@@ -141,7 +146,7 @@ public class PreProcessorImpl implements PreProcessor {
 			LOGGER.debug("Image Task [" + imageTask.getTaskId() + "] preprocessed");
 
 		} else {
-
+			LOGGER.info("Docker container execution exit code [" + dockerExecExitValue + "]");
 			this.imageDataStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FAILED);
 			throw new Exception("Container preprocessing execution failed for ImageTask ["
 					+ imageTask.getTaskId() + "]");
