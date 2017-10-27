@@ -299,8 +299,6 @@ public class InputDownloader {
 							+ "data" + File.separator + "input";
 
 					ProcessBuilder builder = new ProcessBuilder("du", "-sh", "-b", inputDirPath);
-					LOGGER.debug("Executing command " + builder.command());
-
 					try {
 						Process p = builder.start();
 						p.waitFor();
@@ -318,10 +316,6 @@ public class InputDownloader {
 
 			double freeDisk = maxInputUsage - cumulativeInputUsage;
 			numberOfImagesToDownload = freeDisk / DEFAULT_IMAGE_DIR_SIZE;
-
-			LOGGER.info("maxInputUsage=" + maxInputUsage);
-			LOGGER.info("cumulativeInputUsage=" + cumulativeInputUsage);
-			LOGGER.info("numberOfImagesToDownload=" + numberOfImagesToDownload);
 		} else {
 			throw new RuntimeException(
 					"ExportDirPath: " + exportDirPath + " is not a directory or does not exist");
