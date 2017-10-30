@@ -3,10 +3,7 @@ package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -22,6 +19,9 @@ import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,7 +68,7 @@ public class TestRegionResource {
 
 	@Test
 	public void testGetNumberImagesProcessedByRegion()
-			throws SQLException, ClientProtocolException, IOException {
+			throws SQLException, ClientProtocolException, IOException, JSONException {
 		
 		String userEmail = properties.getProperty("admin_email");
 		SapsUser user = this.DBA.getUser(userEmail);
@@ -101,6 +101,10 @@ public class TestRegionResource {
 				"NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
 				"available", ""));
 
+		HashMap<String, Integer> expectedFrequency = new HashMap<String, Integer>();
+		expectedFrequency.put("215066", 2);
+		expectedFrequency.put("215067", 1);
+
 		imageDB.addImageTask(images.get(0));
 		imageDB.addImageTask(images.get(1));
 		imageDB.addImageTask(images.get(2));
@@ -109,12 +113,22 @@ public class TestRegionResource {
 		get.addHeader(UserResource.REQUEST_ATTR_USER_EMAIL, "testuser");
 		get.addHeader(UserResource.REQUEST_ATTR_USERPASS, "testuser");
 		HttpClient client = HttpClients.createMinimal();
+
 		HttpResponse response = client.execute(get);
 		String responseStr = EntityUtils.toString(response.getEntity(),
 				String.valueOf(Charsets.UTF_8));
 
-		Assert.assertEquals(true, responseStr.contains("\"215067\":1"));
-		Assert.assertEquals(true, responseStr.contains("\"215066\":2"));
+		JSONArray responseJson = new JSONArray(responseStr);
+
+		HashMap<String, Integer> actualFrequency = new HashMap<String, Integer>();
+		for (int i = 0; i < responseJson.length(); i++) {
+			JSONObject regionCount = responseJson.getJSONObject(i);
+			actualFrequency.put(regionCount.getString("region"), regionCount.getInt("count"));
+		}
+
+//		Assert.assertEquals(true, responseStr.contains("\"215067\":1"));
+//		Assert.assertEquals(true, responseStr.contains("\"215066\":2"));
+		Assert.assertEquals(expectedFrequency, actualFrequency);
 	}
 
 }

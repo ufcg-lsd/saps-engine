@@ -53,18 +53,19 @@ public class RegionResource extends BaseResource {
 			regionsFrequency.put(region, regionsFrequency.get(region) + 1);
 		}
 
-		JSONArray regionsFrequencyJson = new JSONArray();
+		JSONArray result = new JSONArray();
 		try {
-			JSONObject jsonObject = new JSONObject();
 			for (String region : regionsFrequency.keySet()) {
-				jsonObject.put(region, regionsFrequency.get(region));
+				JSONObject jsonObject = new JSONObject();
+				jsonObject.put("region", region);
+				jsonObject.put("count", regionsFrequency.get(region));
+				result.put(jsonObject);
 			}
-			regionsFrequencyJson.put(jsonObject);
 		} catch (JSONException e) {
 			LOGGER.error("Error while trying creating JSONObject");
 		}
 
-		return new StringRepresentation(regionsFrequencyJson.toString(),
+		return new StringRepresentation(result.toString(),
 				MediaType.APPLICATION_JSON);
 	}
 }
