@@ -30,8 +30,6 @@ public class ImageResource extends BaseResource {
 
 	private static final Logger LOGGER = Logger.getLogger(ImageResource.class);
 
-	private static final String USER_EMAIL = "userEmail";
-	private static final String USER_PASSWORD = "userPass";
 	private static final String LOWER_LEFT = "lowerLeft";
 	private static final String UPPER_RIGHT = "upperRight";
 	private static final String PROCESSING_INIT_DATE = "initialDate";
@@ -56,8 +54,8 @@ public class ImageResource extends BaseResource {
 		Series<Header> series = (Series<Header>) getRequestAttributes()
 				.get("org.restlet.http.headers");
 
-		String userEmail = series.getFirstValue(USER_EMAIL, true);
-		String userPass = series.getFirstValue(USER_PASSWORD, true);
+		String userEmail = series.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
+		String userPass = series.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
 
 		if (!authenticateUser(userEmail, userPass)) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
@@ -110,8 +108,8 @@ public class ImageResource extends BaseResource {
 	public StringRepresentation insertTasks(Representation entity) {
 		Form form = new Form(entity);
 
-		String userEmail = form.getFirstValue(USER_EMAIL, true);
-		String userPass = form.getFirstValue(USER_PASSWORD, true);
+		String userEmail = form.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
+		String userPass = form.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
 		LOGGER.debug("POST with userEmail " + userEmail);
 		if (!authenticateUser(userEmail, userPass) || userEmail.equals("anonymous")) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
@@ -190,8 +188,8 @@ public class ImageResource extends BaseResource {
 	public StringRepresentation purgeTask(Representation entity) throws Exception {
 		Form form = new Form(entity);
 
-		String userEmail = form.getFirstValue(USER_EMAIL, true);
-		String userPass = form.getFirstValue(USER_PASSWORD, true);
+		String userEmail = form.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
+		String userPass = form.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
 
 		LOGGER.debug("DELETE with userEmail " + userEmail);
 
