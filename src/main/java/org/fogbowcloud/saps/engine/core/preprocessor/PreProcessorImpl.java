@@ -66,8 +66,9 @@ public class PreProcessorImpl implements PreProcessor {
 	@Override
 	public void exec() {
 		LOGGER.info("Executing PreProcessor...");
-		while (true) {
-			try {
+		try {
+			while (true) {
+
 				int imagesLimit = 1;
 
 				List<ImageTask> downloadedImages = this.imageDataStore
@@ -81,15 +82,12 @@ public class PreProcessorImpl implements PreProcessor {
 				Thread.sleep(Long.valueOf(this.properties.getProperty(
 						SapsPropertiesConstants.PREPROCESSOR_EXECUTION_PERIOD,
 						SapsPropertiesConstants.DEFAULT_PREPROCESSOR_EXECUTION_PERIOD)));
-
-			} catch (SQLException e) {
-				LOGGER.error("Failed while getting the Downloaded Images from DataBase", e);
-			} catch (Exception e) {
-				LOGGER.error(
-						"Bad number format exception at "
-								+ SapsPropertiesConstants.PREPROCESSOR_EXECUTION_PERIOD + " value",
-						e);
 			}
+		} catch (SQLException e) {
+			LOGGER.error("Failed while getting the Downloaded Images from DataBase", e);
+		} catch (Exception e) {
+			LOGGER.error("Bad number format exception at "
+					+ SapsPropertiesConstants.PREPROCESSOR_EXECUTION_PERIOD + " value", e);
 		}
 	}
 
@@ -109,7 +107,7 @@ public class PreProcessorImpl implements PreProcessor {
 		String containerId = DockerUtil.runMappedContainer(preProcessorTags.getDockerRepository(),
 				preProcessorTags.getDockerTag(), hostPath, containerPath);
 
-		if (containerId.equals("")) {
+		if (containerId.isEmpty()) {
 			throw new Exception("Was not possible raise the Docker Container ["
 					+ preProcessorTags.getDockerRepository() + "]:["
 					+ preProcessorTags.getDockerTag() + "]");
@@ -142,7 +140,7 @@ public class PreProcessorImpl implements PreProcessor {
 
 		if (dockerExecExitValue == 0) {
 
-			this.imageDataStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.READY);
+			this.imageDataStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.PREPROCESSED);
 			LOGGER.debug("Image Task [" + imageTask.getTaskId() + "] preprocessed");
 
 		} else {
