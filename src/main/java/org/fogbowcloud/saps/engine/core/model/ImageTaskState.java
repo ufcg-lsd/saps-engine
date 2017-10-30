@@ -6,9 +6,9 @@ import java.util.List;
 public enum ImageTaskState {
 
 	CREATED("created"), DOWNLOADING("downloading"), DOWNLOADED("downloaded"), PREPROCESSING(
-			"preprocessing"), READY("ready"), RUNNING("running"), FINISHED("finished"), ARCHIVING(
-			"archiving"), ARCHIVED("archived"), FAILED("failed");
-
+			"preprocessing"), PREPROCESSED("preprocessed"), READY("ready"), RUNNING(
+					"running"), FINISHED("finished"), ARCHIVING(
+							"archiving"), ARCHIVED("archived"), FAILED("failed");
 	private String value;
 
 	private ImageTaskState(String value) {

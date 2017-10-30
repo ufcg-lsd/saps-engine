@@ -103,8 +103,16 @@ public class SapsPropertiesConstants {
 	// Monitors constants
 	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
 	public static final String SAPS_EXECUTION_PERIOD = "saps_execution_period";
-	public static final String DEFAULT_ARCHIVER_PERIOD = "default_archiver_period";
+
+	public static final String DEFAULT_ARCHIVER_PERIOD = "default_fetcher_period";
 	public static final String DEFAULT_DOWNLOADER_PERIOD = "default_downloader_period";
+	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
+	public static final String PREPROCESSOR_EXECUTION_PERIOD = "preprocessor_execution_period";
+	
+	// Preprocessor constants
+	public static final String DEFAULT_PREPROCESSOR_EXECUTION_PERIOD = "60000";
+	public static final String PREPROCESSOR_CONTAINER_SCRIPT = "preprocessor_script";
+	public static final String DEFAULT_PREPROCESSOR_CONTAINER_SCRIPT = "/home/ubuntu/run.sh";
 
 	// FTP constants
 	public static final String DEFAULT_FTP_SERVER_USER = "default_ftp_server_user";
