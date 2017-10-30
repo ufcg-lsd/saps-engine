@@ -21,7 +21,10 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.DockerUtil;
+import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -145,7 +148,7 @@ public class InputDownloader {
 					download();
 				} else {
 					Thread.sleep(Long.valueOf(properties
-							.getProperty(SapsPropertiesConstants.DEFAULT_CRAWLER_PERIOD)));
+							.getProperty(SapsPropertiesConstants.DEFAULT_DOWNLOADER_PERIOD)));
 				}
 			}
 		} catch (Throwable e) {
@@ -217,8 +220,7 @@ public class InputDownloader {
 		return false;
 	}
 
-	protected void download() throws SQLException, IOException {
-		LOGGER.debug("maxImagesToDownload=" + MAX_IMAGES_TO_DOWNLOAD);
+	protected void download() throws SQLException, IOException, SapsException {
 		List<ImageTask> tasksToDownload = new ArrayList<ImageTask>();
 
 		try {
@@ -231,7 +233,6 @@ public class InputDownloader {
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing created tasks in Catalogue", e);
 		} catch (IndexOutOfBoundsException e) {
-			LOGGER.info("No tasks available to download");
 			return;
 		}
 
@@ -296,8 +297,6 @@ public class InputDownloader {
 							+ "data" + File.separator + "input";
 
 					ProcessBuilder builder = new ProcessBuilder("du", "-sh", "-b", inputDirPath);
-					LOGGER.debug("Executing command " + builder.command());
-
 					try {
 						Process p = builder.start();
 						p.waitFor();
@@ -315,10 +314,6 @@ public class InputDownloader {
 
 			double freeDisk = maxInputUsage - cumulativeInputUsage;
 			numberOfImagesToDownload = freeDisk / DEFAULT_IMAGE_DIR_SIZE;
-
-			LOGGER.info("maxInputUsage=" + maxInputUsage);
-			LOGGER.info("cumulativeInputUsage=" + cumulativeInputUsage);
-			LOGGER.info("numberOfImagesToDownload=" + numberOfImagesToDownload);
 		} else {
 			throw new RuntimeException(
 					"ExportDirPath: " + exportDirPath + " is not a directory or does not exist");
@@ -342,7 +337,7 @@ public class InputDownloader {
 		return new File(volumeDirPath);
 	}
 
-	protected boolean downloadImage(final ImageTask imageTask) throws SQLException, IOException {
+	protected boolean downloadImage(final ImageTask imageTask) throws SQLException, IOException, SapsException {
 		try {
 			prepareTaskDirStructure(imageTask);
 		} catch (Exception e) {
@@ -355,13 +350,16 @@ public class InputDownloader {
 		for (int currentTry = 0; currentTry < maxDownloadAttempts; currentTry++) {
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
 
-			// TODO update repository
-			DockerUtil.pullImage("", imageTask.getInputGatheringTag());
+			// Getting Input Downloader docker repository and tag
+			ExecutionScriptTag inputDownloaderDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(
+					imageTask.getInputGatheringTag(), ExecutionScriptTagUtil.INPUT_DOWNLOADER);
+			
+			DockerUtil.pullImage(inputDownloaderDockerInfo.getDockerRepository(),
+					inputDownloaderDockerInfo.getDockerTag());
 
-			// TODO update repository
 			String containerId = DockerUtil.runMappedContainer(
-					"",
-					imageTask.getInputGatheringTag(),
+					inputDownloaderDockerInfo.getDockerRepository(),
+					inputDownloaderDockerInfo.getDockerTag(),
 					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
 							+ File.separator + imageTask.getTaskId() + File.separator + "data"
 							+ File.separator + "input",
@@ -405,7 +403,7 @@ public class InputDownloader {
 		return false;
 	}
 
-	private void prepareTaskDirStructure(ImageTask imageTask) throws Exception {
+	protected void prepareTaskDirStructure(ImageTask imageTask) throws Exception {
 		LOGGER.info("Creating directory structure for task" + imageTask.getTaskId());
 
 		String inputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)

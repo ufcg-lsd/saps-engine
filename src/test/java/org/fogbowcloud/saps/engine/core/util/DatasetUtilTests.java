@@ -1,8 +1,6 @@
 package org.fogbowcloud.saps.engine.core.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.junit.Assert;
@@ -11,32 +9,37 @@ import org.junit.Test;
 
 public class DatasetUtilTests {
 
-	@Test
-	public void getSatsInOperationByYearTest() {
-		Assert.assertEquals(0, DatasetUtil.getSatsInOperationByYear(1983).size());
+    public Set<String> toSet(String... values) {
+        return new HashSet<String>(Arrays.asList(values));
+    }
 
-		String[] sats = new String[] { SapsPropertiesConstants.DATASET_LT5_TYPE };
-		Assert.assertEquals(Arrays.toString(sats),
-				DatasetUtil.getSatsInOperationByYear(1984).toString());
+    @Test
+    public void getSatsInOperationByYearTest() {
+        Set<String> expected;
+        Set<String> actual;
 
-		sats = new String[] { SapsPropertiesConstants.DATASET_LT5_TYPE,
-				SapsPropertiesConstants.DATASET_LE7_TYPE };
-		ArrayList<String> ans = DatasetUtil.getSatsInOperationByYear(1999);
-		Collections.sort(ans);
-		Assert.assertEquals(Arrays.toString(sats), ans.toString());
+        actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(1983));
+        Assert.assertEquals(0, actual.size());
 
-		sats = new String[] { SapsPropertiesConstants.DATASET_LT5_TYPE,
-				SapsPropertiesConstants.DATASET_LE7_TYPE,
-				SapsPropertiesConstants.DATASET_LC8_TYPE };
-		ans = DatasetUtil.getSatsInOperationByYear(2013);
-		Collections.sort(ans);
-		Assert.assertEquals(Arrays.toString(sats), ans.toString());
-		
-		sats = DatasetUtil.satsInPresentOperation;
-		Arrays.sort(sats);
-		ans = DatasetUtil.getSatsInOperationByYear(Integer.MAX_VALUE - 1);
-		Collections.sort(ans);
-		Assert.assertEquals(Arrays.toString(sats), ans.toString());
-	}
+        expected = new HashSet<String>(Arrays.asList(new String[]{SapsPropertiesConstants.DATASET_LT5_TYPE}));
+        actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(1984));
+        Assert.assertEquals(expected, actual);
+
+        expected = toSet(SapsPropertiesConstants.DATASET_LT5_TYPE,
+                SapsPropertiesConstants.DATASET_LE7_TYPE);
+        actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(1999));
+        Assert.assertEquals(expected, actual);
+
+        expected = toSet(SapsPropertiesConstants.DATASET_LT5_TYPE,
+                SapsPropertiesConstants.DATASET_LE7_TYPE,
+                SapsPropertiesConstants.DATASET_LC8_TYPE);
+        actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(2013));
+        Assert.assertEquals(expected, actual);
+
+        expected = toSet(SapsPropertiesConstants.DATASET_LE7_TYPE,
+                SapsPropertiesConstants.DATASET_LC8_TYPE);
+        actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(Integer.MAX_VALUE - 1));
+        Assert.assertEquals(expected, actual);
+    }
 
 }

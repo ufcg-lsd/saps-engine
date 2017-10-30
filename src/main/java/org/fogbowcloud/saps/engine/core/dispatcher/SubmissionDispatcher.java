@@ -13,25 +13,16 @@ public interface SubmissionDispatcher {
 
 	void listTasksInDB() throws SQLException, ParseException;
 
-	void listCorruptedImages() throws ParseException;
-
 	void addUserInDB(String userEmail, String userName, String userPass, boolean userState,
 			boolean userNotify, boolean adminRole) throws SQLException;
 
 	void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail)
 			throws SQLException;
 
-	List<Task> fillDB(
-			Double topLeftLat,
-			Double topLeftLon,
-			Double bottomRightLat,
-			Double bottomRightLon,
-			Date initDate,
-			Date endDate,
-			String inputGathering,
-			String inputPreprocessing,
-			String algorithmExecution)
-			throws IOException, ParseException;
+	List<Task> fillDB(String lowerLeftLatitude, String lowerLeftLongitude,
+			String upperRightLatitude, String upperRightLongitude, Date initDate,
+			Date endDate, String inputGathering, String inputPreprocessing,
+			String algorithmExecution) throws IOException, ParseException;
 
 	List<Ward> getUsersToNotify() throws SQLException;
 

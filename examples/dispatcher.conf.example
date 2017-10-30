@@ -1,0 +1,23 @@
+##### Image Datastore Configuration #####
+datastore_url_prefix=jdbc:postgresql://
+datastore_ip=localhost
+datastore_port=5432
+datastore_name=database
+datastore_driver=org.postgresql.Driver
+datastore_username=user
+datastore_password=password
+
+##### Restlet Configuration #####
+admin_email=email
+admin_user=user
+admin_password=password
+submission_rest_server_port=port
+
+##### USGS Configuration #####
+max_usgs_download_link_requests=10
+max_simultaneous_download=1
+usgs_login_url=https://ers.cr.usgs.gov/login/
+usgs_json_url=https://earthexplorer.usgs.gov/inventory/json
+usgs_username=username
+usgs_password=password
+usgs_api_key_period=300000

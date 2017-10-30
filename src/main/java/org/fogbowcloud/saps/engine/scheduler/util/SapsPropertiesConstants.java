@@ -8,7 +8,6 @@ public class SapsPropertiesConstants {
 
 	// Federation constants
 	public static final String LSD_FEDERATION_MEMBER = "lsd.manager.naf.lsd.ufcg.edu.br";
-	public static final String AZURE_FEDERATION_MEMBER = "azure.lsd.ufcg.edu.br";
 
 	// Submission constants
 	public static final String DATASET_LT5_TYPE = "landsat_5";
@@ -104,7 +103,9 @@ public class SapsPropertiesConstants {
 	// Monitors constants
 	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
 	public static final String SAPS_EXECUTION_PERIOD = "saps_execution_period";
+
 	public static final String DEFAULT_ARCHIVER_PERIOD = "default_fetcher_period";
+	public static final String DEFAULT_DOWNLOADER_PERIOD = "default_downloader_period";
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
 	public static final String PREPROCESSOR_EXECUTION_PERIOD = "preprocessor_execution_period";
 	
@@ -116,22 +117,17 @@ public class SapsPropertiesConstants {
 	// FTP constants
 	public static final String DEFAULT_FTP_SERVER_USER = "default_ftp_server_user";
 	public static final String DEFAULT_FTP_SERVER_PORT = "default_ftp_server_port";
-	public static final String AZURE_FTP_SERVER_USER = "azure_ftp_server_user";
-	public static final String AZURE_FTP_SERVER_PORT = "azure_ftp_server_port";
 
 	// NOAA constants
 	public static final String NOAA_FTP_URL = "noaa_ftp_url";
 
 	// Script path constants
-	public static final String SAPS_SFTP_SCRIPT_PATH = "sebal_sftp_script_path";
-	public static final String FMASK_SCRIPT_PATH = "fmask_script_path";
-	public static final String FMASK_TOOL_PATH = "fmask_tool_path";
+	public static final String SAPS_SFTP_SCRIPT_PATH = "saps_sftp_script_path";
 
 	// Quantities constants
 	public static final String MAX_NUMBER_OF_TASKS = "max_tasks_to_download";
 
 	// Properties file constants
-	public static final String FMASK_VERSION_FILE_PATH = "fmask_version_file_path";
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
 	public static final String SAPS_EXPORT_PATH = "saps_export_path";
 	public static final String SAPS_CONTAINER_LINKED_PATH = "saps_container_linked_path";

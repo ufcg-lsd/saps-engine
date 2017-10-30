@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.util;
 
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -52,6 +53,10 @@ public class TestExecutionScriptTagUtil {
 	public void testIsInvalid() throws Exception {
 		ExecutionScriptTagUtil.setExecScriptTagJsonPath("/dev/null");
 		ExecutionScriptTagUtil.isValidJsonScriptTag();
-	}	
-	
+	}
+
+	@After
+	public void tearDown() {
+		ExecutionScriptTagUtil.setExecScriptTagJsonPath(null);
+	}
 }

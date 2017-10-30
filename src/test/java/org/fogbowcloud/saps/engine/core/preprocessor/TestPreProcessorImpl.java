@@ -36,7 +36,7 @@ public class TestPreProcessorImpl {
 		String federationMember = "fake-fed-member";
 
 		this.imageTask = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
-				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "pre_processing", "NE",
+				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "Default", "NE",
 				"NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
 				"available", "");
 

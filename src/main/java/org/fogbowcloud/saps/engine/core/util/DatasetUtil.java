@@ -8,9 +8,6 @@ import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class DatasetUtil {
 
-	public static String[] satsInPresentOperation = new String[] {
-			SapsPropertiesConstants.DATASET_LE7_TYPE, SapsPropertiesConstants.DATASET_LC8_TYPE };
-
 	/**
 	 * Returns a list of Satellites in operation by a given year.
 	 * 
@@ -35,8 +32,6 @@ public class DatasetUtil {
 		satYearBegin.put(SapsPropertiesConstants.DATASET_LC8_TYPE, new Integer(2013));
 		satYearEnd.put(SapsPropertiesConstants.DATASET_LC8_TYPE, new Integer(Integer.MAX_VALUE));
 
-		updateSatsInPresentOperation(satYearEnd);
-
 		ArrayList<String> sats = new ArrayList<String>();
 
 		for (String sat : satYearBegin.keySet()) {
@@ -48,12 +43,6 @@ public class DatasetUtil {
 		}
 
 		return sats;
-	}
-
-	private static void updateSatsInPresentOperation(Map<String, Integer> satYearEnd) {
-		for (String sat : satsInPresentOperation) {
-			satYearEnd.put(sat, new Integer(Integer.MAX_VALUE));
-		}
 	}
 
 }
