@@ -148,7 +148,7 @@ public class InputDownloader {
 					download();
 				} else {
 					Thread.sleep(Long.valueOf(properties
-							.getProperty(SapsPropertiesConstants.DEFAULT_CRAWLER_PERIOD)));
+							.getProperty(SapsPropertiesConstants.DEFAULT_DOWNLOADER_PERIOD)));
 				}
 			}
 		} catch (Throwable e) {

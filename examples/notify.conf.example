@@ -1,0 +1,13 @@
+##### Image Datastore Configuration #####
+datastore_url_prefix=jdbc:postgresql://
+datastore_ip=localhost
+datastore_port=5432
+datastore_name=database
+datastore_driver=org.postgresql.Driver
+datastore_username=username
+datastore_password=password
+
+##### Notify Configuration #####
+noreply_email=email
+noreply_password=password
+default_sleep_time=60000
