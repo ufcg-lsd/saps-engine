@@ -16,9 +16,9 @@ public class UserResource extends BaseResource {
 
 	private static final Logger LOGGER = Logger.getLogger(UserResource.class);
 
-	private static final String REQUEST_ATTR_USER_EMAIL = "userEmail";
-	private static final String REQUEST_ATTR_USERNAME = "userName";
-	private static final String REQUEST_ATTR_USERPASS = "userPass";
+	public static final String REQUEST_ATTR_USER_EMAIL = "userEmail";
+	public static final String REQUEST_ATTR_USERNAME = "userName";
+	public static final String REQUEST_ATTR_USERPASS = "userPass";
 	private static final String REQUEST_ATTR_USERPASS_CONFIRM = "userPassConfirm";
 	private static final String REQUEST_ATTR_USERNOTIFY = "userNotify";
 	private static final String REQUEST_ATTR_USERSTATE = "userState";

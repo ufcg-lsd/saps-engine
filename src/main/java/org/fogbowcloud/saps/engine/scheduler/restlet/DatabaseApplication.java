@@ -1,13 +1,24 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet;
 
+import java.io.File;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.ImageResource;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.MainResource;
+import org.fogbowcloud.saps.engine.scheduler.restlet.resource.RegionResource;
 import org.fogbowcloud.saps.engine.scheduler.restlet.resource.UserResource;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.restlet.Application;
@@ -18,12 +29,6 @@ import org.restlet.resource.Directory;
 import org.restlet.routing.Router;
 import org.restlet.service.ConnectorService;
 import org.restlet.service.CorsService;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.text.ParseException;
-import java.util.*;
 
 public class DatabaseApplication extends Application {
 	private static final String DB_WEB_STATIC_ROOT = "./dbWebHtml/static";
@@ -88,12 +93,17 @@ public class DatabaseApplication extends Application {
 		router.attach("/users/{userEmail}", UserResource.class);
 		router.attach("/processings", ImageResource.class);
 		router.attach("/images/{imgName}", ImageResource.class);
+		router.attach("/imagesProcessedByRegion", RegionResource.class);
 
 		return router;
 	}
 
 	public List<ImageTask> getTasks() throws SQLException, ParseException {
 		return submissionDispatcher.getTaskListInDB();
+	}
+	
+	public List<ImageTask> getTasksInState(ImageTaskState imageState) throws SQLException {
+		return this.submissionDispatcher.getTasksInState(imageState);
 	}
 
 	public ImageTask getTask(String taskId) throws SQLException {
