@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.dispatcher.Task;
@@ -158,5 +159,5 @@ public class DatabaseApplication extends Application {
 
 	public Properties getProperties() {
 		return properties;
-	}
+	}	
 }

@@ -111,8 +111,7 @@ public class SapsPropertiesConstants {
 	
 	// Preprocessor constants
 	public static final String DEFAULT_PREPROCESSOR_EXECUTION_PERIOD = "60000";
-	public static final String PREPROCESSOR_CONTAINER_SCRIPT = "preprocessor_script";
-	public static final String DEFAULT_PREPROCESSOR_CONTAINER_SCRIPT = "/home/ubuntu/run.sh";
+	public static final String DEFAULT_RUN_SCRIPT_COMMAND = "/bin/bash /home/ubuntu/run.sh";
 
 	// FTP constants
 	public static final String DEFAULT_FTP_SERVER_USER = "default_ftp_server_user";
