@@ -50,7 +50,7 @@ public class PreProcessorImpl implements PreProcessor {
 			String containerId = this.raiseContainer(preProcessorTags, imageTask, hostPath,
 					containerPath);
 
-			String commandToRun = SapsPropertiesConstants.DEFAULT_RUN_SCRIPT_COMMAND;
+			String commandToRun = SapsPropertiesConstants.DEFAULT_PREPROCESSOR_RUN_SCRIPT_COMMAND;
 
 			this.executeContainer(containerId, commandToRun, imageTask);
 
