@@ -14,7 +14,6 @@ worker_sandbox=/tmp/sandbox
 worker_raster_tmp_dir=/mnt/rasterTmp
 
 saps_worker_run_script_path=/home/ubuntu/saps-engine/scripts/worker-run.sh
-repository_user_private_key=/tmp/keys/scheduler_key_rsa
 
 worker_remote_user=fogbow
 
@@ -33,7 +32,6 @@ saps_execution_period=60000
 infra_specs_block_creating=false
 
 execution_monitor_period=60000
-local.output=/home/fogbow/Dev/sebalScheduleEnv/result
 
 ##### Blowout Configuration #####
 
