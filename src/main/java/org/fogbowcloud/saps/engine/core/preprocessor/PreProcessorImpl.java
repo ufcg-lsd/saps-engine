@@ -2,6 +2,7 @@ package org.fogbowcloud.saps.engine.core.preprocessor;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Properties;
 
@@ -128,7 +129,9 @@ public class PreProcessorImpl implements PreProcessor {
 	protected void executeContainer(String containerId, String commandToRun, ImageTask imageTask)
 			throws Exception {
 
-		this.imageDataStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.PREPROCESSING);
+		String imageTaskId = imageTask.getTaskId();
+		this.imageDataStore.updateTaskState(imageTaskId, ImageTaskState.PREPROCESSING);
+		addStateStamp(imageTaskId);
 
 		int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
 
@@ -137,15 +140,26 @@ public class PreProcessorImpl implements PreProcessor {
 		}
 
 		if (dockerExecExitValue == 0) {
-
-			this.imageDataStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.PREPROCESSED);
-			LOGGER.debug("Image Task [" + imageTask.getTaskId() + "] preprocessed");
-
+			this.imageDataStore.updateTaskState(imageTaskId, ImageTaskState.PREPROCESSED);
+			LOGGER.debug("Image Task [" + imageTaskId + "] preprocessed");
 		} else {
 			LOGGER.info("Docker container execution exit code [" + dockerExecExitValue + "]");
-			this.imageDataStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FAILED);
+			this.imageDataStore.updateTaskState(imageTaskId, ImageTaskState.FAILED);
 			throw new Exception("Container preprocessing execution failed for ImageTask ["
-					+ imageTask.getTaskId() + "]");
+					+ imageTaskId + "]");
+		}
+		addStateStamp(imageTaskId);
+	}
+
+	protected void addStateStamp(String imageTaskId) {
+		ImageTask imageTask = null;
+		try {
+			imageTask = this.imageDataStore.getTask(imageTaskId);			
+			this.imageDataStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
+		} catch (Exception e) {
+			ImageTaskState state = imageTask != null ? imageTask.getState() : null;
+			Timestamp updateTime = imageTask != null ? imageTask.getUpdateTime() : null;
+			LOGGER.warn("Error while adding state " + state + " timestamp " + updateTime + " in Catalogue", e);
 		}
 	}
 

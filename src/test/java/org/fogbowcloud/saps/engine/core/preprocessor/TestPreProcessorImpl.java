@@ -1,9 +1,10 @@
 package org.fogbowcloud.saps.engine.core.preprocessor;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Properties;
 
@@ -15,22 +16,25 @@ import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 public class TestPreProcessorImpl {
 
+	private static final String DEFAULT_EXPORT_PATH = "/local/exports";
 	private Properties properties;
 	private PreProcessorImpl preProcessor;
+	private ImageDataStore imageStore;
 	private ImageTask imageTask;
 
 	@Before
 	public void setUp() throws Exception {
 		this.properties = new Properties();
-		this.properties.put(SapsPropertiesConstants.SAPS_EXPORT_PATH, "/local/exports");
+		this.properties.put(SapsPropertiesConstants.SAPS_EXPORT_PATH, DEFAULT_EXPORT_PATH);
 		this.properties.put(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH, "/home/ubuntu/");
-		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
+		this.imageStore = Mockito.mock(JDBCImageDataStore.class);
 
 		Date date = new Date(10000854);
 		String federationMember = "fake-fed-member";
@@ -40,10 +44,10 @@ public class TestPreProcessorImpl {
 				"NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
 				"available", "");
 
-		this.preProcessor = Mockito.spy(new PreProcessorImpl(this.properties, imageStore));
+		this.preProcessor = Mockito.spy(new PreProcessorImpl(this.properties, this.imageStore));
 	}
 
-	@Test
+	@Test(expected=Exception.class)
 	public void testPreProcessImage() throws Exception {
 		ExecutionScriptTag execScriptTag = new ExecutionScriptTag(
 				this.imageTask.getInputPreprocessingTag(), "fogbow/preprocessor", "preprocessor",
@@ -55,14 +59,10 @@ public class TestPreProcessorImpl {
 		Mockito.doReturn(containerId).when(this.preProcessor).raiseContainer(
 				Mockito.<ExecutionScriptTag>any(), Mockito.<ImageTask>any(), Mockito.anyString(),
 				Mockito.anyString());
-
-		try {
-			Mockito.doThrow(new Exception()).when(this.preProcessor).executeContainer(
-					"fake-container-id", "/home/ubuntu/run.sh", Mockito.<ImageTask>any());
-			this.preProcessor.preProcessImage(this.imageTask);
-			fail();
-		} catch (Exception e) {
-		}
+		
+		Mockito.doThrow(new Exception()).when(this.preProcessor).executeContainer(
+				"fake-container-id", "/home/ubuntu/run.sh", Mockito.<ImageTask>any());
+		this.preProcessor.preProcessImage(this.imageTask);
 	}
 
 	@Test
@@ -78,9 +78,33 @@ public class TestPreProcessorImpl {
 	@Test
 	public void testGetHostPath() {
 
-		String hostPath = "/local/exports/" + this.imageTask.getTaskId() + "/data/preprocessing";
+		String hostPath = DEFAULT_EXPORT_PATH + File.separator 
+				+ this.imageTask.getTaskId() + "/data/preprocessing";
 
 		assertEquals(hostPath, this.preProcessor.getHostPath(this.imageTask));
+	}
+	
+	@Test
+	public void testAddStateStamp() throws SQLException {
+		String imageTaskId = "imageTaskId";
+		
+		Mockito.when(this.imageStore.getTask(Mockito.eq(imageTaskId))).thenReturn(null);		
+		this.preProcessor.addStateStamp(imageTaskId);
+		
+		Mockito.verify(this.imageStore, Mockito.never()).addStateStamp(
+				Mockito.anyString(), Mockito.any(ImageTaskState.class), Mockito.any(Timestamp.class));
+	}
+	
+	@Test
+	public void testAddStateStampWithTaskNull() throws SQLException {
+		Mockito.when(this.imageStore.getTask(Mockito.anyString())).thenReturn(null);
+		
+		String imageTaskId = "imageTaskId";
+		try {
+			this.preProcessor.addStateStamp(imageTaskId);			
+		} catch (Exception e) {
+			Assert.fail();
+		}
 	}
 
 }
