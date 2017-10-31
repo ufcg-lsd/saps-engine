@@ -487,22 +487,36 @@ public class USGSNasaRepository implements INPERepository {
 				SapsPropertiesConstants.ASC_JSON_VALUE);
 	}
 
-	public Set<String> getRegionsFromArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
-		  String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude){
-		JSONArray jsonArray = searchForRegionInArea(dataset, firstYear, lastYear, lowerLeftLatitude,
-				lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
+	public Set<String> getRegionsFromArea(String dataset, int firstYear, int lastYear,
+			String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
+			String upperRightLongitude) {
+		String parsedDataset = parseDataset(dataset);
+
+		JSONArray jsonArray = searchForRegionInArea(parsedDataset, firstYear, lastYear,
+				lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
 		Set<String> regionsFound = new HashSet<>();
-		for(int i = 0; i < jsonArray.length(); i++){
+		for (int i = 0; i < jsonArray.length(); i++) {
 			try {
 				String entityId = jsonArray.optJSONObject(i).get("entityId").toString();
-				String region = entityId.substring(3,9);
+				String region = entityId.substring(3, 9);
 				regionsFound.add(region);
 			} catch (JSONException e) {
 				LOGGER.error("Error while formatting found regions JSON", e);
-				e.printStackTrace();
 			}
 		}
 		return regionsFound;
+	}
+
+	private String parseDataset(String dataset) {
+		if (dataset.equals(SapsPropertiesConstants.DATASET_LT5_TYPE)) {
+			return SapsPropertiesConstants.LANDSAT_5_DATASET;
+		} else if (dataset.equals(SapsPropertiesConstants.DATASET_LE7_TYPE)) {
+			return SapsPropertiesConstants.LANDSAT_7_DATASET;
+		} else if (dataset.equals(SapsPropertiesConstants.DATASET_LC8_TYPE)) {
+			return SapsPropertiesConstants.LANDSAT_8_DATASET;
+		}
+		
+		return null;
 	}
 
 	protected JSONArray searchForRegionInArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,

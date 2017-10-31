@@ -68,7 +68,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 
 	protected void imageTaskToTimedout(TaskProcess tp) {
 		try {
-			updateImageTaskToQueued(tp);
+			updateImageTaskToReady(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
 			if (tp.getResource() != null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
@@ -82,6 +82,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 		try {
 			updateImageTaskToFailed(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
+			getBlowoutPool().removeTask(getBlowoutPool().getTaskById(tp.getTaskId()));
 			if (tp.getResource() != null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
 			}
@@ -126,7 +127,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 				imageTask.getUpdateTime());
 	}
 
-	protected void updateImageTaskToQueued(TaskProcess tp) throws SQLException {
+	protected void updateImageTaskToReady(TaskProcess tp) throws SQLException {
 		ImageTask imageTask = this.imageStore.getTask(getImageTaskFromTaskProcess(tp));
 		imageTask.setState(ImageTaskState.READY);
 		imageStore.updateImageTask(imageTask);

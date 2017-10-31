@@ -110,7 +110,7 @@ public class SapsController extends BlowoutController {
 			@Override
 			public void run() {
 				try {
-					addSapsTasks(properties, workerSpec, ImageTaskState.DOWNLOADED);
+					addSapsTasks(properties, workerSpec, ImageTaskState.PREPROCESSED);
 				} catch (Exception e) {
 					LOGGER.error("Error while adding tasks", e);
 				}
@@ -143,7 +143,7 @@ public class SapsController extends BlowoutController {
 				LOGGER.debug("specWithFederation " + specWithFederation.toString());
 
 				if (ImageTaskState.READY.equals(imageTaskState)
-						|| ImageTaskState.DOWNLOADED.equals(imageTaskState)) {
+						|| ImageTaskState.PREPROCESSED.equals(imageTaskState)) {
 					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation);
 					Map<String, String> nfsConfig = imageStore
 							.getFederationNFSConfig(imageTask.getFederationMember());

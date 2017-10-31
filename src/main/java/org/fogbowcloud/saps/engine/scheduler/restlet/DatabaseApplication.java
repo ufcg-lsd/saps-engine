@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
 import org.fogbowcloud.saps.engine.core.dispatcher.Task;
@@ -168,5 +169,5 @@ public class DatabaseApplication extends Application {
 
 	public Properties getProperties() {
 		return properties;
-	}
+	}	
 }

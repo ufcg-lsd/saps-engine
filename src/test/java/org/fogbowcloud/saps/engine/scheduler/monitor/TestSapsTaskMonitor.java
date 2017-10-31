@@ -92,7 +92,7 @@ public class TestSapsTaskMonitor {
 		runningTasks.put(fakeTask, fakeProcess);
 		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
 
-		doNothing().when(sebalTaskMonitor).updateImageTaskToQueued(fakeProcess);
+		doNothing().when(sebalTaskMonitor).updateImageTaskToReady(fakeProcess);
 
 		this.sebalTaskMonitor.procMon();
 
@@ -258,7 +258,7 @@ public class TestSapsTaskMonitor {
 		doNothing().when(imageStore).addStateStamp(imageTask.getTaskId(), imageTask.getState(),
 				imageTask.getUpdateTime());
 
-		this.sebalTaskMonitor.updateImageTaskToQueued(fakeTaskProcess);
+		this.sebalTaskMonitor.updateImageTaskToReady(fakeTaskProcess);
 		Assert.assertEquals(ImageTaskState.READY, imageTask.getState());
 	}
 }
