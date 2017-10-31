@@ -16,8 +16,8 @@ default_ftp_server_port=22
 saps_export_path=/local/exports
 local_input_output_path=/local/exports
 
-sebal_execution_period=60000
-default_fetcher_period=60000
+saps_execution_period=60000
+default_archiver_period=60000
 
 #Swift
 swift_container_name=containername
