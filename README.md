@@ -1,6 +1,6 @@
 # SAPS Engine
 ## What is SAPS Engine?
-  SAPS Engine is a tool created to provide a dynamic use of SEBAL algorithm using computational resources obtained through a multi-cloud environment federated by the [Fogbow Middleware](http://www.fogbowcloud.org).
+  SAPS Engine is a tool created to provide a dynamic use of SEBAL algorithm using computational resources obtained through a multi-cloud environment federated by the [Fogbow Middleware](http://www.fogbowcloud.org) (to install it, follow the instructions [here](http://www.fogbowcloud.org/the-big-picture.html)).
   
   SAPS Engine has six main components:
   - **Submission Dispatcher**: Serves requests from a federation member, such as the creation and monitoring new work units, or the purge of processed data.
