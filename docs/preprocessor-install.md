@@ -76,7 +76,7 @@ saps_export_path=
 # default : /tmp
 saps_container_linked_path=
 
-# Non Required Configuration ####
+# No Required Configuration ####
 # Preprocessor Execution interval (ms)
 preprocessor_execution_period=
 ```
