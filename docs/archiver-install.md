@@ -1,16 +1,12 @@
 # Install and Configure Archiver
-
-## Docker Image Information
-  - **User:** fogbow
-  - **Repository:** archiver
   
 ## Dependencies
 The Docker image of the Archiver component can be pulled, and a container running this image can be started, using the following commands:
 
   ```
-  1. docker pull <docker_user>/<docker_repository>
-  2. docker run -td -v <docker_user>/<docker_repository>
-  3. container_id=$(docker ps | grep “<docker_user>/<docker_repository>" | awk '{print $1}')
+  1. docker pull fogbow/archiver
+  2. docker run -td -v fogbow/archiver
+  3. container_id=$(docker ps | grep “fogbow/archiver" | awk '{print $1}')
   ```
 
 ## Configure Archiver Software
