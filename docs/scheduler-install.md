@@ -237,7 +237,6 @@ To configure Keystone authentication:
   # Keystone Infrastructure tenant name
   auth_token_prop_keystone_tenantname=
 
-
   # Keystone Infrastructure user password
   auth_token_prop_keystone_password=
 
@@ -274,7 +273,6 @@ To run Scheduler software, replace the following variables in saps-engine/bin/st
   # Debug port
   debug_port=
   ```
-
 
 After configured, it’s necessary to copy the edited start-scheduler file to running container with
 
