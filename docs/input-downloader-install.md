@@ -8,18 +8,15 @@
 Before starting the Input Downloader container, first an NFS server needs to be installed, and configured. It implements the Temporary Storage component. The following steps must be followed:
 	
   ```
-  1. apt - get install nfs - kernel - server -y
-  2. mkdir -p / local / exports
-  3. echo "/ local / exports *( rw , insecure ,
-  no_subtree_check , async ,
-  no_root_squash ) " >> / etc / exports
-  4. service nfs - kernel - server restart
-  5. mkdir -p / var / log / sebal - execution
-  6. touch / var / log / sebal - execution / sebal -
-  execution . log
-  7. chmod 777 / var / log / sebal - execution /
-  sebal - execution . log
+  1. apt-get install nfs-kernel-server -y
+  2. mkdir -p /local/exports
+  3. echo "/local/exports *(rw, insecure , no_subtree_check, async, no_root_squash ) " >> /etc/exports
+  4. service nfs-kernel-server restart
+  5. mkdir -p /var/log/sebal-execution
+  6. touch /var/log/sebal-execution/sebal-execution.log
+  7. chmod 777 /var/log/sebal-execution/sebal-execution.log
   ```
+  
 Now the Input Downloader container image can be pulled, and a container running this image can be started:
 
  ```
