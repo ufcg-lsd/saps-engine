@@ -27,67 +27,67 @@ With all software deployed, the Input Downloader can be customized by editing it
 With all software deployed, the Input Downloader can be customized by editing its configuration file, as shown below: 
 
   ```
-  #### Input Downloader database URL prefix (ex.: jdbc:postgresql://)
+  # Input Downloader database URL prefix (ex.: jdbc:postgresql://)
   datastore_url_prefix=
 
-  #### Input Downloader database ip
+  # Input Downloader database ip
   datastore_ip=
 
-  #### Input Downloader database port
+  # Input Downloader database port
   datastore_port=
 
-  #### Input Downloader database name
+  # Input Downloader database name
   datastore_name=
 
-  #### Input Downloader database driver
+  # Input Downloader database driver
   datastore_driver=
 
-  #### Input Downloader database user name
+  # Input Downloader database user name
   datastore_username=
 
-  #### Input Downloader database user password
+  # Input Downloader database user password
   datastore_password=
 
-  #### Input Downloader default volume size
+  # Input Downloader default volume size
   default_volume_size=
 
-  #### Input Downloader default downloader period
+  # Input Downloader default downloader period
   default_downloader_period=
 
-  #### NFS server export path
+  # NFS server export path
   saps_export_path=
 
-  #### Path to store scenes
+  # Path to store scenes
   saps_container_linked_path=
 
-  #### Max number of tasks to download
+  # Max number of tasks to download
   max_tasks_to_download=
 
-  #### Max attempts trying to download a scene
+  # Max attempts trying to download a scene
   max_download_attempts=
 
-  #### Script used to download a scene
+  # Script used to download a scene
   container_script=
 
-  #### Max number of requests to USGS download link
+  # Max number of requests to USGS download link
   max_usgs_download_link_requests=10
 
-  #### Simultaneous downloads allowed
+  # Simultaneous downloads allowed
   max_simultaneous_download=1
 
-  #### USGS login URL
+  # USGS login URL
   usgs_login_url=https://ers.cr.usgs.gov/login/
 
-  #### USGS API URL
+  # USGS API URL
   usgs_json_url=https://earthexplorer.usgs.gov/inventory/json
 
-  #### USGS username
+  # USGS username
   usgs_username=
 
-  #### USGS password
+  # USGS password
   usgs_password=
 
-  #### Period to refresh USGS’ API key
+  # Period to refresh USGS’ API key
   usgs_api_key_period=
   ```
 
@@ -102,19 +102,19 @@ The configuration file must be copied to the container:
 The properties defined in the configuration file (example available [here](../examples/downloader.conf.example)) must also be edited appropriately:
 
   ```
-  #### SAPS Engine directory path (Usually /home/ubuntu/saps-engine)
+  # SAPS Engine directory path (Usually /home/ubuntu/saps-engine)
   sebal_engine_dir_path=
 
-  #### The IP running the Input Downloader Software
+  # The IP running the Input Downloader Software
   crawler_ip=
 
-  #### SSH Port
+  # SSH Port
   crawler_ssh_port=
 
-  #### NFS Port
+  # NFS Port
   crawler_nfs_port=
 
-  #### The federation member
+  # The federation member
   federation_member=
   ```
 
