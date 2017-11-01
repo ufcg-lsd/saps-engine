@@ -18,7 +18,7 @@ Before starting the Scheduler container, the Catalog database must be created, u
   8. sed -i 's/peer/md5/g' /etc/postgresql/<installed_version>/main/pg_hba.conf
   9. bash -c 'echo “host    all             all             0.0.0.0/0               md5” >> /etc/postgresql/<installed_version>/main/pg_hba.conf'
   10. Add “listen_addresses = '*'” into /etc/postgresql/<installed_version>/main/postgresql.conf
-service postgresql restart
+  11. service postgresql restart
   ```
 
 After that, configure your timezone and NTP client as shown below.
