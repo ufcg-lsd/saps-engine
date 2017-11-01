@@ -3,48 +3,9 @@
 ## Specifications
 In order to install and configure Preprocessor, it is necessary to consider which type of scenario this component will be deployed. In our current implementation, we have:
 
-* Virtual Machine (recommended specs)
-  * 2vCPU;
-  * 4GB RAM;
-  * 20GB Disk;
+## Dependencies
 
-Dependencies
-```
-* apt-get -y update
-* apt-get -y install net-tools
-* apt-get -y install iputils-ping
-* apt-get install -y software-properties-common
-* add-apt-repository ppa:openjdk-r/ppa
-* apt-get -y update
-
-* apt-get install -y build-essential
-* apt-get install -y openjdk-7-jdk
-* * apt-get install -y git
-* apt-get install -y maven
-```
-```
-* cd {workdir}
-* git clone https://github.com/fogbow/fogbow-manager.git
-* cd fogbow-manager
-* mvn install -Dmaven.test.skip=true
-```
-```
-* cd {workdir}
-* git clone https://github.com/fogbow/blowout.git
-* cd blowout
-* git checkout sebal-experiment-resources-fix
-* mvn install -Dmaven.test.skip=true
-```
-```
-* cd {workdir}
-* git clone https://github.com/fogbow/saps-engine.git
-* cd saps-engine
-* git checkout sebal-experiment-resources-fix
-* mvn install -Dmaven.test.skip=true
-```
-Once raised, VM must have installed NFS client to access the NFS server directory of Input Downloader.
-
-### NFS Client Installation 
+### NFS Client Installation in the Host
 Install packages:
 ```
 sudo apt-get update
@@ -60,21 +21,53 @@ mount -t nfs <ip_nfs_server>:<path_nfs_server> /mnt/nfs/home/
 ```
 Crosscheck:
 ```
-* mount -t nfs
+mount -t nfs
 ```
 
+### Configure date
+Configure your timezone and NTP client as shown below.
+
+  ```
+  1. bash -c ‘echo "America/Recife" > /etc/timezone’
+  2. dpkg-reconfigure -f noninteractive tzdata
+  3. apt-get update
+  4. apt install -y ntp
+  5. sed -i "/server 0.ubuntu.pool.ntp.org/d" /etc/ntp.conf
+  6. sed -i "/server 1.ubuntu.pool.ntp.org/d" /etc/ntp.conf
+  7. sed -i "/server 2.ubuntu.pool.ntp.org/d" /etc/ntp.conf
+  8. sed -i "/server 3.ubuntu.pool.ntp.org/d" /etc/ntp.conf
+  9. sed -i "/server ntp.ubuntu.com/d" /etc/ntp.conf
+  10. bash -c ‘echo "server ntp.lsd.ufcg.edu.br" >> /etc/ntp.conf’
+  11. service ntp restart
+  12. service postgresql restart
+  ```
+
+### Docker
+Install Docker CE in order to deploy Preprocessor component. To do this, follow the steps bellow.
+
+  ```
+  1. apt-get remove docker docker-engine docker.io
+  2. apt-get update
+  3. apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual
+  4. apt-get update
+  5. apt-get install apt-transport-https ca-certificates curl software-properties-common
+  6. curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  7. apt-key fingerprint 0EBFCD88
+  8. add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  9. apt-get update
+  10. apt-get install docker-ce
+  11. apt-cache madison docker-ce
+  12. apt-get install docker-ce=<VERSION>
+  ```
 After installed, your environment is ready to pull Preprocessor’s Docker image.
-
-```
-docker pull <docker_user>/<docker_repository>:<docker_repository_tag>
-docker run -td -v <local_database_dir>:<container_database_dir> <docker_user>/<docker_repository>:<docker_repository_tag>
-container_id=$(docker ps | grep  “<docker_user>/<docker_repository>:<docker_repository_tag>" | awk '{print $1}')
-```
-
+  ```
+  1. docker pull <docker_user>/<docker_repository>:<docker_repository_tag>
+  2. docker run -td -v <nfs_directory>:<container_dir> <docker_user>/<docker_repository>:<docker_repository_tag>
+  3. container_id=$(docker ps | grep  “<docker_user>/<docker_repository>:<docker_repository_tag>" | awk '{print $1}')
+  ```
+  
 ### Configure Preprocessor Software
-With all dependencies set, now it’s time to configure Preprocessor software before starting it. In order to do this, we explain below each configuration from conf file (example available here).
-
-#### Image Datastore Configuration ####
+The configuration file of the Preprocessor component must be edited to customize its behavior:
 ```
 # Catalogue database URL prefix (ex.: jdbc:postgresql://)
 datastore_url_prefix=
@@ -109,21 +102,22 @@ saps_container_linked_path=
 # Preprocessor Execution interval (ms)
 preprocessor_execution_period=
 ```
-
-Once edited, it’s necessary to copy the edited configuration file to running container with
-
+Again, the file must be copied to the container:
 ```
 docker cp preprocessor.conf <container_id>:/home/ubuntu/saps-engine/config
 ```
-
-Running Preprocessor Software
-To run Archiver software, replace the following variables in saps-engine/bin/start-preprocessor (example available here). 
-
-After configured, it’s necessary to copy the edited start-preprocessor file to running container with
+The saps-engine/bin/start-preprocessor script must
+also be configured:
+```
+saps_engine_log_properties_path =
+saps_engine_target_path =
+saps_engine_conf_path =
+```
+Then, the edited start-preprocessor script must be copied to the container:
 ```
 docker cp start-preprocessor <container_id>:/home/ubuntu/saps-engine/bin
 ```
-Finally, it is possible to run Preprocessor using
+Finally, the Preprocessor is started using the following command:
 ```
 docker exec -i <container_id> bash -c “cd /home/ubuntu/saps-engine && bash bin/start-preprocessor &”
 ```
