@@ -2,6 +2,9 @@
 ## What is SEBAL Engine?
   SEBAL Engine is a tool created to provide a dynamic use of SEBAL algorithm using computational resources obtained through a multi-cloud environment federated by the [Fogbow Middleware](http://www.fogbowcloud.org).
   
+  [here](https://github.com/fogbow/saps-engine/blob/master/scheduler-install.md)
+   [here](scheduler-install.md)
+  
   SEBAL Engine has six main components:
   - **Submission Service**: Serves requests from a federation member, such as the creation and monitoring new work units, or the purge of processed data.
   - **Task Catalog**: Stores information of LANDSAT image data (obtained from [NASA repository](https://ers.cr.usgs.gov)) and its execution.
