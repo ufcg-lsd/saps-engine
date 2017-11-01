@@ -1,26 +1,5 @@
 # Install and Configure Preprocessor
-
-## Specifications
-In order to install and configure Preprocessor, it is necessary to consider which type of scenario this component will be deployed. In our current implementation, we have:
-
 ### Dependencies
-Install and configure NFS Client Installation in the Host
-```
-sudo apt-get update
-sudo apt-get install nfs-common
-```
-Now create the NFS directory <nfs_directory> mount point as follows:
-```
-sudo mkdir -p /mnt/nfs/home
-```
-Next we will mount the NFS shared content as shown below:
-```
-mount -t nfs <ip_nfs_server>:<path_nfs_server> /mnt/nfs/home/
-```
-Crosscheck:
-```
-mount -t nfs
-```
 Configure your timezone and NTP client as shown below.
   ```
   1. bash -c ‘echo "America/Recife" > /etc/timezone’
@@ -36,9 +15,18 @@ Configure your timezone and NTP client as shown below.
   11. service ntp restart
   12. service postgresql restart
   ```
-Install Docker CE in order to deploy Preprocessor component. To do this, follow the steps: [here](container-install.md)
-
-After installed, your environment is ready to pull Preprocessor’s Docker image.
+Install and configure NFS Client Installation in the Host
+```
+sudo apt-get update
+sudo apt-get install nfs-common
+# Now create the NFS directory <nfs_directory> mount point as follows:
+sudo mkdir -p /mnt/nfs/home
+# Next we will mount the NFS shared content as shown below:
+mount -t nfs <ip_nfs_server>:<path_nfs_server> /mnt/nfs/home/
+# Crosscheck:
+mount -t nfs
+```
+After installing the NSF client, the environment is ready to pull the image of the Preprocessor component, and start a container that runs this image:
   ```
   1. docker pull <docker_user>/<docker_repository>:<docker_repository_tag>
   2. docker run -td -v <nfs_directory>:<container_dir> <docker_user>/<docker_repository>:<docker_repository_tag>
