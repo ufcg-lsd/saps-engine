@@ -42,7 +42,7 @@ mount -t nfs <ip_nfs_server>:<path_nfs_server> /mnt/nfs/home/
 ```
 Crosscheck:
 ```
-* mount -t nfs
+mount -t nfs
 ```
 
 After installed, your environment is ready to pull Preprocessor’s Docker image.
