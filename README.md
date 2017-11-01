@@ -2,9 +2,6 @@
 ## What is SEBAL Engine?
   SEBAL Engine is a tool created to provide a dynamic use of SEBAL algorithm using computational resources obtained through a multi-cloud environment federated by the [Fogbow Middleware](http://www.fogbowcloud.org).
   
-  [here](https://github.com/fogbow/saps-engine/blob/master/scheduler-install.md)
-   [here](scheduler-install.md)
-  
   SEBAL Engine has six main components:
   - **Submission Service**: Serves requests from a federation member, such as the creation and monitoring new work units, or the purge of processed data.
   - **Task Catalog**: Stores information of LANDSAT image data (obtained from [NASA repository](https://ers.cr.usgs.gov)) and its execution.
@@ -74,6 +71,12 @@
   ```
   
 ## Infrastructure Deploy
+* [Scheduler](docs/scheduler-install.md)
+* [Archiver](docs/archiver-install.md)
+* [Input Downloader](docs/input-downloader-install.md)
+* [Dispacher](docs/dispacher-install.md)
+* [Pre Processor](docs/preprocessor-install.md)
+* [Dashboard](docs/dashboard-install.md)
 ### Configuring deploy with keystone token
   To configure SEBAL Engine deploy, is necessary to generate a token that will be used to order resources from **Fogbow**. For that, simply generate a token using the following **fogbow-cli** command:
   
