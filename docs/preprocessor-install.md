@@ -3,10 +3,8 @@
 ## Specifications
 In order to install and configure Preprocessor, it is necessary to consider which type of scenario this component will be deployed. In our current implementation, we have:
 
-## Dependencies
-
-### NFS Client Installation in the Host
-Install packages:
+### Dependencies
+Install and configure NFS Client Installation in the Host
 ```
 sudo apt-get update
 sudo apt-get install nfs-common
@@ -23,10 +21,7 @@ Crosscheck:
 ```
 mount -t nfs
 ```
-
-### Configure date
 Configure your timezone and NTP client as shown below.
-
   ```
   1. bash -c ‘echo "America/Recife" > /etc/timezone’
   2. dpkg-reconfigure -f noninteractive tzdata
@@ -41,31 +36,14 @@ Configure your timezone and NTP client as shown below.
   11. service ntp restart
   12. service postgresql restart
   ```
+Install Docker CE in order to deploy Preprocessor component. To do this, follow the steps: [here](container-install.md)
 
-### Docker
-Install Docker CE in order to deploy Preprocessor component. To do this, follow the steps bellow.
-
-  ```
-  1. apt-get remove docker docker-engine docker.io
-  2. apt-get update
-  3. apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual
-  4. apt-get update
-  5. apt-get install apt-transport-https ca-certificates curl software-properties-common
-  6. curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  7. apt-key fingerprint 0EBFCD88
-  8. add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  9. apt-get update
-  10. apt-get install docker-ce
-  11. apt-cache madison docker-ce
-  12. apt-get install docker-ce=<VERSION>
-  ```
 After installed, your environment is ready to pull Preprocessor’s Docker image.
   ```
   1. docker pull <docker_user>/<docker_repository>:<docker_repository_tag>
   2. docker run -td -v <nfs_directory>:<container_dir> <docker_user>/<docker_repository>:<docker_repository_tag>
   3. container_id=$(docker ps | grep  “<docker_user>/<docker_repository>:<docker_repository_tag>" | awk '{print $1}')
   ```
-  
 ### Configure Preprocessor Software
 The configuration file of the Preprocessor component must be edited to customize its behavior:
 ```
