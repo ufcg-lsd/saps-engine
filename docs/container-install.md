@@ -40,4 +40,4 @@ To install Docker in a Debian based virtual machine, the following commands shou
   apt-get install docker-ce=<VERSION>
   ```
 
-In the previous listing, the values indicated by names within the symbols <>, such as <VERSION>, should be chosen and assigned appropriately by the system administrator during installation. For the specific case of <VERSION>, it should be replaced by the string that appears in the second column of the output of the command 11 in the previous listing.
+In the previous listing, the values indicated by names within the symbols <>, such as \<VERSION\>, should be chosen and assigned appropriately by the system administrator during installation. For the specific case of <VERSION>, it should be replaced by the string that appears in the second column of the output of the command 11 in the previous listing.
