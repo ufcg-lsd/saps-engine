@@ -67,7 +67,7 @@ After installed, your environment is ready to pull Scheduler’s Docker image.
   3. container_id=$(docker ps | grep  “<docker_user>/<docker_repository>:<docker_repository_tag>" | awk '{print $1}')
   ```
 
-Configure Scheduler Software
+## Configure Scheduler Software
 With all dependencies set, now it’s time to configure Scheduler software before starting it. In order to do this, we explain below each configuration from conf file (example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/examples/scheduler.conf.example)).
 
   ```
@@ -251,7 +251,7 @@ Once edited, it’s necessary to copy the edited configuration file to running c
 
 docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine/config
 
-Running Scheduler Software
+## Running Scheduler Software
 To run Scheduler software, replace the following variables in saps-engine/bin/start-scheduler (example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/bin/start-scheduler)).
 
   ```
