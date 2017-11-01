@@ -34,8 +34,6 @@ After that, configure your timezone and NTP client as shown below.
   12. service postgresql restart
   ```
 
-Once the Catalogue is prepared, install Docker CE in order to deploy Scheduler component. To do this, follow the instructions provided [here](container-install.md).
-
 After installed, your environment is ready to pull Scheduler’s Docker image.
 
   ```
