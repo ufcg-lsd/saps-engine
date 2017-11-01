@@ -1,9 +1,5 @@
 # Install and Configure Preprocessor
 
-## Docker repository
-* User: fogbow
-* Repository: preprocessor
-
 ### Dependencies
 Configure your timezone and NTP client as shown below.
   ```
@@ -33,7 +29,7 @@ mount -t nfs
 ```
 After installing the NSF client, the environment is ready to pull the image of the Preprocessor component, and start a container that runs this image:
   ```
-  1. docker pull <docker_user>/<docker_repository>:<docker_repository_tag>
+  1. docker pull fogbow/preprocessor
   2. docker run -td -v <nfs_directory>:<container_dir> <docker_user>/<docker_repository>:<docker_repository_tag>
   3. container_id=$(docker ps | grep  “<docker_user>/<docker_repository>:<docker_repository_tag>" | awk '{print $1}')
   ```
