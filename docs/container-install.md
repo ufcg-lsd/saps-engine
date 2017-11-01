@@ -32,14 +32,12 @@ To install Docker in a Debian based virtual machine, the following commands shou
   
   # Install the latest version of Docker CE
   apt-get install docker-ce
-  ```
   
-If desired, it is possible to install a scpecific version of Docker CE using the following commands:
-
-  ```
   # List the available Docker CE versions
   apt-cache madison docker-ce
   
   # Install Docker CE version obtained from previous command
   apt-get install docker-ce=<VERSION>
   ```
+
+In the previous listing, the values indicated by names within the symbols <>, such as <VERSION>, should be chosen and assigned appropriately by the system administrator during installation. For the specific case of <VERSION>, it should be replaced by the string that appears in the second column of the output of the command 11 in the previous listing.
