@@ -17,7 +17,7 @@ Before starting the Scheduler container, the Catalog database must be created, u
   11. service postgresql restart
   ```
 
-After that, configure your timezone and NTP client as shown below.
+After that, configure the timezone and NTP client as shown below.
 
   ```
   1. bash -c ‘echo "America/Recife" > /etc/timezone’
