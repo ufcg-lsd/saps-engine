@@ -1,14 +1,6 @@
 ### Install and Configure Dashboard and Submission Dispatcher
 
-#### Specifications
-In order to install and configure the Dashboard and the Submission Dispatcher, it is necessary to consider the scenario where these components are going to be deployed. In our current deployment, we have a virtual machine with the following specs:
-
-- w vCPU;
-- x GB RAM;
-- y GB Disk;
-- z GB Volume.
-
-#### Dependencies
+#### Dashboard and Submission Dispatcher
 Once raised, the VM must contain all the necessary dependencies. In order to do that, follow the steps below:
 
     # add-apt-repository -y ppa:openjdk-r/ppa
@@ -19,6 +11,7 @@ Once raised, the VM must contain all the necessary dependencies. In order to do 
     # apt-get install openjdk-7-jdk -y
     # apt-get -y install maven
 
+Once the needed dependencies are installed, download and build saps-dashboard, fogbow-manager, blowout and saps-engine:
 
     # git clone -b backend-integration https://github.com/fogbow/saps-dashboard.git
     # cd saps-dashboard
@@ -41,6 +34,46 @@ Once raised, the VM must contain all the necessary dependencies. In order to do 
     # mvn install -Dmaven.test.skip=true
     # cd ..
 
+Before starting the service, the dashboard configuration file (example available [here](../examples/dispatcher.conf.example)) needs to be edited to customize the behavior of the scheduler component. We show below some of the most important properties:
+
+datastore_ip=
+datastore_port=
+datastore_url_prefix=
+datastore_username=
+datastore_password=
+datastore_driver=
+datastore_name=
+
+admin_email=
+admin_user=
+admin_password=
+submission_rest_server_port=
+
+saps_export_path=
+
+usgs_login_url=
+usgs_json_url=
+usgs_username=
+usgs_password=
+usgs_api_key_period=
+
+
+The value of the property submission_rest_server_port in *dispatcher.conf* should be written on urlSapsService in the file *dashboardApp.js*, e.g.:
+
+dispatcher.conf:
+
+    # submission_rest_server_port = 8080
+
+dashboardApp.js:
+
+    # "urlSapsService": "http://localhost:8080/"
+
+To run saps-engine, execute the following commands:
+
+    # cd saps-engine
+    # java -
+
+To run the saps-dashboard, change the
     
 #### Configure Dispatcher Software
 With all dependencies set, now it’s time to configure Preprocessor software before starting it. In order to do this, we explain below each configuration from conf file example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/examples/dispatcher.conf.example).
