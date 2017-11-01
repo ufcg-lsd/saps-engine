@@ -48,6 +48,10 @@
     failed: image execution returned error
   
 ## Install and Deploy
+### Install Docker CE
+SAPS componentes are deployed as Docker containers. Thus, before proper installing them, Docker needs to be installed in the virtual machines provisioned to run the SAPS service. To install Docker in a Debian based virtual machine follow the instructions provided [here](docs/container-install.md).
+
+### SAPS Components Installation
 * [Scheduler](docs/scheduler-install.md)
 * [Archiver](docs/archiver-install.md)
 * [Input Downloader](docs/input-downloader-install.md)
