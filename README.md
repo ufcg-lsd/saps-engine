@@ -13,7 +13,7 @@
 
 ## How to use it?
 ### Submitting Tasks
-  A submission, which consists in a pool of tasks, is created when **Task Catalogue** is called passing the range of years for which the images were captured by the satellite and a text file, containing the regions that will be processed.
+  A submission, which consists in a pool of tasks, is created when **Task Catalogue** is called passing two points in the world map for image search, which are the upper right latitude, upper right longitude, lower left latitude and lower left longitude, a range of years for which the images were captured by the LANDSAT series and the chosen version for: **Input Downloader**, **Pre Processor** and **Worker Node**.
   
   Task Field | Description
   ---- | --------------------
