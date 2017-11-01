@@ -17,20 +17,6 @@ Once raised, VM must have installed NFS server in order to Workers mount its dir
 	$ wget https://raw.githubusercontent.com/fogbow/saps-scripts/test-usage/deploy-scripts/input-downloader/installation.sh<br/>
 	$ chmod 777 installation.sh<br/>
 	$ ./installation.sh<br/>
-	
-##### Now, we need to install and configure PostgreSQL, follow the steps below:
-	
-	$ apt-get update<br/>
-	$ apt-get install postgresql<br/>
-	$ su postgres<br/>
-	$ psql -c "CREATE USER <user_name> WITH PASSWORD '<user_password>';"<br/>
-	$ psql -c "CREATE DATABASE <database_name> OWNER <user_name>;"<br/>
-	$ psql -c "GRANT ALL PRIVILEGES ON DATABASE <database_name> TO <user_name>;"<br/>
-	$ exit<br/>
-	$ sed -i 's/peer/md5/g' /etc/postgresql/<installed_version>/main/pg_hba.conf<br/>
-	Add “host    all             all             0.0.0.0/0               md5” into /etc/postgresql/<installed_version>/main/postgresql.conf<br/>
-	Add “listen_addresses = '*'” into /etc/postgresql/<installed_version>/main/postgresql.conf<br/>
-	$ service postgresql restart<br/>
 
 After that, we have the Input Downloader container running. We must configure that component to make it work.
 
