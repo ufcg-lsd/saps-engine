@@ -4,9 +4,9 @@
 In order to install and configure Preprocessor, it is necessary to consider which type of scenario this component will be deployed. In our current implementation, we have:
 
 ### Virtual Machine (recommended specs)
-2vCPU;
-2GB RAM;
-20GB Disk;
+* 2vCPU;
+* 4GB RAM;
+* 20GB Disk;
 
 Dependencies
 ```
@@ -59,7 +59,9 @@ Next we will mount the NFS shared content as shown below:
 mount -t nfs <ip_nfs_server>:<path_nfs_server> /mnt/nfs/home/
 ```
 Crosscheck:
+```
 * mount -t nfs
+```
 
 After installed, your environment is ready to pull Preprocessor’s Docker image.
 
