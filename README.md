@@ -1,18 +1,19 @@
-# SEBAL Engine
-## What is SEBAL Engine?
-  SEBAL Engine is a tool created to provide a dynamic use of SEBAL algorithm using computational resources obtained through a multi-cloud environment federated by the [Fogbow Middleware](http://www.fogbowcloud.org).
+# SAPS Engine
+## What is SAPS Engine?
+  SAPS Engine is a tool created to provide a dynamic use of SEBAL algorithm using computational resources obtained through a multi-cloud environment federated by the [Fogbow Middleware](http://www.fogbowcloud.org).
   
-  SEBAL Engine has six main components:
-  - **Submission Service**: Serves requests from a federation member, such as the creation and monitoring new work units, or the purge of processed data.
-  - **Task Catalog**: Stores information of LANDSAT image data (obtained from [NASA repository](https://ers.cr.usgs.gov)) and its execution.
-  - **Crawler**: Search at **Task Catalog** for LANDSAT images in "not downloaded" state. This component assumes a NFS Server and FTP Server role and stores image data into a repository provided by an interation with **Fogbow Middleware**.
-  - **Scheduler**: Order resources as it detects whether or not are images with "downloaded" state in **Task Catalog**, then redirects SEBAL execution tasks to **Worker Nodes**, which performs the image processing.
-  - **Worker Node**: Receives a task from **Scheduler** and executes it. The execution consists of perform a image processing and store data in the NFS Server.
-  - **Fetcher**: Search at **Task Catalog** for images in "finished" (processed by a **Worker Node**) state and transfer all output data from the FTP Server to a Swift. After that, **Crawler** is able to detect if the image was fetched, so it can remove all results from repository.
+  SAPS Engine has six main components:
+  - **Submission Dispatcher**: Serves requests from a federation member, such as the creation and monitoring new work units, or the purge of processed data.
+  - **Task Catalogue**: Stores information of LANDSAT image data (obtained from [NASA repository](https://ers.cr.usgs.gov)) and its execution.
+  - **Input Download**: Search at **Task Catalogue** for LANDSAT tasks in "created" state. This component assumes a NFS Server and FTP Server role and stores image data into a repository provided by an interation with **Fogbow Middleware**.
+  - **Pre Processor**: Search at **Task Catalogue** for LANDSAT tasks already downloaded by **Input Downloader** for pre processing treatment, if necessary, before it arrives to **Scheduler**.
+  - **Scheduler**: Order resources as it detects whether or not are images with "preprocessed" state in **Task Catalogue**, then redirects scheduled tasks to **Worker Nodes**, which performs the task processing.
+  - **Worker Node**: Receives a task from **Scheduler** and executes it. The execution consists in perform an image processing and store data in the NFS Server at the end of it.
+  - **Archiver**: Search at **Task Catalogue** for tasks in "finished" (processed by a **Worker Node**) state and transfer all task data from FTP Server to a permanent storage. After that, **Input Downloader** is able to detect if the task was archived, so it can remove all task files from its own local repository.
 
 ## How to use it?
 ### Submitting Tasks
-  A pool of tasks is created when **Task Catalog** is called passing the range of years for which the images were captured by the satellite and a text file, containing the regions that will be processed.
+  A submission, which consists in a pool of tasks, is created when **Task Catalogue** is called passing the range of years for which the images were captured by the satellite and a text file, containing the regions that will be processed.
   
   Task Field | Description
   ---- | --------------------
