@@ -42,22 +42,7 @@ After that, configure your timezone and NTP client as shown below.
   12. service postgresql restart
   ```
 
-Once the Catalogue is prepared, install Docker CE in order to deploy Scheduler component. To do this, follow the steps bellow.
-
-  ```
-  1. apt-get remove docker docker-engine docker.io
-  2. apt-get update
-  3. apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual
-  4. apt-get update
-  5. apt-get install apt-transport-https ca-certificates curl software-properties-common
-  6. curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  7. apt-key fingerprint 0EBFCD88
-  8. add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  9. apt-get update
-  10. apt-get install docker-ce
-  11. apt-cache madison docker-ce
-  12. apt-get install docker-ce=<VERSION>
-  ```
+Once the Catalogue is prepared, install Docker CE in order to deploy Scheduler component. To do this, follow the instructions provided [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/docs/container-install.md).
 
 After installed, your environment is ready to pull Scheduler’s Docker image.
 
