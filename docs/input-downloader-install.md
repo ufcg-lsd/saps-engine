@@ -16,9 +16,9 @@ Before starting the Input Downloader container, first an NFS server needs to be 
 Now the Docker can be started and Input Downloader container image can be pulled, and a container running this image can be started:
 
   ```
-  1. service docker start
-  2. docker pull fogbow/downloader-deploy
-  3. docker run --name input-downloader --privileged -td fogbow/downloader-deploy
+  1. docker pull fogbow/downloader-deploy
+  2. docker run --name input-downloader --privileged -td fogbow/downloader-deploy
+  3. docker exec input-downloader service docker start
   ```
 
 With all software deployed, the Input Downloader can be customized by editing its configuration file, as shown below:
