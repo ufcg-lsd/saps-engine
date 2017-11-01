@@ -47,7 +47,7 @@ After installed, your environment is ready to pull Scheduler’s Docker image.
   ```
 
 ## Configure Scheduler Software
-With all dependencies set, now it’s time to configure Scheduler software before starting it. In order to do this, we explain below each configuration from conf file (example available [here](../examples/scheduler.conf.example)).
+Before starting the service, the Scheduler configuration file (example available [here](../examples/scheduler.conf.example)) needs to be edited to customize the behavior of the Scheduler component. We show below the properties found in the configuration file, and the values assigned to them
 
   ```
   # Catalogue database URL prefix (ex.: jdbc:postgresql://)
@@ -226,12 +226,14 @@ To configure Keystone authentication:
   auth_token_prop_keystone_auth_url=
   ```
 
-Once edited, it’s necessary to copy the edited configuration file to running container with
+Once the configuration file has been appropriately customized, it needs to be copied to the container:
 
-docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine/config
+  ```
+  docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine/config
+  ```
 
 ## Running Scheduler Software
-To run Scheduler software, replace the following variables in saps-engine/bin/start-scheduler (example available [here](../bin/start-scheduler)).
+The script used to start the Scheduler (example available [here](../bin/start-scheduler)) also needs to be edited accordingly:
 
   ```
   # SAPS Engine directory path (Usually /home/ubuntu/saps-engine)
@@ -253,13 +255,13 @@ To run Scheduler software, replace the following variables in saps-engine/bin/st
   debug_port=
   ```
 
-After configured, it’s necessary to copy the edited start-scheduler file to running container with
+Then, it needs to be copied to the container:
 
   ```
   docker cp start-scheduler <container_id>:/home/ubuntu/saps-engine/bin
   ```
 
-Finally, it is possible to run Scheduler using
+Finally, run the scheduler using:
 
   ```
   docker exec -i <container_id> bash -c “cd /home/ubuntu/saps-engine && bash bin/start-scheduler &”
