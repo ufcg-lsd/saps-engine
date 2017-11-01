@@ -6,9 +6,6 @@ saps_engine_target_path=
 library_path=
 debug_port=
 
-scheduler_ip=
-scheduler_db_port=
-
 while [ true ]
 do
   if pgrep -x "java" > /dev/null
@@ -18,6 +15,6 @@ do
     sleep 10
   fi
 
-  sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.archiver.ArchiverMain $saps_engine_conf_path $scheduler_ip $scheduler_db_port &
-  sleep 12h
+  sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.archiver.ArchiverMain $saps_engine_conf_path &
+  sleep 10m
 done

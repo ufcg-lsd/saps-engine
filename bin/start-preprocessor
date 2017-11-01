@@ -14,6 +14,6 @@ do
   fi
 
   sudo java -Dlog4j.configuration=file:$saps_engine_log_properties_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.preprocessor.PreProcessorMain $saps_engine_conf_path
-  sleep 12h
+  sleep 10m
 done 
 
