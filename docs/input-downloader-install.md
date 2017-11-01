@@ -1,27 +1,34 @@
 # Install and Configure Input Downloader
 
-## Specifications
-In order to install and configure Input Downloader, it is necessary to consider which type of scenario this component will be deployed. In our current implementation, we have:
-
-Virtual Machine (recommended specs)<br/>
-2vCPU;<br/>
-2GB RAM;<br/>
-20GB Disk;<br/>
-100GB Volume.<br/>
+## Docker Image Information
+  - **User:** fogbow
+  - **Repository:** downloader-deploy
 
 ## Dependencies
-Once raised, VM must have installed NFS server in order to Workers mount its directory. It also needs to install Docker platform to run the Input Downloader Software. To install and configure it, follow the steps below:
+Before starting the Input Downloader container, first an NFS server needs to be installed, and configured. It implements the Temporary Storage component. The following steps must be followed:
+	
+  ```
+  1. apt - get install nfs - kernel - server -y
+  2. mkdir -p / local / exports
+  3. echo "/ local / exports *( rw , insecure ,
+  no_subtree_check , async ,
+  no_root_squash ) " >> / etc / exports
+  4. service nfs - kernel - server restart
+  5. mkdir -p / var / log / sebal - execution
+  6. touch / var / log / sebal - execution / sebal -
+  execution . log
+  7. chmod 777 / var / log / sebal - execution /
+  sebal - execution . log
+  ```
+Now the Input Downloader container image can be pulled, and a container running this image can be started:
 
-	$ apt-get update<br/>
-	$ apt-get install wget<br/>
-	$ wget https://raw.githubusercontent.com/fogbow/saps-scripts/test-usage/deploy-scripts/input-downloader/installation.sh<br/>
-	$ chmod 777 installation.sh<br/>
-	$ ./installation.sh<br/>
-
-After that, we have the Input Downloader container running. We must configure that component to make it work.
+ ```
+  1. docker pull fogbow/downloader-deploy
+  2. docker run --name input-downloader --privileged -td fogbow/downloader-deploy
+  ```
 
 ## Configure Input Downloader Software
-With all dependencies set, now it’s time to configure Input Downloader software before starting it. In order to do this, we explain below each configuration from conf file.
+With all software deployed, the Input Downloader can be customized by editing its configuration file, as shown below: 
 
 #### Input Downloader database URL prefix (ex.: jdbc:postgresql://)
 datastore_url_prefix=
@@ -86,13 +93,15 @@ usgs_password=
 #### Period to refresh USGS’ API key
 usgs_api_key_period=
 
+### The configuration file must be copied to the container:
 
-Once edited, it’s necessary to copy the edited configuration file to running container with
+  ```
+  1. docker cp downloader.conf <container_id>:/home/ubuntu/saps-engine/config
+  ```
+  
+-----
 
-```docker cp downloader.conf <container_id>:/home/ubuntu/saps-engine/config```
-
-## Running Input Downloader Software
-To run Input Downloader software, replace the following variables in saps-engine/bin/start-input-downloader (example available here).
+### The properties defined in the saps-engine/bin/start-input-downloader configuration file must also be edited appropriately:
 
 
 #### SAPS Engine directory path (Usually /home/ubuntu/saps-engine)
@@ -110,12 +119,11 @@ crawler_nfs_port=
 #### The federation member
 federation_member=
 
-After configured, it’s necessary to copy the edited start-archiver file to running container with
-
-```docker cp start-input-downloader <container_id>:/home/ubuntu/saps-engine/bin```
-
-
-Finally, it is possible to run Input Downloader using
-
-```docker exec <container_id> cd /home/ubuntu/saps-engine && bash bin/start-input-downloader &```
-
+Then, the script start-archiver file must be copied to the container: 
+  ```
+  1.docker cp start-input-downloader <container_id>:/home/ubuntu/saps-engine/bin
+  ```
+Finally, type the following command is used to run the Input Downloader:
+  ```
+  1. docker exec <container_id> cd /home/ubuntu/saps-engine && bash bin/start-input-downloader &
+  ```
