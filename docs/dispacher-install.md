@@ -1,1 +1,0 @@
-dispacher-install
