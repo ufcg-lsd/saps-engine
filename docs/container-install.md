@@ -1,4 +1,4 @@
-# Install and configure Container
+# Install and configure Docker Container
 
 SAPS componentes are deployed as Docker containers. Thus, before proper installing them, Docker needs to be installed in the virtual machines provisioned to run the SAPS service.
 
