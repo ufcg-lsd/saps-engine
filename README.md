@@ -56,9 +56,9 @@ To install Docker in a Debian based virtual machine follow the instructions prov
 Once Docker is installed, the SAPS components can be deployed by pulling the container images available in the service’s repository. In the following, we show how this can be done, for each SAPS component, as well as the necessary customizations made for these components.
 
 ### SAPS Components Installation
+* [Dispacher/Dashboard](docs/dispacher-install.md)
+* [Input Downloader](docs/input-downloader-install.md)
+* [Pre Processor](docs/preprocessor-install.md)
 * [Scheduler](docs/scheduler-install.md)
 * [Archiver](docs/archiver-install.md)
-* [Input Downloader](docs/input-downloader-install.md)
-* [Dispacher/Dashboard](docs/dispacher-install.md)
-* [Pre Processor](docs/preprocessor-install.md)
   
