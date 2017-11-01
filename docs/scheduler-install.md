@@ -1,9 +1,5 @@
 # Install and Configure Scheduler
 
-## Docker Image Information
-  - **User:** fogbow
-  - **Repository:** scheduler
-
 ## Dependencies
 Before starting the Scheduler container, the Catalog database must be created, using the following commands
 
@@ -41,9 +37,9 @@ After that, configure your timezone and NTP client as shown below.
 After installed, your environment is ready to pull Scheduler’s Docker image.
 
   ```
-  1. docker pull <docker_user>/<docker_repository>
-  2. docker run -td -v <local_database_dir>:<container_database_dir> <docker_user>/<docker_repository>
-  3. container_id=$(docker ps | grep  “<docker_user>/<docker_repository>" | awk '{print $1}')
+  1. docker pull fogbow/scheduler
+  2. docker run -td -v <local_database_dir>:<container_database_dir> fogbow/scheduler
+  3. container_id=$(docker ps | grep  “fogbow/scheduler" | awk '{print $1}')
   ```
 
 ## Configure Scheduler Software
