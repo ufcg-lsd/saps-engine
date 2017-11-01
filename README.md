@@ -2,7 +2,7 @@
 ## What is SAPS Engine?
   SAPS Engine is a tool created to provide a dynamic use of SEBAL algorithm using computational resources obtained through a multi-cloud environment federated by the [Fogbow Middleware](http://www.fogbowcloud.org) (to install it, follow the instructions [here](http://www.fogbowcloud.org/the-big-picture.html)).
   
-  SAPS Engine has six main components:
+  SAPS Engine has seven main components:
   - **Submission Dispatcher**: Serves requests from a federation member, such as the creation and monitoring new work units, or the purge of processed data.
   - **Task Catalogue**: Stores information of LANDSAT image data (obtained from [NASA repository](https://ers.cr.usgs.gov)) and its execution.
   - **Input Download**: Search at **Task Catalogue** for LANDSAT tasks in "created" state. This component assumes a NFS Server and FTP Server role and stores image data into a repository provided by an interation with **Fogbow Middleware**.
@@ -17,35 +17,40 @@
   
   Task Field | Description
   ---- | --------------------
-  Image Name: | Image name with landsat type, region and year as prefix
-  Download Link: | Image download link from NASA repository
-  Image State: | Image state in system execution
-  Federation Member: | Federation member that deals with the image
+  Task ID: | Task ID created in submission
+  Dataset: | Task LANDSAT type
+  Region: | Task Region
+  Image Date: | Date in which image was captured
+  Download Link: | Image download link from a remote repository
+  State: | Task state in system execution
+  Federation Member: | Federation member that deals with the task
   Priority: | Processing priority
   Station ID: | Image's nearest station ID
-  Sebal Version: | Current SEBAL application version
-  Sebal Engine Version: | Current SEBAL Engine application version
-  Blowout Version: | Current blowout application version
-  Creation Time: | Date of first interation with image in database
-  Update Time: | Date of last interation with image in database
+  Input Gathering Tag: | Current Inpud Downloader version
+  Input Preprocessing Tag: | Current Pre Processor version
+  Algorithm Execution: | Current Worker algorithm version
+  Archiver Version: | Current Archiver version
+  Blowout Version: | Current Blowout application version
+  Creation Time: | Date of first interation with task in Catalogue
+  Update Time: | Date of last interation with task in Catalogue
   Status: | Tells if image was purged from database or not
   Error: | Shows the error message in case of execution failure
   
-  For that, SEBAL Engine relies on a centralized database that gets and stores informations about image data and process output so the components can make their decisions.
+  For that, SEBAL Engine relies on a centralized database that gets and stores informations about task data and process output so the components can make their decisions.
 
-#### Image States
+#### Task States
   While running SEBAL Engine application, each image might be in several different states. The image state will show in which phase exactly the execution is.
   
-    created: 
-    downloading: image is being downloaded by crawler from nasa repository
-    downloaded : image is downloaded by crawler
-    preprocessing:
-    ready:
-    running: image is ready to be processed/is being processed by worker node
-    finished: image successfully processed by worker node
-    archiving: 
-    archived: image successfully archived
-    failed: image execution returned error
+    created: image was created by submission dispatcher
+    downloading: image is being downloaded by input downloader from nasa repository
+    downloaded : image was downloaded by input downloader
+    preprocessing: image is being pre processed by preprocessor 
+    ready: image is ready for process
+    running: image is running in worker node
+    finished: image was successfully processed by worker node
+    archiving: image is being archived into a permanent storage
+    archived: image was successfully archived
+    failed: task execution returned error
   
 ## Install and Deploy
 ### Install Docker CE
