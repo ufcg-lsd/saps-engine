@@ -40,17 +40,19 @@
 
 #### Task States
   While running SEBAL Engine application, each image might be in several different states. The image state will show in which phase exactly the execution is.
-  
-    created: image was created by submission dispatcher
-    downloading: image is being downloaded by input downloader from nasa repository
-    downloaded : image was downloaded by input downloader
-    preprocessing: image is being pre processed by preprocessor 
-    ready: image is ready for process
-    running: image is running in worker node
-    finished: image was successfully processed by worker node
-    archiving: image is being archived into a permanent storage
-    archived: image was successfully archived
-    failed: task execution returned error
+
+  ```
+  created: image was created by submission dispatcher
+  downloading: image is being downloaded by input downloader from nasa repository
+  downloaded : image was downloaded by input downloader
+  preprocessing: image is being pre processed by preprocessor 
+  ready: image is ready for process
+  running: image is running in worker node
+  finished: image was successfully processed by worker node
+  archiving: image is being archived into a permanent storage
+  archived: image was successfully archived
+  failed: task execution returned error    
+  ```
   
 ## Install and Deploy
 ### Install Docker CE
