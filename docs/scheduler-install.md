@@ -1,13 +1,5 @@
 # Install and Configure Scheduler
 
-## Specifications
-  In order to install and configure Scheduler, it is necessary to consider which type of scenario this component will be deployed. In our current implementation, we have:
-
-  - **Virtual Machine (recommended specs)**
-    - 1vCPU;
-    - 2GB RAM;
-    - 10GB Disk.
-
 ## Dependencies
 Once raised, VM must have installed PostgreSQL in order to maintain a Catalog working. To install and configure it, follow the steps shown below.
 
