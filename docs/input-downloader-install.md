@@ -17,11 +17,12 @@ Before starting the Input Downloader container, first an NFS server needs to be 
   7. chmod 777 /var/log/sebal-execution/sebal-execution.log
   ```
   
-Now the Input Downloader container image can be pulled, and a container running this image can be started:
+Now the Docker can be started and Input Downloader container image can be pulled, and a container running this image can be started:
 
  ```
-  1. docker pull fogbow/downloader-deploy
-  2. docker run --name input-downloader --privileged -td fogbow/downloader-deploy
+  1. service docker start
+  2. docker pull fogbow/downloader-deploy
+  3. docker run --name input-downloader --privileged -td fogbow/downloader-deploy
   ```
 
 ## Configure Input Downloader Software
