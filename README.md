@@ -17,24 +17,24 @@
   
   Task Field | Description
   ---- | --------------------
-  Task ID: | Task ID created in submission
-  Dataset: | Task LANDSAT type
-  Region: | Task Region
-  Image Date: | Date in which image was captured
-  Download Link: | Image download link from a remote repository
-  State: | Task state in system execution
-  Federation Member: | Federation member that deals with the task
-  Priority: | Processing priority
-  Station ID: | Image's nearest station ID
-  Input Gathering Tag: | Current Inpud Downloader version
-  Input Preprocessing Tag: | Current Pre Processor version
-  Algorithm Execution: | Current Worker algorithm version
-  Archiver Version: | Current Archiver version
-  Blowout Version: | Current Blowout application version
-  Creation Time: | Date of first interation with task in Catalogue
-  Update Time: | Date of last interation with task in Catalogue
-  Status: | Tells if image was purged from database or not
-  Error: | Shows the error message in case of execution failure
+  Task ID | Task ID created in submission
+  Dataset | Task LANDSAT type
+  Region | Task Region
+  Image Date | Date in which image was captured
+  Download Link | Image download link from a remote repository
+  State | Task state in system execution
+  Federation Member | Federation member that deals with the task
+  Priority | Processing priority
+  Station ID | Image's nearest station ID
+  Input Gathering Tag | Current Inpud Downloader version
+  Input Preprocessing Tag | Current Pre Processor version
+  Algorithm Execution | Current Worker algorithm version
+  Archiver Version | Current Archiver version
+  Blowout Version | Current Blowout application version
+  Creation Time | Date of first interation with task in Catalogue
+  Update Time | Date of last interation with task in Catalogue
+  Status | Tells if image was purged from database or not
+  Error | Shows the error message in case of execution failure
   
   For that, SEBAL Engine relies on a centralized database that gets and stores informations about task data and process output so the components can make their decisions.
 
