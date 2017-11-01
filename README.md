@@ -34,7 +34,7 @@
   Creation Time | Date of first interation with task in Catalogue
   Update Time | Date of last interation with task in Catalogue
   Status | Tells if image was purged from database or not
-  Error | Shows the error message in case of execution failure
+  Error Message | Shows the error message in case of execution failure
   
   For that, SEBAL Engine relies on a centralized database that gets and stores informations about task data and process output so the components can make their decisions.
 
