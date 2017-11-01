@@ -124,9 +124,6 @@ With all dependencies set, now it’s time to configure Archiver software before
 
   # Fogbow-cli directory path
   fogbow_cli_path=
-
-  # Fogbow Infrastructure token public key file path
-  infra_fogbow_token_public_key_filepath=
   ```
 
 Once edited, it’s necessary to copy the edited configuration file to running container with
