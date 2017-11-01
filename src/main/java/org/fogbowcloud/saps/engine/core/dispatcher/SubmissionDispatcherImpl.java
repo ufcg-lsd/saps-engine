@@ -164,8 +164,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         while (cal.before(endCal)) {
             try {
                 int startingYear = cal.get(Calendar.YEAR);
-                ArrayList<String> datasets = DatasetUtil
-                        .getSatsInOperationByYear(startingYear);
+                List<String> datasets = DatasetUtil.getSatsInOperationByYear(startingYear);
 
                 for (String dataset : datasets) {
                     int endingYear = endCal.get(Calendar.YEAR);
