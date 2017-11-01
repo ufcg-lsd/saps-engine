@@ -1,7 +1,7 @@
 # Install and Configure Scheduler
 
 ## Dependencies
-Once raised, VM must have installed PostgreSQL in order to maintain a Catalog working. To install and configure it, follow the steps shown below.
+Before starting the Scheduler container, the Catalog database must be created, using the following commands
 
   ```
   1. apt-get update
@@ -34,7 +34,7 @@ After that, configure your timezone and NTP client as shown below.
   12. service postgresql restart
   ```
 
-Once the Catalogue is prepared, install Docker CE in order to deploy Scheduler component. To do this, follow the instructions provided [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/docs/container-install.md).
+Once the Catalogue is prepared, install Docker CE in order to deploy Scheduler component. To do this, follow the instructions provided [here](container-install.md).
 
 After installed, your environment is ready to pull Scheduler’s Docker image.
 
@@ -45,7 +45,7 @@ After installed, your environment is ready to pull Scheduler’s Docker image.
   ```
 
 ## Configure Scheduler Software
-With all dependencies set, now it’s time to configure Scheduler software before starting it. In order to do this, we explain below each configuration from conf file (example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/examples/scheduler.conf.example)).
+With all dependencies set, now it’s time to configure Scheduler software before starting it. In order to do this, we explain below each configuration from conf file (example available [here](../examples/scheduler.conf.example)).
 
   ```
   # Catalogue database URL prefix (ex.: jdbc:postgresql://)
@@ -229,7 +229,7 @@ Once edited, it’s necessary to copy the edited configuration file to running c
 docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine/config
 
 ## Running Scheduler Software
-To run Scheduler software, replace the following variables in saps-engine/bin/start-scheduler (example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/bin/start-scheduler)).
+To run Scheduler software, replace the following variables in saps-engine/bin/start-scheduler (example available [here](../bin/start-scheduler)).
 
   ```
   # SAPS Engine directory path (Usually /home/ubuntu/saps-engine)
