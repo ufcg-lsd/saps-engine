@@ -11,18 +11,18 @@ In order to install and configure Preprocessor, it is necessary to consider whic
 Dependencies
 To run Preprocessor in your environment, it will be needed to install Docker CE. Follow the steps below to install it.
 ```
-**apt-get remove docker docker-engine docker.io**
-**apt-get update**
-**apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual**
-**apt-get update**
-**apt-get install apt-transport-https ca-certificates curl software-properties-common**
-**curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -**
-**apt-key fingerprint 0EBFCD88**
-**add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"**
-**apt-get update**
-**apt-get install docker-ce**
-**apt-cache madison docker-ce**
-**apt-get install docker-ce=<VERSION>**
+apt-get remove docker docker-engine docker.io
+apt-get update
+apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual
+apt-get update
+apt-get install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+apt-key fingerprint 0EBFCD88
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+apt-get update
+apt-get install docker-ce
+apt-cache madison docker-ce
+apt-get install docker-ce=<VERSION>
 ```
 Once raised, VM must have installed NFS client to access the NFS server directory of Input Downloader.
 
