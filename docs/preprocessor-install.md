@@ -18,14 +18,10 @@ Configure your timezone and NTP client as shown below.
   ```
 Install and configure NFS Client Installation in the Host.
 ```
-sudo apt-get update
-sudo apt-get install nfs-common
-# Now create the NFS directory <nfs_directory> mount point as follows:
-sudo mkdir -p /mnt/nfs/home
-# Next we will mount the NFS shared content as shown below:
-mount -t nfs <ip_nfs_server>:<path_nfs_server> /mnt/nfs/home/
-# Crosscheck:
-mount -t nfs
+1. sudo apt-get update
+2. sudo apt-get install nfs-common
+3. sudo mkdir -p <path_local>
+4. mount -t nfs <ip_nfs_server>:<path_nfs_server> <path_local>
 ```
 After installing the NSF client, the environment is ready to pull the image of the Preprocessor component, and start a container that runs this image:
   ```
