@@ -98,7 +98,7 @@ usgs_api_key_period=
   
 -----
 
-### The properties defined in the saps-engine/bin/start-input-downloader configuration file must also be edited appropriately:
+The properties defined in the saps-engine/bin/start-input-downloader configuration file must also be edited appropriately:
 
 
 #### SAPS Engine directory path (Usually /home/ubuntu/saps-engine)
@@ -120,7 +120,7 @@ federation_member=
   ```
   1. docker cp start-input-downloader <container_id>:/home/ubuntu/saps-engine/bin
   ```
-### Finally, type the following command is used to run the Input Downloader:
+### Finally, the following command is used to run the Input Downloader:
   ```
   1. docker exec <container_id> cd /home/ubuntu/saps-engine && bash bin/start-input-downloader &
   ```
