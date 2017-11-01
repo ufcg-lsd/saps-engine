@@ -1,4 +1,9 @@
 # Install and Configure Preprocessor
+
+## Docker repository
+* User: fogbow
+* Repository: preprocessor
+
 ### Dependencies
 Configure your timezone and NTP client as shown below.
   ```
@@ -15,7 +20,7 @@ Configure your timezone and NTP client as shown below.
   11. service ntp restart
   12. service postgresql restart
   ```
-Install and configure NFS Client Installation in the Host
+Install and configure NFS Client Installation in the Host.
 ```
 sudo apt-get update
 sudo apt-get install nfs-common
