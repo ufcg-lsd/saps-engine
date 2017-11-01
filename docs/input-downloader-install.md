@@ -1,9 +1,5 @@
 # Install and Configure Input Downloader
 
-## Docker Image Information
-  - **User:** fogbow
-  - **Repository:** downloader-deploy
-
 ## Dependencies
 Before starting the Input Downloader container, first an NFS server needs to be installed, and configured. It implements the Temporary Storage component. The following steps must be followed:
 	
