@@ -74,9 +74,8 @@
 * [Scheduler](docs/scheduler-install.md)
 * [Archiver](docs/archiver-install.md)
 * [Input Downloader](docs/input-downloader-install.md)
-* [Dispacher](docs/dispacher-install.md)
+* [Dispacher/Dashboard](docs/dispacher-install.md)
 * [Pre Processor](docs/preprocessor-install.md)
-* [Dashboard](docs/dashboard-install.md)
 ### Configuring deploy with keystone token
   To configure SEBAL Engine deploy, is necessary to generate a token that will be used to order resources from **Fogbow**. For that, simply generate a token using the following **fogbow-cli** command:
   
