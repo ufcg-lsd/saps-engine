@@ -261,7 +261,7 @@ Then, it needs to be copied to the container:
   docker cp start-scheduler <container_id>:/home/ubuntu/saps-engine/bin
   ```
 
-Finally, run the scheduler using:
+Finally, run the Scheduler using:
 
   ```
   docker exec -i <container_id> bash -c “cd /home/ubuntu/saps-engine && bash bin/start-scheduler &”
