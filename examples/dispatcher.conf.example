@@ -11,11 +11,12 @@ datastore_password=password
 admin_email=email
 admin_user=user
 admin_password=password
-submission_rest_server_port=port
+submission_rest_server_port=8000
+
+# Container Configuration
+saps_export_path=/local/exports/
 
 ##### USGS Configuration #####
-max_usgs_download_link_requests=10
-max_simultaneous_download=1
 usgs_login_url=https://ers.cr.usgs.gov/login/
 usgs_json_url=https://earthexplorer.usgs.gov/inventory/json
 usgs_username=username
