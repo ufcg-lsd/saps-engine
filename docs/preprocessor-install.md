@@ -9,38 +9,20 @@ In order to install and configure Preprocessor, it is necessary to consider whic
   * 20GB Disk;
 
 Dependencies
+To run Preprocessor in your environment, it will be needed to install Docker CE. Follow the steps below to install it.
 ```
-* apt-get -y update
-* apt-get -y install net-tools
-* apt-get -y install iputils-ping
-* apt-get install -y software-properties-common
-* add-apt-repository ppa:openjdk-r/ppa
-* apt-get -y update
-
-* apt-get install -y build-essential
-* apt-get install -y openjdk-7-jdk
-* * apt-get install -y git
-* apt-get install -y maven
-```
-```
-* cd {workdir}
-* git clone https://github.com/fogbow/fogbow-manager.git
-* cd fogbow-manager
-* mvn install -Dmaven.test.skip=true
-```
-```
-* cd {workdir}
-* git clone https://github.com/fogbow/blowout.git
-* cd blowout
-* git checkout sebal-experiment-resources-fix
-* mvn install -Dmaven.test.skip=true
-```
-```
-* cd {workdir}
-* git clone https://github.com/fogbow/saps-engine.git
-* cd saps-engine
-* git checkout sebal-experiment-resources-fix
-* mvn install -Dmaven.test.skip=true
+**apt-get remove docker docker-engine docker.io**
+**apt-get update**
+**apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual**
+**apt-get update**
+**apt-get install apt-transport-https ca-certificates curl software-properties-common**
+**curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -**
+**apt-key fingerprint 0EBFCD88**
+**add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"**
+**apt-get update**
+**apt-get install docker-ce**
+**apt-cache madison docker-ce**
+**apt-get install docker-ce=<VERSION>**
 ```
 Once raised, VM must have installed NFS client to access the NFS server directory of Input Downloader.
 
@@ -97,7 +79,7 @@ datastore_username=
 # Catalogue database user password
 datastore_password=
 
-# Container Configuration #####
+# Container Configuration
 # Path NFS directory <nfs_directory>
 saps_export_path=
 
@@ -105,8 +87,10 @@ saps_export_path=
 # default : /tmp
 saps_container_linked_path=
 
-# Non Required Configuration ####
+
+# Non Required Configuration
 # Preprocessor Execution interval (ms)
+# default : 60000 ms
 preprocessor_execution_period=
 ```
 
@@ -116,8 +100,8 @@ Once edited, it’s necessary to copy the edited configuration file to running c
 docker cp preprocessor.conf <container_id>:/home/ubuntu/saps-engine/config
 ```
 
-Running Preprocessor Software
-To run Archiver software, replace the following variables in saps-engine/bin/start-preprocessor (example available here). 
+### Running Preprocessor Software
+To run Archiver software, replace the following variables in saps-engine/bin/start-preprocessor example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/bin/start-preprocessor). 
 
 After configured, it’s necessary to copy the edited start-preprocessor file to running container with
 ```
