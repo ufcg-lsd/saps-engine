@@ -96,8 +96,6 @@ The configuration file must be copied to the container:
   ```
   1. docker cp downloader.conf <container_id>:/home/ubuntu/saps-engine/config
   ```
-  
------
 
 The properties defined in the configuration file (example available [here](../examples/downloader.conf.example)) must also be edited appropriately:
 
