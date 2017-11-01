@@ -13,7 +13,7 @@ Before starting the Scheduler container, the Catalog database must be created, u
   7. exit
   8. sed -i 's/peer/md5/g' /etc/postgresql/<installed_version>/main/pg_hba.conf
   9. bash -c 'echo “host    all             all             0.0.0.0/0               md5” >> /etc/postgresql/<installed_version>/main/pg_hba.conf'
-  10. Add “listen_addresses = '*'” into /etc/postgresql/<installed_version>/main/postgresql.conf
+  10. sudo sed -i "$ a\listen_addresses = '*'" /etc/postgresql/<installed_version>/main/postgresql.conf
   11. service postgresql restart
   ```
 
