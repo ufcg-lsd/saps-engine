@@ -40,3 +40,70 @@ Once raised, the VM must contain all the necessary dependencies. In order to do 
     # cd saps-engine
     # mvn install -Dmaven.test.skip=true
     # cd ..
+
+    
+#### Configure Dispatcher Software
+With all dependencies set, now it’s time to configure Preprocessor software before starting it. In order to do this, we explain below each configuration from conf file example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/examples/dispatcher.conf.example).
+
+##### Image Datastore Configuration
+```
+# Catalogue database URL prefix (ex.: jdbc:postgresql://)
+datastore_url_prefix=
+
+# Catalogue database ip
+datastore_ip=
+
+# Catalogue database port
+datastore_port=
+
+# Catalogue database name
+datastore_name=
+
+# Catalogue database driver
+datastore_driver=
+
+# Catalogue database user name
+datastore_username=
+
+# Catalogue database user password
+datastore_password=
+```
+
+##### Restlet Configuration
+```
+# Admin email
+admin_email=
+
+# Admin username
+admin_user=
+
+# Admin password
+admin_password=
+
+# Submission Restlet port
+submission_rest_server_port=
+```
+
+##### Container Configuration
+```
+# Path NFS directory <nfs_directory>
+saps_export_path=
+```
+
+##### USGS Configuration
+```
+# USGS login URL
+usgs_login_url=
+
+# USGS API URL
+usgs_json_url=
+
+# USGS username
+usgs_username=
+
+# USGS password
+usgs_password=
+
+# Period to refresh USGS’ API key
+usgs_api_key_period=
+```
