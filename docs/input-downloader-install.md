@@ -121,7 +121,7 @@ federation_member=
 
 ### Then, the script start-archiver file must be copied to the container: 
   ```
-  1.docker cp start-input-downloader <container_id>:/home/ubuntu/saps-engine/bin
+  1. docker cp start-input-downloader <container_id>:/home/ubuntu/saps-engine/bin
   ```
 ### Finally, type the following command is used to run the Input Downloader:
   ```
