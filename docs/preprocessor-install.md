@@ -3,10 +3,10 @@
 ## Specifications
 In order to install and configure Preprocessor, it is necessary to consider which type of scenario this component will be deployed. In our current implementation, we have:
 
-### Virtual Machine (recommended specs)
-* 2vCPU;
-* 4GB RAM;
-* 20GB Disk;
+* Virtual Machine (recommended specs)
+  * 2vCPU;
+  * 4GB RAM;
+  * 20GB Disk;
 
 Dependencies
 ```
