@@ -11,49 +11,6 @@
   - **Worker Node**: Receives a task from **Scheduler** and executes it. The execution consists in perform an image processing and store data in the NFS Server at the end of it.
   - **Archiver**: Search at **Task Catalogue** for tasks in "finished" (processed by a **Worker Node**) state and transfer all task data from FTP Server to a permanent storage. After that, **Input Downloader** is able to detect if the task was archived, so it can remove all task files from its own local repository.
 
-## How to use it?
-### Submitting Tasks
-  A submission, which consists in a pool of tasks, is created when **Task Catalogue** is called passing two points in the world map for image search, which are the upper right latitude, upper right longitude, lower left latitude and lower left longitude, a range of years for which the images were captured by the LANDSAT series and the chosen version for: **Input Downloader**, **Pre Processor** and **Worker Node**.
-  
-  Task Field | Description
-  ---- | --------------------
-  Task ID | Task ID created in submission
-  Dataset | Task LANDSAT type
-  Region | Task Region
-  Image Date | Date in which image was captured
-  Download Link | Image download link from a remote repository
-  State | Task state in system execution
-  Federation Member | Federation member that deals with the task
-  Priority | Processing priority
-  Station ID | Image's nearest station ID
-  Input Gathering Tag | Current Inpud Downloader version
-  Input Preprocessing Tag | Current Pre Processor version
-  Algorithm Execution | Current Worker algorithm version
-  Archiver Version | Current Archiver version
-  Blowout Version | Current Blowout application version
-  Creation Time | Date of first interation with task in Catalogue
-  Update Time | Date of last interation with task in Catalogue
-  Status | Tells if image was purged from database or not
-  Error Message | Shows the error message in case of execution failure
-  
-  For that, SEBAL Engine relies on a centralized database that gets and stores informations about task data and process output so the components can make their decisions.
-
-#### Task States
-  While running SEBAL Engine application, each image might be in several different states. The image state will show in which phase exactly the execution is.
-
-  ```
-  created: image was created by submission dispatcher
-  downloading: image is being downloaded by input downloader from nasa repository
-  downloaded : image was downloaded by input downloader
-  preprocessing: image is being pre processed by preprocessor 
-  ready: image is ready for process
-  running: image is running in worker node
-  finished: image was successfully processed by worker node
-  archiving: image is being archived into a permanent storage
-  archived: image was successfully archived
-  failed: task execution returned error    
-  ```
-  
 ## Install and Deploy
 ### Install Docker CE
 SAPS componentes are deployed as Docker containers. Thus, before proper installing them, Docker needs to be installed in the virtual machines provisioned to run the SAPS service. 
