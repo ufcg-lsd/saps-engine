@@ -125,35 +125,8 @@ With all dependencies set, now it’s time to configure Archiver software before
   # Fogbow-cli directory path
   fogbow_cli_path=
 
-  # LDAP token update plugin
-  infra_fogbow_token_update_plugin=
-
-  # LDAP authorization URL
-  fogbow.ldap.auth.url=
-
-  # LDAP user name
-  fogbow.ldap.username=
-
-  # LDAP user password
-  fogbow.ldap.password=
-
-  # LDAP base
-  fogbow.ldap.base=
-
-  # LDAP encrypt type
-  fogbow.ldap.encrypt.type=
-
-  # LDAP private key
-  fogbow.ldap.private.key=
-
-  # LDAP public key
-  fogbow.ldap.public.key=
-
   # Fogbow Infrastructure token public key file path
   infra_fogbow_token_public_key_filepath=
-
-  # Fogbow Infrastructure manager base URL
-  infra_fogbow_manager_base_url=
   ```
 
 Once edited, it’s necessary to copy the edited configuration file to running container with
@@ -183,12 +156,6 @@ To run Archiver software, replace the following variables in saps-engine/bin/sta
 
   # Debug port
   debug_port=
-
-  # Scheduler Catalogue ip
-  scheduler_ip=
-
-  # Scheduler Catalogue port
-  scheduler_db_port=
   ```
 
 After configured, it’s necessary to copy the edited start-archiver file to running container with
