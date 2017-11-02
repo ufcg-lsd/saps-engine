@@ -123,7 +123,7 @@ Once edited, the configuration file needs to be copied to the container:
   docker cp archiver.conf <container_id>:/home/ubuntu/saps-engine/config
   ```
 
-## Running Archiver Software
+## Run
 Before running the Archiver, the saps-engine/bin/start-archiver configuration file (example available [here](../bin/start-archiver)) also needs to be edited.
 
   ```
