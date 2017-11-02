@@ -42,7 +42,7 @@ After installed, your environment is ready to pull Scheduler’s Docker image.
   3. container_id=$(docker ps | grep  “fogbow/scheduler" | awk '{print $1}')
   ```
 
-## Configure Scheduler Software
+## Configure
 Before starting the service, the Scheduler configuration file (example available [here](../examples/scheduler.conf.example)) needs to be edited to customize the behavior of the Scheduler component. We show below the properties found in the configuration file, and the values assigned to them
 
   ```
@@ -228,7 +228,7 @@ Once the configuration file has been appropriately customized, it needs to be co
   docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine/config
   ```
 
-## Running Scheduler Software
+## Run
 The script used to start the Scheduler (example available [here](../bin/start-scheduler)) also needs to be edited accordingly:
 
   ```
