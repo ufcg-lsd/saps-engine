@@ -23,7 +23,7 @@ Now the Docker can be started and Input Downloader container image can be pulled
 
 With all software deployed, the Input Downloader can be customized by editing its configuration file, as shown below:
 
-## Configure Input Downloader Software
+## Configure
 With all software deployed, the Input Downloader can be customized by editing its configuration file, as shown below: 
 
   ```
