@@ -25,7 +25,7 @@ After this, the Docker image of the Archiver component can be pulled, and a cont
   3. container_id=$(docker ps | grep “fogbow/archiver" | awk '{print $1}')
   ```
 
-## Configure Archiver Software
+## Configure
 The Archiver component can also be customized through its configuration file (example available [here](../examples/archiver.conf.example)):
 
   ```
