@@ -29,7 +29,7 @@ After installing the NSF client, the environment is ready to pull the image of t
   2. docker run -td -v <nfs_directory>:<container_dir> <docker_user>/<docker_repository>:<docker_repository_tag>
   3. container_id=$(docker ps | grep  “fogbow/preprocessor" | awk '{print $1}')
   ```
-### Configure Preprocessor Software
+### Configure
 The configuration file of the Preprocessor component must be edited to customize its behavior:
 ```
 # Catalogue database URL prefix (ex.: jdbc:postgresql://)
