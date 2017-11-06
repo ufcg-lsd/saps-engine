@@ -1,15 +1,7 @@
 # Install and Configure Scheduler
 
-## Specifications
-  In order to install and configure Scheduler, it is necessary to consider which type of scenario this component will be deployed. In our current implementation, we have:
-
-  - **Virtual Machine (recommended specs)**
-    - 1vCPU;
-    - 2GB RAM;
-    - 10GB Disk.
-
 ## Dependencies
-Once raised, VM must have installed PostgreSQL in order to maintain a Catalog working. To install and configure it, follow the steps shown below.
+Before starting the Scheduler container, the Catalog database must be created, using the following commands
 
   ```
   1. apt-get update
@@ -21,11 +13,11 @@ Once raised, VM must have installed PostgreSQL in order to maintain a Catalog wo
   7. exit
   8. sed -i 's/peer/md5/g' /etc/postgresql/<installed_version>/main/pg_hba.conf
   9. bash -c 'echo “host    all             all             0.0.0.0/0               md5” >> /etc/postgresql/<installed_version>/main/pg_hba.conf'
-  10. Add “listen_addresses = '*'” into /etc/postgresql/<installed_version>/main/postgresql.conf
-service postgresql restart
+  10. sudo sed -i "$ a\listen_addresses = '*'" /etc/postgresql/<installed_version>/main/postgresql.conf
+  11. service postgresql restart
   ```
 
-After that, configure your timezone and NTP client as shown below.
+After that, configure the timezone and NTP client as shown below.
 
   ```
   1. bash -c ‘echo "America/Recife" > /etc/timezone’
@@ -42,33 +34,16 @@ After that, configure your timezone and NTP client as shown below.
   12. service postgresql restart
   ```
 
-Once the Catalogue is prepared, install Docker CE in order to deploy Scheduler component. To do this, follow the steps bellow.
-
-  ```
-  1. apt-get remove docker docker-engine docker.io
-  2. apt-get update
-  3. apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual
-  4. apt-get update
-  5. apt-get install apt-transport-https ca-certificates curl software-properties-common
-  6. curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  7. apt-key fingerprint 0EBFCD88
-  8. add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  9. apt-get update
-  10. apt-get install docker-ce
-  11. apt-cache madison docker-ce
-  12. apt-get install docker-ce=<VERSION>
-  ```
-
 After installed, your environment is ready to pull Scheduler’s Docker image.
 
   ```
-  1. docker pull <docker_user>/<docker_repository>:<docker_repository_tag>
-  2. docker run -td -v <local_database_dir>:<container_database_dir> <docker_user>/<docker_repository>:<docker_repository_tag>
-  3. container_id=$(docker ps | grep  “<docker_user>/<docker_repository>:<docker_repository_tag>" | awk '{print $1}')
+  1. docker pull fogbow/scheduler
+  2. docker run -td -v <local_database_dir>:<container_database_dir> fogbow/scheduler
+  3. container_id=$(docker ps | grep  “fogbow/scheduler" | awk '{print $1}')
   ```
 
-## Configure Scheduler Software
-With all dependencies set, now it’s time to configure Scheduler software before starting it. In order to do this, we explain below each configuration from conf file (example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/examples/scheduler.conf.example)).
+## Configure
+Before starting the service, the Scheduler configuration file (example available [here](../examples/scheduler.conf.example)) needs to be edited to customize the behavior of the Scheduler component. We show below the properties found in the configuration file, and the values assigned to them
 
   ```
   # Catalogue database URL prefix (ex.: jdbc:postgresql://)
@@ -247,12 +222,14 @@ To configure Keystone authentication:
   auth_token_prop_keystone_auth_url=
   ```
 
-Once edited, it’s necessary to copy the edited configuration file to running container with
+Once the configuration file has been appropriately customized, it needs to be copied to the container:
 
-docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine/config
+  ```
+  docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine/config
+  ```
 
-## Running Scheduler Software
-To run Scheduler software, replace the following variables in saps-engine/bin/start-scheduler (example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/bin/start-scheduler)).
+## Run
+The script used to start the Scheduler (example available [here](../bin/start-scheduler)) also needs to be edited accordingly:
 
   ```
   # SAPS Engine directory path (Usually /home/ubuntu/saps-engine)
@@ -274,13 +251,13 @@ To run Scheduler software, replace the following variables in saps-engine/bin/st
   debug_port=
   ```
 
-After configured, it’s necessary to copy the edited start-scheduler file to running container with
+Then, it needs to be copied to the container:
 
   ```
   docker cp start-scheduler <container_id>:/home/ubuntu/saps-engine/bin
   ```
 
-Finally, it is possible to run Scheduler using
+Finally, run the Scheduler using:
 
   ```
   docker exec -i <container_id> bash -c “cd /home/ubuntu/saps-engine && bash bin/start-scheduler &”
