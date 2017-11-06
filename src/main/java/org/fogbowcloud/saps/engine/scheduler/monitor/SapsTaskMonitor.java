@@ -30,31 +30,31 @@ public class SapsTaskMonitor extends TaskMonitor {
 	public void procMon() {
 		for (TaskProcess tp : getRunningProcesses()) {
 			if (tp.getStatus().equals(TaskState.RUNNING)) {
-				imageToRunning(tp);
+				imageTaskToRunning(tp);
 			}
 			if (tp.getStatus().equals(TaskState.FINNISHED)) {
-				imageToFinished(tp);
+				imageTaskToFinished(tp);
 			}
 			if (tp.getStatus().equals(TaskState.TIMEDOUT)) {
-				imageToTimedout(tp);
+				imageTaskToTimedout(tp);
 			}
 			if (tp.getStatus().equals(TaskState.FAILED)) {
-				imageToFailed(tp);
+				imageTaskToFailed(tp);
 			}
 		}
 	}
 
-	protected void imageToRunning(TaskProcess tp) {
+	protected void imageTaskToRunning(TaskProcess tp) {
 		try {
-			updateImageToRunning(tp);
+			updateImageTaskToRunning(tp);
 		} catch (SQLException e) {
 			LOGGER.error("Error while updating image/task state", e);
 		}
 	}
 
-	protected void imageToFinished(TaskProcess tp) {
+	protected void imageTaskToFinished(TaskProcess tp) {
 		try {
-			updateImageToFinished(tp);
+			updateImageTaskToFinished(tp);
 			Task task = getTaskById(tp.getTaskId());
 			task.finish();
 			getRunningTasks().remove(task);
@@ -66,9 +66,9 @@ public class SapsTaskMonitor extends TaskMonitor {
 		}
 	}
 
-	protected void imageToTimedout(TaskProcess tp) {
+	protected void imageTaskToTimedout(TaskProcess tp) {
 		try {
-			updateImageToQueued(tp);
+			updateImageTaskToReady(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
 			if (tp.getResource() != null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
@@ -78,10 +78,11 @@ public class SapsTaskMonitor extends TaskMonitor {
 		}
 	}
 
-	protected void imageToFailed(TaskProcess tp) {
+	protected void imageTaskToFailed(TaskProcess tp) {
 		try {
-			updateImageToError(tp);
+			updateImageTaskToFailed(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
+			getBlowoutPool().removeTask(getBlowoutPool().getTaskById(tp.getTaskId()));
 			if (tp.getResource() != null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
 			}
@@ -90,54 +91,54 @@ public class SapsTaskMonitor extends TaskMonitor {
 		}
 	}
 
-	protected void updateImageToRunning(TaskProcess tp) throws SQLException {
-		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
-		if (!imageData.getState().equals(ImageTaskState.RUNNING)) {
-			imageData.setState(ImageTaskState.RUNNING);
-			imageStore.updateImageTask(imageData);
+	protected void updateImageTaskToRunning(TaskProcess tp) throws SQLException {
+		ImageTask imageTask = this.imageStore.getTask(getImageTaskFromTaskProcess(tp));
+		if (!imageTask.getState().equals(ImageTaskState.RUNNING)) {
+			imageTask.setState(ImageTaskState.RUNNING);
+			imageStore.updateImageTask(imageTask);
 
 			// Inserting update time into stateStamps table in DB
-			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
-			imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-					imageData.getUpdateTime());
+			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+			imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+					imageTask.getUpdateTime());
 		}
 	}
 
-	protected void updateImageToFinished(TaskProcess tp) throws SQLException {
-		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
-		imageData.setState(ImageTaskState.FINISHED);
-		imageStore.updateImageTask(imageData);
+	protected void updateImageTaskToFinished(TaskProcess tp) throws SQLException {
+		ImageTask imageTask = this.imageStore.getTask(getImageTaskFromTaskProcess(tp));
+		imageTask.setState(ImageTaskState.FINISHED);
+		imageStore.updateImageTask(imageTask);
 
 		// Inserting update time into stateStamps table in DB
-		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
-		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
+		imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+		imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+				imageTask.getUpdateTime());
 	}
 
-	protected void updateImageToError(TaskProcess tp) throws SQLException {
-		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
-		imageData.setState(ImageTaskState.FAILED);
-		imageData.setImageError("Image " + getImageFromTaskProcess(tp) + " process failed");
-		imageStore.updateImageTask(imageData);
+	protected void updateImageTaskToFailed(TaskProcess tp) throws SQLException {
+		ImageTask imageTask = this.imageStore.getTask(getImageTaskFromTaskProcess(tp));
+		imageTask.setState(ImageTaskState.FAILED);
+		imageTask.setError("ImageTask " + getImageTaskFromTaskProcess(tp) + " process failed");
+		imageStore.updateImageTask(imageTask);
 
 		// Inserting update time into stateStamps table in DB
-		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
-		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
+		imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+		imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+				imageTask.getUpdateTime());
 	}
 
-	protected void updateImageToQueued(TaskProcess tp) throws SQLException {
-		ImageTask imageData = this.imageStore.getTask(getImageFromTaskProcess(tp));
-		imageData.setState(ImageTaskState.READY);
-		imageStore.updateImageTask(imageData);
+	protected void updateImageTaskToReady(TaskProcess tp) throws SQLException {
+		ImageTask imageTask = this.imageStore.getTask(getImageTaskFromTaskProcess(tp));
+		imageTask.setState(ImageTaskState.READY);
+		imageStore.updateImageTask(imageTask);
 
 		// Inserting update time into stateStamps table in DB
-		imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
-		imageStore.addStateStamp(imageData.getName(), imageData.getState(),
-				imageData.getUpdateTime());
+		imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+		imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+				imageTask.getUpdateTime());
 	}
 
-	public String getImageFromTaskProcess(TaskProcess tp) {
+	public String getImageTaskFromTaskProcess(TaskProcess tp) {
 		return getBlowoutPool().getTaskById(tp.getTaskId()).getMetadata(SapsTask.METADATA_TASK_ID);
 	}
 }

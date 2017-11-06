@@ -1,0 +1,30 @@
+##### Image Datastore Configuration #####
+datastore_url_prefix=jdbc:postgresql://
+datastore_ip=localhost
+datastore_port=5432
+datastore_name=database
+datastore_driver=org.postgresql.Driver
+datastore_username=user
+datastore_password=password
+
+##### USGS Configuration #####
+max_usgs_download_link_requests=10
+max_simultaneous_download=1
+usgs_login_url=https://ers.cr.usgs.gov/login/
+usgs_json_url=https://earthexplorer.usgs.gov/inventory/json
+usgs_username=username
+usgs_password=password
+usgs_api_key_period=300000
+
+##### Input Downloader Configuration #####
+default_volume_size=100
+default_downloader_period=600000
+
+saps_export_path=/local/exports
+saps_container_linked_path=/home/ubuntu/results
+
+max_tasks_to_download=33
+max_download_attempts=2
+container_script=/home/ubuntu/run.sh
+
+execution_monitor_period=60000

@@ -22,31 +22,37 @@ public class ArchiverHelper {
 	protected static final int NUMBER_OF_RESULT_FILES = 7;
 
 	public static final Logger LOGGER = Logger.getLogger(ArchiverHelper.class);
-	
-	protected void updatePendingMapAndDB(ImageTask imageData, DB pendingImageFetchDB,
-			ConcurrentMap<String, ImageTask> pendingImageFetchMap) {
-		LOGGER.debug("Adding image " + imageData + " to pending database");
-		pendingImageFetchMap.put(imageData.getName(), imageData);
-		pendingImageFetchDB.commit();
+
+	protected void updatePendingMapAndDB(ImageTask imageTask, DB pendingTaskArchiveDB,
+			ConcurrentMap<String, ImageTask> pendingTaskArchiveMap) {
+		LOGGER.debug("Adding task " + imageTask + " to pending database");
+		pendingTaskArchiveMap.put(imageTask.getTaskId(), imageTask);
+		pendingTaskArchiveDB.commit();
 	}
-	
-	protected void removeImageFromPendingMap(ImageTask imageData, DB pendingImageFetchDB,
-			ConcurrentMap<String, ImageTask> pendingImageFetchMap) {		
-		LOGGER.info("Removing image " + imageData + " from pending map.");
-		pendingImageFetchMap.remove(imageData.getName());
-		pendingImageFetchDB.commit();
-		
-		if(pendingImageFetchMap.containsKey(imageData.getName())) {
-			LOGGER.debug("There is still register for image " + imageData + " into Map DB");
+
+	protected void removeTaskFromPendingMap(ImageTask imageTask, DB pendingTaskArchiveDB,
+			ConcurrentMap<String, ImageTask> pendingTaskArchiveMap) {
+		LOGGER.info("Removing task " + imageTask + " from pending map.");
+		pendingTaskArchiveMap.remove(imageTask.getTaskId());
+		pendingTaskArchiveDB.commit();
+
+		if (pendingTaskArchiveMap.containsKey(imageTask.getTaskId())) {
+			LOGGER.debug("There is still register for task " + imageTask + " into Map DB");
 		}
 	}
 
-	protected String getStationId(ImageTask imageData, Properties properties) throws IOException {
-		String stationFilePath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ "/results/" + imageData.getCollectionTierName() + "/" + imageData.getCollectionTierName() 
-				+ "_station.csv";
-		File stationFile = new File(stationFilePath);
+	protected String getStationId(ImageTask imageTask, Properties properties) throws IOException {
+		String localTaskInputPath = getLocalTaskInputPath(imageTask, properties);
+		File localTaskInputDir = new File(localTaskInputPath);
 
+		String stationFilePath = null;
+		for (File file : localTaskInputDir.listFiles()) {
+			if (file.getName().endsWith("_station.csv")) {
+				stationFilePath = file.getName();
+			}
+		}
+
+		File stationFile = new File(stationFilePath);
 		if (stationFile.exists() && stationFile.isFile()) {
 			BufferedReader reader = new BufferedReader(new FileReader(stationFile));
 			String lineOne = reader.readLine();
@@ -56,89 +62,106 @@ public class ArchiverHelper {
 			reader.close();
 			return stationId;
 		} else {
-			LOGGER.debug("Station file for image " + imageData.getCollectionTierName()
+			LOGGER.debug("Station file for task " + imageTask.getTaskId()
 					+ " does not exist or is not a file!");
 			return null;
 		}
 	}
-	
-	protected String getRemoteImageInputsPath(final ImageTask imageData, Properties properties) {
+
+	protected String getRemoteTaskInputPath(final ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "data" + File.separator + "input";
+	}
+
+	protected String getLocalTaskInputPath(ImageTask imageTask, Properties properties) {
 		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ File.separator + "images" + File.separator + imageData.getCollectionTierName();
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "input";
 	}
 	
-	protected String getLocalImageInputsPath(ImageTask imageData, Properties properties) {
-		String localImageInputsPath = properties
-				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ File.separator
-				+ "images" + File.separator + imageData.getCollectionTierName();
-		return localImageInputsPath;
+	protected String getRemoteTaskPreProcessPath(final ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "preprocessing";
 	}
-
-	protected String getRemoteImageResultsPath(final ImageTask imageData, Properties properties) {
+	
+	protected String getLocalTaskPreProcessPath(ImageTask imageTask, Properties properties) {
 		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ "/results/" + imageData.getCollectionTierName();
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "preprocessing";
+	}
+	
+	protected String getRemoteTaskMetadataPath(final ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "metadata";
+	}
+	
+	protected String getLocalTaskMetadataPath(ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
 	}
 
-	protected String getLocalImageResultsPath(ImageTask imageData, Properties properties) {
-		String localImageResultsPath = properties
-				.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
-				+ File.separator
-				+ "results" + File.separator + imageData.getCollectionTierName();
-		return localImageResultsPath;
+	protected String getRemoteTaskOutputPath(final ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "data" + File.separator + "output";
 	}
 
-	// TODO: see how to deal with this exception
-	protected boolean isImageCorrupted(ImageTask imageData,
-			ConcurrentMap<String, ImageTask> pendingImageFetchMap, ImageDataStore imageStore)
+	protected String getLocalTaskOutputPath(ImageTask imageTask, Properties properties) {
+		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "output";
+	}
+
+	protected boolean isTaskFailed(ImageTask imageTask,
+			ConcurrentMap<String, ImageTask> pendingTaskArchiveMap, ImageDataStore imageStore)
 			throws SQLException {
-		if (imageData.getState().equals(ImageTaskState.CORRUPTED)) {
-			pendingImageFetchMap.remove(imageData.getName());
-			imageStore.updateImageTask(imageData);
-			imageData.setUpdateTime(imageStore.getTask(imageData.getName()).getUpdateTime());
+		if (imageTask.getState().equals(ImageTaskState.FAILED)) {
+			pendingTaskArchiveMap.remove(imageTask.getTaskId());
+			imageStore.updateImageTask(imageTask);
+			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 			return true;
 		}
 		return false;
 	}
-	
-	protected boolean isImageRolledBack(ImageTask imageData) {
-		if(imageData.getState().equals(ImageTaskState.FINISHED)){
+
+	protected boolean isTaskRolledBack(ImageTask imageTask) {
+		if (imageTask.getState().equals(ImageTaskState.FINISHED)) {
 			return true;
 		}
 		return false;
 	}
-	
-	protected boolean resultsChecksumOK(ImageTask imageData, File localImageResultsDir)
+
+	protected boolean resultsChecksumOK(ImageTask imageTask, File localTaskOutputDir)
 			throws Exception {
-		LOGGER.info("Checksum of " + imageData + " result files");
-		if (CheckSumMD5ForFile.isFileCorrupted(localImageResultsDir)) {
+		LOGGER.info("Checksum of " + imageTask + " output files");
+		if (CheckSumMD5ForFile.isFileCorrupted(localTaskOutputDir)) {
 			return false;
 		}
-		
+
 		return true;
 	}
-	
-	protected void createTimeoutAndMaxTriesFiles(File localImageResultsDir) {
+
+	protected void createTimeoutAndMaxTriesFiles(File localTaskOutputDir) {
 		LOGGER.debug("Generating timeout and max tries files");
 		ProcessBuilder builder;
 		Process p;
-		
-		for(File file : localImageResultsDir.listFiles()) {
-			if (file.getName().startsWith("temp-worker-run-") && file.getName().endsWith(".out")) {				
+
+		for (File file : localTaskOutputDir.listFiles()) {
+			if (file.getName().startsWith("temp-worker-run-") && file.getName().endsWith(".out")) {
 				try {
 					builder = new ProcessBuilder("/bin/bash", "scripts/create_timeout_file.sh",
 							file.getAbsolutePath());
 					p = builder.start();
 					p.waitFor();
-					
+
 					builder = new ProcessBuilder("/bin/bash", "scripts/create_max_tries_file.sh",
 							file.getAbsolutePath());
 					p = builder.start();
 					p.waitFor();
 				} catch (Exception e) {
 					LOGGER.debug("Error while generating timeout and max tries files", e);
-				}				
+				}
 			}
-		}	
+		}
 	}
 }

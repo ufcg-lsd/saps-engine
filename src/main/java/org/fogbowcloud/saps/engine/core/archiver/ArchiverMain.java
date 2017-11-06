@@ -10,12 +10,6 @@ public class ArchiverMain {
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		String imageStoreIP = args[1];
-		String imageStorePort = args[2];
-		
-		properties.put("datastore_ip", imageStoreIP);
-		properties.put("datastore_port", imageStorePort);
-		
 		Archiver Fetcher = new Archiver(properties);
 		Fetcher.exec();
 	}

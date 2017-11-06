@@ -86,7 +86,7 @@ public class WardenImpl implements Warden {
 				+ " ARCHIVED";
 
 		String message = "The task " + context.getTaskId() + " was ARCHIVED into swift.\n"
-				+ context.formatedToString();
+				+ context.toString();
 
 		try {
 			GoogleMail.Send(properties.getProperty(NOREPLY_EMAIL),

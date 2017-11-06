@@ -15,7 +15,6 @@ import org.fogbowcloud.blowout.core.BlowoutController;
 import org.fogbowcloud.blowout.core.exception.BlowoutException;
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
-import org.fogbowcloud.blowout.core.util.Constants;
 import org.fogbowcloud.blowout.core.util.ManagerTimer;
 import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
@@ -26,6 +25,8 @@ import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.monitor.SapsTaskMonitor;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
 
 public class SapsController extends BlowoutController {
 
@@ -109,7 +110,7 @@ public class SapsController extends BlowoutController {
 			@Override
 			public void run() {
 				try {
-					addSapsTasks(properties, workerSpec, ImageTaskState.DOWNLOADED);
+					addSapsTasks(properties, workerSpec, ImageTaskState.PREPROCESSED);
 				} catch (Exception e) {
 					LOGGER.error("Error while adding tasks", e);
 				}
@@ -142,7 +143,7 @@ public class SapsController extends BlowoutController {
 				LOGGER.debug("specWithFederation " + specWithFederation.toString());
 
 				if (ImageTaskState.READY.equals(imageTaskState)
-						|| ImageTaskState.DOWNLOADED.equals(imageTaskState)) {
+						|| ImageTaskState.PREPROCESSED.equals(imageTaskState)) {
 					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation);
 					Map<String, String> nfsConfig = imageStore
 							.getFederationNFSConfig(imageTask.getFederationMember());
@@ -155,12 +156,16 @@ public class SapsController extends BlowoutController {
 						it.remove(); // avoids a ConcurrentModificationException
 					}
 
-					LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
+					// Getting Worker docker repository and tag
+					ExecutionScriptTag workerDockerInfo = ExecutionScriptTagUtil
+							.getExecutionScritpTag(imageTask.getAlgorithmExecutionTag(),
+									ExecutionScriptTagUtil.WORKER);
 
+					LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
 					taskImpl = SapsTask.createSapsTask(taskImpl, properties, specWithFederation,
 							imageTask.getFederationMember(), nfsServerIP, nfsServerPort,
-							imageTask.getWorkerContainerRepository(),
-							imageTask.getWorkerContainerTag());
+							workerDockerInfo.getDockerRepository(),
+							workerDockerInfo.getDockerTag());
 
 					imageTask.setState(ImageTaskState.READY);
 					imageTask.setBlowoutVersion(getBlowoutVersion(properties));
@@ -240,7 +245,7 @@ public class SapsController extends BlowoutController {
 		try {
 			specs = Specification.getSpecificationsFromJSonFile(workerSpecFile);
 			if (specs != null && !specs.isEmpty()) {
-				return specs.get(Constants.LIST_ARRAY_FIRST_ELEMENT);
+				return specs.get(0);
 			}
 			return null;
 		} catch (IOException e) {
