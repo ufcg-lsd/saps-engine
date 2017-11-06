@@ -22,3 +22,5 @@ usgs_json_url=https://earthexplorer.usgs.gov/inventory/json
 usgs_username=username
 usgs_password=password
 usgs_api_key_period=300000
+
+saps_export_path=/local/exports
