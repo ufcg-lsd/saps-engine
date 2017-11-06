@@ -1,0 +1,15 @@
+##### Image Datastore Configuration #####
+datastore_url_prefix=jdbc:postgresql://
+datastore_ip=localhost
+datastore_port=5432
+datastore_name=database
+datastore_driver=org.postgresql.Driver
+datastore_username=user
+datastore_password=password
+
+##### Container Configuration #####
+saps_export_path=/local/exports/
+saps_container_linked_path=/home/ubuntu/
+
+##### Non Required Configuration #####
+preprocessor_execution_period=60000

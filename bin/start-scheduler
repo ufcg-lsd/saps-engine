@@ -1,22 +1,22 @@
 #!/bin/bash
 
-sebal_engine_dir_path=/home/ubuntu/sebal-engine
-sebal_engine_conf_path=$sebal_engine_dir_path/config/sebal.conf
-sebal_engine_log_properties_path=$sebal_engine_dir_path/config/log4j.properties
-sebal_engine_target_path=target/sebal-scheduler-0.0.1-SNAPSHOT.jar:target/lib
-library_path=/usr/local/lib/
-debug_port=4000
+saps_engine_dir_path=
+saps_engine_conf_path=
+saps_engine_log_properties_path=
+saps_engine_target_path=
+library_path=
+debug_port=
 
-sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$sebal_engine_log_properties_path -Djava.library.path=$library_path -cp $sebal_engine_target_path/* org.fogbowcloud.sebal.engine.scheduler.SebalMain $sebal_engine_conf_path &
+sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.scheduler.SchedulerMain $saps_engine_conf_path &
 
 while [ true ]
 do
-  if (( $(ps -ef | grep -v grep | grep SebalMain | wc -l) > 0 ))
+  if (( $(ps -ef | grep -v grep | grep SchedulerMain | wc -l) > 0 ))
   then
-    echo "Sebal Scheduler is still running"
+    echo "Scheduler is still running"
   else
-    echo "Sebal Scheduler is down. Starting it again..."
-    sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$sebal_engine_log_properties_path -Djava.library.path=$library_path -cp $sebal_engine_target_path/* org.fogbowcloud.sebal.engine.scheduler.SebalMain $sebal_engine_conf_path &
+    echo "Scheduler is down. Starting it again..."
+    sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.scheduler.SchedulerMain $saps_engine_conf_path &
   fi
 
   sleep 10m
