@@ -57,9 +57,7 @@ To run the saps-dashboard, change the
     # cd saps-dashboard
     # node app.js
 
-#### Configure Dispatcher Software
-With all dependencies set, now it’s time to configure Preprocessor software before starting it. In order to do this, we explain below each configuration from conf file example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/examples/dispatcher.conf.example).
-
+#### Additional details on how to configure the Dispatcher
 
 ##### Image Datastore Configuration
 ```
