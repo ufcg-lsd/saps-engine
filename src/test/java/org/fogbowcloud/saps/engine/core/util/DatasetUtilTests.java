@@ -40,6 +40,30 @@ public class DatasetUtilTests {
                 SapsPropertiesConstants.DATASET_LC8_TYPE);
         actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(Integer.MAX_VALUE - 1));
         Assert.assertEquals(expected, actual);
+        
+        expected = new HashSet<String>();
+        actual = new HashSet<String>(DatasetUtil.getSatsInOperationByYear(1980));
+        Assert.assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void getMostRecentDataSetInOperationTest() {
+    	String expected;
+    	String actual;
+    	
+    	expected = SapsPropertiesConstants.DATASET_LC8_TYPE;
+    	actual = DatasetUtil.getMostRecentDataSetInOperation(2013);
+    	Assert.assertEquals(expected, actual);
+    	
+    	expected = SapsPropertiesConstants.DATASET_LE7_TYPE;
+    	actual = DatasetUtil.getMostRecentDataSetInOperation(1999);
+    	Assert.assertEquals(expected, actual);
+    	
+    	expected = SapsPropertiesConstants.DATASET_LT5_TYPE;
+    	actual = DatasetUtil.getMostRecentDataSetInOperation(1984);
+    	Assert.assertEquals(expected, actual);
+    	
+    	Assert.assertNull(DatasetUtil.getMostRecentDataSetInOperation(1980));
     }
 
 }
