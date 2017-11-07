@@ -16,7 +16,7 @@ Once the needed dependencies are installed, download and build saps-dashboard, f
     # git clone -b backend-integration https://github.com/fogbow/saps-dashboard.git
     # cd saps-dashboard
     # npm install
-    # mv node_modules/public
+    # mv node_modules public/
     # cd ..
 
     # git clone -b develop https://github.com/fogbow/fogbow-manager.git
@@ -34,31 +34,9 @@ Once the needed dependencies are installed, download and build saps-dashboard, f
     # mvn install -Dmaven.test.skip=true
     # cd ..
 
-Before starting the service, the dashboard configuration file (example available [here](../examples/dispatcher.conf.example)) needs to be edited to customize the behavior of the scheduler component. We show below some of the most important properties:
+Before starting the dispatcher service, the dashboard configuration file (example available [here](../examples/dispatcher.conf.example)) needs to be edited to customize the behavior of the scheduler component. We show some of the most important properties below:
 
-datastore_ip=
-datastore_port=
-datastore_url_prefix=
-datastore_username=
-datastore_password=
-datastore_driver=
-datastore_name=
-
-admin_email=
-admin_user=
-admin_password=
-submission_rest_server_port=
-
-saps_export_path=
-
-usgs_login_url=
-usgs_json_url=
-usgs_username=
-usgs_password=
-usgs_api_key_period=
-
-
-The value of the property submission_rest_server_port in *dispatcher.conf* should be written on urlSapsService in the file *dashboardApp.js*, e.g.:
+The value of the property **submission_rest_server_port** in *dispatcher.conf* should be the same as the port specified on **urlSapsService** in the file *dashboardApp.js*, e.g.:
 
 dispatcher.conf:
 
@@ -68,15 +46,18 @@ dashboardApp.js:
 
     # "urlSapsService": "http://localhost:8080/"
 
-To run saps-engine, execute the following commands:
+
+To run saps-dispatcher, execute the following commands:
 
     # cd saps-engine
-    # java -
+    # bash scripts/start-dispatcher.sh
 
 To run the saps-dashboard, change the
-    
-#### Configure Dispatcher Software
-With all dependencies set, now it’s time to configure Preprocessor software before starting it. In order to do this, we explain below each configuration from conf file example available [here](https://github.com/fogbow/saps-engine/blob/frontend-integration/examples/dispatcher.conf.example).
+
+    # cd saps-dashboard
+    # node app.js
+
+#### Additional details on how to configure the Dispatcher
 
 ##### Image Datastore Configuration
 ```
