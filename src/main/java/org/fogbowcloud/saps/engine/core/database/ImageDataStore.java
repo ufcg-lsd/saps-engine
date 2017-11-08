@@ -108,4 +108,12 @@ public interface ImageDataStore {
 
 	List<ImageTask> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
 			long processDateEnd) throws SQLException;
+
+	public List<ImageTask> getProcessedImages(
+			String region,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) throws SQLException;
 }

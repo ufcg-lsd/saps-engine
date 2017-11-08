@@ -1340,4 +1340,44 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(removeStatement, connection);
 		}
 	}
+
+	private final String PROCESSED_IMAGES_QUERY = "SELECT * FROM " +
+			IMAGE_TABLE_NAME + " WHERE " +
+			STATE_COL + " = ?, " +
+			REGION_COL + " = ?, " +
+			IMAGE_DATE_COL + " BETWEEN ? AND ?, " +
+			INPUT_PREPROCESSING_TAG + " = ?, " +
+			INPUT_GATHERING_TAG + " = ?, " +
+			ALGORITHM_EXECUTION_TAG + " = ?";
+
+	@Override
+	public List<ImageTask> getProcessedImages(
+			String region,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) throws SQLException {
+		PreparedStatement queryStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			queryStatement = connection.prepareStatement(REMOVE_STATE_SQL);
+			queryStatement.setString(1, ImageTaskState.ARCHIVED.getValue());
+			queryStatement.setString(2, region);
+			queryStatement.setObject(3, initDate);
+			queryStatement.setObject(4, endDate);
+			queryStatement.setString(5, inputPreprocessing);
+			queryStatement.setString(6, inputGathering);
+			queryStatement.setString(7, algorithmExecution);
+			queryStatement.setQueryTimeout(300);
+
+			ResultSet result = queryStatement.executeQuery();
+			return extractImageTaskFrom(result);
+		} finally {
+			close(queryStatement, connection);
+		}
+	}
 }

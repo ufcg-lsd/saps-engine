@@ -92,7 +92,8 @@ public class DatabaseApplication extends Application {
 		router.attach("/users/{userEmail}", UserResource.class);
 		router.attach("/processings", ImageResource.class);
 		router.attach("/images/{imgName}", ImageResource.class);
-		router.attach("/imagesProcessedByRegion", RegionResource.class);
+		router.attach("/regions/details", RegionResource.class);
+		router.attach("/regions/search", RegionResource.class);
 
 		return router;
 	}
@@ -168,5 +169,28 @@ public class DatabaseApplication extends Application {
 
 	public Properties getProperties() {
 		return properties;
-	}	
+	}
+
+	public List<ImageTask> searchProcessedTasks(
+			String lowerLeftLatitude,
+			String lowerLeftLongitude,
+			String upperRightLatitude,
+			String upperRightLongitude,
+			Date initDate,
+			Date endDate,
+			String inputPreprocessing,
+			String inputGathering,
+			String algorithmExecution) {
+		return submissionDispatcher.searchProcessedTasks(
+			lowerLeftLatitude,
+			lowerLeftLongitude,
+			upperRightLatitude,
+			upperRightLongitude,
+			initDate,
+			endDate,
+			inputPreprocessing,
+			inputGathering,
+			algorithmExecution
+		);
+	}
 }
