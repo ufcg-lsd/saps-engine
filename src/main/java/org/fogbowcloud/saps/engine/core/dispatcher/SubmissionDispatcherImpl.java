@@ -257,32 +257,34 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         cal.setTime(initDate);
         int startingYear = cal.get(Calendar.YEAR);
         int endingYear = endCal.get(Calendar.YEAR);
+        Set<String> regions = new HashSet<>();
         for (String dataset: datasets) {
-             Set<String> regions = repository.getRegionsFromArea(
+             regions.addAll(repository.getRegionsFromArea(
                     dataset, startingYear, endingYear, lowerLeftLatitude,
-                    lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
-            for (String region : regions) {
-                List<ImageTask> iTasks = null;
-                try {
-                    iTasks = getImageStore().getProcessedImages(
-                            region,
-                            initDate,
-                            endDate,
-                            inputGathering,
-                            inputPreprocessing,
-                            algorithmExecution
-                    );
+                    lowerLeftLongitude, upperRightLatitude, upperRightLongitude));
 
-                    filteredTasks.addAll(iTasks);
-                } catch (SQLException e) {
-                    String builder = "Failed to load images with configuration:\n" +
+        }
+        for (String region : regions) {
+            List<ImageTask> iTasks = null;
+            try {
+                iTasks = getImageStore().getProcessedImages(
+                        region,
+                        initDate,
+                        endDate,
+                        inputGathering,
+                        inputPreprocessing,
+                        algorithmExecution
+                );
+
+                filteredTasks.addAll(iTasks);
+            } catch (SQLException e) {
+                String builder = "Failed to load images with configuration:\n" +
                         "\tRegion: " + region + "\n" +
                         "\tInterval: " + initDate + " - " + endDate + "\n" +
                         "\tPreprocessing: " + inputPreprocessing + "\n" +
                         "\tGathering: " + inputGathering + "\n" +
                         "\tAlgorithm: " + algorithmExecution + "\n";
-                    LOGGER.error(builder, e);
-                }
+                LOGGER.error(builder, e);
             }
         }
         return filteredTasks;

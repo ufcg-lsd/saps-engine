@@ -208,7 +208,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			String algorithmExecution) throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
 		ImageTask task = new ImageTask(taskId, dataset, region, date, downloadLink,
-				ImageTaskState.CREATED, ImageTask.NON_EXISTENT, priority, ImageTask.NON_EXISTENT,
+				ImageTaskState.ARCHIVED, ImageTask.NON_EXISTENT, priority, ImageTask.NON_EXISTENT,
 				inputGathering, inputPreprocessing, algorithmExecution, ImageTask.NON_EXISTENT,
 				ImageTask.NON_EXISTENT, now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT);
 		addImageTask(task);
@@ -1343,11 +1343,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	private final String PROCESSED_IMAGES_QUERY = "SELECT * FROM " +
 			IMAGE_TABLE_NAME + " WHERE " +
-			STATE_COL + " = ?, " +
-			REGION_COL + " = ?, " +
-			IMAGE_DATE_COL + " BETWEEN ? AND ?, " +
-			INPUT_PREPROCESSING_TAG + " = ?, " +
-			INPUT_GATHERING_TAG + " = ?, " +
+			STATE_COL + " = ? AND " +
+			REGION_COL + " = ? AND " +
+			IMAGE_DATE_COL + " BETWEEN ? AND ? AND " +
+			INPUT_PREPROCESSING_TAG + " = ? AND " +
+			INPUT_GATHERING_TAG + " = ? AND " +
 			ALGORITHM_EXECUTION_TAG + " = ?";
 
 	@Override
@@ -1364,7 +1364,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		try {
 			connection = getConnection();
 
-			queryStatement = connection.prepareStatement(REMOVE_STATE_SQL);
+			queryStatement = connection.prepareStatement(PROCESSED_IMAGES_QUERY);
 			queryStatement.setString(1, ImageTaskState.ARCHIVED.getValue());
 			queryStatement.setString(2, region);
 			queryStatement.setObject(3, initDate);

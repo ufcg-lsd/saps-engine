@@ -59,11 +59,11 @@ public class RegionResource extends BaseResource {
 		
 		List<ImageTask> imageTasks = this.application.getTasksInState(ImageTaskState.ARCHIVED);
 
-		Map<String, Integer> regionsFrequency = new HashMap<String, Integer>();
+		Map<String, Integer> regionsFrequency = new HashMap<>();
 		for (ImageTask imageTask : imageTasks) {
 			String region = imageTask.getRegion();
 			if (!regionsFrequency.containsKey(region)) {
-				regionsFrequency.put(region, new Integer(0));
+				regionsFrequency.put(region, 0);
 			}
 			regionsFrequency.put(region, regionsFrequency.get(region) + 1);
 		}
@@ -136,48 +136,30 @@ public class RegionResource extends BaseResource {
 		LOGGER.info(builder);
 
 		// TODO uncomment when USGS comes back up
-//		List<ImageTask> tasks = application.searchProcessedTasks(
-//				lowerLeftLatitude,
-//				lowerLeftLongitude,
-//				upperRightLatitude,
-//				upperRightLongitude,
-//				initDate,
-//				endDate,
-//				inputPreprocessing,
-//				inputGathering,
-//				algorithmExecution
-//		);
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-		JSONArray jsonArray = new JSONArray();
-		try {
-			jsonArray.put(new ImageTask(
-                    UUID.randomUUID().toString(),
-                    DatasetUtil.getSatsInOperationByYear(2010).get(0),
-                    "215065",
-                    format.parse("2010-05-14"),
-                    "NA",
-                    ImageTaskState.ARCHIVED,
-                    "NA",
-                    0,
-                    "NA",
-                    "Default",
-                    "Default",
-                    "Default",
-                    "NA",
-                    "NA",
-                    new Timestamp(new Date().getTime()),
-                    new Timestamp(new Date().getTime()),
-                    "NA",
-                    "NA"
-            ));
-		} catch (ParseException e) {
-			LOGGER.error("Could not generate mock image", e);
+		List<ImageTask> tasks = application.searchProcessedTasks(
+				lowerLeftLatitude,
+				lowerLeftLongitude,
+				upperRightLatitude,
+				upperRightLongitude,
+				initDate,
+				endDate,
+				inputPreprocessing,
+				inputGathering,
+				algorithmExecution
+		);
+		JSONArray arr = new JSONArray();
+		for (ImageTask task: tasks) {
+			try {
+				arr.put(task.toJSON());
+			} catch (JSONException e) {
+				LOGGER.error("Failed to build JSON object of Image Task", e);
+			}
 		}
 		JSONObject resObj = new JSONObject();
 		try {
-			resObj.put("result", jsonArray);
+			resObj.put("result", arr);
 		} catch (JSONException e) {
-			LOGGER.error("Failed to create json", e);
+			LOGGER.error("Failed to build response JSON object", e);
 		}
 
 		return new StringRepresentation(resObj.toString(), MediaType.APPLICATION_JSON);
