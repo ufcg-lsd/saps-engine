@@ -4,8 +4,10 @@ import java.io.File;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
@@ -41,15 +43,25 @@ public class PreProcessorImpl implements PreProcessor {
 
 			this.getDockerImage(preProcessorTags);
 
-			String hostPath = this.getHostPath(imageTask);
+			String hostPreProcessingPath = this.getHostPreProcessingPath(imageTask);
 
-			String containerPath = this.properties
-					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
+			String containerPreProcessingPath = this.properties
+					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
 
-			this.createPreProcessingHostPath(hostPath);
+			this.createPreProcessingHostPath(hostPreProcessingPath);
 
-			String containerId = this.raiseContainer(preProcessorTags, imageTask, hostPath,
-					containerPath);
+			String hostMetadataPath = this.getHostMetadataPath(imageTask);
+
+			String containerMetadataPath = this.properties
+					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
+
+			@SuppressWarnings("unchecked")
+			Map<String, String> hostAndContainerDirMap = new HashedMap();
+			hostAndContainerDirMap.put(hostPreProcessingPath, containerPreProcessingPath);
+			hostAndContainerDirMap.put(hostMetadataPath, containerMetadataPath);
+
+			String containerId = this.raiseContainer(preProcessorTags, imageTask,
+					hostAndContainerDirMap);
 
 			String commandToRun = SapsPropertiesConstants.DEFAULT_PREPROCESSOR_RUN_SCRIPT_COMMAND;
 
@@ -101,10 +113,9 @@ public class PreProcessorImpl implements PreProcessor {
 	}
 
 	protected String raiseContainer(ExecutionScriptTag preProcessorTags, ImageTask imageTask,
-			String hostPath, String containerPath) throws Exception {
-
+			Map<String, String> hostAndContainerDirMap) throws Exception {
 		String containerId = DockerUtil.runMappedContainer(preProcessorTags.getDockerRepository(),
-				preProcessorTags.getDockerTag(), hostPath, containerPath);
+				preProcessorTags.getDockerTag(), hostAndContainerDirMap);
 
 		if (containerId.isEmpty()) {
 			throw new Exception("Was not possible raise the Docker Container ["
@@ -168,9 +179,15 @@ public class PreProcessorImpl implements PreProcessor {
 				ExecutionScriptTagUtil.PRE_PROCESSING);
 	}
 
-	protected String getHostPath(ImageTask imageTask) {
+	protected String getHostPreProcessingPath(ImageTask imageTask) {
 		return this.properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
 				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
 				+ "preprocessing";
 	}
+	
+	protected String getHostMetadataPath(ImageTask imageTask) {
+		return this.properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
+	}
+
 }

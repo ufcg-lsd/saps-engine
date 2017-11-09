@@ -129,7 +129,8 @@ public class SapsPropertiesConstants {
 	// Properties file constants
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
 	public static final String SAPS_EXPORT_PATH = "saps_export_path";
-	public static final String SAPS_CONTAINER_LINKED_PATH = "saps_container_linked_path";
+	public static final String SAPS_CONTAINER_INPUT_LINKED_PATH = "saps_container_input_linked_path";
+	public static final String SAPS_CONTAINER_METADATA_LINKED_PATH = "saps_container_metadata_linked_path";
 	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 	public static final String STATIONS_FILE_PATH = "stations_file_path";

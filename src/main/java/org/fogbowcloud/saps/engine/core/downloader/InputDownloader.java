@@ -11,9 +11,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
@@ -349,6 +351,11 @@ public class InputDownloader {
 		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		for (int currentTry = 0; currentTry < maxDownloadAttempts; currentTry++) {
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
+			String inputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+					+ File.separator + imageTask.getTaskId() + File.separator + "data"
+					+ File.separator + "input";
+			String metadataDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+					+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
 
 			// Getting Input Downloader docker repository and tag
 			ExecutionScriptTag inputDownloaderDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(
@@ -357,18 +364,21 @@ public class InputDownloader {
 			DockerUtil.pullImage(inputDownloaderDockerInfo.getDockerRepository(),
 					inputDownloaderDockerInfo.getDockerTag());
 
+			Map<String, String> hostAndContainerDirMap = new HashedMap();
+			hostAndContainerDirMap.put(inputDirPath, properties
+					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH));
+			hostAndContainerDirMap.put(metadataDirPath, properties
+					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH));
+
 			String containerId = DockerUtil.runMappedContainer(
 					inputDownloaderDockerInfo.getDockerRepository(),
-					inputDownloaderDockerInfo.getDockerTag(),
-					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-							+ File.separator + imageTask.getTaskId() + File.separator + "data"
-							+ File.separator + "input",
-					properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH));
+					inputDownloaderDockerInfo.getDockerTag(), hostAndContainerDirMap);
 
 			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
 					+ " " + imageTask.getDataset() + " " + imageTask.getRegion() + " "
 					+ dateFormater.format(imageTask.getImageDate()) + " "
-					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
+					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH + " " 
+					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH));
 
 			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
 			DockerUtil.removeContainer(containerId);

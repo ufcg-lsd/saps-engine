@@ -1,5 +1,8 @@
 package org.fogbowcloud.saps.engine.core.util;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 
 public class DockerUtil {
@@ -43,16 +46,16 @@ public class DockerUtil {
 	 *            The Docker image repository name.
 	 * @param tag
 	 *            The Docker tag name.
-	 * @param hostPath
-	 *            A directory path in host.
-	 * @param containerPath
-	 *            A directory path into the container.
+	 * @param hostAndContainerDirMap
+	 *            Mapping for host directories to container.
 	 * @return The running container ID.
 	 */
-	public static String runMappedContainer(String repository, String tag, String hostPath,
-			String containerPath) {
-		ProcessBuilder builder = new ProcessBuilder("docker", "run", "-td", "-v",
-				hostPath + ":" + containerPath, repository + ":" + tag);
+	public static String runMappedContainer(String repository, String tag,
+			Map<String, String> hostAndContainerDirMap) {
+		String mappingCommand = buildMappingCommand(hostAndContainerDirMap);
+
+		ProcessBuilder builder = new ProcessBuilder("docker", "run", "-td", mappingCommand,
+				repository + ":" + tag);
 		LOGGER.debug("Running container: " + builder.command());
 
 		try {
@@ -64,6 +67,21 @@ public class DockerUtil {
 			LOGGER.error("Error while running Docker container " + repository + ":" + tag + ".", e);
 		}
 		return "";
+	}
+
+	private static String buildMappingCommand(Map<String, String> hostAndContainerDirMap) {
+		String mappingCommand = new String();
+
+		@SuppressWarnings("rawtypes")
+		Iterator it = hostAndContainerDirMap.entrySet().iterator();
+		while (it.hasNext()) {
+			@SuppressWarnings("rawtypes")
+			Map.Entry pair = (Map.Entry) it.next();
+			mappingCommand += " -v " + pair.getKey() + ":" + pair.getValue();
+			it.remove(); // avoids a ConcurrentModificationException
+		}
+
+		return mappingCommand;
 	}
 
 	/**
