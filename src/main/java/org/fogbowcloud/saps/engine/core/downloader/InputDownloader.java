@@ -30,6 +30,7 @@ import org.mapdb.DBMaker;
 
 public class InputDownloader {
 
+	private static final String DATE_FORMAT = "yyyy-MM-dd";
 	private final Properties properties;
 	private final ImageDataStore imageStore;
 	private String inputDownloaderIp;
@@ -42,12 +43,17 @@ public class InputDownloader {
 	protected DB pendingTaskDownloadDB;
 	protected ConcurrentMap<String, ImageTask> pendingTaskDownloadMap;
 
-	// Image dir size in bytes
-	protected static final int MAX_IMAGES_TO_DOWNLOAD = 1;
+	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
-	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";
 	private static final int DEFAULT_MAX_DOWNLOAD_ATTEMPTS = 3;
+	protected static final int MAX_IMAGES_TO_DOWNLOAD = 1;
+	
+	// Script execution codes
+	protected static final int OK_SCRIPT_CODE = 0;
+	protected static final int NOT_FOUNT_SCRIPT_CODE = 3;
+	
+	protected static final String IMAGE_NOT_FOUND_FAILED_MSG = "Input Downloader does not found image.";
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
 
@@ -220,19 +226,19 @@ public class InputDownloader {
 		return false;
 	}
 
+	// This updates images in CREATED state to DOWNLOADING
+	// and sets this federation member as owner, 	
+	// and then gets all images marked as DOWNLOADING
 	protected void download() throws SQLException, IOException, SapsException {
 		List<ImageTask> tasksToDownload = new ArrayList<ImageTask>();
 
 		try {
-			// This updates images in CREATED state to DOWNLOADING
-			// and sets this federation member as owner, and then gets all
-			// images
-			// marked as DOWNLOADING
-			tasksToDownload = imageStore.getImagesToDownload(federationMember,
-					MAX_IMAGES_TO_DOWNLOAD);
+			// TODO check if is necessary the amount of images in this method
+			tasksToDownload = this.imageStore.getImagesToDownload(this.federationMember, MAX_IMAGES_TO_DOWNLOAD);
 		} catch (SQLException e) {
-			LOGGER.error("Error while accessing created tasks in Catalogue", e);
+			LOGGER.error("Error while accessing created tasks in Catalogue.", e);
 		} catch (IndexOutOfBoundsException e) {
+			LOGGER.error("Is not possible get the amount of images to download.", e);
 			return;
 		}
 
@@ -346,8 +352,8 @@ public class InputDownloader {
 			return false;
 		}
 
-		DateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd");
-		for (int currentTry = 0; currentTry < maxDownloadAttempts; currentTry++) {
+		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
+		for (int currentTry = 0; currentTry < this.maxDownloadAttempts; currentTry++) {
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
 
 			// Getting Input Downloader docker repository and tag
@@ -373,23 +379,35 @@ public class InputDownloader {
 			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
 			DockerUtil.removeContainer(containerId);
 
-			if (dockerExecExitValue == 0) {
+			if (dockerExecExitValue == OK_SCRIPT_CODE) {
 				updateToDownloadedState(imageTask);
 
-				pendingTaskDownloadMap.remove(imageTask.getTaskId());
-				pendingTaskDownloadDB.commit();
+				this.pendingTaskDownloadMap.remove(imageTask.getTaskId());
+				this.pendingTaskDownloadDB.commit();
 
-				LOGGER.info("Image " + imageTask + " was downloaded");
+				LOGGER.info("Image " + imageTask + " was downloaded.");
+				return true;
+			} else if (dockerExecExitValue == NOT_FOUNT_SCRIPT_CODE) {			
+				imageTask.setStatus(ImageTask.UNAVAILABLE);
+				updateTaskStateToFailed(imageTask, IMAGE_NOT_FOUND_FAILED_MSG);
+
+				this.pendingTaskDownloadMap.remove(imageTask.getTaskId());
+				this.pendingTaskDownloadDB.commit();
+				
+				LOGGER.info("Image " + imageTask + " failed because image not found. "
+						+ "This Image is " + ImageTask.UNAVAILABLE + ".");
 				return true;
 			} else {
+				LOGGER.debug("Docker execution code for " + imageTask + " is " + dockerExecExitValue + ".");
 				if (currentTry == maxDownloadAttempts - 1) {
 					String errorMsg = "Error while downloading task...download retries "
 							+ maxDownloadAttempts + " exceeded.";
 					LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId()
 							+ " in the last try, removing task.");
 					updateTaskStateToFailed(imageTask, errorMsg);
-					pendingTaskDownloadMap.remove(imageTask.getTaskId());
-					pendingTaskDownloadDB.commit();
+					
+					this.pendingTaskDownloadMap.remove(imageTask.getTaskId());
+					this.pendingTaskDownloadDB.commit();
 
 					deleteAllTaskFiles(imageTask,
 							properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
@@ -611,6 +629,10 @@ public class InputDownloader {
 
 	public DB getPendingTaskDB() {
 		return this.pendingTaskDownloadDB;
+	}
+	
+	protected ImageDataStore getImageStore() {
+		return imageStore;
 	}
 
 	public void setPendingTaskDB(DB pendingTaskDownloadDB) {

@@ -49,7 +49,7 @@ public class SubmissionDispatcherTest {
 	}
 
 	@Before
-	public void setUp() throws SQLException {
+	public void setUp() throws SQLException {		
 		Properties properties = new Properties();
 		properties.setProperty("datastore_ip", "");
 		properties.setProperty("datastore_port", "");
@@ -107,26 +107,26 @@ public class SubmissionDispatcherTest {
 		Date date = new Date();
 
 		ImageTask imageTaskOne = new ImageTask(taskOne.getId(), "landsat_5", "region-53", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT_DATA, ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
+				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA);
 		ImageTask imageTaskTwo = new ImageTask(taskTwo.getId(), "landsat_5", "region-53", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT_DATA, ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
+				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA);
 		ImageTask imageTaskThree = new ImageTask(taskThree.getId(), "landsat_5", "region-53", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT_DATA, ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
+				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA);
 
 		taskOne.setImageTask(imageTaskOne);
 		taskTwo.setImageTask(imageTaskTwo);

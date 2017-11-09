@@ -208,9 +208,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 			String algorithmExecution) throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
 		ImageTask task = new ImageTask(taskId, dataset, region, date, downloadLink,
-				ImageTaskState.CREATED, ImageTask.NON_EXISTENT, priority, ImageTask.NON_EXISTENT,
-				inputGathering, inputPreprocessing, algorithmExecution, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT);
+				ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, priority, ImageTask.NON_EXISTENT_DATA,
+				inputGathering, inputPreprocessing, algorithmExecution, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT_DATA);
 		addImageTask(task);
 		return task;
 	}
