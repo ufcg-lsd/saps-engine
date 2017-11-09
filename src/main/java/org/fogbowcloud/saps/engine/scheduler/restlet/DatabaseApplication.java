@@ -15,10 +15,7 @@ import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
-import org.fogbowcloud.saps.engine.scheduler.restlet.resource.ImageResource;
-import org.fogbowcloud.saps.engine.scheduler.restlet.resource.MainResource;
-import org.fogbowcloud.saps.engine.scheduler.restlet.resource.RegionResource;
-import org.fogbowcloud.saps.engine.scheduler.restlet.resource.UserResource;
+import org.fogbowcloud.saps.engine.scheduler.restlet.resource.*;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -94,6 +91,7 @@ public class DatabaseApplication extends Application {
 		router.attach("/images/{imgName}", ImageResource.class);
 		router.attach("/regions/details", RegionResource.class);
 		router.attach("/regions/search", RegionResource.class);
+		router.attach("/email", ProcessedImagesResource.class);
 
 		return router;
 	}

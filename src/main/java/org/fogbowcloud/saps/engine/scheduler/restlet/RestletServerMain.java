@@ -44,18 +44,18 @@ public class RestletServerMain {
                 LOGGER.error("Error while creating user", e);
             }
 
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-            databaseApplication.addTasks(
-                    "-7.913",
-                    "-37.814",
-                    "-6.547",
-                    "-35.757",
-                    format.parse("2017-11-01"),
-                    format.parse("2017-11-08"),
-                    "Default",
-                    "Default",
-                    "Default"
-            );
+//            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+//            databaseApplication.addTasks(
+//                    "-7.913",
+//                    "-37.814",
+//                    "-6.547",
+//                    "-35.757",
+//                    format.parse("2017-11-01"),
+//                    format.parse("2017-11-08"),
+//                    "Default",
+//                    "Default",
+//                    "Default"
+//            );
         }
     }
 

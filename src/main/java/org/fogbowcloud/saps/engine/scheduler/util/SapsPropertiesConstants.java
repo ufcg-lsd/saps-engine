@@ -136,4 +136,11 @@ public class SapsPropertiesConstants {
 	public static final String BASE_YEAR_DIR_PATH = "base_year_dir_path";
 	public static final String POSSIBLE_STATIONS_FILE_PATH = "src/main/resources/possible_stations";
 	public static final String TILES_COORDINATES_FILE_PATH = "src/main/resources/tiles_coordinates.json";
+
+	public static final String NO_REPLY_EMAIL = "noreply_email";
+	public static final String NO_REPLY_PASS = "noreply_password";
+
+	public static final String SWIFT_OBJECT_STORE_URL = "swift_object_store_url";
+	public static final String SWIFT_OBJECT_STORE_PATH = "swift_object_store_path";
+	public static final String SWIFT_OBJECT_STORE_KEY = "swift_object_store_key";
 }

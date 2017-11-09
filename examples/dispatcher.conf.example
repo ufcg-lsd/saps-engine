@@ -22,3 +22,12 @@ usgs_json_url=https://earthexplorer.usgs.gov/inventory/json
 usgs_username=username
 usgs_password=password
 usgs_api_key_period=300000
+
+#### noReply email ####
+noreply_email=email
+noreply_password=password
+
+#### Swift access ####
+swift_object_store_url=localhost
+swift_object_store_path=/path/to/archiver
+swift_object_store_key=mykey
