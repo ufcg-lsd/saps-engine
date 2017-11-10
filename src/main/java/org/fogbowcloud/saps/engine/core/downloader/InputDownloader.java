@@ -388,15 +388,15 @@ public class InputDownloader {
 				LOGGER.info("Image " + imageTask + " was downloaded.");
 				return true;
 			} else if (dockerExecExitValue == NOT_FOUNT_SCRIPT_CODE) {			
-				imageTask.setStatus(ImageTask.UNAVAILABLE);
 				updateTaskStateToFailed(imageTask, IMAGE_NOT_FOUND_FAILED_MSG);
+				updateTaskStatus(imageTask, ImageTask.UNAVAILABLE);
 
 				this.pendingTaskDownloadMap.remove(imageTask.getTaskId());
 				this.pendingTaskDownloadDB.commit();
 				
 				LOGGER.info("Image " + imageTask + " failed because image not found. "
 						+ "This Image is " + ImageTask.UNAVAILABLE + ".");
-				return true;
+				return false;
 			} else {
 				LOGGER.debug("Docker execution code for " + imageTask + " is " + dockerExecExitValue + ".");
 				if (currentTry == maxDownloadAttempts - 1) {
@@ -452,6 +452,16 @@ public class InputDownloader {
 		}
 	}
 
+	protected void updateTaskStatus(ImageTask imageTask, String status) {
+		LOGGER.debug("Updating image task " + imageTask + " status to " + status + ".");
+		try {
+			String id = imageTask.getTaskId();
+			this.imageStore.updateTaskStatus(id, status);
+		} catch (Exception e) {
+			LOGGER.debug("Error while updating " + imageTask + " status to " + status + ".");
+		}
+	}
+	
 	protected void updateTaskStateToFailed(ImageTask imageTask, String errorMsg) {
 		String id = imageTask.getTaskId();
 		LOGGER.debug("Updating image task " + imageTask + " state to Failed.");
@@ -646,4 +656,5 @@ public class InputDownloader {
 	public void setPendingTaskMap(ConcurrentMap<String, ImageTask> pendingTaskDownloadMap) {
 		this.pendingTaskDownloadMap = pendingTaskDownloadMap;
 	}
+	
 }

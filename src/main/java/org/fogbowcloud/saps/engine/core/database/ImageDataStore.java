@@ -61,6 +61,8 @@ public interface ImageDataStore {
 	void updateTaskError(String taskId, String errorMsg) throws SQLException;
 
 	void updateTaskState(String taskId, ImageTaskState state) throws SQLException;
+	
+	void updateTaskStatus(String taskId, String status) throws SQLException;
 
 	void updateImageMetadata(String taskId, String stationId) throws SQLException;
 
