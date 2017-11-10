@@ -109,6 +109,11 @@ public class SapsPropertiesConstants {
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
 	public static final String PREPROCESSOR_EXECUTION_PERIOD = "preprocessor_execution_period";
 	
+	// Provenance data components constants
+	public static final String INPUT_DOWNLOADER_COMPONENT_TYPE = "input_downloader";
+	public static final String PREPROCESSOR_COMPONENT_TYPE = "input_downloader";
+	public static final String WORKER_COMPONENT_TYPE = "input_downloader";
+	
 	// Preprocessor constants
 	public static final String DEFAULT_PREPROCESSOR_EXECUTION_PERIOD = "60000";
 	public static final String DEFAULT_PREPROCESSOR_RUN_SCRIPT_COMMAND = "/bin/bash /home/ubuntu/run.sh";

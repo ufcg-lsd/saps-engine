@@ -12,6 +12,7 @@ import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.notifier.Ward;
 
 public class JDBCImageDataStore implements ImageDataStore {
@@ -54,6 +55,17 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String NFS_SERVER_IP_COL = "nfs_ip";
 	private static final String NFS_SERVER_SSH_PORT_COL = "nfs_ssh_port";
 	private static final String NFS_SERVER_PORT_COL = "nfs_port";
+	
+	private static final String PROVENANCE_TABLE_NAME = "provenance_data";
+	private static final String INPUT_METADATA_COL = "input_metadata";
+	private static final String INPUT_OPERATING_SYSTEM_COL = "input_operating_system";
+	private static final String INPUT_KERNEL_VERSION_COL = "input_kernel_version";
+	private static final String PREPROCESSING_METADATA_COL = "preprocessing_metadata";
+	private static final String PREPROCESSING_OPERATING_SYSTEM_COL = "preprocessing_operating_system";
+	private static final String PREPROCESSING_KERNEL_VERSION_COL = "preprocessing_kernel_version";
+	private static final String OUTPUT_METADATA_COL = "output_metadata";
+	private static final String OUTPUT_OPERATING_SYSTEM_COL = "output_operating_system";
+	private static final String OUTPUT_KERNEL_VERSION_COL = "output_kernel_version";
 
 	// Insert queries
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
@@ -137,6 +149,15 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ FEDERATION_MEMBER_COL + " VARCHAR(255), " + " PRIMARY KEY("
 					+ NFS_SERVER_IP_COL + ", " + NFS_SERVER_SSH_PORT_COL + ", "
 					+ NFS_SERVER_PORT_COL + ", " + FEDERATION_MEMBER_COL + "))");
+
+			statement.execute("CREATE TABLE IF NOT EXISTS " + PROVENANCE_TABLE_NAME + "("
+					+ TASK_ID_COL + " VARCHAR(255) PRIMARY KEY, " + INPUT_METADATA_COL
+					+ " VARCHAR(255), " + INPUT_OPERATING_SYSTEM_COL + " VARCHAR(100), "
+					+ INPUT_KERNEL_VERSION_COL + " VARCHAR(100), " + PREPROCESSING_METADATA_COL
+					+ " VARCHAR(255), " + PREPROCESSING_OPERATING_SYSTEM_COL + " VARCHAR(100), "
+					+ PREPROCESSING_KERNEL_VERSION_COL + " VARCHAR(100), " + OUTPUT_METADATA_COL
+					+ " VARCHAR(255), " + OUTPUT_OPERATING_SYSTEM_COL + " VARCHAR(100), "
+					+ OUTPUT_KERNEL_VERSION_COL + " VARCHAR(100))");
 
 			statement.close();
 		} catch (SQLException e) {
@@ -333,6 +354,101 @@ public class JDBCImageDataStore implements ImageDataStore {
 		} finally {
 			close(insertStatement, connection);
 		}
+	}
+	
+	private static final String INSERT_METADATA_INFO_SQL = "INSERT INTO " + PROVENANCE_TABLE_NAME
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	
+	@Override
+	public void dispatchMetadataInfo(String taskId) throws SQLException {
+		LOGGER.info("Dispatching metadata info for " + taskId + " in Catalogue");
+		if (taskId == null || taskId.isEmpty()) {
+			throw new IllegalArgumentException("Invalid taskId " + taskId);
+		}
+
+		PreparedStatement insertStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			insertStatement = connection.prepareStatement(INSERT_METADATA_INFO_SQL);
+			insertStatement.setString(1, taskId);
+			insertStatement.setString(2, ImageTask.NON_EXISTENT);
+			insertStatement.setString(3, ImageTask.NON_EXISTENT);
+			insertStatement.setString(4, ImageTask.NON_EXISTENT);
+			insertStatement.setString(5, ImageTask.NON_EXISTENT);
+			insertStatement.setString(6, ImageTask.NON_EXISTENT);
+			insertStatement.setString(7, ImageTask.NON_EXISTENT);
+			insertStatement.setString(8, ImageTask.NON_EXISTENT);
+			insertStatement.setString(9, ImageTask.NON_EXISTENT);
+			insertStatement.setString(10, ImageTask.NON_EXISTENT);
+			insertStatement.setQueryTimeout(300);
+
+			insertStatement.execute();
+		} finally {
+			close(insertStatement, connection);
+		}
+	}
+	
+	private static final String UPDATE_DOWNLOADER_METADATA_INFO_SQL = "UPDATE "
+			+ PROVENANCE_TABLE_NAME + " SET " + INPUT_METADATA_COL + " = ?, "
+			+ INPUT_OPERATING_SYSTEM_COL + " = ?, " + INPUT_KERNEL_VERSION_COL + " = ? WHERE "
+			+ TASK_ID_COL + " = ?;";
+	
+	private static final String UPDATE_PREPROCESS_METADATA_INFO_SQL = "UPDATE "
+			+ PROVENANCE_TABLE_NAME + " SET " + PREPROCESSING_METADATA_COL + " = ?, "
+			+ PREPROCESSING_OPERATING_SYSTEM_COL + " = ?, " + PREPROCESSING_KERNEL_VERSION_COL
+			+ " = ? WHERE " + TASK_ID_COL + " = ?;";
+
+	private static final String UPDATE_OUTPUT_METADATA_INFO_SQL = "UPDATE " + PROVENANCE_TABLE_NAME
+			+ " SET " + OUTPUT_METADATA_COL + " = ?, " + OUTPUT_OPERATING_SYSTEM_COL + " = ?, "
+			+ OUTPUT_KERNEL_VERSION_COL + " = ? WHERE " + TASK_ID_COL + " = ?;";
+	
+	@Override
+	public void updateMetadataInfo(String metadataFilePath, String operatingSystem,
+			String kernelVersion, String componentType, String taskId) throws SQLException {
+		LOGGER.info(
+				"Updating metadata info for component " + componentType + " with taskId " + taskId);
+		if (metadataFilePath == null || metadataFilePath.isEmpty() || operatingSystem == null
+				|| operatingSystem.isEmpty() || kernelVersion == null || kernelVersion.isEmpty()
+				|| componentType == null || componentType.isEmpty() || taskId == null
+				|| taskId.isEmpty()) {
+			throw new IllegalArgumentException("Invalid metadataFilePath " + metadataFilePath
+					+ ", operatingSystem " + operatingSystem + ", kernelVersion " + kernelVersion
+					+ ", componentType " + componentType + " or taskId " + taskId);
+		}
+
+		PreparedStatement updateStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			updateStatement = adjustMetadataStatementToComponent(componentType, updateStatement,
+					connection);
+
+			updateStatement.setString(1, metadataFilePath);
+			updateStatement.setString(2, operatingSystem);
+			updateStatement.setString(3, kernelVersion);
+			updateStatement.setQueryTimeout(300);
+
+			updateStatement.execute();
+		} finally {
+			close(updateStatement, connection);
+		}
+	}
+
+	protected PreparedStatement adjustMetadataStatementToComponent(String componentType,
+			PreparedStatement insertStatement, Connection connection) throws SQLException {
+		if (componentType.equals(SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE)) {
+			insertStatement = connection.prepareStatement(UPDATE_DOWNLOADER_METADATA_INFO_SQL);
+		} else if (componentType.equals(SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE)) {
+			insertStatement = connection.prepareStatement(UPDATE_PREPROCESS_METADATA_INFO_SQL);
+		} else if (componentType.equals(SapsPropertiesConstants.WORKER_COMPONENT_TYPE)) {
+			insertStatement = connection.prepareStatement(UPDATE_OUTPUT_METADATA_INFO_SQL);
+		}
+		return insertStatement;
 	}
 
 	private static final String SELECT_ALL_USERS_TO_NOTIFY_SQL = "SELECT * FROM "

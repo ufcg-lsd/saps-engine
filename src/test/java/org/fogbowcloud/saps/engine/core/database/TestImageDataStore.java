@@ -6,12 +6,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.junit.Assert;
 import org.junit.Test;
-import static org.mockito.Mockito.mock;
 
 public class TestImageDataStore {
 
@@ -32,46 +30,14 @@ public class TestImageDataStore {
 		Date date = new Date();
 
 		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
-		ImageTask taskOne = new ImageTask(
-				"task-id-1",
-				"LT5",
-				"region-53",
-				date,
-				"link1",
-				ImageTaskState.CREATED,
-				"NE",
-				0,
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
+		ImageTask taskOne = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
+				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE",
 				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), "available", "");
+		ImageTask taskTwo = new ImageTask("task-id-2", "LT5", "region-53", date, "link1",
+				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE",
 				new Timestamp(new java.util.Date().getTime()),
-				"available",
-				""
-		);
-		ImageTask taskTwo = new ImageTask(
-				"task-id-2",
-				"LT5",
-				"region-53",
-				date,
-				"link1",
-				ImageTaskState.CREATED,
-				"NE",
-				0,
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				"NE",
-				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()),
-				"available",
-				""
-		);
+				new Timestamp(new java.util.Date().getTime()), "available", "");
 
 		imageStore.addImageTask(taskOne);
 		imageStore.addImageTask(taskTwo);
@@ -82,5 +48,4 @@ public class TestImageDataStore {
 
 		imageStore.dispose();
 	}
-
 }

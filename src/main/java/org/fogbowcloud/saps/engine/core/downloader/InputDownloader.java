@@ -250,6 +250,7 @@ public class InputDownloader {
 
 					boolean isDownloadCompleted = downloadImage(imageTask);
 					if (isDownloadCompleted) {
+						storeMetadata(imageTask);
 						LOGGER.info("Task " + imageTask.getTaskId() + " download is completed");
 					} else {
 						LOGGER.info("Task " + imageTask.getTaskId() + " download failed");
@@ -257,6 +258,10 @@ public class InputDownloader {
 				}
 			}
 		}
+	}
+
+	private void storeMetadata(ImageTask imageTask) {
+		
 	}
 
 	protected void addTaskToPendingMap(ImageTask imageTask) {
