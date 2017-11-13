@@ -1,6 +1,9 @@
 package org.fogbowcloud.saps.engine.core.preprocessor;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
@@ -14,6 +17,7 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.DockerUtil;
+import org.fogbowcloud.saps.engine.core.util.OSValidator;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
@@ -160,6 +164,11 @@ public class PreProcessorImpl implements PreProcessor {
 					+ imageTaskId + "]");
 		}
 		addStateStamp(imageTaskId);
+		storeMetadata(imageTask);
+	}
+
+	protected File getExportDirPath(String volumeDirPath) {
+		return new File(volumeDirPath);
 	}
 
 	protected void addStateStamp(String imageTaskId) {
@@ -172,6 +181,64 @@ public class PreProcessorImpl implements PreProcessor {
 			Timestamp updateTime = imageTask != null ? imageTask.getUpdateTime() : null;
 			LOGGER.warn("Error while adding state " + state + " timestamp " + updateTime + " in Catalogue", e);
 		}
+	}
+	
+	private void storeMetadata(ImageTask imageTask) throws SQLException, IOException {
+		LOGGER.info("Storing metadata into Catalogue");
+		imageDataStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
+				getKernelVersion(), SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
+				imageTask.getTaskId());
+	}
+
+	private String getMetadataFilePath(ImageTask imageTask) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "metadata" + File.separator
+				+ "preprocessingDescription.txt";
+	}
+	
+	private String getOperatingSystem() {
+		if (OSValidator.isWindows()) {
+			return "Windows";
+		} else if (OSValidator.isMac()) {
+			return "Mac";
+		} else if (OSValidator.isUnix()) {
+			return "Linux";
+		} else if (OSValidator.isSolaris()) {
+			return "Solaris";
+		} else {
+			return "Operating System Not Recognized";
+		}
+	}
+	
+	private String getKernelVersion() throws IOException {
+		if (OSValidator.isUnix()) {
+			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c",
+					"uname -r | cut -d \'-\' -f 1");
+			Process p = null;
+			try {
+				p = pb.start();
+				p.waitFor();
+			} catch (IOException e) {
+				LOGGER.error("Error while getting Linux kernel version", e);
+			} catch (InterruptedException e) {
+				LOGGER.error("Error while getting Linux kernel version", e);
+			}
+
+			return getProcessOutput(p);
+		} else {
+			return "Kernel version not recognized";
+		}
+	}
+	
+	private static String getProcessOutput(Process p) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		StringBuilder stringBuilder = new StringBuilder();
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			stringBuilder.append(line);
+			stringBuilder.append(System.getProperty("line.separator"));
+		}
+		return stringBuilder.toString();
 	}
 
 	protected ExecutionScriptTag getContainerImageTags(ImageTask imageTask) throws SapsException {

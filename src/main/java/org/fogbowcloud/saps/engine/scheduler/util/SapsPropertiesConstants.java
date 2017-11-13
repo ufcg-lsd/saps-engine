@@ -143,6 +143,8 @@ public class SapsPropertiesConstants {
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 	public static final String STATIONS_FILE_PATH = "stations_file_path";
 	public static final String BASE_YEAR_DIR_PATH = "base_year_dir_path";
+	public static final String WORKER_OPERATING_SYSTEM = "worker_operating_system";
+	public static final String WORKER_KERNEL_VERSION = "worker_kernel_version";
 	public static final String POSSIBLE_STATIONS_FILE_PATH = "src/main/resources/possible_stations";
 	public static final String TILES_COORDINATES_FILE_PATH = "src/main/resources/tiles_coordinates.json";
 }
