@@ -1,8 +1,17 @@
 package org.fogbowcloud.saps.engine.core.database;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -55,7 +64,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String NFS_SERVER_IP_COL = "nfs_ip";
 	private static final String NFS_SERVER_SSH_PORT_COL = "nfs_ssh_port";
 	private static final String NFS_SERVER_PORT_COL = "nfs_port";
-	
+
 	private static final String PROVENANCE_TABLE_NAME = "provenance_data";
 	private static final String INPUT_METADATA_COL = "input_metadata";
 	private static final String INPUT_OPERATING_SYSTEM_COL = "input_operating_system";
@@ -355,10 +364,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(insertStatement, connection);
 		}
 	}
-	
+
 	private static final String INSERT_METADATA_INFO_SQL = "INSERT INTO " + PROVENANCE_TABLE_NAME
 			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	
+
 	@Override
 	public void dispatchMetadataInfo(String taskId) throws SQLException {
 		LOGGER.info("Dispatching metadata info for " + taskId + " in Catalogue");
@@ -390,12 +399,12 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(insertStatement, connection);
 		}
 	}
-	
+
 	private static final String UPDATE_DOWNLOADER_METADATA_INFO_SQL = "UPDATE "
 			+ PROVENANCE_TABLE_NAME + " SET " + INPUT_METADATA_COL + " = ?, "
 			+ INPUT_OPERATING_SYSTEM_COL + " = ?, " + INPUT_KERNEL_VERSION_COL + " = ? WHERE "
 			+ TASK_ID_COL + " = ?;";
-	
+
 	private static final String UPDATE_PREPROCESS_METADATA_INFO_SQL = "UPDATE "
 			+ PROVENANCE_TABLE_NAME + " SET " + PREPROCESSING_METADATA_COL + " = ?, "
 			+ PREPROCESSING_OPERATING_SYSTEM_COL + " = ?, " + PREPROCESSING_KERNEL_VERSION_COL
@@ -404,7 +413,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String UPDATE_OUTPUT_METADATA_INFO_SQL = "UPDATE " + PROVENANCE_TABLE_NAME
 			+ " SET " + OUTPUT_METADATA_COL + " = ?, " + OUTPUT_OPERATING_SYSTEM_COL + " = ?, "
 			+ OUTPUT_KERNEL_VERSION_COL + " = ? WHERE " + TASK_ID_COL + " = ?;";
-	
+
 	@Override
 	public void updateMetadataInfo(String metadataFilePath, String operatingSystem,
 			String kernelVersion, String componentType, String taskId) throws SQLException {
@@ -431,6 +440,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(1, metadataFilePath);
 			updateStatement.setString(2, operatingSystem);
 			updateStatement.setString(3, kernelVersion);
+			updateStatement.setString(4, taskId);
 			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
@@ -693,7 +703,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		LOGGER.info("Adding user " + userName + " into DB");
 		if (userName == null || userName.isEmpty() || userPass == null || userPass.isEmpty()) {
-			throw new IllegalArgumentException("Unable to create user with empty name or password.");
+			throw new IllegalArgumentException(
+					"Unable to create user with empty name or password.");
 		}
 
 		PreparedStatement insertStatement = null;
@@ -1352,6 +1363,100 @@ public class JDBCImageDataStore implements ImageDataStore {
 		} finally {
 			close(selectStatement, connection);
 		}
+	}
+
+	@Override
+	public String getMetadataInfo(String taskId, String componentType, String infoType)
+			throws SQLException {
+		if (taskId == null || taskId.isEmpty() || componentType == null || componentType.isEmpty()
+				|| infoType == null || infoType.isEmpty()) {
+			LOGGER.error("Invalid taskId " + taskId + ", componentType " + componentType
+					+ " or infoType " + infoType);
+			throw new IllegalArgumentException("Invalid taskId " + taskId + ", componentType "
+					+ componentType + " or infoType " + infoType);
+		}
+		PreparedStatement selectStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+			return adjustAndExecuteMetadataSelectStatement(connection, taskId, componentType,
+					infoType);
+		} finally {
+			close(selectStatement, connection);
+		}
+	}
+
+	private String adjustAndExecuteMetadataSelectStatement(Connection connection, String taskId,
+			String componentType, String infoType) throws SQLException {
+		String selectStatementSQL = "SELECT ";
+		String columnLabel = null;
+
+		if (componentType.equals(SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE)) {
+			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
+				selectStatementSQL += INPUT_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = INPUT_METADATA_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
+				selectStatementSQL += INPUT_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = INPUT_OPERATING_SYSTEM_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
+				selectStatementSQL += INPUT_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = INPUT_KERNEL_VERSION_COL;
+			}
+		} else if (componentType.equals(SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE)) {
+			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
+				selectStatementSQL += PREPROCESSING_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = PREPROCESSING_METADATA_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
+				selectStatementSQL += PREPROCESSING_OPERATING_SYSTEM_COL + " FROM "
+						+ PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = PREPROCESSING_OPERATING_SYSTEM_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
+				selectStatementSQL += PREPROCESSING_KERNEL_VERSION_COL + " FROM "
+						+ PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = PREPROCESSING_KERNEL_VERSION_COL;
+			}
+		} else if (componentType.equals(SapsPropertiesConstants.WORKER_COMPONENT_TYPE)) {
+			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
+				selectStatementSQL += OUTPUT_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = OUTPUT_METADATA_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
+				selectStatementSQL += OUTPUT_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = OUTPUT_OPERATING_SYSTEM_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
+				selectStatementSQL += OUTPUT_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = OUTPUT_KERNEL_VERSION_COL;
+			}
+		}
+
+		PreparedStatement selectStatement = connection.prepareStatement(selectStatementSQL);
+		selectStatement.setString(1, taskId);
+		selectStatement.setQueryTimeout(300);
+		selectStatement.execute();
+
+		return getResultSet(selectStatement, columnLabel);
+	}
+	
+	private String getResultSet(PreparedStatement selectStatement, String columnLabel)
+			throws SQLException {
+		ResultSet rs = selectStatement.getResultSet();
+
+		try {
+			if (rs.next()) {
+				return rs.getString(columnLabel);
+			}
+		} finally {
+			rs.close();
+		}
+
+		return null;
 	}
 
 	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME

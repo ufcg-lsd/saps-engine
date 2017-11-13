@@ -113,6 +113,9 @@ public class SapsPropertiesConstants {
 	public static final String INPUT_DOWNLOADER_COMPONENT_TYPE = "input_downloader";
 	public static final String PREPROCESSOR_COMPONENT_TYPE = "input_downloader";
 	public static final String WORKER_COMPONENT_TYPE = "input_downloader";
+	public static final String METADATA_TYPE = "metadata";
+	public static final String OS_TYPE = "operating_system";
+	public static final String KERNEL_TYPE = "kernel_version";
 	
 	// Preprocessor constants
 	public static final String DEFAULT_PREPROCESSOR_EXECUTION_PERIOD = "60000";

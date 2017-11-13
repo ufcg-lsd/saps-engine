@@ -23,6 +23,7 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.DockerUtil;
+import org.fogbowcloud.saps.engine.core.util.OSValidator;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
@@ -46,10 +47,12 @@ public class InputDownloader {
 
 	// Image dir size in bytes
 	protected static final int MAX_IMAGES_TO_DOWNLOAD = 1;
-	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
-	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
-	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";
 	private static final int DEFAULT_MAX_DOWNLOAD_ATTEMPTS = 3;
+	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
+
+	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
+	
+	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
 
@@ -250,18 +253,62 @@ public class InputDownloader {
 
 					boolean isDownloadCompleted = downloadImage(imageTask);
 					if (isDownloadCompleted) {
-						storeMetadata(imageTask);
 						LOGGER.info("Task " + imageTask.getTaskId() + " download is completed");
 					} else {
 						LOGGER.info("Task " + imageTask.getTaskId() + " download failed");
 					}
+
+					storeMetadata(imageTask);
 				}
 			}
 		}
 	}
 
-	private void storeMetadata(ImageTask imageTask) {
-		
+	private void storeMetadata(ImageTask imageTask) throws SQLException, IOException {
+		LOGGER.info("Storing metadata into Catalogue");
+		imageStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
+				getKernelVersion(), SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE,
+				imageTask.getTaskId());
+	}
+
+	private String getOperatingSystem() {
+		if (OSValidator.isWindows()) {
+			return "Windows";
+		} else if (OSValidator.isMac()) {
+			return "Mac";
+		} else if (OSValidator.isUnix()) {
+			return "Linux";
+		} else if (OSValidator.isSolaris()) {
+			return "Solaris";
+		} else {
+			return "Operating System Not Recognized";
+		}
+	}
+	
+	private String getKernelVersion() throws IOException {
+		if (OSValidator.isUnix()) {
+			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c",
+					"uname -r | cut -d \'-\' -f 1");
+			Process p = null;
+			try {
+				p = pb.start();
+				p.waitFor();
+			} catch (IOException e) {
+				LOGGER.error("Error while getting Linux kernel version", e);
+			} catch (InterruptedException e) {
+				LOGGER.error("Error while getting Linux kernel version", e);
+			}
+
+			return getProcessOutput(p);
+		} else {
+			return "Kernel version not recognized";
+		}
+	}
+
+	private String getMetadataFilePath(ImageTask imageTask) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "metadata" + File.separator
+				+ "inputDescription.txt";
 	}
 
 	protected void addTaskToPendingMap(ImageTask imageTask) {
