@@ -14,16 +14,16 @@ import org.fogbowcloud.saps.notifier.Ward;
 
 public interface ImageDataStore {
 
-	String NONE = "None";
-	int UNLIMITED = -1;
+	public String NONE = "None";
+	public int UNLIMITED = -1;
 
-	String DATASTORE_USERNAME = "datastore_username";
-	String DATASTORE_PASSWORD = "datastore_password";
-	String DATASTORE_DRIVER = "datastore_driver";
-	String DATASTORE_URL_PREFIX = "datastore_url_prefix";
-	String DATASTORE_NAME = "datastore_name";
-	String DATASTORE_IP = "datastore_ip";
-	String DATASTORE_PORT = "datastore_port";
+	public String DATASTORE_USERNAME = "datastore_username";
+	public String DATASTORE_PASSWORD = "datastore_password";
+	public String DATASTORE_DRIVER = "datastore_driver";
+	public String DATASTORE_URL_PREFIX = "datastore_url_prefix";
+	public String DATASTORE_NAME = "datastore_name";
+	public String DATASTORE_IP = "datastore_ip";
+	public String DATASTORE_PORT = "datastore_port";
 
 	ImageTask addImageTask(
 			String taskId,
@@ -61,6 +61,8 @@ public interface ImageDataStore {
 	void updateTaskError(String taskId, String errorMsg) throws SQLException;
 
 	void updateTaskState(String taskId, ImageTaskState state) throws SQLException;
+	
+	void updateTaskStatus(String taskId, String status) throws SQLException;
 
 	void updateImageMetadata(String taskId, String stationId) throws SQLException;
 

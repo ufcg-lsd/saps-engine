@@ -1,10 +1,10 @@
 package org.fogbowcloud.saps.engine.core.downloader;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.doNothing;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,25 +22,70 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
+import org.fogbowcloud.saps.engine.core.util.DockerUtil;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mapdb.DB;
+import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.mockito.internal.configuration.GlobalConfiguration;
+import org.mockito.internal.progress.ThreadSafeMockingProgress;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.api.support.ClassLoaderUtil;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
+@PowerMockIgnore("javax.management.*")
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ ExecutionScriptTagUtil.class, DockerUtil.class })
 public class TestInputDownloaderIntegration {
 
-	Properties properties;
+	private String FEDERATION_MEMBER_DEFAULT = "FED_MEMBER";
+	
+	@SuppressWarnings("unused")
+	private Properties properties;
+	private ImageTask imageTaskDefault;
+	
+	private InputDownloader inputDownloaderDefault;
 
 	@Before
 	public void setUp() {
-		properties = mock(Properties.class);
+		// setup
+		Properties properties = Mockito.mock(Properties.class);
+		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
+		String inputDownloaderIP = "ip";
+		String inputDownloaderPort = "port";
+		String nfsPort = "port";
+		String federationMember = "fake-fed-member";
+		
+		// mock
+		this.inputDownloaderDefault = Mockito.spy(new InputDownloader(properties, imageStore,
+				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember));
+		
+		java.util.Date date = new java.util.Date();
+		this.imageTaskDefault = new ImageTask("default-task-id-1", "LT5", "region-53", date,
+				"link1", ImageTaskState.CREATED, FEDERATION_MEMBER_DEFAULT, 0,
+				ImageTask.NON_EXISTENT_DATA, "Default", "Default", "Default",
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, 
+				new Timestamp(date.getTime()), new Timestamp(date.getTime()), ImageTask.AVAILABLE, "");
+		
+		this.properties = mock(Properties.class);
 	}
 
 	@After
 	public void clean() {
+		MockitoStateCleaner mockitoStateCleaner = new MockitoStateCleaner();
+		mockitoStateCleaner.run();
+		
 		String[] pendingTasks = { "pending-task-download.db", "pending-task-download.db.p",
 				"pending-task-download.db.t" };
 		for (String pendingTask : pendingTasks) {
@@ -325,18 +370,82 @@ public class TestInputDownloaderIntegration {
 		imageStore.dispose();
 	}
 
+	@Test
+	public void testDownloadImageNotFoundImage() throws Exception {		
+		Mockito.doNothing().when(this.inputDownloaderDefault).prepareTaskDirStructure(Mockito.eq(this.imageTaskDefault));
+		
+        PowerMockito.mockStatic(ExecutionScriptTagUtil.class);
+        ExecutionScriptTag executionScriptTag = new ExecutionScriptTag("", "", "", "");
+		BDDMockito.given(ExecutionScriptTagUtil.getExecutionScritpTag(
+        		Mockito.anyString(), Mockito.anyString())).willReturn(executionScriptTag);
+		
+		PowerMockito.mockStatic(DockerUtil.class);
+		boolean notImportantBoolean = true;
+		BDDMockito.given(DockerUtil.pullImage(Mockito.anyString(), Mockito.anyString())).willReturn(notImportantBoolean);
+		String containerId = "1";
+		BDDMockito.given(DockerUtil.runMappedContainer(
+				Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).willReturn(containerId);
+		BDDMockito.given(DockerUtil.execDockerCommand(
+				Mockito.eq(containerId), Mockito.anyString())).willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
+		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString())).willReturn(notImportantBoolean);
+		
+		DB pendingTaskDB = this.inputDownloaderDefault.getPendingTaskDB();
+		ConcurrentMap<String, ImageTask> pendingTaskMap = this.inputDownloaderDefault.getPendingTaskMap();
+		
+		Assert.assertEquals(0, pendingTaskMap.values().size());
+		
+		pendingTaskMap.put(this.imageTaskDefault.getTaskId(), this.imageTaskDefault);
+		pendingTaskDB.commit();
+		
+		Assert.assertEquals(1, pendingTaskMap.values().size());
+		Assert.assertEquals(ImageTask.AVAILABLE, this.imageTaskDefault.getStatus());
+		
+		boolean returnDownloadImage = this.inputDownloaderDefault.downloadImage(this.imageTaskDefault);
+		
+		Assert.assertFalse(returnDownloadImage);
+		Assert.assertEquals(0, pendingTaskMap.values().size());
+		Mockito.verify(this.inputDownloaderDefault).updateTaskStateToFailed(
+				Mockito.eq(this.imageTaskDefault), Mockito.eq(InputDownloader.IMAGE_NOT_FOUND_FAILED_MSG));
+		Mockito.verify(this.inputDownloaderDefault).updateTaskStatus(
+				Mockito.eq(this.imageTaskDefault), Mockito.eq(ImageTask.UNAVAILABLE));		
+	}
+	
 	private void setUpProperties(Properties properties) {
 		properties.setProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS, "3");
 
-		properties.setProperty("datastore_ip", "");
-		properties.setProperty("datastore_port", "");
-		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
-		properties.setProperty("datastore_username", "testuser");
-		properties.setProperty("datastore_password", "testuser");
-		properties.setProperty("datastore_driver", "org.h2.Driver");
-		properties.setProperty("datastore_name", "testdb");
+		properties.setProperty(ImageDataStore.DATASTORE_IP, "");
+		properties.setProperty(ImageDataStore.DATASTORE_PORT, "");
+		properties.setProperty(ImageDataStore.DATASTORE_URL_PREFIX, "jdbc:h2:mem:testdb");
+		properties.setProperty(ImageDataStore.DATASTORE_USERNAME, "testuser");
+		properties.setProperty(ImageDataStore.DATASTORE_PASSWORD, "testuser");
+		properties.setProperty(ImageDataStore.DATASTORE_DRIVER, "org.h2.Driver");
+		properties.setProperty(ImageDataStore.DATASTORE_NAME, "testdb");
 
+		// TODO check this dependency. Change /local/exports. Bad dependency
 		properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, "/local/exports");
 		properties.setProperty(SapsPropertiesConstants.MAX_NUMBER_OF_TASKS, "1");
 	}
+	
+	private static class MockitoStateCleaner implements Runnable {
+	    public void run() {
+	        clearMockProgress();
+	        clearConfiguration();
+	    }
+
+	    private void clearMockProgress() {
+	        clearThreadLocalIn(ThreadSafeMockingProgress.class);
+	    }
+
+	    private void clearConfiguration() {
+	        clearThreadLocalIn(GlobalConfiguration.class);
+	    }
+
+	    @SuppressWarnings("unchecked")
+		private void clearThreadLocalIn(Class<?> cls) {
+	        Whitebox.getInternalState(cls, ThreadLocal.class).set(null);
+	        final Class<?> clazz = ClassLoaderUtil.loadClass(cls, ClassLoader.getSystemClassLoader());
+	        Whitebox.getInternalState(clazz, ThreadLocal.class).set(null);
+	    }
+	}		
+
 }

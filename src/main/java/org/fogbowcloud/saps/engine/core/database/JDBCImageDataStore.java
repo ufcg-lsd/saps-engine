@@ -1,8 +1,17 @@
 package org.fogbowcloud.saps.engine.core.database;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -208,9 +217,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 			String algorithmExecution) throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
 		ImageTask task = new ImageTask(taskId, dataset, region, date, downloadLink,
-				ImageTaskState.CREATED, ImageTask.NON_EXISTENT, priority, ImageTask.NON_EXISTENT,
-				inputGathering, inputPreprocessing, algorithmExecution, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT);
+				ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, priority, ImageTask.NON_EXISTENT_DATA,
+				inputGathering, inputPreprocessing, algorithmExecution, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT_DATA);
 		addImageTask(task);
 		return task;
 	}
@@ -649,6 +658,32 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			updateStatement = connection.prepareStatement(UPDATE_IMAGE_STATE_SQL);
 			updateStatement.setString(1, state.getValue());
+			updateStatement.setString(2, taskId);
+			updateStatement.setQueryTimeout(300);
+
+			updateStatement.execute();
+		} finally {
+			close(updateStatement, connection);
+		}
+	}
+	
+	private static String UPDATE_IMAGE_STATUS_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET "
+			+ IMAGE_STATUS_COL + " = ? WHERE " + TASK_ID_COL + " = ?";
+	
+	@Override
+	public void updateTaskStatus(String taskId, String status) throws SQLException {
+		if (taskId == null || taskId.isEmpty() || status == null) {
+			LOGGER.error("Invalid image task " + taskId + " or status " + status);
+			throw new IllegalArgumentException("Invalid image task " + taskId + " or state " + status);
+		}
+		PreparedStatement updateStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			updateStatement = connection.prepareStatement(UPDATE_IMAGE_STATUS_SQL);
+			updateStatement.setString(1, status);
 			updateStatement.setString(2, taskId);
 			updateStatement.setQueryTimeout(300);
 
@@ -1340,4 +1375,5 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(removeStatement, connection);
 		}
 	}
+
 }

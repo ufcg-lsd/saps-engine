@@ -427,9 +427,9 @@ public class USGSNasaRepository implements INPERepository {
 	private JSONArray searchForImagesInRange(String dataset, int firstYear, int lastYear,
 			String latitude, String longitude) {
 
-		JSONObject searchJSONObj = new JSONObject();
+		JSONObject searchJSONObj = null;
 		try {
-			formatSearchJSON(dataset, firstYear, lastYear, latitude, longitude, latitude, longitude, searchJSONObj);
+			searchJSONObj = formatSearchJSON(dataset, firstYear, lastYear, latitude, longitude, latitude, longitude);
 		} catch (JSONException e) {
 			LOGGER.error("Error while formatting search JSON", e);
 			return null;
@@ -454,8 +454,10 @@ public class USGSNasaRepository implements INPERepository {
 		return null;
 	}
 
-	private void formatSearchJSON(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
-			String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude, JSONObject searchJSONObj) throws JSONException {
+	public JSONObject formatSearchJSON(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
+			String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude) throws JSONException {
+		JSONObject searchJSONObj = new JSONObject();
+		
 		JSONObject spatialFilterObj = new JSONObject();
 		JSONObject temporalFilterObj = new JSONObject();
 		JSONObject lowerLeftObj = new JSONObject();
@@ -485,6 +487,8 @@ public class USGSNasaRepository implements INPERepository {
 		searchJSONObj.put(SapsPropertiesConstants.MAX_RESULTS_JSON_KEY, MAX_RESULTS);
 		searchJSONObj.put(SapsPropertiesConstants.SORT_ORDER_JSON_KEY,
 				SapsPropertiesConstants.ASC_JSON_VALUE);
+		
+		return searchJSONObj;
 	}
 
 	public Set<String> getRegionsFromArea(String dataset, int firstYear, int lastYear,
@@ -521,9 +525,10 @@ public class USGSNasaRepository implements INPERepository {
 
 	protected JSONArray searchForRegionInArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
 			   String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude) {
-		JSONObject searchJSONObj = new JSONObject();
+		JSONObject searchJSONObj = null;
 		try {
-			formatSearchJSON(dataset, firstYear, lastYear, lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude, searchJSONObj);
+			searchJSONObj = formatSearchJSON(dataset, firstYear, lastYear, 
+					lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
 		} catch (JSONException e) {
 			LOGGER.error("Error while formatting search JSON", e);
 			return null;
@@ -532,8 +537,9 @@ public class USGSNasaRepository implements INPERepository {
 		try {
 			JSONParser jsonParser = new JSONParser();
 			JSONObject jsonObject;
-			jsonObject = new JSONObject(jsonParser.parse(
-                    new InputStreamReader(requestForRegions(searchJSONObj), "UTF-8")).toString());
+			InputStream inputStream = requestForRegions(searchJSONObj);
+			InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+			jsonObject = new JSONObject(jsonParser.parse(inputStreamReader).toString());
 			return jsonObject.optJSONObject(SapsPropertiesConstants.DATA_JSON_KEY)
 					.optJSONArray(SapsPropertiesConstants.RESULTS_JSON_KEY);
 		} catch (Exception e) {
@@ -542,7 +548,7 @@ public class USGSNasaRepository implements INPERepository {
 		return new JSONArray();
 	}
 
-	private InputStream requestForRegions(JSONObject searchJSONObj){
+	public InputStream requestForRegions(JSONObject searchJSONObj){
 		HttpClient client = HttpClientBuilder.create().build();
 		HttpPost request = new HttpPost(usgsJsonUrl + File.separator + "v" + File.separator
 				+ USGS_SEARCH_VERSION + File.separator + "search");
@@ -551,7 +557,7 @@ public class USGSNasaRepository implements INPERepository {
 		try {
 			params = new StringEntity("jsonRequest=" + searchJSONObj);
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			LOGGER.error("It's not possible add the parameter.", e);
 		}
 		request.setEntity(params);
 
