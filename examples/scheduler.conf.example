@@ -12,6 +12,8 @@ infra_initial_specs_file_path=config/workerSpec
 
 worker_sandbox=/tmp/sandbox
 worker_raster_tmp_dir=/mnt/rasterTmp
+worker_operating_system=Linux
+worker_kernel_version=4.1.0
 
 saps_worker_run_script_path=/home/ubuntu/saps-engine/scripts/worker-run.sh
 
