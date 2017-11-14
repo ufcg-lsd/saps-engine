@@ -533,6 +533,7 @@ public class Archiver {
 		if (!generateProvenanceFile(imageTask)) {
 			return 1;
 		}
+		
 		return 0;
 	}
 

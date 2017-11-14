@@ -383,15 +383,15 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			insertStatement = connection.prepareStatement(INSERT_METADATA_INFO_SQL);
 			insertStatement.setString(1, taskId);
-			insertStatement.setString(2, ImageTask.NON_EXISTENT);
-			insertStatement.setString(3, ImageTask.NON_EXISTENT);
-			insertStatement.setString(4, ImageTask.NON_EXISTENT);
-			insertStatement.setString(5, ImageTask.NON_EXISTENT);
-			insertStatement.setString(6, ImageTask.NON_EXISTENT);
-			insertStatement.setString(7, ImageTask.NON_EXISTENT);
-			insertStatement.setString(8, ImageTask.NON_EXISTENT);
-			insertStatement.setString(9, ImageTask.NON_EXISTENT);
-			insertStatement.setString(10, ImageTask.NON_EXISTENT);
+			insertStatement.setString(2, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(3, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(4, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(5, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(6, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(7, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(8, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(9, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(10, ImageTask.NON_EXISTENT_DATA);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
