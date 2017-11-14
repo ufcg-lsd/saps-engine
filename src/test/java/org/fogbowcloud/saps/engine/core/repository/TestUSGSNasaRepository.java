@@ -76,7 +76,7 @@ public class TestUSGSNasaRepository {
 	@Test
 	public void testLatLongToWRS2Regions() throws IOException, JSONException {
 		Properties properties = new Properties();
-		properties.put("saps_export_path", "/local/exports");
+		properties.put("saps_export_path", "src/test/resources");
 		properties.put("max_usgs_download_link_requests", "10");
 		properties.put("max_simultaneous_download", "1");
 		properties.put("usgs_login_url", "https://ers.cr.usgs.gov/login/");
@@ -100,7 +100,7 @@ public class TestUSGSNasaRepository {
 
 		doReturn(mockedResponse1).when(usgsNasaRepository).searchForRegionInArea(Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt(),
 				Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-		Set regions = usgsNasaRepository.getRegionsFromArea("LANDSAT_TM_C1", 2000, 2001,
+		Set<String> regions = usgsNasaRepository.getRegionsFromArea("LANDSAT_TM_C1", 2000, 2001,
 				"-7.231189", "-36.784093","-7.231189", "-36.784093");
 		Assert.assertEquals(1, regions.size()); //region: 215, 65
 

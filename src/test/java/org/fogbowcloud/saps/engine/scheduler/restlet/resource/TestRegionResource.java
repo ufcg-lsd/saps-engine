@@ -37,7 +37,7 @@ public class TestRegionResource {
 	public void setUp() throws Exception {
 		this.properties = new Properties();
 
-		this.properties.put("saps_export_path", "/local/exports");
+		this.properties.put("saps_export_path", "src/test/resources");
 		this.properties.put("saps_container_linked_path", "/home/ubuntu/");
 		this.properties.put("datastore_url_prefix", "jdbc:h2:mem:testdb");
 		this.properties.put("datastore_username", "testuser");
@@ -126,8 +126,6 @@ public class TestRegionResource {
 			actualFrequency.put(regionCount.getString("region"), regionCount.getInt("count"));
 		}
 
-//		Assert.assertEquals(true, responseStr.contains("\"215067\":1"));
-//		Assert.assertEquals(true, responseStr.contains("\"215066\":2"));
 		Assert.assertEquals(expectedFrequency, actualFrequency);
 	}
 
