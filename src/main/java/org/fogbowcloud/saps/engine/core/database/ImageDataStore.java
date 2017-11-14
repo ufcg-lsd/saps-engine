@@ -49,6 +49,11 @@ public interface ImageDataStore {
 
 	void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember)
 			throws SQLException;
+	
+	void dispatchMetadataInfo(String taskId) throws SQLException;
+	
+	void updateMetadataInfo(String metadataFilePath, String operatingSystem,
+			String kernelVersion, String componentType, String taskId) throws SQLException;
 
 	List<Ward> getUsersToNotify() throws SQLException;
 
@@ -93,6 +98,9 @@ public interface ImageDataStore {
 	String getNFSServerIP(String federationMember) throws SQLException;
 
 	String getNFSServerSshPort(String federationMember) throws SQLException;
+	
+	String getMetadataInfo(String taskId, String componentType, String infoType)
+			throws SQLException;
 
 	void dispose();
 

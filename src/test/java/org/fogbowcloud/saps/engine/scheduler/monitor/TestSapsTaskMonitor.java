@@ -18,15 +18,21 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import org.fogbowcloud.blowout.core.model.Command;
+import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.Task;
+import org.fogbowcloud.blowout.core.model.TaskImpl;
 import org.fogbowcloud.blowout.core.model.TaskProcess;
+import org.fogbowcloud.blowout.core.model.TaskProcessImpl;
 import org.fogbowcloud.blowout.core.model.TaskState;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
 import org.fogbowcloud.blowout.pool.AbstractResource;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
+import org.fogbowcloud.blowout.pool.DefaultBlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -122,6 +128,7 @@ public class TestSapsTaskMonitor {
 		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
 
 		doNothing().when(sebalTaskMonitor).updateImageTaskToFailed(fakeProcess);
+		doNothing().when(sebalTaskMonitor).storeMetadata(fakeProcess);
 
 		this.sebalTaskMonitor.procMon();
 
@@ -260,5 +267,38 @@ public class TestSapsTaskMonitor {
 
 		this.sebalTaskMonitor.updateImageTaskToReady(fakeTaskProcess);
 		Assert.assertEquals(ImageTaskState.READY, imageTask.getState());
+	}
+
+	@Test
+	public void testProcMonTaskFailedWithMetadata() throws SQLException {
+		String taskId = "fake-id";
+		List<Command> commandList = mock(List.class);
+		Specification spec = mock(Specification.class);
+
+		String metadataFilePath = "/fake/export/path/fake-id/metadata/outputDescription.txt";
+		String operatingSystem = "operating-system";
+		String kernelVersion = "kernel-version";
+
+		TaskImpl taskImpl = new TaskImpl(taskId, spec);
+		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, taskId);
+		taskImpl.putMetadata(SapsTask.METADATA_EXPORT_PATH, "/fake/export/path");
+		taskImpl.putMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM, operatingSystem);
+		taskImpl.putMetadata(SapsTask.METADATA_WORKER_KERNEL_VERSION, kernelVersion);
+
+		List<Task> tasks = new ArrayList<>();
+		tasks.add(taskImpl);
+
+		TaskProcessImpl taskProcessImpl = new TaskProcessImpl(taskId, commandList, spec);
+
+		BlowoutPool blowoutPool = new DefaultBlowoutPool();
+		blowoutPool.addTasks(tasks);
+
+		doReturn(blowoutPool).when(sebalTaskMonitor).getBlowoutPool();
+
+		Assert.assertEquals(metadataFilePath,
+				this.sebalTaskMonitor.getMetadataFilePath(taskProcessImpl));
+		Assert.assertEquals(operatingSystem,
+				this.sebalTaskMonitor.getOperatingSystem(taskProcessImpl));
+		Assert.assertEquals(kernelVersion, this.sebalTaskMonitor.getKernelVersion(taskProcessImpl));
 	}
 }

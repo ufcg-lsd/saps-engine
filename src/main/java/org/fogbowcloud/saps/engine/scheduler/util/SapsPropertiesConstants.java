@@ -109,6 +109,14 @@ public class SapsPropertiesConstants {
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
 	public static final String PREPROCESSOR_EXECUTION_PERIOD = "preprocessor_execution_period";
 	
+	// Provenance data components constants
+	public static final String INPUT_DOWNLOADER_COMPONENT_TYPE = "input_downloader";
+	public static final String PREPROCESSOR_COMPONENT_TYPE = "input_downloader";
+	public static final String WORKER_COMPONENT_TYPE = "input_downloader";
+	public static final String METADATA_TYPE = "metadata";
+	public static final String OS_TYPE = "operating_system";
+	public static final String KERNEL_TYPE = "kernel_version";
+	
 	// Preprocessor constants
 	public static final String DEFAULT_PREPROCESSOR_EXECUTION_PERIOD = "60000";
 	public static final String DEFAULT_PREPROCESSOR_RUN_SCRIPT_COMMAND = "/bin/bash /home/ubuntu/run.sh";
@@ -129,11 +137,14 @@ public class SapsPropertiesConstants {
 	// Properties file constants
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
 	public static final String SAPS_EXPORT_PATH = "saps_export_path";
-	public static final String SAPS_CONTAINER_LINKED_PATH = "saps_container_linked_path";
+	public static final String SAPS_CONTAINER_INPUT_LINKED_PATH = "saps_container_input_linked_path";
+	public static final String SAPS_CONTAINER_METADATA_LINKED_PATH = "saps_container_metadata_linked_path";
 	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 	public static final String STATIONS_FILE_PATH = "stations_file_path";
 	public static final String BASE_YEAR_DIR_PATH = "base_year_dir_path";
+	public static final String WORKER_OPERATING_SYSTEM = "worker_operating_system";
+	public static final String WORKER_KERNEL_VERSION = "worker_kernel_version";
 	public static final String POSSIBLE_STATIONS_FILE_PATH = "src/main/resources/possible_stations";
 	public static final String TILES_COORDINATES_FILE_PATH = "src/main/resources/tiles_coordinates.json";
 }

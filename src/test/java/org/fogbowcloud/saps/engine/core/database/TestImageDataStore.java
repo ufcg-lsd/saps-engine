@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class TestImageDataStore {
 				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						new java.util.Date().getTime()), new Timestamp(
 						new java.util.Date().getTime()), ImageTask.AVAILABLE, "");
-
+    
 		this.imageStore.addImageTask(taskOne);
 		this.imageStore.addImageTask(taskTwo);
 
@@ -80,5 +81,43 @@ public class TestImageDataStore {
 		imageTask = tasks.get(0);
 		Assert.assertEquals(imageTask.getStatus(), ImageTask.UNAVAILABLE);
 	}
+	
+	@Test
+	public void testUpdateMetadata() throws SQLException {
+		String metadataFilePath = "fake-metadata-file-path";
+		String operatingSystem = "fake-operating-system";
+		String kernelVersion = "fake-kernel-version";
 
+		Properties properties = new Properties();
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_username", "testuser");
+		properties.setProperty("datastore_password", "testuser");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_name", "testdb");
+
+		Date date = new Date();
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+		ImageTask task = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
+				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE",
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), "available", "");
+
+		imageStore.dispatchMetadataInfo(task.getTaskId());
+		imageStore.updateMetadataInfo(metadataFilePath, operatingSystem, kernelVersion,
+				"input_downloader", task.getTaskId());
+
+		String metadataInfo = imageStore.getMetadataInfo(task.getTaskId(),
+				"input_downloader", SapsPropertiesConstants.METADATA_TYPE);
+		String osInfo = imageStore.getMetadataInfo(task.getTaskId(),
+				"input_downloader", SapsPropertiesConstants.OS_TYPE);
+		String kernelInfo = imageStore.getMetadataInfo(task.getTaskId(),
+				"input_downloader", SapsPropertiesConstants.KERNEL_TYPE);
+		
+		Assert.assertEquals(metadataFilePath, metadataInfo);
+		Assert.assertEquals(operatingSystem, osInfo);
+		Assert.assertEquals(kernelVersion, kernelInfo);
+	}
 }
