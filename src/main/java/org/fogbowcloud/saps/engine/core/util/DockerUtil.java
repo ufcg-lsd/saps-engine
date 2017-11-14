@@ -52,10 +52,12 @@ public class DockerUtil {
 	 */
 	public static String runMappedContainer(String repository, String tag,
 			Map<String, String> hostAndContainerDirMap) {
-		String mappingCommand = buildMappingCommand(hostAndContainerDirMap);
+		ProcessBuilder builder = new ProcessBuilder("docker", "run", "-td");
+		buildMappingCommand(builder, hostAndContainerDirMap);
 
-		ProcessBuilder builder = new ProcessBuilder("docker", "run", "-td", mappingCommand,
-				repository + ":" + tag);
+		builder.command().add(repository);
+		builder.command().add(":");
+		builder.command().add(tag);
 		LOGGER.debug("Running container: " + builder.command());
 
 		try {
@@ -69,7 +71,8 @@ public class DockerUtil {
 		return "";
 	}
 
-	private static String buildMappingCommand(Map<String, String> hostAndContainerDirMap) {
+	private static String buildMappingCommand(ProcessBuilder builder,
+			Map<String, String> hostAndContainerDirMap) {
 		String mappingCommand = new String();
 
 		@SuppressWarnings("rawtypes")
@@ -77,7 +80,10 @@ public class DockerUtil {
 		while (it.hasNext()) {
 			@SuppressWarnings("rawtypes")
 			Map.Entry pair = (Map.Entry) it.next();
-			mappingCommand += " -v " + pair.getKey() + ":" + pair.getValue();
+			builder.command().add("-v");
+			builder.command().add(String.valueOf(pair.getKey()));
+			builder.command().add(":");
+			builder.command().add(String.valueOf(pair.getValue()));
 			it.remove(); // avoids a ConcurrentModificationException
 		}
 
