@@ -242,7 +242,6 @@ public class InputDownloader {
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing created tasks in Catalogue.", e);
 		} catch (IndexOutOfBoundsException e) {
-			LOGGER.error("Is not possible get the amount of images to download.", e);
 			return;
 		}
 
