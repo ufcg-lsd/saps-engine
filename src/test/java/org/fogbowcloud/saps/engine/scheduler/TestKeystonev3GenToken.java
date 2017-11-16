@@ -122,11 +122,9 @@ public class TestKeystonev3GenToken {
         ProcessedImagesEmailBuilder emailBuilder = new ProcessedImagesEmailBuilder(
                 application,
                 properties,
-                "admin@admin.com",
+                "sebal.no.replay@gmail.com",
                 Arrays.asList(images)
         );
         emailBuilder.run();
-
-        System.out.println(emailBuilder.getResult());
     }
 }
