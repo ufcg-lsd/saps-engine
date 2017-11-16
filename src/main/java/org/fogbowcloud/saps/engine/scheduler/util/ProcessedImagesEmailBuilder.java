@@ -46,6 +46,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
     private String userEmail;
     private List<String> images;
     private String result;
+    private boolean finishedWithoutFail;
 
     public ProcessedImagesEmailBuilder(
             DatabaseApplication databaseApplication,
@@ -58,10 +59,15 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         this.userEmail = userEmail;
         this.images = images;
         this.result = null;
+        this.finishedWithoutFail = true;
     }
 
     public String getResult() {
         return result;
+    }
+
+    public boolean getFinishedWithoutFail() {
+        return finishedWithoutFail;
     }
 
     @Override
@@ -80,12 +86,13 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         for (String str: images) {
             try {
                 tasklist.put(generateTaskEmailString(properties, str));
-            } catch (IOException | URISyntaxException e) {
+            } catch (IOException | URISyntaxException | IllegalArgumentException e) {
+                finishedWithoutFail = false;
                 LOGGER.error("Failed to fetch image from object store.", e);
                 errorBuilder
-                        .append("Failed to fetch image from object store.")
-                        .append(e.getMessage())
-                        .append(Arrays.toString(e.getStackTrace()));
+                        .append("Failed to fetch image from object store.").append("\n")
+                        .append(e.getMessage()).append("\n")
+                        .append(Arrays.toString(e.getStackTrace())).append("\n");
                 try {
                     JSONObject task = new JSONObject();
                     task.put("task", str);
@@ -95,11 +102,12 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                     LOGGER.error("Failed to create UNAVAILABLE task json.", e);
                 }
             } catch (SQLException e) {
+                finishedWithoutFail = false;
                 LOGGER.error("Failed to fetch image from database.", e);
                 errorBuilder
-                        .append("Failed to fetch image from database.")
-                        .append(e.getMessage())
-                        .append(Arrays.toString(e.getStackTrace()));
+                        .append("Failed to fetch image from database.").append("\n")
+                        .append(e.getMessage()).append("\n")
+                        .append(Arrays.toString(e.getStackTrace())).append("\n");
                 try {
                     JSONObject task = new JSONObject();
                     task.put("task", str);
@@ -109,11 +117,12 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                     LOGGER.error("Failed to create UNAVAILABLE task json.", e);
                 }
             } catch (JSONException e) {
+                finishedWithoutFail = false;
                 LOGGER.error("Failed to create task json.", e);
                 errorBuilder
-                        .append("Failed to create task json.")
-                        .append(e.getMessage())
-                        .append(Arrays.toString(e.getStackTrace()));
+                        .append("Failed to create task json.").append("\n")
+                        .append(e.getMessage()).append("\n")
+                        .append(Arrays.toString(e.getStackTrace())).append("\n");
                 try {
                     JSONObject task = new JSONObject();
                     task.put("task", str);
@@ -133,11 +142,12 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                     tasklist.toString()
             );
         } catch (MessagingException e) {
+            finishedWithoutFail = false;
             LOGGER.error("Failed to send email with images download links.", e);
             errorBuilder
-                    .append("Failed to send email with images download links.")
-                    .append(e.getMessage())
-                    .append(Arrays.toString(e.getStackTrace()));
+                    .append("Failed to send email with images download links.").append("\n")
+                    .append(e.getMessage()).append("\n")
+                    .append(Arrays.toString(e.getStackTrace())).append("\n");
         }
         if (!errorBuilder.toString().isEmpty()) {
             try {
