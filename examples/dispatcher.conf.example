@@ -23,4 +23,16 @@ usgs_username=username
 usgs_password=password
 usgs_api_key_period=300000
 
-saps_export_path=/local/exports
+#### noReply email ####
+noreply_email=email
+noreply_password=password
+
+#### Swift access ####
+swift_auth_url=localhost
+swift_project_id=projectid
+swift_user_id=userid
+swift_password=password
+swift_object_store_host=localhost:8080
+swift_object_store_path=/path/to/archiver
+swift_object_store_container=container
+swift_object_store_key=mykey
