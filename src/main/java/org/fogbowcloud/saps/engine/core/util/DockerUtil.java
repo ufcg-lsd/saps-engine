@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.core.util;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -55,9 +56,7 @@ public class DockerUtil {
 		ProcessBuilder builder = new ProcessBuilder("docker", "run", "-td");
 		buildMappingCommand(builder, hostAndContainerDirMap);
 
-		builder.command().add(repository);
-		builder.command().add(":");
-		builder.command().add(tag);
+		builder.command().add(repository + ":" + tag);
 		LOGGER.debug("Running container: " + builder.command());
 
 		try {
@@ -81,9 +80,8 @@ public class DockerUtil {
 			@SuppressWarnings("rawtypes")
 			Map.Entry pair = (Map.Entry) it.next();
 			builder.command().add("-v");
-			builder.command().add(String.valueOf(pair.getKey()));
-			builder.command().add(":");
-			builder.command().add(String.valueOf(pair.getValue()));
+			builder.command()
+					.add(String.valueOf(pair.getKey()) + ":" + String.valueOf(pair.getValue()));
 			it.remove(); // avoids a ConcurrentModificationException
 		}
 
