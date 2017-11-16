@@ -170,7 +170,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
             throws URISyntaxException, IOException, SQLException, JSONException {
         JSONObject result = new JSONObject();
 
-        String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST).substring(8);
+        String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
         String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
         String objectStoreContainer = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER);
         String objectStoreKey = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY);
@@ -192,6 +192,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                 .setPath(objectStorePath + "/" + objectStoreContainer)
                 .addParameter("path", "archiver/" + task.getTaskId() + "/data/output/")
                 .build();
+        LOGGER.debug("Getting list of files for task " + task.getTaskId() + " from " + uri);
         HttpGet httpget = new HttpGet(uri);
         httpget.addHeader("X-Auth-Token", token.getAccessId());
         HttpResponse response = client.execute(httpget);

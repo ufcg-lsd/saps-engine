@@ -26,37 +26,37 @@ public class RestletServerMain {
         DatabaseApplication databaseApplication = new DatabaseApplication(properties);
         databaseApplication.startServer();
 
-        String userEmail = properties.getProperty(ADMIN_EMAIL);
-        SapsUser user = databaseApplication.getUser(userEmail);
-        if (user == null) {
-            String userName = properties.getProperty(ADMIN_USER);
-            String userPass = DigestUtils.md5Hex(properties.getProperty(ADMIN_PASSWORD));
-
-            try {
-                databaseApplication.createUser(userEmail, userName, userPass, true, false, true);
-            } catch (Exception e) {
-                LOGGER.error("Error while creating user", e);
-            }
-
-            try {
-                databaseApplication.createUser("anonymous", "anonymous", DigestUtils.md5Hex("pass"), true, false, false);
-            } catch (Exception e) {
-                LOGGER.error("Error while creating user", e);
-            }
-
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-            databaseApplication.addTasks(
-                    "-7.913",
-                    "-37.814",
-                    "-6.547",
-                    "-35.757",
-                    format.parse("2017-11-01"),
-                    format.parse("2017-11-08"),
-                    "Default",
-                    "Default",
-                    "Default"
-            );
-        }
+//        String userEmail = properties.getProperty(ADMIN_EMAIL);
+//        SapsUser user = databaseApplication.getUser(userEmail);
+//        if (user == null) {
+//            String userName = properties.getProperty(ADMIN_USER);
+//            String userPass = DigestUtils.md5Hex(properties.getProperty(ADMIN_PASSWORD));
+//
+//            try {
+//                databaseApplication.createUser(userEmail, userName, userPass, true, false, true);
+//            } catch (Exception e) {
+//                LOGGER.error("Error while creating user", e);
+//            }
+//
+//            try {
+//                databaseApplication.createUser("anonymous", "anonymous", DigestUtils.md5Hex("pass"), true, false, false);
+//            } catch (Exception e) {
+//                LOGGER.error("Error while creating user", e);
+//            }
+//
+////            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+////            databaseApplication.addTasks(
+////                    "-7.913",
+////                    "-37.814",
+////                    "-6.547",
+////                    "-35.757",
+////                    format.parse("2017-11-01"),
+////                    format.parse("2017-11-08"),
+////                    "Default",
+////                    "Default",
+////                    "Default"
+////            );
+//        }
     }
 
 }
