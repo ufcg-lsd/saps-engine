@@ -1,6 +1,10 @@
 package org.fogbowcloud.saps.engine.core.dispatcher;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -9,18 +13,26 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Properties;
 
+import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class SubmissionDispatcherTest {
 
+	private static final String USGS_REGIONS_RESPONSE_16_07_1994="src/test/resources/usgs/regions_16_07_1994.json";  
+	private static final String USGS_REGIONS_DATASET_7_RESPONSE_01_01_2017="src/test/resources/usgs/regions_dataset_7_01_01_2017.json";
+	private static final String USGS_REGIONS_DATASET_8_RESPONSE_01_01_2017 = "src/test/resources/usgs/regions_dataset_8_01_01_2017.json";
+	
 	private JDBCImageDataStore imageStore;
 	private USGSNasaRepository repository;
 	private SubmissionDispatcherImpl dispatcher;
@@ -49,18 +61,18 @@ public class SubmissionDispatcherTest {
 	}
 
 	@Before
-	public void setUp() throws SQLException {
+	public void setUp() throws SQLException {		
 		Properties properties = new Properties();
-		properties.setProperty("datastore_ip", "");
-		properties.setProperty("datastore_port", "");
-		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
-		properties.setProperty("datastore_username", "testuser");
-		properties.setProperty("datastore_password", "testuser");
-		properties.setProperty("datastore_driver", "org.h2.Driver");
-		properties.setProperty("datastore_name", "testdb");
+		properties.setProperty(ImageDataStore.DATASTORE_IP, "");
+		properties.setProperty(ImageDataStore.DATASTORE_PORT, "");
+		properties.setProperty(ImageDataStore.DATASTORE_URL_PREFIX, "jdbc:h2:mem:testdb");
+		properties.setProperty(ImageDataStore.DATASTORE_USERNAME, "testuser");
+		properties.setProperty(ImageDataStore.DATASTORE_PASSWORD, "testuser");
+		properties.setProperty(ImageDataStore.DATASTORE_DRIVER, "org.h2.Driver");
+		properties.setProperty(ImageDataStore.DATASTORE_NAME, "testdb");
 
 		// USGS Properties
-		properties.put("saps_export_path", "/local/exports");
+		properties.put("saps_export_path", "src/test/resources");
 		properties.put("max_usgs_download_link_requests", "10");
 		properties.put("max_simultaneous_download", "1");
 		properties.put("usgs_login_url", "https://ers.cr.usgs.gov/login/");
@@ -70,7 +82,7 @@ public class SubmissionDispatcherTest {
 		properties.put("usgs_api_key_period", "300000");
 
 		imageStore = new JDBCImageDataStore(properties);
-		repository = new USGSNasaRepository(properties);
+		repository = Mockito.spy(new USGSNasaRepository(properties));
 
 		dispatcher = new SubmissionDispatcherImpl(imageStore, repository);
 	}
@@ -81,9 +93,15 @@ public class SubmissionDispatcherTest {
 	}
 
 	@Test
-	public void testFillDb() {
+	public void testFillDb() throws FileNotFoundException {
+	    File initialFile = new File(USGS_REGIONS_RESPONSE_16_07_1994);
+	    InputStream inputStream = new FileInputStream(initialFile);
+
+	    Mockito.when(this.repository.requestForRegions(
+	    		Mockito.any(JSONObject.class))).thenReturn(inputStream);
+	    
 		SampleInput sampleInput = getSampleInput(1994, 7, 16, 1994, 7, 16);
-		List<Task> tasks = dispatcher.fillDB(sampleInput.lowerLeftLatitude,
+		List<Task> tasks = this.dispatcher.fillDB(sampleInput.lowerLeftLatitude,
 				sampleInput.lowerLeftLongitude, sampleInput.upperRightLatitude,
 				sampleInput.upperRightLongitude, sampleInput.initDate, sampleInput.endDate,
 				sampleInput.inputGathering, sampleInput.inputPreprocessing,
@@ -95,7 +113,23 @@ public class SubmissionDispatcherTest {
 	}
 
 	@Test
-	public void testInsertTasksWithSubmission() throws SQLException, IOException {
+	public void testInsertTasksWithSubmission() throws SQLException, IOException, JSONException {
+	    File initialFileDataSet7 = new File(USGS_REGIONS_DATASET_7_RESPONSE_01_01_2017);
+	    InputStream inputStreamDataset7 = new FileInputStream(initialFileDataSet7);
+	    JSONObject datasetSevenJson = new JSONObject();
+		Mockito.when(this.repository.formatSearchJSON(Mockito.eq(SapsPropertiesConstants.LANDSAT_7_DATASET), Mockito.anyInt(), Mockito.anyInt(),
+	    		Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(datasetSevenJson);
+		Mockito.when(this.repository.requestForRegions(
+				Mockito.eq(datasetSevenJson))).thenReturn(inputStreamDataset7);
+		
+		File initialFileDataSet8 = new File(USGS_REGIONS_DATASET_8_RESPONSE_01_01_2017);
+		InputStream inputStreamDataset8 = new FileInputStream(initialFileDataSet8);
+	    JSONObject datasetEightJson = new JSONObject();
+		Mockito.when(this.repository.formatSearchJSON(Mockito.eq(SapsPropertiesConstants.LANDSAT_8_DATASET), Mockito.anyInt(), Mockito.anyInt(),
+	    		Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(datasetEightJson);		
+		Mockito.when(this.repository.requestForRegions(
+				Mockito.eq(datasetEightJson))).thenReturn(inputStreamDataset8);
+		
 		SampleInput sampleInput = getSampleInput(2017, 1, 1, 2017, 1, 1);
 
 		Submission submissionOne = new Submission("sub-1");
@@ -107,26 +141,26 @@ public class SubmissionDispatcherTest {
 		Date date = new Date();
 
 		ImageTask imageTaskOne = new ImageTask(taskOne.getId(), "landsat_5", "region-53", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT_DATA, ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
+				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA);
 		ImageTask imageTaskTwo = new ImageTask(taskTwo.getId(), "landsat_5", "region-53", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT_DATA, ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
+				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA);
 		ImageTask imageTaskThree = new ImageTask(taskThree.getId(), "landsat_5", "region-53", date,
-				ImageTask.NON_EXISTENT, ImageTaskState.CREATED, ImageTask.NON_EXISTENT, 0,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT, ImageTask.NON_EXISTENT,
+				ImageTask.NON_EXISTENT_DATA, ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
 				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT,
-				ImageTask.NON_EXISTENT);
+				new Timestamp(new java.util.Date().getTime()), ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA);
 
 		taskOne.setImageTask(imageTaskOne);
 		taskTwo.setImageTask(imageTaskTwo);
@@ -150,7 +184,7 @@ public class SubmissionDispatcherTest {
 		Assert.assertEquals(submissionOne, actualSubmissionOne);
 		Assert.assertEquals(submissionTwo, actualSubmissionTwo);
 
-		List<Task> tasks = dispatcher.fillDB(sampleInput.lowerLeftLatitude,
+		List<Task> tasks = this.dispatcher.fillDB(sampleInput.lowerLeftLatitude,
 				sampleInput.lowerLeftLongitude, sampleInput.upperRightLatitude,
 				sampleInput.upperRightLongitude, sampleInput.initDate, sampleInput.endDate,
 				sampleInput.inputGathering, sampleInput.inputPreprocessing,

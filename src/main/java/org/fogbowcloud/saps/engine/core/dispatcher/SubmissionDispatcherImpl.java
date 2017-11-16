@@ -131,6 +131,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         return (imageTaskDay.getTime() <= date);
     }
 
+    // FIXME is it necessaty ? "System.out.println" ?
     @Override
     public void listTasksInDB() throws SQLException, ParseException {
         List<ImageTask> allImageTask = imageStore.getAllTasks();
