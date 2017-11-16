@@ -34,6 +34,11 @@ import static org.mockito.Mockito.doReturn;
 
 public class TestKeystonev3GenToken {
 
+    /*
+        This tests are not unit tests, they were created as a shortcut to some
+        methods for prototyping, but are not extensive enough for proper testing.
+     */
+
     @Test
     public void testGenToken() {
         Properties properties = new Properties();
@@ -76,7 +81,7 @@ public class TestKeystonev3GenToken {
         properties.setProperty("swift_project_id", "3324431f606d4a74a060cf78c16fcb21");
         properties.setProperty("swift_user_id", "3e57892203271c195f5d473fc84f484b8062103275ce6ad6e7bcd1baedf70d5c");
         properties.setProperty("swift_password", "nc3SRPS2");
-        properties.setProperty("swift_object_store_host", "https://cloud.lsd.ufcg.edu.br:8080");
+        properties.setProperty("swift_object_store_host", "cloud.lsd.ufcg.edu.br:8080");
         properties.setProperty("swift_object_store_path", "/swift/v1");
         properties.setProperty("swift_object_store_container", "lsd_deploy");
         properties.setProperty("swift_object_store_key", "qnjcKtALnbqHkOM0f0J9I8TWzANCI7Qj8");
