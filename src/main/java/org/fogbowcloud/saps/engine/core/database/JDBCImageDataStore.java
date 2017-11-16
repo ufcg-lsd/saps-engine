@@ -232,6 +232,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
+	private java.sql.Date javaDateToSqlDate(Date date) {
+		return new java.sql.Date(date.getTime());
+	}
+
 	@Override
 	public ImageTask addImageTask(String taskId, String dataset, String region, Date date,
 			String downloadLink, int priority, String inputGathering, String inputPreprocessing,
@@ -276,7 +280,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, imageTask.getTaskId());
 			insertStatement.setString(2, imageTask.getDataset());
 			insertStatement.setString(3, imageTask.getRegion());
-			insertStatement.setDate(4, new java.sql.Date(imageTask.getImageDate().getTime()));
+			insertStatement.setDate(4, javaDateToSqlDate(imageTask.getImageDate()));
 			insertStatement.setString(5, imageTask.getDownloadLink());
 			insertStatement.setString(6, imageTask.getState().getValue());
 			insertStatement.setString(7, imageTask.getFederationMember());
@@ -1614,8 +1618,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			queryStatement = connection.prepareStatement(PROCESSED_IMAGES_QUERY);
 			queryStatement.setString(1, ImageTaskState.ARCHIVED.getValue());
 			queryStatement.setString(2, region);
-			queryStatement.setObject(3, initDate);
-			queryStatement.setObject(4, endDate);
+			queryStatement.setDate(3, javaDateToSqlDate(initDate));
+			queryStatement.setDate(4, javaDateToSqlDate(endDate));
 			queryStatement.setString(5, inputPreprocessing);
 			queryStatement.setString(6, inputGathering);
 			queryStatement.setString(7, algorithmExecution);

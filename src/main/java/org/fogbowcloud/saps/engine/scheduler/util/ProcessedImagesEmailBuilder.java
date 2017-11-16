@@ -75,12 +75,17 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         }
         LOGGER.info(builder.toString());
 
+        StringBuilder errorBuilder = new StringBuilder();
         JSONArray tasklist = new JSONArray();
         for (String str: images) {
             try {
                 tasklist.put(generateTaskEmailString(properties, str));
             } catch (IOException | URISyntaxException e) {
                 LOGGER.error("Failed to fetch image from object store.", e);
+                errorBuilder
+                        .append("Failed to fetch image from object store.")
+                        .append(e.getMessage())
+                        .append(Arrays.toString(e.getStackTrace()));
                 try {
                     JSONObject task = new JSONObject();
                     task.put("task", str);
@@ -91,6 +96,10 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                 }
             } catch (SQLException e) {
                 LOGGER.error("Failed to fetch image from database.", e);
+                errorBuilder
+                        .append("Failed to fetch image from database.")
+                        .append(e.getMessage())
+                        .append(Arrays.toString(e.getStackTrace()));
                 try {
                     JSONObject task = new JSONObject();
                     task.put("task", str);
@@ -101,6 +110,10 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                 }
             } catch (JSONException e) {
                 LOGGER.error("Failed to create task json.", e);
+                errorBuilder
+                        .append("Failed to create task json.")
+                        .append(e.getMessage())
+                        .append(Arrays.toString(e.getStackTrace()));
                 try {
                     JSONObject task = new JSONObject();
                     task.put("task", str);
@@ -121,6 +134,23 @@ public class ProcessedImagesEmailBuilder implements Runnable {
             );
         } catch (MessagingException e) {
             LOGGER.error("Failed to send email with images download links.", e);
+            errorBuilder
+                    .append("Failed to send email with images download links.")
+                    .append(e.getMessage())
+                    .append(Arrays.toString(e.getStackTrace()));
+        }
+        if (!errorBuilder.toString().isEmpty()) {
+            try {
+                GoogleMail.Send(
+                        properties.getProperty(SapsPropertiesConstants.NO_REPLY_EMAIL),
+                        properties.getProperty(SapsPropertiesConstants.NO_REPLY_PASS),
+                        "sebal.no.reply@gmail.com",
+                        "[SAPS] Filter results",
+                        errorBuilder.toString()
+                );
+            } catch (MessagingException e) {
+                LOGGER.error("Failed to send email with errors to admins.", e);
+            }
         }
         result = tasklist.toString();
     }
