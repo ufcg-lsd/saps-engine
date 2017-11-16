@@ -145,7 +145,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                         properties.getProperty(SapsPropertiesConstants.NO_REPLY_EMAIL),
                         properties.getProperty(SapsPropertiesConstants.NO_REPLY_PASS),
                         "sebal.no.reply@gmail.com",
-                        "[SAPS] Filter results",
+                        "[SAPS] Errors during image temporary link creation",
                         errorBuilder.toString()
                 );
             } catch (MessagingException e) {
