@@ -7,12 +7,9 @@ import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -720,33 +717,5 @@ public class InputDownloader {
 
 	public void setPendingTaskMap(ConcurrentMap<String, ImageTask> pendingTaskDownloadMap) {
 		this.pendingTaskDownloadMap = pendingTaskDownloadMap;
-	}
-	
-	public static void main(String[] args) throws ParseException {
-		Properties properties = new Properties();
-		properties.put(SapsPropertiesConstants.CONTAINER_SCRIPT, "/home/ubuntu/run.sh");
-		properties.put(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH,
-				"/home/ubuntu/results");
-		properties.put(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH,
-				"/home/ubuntu/metadata");
-		
-		String startDateString = "2004/12/01";
-		DateFormat df = new SimpleDateFormat("yyyy/MM/dd"); 
-		Date date = df.parse(startDateString);
-		
-		ImageTask imageTask = new ImageTask("task-id", "landsat_5", "215065", date, "NE",
-				ImageTaskState.DOWNLOADING, "NE", 0, "NE", "Default", "Default", "Default", "NE",
-				"NE", new Timestamp(new Date().getTime()), new Timestamp(new Date().getTime()),
-				"available", "");
-		
-		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
-		String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT) + " "
-				+ imageTask.getDataset() + " " + imageTask.getRegion() + " "
-				+ dateFormater.format(imageTask.getImageDate()) + " "
-				+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH)
-				+ " " + properties
-						.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
-
-		int dockerExecExitValue = DockerUtil.execDockerCommand("2f28a6dd6488", commandToRun);
 	}
 }
