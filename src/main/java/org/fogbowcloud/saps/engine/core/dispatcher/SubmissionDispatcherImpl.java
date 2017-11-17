@@ -192,6 +192,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
                         task.setImageTask(iTask);
                         getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
                                 getImageStore().getTask(taskId).getUpdateTime());
+                        getImageStore().dispatchMetadataInfo(taskId);
 
                         createdTasks.add(task);
                     }

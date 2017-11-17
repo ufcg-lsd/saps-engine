@@ -370,6 +370,7 @@ public class TestInputDownloaderIntegration {
 		imageStore.dispose();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testDownloadImageNotFoundImage() throws Exception {		
 		Mockito.doNothing().when(this.inputDownloaderDefault).prepareTaskDirStructure(Mockito.eq(this.imageTaskDefault));

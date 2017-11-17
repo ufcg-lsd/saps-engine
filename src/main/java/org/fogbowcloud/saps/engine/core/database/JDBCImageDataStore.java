@@ -583,27 +583,38 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(statement, conn);
 		}
 	}
+	
+	private static final String SELECT_CHECK_METADATA_EXISTS_SQL = "SELECT EXISTS(SELECT 1 FROM "
+			+ PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL + " = ?)";
 
-	// TODO: verify this later
 	@Override
-	public boolean taskExist(String collectionTierImageName) throws SQLException {
-		LOGGER.debug("Verifying if a image " + collectionTierImageName + " exist in database");
+	public boolean metadataRegisterExist(String taskId) throws SQLException {
+		LOGGER.debug("Verifying if task " + taskId + " has a metadata register");
 
 		PreparedStatement statement = null;
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			statement = conn.prepareStatement(SELECT_CHECK_FEDERATION_EXISTS_SQL);
-			statement.setString(1, collectionTierImageName);
+			statement = conn.prepareStatement(SELECT_CHECK_METADATA_EXISTS_SQL);
+			statement.setString(1, taskId);
 			statement.setQueryTimeout(300);
 
 			statement.execute();
 
 			ResultSet rs = statement.getResultSet();
-			return rs.next();
+			if (rs.next()) {
+				boolean found = rs.getBoolean(1); // "found" column
+				if (found) {
+					return true; // Rows exist
+				} else {
+					// Rows not exist
+				}
+			}
 		} finally {
 			close(statement, conn);
 		}
+
+		return false;
 	}
 
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME
