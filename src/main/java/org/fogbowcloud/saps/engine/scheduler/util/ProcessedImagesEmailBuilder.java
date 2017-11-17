@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.scheduler.util;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -34,19 +35,26 @@ public class ProcessedImagesEmailBuilder implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ProcessedImagesEmailBuilder.class);
 
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+    private static final String UNAVAILABLE = "UNAVAILABLE";
     private static final String TEMP_DIR_URL = "%s?temp_url_sig=%s&temp_url_expires=%s";
 
     private static final String PROJECT_ID = "projectId";
     private static final String PASSWORD = "password";
     private static final String USER_ID = "userId";
     private static final String AUTH_URL = "authUrl";
+    private static final String TASK_ID = "taskId";
+    private static final String REGION = "region";
+    private static final String COLLECTION_TIER_NAME = "collectionTierName";
+    private static final String IMAGE_DATE = "imageDate";
+    private static final String NAME = "name";
+    private static final String URL = "url";
+    private static final String FILES = "files";
+    private static final String STATUS = "status";
 
     private DatabaseApplication application;
     private Properties properties;
     private String userEmail;
     private List<String> images;
-    private String result;
-    private boolean finishedWithoutFail;
 
     public ProcessedImagesEmailBuilder(
             DatabaseApplication databaseApplication,
@@ -58,16 +66,6 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         this.properties = properties;
         this.userEmail = userEmail;
         this.images = images;
-        this.result = null;
-        this.finishedWithoutFail = true;
-    }
-
-    public String getResult() {
-        return result;
-    }
-
-    public boolean getFinishedWithoutFail() {
-        return finishedWithoutFail;
     }
 
     @Override
@@ -82,73 +80,78 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         LOGGER.info(builder.toString());
 
         StringBuilder errorBuilder = new StringBuilder();
+        JSONArray tasklist = generateAllTasksJsons(errorBuilder);
+        sendTaskEmail(errorBuilder, tasklist);
+        sendErrorEmail(errorBuilder);
+    }
+
+    JSONArray generateAllTasksJsons(StringBuilder errorBuilder) {
         JSONArray tasklist = new JSONArray();
         for (String str: images) {
             try {
-                tasklist.put(generateTaskEmailString(properties, str));
+                tasklist.put(generateTaskEmailJson(properties, str));
             } catch (IOException | URISyntaxException | IllegalArgumentException e) {
-                finishedWithoutFail = false;
                 LOGGER.error("Failed to fetch image from object store.", e);
                 errorBuilder
                         .append("Failed to fetch image from object store.").append("\n")
-                        .append(e.getMessage()).append("\n")
-                        .append(Arrays.toString(e.getStackTrace())).append("\n");
+                        .append(ExceptionUtils.getStackTrace(e)).append("\n");
                 try {
                     JSONObject task = new JSONObject();
-                    task.put("task", str);
-                    task.put("status", "UNAVAILABLE");
+                    task.put(TASK_ID, str);
+                    task.put(STATUS, UNAVAILABLE);
                     tasklist.put(task);
                 } catch (JSONException e1) {
                     LOGGER.error("Failed to create UNAVAILABLE task json.", e);
                 }
             } catch (SQLException e) {
-                finishedWithoutFail = false;
                 LOGGER.error("Failed to fetch image from database.", e);
                 errorBuilder
                         .append("Failed to fetch image from database.").append("\n")
-                        .append(e.getMessage()).append("\n")
-                        .append(Arrays.toString(e.getStackTrace())).append("\n");
+                        .append(ExceptionUtils.getStackTrace(e)).append("\n");
                 try {
                     JSONObject task = new JSONObject();
-                    task.put("task", str);
-                    task.put("status", "UNAVAILABLE");
+                    task.put(TASK_ID, str);
+                    task.put(STATUS, UNAVAILABLE);
                     tasklist.put(task);
                 } catch (JSONException e1) {
                     LOGGER.error("Failed to create UNAVAILABLE task json.", e);
                 }
             } catch (JSONException e) {
-                finishedWithoutFail = false;
                 LOGGER.error("Failed to create task json.", e);
                 errorBuilder
                         .append("Failed to create task json.").append("\n")
-                        .append(e.getMessage()).append("\n")
-                        .append(Arrays.toString(e.getStackTrace())).append("\n");
+                        .append(ExceptionUtils.getStackTrace(e)).append("\n");
                 try {
                     JSONObject task = new JSONObject();
-                    task.put("task", str);
-                    task.put("status", "UNAVAILABLE");
+                    task.put(TASK_ID, str);
+                    task.put(STATUS, UNAVAILABLE);
                     tasklist.put(task);
                 } catch (JSONException e1) {
                     LOGGER.error("Failed to create UNAVAILABLE task json.", e);
                 }
             }
         }
+        return tasklist;
+    }
+
+    private void sendTaskEmail(StringBuilder errorBuilder, JSONArray tasklist) {
         try {
             GoogleMail.Send(
                     properties.getProperty(SapsPropertiesConstants.NO_REPLY_EMAIL),
                     properties.getProperty(SapsPropertiesConstants.NO_REPLY_PASS),
                     userEmail,
                     "[SAPS] Filter results",
-                    tasklist.toString()
+                    tasklist.toString(2)
             );
-        } catch (MessagingException e) {
-            finishedWithoutFail = false;
+        } catch (MessagingException | JSONException e) {
             LOGGER.error("Failed to send email with images download links.", e);
             errorBuilder
                     .append("Failed to send email with images download links.").append("\n")
-                    .append(e.getMessage()).append("\n")
-                    .append(Arrays.toString(e.getStackTrace())).append("\n");
+                    .append(ExceptionUtils.getStackTrace(e)).append("\n");
         }
+    }
+
+    private void sendErrorEmail(StringBuilder errorBuilder) {
         if (!errorBuilder.toString().isEmpty()) {
             try {
                 GoogleMail.Send(
@@ -162,10 +165,9 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                 LOGGER.error("Failed to send email with errors to admins.", e);
             }
         }
-        result = tasklist.toString();
     }
 
-    private static String toHexString(byte[] bytes) {
+    private String toHexString(byte[] bytes) {
         Formatter formatter = new Formatter();
 
         for (byte b : bytes) {
@@ -175,7 +177,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         return formatter.toString();
     }
 
-    private static String calculateRFC2104HMAC(String data, String key)
+    private String calculateRFC2104HMAC(String data, String key)
             throws SignatureException, NoSuchAlgorithmException, InvalidKeyException
     {
         SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
@@ -184,7 +186,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         return toHexString(mac.doFinal(data.getBytes()));
     }
 
-    private static String generateTempURL(String swiftPath, String container, String filePath, String key)
+    String generateTempURL(String swiftPath, String container, String filePath, String key)
             throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
         String path = swiftPath + "/" + container + "/" + filePath;
 
@@ -206,7 +208,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         return res;
     }
 
-    private JSONObject generateTaskEmailString(Properties properties, String imageid)
+    JSONObject generateTaskEmailJson(Properties properties, String imageid)
             throws URISyntaxException, IOException, SQLException, JSONException {
         JSONObject result = new JSONObject();
 
@@ -217,32 +219,14 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
         ImageTask task = application.getTask(imageid);
 
-        KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin(properties);
-        Map<String, String> credentials = new HashMap<>();
-        credentials.put(AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
-        credentials.put(PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
-        credentials.put(USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
-        credentials.put(PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
-        Token token = keystone.createToken(credentials);
+        List<String> files = getTaskFilesFromObjectStore(
+                properties, objectStoreHost, objectStorePath, objectStoreContainer, task
+        );
 
-        HttpClient client = HttpClients.createDefault();
-        URI uri = new URIBuilder()
-                .setScheme("https")
-                .setHost(objectStoreHost)
-                .setPath(objectStorePath + "/" + objectStoreContainer)
-                .addParameter("path", "archiver/" + task.getTaskId() + "/data/output/")
-                .build();
-        LOGGER.debug("Getting list of files for task " + task.getTaskId() + " from " + uri);
-        HttpGet httpget = new HttpGet(uri);
-        httpget.addHeader("X-Auth-Token", token.getAccessId());
-        HttpResponse response = client.execute(httpget);
-
-        String[] files = EntityUtils.toString(response.getEntity()).split("\n");
-
-        result.put("task", task.getTaskId());
-        result.put("region", task.getRegion());
-        result.put("collectionTierName", task.getCollectionTierName());
-        result.put("imageDate", task.getImageDate());
+        result.put(TASK_ID, task.getTaskId());
+        result.put(REGION, task.getRegion());
+        result.put(COLLECTION_TIER_NAME, task.getCollectionTierName());
+        result.put(IMAGE_DATE, task.getImageDate());
 
         JSONArray filelist = new JSONArray();
         for (String str: files) {
@@ -250,8 +234,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
             String fileName = f.getName();
             try {
                 JSONObject fileobject = new JSONObject();
-                fileobject.put("name", fileName);
-                fileobject.put("url", "https://" + objectStoreHost + generateTempURL(
+                fileobject.put(NAME, fileName);
+                fileobject.put(URL, "https://" + objectStoreHost + generateTempURL(
                         objectStorePath,
                         objectStoreContainer,
                         str,
@@ -262,16 +246,49 @@ public class ProcessedImagesEmailBuilder implements Runnable {
                 LOGGER.error("Failed to generate download link for file " + str, e);
                 try {
                     JSONObject fileobject = new JSONObject();
-                    fileobject.put("name", fileName);
-                    fileobject.put("url", "UNAVAILABLE");
+                    fileobject.put(NAME, fileName);
+                    fileobject.put(URL, UNAVAILABLE);
                     filelist.put(fileobject);
                 } catch (JSONException e1) {
                     LOGGER.error("Failed to create UNAVAILABLE temp url json.", e);
                 }
             }
         }
-        result.put("files", filelist);
+        result.put(FILES, filelist);
 
         return result;
+    }
+
+    List<String> getTaskFilesFromObjectStore(Properties properties, String objectStoreHost, String objectStorePath, String objectStoreContainer, ImageTask task) throws URISyntaxException, IOException {
+        Token token = getKeystoneToken(properties);
+
+        HttpClient client = HttpClients.createDefault();
+        HttpGet httpget = prepObjectStoreRequest(objectStoreHost, objectStorePath, objectStoreContainer, task, token);
+        HttpResponse response = client.execute(httpget);
+
+        return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
+    }
+
+    private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer, ImageTask task, Token token) throws URISyntaxException {
+        URI uri = new URIBuilder()
+                .setScheme("https")
+                .setHost(objectStoreHost)
+                .setPath(objectStorePath + "/" + objectStoreContainer)
+                .addParameter("path", "archiver/" + task.getTaskId() + "/data/output/")
+                .build();
+        LOGGER.debug("Getting list of files for task " + task.getTaskId() + " from " + uri);
+        HttpGet httpget = new HttpGet(uri);
+        httpget.addHeader("X-Auth-Token", token.getAccessId());
+        return httpget;
+    }
+
+    private Token getKeystoneToken(Properties properties) {
+        KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin(properties);
+        Map<String, String> credentials = new HashMap<>();
+        credentials.put(AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
+        credentials.put(PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
+        credentials.put(USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
+        credentials.put(PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
+        return keystone.createToken(credentials);
     }
 }
