@@ -102,7 +102,7 @@ function executeDockerContainer {
 
   CONTAINER_ID=$(sudo docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
 
-  sudo docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${SAPS_MOUNT_POINT}/${TASK_ID}/$INPUTS_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$PREPROCESSING_DIR_NAME
+  sudo timeout 3h docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${SAPS_MOUNT_POINT}/${TASK_ID}/$INPUTS_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$PREPROCESSING_DIR_NAME
 }
 
 function removeDockerContainer {
@@ -147,6 +147,7 @@ function checkProcessOutput {
     echo "Copying temporary out and err files to ${SAPS_MOUNT_POINT}/${TASK_ID}/$LOGS_DIR"
     sudo cp ${SANDBOX}/*out ${SAPS_MOUNT_POINT}/${TASK_ID}/$LOGS_DIR
     sudo cp ${SANDBOX}/*err ${SAPS_MOUNT_POINT}/${TASK_ID}/$LOGS_DIR
+    removeDockerContainer
     finally
   fi
 }
