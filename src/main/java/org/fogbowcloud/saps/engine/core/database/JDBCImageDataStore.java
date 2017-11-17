@@ -1127,6 +1127,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 			ResultSet rs = selectStatementLimit.getResultSet();
 			List<ImageTask> createdImageTasks = extractImageTaskFrom(rs);
 			rs.close();
+			
+			List<ImageTask> downloadingImageTasks = new ArrayList<ImageTask>();
+			if(createdImageTasks.size() == 0){
+				return downloadingImageTasks;
+			}
 
 			lockAndUpdateStatement = connection.prepareStatement(UPDATE_LIMITED_IMAGES_TO_DOWNLOAD);
 			lockAndUpdateStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
@@ -1145,7 +1150,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			rs = selectStatement.getResultSet();
-			List<ImageTask> downloadingImageTasks = extractImageTaskFrom(rs);
+			downloadingImageTasks = extractImageTaskFrom(rs);
 			rs.close();
 			return downloadingImageTasks;
 		} finally {

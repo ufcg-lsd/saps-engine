@@ -46,6 +46,9 @@ public class TestImageDataStore {
 
 		Date date = new Date();
 		
+		List<ImageTask> imageTaskList = this.imageStore.getImagesToDownload(federationMember, limit);
+		Assert.assertTrue(imageTaskList.size() == 0);		
+		
 		ImageTask taskOne = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
 				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						new java.util.Date().getTime()), new Timestamp(
@@ -58,7 +61,7 @@ public class TestImageDataStore {
 		this.imageStore.addImageTask(taskOne);
 		this.imageStore.addImageTask(taskTwo);
 
-		List<ImageTask> imageTaskList = this.imageStore.getImagesToDownload(federationMember, limit);
+		imageTaskList = this.imageStore.getImagesToDownload(federationMember, limit);
 
 		Assert.assertTrue(imageTaskList.size() == 1);
 
