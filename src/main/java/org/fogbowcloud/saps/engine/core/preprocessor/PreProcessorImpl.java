@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
@@ -185,9 +190,46 @@ public class PreProcessorImpl implements PreProcessor {
 	
 	private void storeMetadata(ImageTask imageTask) throws SQLException, IOException {
 		LOGGER.info("Storing metadata into Catalogue");
-		imageDataStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
-				getKernelVersion(), SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
-				imageTask.getTaskId());
+		if (replacePathsIntoFile(imageTask) && createMetadataRegisterIfNotExist(imageTask)) {
+			imageDataStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
+					getKernelVersion(), SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
+					imageTask.getTaskId());
+		}
+	}
+	
+	private boolean createMetadataRegisterIfNotExist(ImageTask imageTask) throws SQLException {
+		if (!imageDataStore.metadataRegisterExist(imageTask.getTaskId())) {
+			LOGGER.debug("Task " + imageTask.getTaskId()
+					+ " metadata register not exist yet...Creating one");
+			imageDataStore.dispatchMetadataInfo(imageTask.getTaskId());
+			return true;
+		}
+
+		return false;
+	}
+
+	protected boolean replacePathsIntoFile(ImageTask imageTask) {
+		String containerMetadataPath = properties
+				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
+		String localMetadataPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
+
+		Path path = Paths.get(getMetadataFilePath(imageTask));
+		Charset charset = StandardCharsets.UTF_8;
+
+		try {
+			String content = new String(Files.readAllBytes(path), charset);
+			content = content.replaceAll(containerMetadataPath, localMetadataPath);
+			Files.write(path, content.getBytes(charset));
+		} catch (IOException e) {
+			LOGGER.error("Error while replacing " + containerMetadataPath + " for "
+					+ localMetadataPath + " in " + getMetadataFilePath(imageTask) + " file");
+			return false;
+		}
+
+		LOGGER.debug("Successfully replaced " + containerMetadataPath + " by " + localMetadataPath
+				+ " in " + getMetadataFilePath(imageTask));
+		return true;
 	}
 
 	private String getMetadataFilePath(ImageTask imageTask) {

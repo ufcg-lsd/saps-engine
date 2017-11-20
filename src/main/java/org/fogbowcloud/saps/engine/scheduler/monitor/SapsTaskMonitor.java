@@ -59,6 +59,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 			updateImageTaskToFinished(tp);
 			Task task = getTaskById(tp.getTaskId());
 			task.finish();
+			storeMetadata(tp);
 			getRunningTasks().remove(task);
 			if (tp.getResource() != null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
