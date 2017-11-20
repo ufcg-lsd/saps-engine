@@ -417,8 +417,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public void updateMetadataInfo(String metadataFilePath, String operatingSystem,
 			String kernelVersion, String componentType, String taskId) throws SQLException {
-		LOGGER.info(
-				"Updating metadata info for component " + componentType + " with taskId " + taskId);
+		LOGGER.info("Updating metadata info for component " + componentType + " with taskId "
+				+ taskId + "\nMetadataFilePath: " + metadataFilePath + " OperatingSystem: "
+				+ operatingSystem + " KernelVersion: " + kernelVersion);
 		if (metadataFilePath == null || metadataFilePath.isEmpty() || operatingSystem == null
 				|| operatingSystem.isEmpty() || kernelVersion == null || kernelVersion.isEmpty()
 				|| componentType == null || componentType.isEmpty() || taskId == null
