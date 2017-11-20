@@ -275,22 +275,26 @@ public class InputDownloader {
 
 	private void storeMetadata(ImageTask imageTask) throws SQLException, IOException {
 		LOGGER.info("Storing metadata into Catalogue");
-		if (replacePathsIntoFile(imageTask) && createMetadataRegisterIfNotExist(imageTask)) {
+		if (replacePathsIntoFile(imageTask) && assertMetadataRegisterExists(imageTask)) {
 			imageStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
 					getKernelVersion(), SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE,
 					imageTask.getTaskId());
 		}
 	}
 
-	private boolean createMetadataRegisterIfNotExist(ImageTask imageTask) throws SQLException {
-		if (!imageStore.metadataRegisterExist(imageTask.getTaskId())) {
-			LOGGER.debug("Task " + imageTask.getTaskId()
-					+ " metadata register not exist yet...Creating one");
-			imageStore.dispatchMetadataInfo(imageTask.getTaskId());
-			return true;
+	private boolean assertMetadataRegisterExists(ImageTask imageTask) throws SQLException {
+		try {
+			if (!imageStore.metadataRegisterExist(imageTask.getTaskId())) {
+				LOGGER.debug("Task " + imageTask.getTaskId()
+						+ " metadata register not exist yet...Creating one");
+				imageStore.dispatchMetadataInfo(imageTask.getTaskId());
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while updating metadata register for task " + imageTask, e);
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	protected boolean replacePathsIntoFile(ImageTask imageTask) {

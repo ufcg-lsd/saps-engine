@@ -190,22 +190,26 @@ public class PreProcessorImpl implements PreProcessor {
 	
 	private void storeMetadata(ImageTask imageTask) throws SQLException, IOException {
 		LOGGER.info("Storing metadata into Catalogue");
-		if (replacePathsIntoFile(imageTask) && createMetadataRegisterIfNotExist(imageTask)) {
+		if (replacePathsIntoFile(imageTask) && assertMetadataRegisterExists(imageTask)) {
 			imageDataStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
 					getKernelVersion(), SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
 					imageTask.getTaskId());
 		}
 	}
 	
-	private boolean createMetadataRegisterIfNotExist(ImageTask imageTask) throws SQLException {
-		if (!imageDataStore.metadataRegisterExist(imageTask.getTaskId())) {
-			LOGGER.debug("Task " + imageTask.getTaskId()
-					+ " metadata register not exist yet...Creating one");
-			imageDataStore.dispatchMetadataInfo(imageTask.getTaskId());
-			return true;
+	private boolean assertMetadataRegisterExists(ImageTask imageTask) throws SQLException {
+		try {
+			if (!imageDataStore.metadataRegisterExist(imageTask.getTaskId())) {
+				LOGGER.debug("Task " + imageTask.getTaskId()
+						+ " metadata register not exist yet...Creating one");
+				imageDataStore.dispatchMetadataInfo(imageTask.getTaskId());
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while updating metadata register for task " + imageTask, e);
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	protected boolean replacePathsIntoFile(ImageTask imageTask) {
