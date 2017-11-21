@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -11,9 +16,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
@@ -21,6 +28,7 @@ import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.DockerUtil;
+import org.fogbowcloud.saps.engine.core.util.OSValidator;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
@@ -45,6 +53,7 @@ public class InputDownloader {
 
 	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";
 	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
+
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
 	private static final int DEFAULT_MAX_DOWNLOAD_ATTEMPTS = 3;
 	protected static final int MAX_IMAGES_TO_DOWNLOAD = 1;
@@ -56,7 +65,7 @@ public class InputDownloader {
 	protected static final String IMAGE_NOT_FOUND_FAILED_MSG = "Input Downloader does not found image.";
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
-
+	
 	public InputDownloader(Properties properties, String inputDownloderIp,
 			String InputDownloaderSshPort, String inputDownloaderNfsPort, String federationMember)
 			throws SQLException {
@@ -227,18 +236,18 @@ public class InputDownloader {
 	}
 
 	// This updates images in CREATED state to DOWNLOADING
-	// and sets this federation member as owner, 	
+	// and sets this federation member as owner,
 	// and then gets all images marked as DOWNLOADING
 	protected void download() throws SQLException, IOException, SapsException {
 		List<ImageTask> tasksToDownload = new ArrayList<ImageTask>();
 
 		try {
 			// TODO check if is necessary the amount of images in this method
-			tasksToDownload = this.imageStore.getImagesToDownload(this.federationMember, MAX_IMAGES_TO_DOWNLOAD);
+			tasksToDownload = this.imageStore.getImagesToDownload(this.federationMember,
+					MAX_IMAGES_TO_DOWNLOAD);
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing created tasks in Catalogue.", e);
 		} catch (IndexOutOfBoundsException e) {
-			LOGGER.error("Is not possible get the amount of images to download.", e);
 			return;
 		}
 
@@ -255,12 +264,101 @@ public class InputDownloader {
 					boolean isDownloadCompleted = downloadImage(imageTask);
 					if (isDownloadCompleted) {
 						LOGGER.info("Task " + imageTask.getTaskId() + " download is completed");
+						storeMetadata(imageTask);
 					} else {
 						LOGGER.info("Task " + imageTask.getTaskId() + " download failed");
 					}
 				}
 			}
 		}
+	}
+
+	private void storeMetadata(ImageTask imageTask) throws SQLException, IOException {
+		LOGGER.info("Storing metadata into Catalogue");
+		if (replacePathsIntoFile(imageTask) && assertMetadataRegisterExists(imageTask)) {
+			imageStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
+					getKernelVersion(), SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE,
+					imageTask.getTaskId());
+		}
+	}
+
+	private boolean assertMetadataRegisterExists(ImageTask imageTask) throws SQLException {
+		try {
+			if (!imageStore.metadataRegisterExist(imageTask.getTaskId())) {
+				LOGGER.debug("Task " + imageTask.getTaskId()
+						+ " metadata register not exist yet...Creating one");
+				imageStore.dispatchMetadataInfo(imageTask.getTaskId());
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while updating metadata register for task " + imageTask, e);
+			return false;
+		}
+
+		return true;
+	}
+
+	protected boolean replacePathsIntoFile(ImageTask imageTask) {
+		String containerMetadataPath = properties
+				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
+		String localMetadataPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
+
+		Path path = Paths.get(getMetadataFilePath(imageTask));
+		Charset charset = StandardCharsets.UTF_8;
+
+		try {
+			String content = new String(Files.readAllBytes(path), charset);
+			content = content.replaceAll(containerMetadataPath, localMetadataPath);
+			Files.write(path, content.getBytes(charset));
+		} catch (IOException e) {
+			LOGGER.error("Error while replacing " + containerMetadataPath + " for "
+					+ localMetadataPath + " in " + getMetadataFilePath(imageTask) + " file");
+			return false;
+		}
+
+		LOGGER.debug("Successfully replaced " + containerMetadataPath + " by " + localMetadataPath
+				+ " in " + getMetadataFilePath(imageTask));
+		return true;
+	}
+
+	private String getOperatingSystem() {
+		if (OSValidator.isWindows()) {
+			return "Windows";
+		} else if (OSValidator.isMac()) {
+			return "Mac";
+		} else if (OSValidator.isUnix()) {
+			return "Linux";
+		} else if (OSValidator.isSolaris()) {
+			return "Solaris";
+		} else {
+			return "Operating System Not Recognized";
+		}
+	}
+	
+	private String getKernelVersion() throws IOException {
+		if (OSValidator.isUnix()) {
+			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c",
+					"uname -r | cut -d \'-\' -f 1");
+			Process p = null;
+			try {
+				p = pb.start();
+				p.waitFor();
+			} catch (IOException e) {
+				LOGGER.error("Error while getting Linux kernel version", e);
+			} catch (InterruptedException e) {
+				LOGGER.error("Error while getting Linux kernel version", e);
+			}
+
+			return getProcessOutput(p);
+		} else {
+			return "Kernel version not recognized";
+		}
+	}
+
+	private String getMetadataFilePath(ImageTask imageTask) {
+		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
+				+ imageTask.getTaskId() + File.separator + "metadata" + File.separator
+				+ "inputDescription.txt";
 	}
 
 	protected void addTaskToPendingMap(ImageTask imageTask) {
@@ -355,6 +453,11 @@ public class InputDownloader {
 		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
 		for (int currentTry = 0; currentTry < this.maxDownloadAttempts; currentTry++) {
 			LOGGER.debug("Image download link is " + imageTask.getDownloadLink());
+			String inputDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+					+ File.separator + imageTask.getTaskId() + File.separator + "data"
+					+ File.separator + "input";
+			String metadataDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+					+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
 
 			// Getting Input Downloader docker repository and tag
 			ExecutionScriptTag inputDownloaderDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(
@@ -363,18 +466,24 @@ public class InputDownloader {
 			DockerUtil.pullImage(inputDownloaderDockerInfo.getDockerRepository(),
 					inputDownloaderDockerInfo.getDockerTag());
 
+			@SuppressWarnings("unchecked")
+			Map<String, String> hostAndContainerDirMap = new HashedMap();
+			hostAndContainerDirMap.put(inputDirPath, properties
+					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH));
+			hostAndContainerDirMap.put(metadataDirPath, properties
+					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH));
+
 			String containerId = DockerUtil.runMappedContainer(
 					inputDownloaderDockerInfo.getDockerRepository(),
-					inputDownloaderDockerInfo.getDockerTag(),
-					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-							+ File.separator + imageTask.getTaskId() + File.separator + "data"
-							+ File.separator + "input",
-					properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH));
+					inputDownloaderDockerInfo.getDockerTag(), hostAndContainerDirMap);
 
 			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
 					+ " " + imageTask.getDataset() + " " + imageTask.getRegion() + " "
 					+ dateFormater.format(imageTask.getImageDate()) + " "
-					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH);
+					+ properties
+							.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH)
+					+ " " + properties.getProperty(
+							SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
 
 			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
 			DockerUtil.removeContainer(containerId);
@@ -656,5 +765,4 @@ public class InputDownloader {
 	public void setPendingTaskMap(ConcurrentMap<String, ImageTask> pendingTaskDownloadMap) {
 		this.pendingTaskDownloadMap = pendingTaskDownloadMap;
 	}
-	
 }

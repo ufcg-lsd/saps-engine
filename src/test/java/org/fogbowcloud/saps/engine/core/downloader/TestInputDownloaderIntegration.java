@@ -383,8 +383,9 @@ public class TestInputDownloaderIntegration {
 		boolean notImportantBoolean = true;
 		BDDMockito.given(DockerUtil.pullImage(Mockito.anyString(), Mockito.anyString())).willReturn(notImportantBoolean);
 		String containerId = "1";
+		
 		BDDMockito.given(DockerUtil.runMappedContainer(
-				Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).willReturn(containerId);
+				Mockito.anyString(), Mockito.anyString(), Mockito.anyMapOf(String.class, String.class))).willReturn(containerId);
 		BDDMockito.given(DockerUtil.execDockerCommand(
 				Mockito.eq(containerId), Mockito.anyString())).willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
 		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString())).willReturn(notImportantBoolean);

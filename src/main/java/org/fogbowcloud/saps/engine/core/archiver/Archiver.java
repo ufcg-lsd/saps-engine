@@ -3,6 +3,8 @@ package org.fogbowcloud.saps.engine.core.archiver;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -16,9 +18,11 @@ import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.util.ProvenanceUtilImpl;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.openprovenance.prov.model.Document;
 
 public class Archiver {
 
@@ -275,7 +279,7 @@ public class Archiver {
 
 		LOGGER.debug("Using FTP Server IP " + ftpServerIP + " and port " + ftpServerPort);
 		if (archiveInputs(imageTask) == 0 && archivePreProcess(imageTask) == 0
-				&& archiveMetadata(imageTask) == 0) {
+				&& generateProvenance(imageTask) == 0 && archiveMetadata(imageTask) == 0) {
 			archiveOutputs(imageTask);
 		}
 	}
@@ -384,11 +388,17 @@ public class Archiver {
 			LOGGER.info("Max tries was reached. Marking " + imageTask + " as failed.");
 			imageTask.setState(ImageTaskState.FAILED);
 			imageTask.setError("Max archive tries" + MAX_ARCHIVE_TRIES + " reached");
+			
 			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
 					pendingTaskArchiveMap);
+			
 			deleteInputFromDisk(imageTask, properties);
 			imageStore.updateImageTask(imageTask);
 			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+			
+			generateProvenance(imageTask);
+			uploadMetadataFilesToSwift(imageTask,
+					new File(archiverHelper.getLocalTaskMetadataPath(imageTask, properties)));
 		}
 
 		return 1;
@@ -435,11 +445,17 @@ public class Archiver {
 			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
 			imageTask.setState(ImageTaskState.FAILED);
 			imageTask.setError("Max archive tries" + MAX_ARCHIVE_TRIES + " reached");
+			
 			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
 					pendingTaskArchiveMap);
+			
 			deletePreProcessFromDisk(imageTask, properties);
 			imageStore.updateImageTask(imageTask);
 			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+			
+			generateProvenance(imageTask);
+			uploadMetadataFilesToSwift(imageTask,
+					new File(archiverHelper.getLocalTaskMetadataPath(imageTask, properties)));
 		}
 
 		return 1;
@@ -486,8 +502,10 @@ public class Archiver {
 			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
 			imageTask.setState(ImageTaskState.FAILED);
 			imageTask.setError("Max archive tries" + MAX_ARCHIVE_TRIES + " reached");
+			
 			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
 					pendingTaskArchiveMap);
+			
 			deleteMetadataFromDisk(imageTask, properties);
 			imageStore.updateImageTask(imageTask);
 			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
@@ -496,9 +514,83 @@ public class Archiver {
 		return 1;
 	}
 
+	private int generateProvenance(ImageTask imageTask) throws SQLException, IOException {
+		String localTaskProvenancePath = archiverHelper.getLocalTaskMetadataPath(imageTask,
+				properties);
+		File localTaskProvenanceDir = new File(localTaskProvenancePath);
+
+		if (!localTaskProvenanceDir.exists()) {
+			LOGGER.debug("Path " + localTaskProvenancePath + " not valid or nonexistent. Creating "
+					+ localTaskProvenancePath);
+			localTaskProvenanceDir.mkdirs();
+		} else if (!localTaskProvenanceDir.isDirectory()) {
+			LOGGER.debug(localTaskProvenancePath
+					+ " is a file, not a directory. Deleting it and creating a actual directory");
+			localTaskProvenanceDir.delete();
+			localTaskProvenanceDir.mkdirs();
+		}
+
+		if (!generateProvenanceFile(imageTask)) {
+			return 1;
+		}
+		
+		return 0;
+	}
+
+	private boolean generateProvenanceFile(ImageTask imageTask) throws SQLException {
+		ProvenanceUtilImpl provUtilImpl = new ProvenanceUtilImpl();
+		DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+
+		String inputMetadata = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE,
+				SapsPropertiesConstants.METADATA_TYPE);
+		String inputOS = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE,
+				SapsPropertiesConstants.OS_TYPE);
+		String inputKernelVersion = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE,
+				SapsPropertiesConstants.KERNEL_TYPE);
+
+		String preprocessingMetadata = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
+				SapsPropertiesConstants.METADATA_TYPE);
+		String preprocessingOS = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
+				SapsPropertiesConstants.OS_TYPE);
+		String preprocessingKernelVersion = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
+				SapsPropertiesConstants.KERNEL_TYPE);
+
+		String outputMetadata = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.WORKER_COMPONENT_TYPE,
+				SapsPropertiesConstants.METADATA_TYPE);
+		String outputOS = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.WORKER_COMPONENT_TYPE, SapsPropertiesConstants.OS_TYPE);
+		String outputKernelVersion = imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.WORKER_COMPONENT_TYPE, SapsPropertiesConstants.KERNEL_TYPE);
+
+		try {
+			LOGGER.debug("Generating provenance for task " + imageTask.getTaskId());
+			Document document = provUtilImpl.makeDocument(imageTask.getRegion(),
+					df.format(imageTask.getImageDate()), imageTask.getInputGatheringTag(),
+					imageTask.getInputPreprocessingTag(), imageTask.getAlgorithmExecutionTag(),
+					inputMetadata, inputOS, inputKernelVersion, preprocessingMetadata,
+					preprocessingOS, preprocessingKernelVersion, outputMetadata, outputOS,
+					outputKernelVersion);
+
+			LOGGER.debug("Writing provenance for task " + imageTask.getTaskId() + " in file "
+					+ getProvenanceFilePath(imageTask));
+			provUtilImpl.writePROVNProvenanceFile(document, getProvenanceFilePath(imageTask));
+		} catch (Exception e) {
+			LOGGER.error("Error while generating provenance for task " + imageTask.getTaskId());
+			return false;
+		}
+
+		return true;
+	}
+
 	protected void archiveOutputs(final ImageTask imageTask)
 			throws Exception, IOException, SQLException {
-		// FIXME: doc-it (we want to know the max tries logic)
 		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
 		int i;
@@ -546,11 +638,17 @@ public class Archiver {
 			LOGGER.info("Max tries was reached. Marking " + imageTask + " as corrupted.");
 			imageTask.setState(ImageTaskState.FAILED);
 			imageTask.setError("Max archive tries" + MAX_ARCHIVE_TRIES + " reached");
+			
 			archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
 					pendingTaskArchiveMap);
+			
 			deleteOutputFromDisk(imageTask, properties);
 			imageStore.updateImageTask(imageTask);
 			imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+			
+			generateProvenance(imageTask);
+			uploadMetadataFilesToSwift(imageTask,
+					new File(archiverHelper.getLocalTaskMetadataPath(imageTask, properties)));
 		}
 	}
 
@@ -795,6 +893,12 @@ public class Archiver {
 		return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
 				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
 				+ "output" + File.separator;
+	}
+	
+	private String getProvenanceFilePath(ImageTask imageTask) {
+		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "metadata"
+				+ File.separator + "saps.provn";
 	}
 
 	protected String getArchiverVersion() {

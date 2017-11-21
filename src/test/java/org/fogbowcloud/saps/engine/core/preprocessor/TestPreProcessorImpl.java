@@ -33,7 +33,7 @@ public class TestPreProcessorImpl {
 	public void setUp() throws Exception {
 		this.properties = new Properties();
 		this.properties.put(SapsPropertiesConstants.SAPS_EXPORT_PATH, DEFAULT_EXPORT_PATH);
-		this.properties.put(SapsPropertiesConstants.SAPS_CONTAINER_LINKED_PATH, "/home/ubuntu/");
+		this.properties.put(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH, "/home/ubuntu/");
 		this.imageStore = Mockito.mock(JDBCImageDataStore.class);
 
 		Date date = new Date(10000854);
@@ -47,6 +47,7 @@ public class TestPreProcessorImpl {
 		this.preProcessor = Mockito.spy(new PreProcessorImpl(this.properties, this.imageStore));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test(expected=Exception.class)
 	public void testPreProcessImage() throws Exception {
 		ExecutionScriptTag execScriptTag = new ExecutionScriptTag(
@@ -57,8 +58,7 @@ public class TestPreProcessorImpl {
 
 		String containerId = "fake-container-id";
 		Mockito.doReturn(containerId).when(this.preProcessor).raiseContainer(
-				Mockito.<ExecutionScriptTag>any(), Mockito.<ImageTask>any(), Mockito.anyString(),
-				Mockito.anyString());
+				Mockito.<ExecutionScriptTag>any(), Mockito.<ImageTask>any(), Mockito.anyMap());
 		
 		Mockito.doThrow(new Exception()).when(this.preProcessor).executeContainer(
 				"fake-container-id", "/home/ubuntu/run.sh", Mockito.<ImageTask>any());
@@ -81,7 +81,7 @@ public class TestPreProcessorImpl {
 		String hostPath = DEFAULT_EXPORT_PATH + File.separator 
 				+ this.imageTask.getTaskId() + "/data/preprocessing";
 
-		assertEquals(hostPath, this.preProcessor.getHostPath(this.imageTask));
+		assertEquals(hostPath, this.preProcessor.getHostPreProcessingPath(this.imageTask));
 	}
 	
 	@Test
@@ -106,5 +106,4 @@ public class TestPreProcessorImpl {
 			Assert.fail();
 		}
 	}
-
 }

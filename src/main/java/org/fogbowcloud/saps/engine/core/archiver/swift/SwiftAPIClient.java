@@ -1,7 +1,6 @@
 package org.fogbowcloud.saps.engine.core.archiver.swift;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

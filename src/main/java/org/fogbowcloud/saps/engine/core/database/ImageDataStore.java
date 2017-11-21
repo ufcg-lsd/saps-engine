@@ -49,6 +49,11 @@ public interface ImageDataStore {
 
 	void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember)
 			throws SQLException;
+	
+	void dispatchMetadataInfo(String taskId) throws SQLException;
+	
+	void updateMetadataInfo(String metadataFilePath, String operatingSystem,
+			String kernelVersion, String componentType, String taskId) throws SQLException;
 
 	List<Ward> getUsersToNotify() throws SQLException;
 
@@ -69,8 +74,8 @@ public interface ImageDataStore {
 	boolean isUserNotifiable(String userEmail) throws SQLException;
 
 	boolean deployConfigExists(String federationMember) throws SQLException;
-
-	boolean taskExist(String taskId) throws SQLException;
+	
+	boolean metadataRegisterExist(String taskId) throws SQLException;
 
 	List<Submission> getAllSubmissions() throws SQLException;
 
@@ -93,6 +98,9 @@ public interface ImageDataStore {
 	String getNFSServerIP(String federationMember) throws SQLException;
 
 	String getNFSServerSshPort(String federationMember) throws SQLException;
+	
+	String getMetadataInfo(String taskId, String componentType, String infoType)
+			throws SQLException;
 
 	void dispose();
 
@@ -110,4 +118,12 @@ public interface ImageDataStore {
 
 	List<ImageTask> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
 			long processDateEnd) throws SQLException;
+
+	public List<ImageTask> getProcessedImages(
+			String region,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) throws SQLException;
 }

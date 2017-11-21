@@ -74,6 +74,11 @@
 			<id>maven-fogbow</id>
 			<url>https://github.com/fogbow/mvn-repo/raw/master/releases/</url>
 		</repository>
+		<repository>
+            <id>mvn.prov.toolbox.snapshots</id>
+      		<name>maven snapshot repository for PROV toolbox</name>
+      		<url>http://openprovenance.org/java/maven-snapshots/</url>
+    	</repository>
 	</repositories>
 
 	<dependencies>
@@ -199,12 +204,21 @@
 			<artifactId>mapdb</artifactId>
 			<version>1.0.9</version>
 		</dependency>
-		
-		<dependency>
-     			<groupId>org.json</groupId>
-     			<artifactId>json</artifactId>
-     			<version>20090211</version>
- 		</dependency>
-		
+				
+    <dependency>
+        <groupId>org.openprovenance.prov</groupId>
+        <artifactId>prov-model</artifactId>
+        <version>0.7.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openprovenance.prov</groupId>
+        <artifactId>prov-interop</artifactId>
+        <version>0.7.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20090211</version>
+    </dependency>
 	</dependencies>
 </project>

@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.scheduler.monitor;
 
+import java.io.File;
 import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
@@ -13,6 +14,7 @@ import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class SapsTaskMonitor extends TaskMonitor {
 
@@ -57,6 +59,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 			updateImageTaskToFinished(tp);
 			Task task = getTaskById(tp.getTaskId());
 			task.finish();
+			storeMetadata(tp);
 			getRunningTasks().remove(task);
 			if (tp.getResource() != null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
@@ -81,6 +84,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 	protected void imageTaskToFailed(TaskProcess tp) {
 		try {
 			updateImageTaskToFailed(tp);
+			storeMetadata(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
 			getBlowoutPool().removeTask(getBlowoutPool().getTaskById(tp.getTaskId()));
 			if (tp.getResource() != null) {
@@ -136,6 +140,37 @@ public class SapsTaskMonitor extends TaskMonitor {
 		imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 		imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
 				imageTask.getUpdateTime());
+	}
+
+	protected void storeMetadata(TaskProcess tp) throws SQLException {
+		String metadataFilePath = getMetadataFilePath(tp);
+		String operatingSystem = getBlowoutPool().getTaskById(tp.getTaskId())
+				.getMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM);
+		String kernelVersion = getBlowoutPool().getTaskById(tp.getTaskId())
+				.getMetadata(SapsTask.METADATA_WORKER_KERNEL_VERSION);
+
+		LOGGER.info("Storing into catalogue metadata " + metadataFilePath + " operating system "
+				+ operatingSystem + " and kernel version " + kernelVersion + " for task "
+				+ getImageTaskFromTaskProcess(tp));
+
+		imageStore.updateMetadataInfo(metadataFilePath, operatingSystem, kernelVersion,
+				SapsPropertiesConstants.WORKER_COMPONENT_TYPE, getImageTaskFromTaskProcess(tp));
+	}
+
+	protected String getMetadataFilePath(TaskProcess tp) {
+		return getBlowoutPool().getTaskById(tp.getTaskId()).getMetadata(
+				SapsTask.METADATA_EXPORT_PATH) + File.separator + getImageTaskFromTaskProcess(tp)
+				+ File.separator + "metadata" + File.separator + "outputDescription.txt";
+	}
+
+	protected String getOperatingSystem(TaskProcess tp) {
+		return getBlowoutPool().getTaskById(tp.getTaskId())
+				.getMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM);
+	}
+
+	protected String getKernelVersion(TaskProcess tp) {
+		return getBlowoutPool().getTaskById(tp.getTaskId())
+				.getMetadata(SapsTask.METADATA_WORKER_KERNEL_VERSION);
 	}
 
 	public String getImageTaskFromTaskProcess(TaskProcess tp) {

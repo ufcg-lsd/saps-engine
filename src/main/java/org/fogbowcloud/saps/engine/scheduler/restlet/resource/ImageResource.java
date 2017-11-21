@@ -93,17 +93,6 @@ public class ImageResource extends BaseResource {
 		return new StringRepresentation(tasksJSON.toString(), MediaType.APPLICATION_JSON);
 	}
 
-	private String extractCoordinate(Form form, String name, int index) {
-		String data[] = form.getValuesArray(name + "[]");
-		return data[index];
-	}
-
-	private Date extractDate(Form form, String name) throws ParseException {
-		String data = form.getFirstValue(name);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		return dateFormat.parse(data);
-	}
-
 	@Post
 	public StringRepresentation insertTasks(Representation entity) {
 		Form form = new Form(entity);

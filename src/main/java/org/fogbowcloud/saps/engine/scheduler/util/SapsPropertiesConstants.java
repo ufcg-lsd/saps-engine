@@ -69,13 +69,19 @@ public class SapsPropertiesConstants {
 	public static final String SWIFT_INPUT_PSEUDO_FOLDER_PREFIX = "swift_input_pseud_folder_prefix";
 	public static final String SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX = "swift_output_pseud_folder_prefix";
 	public static final String SWIFT_USERNAME = "swift_username";
+	public static final String SWIFT_USER_ID = "swift_user_id";
 	public static final String SWIFT_PASSWORD = "swift_password";
+	public static final String SWIFT_PROJECT_ID = "swift_project_id";
 	public static final String SWIFT_TENANT_ID = "swift_tenant_id";
 	public static final String SWIFT_TENANT_NAME = "swift_tenant_name";
 	public static final String SWIFT_AUTH_URL = "swift_auth_url";
 	public static final String SWIFT_IMAGE_EXTENSION = "swift_image_extension";
 	public static final String SWIFT_PSEUDO_FOLDER_PREFIX = "swift_pseudo_folder_prefix";
 	public static final String SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX = "swift_stations_pseudo_folder_prefix";
+	public static final String SWIFT_OBJECT_STORE_HOST = "swift_object_store_host";
+	public static final String SWIFT_OBJECT_STORE_PATH = "swift_object_store_path";
+	public static final String SWIFT_OBJECT_STORE_CONTAINER = "swift_object_store_container";
+	public static final String SWIFT_OBJECT_STORE_KEY = "swift_object_store_key";
 
 	// Restlet constants
 	public static final String SUBMISSION_REST_SERVER_PORT = "submission_rest_server_port";
@@ -104,14 +110,23 @@ public class SapsPropertiesConstants {
 	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
 	public static final String SAPS_EXECUTION_PERIOD = "saps_execution_period";
 
-	public static final String DEFAULT_ARCHIVER_PERIOD = "default_fetcher_period";
+	public static final String DEFAULT_ARCHIVER_PERIOD = "default_archiver_period";
 	public static final String DEFAULT_DOWNLOADER_PERIOD = "default_downloader_period";
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
 	public static final String PREPROCESSOR_EXECUTION_PERIOD = "preprocessor_execution_period";
 	
+	// Provenance data components constants
+	public static final String INPUT_DOWNLOADER_COMPONENT_TYPE = "input_downloader";
+	public static final String PREPROCESSOR_COMPONENT_TYPE = "preprocessor";
+	public static final String WORKER_COMPONENT_TYPE = "worker";
+	public static final String METADATA_TYPE = "metadata";
+	public static final String OS_TYPE = "operating_system";
+	public static final String KERNEL_TYPE = "kernel_version";
+	
 	// Preprocessor constants
 	public static final String DEFAULT_PREPROCESSOR_EXECUTION_PERIOD = "60000";
-	public static final String DEFAULT_PREPROCESSOR_RUN_SCRIPT_COMMAND = "/bin/bash /home/ubuntu/run.sh";
+	public static final String DEFAULT_PREPROCESSOR_RUN_SCRIPT_COMMAND = "/bin/bash /home/ubuntu/run.sh "
+			+ "/home/ubuntu/metadata";
 
 	// FTP constants
 	public static final String DEFAULT_FTP_SERVER_USER = "default_ftp_server_user";
@@ -129,11 +144,17 @@ public class SapsPropertiesConstants {
 	// Properties file constants
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
 	public static final String SAPS_EXPORT_PATH = "saps_export_path";
-	public static final String SAPS_CONTAINER_LINKED_PATH = "saps_container_linked_path";
+	public static final String SAPS_CONTAINER_INPUT_LINKED_PATH = "saps_container_input_linked_path";
+	public static final String SAPS_CONTAINER_METADATA_LINKED_PATH = "saps_container_metadata_linked_path";
 	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 	public static final String STATIONS_FILE_PATH = "stations_file_path";
 	public static final String BASE_YEAR_DIR_PATH = "base_year_dir_path";
+	public static final String WORKER_OPERATING_SYSTEM = "worker_operating_system";
+	public static final String WORKER_KERNEL_VERSION = "worker_kernel_version";
 	public static final String POSSIBLE_STATIONS_FILE_PATH = "src/main/resources/possible_stations";
 	public static final String TILES_COORDINATES_FILE_PATH = "src/main/resources/tiles_coordinates.json";
+
+	public static final String NO_REPLY_EMAIL = "noreply_email";
+	public static final String NO_REPLY_PASS = "noreply_password";
 }

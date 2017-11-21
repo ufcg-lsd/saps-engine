@@ -15,26 +15,30 @@ import org.fogbowcloud.blowout.core.model.Command;
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class SapsTask {
 
 	public static final String METADATA_TASK_ID = "task_id";
-	private static final String METADATA_REPOS_USER = "repository_user";
-	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
-	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
-	private static final String METADATA_EXPORT_PATH = "volume_export_path";
-	private static final String METADATA_MOUNT_POINT = "mount_point";
-	private static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
-	private static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
-	private static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
+	public static final String METADATA_EXPORT_PATH = "volume_export_path";
+	protected static final String METADATA_REPOS_USER = "repository_user";
+	protected static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
+	protected static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
+	protected static final String METADATA_MOUNT_POINT = "mount_point";
+	protected static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
+	protected static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
+	protected static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
+	
+	protected static final String WORKER_SANDBOX = "worker_sandbox";
+	protected static final String WORKER_REMOTE_USER = "worker_remote_user";
+	protected static final String WORKER_MOUNT_POINT = "worker_mount_point";
+	protected static final String WORKER_EXPORT_PATH = "saps_export_path";
+	protected static final String WORKER_TASK_TIMEOUT = "worker_task_timeout";
+	protected static final String SAPS_WORKER_RUN_SCRIPT_PATH = "saps_worker_run_script_path";
+	protected static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
 
-	private static final String WORKER_SANDBOX = "worker_sandbox";
-	private static final String WORKER_REMOTE_USER = "worker_remote_user";
-	private static final String WORKER_EXPORT_PATH = "saps_export_path";
-	private static final String WORKER_MOUNT_POINT = "worker_mount_point";
-	private static final String WORKER_TASK_TIMEOUT = "worker_task_timeout";
-	private static final String SAPS_WORKER_RUN_SCRIPT_PATH = "saps_worker_run_script_path";
-	private static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
+	public static final String METADATA_WORKER_OPERATING_SYSTEM = "worker_operating_system";
+	public static final String METADATA_WORKER_KERNEL_VERSION = "worker_kernel_version";
 
 	private static final Logger LOGGER = Logger.getLogger(SapsTask.class);
 
@@ -59,6 +63,11 @@ public class SapsTask {
 		taskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
 		taskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 				taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + taskImpl.getId());
+		
+		taskImpl.putMetadata(METADATA_WORKER_OPERATING_SYSTEM,
+				properties.getProperty(SapsPropertiesConstants.WORKER_OPERATING_SYSTEM));
+		taskImpl.putMetadata(METADATA_WORKER_KERNEL_VERSION,
+				properties.getProperty(SapsPropertiesConstants.WORKER_KERNEL_VERSION));
 
 		// cleaning environment
 		String cleanEnvironment = "sudo rm -rf " + properties.getProperty(WORKER_SANDBOX);
@@ -91,7 +100,7 @@ public class SapsTask {
 		return taskImpl;
 	}
 
-	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
+	protected static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
 		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT "
 				+ localFilePath + " $SSH_USER@$HOST:" + remoteFilePath;
 	}
@@ -133,7 +142,7 @@ public class SapsTask {
 		return execScriptCommand;
 	}
 
-	private static File createScriptFile(Properties props, TaskImpl task) {
+	protected static File createScriptFile(Properties props, TaskImpl task) {
 		File tempFile = null;
 		FileOutputStream fos = null;
 		FileInputStream fis = null;

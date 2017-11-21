@@ -21,6 +21,7 @@ import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.notifier.Ward;
 
 public class JDBCImageDataStore implements ImageDataStore {
@@ -63,6 +64,17 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String NFS_SERVER_IP_COL = "nfs_ip";
 	private static final String NFS_SERVER_SSH_PORT_COL = "nfs_ssh_port";
 	private static final String NFS_SERVER_PORT_COL = "nfs_port";
+
+	private static final String PROVENANCE_TABLE_NAME = "provenance_data";
+	private static final String INPUT_METADATA_COL = "input_metadata";
+	private static final String INPUT_OPERATING_SYSTEM_COL = "input_operating_system";
+	private static final String INPUT_KERNEL_VERSION_COL = "input_kernel_version";
+	private static final String PREPROCESSING_METADATA_COL = "preprocessing_metadata";
+	private static final String PREPROCESSING_OPERATING_SYSTEM_COL = "preprocessing_operating_system";
+	private static final String PREPROCESSING_KERNEL_VERSION_COL = "preprocessing_kernel_version";
+	private static final String OUTPUT_METADATA_COL = "output_metadata";
+	private static final String OUTPUT_OPERATING_SYSTEM_COL = "output_operating_system";
+	private static final String OUTPUT_KERNEL_VERSION_COL = "output_kernel_version";
 
 	// Insert queries
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
@@ -147,6 +159,15 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ NFS_SERVER_IP_COL + ", " + NFS_SERVER_SSH_PORT_COL + ", "
 					+ NFS_SERVER_PORT_COL + ", " + FEDERATION_MEMBER_COL + "))");
 
+			statement.execute("CREATE TABLE IF NOT EXISTS " + PROVENANCE_TABLE_NAME + "("
+					+ TASK_ID_COL + " VARCHAR(255) PRIMARY KEY, " + INPUT_METADATA_COL
+					+ " VARCHAR(255), " + INPUT_OPERATING_SYSTEM_COL + " VARCHAR(100), "
+					+ INPUT_KERNEL_VERSION_COL + " VARCHAR(100), " + PREPROCESSING_METADATA_COL
+					+ " VARCHAR(255), " + PREPROCESSING_OPERATING_SYSTEM_COL + " VARCHAR(100), "
+					+ PREPROCESSING_KERNEL_VERSION_COL + " VARCHAR(100), " + OUTPUT_METADATA_COL
+					+ " VARCHAR(255), " + OUTPUT_OPERATING_SYSTEM_COL + " VARCHAR(100), "
+					+ OUTPUT_KERNEL_VERSION_COL + " VARCHAR(100))");
+
 			statement.close();
 		} catch (SQLException e) {
 			LOGGER.error("Error while initializing DataStore", e);
@@ -211,6 +232,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
+	private java.sql.Date javaDateToSqlDate(Date date) {
+		return new java.sql.Date(date.getTime());
+	}
+
 	@Override
 	public ImageTask addImageTask(String taskId, String dataset, String region, Date date,
 			String downloadLink, int priority, String inputGathering, String inputPreprocessing,
@@ -255,7 +280,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, imageTask.getTaskId());
 			insertStatement.setString(2, imageTask.getDataset());
 			insertStatement.setString(3, imageTask.getRegion());
-			insertStatement.setDate(4, new java.sql.Date(imageTask.getImageDate().getTime()));
+			insertStatement.setDate(4, javaDateToSqlDate(imageTask.getImageDate()));
 			insertStatement.setString(5, imageTask.getDownloadLink());
 			insertStatement.setString(6, imageTask.getState().getValue());
 			insertStatement.setString(7, imageTask.getFederationMember());
@@ -342,6 +367,103 @@ public class JDBCImageDataStore implements ImageDataStore {
 		} finally {
 			close(insertStatement, connection);
 		}
+	}
+
+	private static final String INSERT_METADATA_INFO_SQL = "INSERT INTO " + PROVENANCE_TABLE_NAME
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+	@Override
+	public void dispatchMetadataInfo(String taskId) throws SQLException {
+		LOGGER.info("Dispatching metadata info for " + taskId + " in Catalogue");
+		if (taskId == null || taskId.isEmpty()) {
+			throw new IllegalArgumentException("Invalid taskId " + taskId);
+		}
+
+		PreparedStatement insertStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			insertStatement = connection.prepareStatement(INSERT_METADATA_INFO_SQL);
+			insertStatement.setString(1, taskId);
+			insertStatement.setString(2, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(3, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(4, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(5, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(6, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(7, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(8, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(9, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(10, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setQueryTimeout(300);
+
+			insertStatement.execute();
+		} finally {
+			close(insertStatement, connection);
+		}
+	}
+
+	private static final String UPDATE_DOWNLOADER_METADATA_INFO_SQL = "UPDATE "
+			+ PROVENANCE_TABLE_NAME + " SET " + INPUT_METADATA_COL + " = ?, "
+			+ INPUT_OPERATING_SYSTEM_COL + " = ?, " + INPUT_KERNEL_VERSION_COL + " = ? WHERE "
+			+ TASK_ID_COL + " = ?;";
+
+	private static final String UPDATE_PREPROCESS_METADATA_INFO_SQL = "UPDATE "
+			+ PROVENANCE_TABLE_NAME + " SET " + PREPROCESSING_METADATA_COL + " = ?, "
+			+ PREPROCESSING_OPERATING_SYSTEM_COL + " = ?, " + PREPROCESSING_KERNEL_VERSION_COL
+			+ " = ? WHERE " + TASK_ID_COL + " = ?;";
+
+	private static final String UPDATE_OUTPUT_METADATA_INFO_SQL = "UPDATE " + PROVENANCE_TABLE_NAME
+			+ " SET " + OUTPUT_METADATA_COL + " = ?, " + OUTPUT_OPERATING_SYSTEM_COL + " = ?, "
+			+ OUTPUT_KERNEL_VERSION_COL + " = ? WHERE " + TASK_ID_COL + " = ?;";
+
+	@Override
+	public void updateMetadataInfo(String metadataFilePath, String operatingSystem,
+			String kernelVersion, String componentType, String taskId) throws SQLException {
+		LOGGER.info("Updating metadata info for component " + componentType + " with taskId "
+				+ taskId + "\nMetadataFilePath: " + metadataFilePath + " OperatingSystem: "
+				+ operatingSystem + " KernelVersion: " + kernelVersion);
+		if (metadataFilePath == null || metadataFilePath.isEmpty() || operatingSystem == null
+				|| operatingSystem.isEmpty() || kernelVersion == null || kernelVersion.isEmpty()
+				|| componentType == null || componentType.isEmpty() || taskId == null
+				|| taskId.isEmpty()) {
+			throw new IllegalArgumentException("Invalid metadataFilePath " + metadataFilePath
+					+ ", operatingSystem " + operatingSystem + ", kernelVersion " + kernelVersion
+					+ ", componentType " + componentType + " or taskId " + taskId);
+		}
+
+		PreparedStatement updateStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			updateStatement = adjustMetadataStatementToComponent(componentType, updateStatement,
+					connection);
+
+			updateStatement.setString(1, metadataFilePath);
+			updateStatement.setString(2, operatingSystem);
+			updateStatement.setString(3, kernelVersion);
+			updateStatement.setString(4, taskId);
+			updateStatement.setQueryTimeout(300);
+
+			updateStatement.execute();
+		} finally {
+			close(updateStatement, connection);
+		}
+	}
+
+	protected PreparedStatement adjustMetadataStatementToComponent(String componentType,
+			PreparedStatement insertStatement, Connection connection) throws SQLException {
+		if (componentType.equals(SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE)) {
+			insertStatement = connection.prepareStatement(UPDATE_DOWNLOADER_METADATA_INFO_SQL);
+		} else if (componentType.equals(SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE)) {
+			insertStatement = connection.prepareStatement(UPDATE_PREPROCESS_METADATA_INFO_SQL);
+		} else if (componentType.equals(SapsPropertiesConstants.WORKER_COMPONENT_TYPE)) {
+			insertStatement = connection.prepareStatement(UPDATE_OUTPUT_METADATA_INFO_SQL);
+		}
+		return insertStatement;
 	}
 
 	private static final String SELECT_ALL_USERS_TO_NOTIFY_SQL = "SELECT * FROM "
@@ -466,27 +588,38 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(statement, conn);
 		}
 	}
+	
+	private static final String SELECT_CHECK_METADATA_EXISTS_SQL = "SELECT EXISTS(SELECT 1 FROM "
+			+ PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL + " = ?)";
 
-	// TODO: verify this later
 	@Override
-	public boolean taskExist(String collectionTierImageName) throws SQLException {
-		LOGGER.debug("Verifying if a image " + collectionTierImageName + " exist in database");
+	public boolean metadataRegisterExist(String taskId) throws SQLException {
+		LOGGER.debug("Verifying if task " + taskId + " has a metadata register");
 
 		PreparedStatement statement = null;
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			statement = conn.prepareStatement(SELECT_CHECK_FEDERATION_EXISTS_SQL);
-			statement.setString(1, collectionTierImageName);
+			statement = conn.prepareStatement(SELECT_CHECK_METADATA_EXISTS_SQL);
+			statement.setString(1, taskId);
 			statement.setQueryTimeout(300);
 
 			statement.execute();
 
 			ResultSet rs = statement.getResultSet();
-			return rs.next();
+			if (rs.next()) {
+				boolean found = rs.getBoolean(1); // "found" column
+				if (found) {
+					return true; // Rows exist
+				} else {
+					// Rows not exist
+				}
+			}
 		} finally {
 			close(statement, conn);
 		}
+
+		return false;
 	}
 
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME
@@ -586,7 +719,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		LOGGER.info("Adding user " + userName + " into DB");
 		if (userName == null || userName.isEmpty() || userPass == null || userPass.isEmpty()) {
-			throw new IllegalArgumentException("Unable to create user with empty name or password.");
+			throw new IllegalArgumentException(
+					"Unable to create user with empty name or password.");
 		}
 
 		PreparedStatement insertStatement = null;
@@ -666,10 +800,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(updateStatement, connection);
 		}
 	}
-	
+
 	private static String UPDATE_IMAGE_STATUS_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET "
 			+ IMAGE_STATUS_COL + " = ? WHERE " + TASK_ID_COL + " = ?";
-	
+
 	@Override
 	public void updateTaskStatus(String taskId, String status) throws SQLException {
 		if (taskId == null || taskId.isEmpty() || status == null) {
@@ -1278,6 +1412,100 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
+	@Override
+	public String getMetadataInfo(String taskId, String componentType, String infoType)
+			throws SQLException {
+		if (taskId == null || taskId.isEmpty() || componentType == null || componentType.isEmpty()
+				|| infoType == null || infoType.isEmpty()) {
+			LOGGER.error("Invalid taskId " + taskId + ", componentType " + componentType
+					+ " or infoType " + infoType);
+			throw new IllegalArgumentException("Invalid taskId " + taskId + ", componentType "
+					+ componentType + " or infoType " + infoType);
+		}
+		PreparedStatement selectStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+			return adjustAndExecuteMetadataSelectStatement(connection, taskId, componentType,
+					infoType);
+		} finally {
+			close(selectStatement, connection);
+		}
+	}
+
+	private String adjustAndExecuteMetadataSelectStatement(Connection connection, String taskId,
+			String componentType, String infoType) throws SQLException {
+		String selectStatementSQL = "SELECT ";
+		String columnLabel = null;
+
+		if (componentType.equals(SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE)) {
+			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
+				selectStatementSQL += INPUT_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = INPUT_METADATA_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
+				selectStatementSQL += INPUT_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = INPUT_OPERATING_SYSTEM_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
+				selectStatementSQL += INPUT_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = INPUT_KERNEL_VERSION_COL;
+			}
+		} else if (componentType.equals(SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE)) {
+			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
+				selectStatementSQL += PREPROCESSING_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = PREPROCESSING_METADATA_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
+				selectStatementSQL += PREPROCESSING_OPERATING_SYSTEM_COL + " FROM "
+						+ PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = PREPROCESSING_OPERATING_SYSTEM_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
+				selectStatementSQL += PREPROCESSING_KERNEL_VERSION_COL + " FROM "
+						+ PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = PREPROCESSING_KERNEL_VERSION_COL;
+			}
+		} else if (componentType.equals(SapsPropertiesConstants.WORKER_COMPONENT_TYPE)) {
+			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
+				selectStatementSQL += OUTPUT_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = OUTPUT_METADATA_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
+				selectStatementSQL += OUTPUT_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = OUTPUT_OPERATING_SYSTEM_COL;
+			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
+				selectStatementSQL += OUTPUT_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME
+						+ " WHERE " + TASK_ID_COL + " = ?";
+				columnLabel = OUTPUT_KERNEL_VERSION_COL;
+			}
+		}
+
+		PreparedStatement selectStatement = connection.prepareStatement(selectStatementSQL);
+		selectStatement.setString(1, taskId);
+		selectStatement.setQueryTimeout(300);
+		selectStatement.execute();
+
+		return getResultSet(selectStatement, columnLabel);
+	}
+
+	private String getResultSet(PreparedStatement selectStatement, String columnLabel)
+			throws SQLException {
+		ResultSet rs = selectStatement.getResultSet();
+
+		try {
+			if (rs.next()) {
+				return rs.getString(columnLabel);
+			}
+		} finally {
+			rs.close();
+		}
+
+		return null;
+	}
+
 	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME
 			+ " WHERE task_id = ?";
 
@@ -1378,6 +1606,46 @@ public class JDBCImageDataStore implements ImageDataStore {
 			removeStatement.execute();
 		} finally {
 			close(removeStatement, connection);
+		}
+	}
+
+	private final String PROCESSED_IMAGES_QUERY = "SELECT * FROM " +
+			IMAGE_TABLE_NAME + " WHERE " +
+			STATE_COL + " = ? AND " +
+			REGION_COL + " = ? AND " +
+			IMAGE_DATE_COL + " BETWEEN ? AND ? AND " +
+			INPUT_PREPROCESSING_TAG + " = ? AND " +
+			INPUT_GATHERING_TAG + " = ? AND " +
+			ALGORITHM_EXECUTION_TAG + " = ?";
+
+	@Override
+	public List<ImageTask> getProcessedImages(
+			String region,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) throws SQLException {
+		PreparedStatement queryStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			queryStatement = connection.prepareStatement(PROCESSED_IMAGES_QUERY);
+			queryStatement.setString(1, ImageTaskState.ARCHIVED.getValue());
+			queryStatement.setString(2, region);
+			queryStatement.setDate(3, javaDateToSqlDate(initDate));
+			queryStatement.setDate(4, javaDateToSqlDate(endDate));
+			queryStatement.setString(5, inputPreprocessing);
+			queryStatement.setString(6, inputGathering);
+			queryStatement.setString(7, algorithmExecution);
+			queryStatement.setQueryTimeout(300);
+
+			ResultSet result = queryStatement.executeQuery();
+			return extractImageTaskFrom(result);
+		} finally {
+			close(queryStatement, connection);
 		}
 	}
 
