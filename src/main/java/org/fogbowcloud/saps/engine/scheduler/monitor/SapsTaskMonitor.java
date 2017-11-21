@@ -143,10 +143,18 @@ public class SapsTaskMonitor extends TaskMonitor {
 	}
 
 	protected void storeMetadata(TaskProcess tp) throws SQLException {
-		LOGGER.info("Storing metadata into Catalogue");
-		imageStore.updateMetadataInfo(getMetadataFilePath(tp), getOperatingSystem(tp),
-				getKernelVersion(tp), SapsPropertiesConstants.WORKER_COMPONENT_TYPE,
-				getImageTaskFromTaskProcess(tp));
+		String metadataFilePath = getMetadataFilePath(tp);
+		String operatingSystem = getBlowoutPool().getTaskById(tp.getTaskId())
+				.getMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM);
+		String kernelVersion = getBlowoutPool().getTaskById(tp.getTaskId())
+				.getMetadata(SapsTask.METADATA_WORKER_KERNEL_VERSION);
+
+		LOGGER.info("Storing into catalogue metadata " + metadataFilePath + " operating system "
+				+ operatingSystem + " and kernel version " + kernelVersion + " for task "
+				+ getImageTaskFromTaskProcess(tp));
+
+		imageStore.updateMetadataInfo(metadataFilePath, operatingSystem, kernelVersion,
+				SapsPropertiesConstants.WORKER_COMPONENT_TYPE, getImageTaskFromTaskProcess(tp));
 	}
 
 	protected String getMetadataFilePath(TaskProcess tp) {
