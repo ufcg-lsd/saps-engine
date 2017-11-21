@@ -8,7 +8,7 @@ datastore_username=user
 datastore_password=password
 
 ##### Sebal Task Configuration #####
-infra_initial_specs_file_path=config/workerSpec
+infra_initial_specs_file_path=/path/to/workerSpec
 
 worker_sandbox=/tmp/sandbox
 worker_raster_tmp_dir=/mnt/rasterTmp
