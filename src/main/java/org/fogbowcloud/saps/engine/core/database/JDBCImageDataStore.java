@@ -232,6 +232,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
+	private java.sql.Date javaDateToSqlDate(Date date) {
+		return new java.sql.Date(date.getTime());
+	}
+
 	@Override
 	public ImageTask addImageTask(String taskId, String dataset, String region, Date date,
 			String downloadLink, int priority, String inputGathering, String inputPreprocessing,
@@ -276,7 +280,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, imageTask.getTaskId());
 			insertStatement.setString(2, imageTask.getDataset());
 			insertStatement.setString(3, imageTask.getRegion());
-			insertStatement.setDate(4, new java.sql.Date(imageTask.getImageDate().getTime()));
+			insertStatement.setDate(4, javaDateToSqlDate(imageTask.getImageDate()));
 			insertStatement.setString(5, imageTask.getDownloadLink());
 			insertStatement.setString(6, imageTask.getState().getValue());
 			insertStatement.setString(7, imageTask.getFederationMember());
@@ -796,10 +800,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(updateStatement, connection);
 		}
 	}
-	
+
 	private static String UPDATE_IMAGE_STATUS_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET "
 			+ IMAGE_STATUS_COL + " = ? WHERE " + TASK_ID_COL + " = ?";
-	
+
 	@Override
 	public void updateTaskStatus(String taskId, String status) throws SQLException {
 		if (taskId == null || taskId.isEmpty() || status == null) {
@@ -1481,7 +1485,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		return getResultSet(selectStatement, columnLabel);
 	}
-	
+
 	private String getResultSet(PreparedStatement selectStatement, String columnLabel)
 			throws SQLException {
 		ResultSet rs = selectStatement.getResultSet();
@@ -1597,6 +1601,46 @@ public class JDBCImageDataStore implements ImageDataStore {
 			removeStatement.execute();
 		} finally {
 			close(removeStatement, connection);
+		}
+	}
+
+	private final String PROCESSED_IMAGES_QUERY = "SELECT * FROM " +
+			IMAGE_TABLE_NAME + " WHERE " +
+			STATE_COL + " = ? AND " +
+			REGION_COL + " = ? AND " +
+			IMAGE_DATE_COL + " BETWEEN ? AND ? AND " +
+			INPUT_PREPROCESSING_TAG + " = ? AND " +
+			INPUT_GATHERING_TAG + " = ? AND " +
+			ALGORITHM_EXECUTION_TAG + " = ?";
+
+	@Override
+	public List<ImageTask> getProcessedImages(
+			String region,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) throws SQLException {
+		PreparedStatement queryStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			queryStatement = connection.prepareStatement(PROCESSED_IMAGES_QUERY);
+			queryStatement.setString(1, ImageTaskState.ARCHIVED.getValue());
+			queryStatement.setString(2, region);
+			queryStatement.setDate(3, javaDateToSqlDate(initDate));
+			queryStatement.setDate(4, javaDateToSqlDate(endDate));
+			queryStatement.setString(5, inputPreprocessing);
+			queryStatement.setString(6, inputGathering);
+			queryStatement.setString(7, algorithmExecution);
+			queryStatement.setQueryTimeout(300);
+
+			ResultSet result = queryStatement.executeQuery();
+			return extractImageTaskFrom(result);
+		} finally {
+			close(queryStatement, connection);
 		}
 	}
 

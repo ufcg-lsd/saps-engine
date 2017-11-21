@@ -3,7 +3,12 @@ package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
+import org.restlet.data.Form;
 import org.restlet.resource.ServerResource;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class BaseResource extends ServerResource {
 	protected DatabaseApplication application;
@@ -31,5 +36,16 @@ public class BaseResource extends ServerResource {
 			return true;
 		}
 		return false;
+	}
+
+	String extractCoordinate(Form form, String name, int index) {
+		String data[] = form.getValuesArray(name + "[]");
+		return data[index];
+	}
+
+	Date extractDate(Form form, String name) throws ParseException {
+		String data = form.getFirstValue(name);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		return dateFormat.parse(data);
 	}
 }
