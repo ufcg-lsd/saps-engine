@@ -14,6 +14,7 @@
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
+					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -203,16 +204,21 @@
 			<artifactId>mapdb</artifactId>
 			<version>1.0.9</version>
 		</dependency>
-		
-		<dependency>
-      		<groupId>org.openprovenance.prov</groupId>
-      		<artifactId>prov-model</artifactId>
-      		<version>0.7.0</version>
-    	</dependency>
-    	<dependency>
-      		<groupId>org.openprovenance.prov</groupId>
-      		<artifactId>prov-interop</artifactId>
-      		<version>0.7.0</version>
-    	</dependency>
+				
+    <dependency>
+        <groupId>org.openprovenance.prov</groupId>
+        <artifactId>prov-model</artifactId>
+        <version>0.7.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openprovenance.prov</groupId>
+        <artifactId>prov-interop</artifactId>
+        <version>0.7.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20090211</version>
+    </dependency>
 	</dependencies>
 </project>
