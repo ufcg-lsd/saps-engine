@@ -51,8 +51,8 @@ public class TestRegionResource {
 
 		this.properties.put("submission_rest_server_port", "8000");
 
-		this.properties.put("usgs_login_url", "fakelogin");
-		this.properties.put("usgs_json_url", "fakeurl");
+		this.properties.put("usgs_login_url", "https://ers.cr.usgs.gov/login/");
+		this.properties.put("usgs_json_url", "https://earthexplorer.usgs.gov/inventory/json");
 		this.properties.put("usgs_username", "username");
 		this.properties.put("usgs_password", "password");
 		this.properties.put("usgs_api_key_period", "100000");
@@ -101,7 +101,7 @@ public class TestRegionResource {
 				"NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
 				"available", ""));
 
-		HashMap<String, Integer> expectedFrequency = new HashMap<String, Integer>();
+		HashMap<String, Integer> expectedFrequency = new HashMap<>();
 		expectedFrequency.put("215066", 2);
 		expectedFrequency.put("215067", 1);
 
@@ -109,7 +109,7 @@ public class TestRegionResource {
 		imageDB.addImageTask(images.get(1));
 		imageDB.addImageTask(images.get(2));
 
-		HttpGet get = new HttpGet("http://localhost:8000/imagesProcessedByRegion");
+		HttpGet get = new HttpGet("http://localhost:8000/regions/details");
 		get.addHeader(UserResource.REQUEST_ATTR_USER_EMAIL, "testuser");
 		get.addHeader(UserResource.REQUEST_ATTR_USERPASS, "testuser");
 		HttpClient client = HttpClients.createMinimal();
