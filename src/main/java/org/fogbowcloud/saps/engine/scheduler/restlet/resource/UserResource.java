@@ -53,8 +53,7 @@ public class UserResource extends BaseResource {
 			if (userNotify.equals("yes")) {
 				notify = true;
 			}
-			// TODO return default status to false
-			application.createUser(userEmail, userName, md5Pass, true, notify, false);
+			application.createUser(userEmail, userName, md5Pass, false, notify, false);
 		} catch (Exception e) {
 			LOGGER.error("Error while creating user", e);
 			return new StringRepresentation(CREATE_USER_ALREADY_EXISTS, MediaType.TEXT_PLAIN);
