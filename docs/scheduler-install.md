@@ -225,7 +225,7 @@ To configure Keystone authentication:
 Once the configuration file has been appropriately customized, it needs to be copied to the container:
 
   ```
-  docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine/config
+  docker cp scheduler.conf <container_id>:/home/ubuntu/saps-engine
   ```
 
 ## Run
