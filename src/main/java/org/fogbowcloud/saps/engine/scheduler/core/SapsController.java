@@ -148,8 +148,10 @@ public class SapsController extends BlowoutController {
 					Map<String, String> nfsConfig = imageStore
 							.getFederationNFSConfig(imageTask.getFederationMember());
 
+					@SuppressWarnings("rawtypes")
 					Iterator it = nfsConfig.entrySet().iterator();
 					while (it.hasNext()) {
+						@SuppressWarnings("rawtypes")
 						Map.Entry pair = (Map.Entry) it.next();
 						nfsServerIP = pair.getKey().toString();
 						nfsServerPort = pair.getValue().toString();
