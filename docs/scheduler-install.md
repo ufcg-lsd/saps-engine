@@ -197,7 +197,7 @@ To configure NAF authentication:
   auth_token_prop_naf_identity_private_key=
 
   # NAF Infrastructure public key
-  auth_token_prop_naf_identity_private_key=
+  auth_token_prop_naf_identity_public_key=
 
   # NAF Infrastructure user name
   auth_token_prop_naf_identity_token_username=
