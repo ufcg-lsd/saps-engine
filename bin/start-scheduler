@@ -7,8 +7,6 @@ saps_engine_target_path=
 library_path=
 debug_port=
 
-sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.scheduler.SchedulerMain $saps_engine_conf_path &
-
 while [ true ]
 do
   if (( $(ps -ef | grep -v grep | grep SchedulerMain | wc -l) > 0 ))
