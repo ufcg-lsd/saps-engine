@@ -2,21 +2,21 @@
   "worker":[
     {
       "name":"Default",
-      "docker_tag":"v1.3",
+      "docker_tag":"latest",
       "docker_repository":"fogbow/worker"
     }
   ],
   "pre_processing":[
     {
       "name":"Default",
-      "docker_tag":"preprocessor",
+      "docker_tag":"latest",
       "docker_repository":"fogbow/preprocessor"
     }
   ],
   "input_downloader":[
     {
       "name":"Default",
-      "docker_tag":"test_v1.1",
+      "docker_tag":"latest",
       "docker_repository":"fogbow/inputdownloader"
     }
   ]
