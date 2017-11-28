@@ -6,8 +6,10 @@ import java.io.File;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
@@ -18,7 +20,9 @@ import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 public class TestPreProcessorImpl {
@@ -28,6 +32,9 @@ public class TestPreProcessorImpl {
 	private PreProcessorImpl preProcessor;
 	private ImageDataStore imageStore;
 	private ImageTask imageTask;
+	
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	@Before
 	public void setUp() throws Exception {
@@ -47,21 +54,41 @@ public class TestPreProcessorImpl {
 		this.preProcessor = Mockito.spy(new PreProcessorImpl(this.properties, this.imageStore));
 	}
 
-	@SuppressWarnings("unchecked")
-	@Test(expected=Exception.class)
 	public void testPreProcessImage() throws Exception {
+		String hostPreProcessingPath = "fake-host-path";
+		String containerPreProcessingPath = "fake-container-path";
+		String hostMetadataPath = "fake-host-metadata-path";
+		String containerMetadataPath = "fake-container-metadata-path";
+
+		@SuppressWarnings("unchecked")
+		Map<String, String> hostContainerMap = new HashedMap();
+		hostContainerMap.put(hostPreProcessingPath, containerPreProcessingPath);
+		hostContainerMap.put(hostMetadataPath, containerMetadataPath);
+
 		ExecutionScriptTag execScriptTag = new ExecutionScriptTag(
 				this.imageTask.getInputPreprocessingTag(), "fogbow/preprocessor", "preprocessor",
 				ExecutionScriptTagUtil.PRE_PROCESSING);
 
+		Mockito.doReturn(execScriptTag).when(this.preProcessor).getContainerImageTags(imageTask);
 		Mockito.doNothing().when(this.preProcessor).getDockerImage(execScriptTag);
 
+		Mockito.doReturn(hostPreProcessingPath).when(this.preProcessor)
+				.getHostPreProcessingPath(imageTask);
+		Mockito.doReturn(containerPreProcessingPath).when(this.preProcessor)
+				.getConteinerPreProcessingPath();
+
+		Mockito.doNothing().when(this.preProcessor)
+				.createPreProcessingHostPath(hostPreProcessingPath);
+
+		Mockito.doReturn(hostContainerMap).when(this.preProcessor).getHostContainerMap(
+				hostPreProcessingPath, containerPreProcessingPath, hostMetadataPath,
+				containerMetadataPath);
+
 		String containerId = "fake-container-id";
-		Mockito.doReturn(containerId).when(this.preProcessor).raiseContainer(
-				Mockito.<ExecutionScriptTag>any(), Mockito.<ImageTask>any(), Mockito.anyMap());
-		
-		Mockito.doThrow(new Exception()).when(this.preProcessor).executeContainer(
-				"fake-container-id", "/home/ubuntu/run.sh", Mockito.<ImageTask>any());
+		Mockito.doReturn(containerId).when(this.preProcessor).raiseContainer(execScriptTag,
+				imageTask, hostContainerMap);
+		thrown.expect(Exception.class);
+
 		this.preProcessor.preProcessImage(this.imageTask);
 	}
 
@@ -69,7 +96,7 @@ public class TestPreProcessorImpl {
 	public void testGetContainerImageTags() throws SapsException {
 
 		ExecutionScriptTag execScriptTag = new ExecutionScriptTag(
-				this.imageTask.getInputPreprocessingTag(), "fogbow/preprocessor", "preprocessor",
+				this.imageTask.getInputPreprocessingTag(), "fogbow/preprocessor", "latest",
 				ExecutionScriptTagUtil.PRE_PROCESSING);
 
 		assertEquals(this.preProcessor.getContainerImageTags(this.imageTask), execScriptTag);

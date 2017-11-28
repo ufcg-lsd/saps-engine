@@ -242,7 +242,6 @@ public class InputDownloader {
 		List<ImageTask> tasksToDownload = new ArrayList<ImageTask>();
 
 		try {
-			// TODO check if is necessary the amount of images in this method
 			tasksToDownload = this.imageStore.getImagesToDownload(this.federationMember,
 					MAX_IMAGES_TO_DOWNLOAD);
 		} catch (SQLException e) {
@@ -406,8 +405,13 @@ public class InputDownloader {
 						p.waitFor();
 
 						actualInputUsage = getProcessOutput(p);
-						String[] splited = actualInputUsage.split("\\s+");
-						actualInputUsage = splited[0];
+						
+						if (actualInputUsage != null) {
+							String[] splited = actualInputUsage.split("\\s+");
+							actualInputUsage = splited[0];
+						} else {
+							actualInputUsage = "0";
+						}
 
 						cumulativeInputUsage += Double.valueOf(actualInputUsage);
 					} catch (Exception e) {

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
@@ -91,7 +90,7 @@ public class TestInputDownloaderIntegration {
 		for (String pendingTask : pendingTasks) {
 			File pendingImageDBFile = new File(pendingTask);
 			if (pendingImageDBFile.exists()) {
-				FileUtils.deleteQuietly(pendingImageDBFile);
+				pendingImageDBFile.delete();
 			}
 		}
 	}
@@ -99,6 +98,7 @@ public class TestInputDownloaderIntegration {
 	@Test
 	public void testStepOverImageWhenDownloadFails()
 			throws SQLException, IOException, InterruptedException, SapsException {
+		clean();
 
 		// 1. we have 2 NOT_DOWNLOADED images, pendingDB is empty
 		// 2. we proceed to download them
@@ -149,6 +149,8 @@ public class TestInputDownloaderIntegration {
 	@Test
 	public void testinputDownloaderErrorWhileGetCreatedImages()
 			throws SQLException, IOException, SapsException {
+		clean();
+		
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -173,6 +175,8 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testPurgeImagesFromVolume() throws SQLException, IOException, InterruptedException {
+		clean();
+		
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -210,6 +214,8 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testFederationMemberCheck() throws SQLException, IOException, InterruptedException {
+		clean();
+		
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -251,6 +257,8 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testPendingTaskMap() throws SQLException, IOException {
+		clean();
+		
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
 		String inputDownloaderIP = "fake-inputDownloader-ip";
@@ -274,8 +282,11 @@ public class TestInputDownloaderIntegration {
 		Assert.assertEquals(task, pendingTaskMap.get(task.getTaskId()));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFailsAndRemovesImage() throws Exception {
+		clean();
+		
 		Properties properties = new Properties();
 		setUpProperties(properties);
 
@@ -299,6 +310,22 @@ public class TestInputDownloaderIntegration {
 				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember));
 		
 		doNothing().when(inputDownloader).prepareTaskDirStructure(Mockito.any(ImageTask.class));
+		PowerMockito.mockStatic(ExecutionScriptTagUtil.class);
+		ExecutionScriptTag executionScriptTag = new ExecutionScriptTag("", "", "", "");
+		BDDMockito.given(ExecutionScriptTagUtil.getExecutionScritpTag(Mockito.anyString(),
+				Mockito.anyString())).willReturn(executionScriptTag);
+
+		PowerMockito.mockStatic(DockerUtil.class);
+		boolean notImportantBoolean = true;
+		BDDMockito.given(DockerUtil.pullImage(Mockito.anyString(), Mockito.anyString()))
+				.willReturn(notImportantBoolean);
+		String containerId = "1";
+		BDDMockito.given(DockerUtil.runMappedContainer(Mockito.anyString(), Mockito.anyString(),
+				Mockito.anyMap())).willReturn(containerId);
+		BDDMockito.given(DockerUtil.execDockerCommand(Mockito.eq(containerId), Mockito.anyString()))
+				.willReturn(1);
+		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString()))
+				.willReturn(notImportantBoolean);
 
 		Assert.assertEquals(0, imageStore.getIn(ImageTaskState.FAILED).size()); // There's no failed
 																				// image tasks
@@ -326,6 +353,8 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testTaskChangingState() throws Exception {
+		clean();
+		
 		Properties properties = new Properties();
 		setUpProperties(properties);
 
@@ -371,44 +400,52 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testDownloadImageNotFoundImage() throws Exception {		
-		Mockito.doNothing().when(this.inputDownloaderDefault).prepareTaskDirStructure(Mockito.eq(this.imageTaskDefault));
-		
-        PowerMockito.mockStatic(ExecutionScriptTagUtil.class);
-        ExecutionScriptTag executionScriptTag = new ExecutionScriptTag("", "", "", "");
-		BDDMockito.given(ExecutionScriptTagUtil.getExecutionScritpTag(
-        		Mockito.anyString(), Mockito.anyString())).willReturn(executionScriptTag);
-		
+	public void testDownloadImageNotFoundImage() throws Exception {
+		clean();
+
+		Mockito.doNothing().when(this.inputDownloaderDefault)
+				.prepareTaskDirStructure(Mockito.eq(this.imageTaskDefault));
+
+		PowerMockito.mockStatic(ExecutionScriptTagUtil.class);
+		ExecutionScriptTag executionScriptTag = new ExecutionScriptTag("", "", "", "");
+		BDDMockito.given(ExecutionScriptTagUtil.getExecutionScritpTag(Mockito.anyString(),
+				Mockito.anyString())).willReturn(executionScriptTag);
+
 		PowerMockito.mockStatic(DockerUtil.class);
 		boolean notImportantBoolean = true;
-		BDDMockito.given(DockerUtil.pullImage(Mockito.anyString(), Mockito.anyString())).willReturn(notImportantBoolean);
+		BDDMockito.given(DockerUtil.pullImage(Mockito.anyString(), Mockito.anyString()))
+				.willReturn(notImportantBoolean);
 		String containerId = "1";
-		
-		BDDMockito.given(DockerUtil.runMappedContainer(
-				Mockito.anyString(), Mockito.anyString(), Mockito.anyMapOf(String.class, String.class))).willReturn(containerId);
-		BDDMockito.given(DockerUtil.execDockerCommand(
-				Mockito.eq(containerId), Mockito.anyString())).willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
-		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString())).willReturn(notImportantBoolean);
-		
+
+		BDDMockito.given(DockerUtil.runMappedContainer(Mockito.anyString(), Mockito.anyString(),
+				Mockito.anyMapOf(String.class, String.class))).willReturn(containerId);
+		BDDMockito.given(DockerUtil.execDockerCommand(Mockito.eq(containerId), Mockito.anyString()))
+				.willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
+		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString()))
+				.willReturn(notImportantBoolean);
+
 		DB pendingTaskDB = this.inputDownloaderDefault.getPendingTaskDB();
-		ConcurrentMap<String, ImageTask> pendingTaskMap = this.inputDownloaderDefault.getPendingTaskMap();
-		
+		ConcurrentMap<String, ImageTask> pendingTaskMap = this.inputDownloaderDefault
+				.getPendingTaskMap();
+
 		Assert.assertEquals(0, pendingTaskMap.values().size());
-		
+
 		pendingTaskMap.put(this.imageTaskDefault.getTaskId(), this.imageTaskDefault);
 		pendingTaskDB.commit();
-		
+
 		Assert.assertEquals(1, pendingTaskMap.values().size());
 		Assert.assertEquals(ImageTask.AVAILABLE, this.imageTaskDefault.getStatus());
-		
-		boolean returnDownloadImage = this.inputDownloaderDefault.downloadImage(this.imageTaskDefault);
-		
+
+		boolean returnDownloadImage = this.inputDownloaderDefault
+				.downloadImage(this.imageTaskDefault);
+
 		Assert.assertFalse(returnDownloadImage);
 		Assert.assertEquals(0, pendingTaskMap.values().size());
 		Mockito.verify(this.inputDownloaderDefault).updateTaskStateToFailed(
-				Mockito.eq(this.imageTaskDefault), Mockito.eq(InputDownloader.IMAGE_NOT_FOUND_FAILED_MSG));
+				Mockito.eq(this.imageTaskDefault),
+				Mockito.eq(InputDownloader.IMAGE_NOT_FOUND_FAILED_MSG));
 		Mockito.verify(this.inputDownloaderDefault).updateTaskStatus(
-				Mockito.eq(this.imageTaskDefault), Mockito.eq(ImageTask.UNAVAILABLE));		
+				Mockito.eq(this.imageTaskDefault), Mockito.eq(ImageTask.UNAVAILABLE));
 	}
 	
 	private void setUpProperties(Properties properties) {

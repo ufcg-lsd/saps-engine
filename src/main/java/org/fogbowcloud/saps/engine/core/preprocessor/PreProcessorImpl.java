@@ -54,8 +54,7 @@ public class PreProcessorImpl implements PreProcessor {
 
 			String hostPreProcessingPath = this.getHostPreProcessingPath(imageTask);
 
-			String containerPreProcessingPath = this.properties
-					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
+			String containerPreProcessingPath = this.getConteinerPreProcessingPath();
 
 			this.createPreProcessingHostPath(hostPreProcessingPath);
 
@@ -64,10 +63,8 @@ public class PreProcessorImpl implements PreProcessor {
 			String containerMetadataPath = this.properties
 					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
 
-			@SuppressWarnings("unchecked")
-			Map<String, String> hostAndContainerDirMap = new HashedMap();
-			hostAndContainerDirMap.put(hostPreProcessingPath, containerPreProcessingPath);
-			hostAndContainerDirMap.put(hostMetadataPath, containerMetadataPath);
+			Map<String, String> hostAndContainerDirMap = getHostContainerMap(hostPreProcessingPath,
+					containerPreProcessingPath, hostMetadataPath, containerMetadataPath);
 
 			String containerId = this.raiseContainer(preProcessorTags, imageTask,
 					hostAndContainerDirMap);
@@ -81,6 +78,21 @@ public class PreProcessorImpl implements PreProcessor {
 					"Failed in the preprocessing of Image Task [" + imageTask.getTaskId() + "]", e);
 		}
 
+	}
+
+	protected Map<String, String> getHostContainerMap(String hostPreProcessingPath,
+			String containerPreProcessingPath, String hostMetadataPath,
+			String containerMetadataPath) {
+		@SuppressWarnings("unchecked")
+		Map<String, String> hostAndContainerDirMap = new HashedMap();
+		hostAndContainerDirMap.put(hostPreProcessingPath, containerPreProcessingPath);
+		hostAndContainerDirMap.put(hostMetadataPath, containerMetadataPath);
+		return hostAndContainerDirMap;
+	}
+
+	protected String getConteinerPreProcessingPath() {
+		return this.properties
+				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
 	}
 
 	@Override
@@ -135,7 +147,7 @@ public class PreProcessorImpl implements PreProcessor {
 		return containerId;
 	}
 
-	private void createPreProcessingHostPath(String hostPath) throws Exception {
+	protected void createPreProcessingHostPath(String hostPath) throws Exception {
 		File file = new File(hostPath);
 		if (!file.exists()) {
 			LOGGER.info("Creating directory [" + hostPath + "]");

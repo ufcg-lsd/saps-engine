@@ -109,7 +109,7 @@ public class TestRegionResource {
 		imageDB.addImageTask(images.get(1));
 		imageDB.addImageTask(images.get(2));
 
-		HttpGet get = new HttpGet("http://localhost:8000/imagesProcessedByRegion");
+		HttpGet get = new HttpGet("http://localhost:8000/regions/details");
 		get.addHeader(UserResource.REQUEST_ATTR_USER_EMAIL, "testuser");
 		get.addHeader(UserResource.REQUEST_ATTR_USERPASS, "testuser");
 		HttpClient client = HttpClients.createMinimal();
