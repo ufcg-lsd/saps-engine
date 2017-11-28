@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.core.model;
 
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
@@ -30,7 +31,7 @@ public class TestSapsTask {
 		String kernelVersion = "fake-kernel-version";
 		String scriptFilePath = "fake-script-path";
 
-		File fakeScriptFile = mock(File.class);
+		File fakeScriptFile = new File(scriptFilePath);
 		Specification spec = mock(Specification.class);
 
 		TaskImpl taskImpl = new TaskImpl(taskId, spec);
@@ -49,8 +50,6 @@ public class TestSapsTask {
 		properties.put(SapsPropertiesConstants.WORKER_KERNEL_VERSION, kernelVersion);
 		properties.put(sapsTask.SAPS_WORKER_RUN_SCRIPT_PATH, scriptFilePath);
 
-		doReturn(fakeScriptFile).when(sapsTask).createScriptFile(properties, taskImpl);
-
 		TaskImpl createdTask = sapsTask.createSapsTask(taskImpl, properties, spec, federationMember,
 				nfsServerIP, nfsServerPort, workerContainerRepository, workerContainerTag);
 
@@ -62,5 +61,7 @@ public class TestSapsTask {
 
 		Assert.assertEquals(kernelVersion,
 				createdTask.getMetadata(sapsTask.METADATA_WORKER_KERNEL_VERSION));
+		
+		fakeScriptFile.delete();
 	}
 }
