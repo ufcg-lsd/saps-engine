@@ -86,7 +86,6 @@ public class DatabaseApplication extends Application {
 				)
 		);
 		router.attach("/users", UserResource.class);
-		router.attach("/users/{userEmail}", UserResource.class);
 		router.attach("/processings", ImageResource.class);
 		router.attach("/images/{imgName}", ImageResource.class);
 		router.attach("/regions/details", RegionResource.class);

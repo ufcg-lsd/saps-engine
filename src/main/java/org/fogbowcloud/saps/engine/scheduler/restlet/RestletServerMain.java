@@ -26,17 +26,18 @@ public class RestletServerMain {
         DatabaseApplication databaseApplication = new DatabaseApplication(properties);
         databaseApplication.startServer();
 
-//        String userEmail = properties.getProperty(ADMIN_EMAIL);
-//        SapsUser user = databaseApplication.getUser(userEmail);
-//        if (user == null) {
-//            String userName = properties.getProperty(ADMIN_USER);
-//            String userPass = DigestUtils.md5Hex(properties.getProperty(ADMIN_PASSWORD));
-//
-//            try {
-//                databaseApplication.createUser(userEmail, userName, userPass, true, false, true);
-//            } catch (Exception e) {
-//                LOGGER.error("Error while creating user", e);
-//            }
+        String userEmail = properties.getProperty(ADMIN_EMAIL);
+        SapsUser user = databaseApplication.getUser(userEmail);
+        if (user == null) {
+            String userName = properties.getProperty(ADMIN_USER);
+            String userPass = DigestUtils.md5Hex(properties.getProperty(ADMIN_PASSWORD));
+
+            try {
+                databaseApplication.createUser(userEmail, userName, userPass, true, false, true);
+            } catch (Exception e) {
+                LOGGER.error("Error while creating user", e);
+            }
+        }
 //
 //            try {
 //                databaseApplication.createUser("anonymous", "anonymous", DigestUtils.md5Hex("pass"), true, false, false);
@@ -56,7 +57,6 @@ public class RestletServerMain {
 ////                    "Default",
 ////                    "Default"
 ////            );
-//        }
     }
 
 }

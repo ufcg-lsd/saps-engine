@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
 import org.restlet.data.Form;
@@ -11,6 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class BaseResource extends ServerResource {
+
+	private static final Logger LOGGER = Logger.getLogger(BaseResource.class);
+
 	protected DatabaseApplication application;
 
 	public BaseResource() {
@@ -23,6 +27,7 @@ public class BaseResource extends ServerResource {
 
 	protected boolean authenticateUser(String userEmail, String userPass, boolean mustBeAdmin) {
 		if (userEmail == null || userEmail.isEmpty() || userPass == null || userPass.isEmpty()) {
+			LOGGER.error("User email or user password was null.");
 			return false;
 		}
 
@@ -31,10 +36,12 @@ public class BaseResource extends ServerResource {
 		if (user != null && user.getUserPassword().equals(md5Pass) && user.getActive()) {
 			if (mustBeAdmin && !user.getAdminRole()) {
 				// the user must be an admin and the logged user is not
+				LOGGER.error("Admin level account needed for this action.");
 				return false;
 			}
 			return true;
 		}
+		LOGGER.error("No user with this email or password mismatch.");
 		return false;
 	}
 
