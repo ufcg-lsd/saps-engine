@@ -558,11 +558,46 @@ public class InputDownloader {
 		File metadataDir = new File(metadataDirPath);
 		File logsDir = new File(logsDirPath);
 
-		if (!inputDir.mkdirs() || !outputDir.mkdirs() || !preProcessDir.mkdirs()
-				|| !logsDir.mkdirs() || !metadataDir.mkdirs()) {
+		if (!createDirectories(imageTask, inputDir, outputDir, preProcessDir, metadataDir,
+				logsDir)) {
 			throw new Exception(
 					"Error while creating directories for task " + imageTask.getTaskId());
 		}
+	}
+
+	protected boolean createDirectories(ImageTask imageTask, File inputDir, File outputDir,
+			File preProcessDir, File metadataDir, File logsDir) throws Exception {
+		try {
+			if (!inputDir.exists()) {
+				LOGGER.debug("Creating directory: " + inputDir.getAbsolutePath());
+				inputDir.mkdirs();
+			}
+
+			if (!outputDir.exists()) {
+				LOGGER.debug("Creating directory: " + outputDir.getAbsolutePath());
+				outputDir.mkdirs();
+			}
+
+			if (!preProcessDir.exists()) {
+				LOGGER.debug("Creating directory: " + preProcessDir.getAbsolutePath());
+				preProcessDir.mkdirs();
+			}
+
+			if (!metadataDir.exists()) {
+				LOGGER.debug("Creating directory: " + metadataDir.getAbsolutePath());
+				metadataDir.mkdirs();
+			}
+
+			if (!logsDir.exists()) {
+				LOGGER.debug("Creating directory: " + logsDir.getAbsolutePath());
+				logsDir.mkdirs();
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while creating directories for task " + imageTask.getTaskId());
+			return false;
+		}
+
+		return true;
 	}
 
 	protected void updateTaskStatus(ImageTask imageTask, String status) {

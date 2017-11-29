@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
@@ -446,6 +447,138 @@ public class TestInputDownloaderIntegration {
 				Mockito.eq(InputDownloader.IMAGE_NOT_FOUND_FAILED_MSG));
 		Mockito.verify(this.inputDownloaderDefault).updateTaskStatus(
 				Mockito.eq(this.imageTaskDefault), Mockito.eq(ImageTask.UNAVAILABLE));
+	}
+	
+	@Test
+	public void testDirectorySetUp() throws Exception {
+		// Image task info
+		String taskId = "fake-task-id";
+		String dataset = "fake-dataset";
+		String region = "fake-region";
+		String downloadLink = "link1";
+		String federationMember = "fake-task-id";
+		String status = "available";
+
+		ImageTask imageTask = new ImageTask(taskId, dataset, region, new java.util.Date(),
+				downloadLink, ImageTaskState.CREATED, federationMember, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), status, "");
+
+		// Input downloader info
+		String inputDownloderIp = "fake-ip";
+		String InputDownloaderSshPort = "fake-ssh-port";
+		String inputDownloaderNfsPort = "fake-nfs-port";
+
+		Properties properties = new Properties();
+		setUpProperties(properties);
+
+		InputDownloader inputDownloader = new InputDownloader(properties, inputDownloderIp,
+				InputDownloaderSshPort, inputDownloaderNfsPort, federationMember);
+
+		// Expected paths and files
+		String exportDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+		String inputDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "input";
+		String outputDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "output";
+		String preProcessDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+		String logsDirPath = exportDirPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "logs";
+		String metadataDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "metadata";
+
+		File inputDir = new File(inputDirPath);
+		File outputDir = new File(outputDirPath);
+		File preProcessDir = new File(preProcessDirPath);
+		File metadataDir = new File(metadataDirPath);
+		File logsDir = new File(logsDirPath);
+
+		// Exercise
+		inputDownloader.prepareTaskDirStructure(imageTask);
+
+		// Assert
+		Assert.assertTrue(inputDir.exists());
+		Assert.assertTrue(outputDir.exists());
+		Assert.assertTrue(preProcessDir.exists());
+		Assert.assertTrue(metadataDir.exists());
+		Assert.assertTrue(logsDir.exists());
+
+		// Cleaning env
+		String taskDirPath = exportDirPath + File.separator + imageTask.getTaskId();
+		FileUtils.deleteDirectory(new File(taskDirPath));
+	}
+
+	@Test
+	public void testDirectorySetUpWhenAlreadyExists() throws Exception {
+		// Image task info
+		String taskId = "fake-task-id";
+		String dataset = "fake-dataset";
+		String region = "fake-region";
+		String downloadLink = "link1";
+		String federationMember = "fake-task-id";
+		String status = "available";
+
+		ImageTask imageTask = new ImageTask(taskId, dataset, region, new java.util.Date(),
+				downloadLink, ImageTaskState.CREATED, federationMember, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), status, "");
+
+		// Input downloader info
+		String inputDownloderIp = "fake-ip";
+		String InputDownloaderSshPort = "fake-ssh-port";
+		String inputDownloaderNfsPort = "fake-nfs-port";
+
+		Properties properties = new Properties();
+		setUpProperties(properties);
+
+		InputDownloader inputDownloader = new InputDownloader(properties, inputDownloderIp,
+				InputDownloaderSshPort, inputDownloaderNfsPort, federationMember);
+
+		// Expected paths and files
+		String exportDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+		String inputDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "input";
+		String outputDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "output";
+		String preProcessDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+		String logsDirPath = exportDirPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "logs";
+		String metadataDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "metadata";
+
+		File inputDir = new File(inputDirPath);
+		File outputDir = new File(outputDirPath);
+		File preProcessDir = new File(preProcessDirPath);
+		File metadataDir = new File(metadataDirPath);
+		File logsDir = new File(logsDirPath);
+
+		inputDir.mkdirs();
+		outputDir.mkdirs();
+		preProcessDir.mkdirs();
+		metadataDir.mkdirs();
+		logsDir.mkdirs();
+
+		// Exercise
+		inputDownloader.prepareTaskDirStructure(imageTask);
+
+		// Assert
+		Assert.assertTrue(inputDir.exists());
+		Assert.assertTrue(outputDir.exists());
+		Assert.assertTrue(preProcessDir.exists());
+		Assert.assertTrue(metadataDir.exists());
+		Assert.assertTrue(logsDir.exists());
+
+		// Cleaning env
+		String taskDirPath = exportDirPath + File.separator + imageTask.getTaskId();
+		FileUtils.deleteDirectory(new File(taskDirPath));
 	}
 	
 	private void setUpProperties(Properties properties) {
