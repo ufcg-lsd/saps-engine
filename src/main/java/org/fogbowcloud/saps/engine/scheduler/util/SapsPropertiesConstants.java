@@ -82,6 +82,7 @@ public class SapsPropertiesConstants {
 	public static final String SWIFT_OBJECT_STORE_PATH = "swift_object_store_path";
 	public static final String SWIFT_OBJECT_STORE_CONTAINER = "swift_object_store_container";
 	public static final String SWIFT_OBJECT_STORE_KEY = "swift_object_store_key";
+	public static final String SWIFT_CONTAINER_POST_HEADER = "X-Storage-Policy: ec-placement";
 
 	// Restlet constants
 	public static final String SUBMISSION_REST_SERVER_PORT = "submission_rest_server_port";
