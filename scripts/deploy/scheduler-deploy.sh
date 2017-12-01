@@ -10,10 +10,16 @@ CONTAINER_DATABASE_DIR=/local/exports
 CONTAINER_REPOSITORY=fogbow/scheduler
 
 function installPostgreSQL {
-  echo -e "Installing PostgreSQL database\n"
+  echo -e "Verifying if PostgreSQL is installed\n"
 
-  apt-get update
-  apt-get install postgresql
+  service postgresql status
+  if [ $? -ne 0 ]
+  then
+    echo -e "PostgreSQL not installed\nStarting installation...\n"
+
+    apt-get update
+    apt-get install -y postgresql
+  fi
 
   # Register Database Information
   echo -e "Register Database Name: "
@@ -31,7 +37,7 @@ function installPostgreSQL {
     exit 1
   fi
 
-  su postgres -c "psql -c \"CREATE USER $USER WITH PASSWORD $PASSWORD;\""
+  su postgres -c "psql -c \"CREATE USER $USER WITH PASSWORD '$PASSWORD';\""
   su postgres -c "psql -c \"CREATE DATABASE $DB_NAME OWNER $USER;\""
   su postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $USER;\""
 
@@ -45,7 +51,7 @@ function installPostgreSQL {
 function installNTPClient {
   echo -e "Installing NTP Client\n"
 
-  bash -c ‘echo "America/Recife" > /etc/timezone’
+  bash -c 'echo "America/Recife" > /etc/timezone'
   dpkg-reconfigure -f noninteractive tzdata
 
   apt-get update
