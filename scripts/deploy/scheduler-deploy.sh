@@ -3,7 +3,8 @@
 # General constants
 CONTAINER_ID=
 POSTGRESQL_VERSION=9.3
-LOCAL_DATABASE_DIR=/local/exports
+LOCAL_DATABASE_DIR=/local/exports/postgres
+LOCAL_DATABASE_DIR_CHAR="'\/local\/exports\/postgres'"
 
 # Container constants
 CONTAINER_DATABASE_DIR=/local/exports
@@ -17,8 +18,25 @@ function installPostgreSQL {
   then
     echo -e "PostgreSQL not installed\nStarting installation...\n"
 
+    if [ ! -d "$LOCAL_DATABASE_DIR" ]
+    then
+      mkdir -p $LOCAL_DATABASE_DIR
+      chown $USER $LOCAL_DATABASE_DIR
+    fi
+
     apt-get update
     apt-get install -y postgresql
+
+    su $USER -c "/usr/lib/postgresql/$POSTGRESQL_VERSION/bin/initdb -D $LOCAL_DATABASE_DIR"
+    service postgresql stop
+    sed -i "/data_directory =/ s/=.*/=$LOCAL_DATABASE_DIR_CHAR/" /etc/postgresql/$POSTGRESQL_VERSION/main/postgresql.conf
+    service postgresql start
+
+    sed -i 's/peer/md5/g' /etc/postgresql/$POSTGRESQL_VERSION/main/pg_hba.conf
+    bash -c "echo \"host    all             all             0.0.0.0/0               md5\" >> /etc/postgresql/$POSTGRESQL_VERSION/main/pg_hba.conf"
+    sudo sed -i "$ a\\listen_addresses = '*'" /etc/postgresql/$POSTGRESQL_VERSION/main/postgresql.conf
+
+    service postgresql restart
   fi
 
   # Register Database Information
@@ -29,7 +47,7 @@ function installPostgreSQL {
   echo -e "Register Database Password: "
   read -s PASSWORD
   echo -e "Confirm Password: "
-  read -S PASSWORD_CONFIRM
+  read -s PASSWORD_CONFIRM
 
   if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]
   then
@@ -40,12 +58,6 @@ function installPostgreSQL {
   su postgres -c "psql -c \"CREATE USER $USER WITH PASSWORD '$PASSWORD';\""
   su postgres -c "psql -c \"CREATE DATABASE $DB_NAME OWNER $USER;\""
   su postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $USER;\""
-
-  sed -i 's/peer/md5/g' /etc/postgresql/$POSTGRESQL_VERSION/main/pg_hba.conf
-  bash -c "echo \"host    all             all             0.0.0.0/0               md5\" >> /etc/postgresql/$POSTGRESQL_VERSION/main/pg_hba.conf"
-  sudo sed -i "$ a\\listen_addresses = '*'" /etc/postgresql/$POSTGRESQL_VERSION/main/postgresql.conf
-
-  service postgresql restart
 }
 
 function installNTPClient {
