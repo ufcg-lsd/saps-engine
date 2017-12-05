@@ -593,7 +593,7 @@ public class TestInputDownloaderIntegration {
 		properties.setProperty(ImageDataStore.DATASTORE_NAME, "testdb");
 
 		// TODO check this dependency. Change /local/exports. Bad dependency
-		properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, "/local/exports");
+		properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, "/tmp/engine-test/exports");
 		properties.setProperty(SapsPropertiesConstants.MAX_NUMBER_OF_TASKS, "1");
 	}
 	
