@@ -81,35 +81,6 @@ public class TestSapsTaskMonitor {
 	}
 
 	@Test
-	public void testProcMonTaskTimedout() throws SQLException {
-		Task fakeTask = mock(Task.class);
-		TaskProcess fakeProcess = mock(TaskProcess.class);
-
-		doReturn(TaskState.TIMEDOUT).when(fakeProcess).getStatus();
-
-		AbstractResource fakeResource = mock(AbstractResource.class);
-		doReturn(FAKE_ID).when(fakeTask).getId();
-		doReturn(FAKE_ID).when(fakeProcess).getTaskId();
-		doReturn(fakeTask).when(this.sebalTaskMonitor).getTaskById(FAKE_ID);
-		doReturn(fakeResource).when(fakeProcess).getResource();
-
-		List<TaskProcess> runningProcesses = new ArrayList<TaskProcess>();
-		runningProcesses.add(fakeProcess);
-		doReturn(runningProcesses).when(this.sebalTaskMonitor).getRunningProcesses();
-
-		Map<Task, TaskProcess> runningTasks = new HashMap<Task, TaskProcess>();
-		runningTasks.put(fakeTask, fakeProcess);
-		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
-
-		doNothing().when(sebalTaskMonitor).updateImageTaskToReady(fakeProcess);
-
-		this.sebalTaskMonitor.procMon();
-
-		verify(pool).updateResource(fakeResource, ResourceState.IDLE);
-		verify(pool, never()).updateResource(fakeResource, ResourceState.FAILED);
-	}
-
-	@Test
 	public void testProcMonTaskFailed() throws SQLException {
 		Task fakeTask = mock(Task.class);
 		TaskProcess fakeProcess = mock(TaskProcess.class);
@@ -349,5 +320,60 @@ public class TestSapsTaskMonitor {
 				imageStore.getMetadataInfo(imageTask.getTaskId(),
 						SapsPropertiesConstants.WORKER_COMPONENT_TYPE,
 						SapsPropertiesConstants.KERNEL_TYPE));
+	}
+	
+	@Test
+	public void testTaskTimedout() throws SQLException {
+		// ImageTask set
+		ImageTask imageTask = new ImageTask("fake-task-id", "LT5", "region-53", new Date(), "link1",
+				ImageTaskState.RUNNING, ImageTask.NON_EXISTENT_DATA, 0, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), "available", "");
+
+		// Database set
+		Properties properties = new Properties();
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_username", "testuser");
+		properties.setProperty("datastore_password", "testuser");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_name", "testdb");
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+		imageStore.addImageTask(imageTask);
+
+		List<Task> tasks = new ArrayList<>();
+
+		Specification spec = mock(Specification.class);
+		TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), spec);
+		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, imageTask.getTaskId());
+		
+		tasks.add(taskImpl);
+
+		BlowoutPool blowoutPool = new DefaultBlowoutPool();
+		blowoutPool.addTasks(tasks);
+
+		TaskProcessImpl taskProcess = new TaskProcessImpl(imageTask.getTaskId(),
+				new ArrayList<Command>(), spec);
+		taskProcess.setStatus(TaskState.TIMEDOUT);
+
+		Map<Task, TaskProcess> taskProcesses = new HashMap<>();
+		taskProcesses.put(taskImpl, taskProcess);
+
+		// Task monitor set
+		SapsTaskMonitor taskMonitor = spy(new SapsTaskMonitor(blowoutPool, imageStore));
+		taskMonitor.setRunningTasks(taskProcesses);
+
+		// exercise
+		taskMonitor.procMon();
+
+		// expect
+		Assert.assertEquals(ImageTaskState.READY,
+				imageStore.getTask(imageTask.getTaskId()).getState());
+		Assert.assertEquals(TaskState.READY,
+				taskMonitor.getBlowoutPool().getTaskById(imageTask.getTaskId()).getState());
 	}
 }

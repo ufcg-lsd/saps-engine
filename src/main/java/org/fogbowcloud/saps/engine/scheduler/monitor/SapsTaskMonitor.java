@@ -73,6 +73,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 		try {
 			updateImageTaskToReady(tp);
 			getRunningTasks().remove(getTaskById(tp.getTaskId()));
+			getBlowoutPool().getTaskById(tp.getTaskId()).setState(TaskState.READY);
 			if (tp.getResource() != null) {
 				getBlowoutPool().updateResource(tp.getResource(), ResourceState.IDLE);
 			}
