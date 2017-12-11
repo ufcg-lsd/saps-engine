@@ -406,7 +406,7 @@ public class InputDownloader {
 
 						actualInputUsage = getProcessOutput(p);
 						
-						if (actualInputUsage != null) {
+						if (actualInputUsage != null && !actualInputUsage.isEmpty()) {
 							String[] splited = actualInputUsage.split("\\s+");
 							actualInputUsage = splited[0];
 						} else {
