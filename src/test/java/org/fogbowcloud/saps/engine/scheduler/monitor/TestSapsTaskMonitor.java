@@ -347,9 +347,15 @@ public class TestSapsTaskMonitor {
 
 		List<Task> tasks = new ArrayList<>();
 
-		Specification spec = mock(Specification.class);
+		Specification spec = mock(Specification.class);		
+		String operatingSystem = "operating-system";
+		String kernelVersion = "kernel-version";
+		
 		TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), spec);
 		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, imageTask.getTaskId());
+		taskImpl.putMetadata(SapsTask.METADATA_EXPORT_PATH, "/fake/export/path");
+		taskImpl.putMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM, operatingSystem);
+		taskImpl.putMetadata(SapsTask.METADATA_WORKER_KERNEL_VERSION, kernelVersion);
 		
 		tasks.add(taskImpl);
 
@@ -371,9 +377,8 @@ public class TestSapsTaskMonitor {
 		taskMonitor.procMon();
 
 		// expect
-		Assert.assertEquals(ImageTaskState.READY,
+		Assert.assertEquals(ImageTaskState.FAILED,
 				imageStore.getTask(imageTask.getTaskId()).getState());
-		Assert.assertEquals(TaskState.READY,
-				taskMonitor.getBlowoutPool().getTaskById(imageTask.getTaskId()).getState());
+		Assert.assertFalse(taskMonitor.getBlowoutPool().getAllTasks().contains(taskImpl));
 	}
 }
