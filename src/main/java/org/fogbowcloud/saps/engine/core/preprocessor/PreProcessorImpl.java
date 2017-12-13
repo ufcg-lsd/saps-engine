@@ -225,25 +225,26 @@ public class PreProcessorImpl implements PreProcessor {
 	}
 
 	protected boolean replacePathsIntoFile(ImageTask imageTask) {
-		String containerMetadataPath = properties
+		String containerPreprocessPath = properties
 				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
-		String localMetadataPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
+		String localPreprocessPath = properties.getProperty(
+				SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
 
 		Path path = Paths.get(getMetadataFilePath(imageTask));
 		Charset charset = StandardCharsets.UTF_8;
 
 		try {
 			String content = new String(Files.readAllBytes(path), charset);
-			content = content.replaceAll(containerMetadataPath, localMetadataPath);
+			content = content.replaceAll(containerPreprocessPath, localPreprocessPath);
 			Files.write(path, content.getBytes(charset));
 		} catch (IOException e) {
-			LOGGER.error("Error while replacing " + containerMetadataPath + " for "
-					+ localMetadataPath + " in " + getMetadataFilePath(imageTask) + " file");
+			LOGGER.error("Error while replacing " + containerPreprocessPath + " for "
+					+ localPreprocessPath + " in " + getMetadataFilePath(imageTask) + " file");
 			return false;
 		}
 
-		LOGGER.debug("Successfully replaced " + containerMetadataPath + " by " + localMetadataPath
+		LOGGER.debug("Successfully replaced " + containerPreprocessPath + " by " + localPreprocessPath
 				+ " in " + getMetadataFilePath(imageTask));
 		return true;
 	}
