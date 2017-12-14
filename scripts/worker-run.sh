@@ -57,7 +57,7 @@ function installDocker {
 }
 
 # This function downloads container image and prepare container to execution
-function prepareDockerContainer {
+function prepareAndExecuteDockerContainer {
   cd ${SANDBOX}
 
   echo "Pulling docker image from ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}"
@@ -69,7 +69,7 @@ function prepareDockerContainer {
     sudo docker rm ${WORKER_CONTAINER_TAG}
   fi
 
-  sudo docker run -td -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} -v $SAPS_TMP:$SAPS_TMP ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}
+  sudo docker run -v ${SAPS_MOUNT_POINT}:${SAPS_MOUNT_POINT} -v $SAPS_TMP:$SAPS_TMP ${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG} bash -x $BIN_RUN_SCRIPT ${SAPS_MOUNT_POINT}/${TASK_ID}/$INPUTS_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$PREPROCESSING_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$METADATA_DIR
 }
 
 # This function creates output directory if not exists
@@ -90,20 +90,6 @@ function garbageCollect {
       sudo rm ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME/*
     fi
   fi
-}
-
-# This function creates output directory if not exists
-function createOutputDir {
-  echo "Create output directory ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME if it not exists"
-  sudo mkdir -p ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME
-}
-
-function executeDockerContainer {
-  cd ${SANDBOX}
-
-  CONTAINER_ID=$(sudo docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
-
-  sudo timeout 3h docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${SAPS_MOUNT_POINT}/${TASK_ID}/$INPUTS_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$PREPROCESSING_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$METADATA_DIR
 }
 
 function removeDockerContainer {
@@ -163,13 +149,11 @@ mountExportsDir
 checkProcessOutput
 installDocker
 checkProcessOutput
-prepareDockerContainer
-checkProcessOutput
 garbageCollect
 checkProcessOutput
 createOutputDir
 checkProcessOutput
-executeDockerContainer
+prepareAndExecuteDockerContainer
 checkProcessOutput
 removeDockerContainer
 checkProcessOutput
