@@ -210,7 +210,11 @@ public class InputDownloader {
 			throws SQLException, IOException {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.FAILED);
 		for (ImageTask imageTask : tasks) {
-			deleteAllTaskFiles(imageTask,
+			deleteInputsFromDisk(imageTask,
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
+			deletePreprocessFromDisk(imageTask,
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
+			deleteOutputsFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 		}
 	}
@@ -625,6 +629,33 @@ public class InputDownloader {
 		} catch (SQLException e) {
 			LOGGER.debug("Error while updating " + imageTask + ".");
 		}
+	}
+	
+	private void deleteInputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
+		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "input";
+		File inputDir = new File(inputDirPath);
+
+		if (!inputDir.exists() || !inputDir.isDirectory()) {
+			return;
+		}
+
+		LOGGER.debug("Deleting input for " + imageTask + " from " + inputDirPath);
+		FileUtils.deleteDirectory(inputDir);
+	}
+
+	private void deletePreprocessFromDisk(ImageTask imageTask, String exportPath)
+			throws IOException {
+		String preProcessDirPath = exportPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+		File preProcessDir = new File(preProcessDirPath);
+
+		if (!preProcessDir.exists() || !preProcessDir.isDirectory()) {
+			return;
+		}
+
+		LOGGER.debug("Deleting input for " + imageTask + " from " + preProcessDirPath);
+		FileUtils.deleteDirectory(preProcessDir);
 	}
 
 	private void deleteOutputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
