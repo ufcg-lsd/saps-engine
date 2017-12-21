@@ -24,6 +24,13 @@ function mountExportsDir {
   then
     echo "Directory ${SAPS_MOUNT_POINT} already mounted."
   else
+    if (( $(ps -ef | grep -v grep | grep nfsiod | wc -l) > 0 ))
+    then
+      echo "NFS Client is not installed...Procceeding to install."
+      sudo apt-get update
+      sudo apt-get install nfs-common
+    fi
+
     echo "Directory ${SAPS_MOUNT_POINT} not mounted yet...proceeding to mount"
     sudo mount -t nfs -o proto=tcp,port=${NFS_SERVER_PORT} ${NFS_SERVER_IP}:${EXPORT_PATH} ${SAPS_MOUNT_POINT}
   fi
