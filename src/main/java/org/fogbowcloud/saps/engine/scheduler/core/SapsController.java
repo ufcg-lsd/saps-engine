@@ -96,7 +96,7 @@ public class SapsController extends BlowoutController {
 		getResourceMonitor().start();
 
 		setSchedulerInterface(createSchedulerInstance(getTaskMonitor()));
-		setInfraManager(createInfraManagerInstance());
+		setInfraManager(createInfraManagerInstance(getInfraProvider(), getResourceMonitor()));
 
 		getBlowoutPool().start(getInfraManager(), getSchedulerInterface());
 	}
@@ -187,7 +187,7 @@ public class SapsController extends BlowoutController {
 	}
 
 	private void addTask(TaskImpl taskImpl) throws SapsException {
-		if (!started) {
+		if (!isStarted()) {
 			throw new SapsException(
 					"Error while adding new task. BlowoutController not started yet.");
 		}
