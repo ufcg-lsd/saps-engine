@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
@@ -100,7 +101,7 @@ public class SapsController extends BlowoutController {
 		getResourceMonitor().start();
 
 		setSchedulerInterface(createSchedulerInstance(getTaskMonitor()));
-		setInfraManager(createInfraManagerInstance());
+		setInfraManager(createInfraManagerInstance(getInfraProvider(), getResourceMonitor()));
 
 		getBlowoutPool().start(getInfraManager(), getSchedulerInterface());
 	}
@@ -144,7 +145,10 @@ public class SapsController extends BlowoutController {
 
 				if (ImageTaskState.READY.equals(imageTaskState)
 						|| ImageTaskState.PREPROCESSED.equals(imageTaskState)) {
-					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation);
+					
+					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation,
+							UUID.randomUUID().toString());
+					
 					Map<String, String> nfsConfig = imageStore
 							.getFederationNFSConfig(imageTask.getFederationMember());
 
@@ -191,7 +195,7 @@ public class SapsController extends BlowoutController {
 	}
 
 	private void addTask(TaskImpl taskImpl) throws SapsException {
-		if (!started) {
+		if (!super.started) {
 			throw new SapsException(
 					"Error while adding new task. BlowoutController not started yet.");
 		}
