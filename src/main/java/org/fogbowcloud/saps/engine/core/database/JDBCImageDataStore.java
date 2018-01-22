@@ -680,7 +680,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
-			+ " VALUES(?, ?, ?)";
+			+ " VALUES(?, ?, now())";
 
 	@Override
 	public void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
@@ -701,7 +701,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement = connection.prepareStatement(INSERT_NEW_STATE_TIMESTAMP_SQL);
 			insertStatement.setString(1, taskId);
 			insertStatement.setString(2, state.getValue());
-			insertStatement.setTimestamp(3, timestamp);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();

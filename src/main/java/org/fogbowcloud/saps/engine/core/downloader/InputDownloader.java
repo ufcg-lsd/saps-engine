@@ -210,7 +210,11 @@ public class InputDownloader {
 			throws SQLException, IOException {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.FAILED);
 		for (ImageTask imageTask : tasks) {
-			deleteAllTaskFiles(imageTask,
+			deleteInputsFromDisk(imageTask,
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
+			deletePreprocessFromDisk(imageTask,
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
+			deleteOutputsFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 		}
 	}
@@ -297,25 +301,26 @@ public class InputDownloader {
 	}
 
 	protected boolean replacePathsIntoFile(ImageTask imageTask) {
-		String containerMetadataPath = properties
+		String containerInputPath = properties
 				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
-		String localMetadataPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
+		String localInputPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "input";
 
 		Path path = Paths.get(getMetadataFilePath(imageTask));
 		Charset charset = StandardCharsets.UTF_8;
 
 		try {
 			String content = new String(Files.readAllBytes(path), charset);
-			content = content.replaceAll(containerMetadataPath, localMetadataPath);
+			content = content.replaceAll(containerInputPath, localInputPath);
 			Files.write(path, content.getBytes(charset));
 		} catch (IOException e) {
-			LOGGER.error("Error while replacing " + containerMetadataPath + " for "
-					+ localMetadataPath + " in " + getMetadataFilePath(imageTask) + " file");
+			LOGGER.error("Error while replacing " + containerInputPath + " for "
+					+ localInputPath + " in " + getMetadataFilePath(imageTask) + " file");
 			return false;
 		}
 
-		LOGGER.debug("Successfully replaced " + containerMetadataPath + " by " + localMetadataPath
+		LOGGER.debug("Successfully replaced " + containerInputPath + " by " + localInputPath
 				+ " in " + getMetadataFilePath(imageTask));
 		return true;
 	}
@@ -406,7 +411,7 @@ public class InputDownloader {
 
 						actualInputUsage = getProcessOutput(p);
 						
-						if (actualInputUsage != null) {
+						if (actualInputUsage != null && !actualInputUsage.isEmpty()) {
 							String[] splited = actualInputUsage.split("\\s+");
 							actualInputUsage = splited[0];
 						} else {
@@ -624,6 +629,33 @@ public class InputDownloader {
 		} catch (SQLException e) {
 			LOGGER.debug("Error while updating " + imageTask + ".");
 		}
+	}
+	
+	private void deleteInputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
+		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "input";
+		File inputDir = new File(inputDirPath);
+
+		if (!inputDir.exists() || !inputDir.isDirectory()) {
+			return;
+		}
+
+		LOGGER.debug("Deleting input for " + imageTask + " from " + inputDirPath);
+		FileUtils.deleteDirectory(inputDir);
+	}
+
+	private void deletePreprocessFromDisk(ImageTask imageTask, String exportPath)
+			throws IOException {
+		String preProcessDirPath = exportPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+		File preProcessDir = new File(preProcessDirPath);
+
+		if (!preProcessDir.exists() || !preProcessDir.isDirectory()) {
+			return;
+		}
+
+		LOGGER.debug("Deleting input for " + imageTask + " from " + preProcessDirPath);
+		FileUtils.deleteDirectory(preProcessDir);
 	}
 
 	private void deleteOutputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
