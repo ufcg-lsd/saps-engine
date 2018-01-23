@@ -2,9 +2,7 @@ package org.fogbowcloud.saps.engine.core.archiver.swift;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -60,12 +58,10 @@ public class SwiftAPIClient {
 		try {
 			Process p = builder.start();
 			p.waitFor();
-		} catch (IOException e) {
-			LOGGER.error("Error while creating container " + containerName, e);
-		} catch (InterruptedException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while creating container " + containerName, e);
 		}
-	}
+    }
 
 	public void deleteContainer(String containerName) {
 		// TODO: test JUnit
@@ -76,22 +72,16 @@ public class SwiftAPIClient {
 		try {
 			Process p = builder.start();
 			p.waitFor();
-		} catch (IOException e) {
-			LOGGER.error("Error while deleting container " + containerName, e);
-		} catch (InterruptedException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while deleting container " + containerName, e);
 		}
-	}
+    }
 
 	protected boolean isContainerEmpty(String containerName) {
 		// TODO: test JUnit
 		int numberOfFiles = numberOfFilesInContainer(containerName);
-		if (numberOfFiles != 0) {			
-			return false;
-		}
-
-		return true;
-	}
+        return numberOfFiles == 0;
+    }
 
 	public void uploadFile(String containerName, File file, String pseudFolder)
 			throws Exception {
@@ -116,18 +106,26 @@ public class SwiftAPIClient {
 		try {
 			Process p = builder.start();
 			p.waitFor();
-			
+
 			if(p.exitValue() != 0) {
-				throw new Exception("process_output=" + p.exitValue());
+                Scanner scanner = new Scanner(p.getErrorStream()).useDelimiter("\n");
+                boolean error = false;
+                while (scanner.hasNext()) {
+                    String n = scanner.next();
+                    if (!n.contains("409 Conflict")) {
+                        LOGGER.error("Process output: " + n);
+                        error = true;
+                    }
+                }
+                if (error) {
+                    throw new Exception("process_output=" + p.exitValue());
+                }
 			}
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while uploading file " + completeFileName
 					+ " to container " + containerName, e);
-		} catch (InterruptedException e) {
-			LOGGER.error("Error while uploading file " + completeFileName
-					+ " to container " + containerName, e);
-		}		
-	}
+		}
+    }
 
 	public void downloadFile(String containerName, String fileName,
 			String pseudFolder, String localOutputPath) {
@@ -156,14 +154,11 @@ public class SwiftAPIClient {
 			
 			LOGGER.debug("File " + completeFileName + " from " + containerName
 					+ " download successfully into " + localOutputPath);
-		} catch (IOException e) {
-			LOGGER.error("Error while uploading file " + completeFileName
-					+ " to container " + containerName, e);
-		} catch (InterruptedException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while uploading file " + completeFileName
 					+ " to container " + containerName, e);
 		}
-	}
+    }
 
 	public void deleteFile(String containerName, String pseudFolder,
 			String fileName) {
@@ -189,15 +184,12 @@ public class SwiftAPIClient {
 		try {
 			Process p = builder.start();
 			p.waitFor();
-		} catch (IOException e) {
-			LOGGER.error("Error while deleting file " + completeFileName
-					+ " from container " + containerName, e);
-		} catch (InterruptedException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while deleting file " + completeFileName
 					+ " from container " + containerName, e);
 		}
 
-		LOGGER.debug("Object " + completeFileName
+        LOGGER.debug("Object " + completeFileName
 				+ " deleted successfully from " + containerName);
 	}
 
@@ -219,13 +211,11 @@ public class SwiftAPIClient {
 					return Character.getNumericValue(commandOutput.charAt(i));
 				}
 			}
-		} catch (IOException e) {
-			LOGGER.error("Error while getting number of files in " + containerName, e);
-		} catch (InterruptedException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while getting number of files in " + containerName, e);
 		}
-				
-		return 0;
+
+        return 0;
 	}
 	
 	public List<String> listFilesInContainer(String containerName) {
@@ -249,14 +239,11 @@ public class SwiftAPIClient {
 			// each file has complete path
 			// ex.: fetcher/images/image_name/file.nc
 			return getOutputLinesIntoList(output);
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while listing files from " + containerName);
-			return new ArrayList<String>();
-		} catch (InterruptedException e) {
-			LOGGER.error("Error while listing files from " + containerName);
-			return new ArrayList<String>();
-		}        
-	}
+			return new ArrayList<>();
+		}
+    }
 	
 	public List<String> listFilesWithPrefix(String containerName, String prefix) {
 		LOGGER.info("Listing files in container " + containerName + " with prefix " + prefix);
@@ -275,25 +262,17 @@ public class SwiftAPIClient {
 			output = ProcessUtil.getOutput(p);
 
 			return getOutputLinesIntoList(output);
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while listing files from " + containerName);
-			return new ArrayList<String>();
-		} catch (InterruptedException e) {
-			LOGGER.error("Error while listing files from " + containerName);
-			return new ArrayList<String>();
-		}        
-	}
-	
-	private List<String> getOutputLinesIntoList(String fileNames) throws IOException {
-		List<String> fileNamesList = new ArrayList<String>();
-		
-		String[] lines = fileNames.split(System.getProperty("line.separator"));
-		
-		for(int i = 0; i < lines.length; i++) {
-			fileNamesList.add(lines[i]);
+			return new ArrayList<>();
 		}
-		
-		return fileNamesList;
+    }
+	
+	private List<String> getOutputLinesIntoList(String fileNames) {
+
+        String[] lines = fileNames.split(System.getProperty("line.separator"));
+
+        return new ArrayList<>(Arrays.asList(lines));
 	}
 
 	private String normalizePseudFolder(String value) {
@@ -318,8 +297,6 @@ public class SwiftAPIClient {
 					"-DprojectId=" + projectId, "-DuserId=" + userId,
 					"-Dpassword=" + userPassword, "-DauthUrl=" + tokenAuthUrl,
 					"--type", "openstack");
-
-			LOGGER.debug("Executing command " + builder.command());
 
 			Process p = builder.start();
 			p.waitFor();
