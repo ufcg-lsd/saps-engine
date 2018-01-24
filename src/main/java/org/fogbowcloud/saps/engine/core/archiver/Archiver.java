@@ -100,12 +100,9 @@ public class Archiver {
 						archiveAndUpdateTask(imageTask);
 					}
 				}
-				Thread.sleep(Long.valueOf(
-						properties.getProperty(SapsPropertiesConstants.DEFAULT_ARCHIVER_PERIOD)));
+				Thread.sleep(Long.valueOf(properties.getProperty(SapsPropertiesConstants.DEFAULT_ARCHIVER_PERIOD)));
 			}
-		} catch (InterruptedException e) {
-			LOGGER.error("Error while archiving tasks", e);
-		} catch (IOException e) {
+		} catch (InterruptedException | IOException e) {
 			LOGGER.error("Error while archiving tasks", e);
 		}
 
@@ -129,8 +126,8 @@ public class Archiver {
 		for (ImageTask imageTask : taskList) {
 			rollBackArchive(imageTask);
 			deleteAllTaskFilesFromDisk(imageTask, properties);
-			deletePendingInputFilesFromSwift(imageTask, properties);
-			deletePendingOutputFromSwift(imageTask, properties);
+			deletePendingInputFilesFromSwift(imageTask);
+			deletePendingOutputFromSwift(imageTask);
 		}
 		LOGGER.info("Garbage collect finished");
 	}
@@ -148,10 +145,9 @@ public class Archiver {
 		}
 	}
 
-	private void deletePendingOutputFromSwift(ImageTask imageTask, Properties properties)
-			throws Exception {
+	private void deletePendingOutputFromSwift(ImageTask imageTask) {
 		LOGGER.debug("Pending task" + imageTask + " still have files in swift");
-		deleteOutputFilesFromSwift(imageTask, properties);
+		deleteOutputFilesFromSwift(imageTask);
 	}
 
 	protected void deleteInputFromDisk(final ImageTask imageTask, Properties properties)
@@ -216,11 +212,10 @@ public class Archiver {
 		} catch (SQLException e) {
 			LOGGER.error("Error getting " + ImageTaskState.FINISHED + " tasks from DB", e);
 		}
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
-	protected void archiveAndUpdateTask(ImageTask imageTask)
-			throws IOException, InterruptedException {
+	protected void archiveAndUpdateTask(ImageTask imageTask) throws IOException {
 		try {
 			if (prepareArchive(imageTask)) {
 				archive(imageTask);
@@ -240,7 +235,7 @@ public class Archiver {
 		}
 	}
 
-	protected boolean prepareArchive(ImageTask imageTask) throws SQLException, IOException {
+	protected boolean prepareArchive(ImageTask imageTask) throws SQLException {
 		LOGGER.debug("Preparing task " + imageTask.getTaskId() + " to archive");
 		if (imageStore.lockTask(imageTask.getTaskId())) {
 			imageTask.setState(ImageTaskState.ARCHIVING);
@@ -289,7 +284,7 @@ public class Archiver {
 		ftpServerPort = imageStore.getNFSServerSshPort(imageTask.getFederationMember());
 	}
 
-	protected void finishArchive(ImageTask imageTask) throws IOException, SQLException {
+	protected void finishArchive(ImageTask imageTask) throws IOException {
 		LOGGER.debug("Finishing archive for task " + imageTask);
 		imageTask.setState(ImageTaskState.ARCHIVED);
 
@@ -514,7 +509,7 @@ public class Archiver {
 		return 1;
 	}
 
-	private int generateProvenance(ImageTask imageTask) throws SQLException, IOException {
+	private int generateProvenance(ImageTask imageTask) throws SQLException {
 		String localTaskProvenancePath = archiverHelper.getLocalTaskMetadataPath(imageTask,
 				properties);
 		File localTaskProvenanceDir = new File(localTaskProvenancePath);
@@ -589,8 +584,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected void archiveOutputs(final ImageTask imageTask)
-			throws Exception, IOException, SQLException {
+	protected void archiveOutputs(final ImageTask imageTask) throws Exception {
 		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
 		int i;
@@ -669,7 +663,6 @@ public class Archiver {
 					break;
 				} catch (Exception e) {
 					LOGGER.error("Error while uploading files to swift", e);
-					continue;
 				}
 			}
 
@@ -704,7 +697,6 @@ public class Archiver {
 					break;
 				} catch (Exception e) {
 					LOGGER.error("Error while uploading files to swift", e);
-					continue;
 				}
 			}
 
@@ -739,7 +731,6 @@ public class Archiver {
 					break;
 				} catch (Exception e) {
 					LOGGER.error("Error while uploading files to swift", e);
-					continue;
 				}
 			}
 
@@ -774,7 +765,6 @@ public class Archiver {
 					break;
 				} catch (Exception e) {
 					LOGGER.error("Error while uploading files to swift", e);
-					continue;
 				}
 			}
 
@@ -792,8 +782,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean deletePendingInputFilesFromSwift(ImageTask imageTask, Properties properties)
-			throws Exception {
+	protected boolean deletePendingInputFilesFromSwift(ImageTask imageTask) {
 		LOGGER.debug("Deleting " + imageTask + " input files from swift");
 		String containerName = getContainerName();
 
@@ -816,8 +805,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean deleteOutputFilesFromSwift(ImageTask imageTask, Properties properties)
-			throws Exception {
+	protected boolean deleteOutputFilesFromSwift(ImageTask imageTask) {
 		LOGGER.debug("Deleting " + imageTask + " output files from swift");
 		String containerName = getContainerName();
 

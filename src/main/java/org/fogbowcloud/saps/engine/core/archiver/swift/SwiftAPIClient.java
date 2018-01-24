@@ -13,7 +13,17 @@ import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class SwiftAPIClient {
 
-	// Properties
+    private static final String SWIFT = "swift";
+    private static final String OS_AUTH_TOKEN = "--os-auth-token";
+    private static final String OS_STORAGE_URL = "--os-storage-url";
+    private static final String OBJECT_NAME = "--object-name";
+    private static final String SWIFT_COMMAND_LIST = "list";
+    private static final String SWIFT_COMMAND_DOWNLOAD = "download";
+    private static final String SWIFT_COMMAND_DELETE = "delete";
+    private static final String SWIFT_COMMAND_UPLOAD = "upload";
+    private static final String SWIFT_COMMAND_POST = "post";
+    private static final String SWIFT_HEADER = "--header";
+    // Properties
 	private Properties properties;
 
 	// Core Attributes
@@ -38,25 +48,25 @@ public class SwiftAPIClient {
 		userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
 		tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
 		swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
-
-		handleTokenUpdate(Executors.newScheduledThreadPool(1));
-		
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			LOGGER.error(e);
-		}
+		token = null;
 	}
 
+    public void start() {
+        handleTokenUpdate(Executors.newScheduledThreadPool(1));
+        while (token == null) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                LOGGER.debug("Interrupted", e);
+            }
+        }
+    }
+
 	public void createContainer(String containerName) {
-		// TODO: test JUnit
 		LOGGER.debug("Creating container " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token,
-				"--os-storage-url", swiftUrl, "post", "--header",
-				SapsPropertiesConstants.SWIFT_CONTAINER_POST_HEADER, containerName);
 				
 		try {
-			Process p = builder.start();
+			Process p = buildCreateContainerProcess(containerName);
 			p.waitFor();
 		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while creating container " + containerName, e);
@@ -64,13 +74,10 @@ public class SwiftAPIClient {
     }
 
 	public void deleteContainer(String containerName) {
-		// TODO: test JUnit
 		LOGGER.debug("Deleting container " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
-				token, "--os-storage-url", swiftUrl, "delete", containerName);
 
 		try {
-			Process p = builder.start();
+			Process p = buildDeleteContainerProcess(containerName);
 			p.waitFor();
 		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while deleting container " + containerName, e);
@@ -78,14 +85,10 @@ public class SwiftAPIClient {
     }
 
 	protected boolean isContainerEmpty(String containerName) {
-		// TODO: test JUnit
-		int numberOfFiles = numberOfFilesInContainer(containerName);
-        return numberOfFiles == 0;
+        return numberOfFilesInContainer(containerName) == 0;
     }
 
-	public void uploadFile(String containerName, File file, String pseudFolder)
-			throws Exception {
-		// TODO: test JUnit
+	public void uploadFile(String containerName, File file, String pseudFolder) throws Exception {
 		LOGGER.debug("containerName " + containerName);
 		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
 
@@ -100,11 +103,10 @@ public class SwiftAPIClient {
 		}
 
 		LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
-				token, "--os-storage-url", swiftUrl, "upload", containerName,
-				file.getAbsolutePath(), "--object-name", completeFileName);
 		try {
-			Process p = builder.start();
+			Process p = buildUploadFileProcess(
+                    containerName, file, completeFileName
+            );
 			p.waitFor();
 
 			if(p.exitValue() != 0) {
@@ -123,12 +125,14 @@ public class SwiftAPIClient {
 			}
 		} catch (IOException | InterruptedException e) {
 			LOGGER.error("Error while uploading file " + completeFileName
-					+ " to container " + containerName, e);
+					+ " to container " + containerName);
+			throw e;
 		}
     }
 
 	public void downloadFile(String containerName, String fileName,
 			String pseudFolder, String localOutputPath) {
+	    // TODO unit test
 		LOGGER.debug("containerName " + containerName);
 		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
 
@@ -143,10 +147,9 @@ public class SwiftAPIClient {
 		}
 
 		LOGGER.debug("Downloading " + completeFileName + " to " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
-				token, "--os-storage-url", swiftUrl, "download", containerName,
-				completeFileName, "-o", localOutputPath + File.separator
-						+ fileName);
+		ProcessBuilder builder = buildDownloadFileProcess(
+		        containerName, fileName, completeFileName, localOutputPath
+        );
 		
 		try {
 			Process p = builder.start();
@@ -177,9 +180,7 @@ public class SwiftAPIClient {
 		}
 
 		LOGGER.debug("Deleting " + completeFileName + " from " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
-				token, "--os-storage-url", swiftUrl, "delete", containerName,
-				completeFileName);
+		ProcessBuilder builder = buildDeleteFileProcess(containerName, completeFileName);
 
 		try {
 			Process p = builder.start();
@@ -193,12 +194,11 @@ public class SwiftAPIClient {
 				+ " deleted successfully from " + containerName);
 	}
 
-	protected int numberOfFilesInContainer(String containerName) {
+    protected int numberOfFilesInContainer(String containerName) {
 		// TODO: test JUnit
 		LOGGER.debug("containerName " + containerName);
 		
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
-				token, "--os-storage-url", swiftUrl, "list", "-l", containerName);
+		ProcessBuilder builder = buildNumberOfFilesInContainerProcess(containerName);
 
 		try {
 			Process p = builder.start();
@@ -217,13 +217,10 @@ public class SwiftAPIClient {
 
         return 0;
 	}
-	
-	public List<String> listFilesInContainer(String containerName) {
+
+    public List<String> listFilesInContainer(String containerName) {
 		LOGGER.info("Listing files in container " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
-				token, "--os-storage-url",
-				properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL), "list",
-				containerName);
+		ProcessBuilder builder = buildListFilesInContainerProcess(containerName);
 		LOGGER.debug("Executing command " + builder.command());
         
         Process p;
@@ -244,12 +241,10 @@ public class SwiftAPIClient {
 			return new ArrayList<>();
 		}
     }
-	
-	public List<String> listFilesWithPrefix(String containerName, String prefix) {
+
+    public List<String> listFilesWithPrefix(String containerName, String prefix) {
 		LOGGER.info("Listing files in container " + containerName + " with prefix " + prefix);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", 
-				properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL),
-				"list", "-p", prefix, containerName);
+		ProcessBuilder builder = buildListFilesWithPrefixProcess(containerName, prefix);
 		LOGGER.debug("Executing command " + builder.command());
         
         Process p;
@@ -267,8 +262,8 @@ public class SwiftAPIClient {
 			return new ArrayList<>();
 		}
     }
-	
-	private List<String> getOutputLinesIntoList(String fileNames) {
+
+    private List<String> getOutputLinesIntoList(String fileNames) {
 
         String[] lines = fileNames.split(System.getProperty("line.separator"));
 
@@ -291,12 +286,7 @@ public class SwiftAPIClient {
 	protected String generateToken() {
 
 		try {
-			ProcessBuilder builder = new ProcessBuilder("bash",
-					properties.get(SapsPropertiesConstants.FOGBOW_CLI_PATH) + File.separator
-							+ "bin/fogbow-cli", "token", "--create",
-					"-DprojectId=" + projectId, "-DuserId=" + userId,
-					"-Dpassword=" + userPassword, "-DauthUrl=" + tokenAuthUrl,
-					"--type", "openstack");
+			ProcessBuilder builder = buildGenerateTokenProcess();
 
 			Process p = builder.start();
 			p.waitFor();
@@ -308,20 +298,87 @@ public class SwiftAPIClient {
 
 		return null;
 	}
-	
-	protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
+
+    protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
 		LOGGER.debug("Turning on handle token update.");
 		
-		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
-			@Override
-			public void run() {
-				setToken(generateToken());
-			}
-		}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)), TimeUnit.MILLISECONDS);
+		handleTokenUpdateExecutor.scheduleWithFixedDelay(
+		        new Runnable() {
+		            @Override
+                    public void run() {
+		                setToken(generateToken());
+		            }
+		            },
+                0,
+                Integer.parseInt(
+                        properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)
+                ),
+                TimeUnit.MILLISECONDS
+        );
 	}
 	
 	protected void setToken(String token) {
 		LOGGER.debug("Setting token to " + token);
 		this.token = token;
 	}
+
+    Process buildCreateContainerProcess(String containerName) throws IOException {
+        ProcessBuilder builder = new ProcessBuilder(SWIFT, OS_AUTH_TOKEN, token,
+                OS_STORAGE_URL, swiftUrl, SWIFT_COMMAND_POST, SWIFT_HEADER,
+                SapsPropertiesConstants.SWIFT_CONTAINER_POST_HEADER, containerName);
+        return builder.start();
+    }
+
+    Process buildDeleteContainerProcess(String containerName) throws IOException {
+        ProcessBuilder builder = new ProcessBuilder(SWIFT, OS_AUTH_TOKEN,
+                token, OS_STORAGE_URL, swiftUrl, SWIFT_COMMAND_DELETE, containerName);
+        return builder.start();
+    }
+
+    Process buildUploadFileProcess(String containerName, File file, String completeFileName) throws IOException {
+        ProcessBuilder builder = new ProcessBuilder(SWIFT, OS_AUTH_TOKEN,
+                token, OS_STORAGE_URL, swiftUrl, SWIFT_COMMAND_UPLOAD, containerName,
+                file.getAbsolutePath(), OBJECT_NAME, completeFileName);
+        return builder.start();
+    }
+
+    ProcessBuilder buildDownloadFileProcess(String containerName, String fileName, String completeFileName, String localOutputPath) {
+        return new ProcessBuilder(SWIFT, OS_AUTH_TOKEN,
+                token, OS_STORAGE_URL, swiftUrl, SWIFT_COMMAND_DOWNLOAD, containerName,
+                completeFileName, "-o", localOutputPath + File.separator
+                + fileName);
+    }
+
+    ProcessBuilder buildDeleteFileProcess(String containerName, String completeFileName) {
+        return new ProcessBuilder(SWIFT, OS_AUTH_TOKEN,
+                token, OS_STORAGE_URL, swiftUrl, SWIFT_COMMAND_DELETE, containerName,
+                completeFileName);
+    }
+
+    ProcessBuilder buildNumberOfFilesInContainerProcess(String containerName) {
+        return new ProcessBuilder(SWIFT, OS_AUTH_TOKEN,
+                token, OS_STORAGE_URL, swiftUrl, SWIFT_COMMAND_LIST, "-l", containerName);
+    }
+
+    ProcessBuilder buildListFilesInContainerProcess(String containerName) {
+        return new ProcessBuilder(SWIFT, OS_AUTH_TOKEN,
+                token, OS_STORAGE_URL,
+                properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL), SWIFT_COMMAND_LIST,
+                containerName);
+    }
+
+    ProcessBuilder buildListFilesWithPrefixProcess(String containerName, String prefix) {
+        return new ProcessBuilder(SWIFT, OS_AUTH_TOKEN, token, OS_STORAGE_URL,
+                properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL),
+                SWIFT_COMMAND_LIST, "-p", prefix, containerName);
+    }
+
+    ProcessBuilder buildGenerateTokenProcess() {
+        return new ProcessBuilder("bash",
+                properties.get(SapsPropertiesConstants.FOGBOW_CLI_PATH) + File.separator
+                        + "bin/fogbow-cli", "token", "--create",
+                "-DprojectId=" + projectId, "-DuserId=" + userId,
+                "-Dpassword=" + userPassword, "-DauthUrl=" + tokenAuthUrl,
+                "--type", "openstack");
+    }
 }
