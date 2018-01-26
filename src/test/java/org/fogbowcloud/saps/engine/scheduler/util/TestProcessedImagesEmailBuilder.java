@@ -206,7 +206,7 @@ public class TestProcessedImagesEmailBuilder {
         properties.setProperty(SapsPropertiesConstants.SWIFT_AUTH_URL, "https://cloud.lsd.ufcg.edu.br:5000");
         properties.setProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID, "3324431f606d4a74a060cf78c16fcb21");
         properties.setProperty(SapsPropertiesConstants.SWIFT_USER_ID, "3e57892203271c195f5d473fc84f484b8062103275ce6ad6e7bcd1baedf70d5c");
-        properties.setProperty(SapsPropertiesConstants.SWIFT_PASSWORD, "nc3SRPS2");
+        properties.setProperty(SapsPropertiesConstants.SWIFT_PASSWORD, "123456");
         properties.setProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST, "cloud.lsd.ufcg.edu.br:8080");
         properties.setProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH, "/swift/v1");
         properties.setProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER, "lsd_deploy");

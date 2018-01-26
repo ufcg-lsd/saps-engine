@@ -5,7 +5,6 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 
 import java.io.FileInputStream;
-import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 public class RestletServerMain {
@@ -38,25 +37,6 @@ public class RestletServerMain {
                 LOGGER.error("Error while creating user", e);
             }
         }
-//
-//            try {
-//                databaseApplication.createUser("anonymous", "anonymous", DigestUtils.md5Hex("pass"), true, false, false);
-//            } catch (Exception e) {
-//                LOGGER.error("Error while creating user", e);
-//            }
-//
-////            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-////            databaseApplication.addTasks(
-////                    "-7.913",
-////                    "-37.814",
-////                    "-6.547",
-////                    "-35.757",
-////                    format.parse("2017-11-01"),
-////                    format.parse("2017-11-08"),
-////                    "Default",
-////                    "Default",
-////                    "Default"
-////            );
     }
 
 }

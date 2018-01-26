@@ -74,11 +74,11 @@
 			<id>maven-fogbow</id>
 			<url>https://github.com/fogbow/mvn-repo/raw/master/releases/</url>
 		</repository>
-		<repository>
+		<!-- <repository>
             <id>mvn.prov.toolbox.snapshots</id>
       		<name>maven snapshot repository for PROV toolbox</name>
       		<url>http://openprovenance.org/java/maven-snapshots/</url>
-    	</repository>
+    	</repository> -->
 	</repositories>
 
 	<dependencies>

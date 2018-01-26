@@ -173,8 +173,11 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         for (byte b : bytes) {
             formatter.format("%02x", b);
         }
-
-        return formatter.toString();
+        
+        String hexString = formatter.toString();
+        formatter.close();
+        
+        return hexString;
     }
 
     private String calculateRFC2104HMAC(String data, String key)

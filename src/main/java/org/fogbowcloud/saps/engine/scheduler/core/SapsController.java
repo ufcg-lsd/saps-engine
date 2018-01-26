@@ -49,8 +49,8 @@ public class SapsController extends BlowoutController {
 		try {
 			if (!checkProperties(properties)) {
 				throw new SapsException("Error on validate the file");
-			} else if (getBlowoutVersion(properties).isEmpty()
-					|| getBlowoutVersion(properties) == null) {
+			} else if (getBlowoutVersion(properties) == null || 
+				getBlowoutVersion(properties).isEmpty()) {
 				throw new SapsException("Error while reading blowout version file");
 			}
 		} catch (Exception e) {

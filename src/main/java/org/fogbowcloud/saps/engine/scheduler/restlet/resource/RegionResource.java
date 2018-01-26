@@ -1,17 +1,12 @@
 package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
 
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
 import org.restlet.data.Form;
 import org.restlet.data.Header;
 import org.restlet.data.MediaType;
@@ -20,7 +15,6 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.util.Series;
 import org.json.JSONArray;
