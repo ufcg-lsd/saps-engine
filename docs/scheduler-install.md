@@ -76,6 +76,12 @@ Before starting the service, the Scheduler configuration file (example available
   # Worker temporary raster directory
   worker_raster_tmp_dir=
 
+  # Worker Operating System
+  worker_operating_system=
+
+  # Worker Kernel Version
+  worker_kernel_version=
+
   # Worker run script path
   saps_worker_run_script_path=
 
@@ -142,8 +148,8 @@ Before starting the service, the Scheduler configuration file (example available
   # Infrastructure monitor period
   infra_monitor_period=
 
-  # Local Blowout command interpreter
-  local_command_interpreter=
+  # Blowout su_command script path
+  su_command_path=
 
   # Token update time
   token_update_time=

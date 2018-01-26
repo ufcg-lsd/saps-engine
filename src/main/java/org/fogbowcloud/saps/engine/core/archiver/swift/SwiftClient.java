@@ -1,7 +1,6 @@
 package org.fogbowcloud.saps.engine.core.archiver.swift;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -190,25 +189,4 @@ public class SwiftClient {
 		return normalizedPath.toString();
 	}
 
-	public static void main(String[] args) throws Exception {
-
-		Properties prop = new Properties();
-
-		prop.put(SapsPropertiesConstants.SWIFT_USERNAME, "fogbow");
-		prop.put(SapsPropertiesConstants.SWIFT_PASSWORD, "nc3SRPS2");
-		prop.put(SapsPropertiesConstants.SWIFT_TENANT_NAME, "Fogbow");
-		prop.put(SapsPropertiesConstants.SWIFT_AUTH_URL,
-				"http://10.5.0.14:5000/v2.0/tokens");
-
-		SwiftClient sc = new SwiftClient(prop);
-		File file = new File("9th_Place_-_Fogbow_(7420267902).jpg");
-		sc.uploadFile("sebal_container", file, "/images/fogbow");
-
-		Thread.sleep(5000);
-
-		File downloadFile = new File("temp_" + file.getName());
-		FileOutputStream fos = new FileOutputStream(downloadFile);
-		fos.write(sc.downloadFile("sebal_container", file.getName(),
-				"images/fogbow"));
-	}
 }

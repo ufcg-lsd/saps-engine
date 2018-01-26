@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -26,8 +27,8 @@ import org.fogbowcloud.blowout.core.model.TaskImpl;
 import org.fogbowcloud.blowout.core.model.TaskProcess;
 import org.fogbowcloud.blowout.core.model.TaskProcessImpl;
 import org.fogbowcloud.blowout.core.model.TaskState;
+import org.fogbowcloud.blowout.infrastructure.model.AbstractResource;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
-import org.fogbowcloud.blowout.pool.AbstractResource;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.blowout.pool.DefaultBlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
@@ -225,7 +226,7 @@ public class TestSapsTaskMonitor {
 		String operatingSystem = "operating-system";
 		String kernelVersion = "kernel-version";
 
-		TaskImpl taskImpl = new TaskImpl(taskId, spec);
+		TaskImpl taskImpl = new TaskImpl(taskId, spec, UUID.randomUUID().toString());
 		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, taskId);
 		taskImpl.putMetadata(SapsTask.METADATA_EXPORT_PATH, "/fake/export/path");
 		taskImpl.putMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM, operatingSystem);
@@ -234,7 +235,7 @@ public class TestSapsTaskMonitor {
 		List<Task> tasks = new ArrayList<>();
 		tasks.add(taskImpl);
 
-		TaskProcessImpl taskProcessImpl = new TaskProcessImpl(taskId, commandList, spec);
+		TaskProcessImpl taskProcessImpl = new TaskProcessImpl(taskId, commandList, spec, UUID.randomUUID().toString());
 
 		BlowoutPool blowoutPool = new DefaultBlowoutPool();
 		blowoutPool.addTasks(tasks);
@@ -282,7 +283,7 @@ public class TestSapsTaskMonitor {
 		String operatingSystem = "operating-system";
 		String kernelVersion = "kernel-version";
 
-		TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), spec);
+		TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), spec, UUID.randomUUID().toString());
 		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, imageTask.getTaskId());
 		taskImpl.putMetadata(SapsTask.METADATA_EXPORT_PATH, "/fake/export/path");
 		taskImpl.putMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM, operatingSystem);
@@ -294,8 +295,8 @@ public class TestSapsTaskMonitor {
 		BlowoutPool blowoutPool = new DefaultBlowoutPool();
 		blowoutPool.addTasks(tasks);
 
-		TaskProcessImpl taskProcess = new TaskProcessImpl(imageTask.getTaskId(), commandList, spec);
-		taskProcess.setStatus(TaskState.FINNISHED);
+		TaskProcessImpl taskProcess = new TaskProcessImpl(imageTask.getTaskId(), commandList, spec, UUID.randomUUID().toString());
+		taskProcess.setStatus(TaskState.FINISHED);
 
 		Map<Task, TaskProcess> taskProcesses = new HashMap<>();
 		taskProcesses.put(taskImpl, taskProcess);
@@ -351,7 +352,7 @@ public class TestSapsTaskMonitor {
 		String operatingSystem = "operating-system";
 		String kernelVersion = "kernel-version";
 		
-		TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), spec);
+		TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), spec, UUID.randomUUID().toString());
 		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, imageTask.getTaskId());
 		taskImpl.putMetadata(SapsTask.METADATA_EXPORT_PATH, "/fake/export/path");
 		taskImpl.putMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM, operatingSystem);
@@ -363,7 +364,7 @@ public class TestSapsTaskMonitor {
 		blowoutPool.addTasks(tasks);
 
 		TaskProcessImpl taskProcess = new TaskProcessImpl(imageTask.getTaskId(),
-				new ArrayList<Command>(), spec);
+				new ArrayList<Command>(), spec, UUID.randomUUID().toString());
 		taskProcess.setStatus(TaskState.TIMEDOUT);
 
 		Map<Task, TaskProcess> taskProcesses = new HashMap<>();
