@@ -3,11 +3,7 @@ package org.fogbowcloud.saps.engine.scheduler.core;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
@@ -100,7 +96,7 @@ public class SapsController extends BlowoutController {
 		getResourceMonitor().start();
 
 		setSchedulerInterface(createSchedulerInstance(getTaskMonitor()));
-		setInfraManager(createInfraManagerInstance());
+		setInfraManager(createInfraManagerInstance(getInfraProvider(), getResourceMonitor()));
 
 		getBlowoutPool().start(getInfraManager(), getSchedulerInterface());
 	}
@@ -144,7 +140,7 @@ public class SapsController extends BlowoutController {
 
 				if (ImageTaskState.READY.equals(imageTaskState)
 						|| ImageTaskState.PREPROCESSED.equals(imageTaskState)) {
-					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation);
+					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation, UUID.randomUUID().toString());
 					Map<String, String> nfsConfig = imageStore
 							.getFederationNFSConfig(imageTask.getFederationMember());
 
@@ -191,7 +187,7 @@ public class SapsController extends BlowoutController {
 	}
 
 	private void addTask(TaskImpl taskImpl) throws SapsException {
-		if (!started) {
+		if (!isStarted()) {
 			throw new SapsException(
 					"Error while adding new task. BlowoutController not started yet.");
 		}

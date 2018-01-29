@@ -19,7 +19,7 @@ public class FTPIntegrationImpl implements FTPIntegration{
 			return 1;
 		}
 
-		LOGGER.info("Getting " + remoteTaskFilesPath + " in FTPserver" + ftpServerIP + ":"
+		LOGGER.info("Getting " + remoteTaskFilesPath + " in FTPserver " + ftpServerIP + ":"
 				+ ftpServerPort + " to " + localTaskFilesPath + " in localhost");
 		LOGGER.debug("Task " + imageTask.getTaskId());
 
