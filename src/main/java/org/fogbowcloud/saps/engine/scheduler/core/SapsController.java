@@ -96,7 +96,7 @@ public class SapsController extends BlowoutController {
 		getResourceMonitor().start();
 
 		setSchedulerInterface(createSchedulerInstance(getTaskMonitor()));
-		setInfraManager(createInfraManagerInstance(getInfraProvider(), getResourceMonitor()));
+		setInfraManager(createInfraManagerInstance());
 
 		getBlowoutPool().start(getInfraManager(), getSchedulerInterface());
 	}

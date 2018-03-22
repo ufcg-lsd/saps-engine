@@ -5,13 +5,11 @@ import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class TestSwiftApiClient {
     private static final String TEST_CONTAINER = "test_container";
