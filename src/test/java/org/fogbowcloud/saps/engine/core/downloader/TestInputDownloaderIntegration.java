@@ -3,7 +3,6 @@ package org.fogbowcloud.saps.engine.core.downloader;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import java.io.File;
@@ -21,7 +20,6 @@ import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.core.util.DockerUtil;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
@@ -49,58 +47,84 @@ import org.powermock.reflect.Whitebox;
 @PrepareForTest({ ExecutionScriptTagUtil.class, DockerUtil.class })
 public class TestInputDownloaderIntegration {
 
-	private String FEDERATION_MEMBER_DEFAULT = "FED_MEMBER";
-	
-	@SuppressWarnings("unused")
-	private Properties properties;
+	private final static String FEDERATION_MEMBER_DEFAULT = "fake-fed-member";
+	private final static String SEBAL_EXPORTS_PATH = "fake-export-path";
+
 	private ImageTask imageTaskDefault;
-	
+	private Properties properties;
 	private InputDownloader inputDownloaderDefault;
 
 	@Before
 	public void setUp() {
 		// setup
-		Properties properties = Mockito.mock(Properties.class);
+		this.properties = Mockito.spy(new Properties());
+		setUpProperties(properties);
+
 		ImageDataStore imageStore = Mockito.mock(JDBCImageDataStore.class);
-		String inputDownloaderIP = "ip";
-		String inputDownloaderPort = "port";
-		String nfsPort = "port";
-		String federationMember = "fake-fed-member";
+		String inputDownloaderIP = "fake-inputDownloader-ip";
+		String inputDownloaderPort = "fake-inputDownloader-port";
+		String nfsPort = "fake-nfs-port";
 		
 		// mock
-		this.inputDownloaderDefault = Mockito.spy(new InputDownloader(properties, imageStore,
-				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember));
+		this.inputDownloaderDefault = Mockito.spy(
+				new InputDownloader(
+						properties,
+						imageStore,
+						inputDownloaderIP,
+						inputDownloaderPort,
+						nfsPort,
+						FEDERATION_MEMBER_DEFAULT
+				)
+		);
 		
 		java.util.Date date = new java.util.Date();
-		this.imageTaskDefault = new ImageTask("default-task-id-1", "LT5", "region-53", date,
-				"link1", ImageTaskState.CREATED, FEDERATION_MEMBER_DEFAULT, 0,
-				ImageTask.NON_EXISTENT_DATA, "Default", "Default", "Default",
-				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA, 
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), ImageTask.AVAILABLE, "");
-		
-		this.properties = mock(Properties.class);
+		this.imageTaskDefault = new ImageTask(
+				"default-task-id-1",
+				"LT5",
+				"region-53",
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				FEDERATION_MEMBER_DEFAULT,
+				0,
+
+				ImageTask.NON_EXISTENT_DATA,
+				"Default",
+				"Default",
+				"Default",
+				ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA,
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				ImageTask.AVAILABLE,
+				""
+		);
 	}
 
 	@After
 	public void clean() {
 		MockitoStateCleaner mockitoStateCleaner = new MockitoStateCleaner();
 		mockitoStateCleaner.run();
+
+		this.properties = null;
+
+		inputDownloaderDefault.getImageStore().dispose();
 		
 		String[] pendingTasks = { "pending-task-download.db", "pending-task-download.db.p",
 				"pending-task-download.db.t" };
 		for (String pendingTask : pendingTasks) {
 			File pendingImageDBFile = new File(pendingTask);
 			if (pendingImageDBFile.exists()) {
-				pendingImageDBFile.delete();
+				if (!FileUtils.deleteQuietly(pendingImageDBFile)) {
+					Assert.fail("Failed to clean up after test");
+				}
 			}
 		}
 	}
 
 	@Test
 	public void testStepOverImageWhenDownloadFails()
-			throws SQLException, IOException, InterruptedException, SapsException {
-		clean();
-
+			throws SQLException, IOException, SapsException {
 		// 1. we have 2 NOT_DOWNLOADED images, pendingDB is empty
 		// 2. we proceed to download them
 		// 3. we face a download error for the first. then we step over
@@ -109,147 +133,191 @@ public class TestInputDownloaderIntegration {
 		// 5. in the end, we shall 1 DOWNLOADED and 1 NOT_DOWNLOADED and the
 		// pendingDB is empty
 
-		// setup
-		Properties properties = mock(Properties.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		USGSNasaRepository usgsRepository = mock(USGSNasaRepository.class);
-		String inputDownloaderIP = "fake-inputDownloader-ip";
-		String inputDownloaderPort = "fake-inputDownloader-port";
-		String nfsPort = "fake-nfs-port";
-		String federationMember = "fake-fed-member";
-
 		Date date = new Date(10000854);
 
-		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
-				ImageTaskState.CREATED, federationMember, 0, "NE", "Default", "Default", "Default",
-				"NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
-				"available", "");
+		List<ImageTask> imageList = new ArrayList<>();
+		ImageTask taskOne = new ImageTask(
+				"task-id-1",
+				"LT5",
+				"region-53",
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				FEDERATION_MEMBER_DEFAULT,
+				0,
+				"NE",
+				"Default",
+				"Default",
+				"Default",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
 
 		imageList.add(taskOne);
 
-		doReturn(imageList).when(imageStore).getImagesToDownload(federationMember,
-				InputDownloader.MAX_IMAGES_TO_DOWNLOAD);
-		doReturn(taskOne).when(imageStore).getTask(taskOne.getTaskId());
-		doReturn("link-1").when(usgsRepository).getImageDownloadLink(taskOne.getName());
-		doThrow(new IOException()).when(usgsRepository).downloadImage(taskOne);
+		ImageDataStore imageStore = inputDownloaderDefault.getImageStore();
 
-		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
+		doReturn(imageList).when(imageStore).getImagesToDownload(
+				FEDERATION_MEMBER_DEFAULT,
+				InputDownloader.MAX_IMAGES_TO_DOWNLOAD
+		);
+		doReturn(taskOne).when(imageStore).getTask(taskOne.getTaskId());
+
 		Assert.assertEquals(ImageTaskState.CREATED, taskOne.getState());
-		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
+		Assert.assertTrue(inputDownloaderDefault.pendingTaskDownloadMap.isEmpty());
 
 		// exercise
-		inputDownloader.download();
+		inputDownloaderDefault.download();
 
 		// expect
 		Assert.assertEquals(ImageTaskState.CREATED, taskOne.getState());
-		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
+		Assert.assertTrue(inputDownloaderDefault.pendingTaskDownloadMap.isEmpty());
 	}
 
 	@Test
 	public void testinputDownloaderErrorWhileGetCreatedImages()
 			throws SQLException, IOException, SapsException {
-		clean();
-		
-		// setup
-		Properties properties = mock(Properties.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		String inputDownloaderIP = "fake-inputDownloader-ip";
-		String inputDownloaderPort = "fake-inputDownloader-port";
-		String nfsPort = "fake-nfs-port";
-		String federationMember = "fake-fed-member";
+		ImageDataStore imageStore = inputDownloaderDefault.getImageStore();
 
-		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
-
-		doThrow(new SQLException()).when(imageStore).getImagesToDownload(federationMember,
-				InputDownloader.MAX_IMAGES_TO_DOWNLOAD);
-		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
+		doThrow(new SQLException()).when(imageStore).getImagesToDownload(
+				FEDERATION_MEMBER_DEFAULT,
+				InputDownloader.MAX_IMAGES_TO_DOWNLOAD
+		);
+		Assert.assertTrue(inputDownloaderDefault.pendingTaskDownloadMap.isEmpty());
 
 		// exercise
-		inputDownloader.download();
+		inputDownloaderDefault.download();
 
 		// expect
-		Assert.assertTrue(inputDownloader.pendingTaskDownloadMap.isEmpty());
+		Assert.assertTrue(inputDownloaderDefault.pendingTaskDownloadMap.isEmpty());
 	}
 
 	@Test
 	public void testPurgeImagesFromVolume() throws SQLException, IOException, InterruptedException {
-		clean();
-		
-		// setup
-		Properties properties = mock(Properties.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		String inputDownloaderIP = "fake-inputDownloader-ip";
-		String inputDownloaderPort = "fake-inputDownloader-port";
-		String nfsPort = "fake-nfs-port";
-		String federationMember = "fake-fed-member";
-		String sebalExportPath = "fake-export-path";
-
 		Date date = new Date(10000854);
 
-		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
-				ImageTaskState.FINISHED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "");
+		List<ImageTask> imageList = new ArrayList<>();
+		ImageTask taskOne = new ImageTask(
+				"task-id-1",
+				"LT5",
+				"region-53",
+				date,
+				"link1",
+				ImageTaskState.FINISHED,
+				FEDERATION_MEMBER_DEFAULT,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
 		taskOne.setStatus(ImageTask.PURGED);
-		ImageTask taskTwo = new ImageTask("task-id-2", "LT5", "region-53", date, "link2",
-				ImageTaskState.FINISHED, federationMember, 1, "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "");
+		ImageTask taskTwo = new ImageTask(
+				"task-id-2",
+				"LT5",
+				"region-53",
+				date,
+				"link2",
+				ImageTaskState.FINISHED,
+				FEDERATION_MEMBER_DEFAULT,
+				1,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
 
 		imageList.add(taskOne);
 		imageList.add(taskTwo);
 
+		ImageDataStore imageStore = inputDownloaderDefault.getImageStore();
+
 		doReturn(imageList).when(imageStore).getIn(ImageTaskState.FINISHED);
 
-		doReturn(sebalExportPath).when(properties)
-				.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-
-		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
+		doReturn(SEBAL_EXPORTS_PATH).when(properties).getProperty(
+				Mockito.eq(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+		);
 
 		// exercise
-		inputDownloader.purgeTasksFromVolume(properties);
+		inputDownloaderDefault.purgeTasksFromVolume(properties);
 	}
 
 	@Test
 	public void testFederationMemberCheck() throws SQLException, IOException, InterruptedException {
-		clean();
-		
-		// setup
-		Properties properties = mock(Properties.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		String inputDownloaderIP = "fake-inputDownloader-ip";
-		String inputDownloaderPort = "fake-inputDownloader-port";
-		String nfsPort = "fake-nfs-port";
-		String federationMember1 = "fake-fed-member-1";
 		String federationMember2 = "fake-fed-member-2";
-		String sebalExportPath = "fake-export-path";
 
 		Date date = new Date(10000854);
 
-		List<ImageTask> imageList = new ArrayList<ImageTask>();
-		ImageTask taskOne = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
-				ImageTaskState.ARCHIVED, federationMember1, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "");
-		ImageTask taskTwo = new ImageTask("task-id-2", "LT5", "region-53", date, "link2",
-				ImageTaskState.ARCHIVED, federationMember2, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(date.getTime()), new Timestamp(date.getTime()), "available", "");
+		List<ImageTask> imageList = new ArrayList<>();
+		ImageTask taskOne = new ImageTask(
+				"task-id-1",
+				"LT5",
+				"region-53",
+				date,
+				"link1",
+				ImageTaskState.ARCHIVED,
+				FEDERATION_MEMBER_DEFAULT,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
+		ImageTask taskTwo = new ImageTask(
+				"task-id-2",
+				"LT5",
+				"region-53",
+				date,
+				"link2",
+				ImageTaskState.ARCHIVED,
+				federationMember2,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
 
 		imageList.add(taskOne);
 		imageList.add(taskTwo);
 
-		doReturn(sebalExportPath).when(properties)
+		doReturn(SEBAL_EXPORTS_PATH).when(properties)
 				.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+
+		ImageDataStore imageStore = inputDownloaderDefault.getImageStore();
 
 		doReturn(imageList).when(imageStore).getAllTasks();
 
-		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember1);
-
 		// exercise
-		inputDownloader.deleteArchivedTasksFromDisk(properties);
+		inputDownloaderDefault.deleteArchivedTasksFromDisk(properties);
 
 		// expect
 		// Assert.assertNotEquals(taskOne.getFederationMember(),
@@ -257,37 +325,38 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testPendingTaskMap() throws SQLException, IOException {
-		clean();
-		
-		Properties properties = mock(Properties.class);
-		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
-		String inputDownloaderIP = "fake-inputDownloader-ip";
-		String inputDownloaderPort = "fake-inputDownloader-port";
-		String nfsPort = "fake-nfs-port";
-		String federationMember = "fake-fed-member";
-
+	public void testPendingTaskMap() {
 		Date date = new Date(10000854);
 
-		ImageTask task = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
-				ImageTaskState.CREATED, federationMember, 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(new java.util.Date().getTime()),
-				new Timestamp(new java.util.Date().getTime()), "available", "");
+		ImageTask task = new ImageTask(
+				"task-id-1",
+				"LT5",
+				"region-53",
+				date,
+				"link1",
+				ImageTaskState.CREATED,
+				FEDERATION_MEMBER_DEFAULT,
+				0,
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				"NE",
+				new Timestamp(date.getTime()),
+				new Timestamp(date.getTime()),
+				"available",
+				""
+		);
 
-		InputDownloader inputDownloader = new InputDownloader(properties, imageStore,
-				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember);
-
-		inputDownloader.addTaskToPendingMap(task);
-		ConcurrentMap<String, ImageTask> pendingTaskMap = inputDownloader.getPendingTaskMap();
+		inputDownloaderDefault.addTaskToPendingMap(task);
+		ConcurrentMap<String, ImageTask> pendingTaskMap = inputDownloaderDefault.getPendingTaskMap();
 
 		Assert.assertEquals(task, pendingTaskMap.get(task.getTaskId()));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testFailsAndRemovesImage() throws Exception {
-		clean();
-		
 		Properties properties = new Properties();
 		setUpProperties(properties);
 
@@ -309,7 +378,7 @@ public class TestInputDownloaderIntegration {
 
 		InputDownloader inputDownloader = spy(new InputDownloader(properties, imageStore,
 				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember));
-		
+
 		doNothing().when(inputDownloader).prepareTaskDirStructure(Mockito.any(ImageTask.class));
 		PowerMockito.mockStatic(ExecutionScriptTagUtil.class);
 		ExecutionScriptTag executionScriptTag = new ExecutionScriptTag("", "", "", "");
@@ -354,8 +423,6 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testTaskChangingState() throws Exception {
-		clean();
-		
 		Properties properties = new Properties();
 		setUpProperties(properties);
 
@@ -402,8 +469,6 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testDownloadImageNotFoundImage() throws Exception {
-		clean();
-
 		Mockito.doNothing().when(this.inputDownloaderDefault)
 				.prepareTaskDirStructure(Mockito.eq(this.imageTaskDefault));
 
