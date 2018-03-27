@@ -9,6 +9,7 @@ import java.util.Properties;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +40,11 @@ public class TestImageDataStore {
 						new java.util.Date().getTime()), new Timestamp(
 						new java.util.Date().getTime()), ImageTask.AVAILABLE, "");
 	}
+
+	@After
+	public void after() {
+		this.imageStore.dispose();
+	}
 	
 	@Test
 	public void testGetImageToDownload() throws SQLException {
@@ -65,8 +71,6 @@ public class TestImageDataStore {
 		imageTaskList = this.imageStore.getImagesToDownload(federationMember, limit);
 
 		Assert.assertTrue(imageTaskList.size() == 1);
-
-		this.imageStore.dispose();
 	}
 	
 	@Test
@@ -91,18 +95,8 @@ public class TestImageDataStore {
 		String operatingSystem = "fake-operating-system";
 		String kernelVersion = "fake-kernel-version";
 
-		Properties properties = new Properties();
-		properties.setProperty("datastore_ip", "");
-		properties.setProperty("datastore_port", "");
-		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
-		properties.setProperty("datastore_username", "testuser");
-		properties.setProperty("datastore_password", "testuser");
-		properties.setProperty("datastore_driver", "org.h2.Driver");
-		properties.setProperty("datastore_name", "testdb");
-
 		Date date = new Date();
 
-		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
 		ImageTask task = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
 				ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, 0, ImageTask.NON_EXISTENT_DATA,
 				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
@@ -130,16 +124,6 @@ public class TestImageDataStore {
 	public void testMetadataRegisterExist() throws SQLException {
 		String fakeTaskId = "fake-task-id-exist";
 
-		Properties properties = new Properties();
-		properties.setProperty("datastore_ip", "");
-		properties.setProperty("datastore_port", "");
-		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
-		properties.setProperty("datastore_username", "testuser");
-		properties.setProperty("datastore_password", "testuser");
-		properties.setProperty("datastore_driver", "org.h2.Driver");
-		properties.setProperty("datastore_name", "testdb");
-
-		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
 		imageStore.dispatchMetadataInfo(fakeTaskId);
 		
 		boolean exist = imageStore.metadataRegisterExist(fakeTaskId);
@@ -150,17 +134,6 @@ public class TestImageDataStore {
 	@Test
 	public void testMetadataRegisterNotExist() throws SQLException {
 		String fakeTaskId = "fake-task-id-not-exist";
-
-		Properties properties = new Properties();
-		properties.setProperty("datastore_ip", "");
-		properties.setProperty("datastore_port", "");
-		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
-		properties.setProperty("datastore_username", "testuser");
-		properties.setProperty("datastore_password", "testuser");
-		properties.setProperty("datastore_driver", "org.h2.Driver");
-		properties.setProperty("datastore_name", "testdb");
-
-		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
 
 		boolean exist = imageStore.metadataRegisterExist(fakeTaskId);
 
