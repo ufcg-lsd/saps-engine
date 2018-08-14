@@ -496,18 +496,20 @@ public class USGSNasaRepository implements INPERepository {
 			String upperRightLongitude) {
 		String parsedDataset = parseDataset(dataset);
 
-		JSONArray jsonArray = searchForRegionInArea(parsedDataset, firstYear, lastYear,
-				lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
+		// TODO: instead of calling searchForRegionInArea(...), we must treat the LatLongToWRS algorithm output
+		// https://github.com/robintw/LatLongToWRS
+		// JSONArray jsonArray = searchForRegionInArea(parsedDataset, firstYear, lastYear,
+		//		lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
 		Set<String> regionsFound = new HashSet<>();
-		for (int i = 0; i < jsonArray.length(); i++) {
-			try {
-				String entityId = jsonArray.optJSONObject(i).get("entityId").toString();
-				String region = entityId.substring(3, 9);
-				regionsFound.add(region);
-			} catch (JSONException e) {
-				LOGGER.error("Error while formatting found regions JSON", e);
-			}
-		}
+//		for (int i = 0; i < jsonArray.length(); i++) {
+//			try {
+//				String entityId = jsonArray.optJSONObject(i).get("entityId").toString();
+//				String region = entityId.substring(3, 9);
+//				regionsFound.add(region);
+//			} catch (JSONException e) {
+//				LOGGER.error("Error while formatting found regions JSON", e);
+//			}
+//		}
 		return regionsFound;
 	}
 
@@ -523,62 +525,62 @@ public class USGSNasaRepository implements INPERepository {
 		return null;
 	}
 
-	protected JSONArray searchForRegionInArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
-			   String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude) {
-		JSONObject searchJSONObj = null;
-		try {
-			searchJSONObj = formatSearchJSON(dataset, firstYear, lastYear, 
-					lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
-		} catch (JSONException e) {
-			LOGGER.error("Error while formatting search JSON", e);
-			return null;
-		}
-
-		try {
-			JSONParser jsonParser = new JSONParser();
-			JSONObject jsonObject;
-			InputStream inputStream = requestForRegions(searchJSONObj);
-			InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-			jsonObject = new JSONObject(jsonParser.parse(inputStreamReader).toString());
-			return jsonObject.optJSONObject(SapsPropertiesConstants.DATA_JSON_KEY)
-					.optJSONArray(SapsPropertiesConstants.RESULTS_JSON_KEY);
-		} catch (Exception e) {
-			LOGGER.error("Error while converting USGS response to JSON object.", e);
-		}
-		return new JSONArray();
-	}
-
-	public InputStream requestForRegions(JSONObject searchJSONObj){
-		HttpClient client = HttpClientBuilder.create().build();
-		HttpPost request = new HttpPost(usgsJsonUrl + File.separator + "v" + File.separator
-				+ USGS_SEARCH_VERSION + File.separator + "search");
-
-		StringEntity params = null;
-		try {
-			params = new StringEntity("jsonRequest=" + searchJSONObj);
-		} catch (UnsupportedEncodingException e) {
-			LOGGER.error("It's not possible add the parameter.", e);
-		}
-		request.setEntity(params);
-
-		request.addHeader("content-type", "application/x-www-form-urlencoded");
-
-		HttpResponse response = null;
-		try {
-			response = client.execute(request);
-		} catch (IOException e) {
-			LOGGER.error("Error to send request to USGS.", e);
-		}
-		HttpEntity entity = response.getEntity();
-
-
-		if (entity != null) {
-			try {
-				return entity.getContent();
-			} catch (IOException e) {
-				LOGGER.error("Error to get regions content from USGS' response.", e);
-			}
-		}
-		return null;
-	}
+//	protected JSONArray searchForRegionInArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
+//			   String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude) {
+//		JSONObject searchJSONObj = null;
+//		try {
+//			searchJSONObj = formatSearchJSON(dataset, firstYear, lastYear,
+//					lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
+//		} catch (JSONException e) {
+//			LOGGER.error("Error while formatting search JSON", e);
+//			return null;
+//		}
+//
+//		try {
+//			JSONParser jsonParser = new JSONParser();
+//			JSONObject jsonObject;
+//			InputStream inputStream = requestForRegions(searchJSONObj);
+//			InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+//			jsonObject = new JSONObject(jsonParser.parse(inputStreamReader).toString());
+//			return jsonObject.optJSONObject(SapsPropertiesConstants.DATA_JSON_KEY)
+//					.optJSONArray(SapsPropertiesConstants.RESULTS_JSON_KEY);
+//		} catch (Exception e) {
+//			LOGGER.error("Error while converting USGS response to JSON object.", e);
+//		}
+//		return new JSONArray();
+//	}
+//
+//	public InputStream requestForRegions(JSONObject searchJSONObj){
+//		HttpClient client = HttpClientBuilder.create().build();
+//		HttpPost request = new HttpPost(usgsJsonUrl + File.separator + "v" + File.separator
+//				+ USGS_SEARCH_VERSION + File.separator + "search");
+//
+//		StringEntity params = null;
+//		try {
+//			params = new StringEntity("jsonRequest=" + searchJSONObj);
+//		} catch (UnsupportedEncodingException e) {
+//			LOGGER.error("It's not possible add the parameter.", e);
+//		}
+//		request.setEntity(params);
+//
+//		request.addHeader("content-type", "application/x-www-form-urlencoded");
+//
+//		HttpResponse response = null;
+//		try {
+//			response = client.execute(request);
+//		} catch (IOException e) {
+//			LOGGER.error("Error to send request to USGS.", e);
+//		}
+//		HttpEntity entity = response.getEntity();
+//
+//
+//		if (entity != null) {
+//			try {
+//				return entity.getContent();
+//			} catch (IOException e) {
+//				LOGGER.error("Error to get regions content from USGS' response.", e);
+//			}
+//		}
+//		return null;
+//	}
 }
