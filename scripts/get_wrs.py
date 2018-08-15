@@ -1,3 +1,7 @@
+#!/usr/bin/python
+
+import sys
+
 import ogr
 import shapely.geometry
 import shapely.wkt
@@ -16,7 +20,7 @@ class ConvertToWRS:
     Usage:
 
     1. Create an instance of the class:
-        
+
         conv = ConvertToWRS()
 
     (This will take a while to run, as it loads
@@ -35,7 +39,7 @@ class ConvertToWRS:
         [{'path': 201, 'row': 25}, {'path': 202, 'row': 25}]
 
     """
-    def __init__(self, shapefile="./wrs2_descending.shp"):
+    def __init__(self, shapefile="./WRS2_descending.shp"):
         """Create a new instance of the ConvertToWRS class,
         and load the shapefiles into memory.
 
@@ -45,6 +49,7 @@ class ConvertToWRS:
         """
         # Open the shapefile
         self.shapefile = ogr.Open(shapefile)
+
         # Get the only layer within it
         self.layer = self.shapefile.GetLayer(0)
 
@@ -83,6 +88,7 @@ class ConvertToWRS:
         # not lat, lon)
         pt = shapely.geometry.Point(lon, lat)
         res = []
+
         # Iterate through every polgon
         for poly in self.polygons:
             # If the point is within the polygon then
@@ -93,3 +99,13 @@ class ConvertToWRS:
 
         # Return the results list to the user
         return res
+
+def main():
+	lat = float(sys.argv[1])
+	lon = float(sys.argv[2])
+
+	conv = ConvertToWRS()
+	print(conv.get_wrs(lat, lon))
+
+if __name__ == '__main__':
+	main()
