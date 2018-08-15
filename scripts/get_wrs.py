@@ -37,9 +37,9 @@ class ConvertToWRS:
         [{'path': 202, 'row': 25}]
         >>> conv.get_wrs(50.14, -1.43)
         [{'path': 201, 'row': 25}, {'path': 202, 'row': 25}]
-
     """
-    def __init__(self, shapefile="./WRS2_descending.shp"):
+
+    def __init__(self, shapefile="resources/WRS2_descending/WRS2_descending.shp"):
         """Create a new instance of the ConvertToWRS class,
         and load the shapefiles into memory.
 
@@ -47,31 +47,33 @@ class ConvertToWRS:
         using the shapefile keyword - but it should work if the
         shapefile is in the same directory.
         """
-        # Open the shapefile
-        self.shapefile = ogr.Open(shapefile)
+        try:
+            # Open the shapefile
+            self.shapefile = ogr.Open(shapefile)
 
-        # Get the only layer within it
-        self.layer = self.shapefile.GetLayer(0)
+            # Get the only layer within it
+            self.layer = self.shapefile.GetLayer(0)
 
-        self.polygons = []
+            self.polygons = []
 
-        # For each feature in the layer
-        for i in range(self.layer.GetFeatureCount()):
-            # Get the feature, and its path and row attributes
-            feature = self.layer.GetFeature(i)
-            path = feature['PATH']
-            row = feature['ROW']
+            # For each feature in the layer
+            for i in range(self.layer.GetFeatureCount()):
+                # Get the feature, and its path and row attributes
+                feature = self.layer.GetFeature(i)
+                path = feature['PATH']
+                row = feature['ROW']
 
-            # Get the geometry into a Shapely-compatible
-            # format by converting to Well-known Text (Wkt)
-            # and importing that into shapely
-            geom = feature.GetGeometryRef()
-            shape = shapely.wkt.loads(geom.ExportToWkt())
+                # Get the geometry into a Shapely-compatible
+                # format by converting to Well-known Text (Wkt)
+                # and importing that into shapely
+                geom = feature.GetGeometryRef()
+                shape = shapely.wkt.loads(geom.ExportToWkt())
 
-            # Store the shape and the path/row values
-            # in a list so we can search it easily later
-            self.polygons.append((shape, path, row))
-
+                # Store the shape and the path/row values
+                # in a list so we can search it easily later
+                self.polygons.append((shape, path, row))
+        except Exception as e:
+            print(e)
 
     def get_wrs(self, lat, lon):
         """Get the Landsat WRS-2 path and row for the given
@@ -87,7 +89,7 @@ class ConvertToWRS:
         # and longitude (NB: the arguments are lon, lat
         # not lat, lon)
         pt = shapely.geometry.Point(lon, lat)
-        res = []
+        res = ""
 
         # Iterate through every polgon
         for poly in self.polygons:
@@ -95,17 +97,25 @@ class ConvertToWRS:
             # append the current path/row to the results
             # list
             if pt.within(poly[0]):
-                res.append({'path': poly[1], 'row': poly[2]})
+                path = str(poly[1])
+                row = str(poly[2])
+
+                while len(path) < 3:
+                    path = "0" + path
+
+                while len(row) < 3:
+                    row = "0" + row
+
+                res += path + row + " "
+                #res.append({'path': poly[1], 'row': poly[2]})
 
         # Return the results list to the user
         return res
 
-def main():
-	lat = float(sys.argv[1])
-	lon = float(sys.argv[2])
+lat = float(sys.argv[1])
+lon = float(sys.argv[2])
 
-	conv = ConvertToWRS()
-	print(conv.get_wrs(lat, lon))
+conv = ConvertToWRS()
+print(conv.get_wrs(lat, lon))
 
-if __name__ == '__main__':
-	main()
+sys.stdout.flush()
