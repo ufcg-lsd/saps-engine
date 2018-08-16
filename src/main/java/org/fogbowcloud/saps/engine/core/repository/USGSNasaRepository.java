@@ -298,27 +298,49 @@ public class USGSNasaRepository implements INPERepository {
 	protected void setUSGSAPIKey(String usgsAPIKey) {
 		this.usgsAPIKey = usgsAPIKey;
 	}
-
-	public Set<String> getRegionsFromArea(String dataset, int firstYear, int lastYear,
-			String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
-			String upperRightLongitude) {
-
-        Set<String> regionsFound = null;
-
+	
+	/**
+	 * Performs conversion between a region represented by two pointers and returns it as 
+	 * a set of Landsat WRS-2 ID
+	 */
+	public Set<String> getRegionsFromArea(String lowerLeftLatitude, String lowerLeftLongitude,
+			String upperRightLatitude, String upperRightLongitude) {
+		
+		LOGGER.debug("Getting landsat ID of: \n"
+				+ "lower left latitude: " + lowerLeftLatitude + "\n"
+				+ "lower left longitude: " + lowerLeftLongitude + "\n"
+				+ "upper right latitude: " + upperRightLatitude + "\n"
+				+ "upper right longitude: " + upperRightLongitude);
+		
+        String[] middlePoint = getMiddlePoint(lowerLeftLatitude, lowerLeftLongitude,
+        		upperRightLatitude, upperRightLongitude).split(" ");
+        
+        LOGGER.debug("Setting middle point(reference point to the LandSat region): + \n" + 
+        		"latitude: " + middlePoint[0] + "\n" +  
+        		"longitude: " +  middlePoint[1]);
+        
+        String regionIds = "";
         try {
-            String[] middlePoint = getMiddlePoint(lowerLeftLatitude, lowerLeftLongitude,
-                    upperRightLatitude, upperRightLongitude).split(" ");
-
-            String regionIds = getRegionIds(middlePoint[0], middlePoint[1]).trim();
-
-            regionsFound = new HashSet<>(Arrays.asList(regionIds.split(" ")));
+            regionIds = getRegionIds(middlePoint[0], middlePoint[1]).trim();
         } catch (IOException | InterruptedException e) {
+        	LOGGER.error("Error while calling the ConvertToWRS script");
             e.printStackTrace();
         }
-
+        Set<String> regionsFound = new HashSet<>(Arrays.asList(regionIds.split(" ")));
+       
+        LOGGER.debug("Returned regions as set: ");
+        int regionsCount = 0;
+        for (String s: regionsFound) {
+        	LOGGER.debug(regionsCount + ". " + s);
+        	regionsCount++;
+        }
+        
 		return regionsFound;
 	}
-
+	
+	/**
+	 * Gets a region on the map represented by two points (the two vertexes of the region) and returns the middle point
+	 */
 	private String getMiddlePoint(String lowerLeftLatitude, String lowerLeftLongitude,
                                  String upperRightLatitude, String upperRightLongitude) {
 	    double lat1 = Double.parseDouble(lowerLeftLatitude);
@@ -341,14 +363,21 @@ public class USGSNasaRepository implements INPERepository {
         String result = Math.toDegrees(lat3) + " " + Math.toDegrees(lon3);
         return result;
     }
-
+	
+	/**
+	 * Gets the Landsat WRS-2 ID's given a point (latitude, longitude) by calling get_wrs.py script
+	 */
 	private static String getRegionIds(String latitude, String longitude) throws IOException, InterruptedException {
+		
+		LOGGER.debug("Calling get_wrs.py and passing (" + latitude + ", " + longitude + ") as parameter" );
 		Process processBuildScript = new ProcessBuilder(
 		        "python", "./scripts/get_wrs.py",
                 latitude, longitude).start();
-
+		
+		LOGGER.debug("Waiting for the process...");
 		processBuildScript.waitFor();
-
+		LOGGER.debug("Process ended.");
+		
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(processBuildScript.getInputStream()));
         StringBuilder builder = new StringBuilder();
@@ -360,7 +389,9 @@ public class USGSNasaRepository implements INPERepository {
         }
 
         String result = builder.toString();
-
+        
+        LOGGER.debug("Process output (regions ID's): \n" + result);
+        
         return result;
     }
 }
