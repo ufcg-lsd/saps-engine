@@ -329,9 +329,9 @@ public class USGSNasaRepository implements INPERepository {
         Set<String> regionsFound = new HashSet<>(Arrays.asList(regionIds.split(" ")));
        
         LOGGER.debug("Returned regions as set: ");
-        int regionsCount = 0;
+        int regionsCount = 1;
         for (String s: regionsFound) {
-        	LOGGER.debug(regionsCount + ". " + s);
+        	LOGGER.debug(regionsCount + "# " + s);
         	regionsCount++;
         }
         
