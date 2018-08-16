@@ -158,11 +158,12 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
             try {
                 int startingYear = cal.get(Calendar.YEAR);
                 List<String> datasets = DatasetUtil.getSatsInOperationByYear(startingYear);
-
+                
+                // FIXME do we need this loop?
                 for (String dataset : datasets) {
                     int endingYear = endCal.get(Calendar.YEAR);
                     Set<String> regions = repository.getRegionsFromArea(
-                            dataset, startingYear, endingYear, lowerLeftLatitude,
+                            lowerLeftLatitude,
                             lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
 
                     for (String region : regions) {
@@ -260,12 +261,14 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         int startingYear = cal.get(Calendar.YEAR);
         int endingYear = endCal.get(Calendar.YEAR);
         Set<String> regions = new HashSet<>();
+        
+        // FIXME do we need this loop?
         for (String dataset: datasets) {
              regions.addAll(repository.getRegionsFromArea(
-                    dataset, startingYear, endingYear, lowerLeftLatitude,
+                    lowerLeftLatitude,
                     lowerLeftLongitude, upperRightLatitude, upperRightLongitude));
-
         }
+        
         for (String region : regions) {
             List<ImageTask> iTasks = null;
             try {
