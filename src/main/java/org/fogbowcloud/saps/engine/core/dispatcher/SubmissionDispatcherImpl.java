@@ -158,10 +158,11 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
             try {
                 int startingYear = cal.get(Calendar.YEAR);
                 List<String> datasets = DatasetUtil.getSatsInOperationByYear(startingYear);
-                
-                // FIXME do we need this loop?
+
                 for (String dataset : datasets) {
-                    int endingYear = endCal.get(Calendar.YEAR);
+                	
+                	LOGGER.debug("----------------------------------------> " +  dataset);
+                	
                     Set<String> regions = repository.getRegionsFromArea(
                             lowerLeftLatitude,
                             lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
@@ -233,54 +234,20 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         return properties;
     }
 
-    public List<ImageTask> searchProcessedTasks(
-            String lowerLeftLatitude,
-            String lowerLeftLongitude,
-            String upperRightLatitude,
-            String upperRightLongitude,
-            Date initDate,
-            Date endDate,
-            String inputPreprocessing,
-            String inputGathering,
-            String algorithmExecution) {
-        List<ImageTask> filteredTasks = new ArrayList<>();
-
-        GregorianCalendar cal = new GregorianCalendar();
-        cal.setTime(initDate);
-        GregorianCalendar endCal = new GregorianCalendar();
-        endCal.setTime(endDate);
-        endCal.add(Calendar.DAY_OF_YEAR, 1);
-
-        Set<String> datasets = new HashSet<>();
-        while (cal.get(Calendar.YEAR) <= endCal.get(Calendar.YEAR)) {
-            int startingYear = cal.get(Calendar.YEAR);
-            datasets.addAll(DatasetUtil.getSatsInOperationByYear(startingYear));
-            cal.add(Calendar.YEAR, 1);
-        }
-        cal.setTime(initDate);
-        int startingYear = cal.get(Calendar.YEAR);
-        int endingYear = endCal.get(Calendar.YEAR);
+	public List<ImageTask> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
+			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
+			String inputPreprocessing, String inputGathering, String algorithmExecution) {
+        
+		List<ImageTask> filteredTasks = new ArrayList<>();
         Set<String> regions = new HashSet<>();
-        
-        // FIXME do we need this loop?
-        for (String dataset: datasets) {
-             regions.addAll(repository.getRegionsFromArea(
-                    lowerLeftLatitude,
-                    lowerLeftLongitude, upperRightLatitude, upperRightLongitude));
-        }
-        
+		regions.addAll(repository.getRegionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+				upperRightLongitude));
+		
         for (String region : regions) {
             List<ImageTask> iTasks = null;
             try {
-                iTasks = getImageStore().getProcessedImages(
-                        region,
-                        initDate,
-                        endDate,
-                        inputGathering,
-                        inputPreprocessing,
-                        algorithmExecution
-                );
-
+				iTasks = getImageStore().getProcessedImages(region, initDate, endDate, inputGathering,
+						inputPreprocessing, algorithmExecution);
                 filteredTasks.addAll(iTasks);
             } catch (SQLException e) {
                 String builder = "Failed to load images with configuration:\n" +
