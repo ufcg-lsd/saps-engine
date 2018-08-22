@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
@@ -100,7 +101,7 @@ public class SapsController extends BlowoutController {
 		getResourceMonitor().start();
 
 		setSchedulerInterface(createSchedulerInstance(getTaskMonitor()));
-		setInfraManager(createInfraManagerInstance());
+		setInfraManager(createInfraManagerInstance(getInfraProvider(), getResourceMonitor()));
 
 		getBlowoutPool().start(getInfraManager(), getSchedulerInterface());
 	}
@@ -144,7 +145,10 @@ public class SapsController extends BlowoutController {
 
 				if (ImageTaskState.READY.equals(imageTaskState)
 						|| ImageTaskState.PREPROCESSED.equals(imageTaskState)) {
-					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation);
+					
+					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation,
+							UUID.randomUUID().toString());
+					
 					Map<String, String> nfsConfig = imageStore
 							.getFederationNFSConfig(imageTask.getFederationMember());
 
@@ -189,6 +193,7 @@ public class SapsController extends BlowoutController {
 			LOGGER.error("Error while getting task.", e);
 		}
 	}
+
 
 	private void addTask(TaskImpl taskImpl) throws SapsException {
 		if (!started) {

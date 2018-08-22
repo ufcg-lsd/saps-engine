@@ -1,12 +1,11 @@
 package org.fogbowcloud.saps.engine.core.model;
 
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import java.io.File;
 import java.util.Properties;
+import java.util.UUID;
 
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
@@ -33,8 +32,8 @@ public class TestSapsTask {
 
 		File fakeScriptFile = new File(scriptFilePath);
 		Specification spec = mock(Specification.class);
-
-		TaskImpl taskImpl = new TaskImpl(taskId, spec);
+		
+		TaskImpl taskImpl = new TaskImpl(taskId, spec, UUID.randomUUID().toString());
 		SapsTask sapsTask = spy(new SapsTask());
 
 		Properties properties = new Properties();

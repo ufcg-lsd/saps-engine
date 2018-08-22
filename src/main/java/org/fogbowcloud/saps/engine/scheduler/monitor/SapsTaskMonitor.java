@@ -34,7 +34,7 @@ public class SapsTaskMonitor extends TaskMonitor {
 			if (tp.getStatus().equals(TaskState.RUNNING)) {
 				imageTaskToRunning(tp);
 			}
-			if (tp.getStatus().equals(TaskState.FINNISHED)) {
+			if (tp.getStatus().equals(TaskState.FINISHED)) {
 				imageTaskToFinished(tp);
 			}
 			if (tp.getStatus().equals(TaskState.TIMEDOUT)) {
