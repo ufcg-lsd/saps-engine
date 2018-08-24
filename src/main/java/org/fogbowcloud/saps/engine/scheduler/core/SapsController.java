@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
@@ -193,6 +194,7 @@ public class SapsController extends BlowoutController {
 			LOGGER.error("Error while getting task.", e);
 		}
 	}
+
 
 	private void addTask(TaskImpl taskImpl) throws SapsException {
 		if (!super.started) {

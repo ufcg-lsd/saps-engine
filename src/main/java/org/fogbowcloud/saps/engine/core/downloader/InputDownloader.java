@@ -471,7 +471,7 @@ public class InputDownloader {
 			// Getting Input Downloader docker repository and tag
 			ExecutionScriptTag inputDownloaderDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(
 					imageTask.getInputGatheringTag(), ExecutionScriptTagUtil.INPUT_DOWNLOADER);
-			
+
 			DockerUtil.pullImage(inputDownloaderDockerInfo.getDockerRepository(),
 					inputDownloaderDockerInfo.getDockerTag());
 
@@ -493,6 +493,8 @@ public class InputDownloader {
 							.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH)
 					+ " " + properties.getProperty(
 							SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
+
+			LOGGER.debug("Command: " + commandToRun);
 
 			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
 			DockerUtil.removeContainer(containerId);
