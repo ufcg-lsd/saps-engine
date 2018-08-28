@@ -165,7 +165,10 @@ public class PreProcessorImpl implements PreProcessor {
 		this.imageDataStore.updateTaskState(imageTaskId, ImageTaskState.PREPROCESSING);
 		addStateStamp(imageTaskId);
 
-		int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
+		String usgsEnvVars = "-e USGS_USERNAME=" + properties.getProperty(SapsPropertiesConstants.USGS_USERNAME)
+				+ " -e USGS_PASSWORD=" + properties.getProperty(SapsPropertiesConstants.USGS_PASSWORD);
+
+		int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, usgsEnvVars, commandToRun);
 
 		if (!DockerUtil.removeContainer(containerId)) {
 			LOGGER.error("Error while trying to stop Container [" + containerId + "]");

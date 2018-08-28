@@ -144,8 +144,8 @@ public class DockerUtil {
 	 *            The command to be executed.
 	 * @return The exit value.
 	 */
-	public static int execDockerCommand(String containerId, String command) {
-		String fullCommand = "docker exec " + containerId + " " + command;
+	public static int execDockerCommand(String containerId, String envVars, String command) {
+		String fullCommand = "docker exec " + envVars + " " + containerId + " " + command;
 		String[] commandArray = fullCommand.split("\\s+");
 		ProcessBuilder builder = new ProcessBuilder(commandArray);
 		LOGGER.debug("Executing containerized file: " + builder.command());

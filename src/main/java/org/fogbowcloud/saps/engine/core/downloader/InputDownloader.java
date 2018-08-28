@@ -496,7 +496,10 @@ public class InputDownloader {
 
 			LOGGER.debug("Command: " + commandToRun);
 
-			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
+			String usgsEnvVars = "-e USGS_USERNAME=" + properties.getProperty(SapsPropertiesConstants.USGS_USERNAME)
+					+ " -e USGS_PASSWORD=" + properties.getProperty(SapsPropertiesConstants.USGS_PASSWORD);
+
+			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, usgsEnvVars, commandToRun);
 			DockerUtil.removeContainer(containerId);
 
 			if (dockerExecExitValue == OK_SCRIPT_CODE) {
