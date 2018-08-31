@@ -63,9 +63,9 @@ public class DatasetUtil {
 	private static Map<String, Integer> getDataSetStartOperationYear() {
 		Map<String, Integer> satYearBegin = new HashMap<String, Integer>();
 
-		satYearBegin.put(SapsPropertiesConstants.LANDSAT_5_DATASET, new Integer(1984));
-		satYearBegin.put(SapsPropertiesConstants.LANDSAT_7_DATASET, new Integer(1999));
-		satYearBegin.put(SapsPropertiesConstants.LANDSAT_8_DATASET, new Integer(2013));
+		satYearBegin.put(SapsPropertiesConstants.DATASET_LT5_TYPE, new Integer(1984));
+		satYearBegin.put(SapsPropertiesConstants.DATASET_LE7_TYPE, new Integer(1999));
+		satYearBegin.put(SapsPropertiesConstants.DATASET_LC8_TYPE, new Integer(2013));
 
 		return satYearBegin;
 	}
@@ -73,9 +73,9 @@ public class DatasetUtil {
 	private static Map<String, Integer> getDataSetEndOperationYear() {
 		Map<String, Integer> satYearEnd = new HashMap<String, Integer>();
 
-		satYearEnd.put(SapsPropertiesConstants.LANDSAT_5_DATASET, new Integer(2013));
-		satYearEnd.put(SapsPropertiesConstants.LANDSAT_7_DATASET, new Integer(Integer.MAX_VALUE));
-		satYearEnd.put(SapsPropertiesConstants.LANDSAT_8_DATASET, new Integer(Integer.MAX_VALUE));
+		satYearEnd.put(SapsPropertiesConstants.DATASET_LT5_TYPE, new Integer(2013));
+		satYearEnd.put(SapsPropertiesConstants.DATASET_LE7_TYPE, new Integer(Integer.MAX_VALUE));
+		satYearEnd.put(SapsPropertiesConstants.DATASET_LC8_TYPE, new Integer(Integer.MAX_VALUE));
 
 		return satYearEnd;
 	}
