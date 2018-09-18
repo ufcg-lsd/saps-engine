@@ -11,6 +11,11 @@
   - **Worker Node**: Receives a task from **Scheduler** and executes it. The execution consists in perform an image processing and store data in the NFS Server at the end of it.
   - **Archiver**: Search at **Task Catalogue** for tasks in "finished" (processed by a **Worker Node**) state and transfer all task data from FTP Server to a permanent storage. After that, **Input Downloader** is able to detect if the task was archived, so it can remove all task files from its own local repository.
 
+### Video Demo
+
+[https://www.youtube.com/watch?v=-x3shbRMHkI&t=2s](https://www.youtube.com/watch?v=-x3shbRMHkI&t=2s)
+[![demo SAPS](https://user-images.githubusercontent.com/26657147/45714471-12ba6b00-bb68-11e8-99e1-a52156101d5a.png)](https://www.youtube.com/watch?v=-x3shbRMHkI&t=2s)
+
 ## Install and Deploy
 ### Install Docker CE
 SAPS componentes are deployed as Docker containers. Thus, before proper installing them, Docker needs to be installed in the virtual machines provisioned to run the SAPS service. 
