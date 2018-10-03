@@ -220,11 +220,11 @@ public class USGSNasaRepository implements INPERepository {
 
 	private String getDataSet(String imageName) {
 		if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_5_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_5_DATASET;
+			return SapsPropertiesConstants.DATASET_LT5_TYPE;
 		} else if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_7_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_7_DATASET;
+			return SapsPropertiesConstants.DATASET_LE7_TYPE;
 		} else if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_8_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_8_DATASET;
+			return SapsPropertiesConstants.DATASET_LC8_TYPE;
 		}
 
 		return null;
