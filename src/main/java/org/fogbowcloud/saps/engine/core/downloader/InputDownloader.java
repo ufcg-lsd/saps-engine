@@ -471,7 +471,7 @@ public class InputDownloader {
 			// Getting Input Downloader docker repository and tag
 			ExecutionScriptTag inputDownloaderDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(
 					imageTask.getInputGatheringTag(), ExecutionScriptTagUtil.INPUT_DOWNLOADER);
-			
+
 			DockerUtil.pullImage(inputDownloaderDockerInfo.getDockerRepository(),
 					inputDownloaderDockerInfo.getDockerTag());
 
@@ -486,15 +486,22 @@ public class InputDownloader {
 					inputDownloaderDockerInfo.getDockerRepository(),
 					inputDownloaderDockerInfo.getDockerTag(), hostAndContainerDirMap);
 
+			String dataset = formatDataSet(imageTask.getDataset());
+
 			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
-					+ " " + imageTask.getDataset() + " " + imageTask.getRegion() + " "
+					+ " " + dataset + " " + imageTask.getRegion() + " "
 					+ dateFormater.format(imageTask.getImageDate()) + " "
 					+ properties
 							.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH)
 					+ " " + properties.getProperty(
 							SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
 
-			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
+			LOGGER.debug("Command: " + commandToRun);
+
+			String usgsEnvVars = "-e USGS_USERNAME=" + properties.getProperty(SapsPropertiesConstants.USGS_USERNAME)
+					+ " -e USGS_PASSWORD=" + properties.getProperty(SapsPropertiesConstants.USGS_PASSWORD);
+
+			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, usgsEnvVars, commandToRun);
 			DockerUtil.removeContainer(containerId);
 
 			if (dockerExecExitValue == OK_SCRIPT_CODE) {
@@ -537,6 +544,16 @@ public class InputDownloader {
 		}
 
 		return false;
+	}
+
+	private String formatDataSet(String dataset) {
+		if (dataset.equals(SapsPropertiesConstants.LANDSAT_5_DATASET)) {
+			return SapsPropertiesConstants.DATASET_LT5_TYPE;
+		} else if (dataset.equals(SapsPropertiesConstants.LANDSAT_7_DATASET)) {
+			return SapsPropertiesConstants.DATASET_LE7_TYPE;
+		} else {
+			return SapsPropertiesConstants.DATASET_LC8_TYPE;
+		}
 	}
 
 	protected void prepareTaskDirStructure(ImageTask imageTask) throws Exception {
