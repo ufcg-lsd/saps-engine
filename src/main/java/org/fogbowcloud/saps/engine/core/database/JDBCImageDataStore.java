@@ -1266,6 +1266,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 				return downloadingImageTasks;
 			}
 
+			if(createdImageTasks.size() == 0){
+				return createdImageTasks;
+			}
+
 			lockAndUpdateStatement = connection.prepareStatement(UPDATE_LIMITED_IMAGES_TO_DOWNLOAD);
 			lockAndUpdateStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
 			lockAndUpdateStatement.setString(2, federationMember);

@@ -99,6 +99,20 @@ function garbageCollect {
   fi
 }
 
+# This function creates output directory if not exists
+function createOutputDir {
+  echo "Create output directory ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME if it not exists"
+  sudo mkdir -p ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME
+}
+
+function executeDockerContainer {
+  cd ${SANDBOX}
+
+  CONTAINER_ID=$(sudo docker ps | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
+
+  sudo timeout 3h docker exec $CONTAINER_ID bash -x $BIN_RUN_SCRIPT ${SAPS_MOUNT_POINT}/${TASK_ID}/$INPUTS_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$OUTPUT_DIR_NAME ${SAPS_MOUNT_POINT}/${TASK_ID}/$PREPROCESSING_DIR_NAME
+}
+
 function removeDockerContainer {
   CONTAINER_ID=$(sudo docker ps -a | grep "${WORKER_CONTAINER_REPOSITORY}:${WORKER_CONTAINER_TAG}" | awk '{print $1}')
 

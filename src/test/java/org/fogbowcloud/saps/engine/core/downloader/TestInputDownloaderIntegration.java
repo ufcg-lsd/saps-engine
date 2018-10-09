@@ -323,7 +323,7 @@ public class TestInputDownloaderIntegration {
 		String containerId = "1";
 		BDDMockito.given(DockerUtil.runMappedContainer(Mockito.anyString(), Mockito.anyString(),
 				Mockito.anyMap())).willReturn(containerId);
-		BDDMockito.given(DockerUtil.execDockerCommand(Mockito.eq(containerId), Mockito.anyString()))
+		BDDMockito.given(DockerUtil.execDockerCommand(Mockito.eq(containerId), Mockito.anyString(),Mockito.anyString()))
 				.willReturn(1);
 		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString()))
 				.willReturn(notImportantBoolean);
@@ -420,10 +420,16 @@ public class TestInputDownloaderIntegration {
 
 		BDDMockito.given(DockerUtil.runMappedContainer(Mockito.anyString(), Mockito.anyString(),
 				Mockito.anyMapOf(String.class, String.class))).willReturn(containerId);
-		BDDMockito.given(DockerUtil.execDockerCommand(Mockito.eq(containerId), Mockito.anyString()))
+		BDDMockito.given(DockerUtil.execDockerCommand(Mockito.eq(containerId), Mockito.anyString(), Mockito.anyString()))
 				.willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
 		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString()))
 				.willReturn(notImportantBoolean);
+
+		BDDMockito.given(DockerUtil.runMappedContainer(
+				Mockito.anyString(), Mockito.anyString(), Mockito.anyMap())).willReturn(containerId);
+		BDDMockito.given(DockerUtil.execDockerCommand(
+				Mockito.eq(containerId), Mockito.anyString() ,Mockito.anyString())).willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
+		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString())).willReturn(notImportantBoolean);
 
 		DB pendingTaskDB = this.inputDownloaderDefault.getPendingTaskDB();
 		ConcurrentMap<String, ImageTask> pendingTaskMap = this.inputDownloaderDefault

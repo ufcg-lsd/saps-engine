@@ -46,6 +46,10 @@ public class TestImageDataStore {
 		int limit = 1;
 
 		Date date = new Date();
+
+		List<ImageTask> imageTaskList = this.imageStore.getImagesToDownload(federationMember, limit);
+
+		Assert.assertTrue(imageTaskList.size() == 0);
 		
 		List<ImageTask> imageTaskList = this.imageStore.getImagesToDownload(federationMember, limit);
 		Assert.assertTrue(imageTaskList.size() == 0);		
