@@ -8,13 +8,13 @@ debug_port=
 
 while [ true ]
 do
-  if pgrep -x "java" > /dev/null
+  if (( $(ps -ef | grep -v grep | grep ArchiverMain | wc -l) > 0 ))
   then
-    java_pid="$(pidof java)"
-    sudo kill -9 $java_pid
-    sleep 10
+    echo "Archiver is still running"
+  else
+    echo "Archiver is down. Starting it again..."
+  sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.archiver.ArchiverMain $saps_engine_conf_path &
   fi
 
-  sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.archiver.ArchiverMain $saps_engine_conf_path &
   sleep 10m
 done

@@ -6,14 +6,14 @@ saps_engine_conf_path=
 
 while [ true ]
 do
-  if pgrep -x "java" > /dev/null
+  if (( $(ps -ef | grep -v grep | grep PreProcessorMain | wc -l) > 0 ))
   then
-    java_pid="$(pidof java)"
-    sudo kill -9 $java_pid
-    sleep 10
-  fi
-
-  sudo java -Dlog4j.configuration=file:$saps_engine_log_properties_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.preprocessor.PreProcessorMain $saps_engine_conf_path
+    echo "PreProcessor is still running"
+  else
+    echo "PreProcessor is down. Starting it again..."
+    sudo java -Dlog4j.configuration=file:$saps_engine_log_properties_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.preprocessor.PreProcessorMain $saps_engine_conf_path
+  fi    
+  
   sleep 10m
 done 
 

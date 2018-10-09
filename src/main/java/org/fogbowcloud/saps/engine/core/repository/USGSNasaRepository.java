@@ -1,30 +1,25 @@
 package org.fogbowcloud.saps.engine.core.repository;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.lang.Validate;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
 
-/**
- * Created by manel on 18/08/16.
- */
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class USGSNasaRepository implements INPERepository {
 
 	private final String sapsExportPath;
@@ -39,12 +34,6 @@ public class USGSNasaRepository implements INPERepository {
 	private static final String EARTH_EXPLORER_NODE = "EE";
 	// products
 	private static final String LEVEL_1_PRODUCT = "STANDARD";
-
-	// conf constants
-	private static final String USGS_SEARCH_VERSION = "1.4.0";
-	private static final String FIRST_YEAR_SUFFIX = "-01-01";
-	private static final String LAST_YEAR_SUFFIX = "-12-31";
-	private static final int MAX_RESULTS = 50000;
 
 	private static final Logger LOGGER = Logger.getLogger(USGSNasaRepository.class);
 
@@ -104,7 +93,7 @@ public class USGSNasaRepository implements INPERepository {
 		return null;
 	}
 
-	protected String getLoginResponse() throws IOException, ClientProtocolException {
+	protected String getLoginResponse() throws IOException {
 
 		JSONObject loginJSONObj = new JSONObject();
 		try {
@@ -229,73 +218,13 @@ public class USGSNasaRepository implements INPERepository {
 		return null;
 	}
 
-	protected String getMetadataHttpResponse(String dataset, String sceneId, String node,
-			String product) {
-
-		JSONObject metadataJSONObj = new JSONObject();
-		try {
-			formatMetadataJSON(dataset, sceneId, node, product, metadataJSONObj);
-		} catch (JSONException e) {
-			LOGGER.error("Error while formatting metadata JSON", e);
-			return null;
-		}
-
-		String metadataJsonRequest = "jsonRequest=" + metadataJSONObj.toString();
-		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data",
-				metadataJsonRequest, usgsJsonUrl + File.separator + "metadata");
-		LOGGER.debug("Command=" + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			return getProcessOutput(p);
-		} catch (Exception e) {
-			LOGGER.error("Error while logging in USGS", e);
-		}
-
-		return null;
-	}
-
-	private void formatMetadataJSON(String dataset, String sceneId, String node, String product,
-			JSONObject metadataJSONObj) throws JSONException {
-		JSONArray entityIDs = new JSONArray();
-		JSONArray products = new JSONArray();
-		entityIDs.put(sceneId);
-		products.put(product);
-
-		metadataJSONObj.put(SapsPropertiesConstants.DATASET_NAME_JSON_KEY, dataset);
-		metadataJSONObj.put(SapsPropertiesConstants.API_KEY_JSON_KEY, usgsAPIKey);
-		metadataJSONObj.put(SapsPropertiesConstants.NODE_JSON_KEY, node);
-		metadataJSONObj.put(SapsPropertiesConstants.ENTITY_IDS_JSON_KEY, entityIDs);
-		metadataJSONObj.put(SapsPropertiesConstants.PRODUCTS_JSON_KEY, products);
-	}
-
-	public List<String> getPossibleStations() {
-		List<String> possibleStations = new ArrayList<String>();
-
-		try {
-			File file = new File(SapsPropertiesConstants.POSSIBLE_STATIONS_FILE_PATH);
-			FileReader fileReader = new FileReader(file);
-			BufferedReader bufferedReader = new BufferedReader(fileReader);
-			String line;
-			while ((line = bufferedReader.readLine()) != null) {
-				possibleStations.add(line);
-			}
-			fileReader.close();
-		} catch (IOException e) {
-			LOGGER.error("Error while getting possible stations from file", e);
-		}
-
-		return possibleStations;
-	}
-
 	private String getDataSet(String imageName) {
 		if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_5_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_5_DATASET;
+			return SapsPropertiesConstants.DATASET_LT5_TYPE;
 		} else if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_7_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_7_DATASET;
+			return SapsPropertiesConstants.DATASET_LE7_TYPE;
 		} else if (imageName.startsWith(SapsPropertiesConstants.LANDSAT_8_PREFIX)) {
-			return SapsPropertiesConstants.LANDSAT_8_DATASET;
+			return SapsPropertiesConstants.DATASET_LC8_TYPE;
 		}
 
 		return null;
@@ -319,7 +248,7 @@ public class USGSNasaRepository implements INPERepository {
 				return downloadLink;
 			}
 		} catch (Exception e) {
-			LOGGER.error("Error while formating request response", e);
+			LOGGER.error("Error while formatting request response", e);
 		}
 
 		return null;
@@ -369,216 +298,100 @@ public class USGSNasaRepository implements INPERepository {
 	protected void setUSGSAPIKey(String usgsAPIKey) {
 		this.usgsAPIKey = usgsAPIKey;
 	}
-
-	protected String getUSGSAPIKey() {
-		return this.usgsAPIKey;
-	}
-
-	public JSONArray getAvailableImagesInRange(String dataSet, int firstYear, int lastYear,
-			String region) {
-		String latitude;
-		String longitude;
-
-		try {
-			JSONObject regionJSON = getRegionJSON(region);
-			latitude = regionJSON.getString(SapsPropertiesConstants.LATITUDE_JSON_KEY);
-			longitude = regionJSON.getString(SapsPropertiesConstants.LONGITUDE_JSON_KEY);
-		} catch (JSONException e) {
-			LOGGER.error("Error while getting coordinates from region JSON", e);
-			return null;
-		}
-
-		return searchForImagesInRange(dataSet, firstYear, lastYear, latitude, longitude);
-	}
-
-	private JSONObject getRegionJSON(String region) throws JSONException {
-		String jsonData = readFile(SapsPropertiesConstants.TILES_COORDINATES_FILE_PATH);
-		JSONObject regionsJSON = new JSONObject(jsonData);
-		JSONArray tiles = regionsJSON.getJSONArray(SapsPropertiesConstants.TILES_JSON_KEY);
-		for (int i = 0; i < tiles.length(); i++) {
-			if (tiles.getJSONObject(i).getString(SapsPropertiesConstants.TILE_ID_JSON_KEY)
-					.equals(region)) {
-				return tiles.getJSONObject(i);
-			}
-		}
-
-		return null;
-	}
-
-	private static String readFile(String filename) {
-		String result = "";
-		try {
-			BufferedReader br = new BufferedReader(new FileReader(filename));
-			StringBuilder sb = new StringBuilder();
-			String line = br.readLine();
-			while (line != null) {
-				sb.append(line);
-				line = br.readLine();
-			}
-			result = sb.toString();
-			br.close();
-		} catch (Exception e) {
-			LOGGER.error("Error while reading regions JSON file", e);
-		}
-
-		return result;
-	}
-
-	private JSONArray searchForImagesInRange(String dataset, int firstYear, int lastYear,
-			String latitude, String longitude) {
-
-		JSONObject searchJSONObj = null;
-		try {
-			searchJSONObj = formatSearchJSON(dataset, firstYear, lastYear, latitude, longitude, latitude, longitude);
-		} catch (JSONException e) {
-			LOGGER.error("Error while formatting search JSON", e);
-			return null;
-		}
-
-		String searchJsonRequest = "jsonRequest=" + searchJSONObj.toString();
-		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data",
-				searchJsonRequest, usgsJsonUrl + File.separator + "v" + File.separator
-						+ USGS_SEARCH_VERSION + File.separator + "search");
-		LOGGER.debug("Command=" + builder.command());
-
-		try {
-			Process p = builder.start();
-			p.waitFor();
-			JSONObject searchResponse = new JSONObject(getProcessOutput(p));
-			return searchResponse.getJSONObject(SapsPropertiesConstants.DATA_JSON_KEY)
-					.getJSONArray(SapsPropertiesConstants.RESULTS_JSON_KEY);
-		} catch (Exception e) {
-			LOGGER.error("Error while logging in USGS", e);
-		}
-
-		return null;
-	}
-
-	public JSONObject formatSearchJSON(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
-			String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude) throws JSONException {
-		JSONObject searchJSONObj = new JSONObject();
+	
+	/**
+	 * Performs conversion between a region represented by two pointers and returns it as 
+	 * a set of Landsat WRS-2 ID
+	 */
+	public Set<String> getRegionsFromArea(String lowerLeftLatitude, String lowerLeftLongitude,
+			String upperRightLatitude, String upperRightLongitude) {
 		
-		JSONObject spatialFilterObj = new JSONObject();
-		JSONObject temporalFilterObj = new JSONObject();
-		JSONObject lowerLeftObj = new JSONObject();
-		JSONObject upperRightObj = new JSONObject();
-
-		lowerLeftObj.put(SapsPropertiesConstants.LATITUDE_JSON_KEY, lowerLeftLatitude);
-		lowerLeftObj.put(SapsPropertiesConstants.LONGITUDE_JSON_KEY, lowerLeftLongitude);
-		upperRightObj.put(SapsPropertiesConstants.LATITUDE_JSON_KEY, upperRightLatitude);
-		upperRightObj.put(SapsPropertiesConstants.LONGITUDE_JSON_KEY, upperRightLongitude);
-
-		spatialFilterObj.put(SapsPropertiesConstants.FILTER_TYPE_JSON_KEY,
-				SapsPropertiesConstants.MBR_JSON_VALUE);
-		spatialFilterObj.put(SapsPropertiesConstants.LOWER_LEFT_JSON_KEY, lowerLeftObj);
-		spatialFilterObj.put(SapsPropertiesConstants.UPPER_RIGHT_JSON_KEY, upperRightObj);
-
-		temporalFilterObj.put(SapsPropertiesConstants.DATE_FIELD_JSON_KEY,
-				SapsPropertiesConstants.SEARCH_DATE_JSON_VALUE);
-		temporalFilterObj.put(SapsPropertiesConstants.START_DATE_JSON_KEY, firstYear
-				+ FIRST_YEAR_SUFFIX);
-		temporalFilterObj.put(SapsPropertiesConstants.END_DATE_JSON_KEY, lastYear
-				+ LAST_YEAR_SUFFIX);
-
-		searchJSONObj.put(SapsPropertiesConstants.API_KEY_JSON_KEY, usgsAPIKey);
-		searchJSONObj.put(SapsPropertiesConstants.DATASET_NAME_JSON_KEY, dataset);
-		searchJSONObj.put(SapsPropertiesConstants.SPATIAL_FILTER_JSON_KEY, spatialFilterObj);
-		searchJSONObj.put(SapsPropertiesConstants.TEMPORAL_FILTER_JSON_KEY, temporalFilterObj);
-		searchJSONObj.put(SapsPropertiesConstants.MAX_RESULTS_JSON_KEY, MAX_RESULTS);
-		searchJSONObj.put(SapsPropertiesConstants.SORT_ORDER_JSON_KEY,
-				SapsPropertiesConstants.ASC_JSON_VALUE);
+		LOGGER.debug("Getting landsat ID of: \n"
+				+ "lower left latitude: " + lowerLeftLatitude + "\n"
+				+ "lower left longitude: " + lowerLeftLongitude + "\n"
+				+ "upper right latitude: " + upperRightLatitude + "\n"
+				+ "upper right longitude: " + upperRightLongitude);
 		
-		return searchJSONObj;
-	}
-
-	public Set<String> getRegionsFromArea(String dataset, int firstYear, int lastYear,
-			String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
-			String upperRightLongitude) {
-		String parsedDataset = parseDataset(dataset);
-
-		JSONArray jsonArray = searchForRegionInArea(parsedDataset, firstYear, lastYear,
-				lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
-		Set<String> regionsFound = new HashSet<>();
-		for (int i = 0; i < jsonArray.length(); i++) {
-			try {
-				String entityId = jsonArray.optJSONObject(i).get("entityId").toString();
-				String region = entityId.substring(3, 9);
-				regionsFound.add(region);
-			} catch (JSONException e) {
-				LOGGER.error("Error while formatting found regions JSON", e);
-			}
-		}
+        String[] middlePoint = getMiddlePoint(lowerLeftLatitude, lowerLeftLongitude,
+        		upperRightLatitude, upperRightLongitude).split(" ");
+        
+        LOGGER.debug("Setting middle point(reference point to the LandSat region): + \n" + 
+        		"latitude: " + middlePoint[0] + "\n" +  
+        		"longitude: " +  middlePoint[1]);
+        
+        String regionIds = "";
+        try {
+            regionIds = getRegionIds(middlePoint[0], middlePoint[1]).trim();
+        } catch (IOException | InterruptedException e) {
+        	LOGGER.error("Error while calling the ConvertToWRS script");
+            e.printStackTrace();
+        }
+        Set<String> regionsFound = new HashSet<>(Arrays.asList(regionIds.split(" ")));
+       
+        LOGGER.debug("Returned regions as set: ");
+        int regionsCount = 1;
+        for (String s: regionsFound) {
+        	LOGGER.debug(regionsCount + "# " + s);
+        	regionsCount++;
+        }
+        
 		return regionsFound;
 	}
+	
+	/**
+	 * Gets a region on the map represented by two points (the two vertexes of the region) and returns the middle point
+	 */
+	private String getMiddlePoint(String lowerLeftLatitude, String lowerLeftLongitude,
+                                 String upperRightLatitude, String upperRightLongitude) {
+	    double lat1 = Double.parseDouble(lowerLeftLatitude);
+	    double lon1 = Double.parseDouble(lowerLeftLongitude);
+	    double lat2 = Double.parseDouble(upperRightLatitude);
+	    double lon2 = Double.parseDouble(upperRightLongitude);
 
-	private String parseDataset(String dataset) {
-		if (dataset.equals(SapsPropertiesConstants.DATASET_LT5_TYPE)) {
-			return SapsPropertiesConstants.LANDSAT_5_DATASET;
-		} else if (dataset.equals(SapsPropertiesConstants.DATASET_LE7_TYPE)) {
-			return SapsPropertiesConstants.LANDSAT_7_DATASET;
-		} else if (dataset.equals(SapsPropertiesConstants.DATASET_LC8_TYPE)) {
-			return SapsPropertiesConstants.LANDSAT_8_DATASET;
-		}
+        double dLon = Math.toRadians(lon2 - lon1);
+
+        //convert to radians
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+        lon1 = Math.toRadians(lon1);
+
+        double Bx = Math.cos(lat2) * Math.cos(dLon);
+        double By = Math.cos(lat2) * Math.sin(dLon);
+        double lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2), Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
+        double lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
+
+        String result = Math.toDegrees(lat3) + " " + Math.toDegrees(lon3);
+        return result;
+    }
+	
+	/**
+	 * Gets the Landsat WRS-2 ID's given a point (latitude, longitude) by calling get_wrs.py script
+	 */
+	private static String getRegionIds(String latitude, String longitude) throws IOException, InterruptedException {
 		
-		return null;
-	}
+		LOGGER.debug("Calling get_wrs.py and passing (" + latitude + ", " + longitude + ") as parameter" );
+		Process processBuildScript = new ProcessBuilder(
+		        "python", "./scripts/get_wrs.py",
+                latitude, longitude).start();
+		
+		LOGGER.debug("Waiting for the process...");
+		processBuildScript.waitFor();
+		LOGGER.debug("Process ended.");
+		
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(processBuildScript.getInputStream()));
+        StringBuilder builder = new StringBuilder();
 
-	protected JSONArray searchForRegionInArea(String dataset, int firstYear, int lastYear, String lowerLeftLatitude,
-			   String lowerLeftLongitude, String upperRightLatitude, String upperRightLongitude) {
-		JSONObject searchJSONObj = null;
-		try {
-			searchJSONObj = formatSearchJSON(dataset, firstYear, lastYear, 
-					lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
-		} catch (JSONException e) {
-			LOGGER.error("Error while formatting search JSON", e);
-			return null;
-		}
+        String line;
+        while ( (line = reader.readLine()) != null) {
+            builder.append(line);
+            builder.append(System.getProperty("line.separator"));
+        }
 
-		try {
-			JSONParser jsonParser = new JSONParser();
-			JSONObject jsonObject;
-			InputStream inputStream = requestForRegions(searchJSONObj);
-			InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-			jsonObject = new JSONObject(jsonParser.parse(inputStreamReader).toString());
-			return jsonObject.optJSONObject(SapsPropertiesConstants.DATA_JSON_KEY)
-					.optJSONArray(SapsPropertiesConstants.RESULTS_JSON_KEY);
-		} catch (Exception e) {
-			LOGGER.error("Error while converting USGS response to JSON object.", e);
-		}
-		return new JSONArray();
-	}
-
-	public InputStream requestForRegions(JSONObject searchJSONObj){
-		HttpClient client = HttpClientBuilder.create().build();
-		HttpPost request = new HttpPost(usgsJsonUrl + File.separator + "v" + File.separator
-				+ USGS_SEARCH_VERSION + File.separator + "search");
-
-		StringEntity params = null;
-		try {
-			params = new StringEntity("jsonRequest=" + searchJSONObj);
-		} catch (UnsupportedEncodingException e) {
-			LOGGER.error("It's not possible add the parameter.", e);
-		}
-		request.setEntity(params);
-
-		request.addHeader("content-type", "application/x-www-form-urlencoded");
-
-		HttpResponse response = null;
-		try {
-			response = client.execute(request);
-		} catch (IOException e) {
-			LOGGER.error("Error to send request to USGS.", e);
-		}
-		HttpEntity entity = response.getEntity();
-
-
-		if (entity != null) {
-			try {
-				return entity.getContent();
-			} catch (IOException e) {
-				LOGGER.error("Error to get regions content from USGS' response.", e);
-			}
-		}
-		return null;
-	}
+        String result = builder.toString();
+        
+        LOGGER.debug("Process output (regions ID's): \n" + result);
+        
+        return result;
+    }
 }

@@ -15,6 +15,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -25,14 +27,16 @@ import org.fogbowcloud.blowout.core.model.TaskImpl;
 import org.fogbowcloud.blowout.core.model.TaskProcess;
 import org.fogbowcloud.blowout.core.model.TaskProcessImpl;
 import org.fogbowcloud.blowout.core.model.TaskState;
+import org.fogbowcloud.blowout.infrastructure.model.AbstractResource;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
-import org.fogbowcloud.blowout.pool.AbstractResource;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.blowout.pool.DefaultBlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
+import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -78,35 +82,6 @@ public class TestSapsTaskMonitor {
 	}
 
 	@Test
-	public void testProcMonTaskTimedout() throws SQLException {
-		Task fakeTask = mock(Task.class);
-		TaskProcess fakeProcess = mock(TaskProcess.class);
-
-		doReturn(TaskState.TIMEDOUT).when(fakeProcess).getStatus();
-
-		AbstractResource fakeResource = mock(AbstractResource.class);
-		doReturn(FAKE_ID).when(fakeTask).getId();
-		doReturn(FAKE_ID).when(fakeProcess).getTaskId();
-		doReturn(fakeTask).when(this.sebalTaskMonitor).getTaskById(FAKE_ID);
-		doReturn(fakeResource).when(fakeProcess).getResource();
-
-		List<TaskProcess> runningProcesses = new ArrayList<TaskProcess>();
-		runningProcesses.add(fakeProcess);
-		doReturn(runningProcesses).when(this.sebalTaskMonitor).getRunningProcesses();
-
-		Map<Task, TaskProcess> runningTasks = new HashMap<Task, TaskProcess>();
-		runningTasks.put(fakeTask, fakeProcess);
-		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
-
-		doNothing().when(sebalTaskMonitor).updateImageTaskToReady(fakeProcess);
-
-		this.sebalTaskMonitor.procMon();
-
-		verify(pool).updateResource(fakeResource, ResourceState.IDLE);
-		verify(pool, never()).updateResource(fakeResource, ResourceState.FAILED);
-	}
-
-	@Test
 	public void testProcMonTaskFailed() throws SQLException {
 		Task fakeTask = mock(Task.class);
 		TaskProcess fakeProcess = mock(TaskProcess.class);
@@ -134,35 +109,6 @@ public class TestSapsTaskMonitor {
 
 		verify(pool).updateResource(fakeResource, ResourceState.IDLE);
 		verify(pool, never()).updateResource(fakeResource, ResourceState.FAILED);
-	}
-
-	@Test
-	public void testProcMonTaskFinnished() throws SQLException {
-		Task fakeTask = mock(Task.class);
-		TaskProcess fakeProcess = mock(TaskProcess.class);
-
-		doReturn(TaskState.FINNISHED).when(fakeProcess).getStatus();
-
-		AbstractResource fakeResource = mock(AbstractResource.class);
-		doReturn(FAKE_ID).when(fakeTask).getId();
-		doReturn(FAKE_ID).when(fakeProcess).getTaskId();
-		doReturn(fakeTask).when(this.sebalTaskMonitor).getTaskById(FAKE_ID);
-		doReturn(fakeResource).when(fakeProcess).getResource();
-
-		List<TaskProcess> runningProcesses = new ArrayList<TaskProcess>();
-		runningProcesses.add(fakeProcess);
-		doReturn(runningProcesses).when(this.sebalTaskMonitor).getRunningProcesses();
-
-		Map<Task, TaskProcess> runningTasks = new HashMap<Task, TaskProcess>();
-		runningTasks.put(fakeTask, fakeProcess);
-		doReturn(runningTasks).when(this.sebalTaskMonitor).getRunningTasks();
-
-		doNothing().when(sebalTaskMonitor).updateImageTaskToFinished(fakeProcess);
-
-		this.sebalTaskMonitor.procMon();
-
-		verify(pool, never()).updateResource(fakeResource, ResourceState.FAILED);
-		verify(pool).updateResource(fakeResource, ResourceState.IDLE);
 	}
 
 	@Test
@@ -272,6 +218,7 @@ public class TestSapsTaskMonitor {
 	@Test
 	public void testProcMonTaskFailedWithMetadata() throws SQLException {
 		String taskId = "fake-id";
+		@SuppressWarnings("unchecked")
 		List<Command> commandList = mock(List.class);
 		Specification spec = mock(Specification.class);
 
@@ -279,7 +226,7 @@ public class TestSapsTaskMonitor {
 		String operatingSystem = "operating-system";
 		String kernelVersion = "kernel-version";
 
-		TaskImpl taskImpl = new TaskImpl(taskId, spec);
+		TaskImpl taskImpl = new TaskImpl(taskId, spec, UUID.randomUUID().toString());
 		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, taskId);
 		taskImpl.putMetadata(SapsTask.METADATA_EXPORT_PATH, "/fake/export/path");
 		taskImpl.putMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM, operatingSystem);
@@ -288,7 +235,7 @@ public class TestSapsTaskMonitor {
 		List<Task> tasks = new ArrayList<>();
 		tasks.add(taskImpl);
 
-		TaskProcessImpl taskProcessImpl = new TaskProcessImpl(taskId, commandList, spec);
+		TaskProcessImpl taskProcessImpl = new TaskProcessImpl(taskId, commandList, spec, UUID.randomUUID().toString());
 
 		BlowoutPool blowoutPool = new DefaultBlowoutPool();
 		blowoutPool.addTasks(tasks);
@@ -300,5 +247,139 @@ public class TestSapsTaskMonitor {
 		Assert.assertEquals(operatingSystem,
 				this.sebalTaskMonitor.getOperatingSystem(taskProcessImpl));
 		Assert.assertEquals(kernelVersion, this.sebalTaskMonitor.getKernelVersion(taskProcessImpl));
+	}
+
+	@Test
+	public void testMetadataStoreWhenTaskFinish() throws SQLException {
+		// ImageTask set
+		ImageTask imageTask = new ImageTask("task-id", "LT5", "region-53", new Date(), "link1",
+				ImageTaskState.RUNNING, ImageTask.NON_EXISTENT_DATA, 0, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), "available", "");
+
+		// Database set
+		Properties properties = new Properties();
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_username", "testuser");
+		properties.setProperty("datastore_password", "testuser");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_name", "testdb");
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+		imageStore.addImageTask(imageTask);
+		imageStore.dispatchMetadataInfo(imageTask.getTaskId());
+
+		// Task set
+		@SuppressWarnings("unchecked")
+		List<Command> commandList = mock(List.class);
+		Specification spec = mock(Specification.class);
+
+		String metadataFilePath = "/fake/export/path/" + imageTask.getTaskId()
+				+ "/metadata/outputDescription.txt";
+		String operatingSystem = "operating-system";
+		String kernelVersion = "kernel-version";
+
+		TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), spec, UUID.randomUUID().toString());
+		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, imageTask.getTaskId());
+		taskImpl.putMetadata(SapsTask.METADATA_EXPORT_PATH, "/fake/export/path");
+		taskImpl.putMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM, operatingSystem);
+		taskImpl.putMetadata(SapsTask.METADATA_WORKER_KERNEL_VERSION, kernelVersion);
+
+		List<Task> tasks = new ArrayList<>();
+		tasks.add(taskImpl);
+
+		BlowoutPool blowoutPool = new DefaultBlowoutPool();
+		blowoutPool.addTasks(tasks);
+
+		TaskProcessImpl taskProcess = new TaskProcessImpl(imageTask.getTaskId(), commandList, spec, UUID.randomUUID().toString());
+		taskProcess.setStatus(TaskState.FINISHED);
+
+		Map<Task, TaskProcess> taskProcesses = new HashMap<>();
+		taskProcesses.put(taskImpl, taskProcess);
+
+		// Task monitor set
+		SapsTaskMonitor taskMonitor = spy(new SapsTaskMonitor(blowoutPool, imageStore));
+		taskMonitor.setRunningTasks(taskProcesses);
+
+		// exercise
+		taskMonitor.procMon();
+
+		// expect
+		Assert.assertEquals(metadataFilePath,
+				imageStore.getMetadataInfo(imageTask.getTaskId(),
+						SapsPropertiesConstants.WORKER_COMPONENT_TYPE,
+						SapsPropertiesConstants.METADATA_TYPE));
+		
+		Assert.assertEquals(operatingSystem, imageStore.getMetadataInfo(imageTask.getTaskId(),
+				SapsPropertiesConstants.WORKER_COMPONENT_TYPE, SapsPropertiesConstants.OS_TYPE));
+		
+		Assert.assertEquals(kernelVersion,
+				imageStore.getMetadataInfo(imageTask.getTaskId(),
+						SapsPropertiesConstants.WORKER_COMPONENT_TYPE,
+						SapsPropertiesConstants.KERNEL_TYPE));
+	}
+	
+	@Test
+	public void testTaskTimedout() throws SQLException {
+		// ImageTask set
+		ImageTask imageTask = new ImageTask("fake-task-id", "LT5", "region-53", new Date(), "link1",
+				ImageTaskState.RUNNING, ImageTask.NON_EXISTENT_DATA, 0, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), "available", "");
+
+		// Database set
+		Properties properties = new Properties();
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_username", "testuser");
+		properties.setProperty("datastore_password", "testuser");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_name", "testdb");
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+		imageStore.addImageTask(imageTask);
+
+		List<Task> tasks = new ArrayList<>();
+
+		Specification spec = mock(Specification.class);		
+		String operatingSystem = "operating-system";
+		String kernelVersion = "kernel-version";
+		
+		TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), spec, UUID.randomUUID().toString());
+		taskImpl.putMetadata(SapsTask.METADATA_TASK_ID, imageTask.getTaskId());
+		taskImpl.putMetadata(SapsTask.METADATA_EXPORT_PATH, "/fake/export/path");
+		taskImpl.putMetadata(SapsTask.METADATA_WORKER_OPERATING_SYSTEM, operatingSystem);
+		taskImpl.putMetadata(SapsTask.METADATA_WORKER_KERNEL_VERSION, kernelVersion);
+		
+		tasks.add(taskImpl);
+
+		BlowoutPool blowoutPool = new DefaultBlowoutPool();
+		blowoutPool.addTasks(tasks);
+
+		TaskProcessImpl taskProcess = new TaskProcessImpl(imageTask.getTaskId(),
+				new ArrayList<Command>(), spec, UUID.randomUUID().toString());
+		taskProcess.setStatus(TaskState.TIMEDOUT);
+
+		Map<Task, TaskProcess> taskProcesses = new HashMap<>();
+		taskProcesses.put(taskImpl, taskProcess);
+
+		// Task monitor set
+		SapsTaskMonitor taskMonitor = spy(new SapsTaskMonitor(blowoutPool, imageStore));
+		taskMonitor.setRunningTasks(taskProcesses);
+
+		// exercise
+		taskMonitor.procMon();
+
+		// expect
+		Assert.assertEquals(ImageTaskState.FAILED,
+				imageStore.getTask(imageTask.getTaskId()).getState());
+		Assert.assertFalse(taskMonitor.getBlowoutPool().getAllTasks().contains(taskImpl));
 	}
 }

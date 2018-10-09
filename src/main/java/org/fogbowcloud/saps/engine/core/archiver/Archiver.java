@@ -216,7 +216,7 @@ public class Archiver {
 		} catch (SQLException e) {
 			LOGGER.error("Error getting " + ImageTaskState.FINISHED + " tasks from DB", e);
 		}
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	protected void archiveAndUpdateTask(ImageTask imageTask)
@@ -533,6 +533,7 @@ public class Archiver {
 		if (!generateProvenanceFile(imageTask)) {
 			return 1;
 		}
+		
 		return 0;
 	}
 

@@ -21,21 +21,21 @@ public class SapsTask {
 
 	public static final String METADATA_TASK_ID = "task_id";
 	public static final String METADATA_EXPORT_PATH = "volume_export_path";
-	private static final String METADATA_REPOS_USER = "repository_user";
-	private static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
-	private static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
-	private static final String METADATA_MOUNT_POINT = "mount_point";
-	private static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
-	private static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
-	private static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
-
-	private static final String WORKER_SANDBOX = "worker_sandbox";
-	private static final String WORKER_REMOTE_USER = "worker_remote_user";
-	private static final String WORKER_MOUNT_POINT = "worker_mount_point";
-	private static final String WORKER_EXPORT_PATH = "saps_export_path";
-	private static final String WORKER_TASK_TIMEOUT = "worker_task_timeout";
-	private static final String SAPS_WORKER_RUN_SCRIPT_PATH = "saps_worker_run_script_path";
-	private static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
+	protected static final String METADATA_REPOS_USER = "repository_user";
+	protected static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
+	protected static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
+	protected static final String METADATA_MOUNT_POINT = "mount_point";
+	protected static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
+	protected static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
+	protected static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
+	
+	protected static final String WORKER_SANDBOX = "worker_sandbox";
+	protected static final String WORKER_REMOTE_USER = "worker_remote_user";
+	protected static final String WORKER_MOUNT_POINT = "worker_mount_point";
+	protected static final String WORKER_EXPORT_PATH = "saps_export_path";
+	protected static final String WORKER_TASK_TIMEOUT = "worker_task_timeout";
+	protected static final String SAPS_WORKER_RUN_SCRIPT_PATH = "saps_worker_run_script_path";
+	protected static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
 
 	public static final String METADATA_WORKER_OPERATING_SYSTEM = "worker_operating_system";
 	public static final String METADATA_WORKER_KERNEL_VERSION = "worker_kernel_version";
@@ -66,7 +66,7 @@ public class SapsTask {
 		
 		taskImpl.putMetadata(METADATA_WORKER_OPERATING_SYSTEM,
 				properties.getProperty(SapsPropertiesConstants.WORKER_OPERATING_SYSTEM));
-		taskImpl.putMetadata(METADATA_WORKER_OPERATING_SYSTEM,
+		taskImpl.putMetadata(METADATA_WORKER_KERNEL_VERSION,
 				properties.getProperty(SapsPropertiesConstants.WORKER_KERNEL_VERSION));
 
 		// cleaning environment
@@ -100,7 +100,7 @@ public class SapsTask {
 		return taskImpl;
 	}
 
-	private static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
+	protected static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
 		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT "
 				+ localFilePath + " $SSH_USER@$HOST:" + remoteFilePath;
 	}
@@ -142,7 +142,7 @@ public class SapsTask {
 		return execScriptCommand;
 	}
 
-	private static File createScriptFile(Properties props, TaskImpl task) {
+	protected static File createScriptFile(Properties props, TaskImpl task) {
 		File tempFile = null;
 		FileOutputStream fos = null;
 		FileInputStream fis = null;

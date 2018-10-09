@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -60,7 +65,7 @@ public class InputDownloader {
 	protected static final String IMAGE_NOT_FOUND_FAILED_MSG = "Input Downloader does not found image.";
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
-
+	
 	public InputDownloader(Properties properties, String inputDownloderIp,
 			String InputDownloaderSshPort, String inputDownloaderNfsPort, String federationMember)
 			throws SQLException {
@@ -205,7 +210,11 @@ public class InputDownloader {
 			throws SQLException, IOException {
 		List<ImageTask> tasks = imageStore.getIn(ImageTaskState.FAILED);
 		for (ImageTask imageTask : tasks) {
-			deleteAllTaskFiles(imageTask,
+			deleteInputsFromDisk(imageTask,
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
+			deletePreprocessFromDisk(imageTask,
+					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
+			deleteOutputsFromDisk(imageTask,
 					properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH));
 		}
 	}
@@ -231,18 +240,17 @@ public class InputDownloader {
 	}
 
 	// This updates images in CREATED state to DOWNLOADING
-	// and sets this federation member as owner, 	
+	// and sets this federation member as owner,
 	// and then gets all images marked as DOWNLOADING
 	protected void download() throws SQLException, IOException, SapsException {
 		List<ImageTask> tasksToDownload = new ArrayList<ImageTask>();
 
 		try {
-			// TODO check if is necessary the amount of images in this method
-			tasksToDownload = this.imageStore.getImagesToDownload(this.federationMember, MAX_IMAGES_TO_DOWNLOAD);
+			tasksToDownload = this.imageStore.getImagesToDownload(this.federationMember,
+					MAX_IMAGES_TO_DOWNLOAD);
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing created tasks in Catalogue.", e);
 		} catch (IndexOutOfBoundsException e) {
-			LOGGER.error("Is not possible get the amount of images to download.", e);
 			return;
 		}
 
@@ -259,11 +267,10 @@ public class InputDownloader {
 					boolean isDownloadCompleted = downloadImage(imageTask);
 					if (isDownloadCompleted) {
 						LOGGER.info("Task " + imageTask.getTaskId() + " download is completed");
+						storeMetadata(imageTask);
 					} else {
 						LOGGER.info("Task " + imageTask.getTaskId() + " download failed");
 					}
-
-					storeMetadata(imageTask);
 				}
 			}
 		}
@@ -271,9 +278,51 @@ public class InputDownloader {
 
 	private void storeMetadata(ImageTask imageTask) throws SQLException, IOException {
 		LOGGER.info("Storing metadata into Catalogue");
-		imageStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
-				getKernelVersion(), SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE,
-				imageTask.getTaskId());
+		if (replacePathsIntoFile(imageTask) && assertMetadataRegisterExists(imageTask)) {
+			imageStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
+					getKernelVersion(), SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE,
+					imageTask.getTaskId());
+		}
+	}
+
+	private boolean assertMetadataRegisterExists(ImageTask imageTask) throws SQLException {
+		try {
+			if (!imageStore.metadataRegisterExist(imageTask.getTaskId())) {
+				LOGGER.debug("Task " + imageTask.getTaskId()
+						+ " metadata register not exist yet...Creating one");
+				imageStore.dispatchMetadataInfo(imageTask.getTaskId());
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while updating metadata register for task " + imageTask, e);
+			return false;
+		}
+
+		return true;
+	}
+
+	protected boolean replacePathsIntoFile(ImageTask imageTask) {
+		String containerInputPath = properties
+				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
+		String localInputPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
+				+ "input";
+
+		Path path = Paths.get(getMetadataFilePath(imageTask));
+		Charset charset = StandardCharsets.UTF_8;
+
+		try {
+			String content = new String(Files.readAllBytes(path), charset);
+			content = content.replaceAll(containerInputPath, localInputPath);
+			Files.write(path, content.getBytes(charset));
+		} catch (IOException e) {
+			LOGGER.error("Error while replacing " + containerInputPath + " for "
+					+ localInputPath + " in " + getMetadataFilePath(imageTask) + " file");
+			return false;
+		}
+
+		LOGGER.debug("Successfully replaced " + containerInputPath + " by " + localInputPath
+				+ " in " + getMetadataFilePath(imageTask));
+		return true;
 	}
 
 	private String getOperatingSystem() {
@@ -361,8 +410,13 @@ public class InputDownloader {
 						p.waitFor();
 
 						actualInputUsage = getProcessOutput(p);
-						String[] splited = actualInputUsage.split("\\s+");
-						actualInputUsage = splited[0];
+						
+						if (actualInputUsage != null && !actualInputUsage.isEmpty()) {
+							String[] splited = actualInputUsage.split("\\s+");
+							actualInputUsage = splited[0];
+						} else {
+							actualInputUsage = "0";
+						}
 
 						cumulativeInputUsage += Double.valueOf(actualInputUsage);
 					} catch (Exception e) {
@@ -417,10 +471,11 @@ public class InputDownloader {
 			// Getting Input Downloader docker repository and tag
 			ExecutionScriptTag inputDownloaderDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(
 					imageTask.getInputGatheringTag(), ExecutionScriptTagUtil.INPUT_DOWNLOADER);
-			
+
 			DockerUtil.pullImage(inputDownloaderDockerInfo.getDockerRepository(),
 					inputDownloaderDockerInfo.getDockerTag());
 
+			@SuppressWarnings("unchecked")
 			Map<String, String> hostAndContainerDirMap = new HashedMap();
 			hostAndContainerDirMap.put(inputDirPath, properties
 					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH));
@@ -431,13 +486,22 @@ public class InputDownloader {
 					inputDownloaderDockerInfo.getDockerRepository(),
 					inputDownloaderDockerInfo.getDockerTag(), hostAndContainerDirMap);
 
-			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
-					+ " " + imageTask.getDataset() + " " + imageTask.getRegion() + " "
-					+ dateFormater.format(imageTask.getImageDate()) + " "
-					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH + " " 
-					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH));
+			String dataset = formatDataSet(imageTask.getDataset());
 
-			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
+			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT)
+					+ " " + dataset + " " + imageTask.getRegion() + " "
+					+ dateFormater.format(imageTask.getImageDate()) + " "
+					+ properties
+							.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH)
+					+ " " + properties.getProperty(
+							SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
+
+			LOGGER.debug("Command: " + commandToRun);
+
+			String usgsEnvVars = "-e USGS_USERNAME=" + properties.getProperty(SapsPropertiesConstants.USGS_USERNAME)
+					+ " -e USGS_PASSWORD=" + properties.getProperty(SapsPropertiesConstants.USGS_PASSWORD);
+
+			int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, usgsEnvVars, commandToRun);
 			DockerUtil.removeContainer(containerId);
 
 			if (dockerExecExitValue == OK_SCRIPT_CODE) {
@@ -482,6 +546,16 @@ public class InputDownloader {
 		return false;
 	}
 
+	private String formatDataSet(String dataset) {
+		if (dataset.equals(SapsPropertiesConstants.LANDSAT_5_DATASET)) {
+			return SapsPropertiesConstants.DATASET_LT5_TYPE;
+		} else if (dataset.equals(SapsPropertiesConstants.LANDSAT_7_DATASET)) {
+			return SapsPropertiesConstants.DATASET_LE7_TYPE;
+		} else {
+			return SapsPropertiesConstants.DATASET_LC8_TYPE;
+		}
+	}
+
 	protected void prepareTaskDirStructure(ImageTask imageTask) throws Exception {
 		LOGGER.info("Creating directory structure for task" + imageTask.getTaskId());
 
@@ -506,11 +580,46 @@ public class InputDownloader {
 		File metadataDir = new File(metadataDirPath);
 		File logsDir = new File(logsDirPath);
 
-		if (!inputDir.mkdirs() || !outputDir.mkdirs() || !preProcessDir.mkdirs()
-				|| !logsDir.mkdirs() || !metadataDir.mkdirs()) {
+		if (!createDirectories(imageTask, inputDir, outputDir, preProcessDir, metadataDir,
+				logsDir)) {
 			throw new Exception(
 					"Error while creating directories for task " + imageTask.getTaskId());
 		}
+	}
+
+	protected boolean createDirectories(ImageTask imageTask, File inputDir, File outputDir,
+			File preProcessDir, File metadataDir, File logsDir) throws Exception {
+		try {
+			if (!inputDir.exists()) {
+				LOGGER.debug("Creating directory: " + inputDir.getAbsolutePath());
+				inputDir.mkdirs();
+			}
+
+			if (!outputDir.exists()) {
+				LOGGER.debug("Creating directory: " + outputDir.getAbsolutePath());
+				outputDir.mkdirs();
+			}
+
+			if (!preProcessDir.exists()) {
+				LOGGER.debug("Creating directory: " + preProcessDir.getAbsolutePath());
+				preProcessDir.mkdirs();
+			}
+
+			if (!metadataDir.exists()) {
+				LOGGER.debug("Creating directory: " + metadataDir.getAbsolutePath());
+				metadataDir.mkdirs();
+			}
+
+			if (!logsDir.exists()) {
+				LOGGER.debug("Creating directory: " + logsDir.getAbsolutePath());
+				logsDir.mkdirs();
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while creating directories for task " + imageTask.getTaskId());
+			return false;
+		}
+
+		return true;
 	}
 
 	protected void updateTaskStatus(ImageTask imageTask, String status) {
@@ -537,6 +646,33 @@ public class InputDownloader {
 		} catch (SQLException e) {
 			LOGGER.debug("Error while updating " + imageTask + ".");
 		}
+	}
+	
+	private void deleteInputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
+		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "input";
+		File inputDir = new File(inputDirPath);
+
+		if (!inputDir.exists() || !inputDir.isDirectory()) {
+			return;
+		}
+
+		LOGGER.debug("Deleting input for " + imageTask + " from " + inputDirPath);
+		FileUtils.deleteDirectory(inputDir);
+	}
+
+	private void deletePreprocessFromDisk(ImageTask imageTask, String exportPath)
+			throws IOException {
+		String preProcessDirPath = exportPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+		File preProcessDir = new File(preProcessDirPath);
+
+		if (!preProcessDir.exists() || !preProcessDir.isDirectory()) {
+			return;
+		}
+
+		LOGGER.debug("Deleting input for " + imageTask + " from " + preProcessDirPath);
+		FileUtils.deleteDirectory(preProcessDir);
 	}
 
 	private void deleteOutputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
@@ -717,5 +853,4 @@ public class InputDownloader {
 	public void setPendingTaskMap(ConcurrentMap<String, ImageTask> pendingTaskDownloadMap) {
 		this.pendingTaskDownloadMap = pendingTaskDownloadMap;
 	}
-	
 }

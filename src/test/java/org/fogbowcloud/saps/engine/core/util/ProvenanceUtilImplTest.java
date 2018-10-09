@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.core.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -61,13 +62,16 @@ public class ProvenanceUtilImplTest {
 				preprocessingMetadata, preprocessingOperatingSystem, preprocessingKernelVersion,
 				outputMetadata, outputOperatingSystem, outputKernelVersion);
 
-		String outputFile = "/tmp/prov-test-file.provn";
-		provUtilImpl.writePROVNProvenanceFile(document, outputFile);
+		String outputFilePath = "/tmp/prov-test-file.provn";
+		File outputFile = new File(outputFilePath);
+		
+		provUtilImpl.writePROVNProvenanceFile(document, outputFilePath);
 
-		BufferedReader br = new BufferedReader(new FileReader(outputFile));
+		BufferedReader br = new BufferedReader(new FileReader(outputFilePath));
 
 		Assert.assertNotNull(br.readLine());
 
 		br.close();
+		outputFile.delete();
 	}
 }

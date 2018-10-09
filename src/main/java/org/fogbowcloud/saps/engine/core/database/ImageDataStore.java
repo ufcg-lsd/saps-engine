@@ -74,8 +74,8 @@ public interface ImageDataStore {
 	boolean isUserNotifiable(String userEmail) throws SQLException;
 
 	boolean deployConfigExists(String federationMember) throws SQLException;
-
-	boolean taskExist(String taskId) throws SQLException;
+	
+	boolean metadataRegisterExist(String taskId) throws SQLException;
 
 	List<Submission> getAllSubmissions() throws SQLException;
 
@@ -118,4 +118,12 @@ public interface ImageDataStore {
 
 	List<ImageTask> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
 			long processDateEnd) throws SQLException;
+
+	public List<ImageTask> getProcessedImages(
+			String region,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) throws SQLException;
 }

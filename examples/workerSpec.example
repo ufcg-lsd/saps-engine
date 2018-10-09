@@ -1,0 +1,11 @@
+[
+{"image":"fogbow-sebal-image-v4",
+ "username":"fogbow",
+ "publicKey":"/home/ubuntu/keys/scheduler_key_rsa.pub",
+ "privateKeyFilePath":"/home/ubuntu/keys/scheduler_key_rsa",
+ "requirements":{
+	"FogbowRequirements":"Glue2vCPU >= 8 && Glue2RAM >= 28672 && Glue2Disk >= 140",
+	"RequestType":"one-time"
+	}
+}
+]

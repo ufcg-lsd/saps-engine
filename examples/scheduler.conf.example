@@ -8,7 +8,7 @@ datastore_username=user
 datastore_password=password
 
 ##### Sebal Task Configuration #####
-infra_initial_specs_file_path=config/workerSpec
+infra_initial_specs_file_path=/path/to/workerSpec
 
 worker_sandbox=/tmp/sandbox
 worker_raster_tmp_dir=/mnt/rasterTmp
@@ -50,7 +50,7 @@ infra_resource_idle_lifetime=120000
 max_resource_reuse=10000
 max_resource_connection_retry=4
 infra_monitor_period=30000
-local_command_interpreter=/home/ubuntu/blowout/scripts/su_command
+su_command_path=/home/ubuntu/blowout/scripts/su_command
 
 ##### AUTH TOKEN PROPERTIES - LDAP example #####
 infra_auth_token_update_plugin=org.fogbowcloud.blowout.infrastructure.token.LDAPTokenUpdatePlugin

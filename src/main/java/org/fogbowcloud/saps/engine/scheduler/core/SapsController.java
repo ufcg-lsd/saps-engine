@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
@@ -48,8 +50,8 @@ public class SapsController extends BlowoutController {
 		try {
 			if (!checkProperties(properties)) {
 				throw new SapsException("Error on validate the file");
-			} else if (getBlowoutVersion(properties).isEmpty()
-					|| getBlowoutVersion(properties) == null) {
+			} else if (getBlowoutVersion(properties) == null || 
+				getBlowoutVersion(properties).isEmpty()) {
 				throw new SapsException("Error while reading blowout version file");
 			}
 		} catch (Exception e) {
@@ -100,7 +102,7 @@ public class SapsController extends BlowoutController {
 		getResourceMonitor().start();
 
 		setSchedulerInterface(createSchedulerInstance(getTaskMonitor()));
-		setInfraManager(createInfraManagerInstance());
+		setInfraManager(createInfraManagerInstance(getInfraProvider(), getResourceMonitor()));
 
 		getBlowoutPool().start(getInfraManager(), getSchedulerInterface());
 	}
@@ -144,12 +146,17 @@ public class SapsController extends BlowoutController {
 
 				if (ImageTaskState.READY.equals(imageTaskState)
 						|| ImageTaskState.PREPROCESSED.equals(imageTaskState)) {
-					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation);
+					
+					TaskImpl taskImpl = new TaskImpl(imageTask.getTaskId(), specWithFederation,
+							UUID.randomUUID().toString());
+					
 					Map<String, String> nfsConfig = imageStore
 							.getFederationNFSConfig(imageTask.getFederationMember());
 
+					@SuppressWarnings("rawtypes")
 					Iterator it = nfsConfig.entrySet().iterator();
 					while (it.hasNext()) {
+						@SuppressWarnings("rawtypes")
 						Map.Entry pair = (Map.Entry) it.next();
 						nfsServerIP = pair.getKey().toString();
 						nfsServerPort = pair.getValue().toString();
@@ -188,8 +195,9 @@ public class SapsController extends BlowoutController {
 		}
 	}
 
+
 	private void addTask(TaskImpl taskImpl) throws SapsException {
-		if (!started) {
+		if (!super.started) {
 			throw new SapsException(
 					"Error while adding new task. BlowoutController not started yet.");
 		}

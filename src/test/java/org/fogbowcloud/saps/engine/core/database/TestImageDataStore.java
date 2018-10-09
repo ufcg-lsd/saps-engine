@@ -51,6 +51,9 @@ public class TestImageDataStore {
 
 		Assert.assertTrue(imageTaskList.size() == 0);
 		
+		List<ImageTask> imageTaskList = this.imageStore.getImagesToDownload(federationMember, limit);
+		Assert.assertTrue(imageTaskList.size() == 0);		
+		
 		ImageTask taskOne = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
 				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE", new Timestamp(
 						new java.util.Date().getTime()), new Timestamp(
@@ -105,8 +108,10 @@ public class TestImageDataStore {
 
 		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
 		ImageTask task = new ImageTask("task-id-1", "LT5", "region-53", date, "link1",
-				ImageTaskState.CREATED, "NE", 0, "NE", "NE", "NE", "NE", "NE", "NE",
-				new Timestamp(new java.util.Date().getTime()),
+				ImageTaskState.CREATED, ImageTask.NON_EXISTENT_DATA, 0, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, new Timestamp(new java.util.Date().getTime()),
 				new Timestamp(new java.util.Date().getTime()), "available", "");
 
 		imageStore.dispatchMetadataInfo(task.getTaskId());
@@ -123,5 +128,46 @@ public class TestImageDataStore {
 		Assert.assertEquals(metadataFilePath, metadataInfo);
 		Assert.assertEquals(operatingSystem, osInfo);
 		Assert.assertEquals(kernelVersion, kernelInfo);
+	}
+	
+	@Test
+	public void testMetadataRegisterExist() throws SQLException {
+		String fakeTaskId = "fake-task-id-exist";
+
+		Properties properties = new Properties();
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_username", "testuser");
+		properties.setProperty("datastore_password", "testuser");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_name", "testdb");
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+		imageStore.dispatchMetadataInfo(fakeTaskId);
+		
+		boolean exist = imageStore.metadataRegisterExist(fakeTaskId);
+		
+		Assert.assertTrue(exist);
+	}
+	
+	@Test
+	public void testMetadataRegisterNotExist() throws SQLException {
+		String fakeTaskId = "fake-task-id-not-exist";
+
+		Properties properties = new Properties();
+		properties.setProperty("datastore_ip", "");
+		properties.setProperty("datastore_port", "");
+		properties.setProperty("datastore_url_prefix", "jdbc:h2:mem:testdb");
+		properties.setProperty("datastore_username", "testuser");
+		properties.setProperty("datastore_password", "testuser");
+		properties.setProperty("datastore_driver", "org.h2.Driver");
+		properties.setProperty("datastore_name", "testdb");
+
+		JDBCImageDataStore imageStore = new JDBCImageDataStore(properties);
+
+		boolean exist = imageStore.metadataRegisterExist(fakeTaskId);
+
+		Assert.assertFalse(exist);
 	}
 }

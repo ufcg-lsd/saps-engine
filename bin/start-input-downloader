@@ -7,13 +7,13 @@ federation_member=
 
 while [ true ]
 do
-  if pgrep -x "java" > /dev/null
+  if (( $(ps -ef | grep -v grep | grep InputDownloaderMain | wc -l) > 0 ))
   then
-    java_pid="$(pidof java)"
-    sudo kill -9 $java_pid
-    sleep 10
+    echo "Input Downloader is still running"
+  else
+    echo "Input Downloader is down. Starting it again..."
+  sudo java -Dlog4j.configuration=file:$sebal_engine_dir_path/config/log4j.properties -cp target/saps-engine-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.saps.engine.core.downloader.InputDownloaderMain $sebal_engine_dir_path/config/downloader.conf $downloader_ip $downloader_ssh_port $downloader_nfs_port $federation_member &
   fi
 
-  sudo java -Dlog4j.configuration=file:$sebal_engine_dir_path/config/log4j.properties -cp target/saps-engine-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.saps.engine.core.downloader.InputDownloaderMain $sebal_engine_dir_path/config/downloader.conf $downloader_ip $downloader_ssh_port $downloader_nfs_port $federation_member &
   sleep 10m
 done

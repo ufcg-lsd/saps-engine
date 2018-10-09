@@ -91,7 +91,7 @@ public class TestInputDownloaderIntegration {
 		for (String pendingTask : pendingTasks) {
 			File pendingImageDBFile = new File(pendingTask);
 			if (pendingImageDBFile.exists()) {
-				FileUtils.deleteQuietly(pendingImageDBFile);
+				pendingImageDBFile.delete();
 			}
 		}
 	}
@@ -99,6 +99,7 @@ public class TestInputDownloaderIntegration {
 	@Test
 	public void testStepOverImageWhenDownloadFails()
 			throws SQLException, IOException, InterruptedException, SapsException {
+		clean();
 
 		// 1. we have 2 NOT_DOWNLOADED images, pendingDB is empty
 		// 2. we proceed to download them
@@ -149,6 +150,8 @@ public class TestInputDownloaderIntegration {
 	@Test
 	public void testinputDownloaderErrorWhileGetCreatedImages()
 			throws SQLException, IOException, SapsException {
+		clean();
+		
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -173,6 +176,8 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testPurgeImagesFromVolume() throws SQLException, IOException, InterruptedException {
+		clean();
+		
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -210,6 +215,8 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testFederationMemberCheck() throws SQLException, IOException, InterruptedException {
+		clean();
+		
 		// setup
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
@@ -251,6 +258,8 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testPendingTaskMap() throws SQLException, IOException {
+		clean();
+		
 		Properties properties = mock(Properties.class);
 		ImageDataStore imageStore = mock(JDBCImageDataStore.class);
 		String inputDownloaderIP = "fake-inputDownloader-ip";
@@ -274,8 +283,11 @@ public class TestInputDownloaderIntegration {
 		Assert.assertEquals(task, pendingTaskMap.get(task.getTaskId()));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFailsAndRemovesImage() throws Exception {
+		clean();
+		
 		Properties properties = new Properties();
 		setUpProperties(properties);
 
@@ -299,6 +311,22 @@ public class TestInputDownloaderIntegration {
 				inputDownloaderIP, inputDownloaderPort, nfsPort, federationMember));
 		
 		doNothing().when(inputDownloader).prepareTaskDirStructure(Mockito.any(ImageTask.class));
+		PowerMockito.mockStatic(ExecutionScriptTagUtil.class);
+		ExecutionScriptTag executionScriptTag = new ExecutionScriptTag("", "", "", "");
+		BDDMockito.given(ExecutionScriptTagUtil.getExecutionScritpTag(Mockito.anyString(),
+				Mockito.anyString())).willReturn(executionScriptTag);
+
+		PowerMockito.mockStatic(DockerUtil.class);
+		boolean notImportantBoolean = true;
+		BDDMockito.given(DockerUtil.pullImage(Mockito.anyString(), Mockito.anyString()))
+				.willReturn(notImportantBoolean);
+		String containerId = "1";
+		BDDMockito.given(DockerUtil.runMappedContainer(Mockito.anyString(), Mockito.anyString(),
+				Mockito.anyMap())).willReturn(containerId);
+		BDDMockito.given(DockerUtil.execDockerCommand(Mockito.eq(containerId), Mockito.anyString(),Mockito.anyString()))
+				.willReturn(1);
+		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString()))
+				.willReturn(notImportantBoolean);
 
 		Assert.assertEquals(0, imageStore.getIn(ImageTaskState.FAILED).size()); // There's no failed
 																				// image tasks
@@ -326,6 +354,8 @@ public class TestInputDownloaderIntegration {
 
 	@Test
 	public void testTaskChangingState() throws Exception {
+		clean();
+		
 		Properties properties = new Properties();
 		setUpProperties(properties);
 
@@ -371,43 +401,190 @@ public class TestInputDownloaderIntegration {
 	}
 
 	@Test
-	public void testDownloadImageNotFoundImage() throws Exception {		
-		Mockito.doNothing().when(this.inputDownloaderDefault).prepareTaskDirStructure(Mockito.eq(this.imageTaskDefault));
-		
-        PowerMockito.mockStatic(ExecutionScriptTagUtil.class);
-        ExecutionScriptTag executionScriptTag = new ExecutionScriptTag("", "", "", "");
-		BDDMockito.given(ExecutionScriptTagUtil.getExecutionScritpTag(
-        		Mockito.anyString(), Mockito.anyString())).willReturn(executionScriptTag);
-		
+	public void testDownloadImageNotFoundImage() throws Exception {
+		clean();
+
+		Mockito.doNothing().when(this.inputDownloaderDefault)
+				.prepareTaskDirStructure(Mockito.eq(this.imageTaskDefault));
+
+		PowerMockito.mockStatic(ExecutionScriptTagUtil.class);
+		ExecutionScriptTag executionScriptTag = new ExecutionScriptTag("", "", "", "");
+		BDDMockito.given(ExecutionScriptTagUtil.getExecutionScritpTag(Mockito.anyString(),
+				Mockito.anyString())).willReturn(executionScriptTag);
+
 		PowerMockito.mockStatic(DockerUtil.class);
 		boolean notImportantBoolean = true;
-		BDDMockito.given(DockerUtil.pullImage(Mockito.anyString(), Mockito.anyString())).willReturn(notImportantBoolean);
+		BDDMockito.given(DockerUtil.pullImage(Mockito.anyString(), Mockito.anyString()))
+				.willReturn(notImportantBoolean);
 		String containerId = "1";
+
+		BDDMockito.given(DockerUtil.runMappedContainer(Mockito.anyString(), Mockito.anyString(),
+				Mockito.anyMapOf(String.class, String.class))).willReturn(containerId);
+		BDDMockito.given(DockerUtil.execDockerCommand(Mockito.eq(containerId), Mockito.anyString(), Mockito.anyString()))
+				.willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
+		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString()))
+				.willReturn(notImportantBoolean);
+
 		BDDMockito.given(DockerUtil.runMappedContainer(
 				Mockito.anyString(), Mockito.anyString(), Mockito.anyMap())).willReturn(containerId);
 		BDDMockito.given(DockerUtil.execDockerCommand(
-				Mockito.eq(containerId), Mockito.anyString())).willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
+				Mockito.eq(containerId), Mockito.anyString() ,Mockito.anyString())).willReturn(InputDownloader.NOT_FOUNT_SCRIPT_CODE);
 		BDDMockito.given(DockerUtil.removeImage(Mockito.anyString())).willReturn(notImportantBoolean);
-		
+
 		DB pendingTaskDB = this.inputDownloaderDefault.getPendingTaskDB();
-		ConcurrentMap<String, ImageTask> pendingTaskMap = this.inputDownloaderDefault.getPendingTaskMap();
-		
+		ConcurrentMap<String, ImageTask> pendingTaskMap = this.inputDownloaderDefault
+				.getPendingTaskMap();
+
 		Assert.assertEquals(0, pendingTaskMap.values().size());
-		
+
 		pendingTaskMap.put(this.imageTaskDefault.getTaskId(), this.imageTaskDefault);
 		pendingTaskDB.commit();
-		
+
 		Assert.assertEquals(1, pendingTaskMap.values().size());
 		Assert.assertEquals(ImageTask.AVAILABLE, this.imageTaskDefault.getStatus());
-		
-		boolean returnDownloadImage = this.inputDownloaderDefault.downloadImage(this.imageTaskDefault);
-		
+
+		boolean returnDownloadImage = this.inputDownloaderDefault
+				.downloadImage(this.imageTaskDefault);
+
 		Assert.assertFalse(returnDownloadImage);
 		Assert.assertEquals(0, pendingTaskMap.values().size());
 		Mockito.verify(this.inputDownloaderDefault).updateTaskStateToFailed(
-				Mockito.eq(this.imageTaskDefault), Mockito.eq(InputDownloader.IMAGE_NOT_FOUND_FAILED_MSG));
+				Mockito.eq(this.imageTaskDefault),
+				Mockito.eq(InputDownloader.IMAGE_NOT_FOUND_FAILED_MSG));
 		Mockito.verify(this.inputDownloaderDefault).updateTaskStatus(
-				Mockito.eq(this.imageTaskDefault), Mockito.eq(ImageTask.UNAVAILABLE));		
+				Mockito.eq(this.imageTaskDefault), Mockito.eq(ImageTask.UNAVAILABLE));
+	}
+	
+	@Test
+	public void testDirectorySetUp() throws Exception {
+		// Image task info
+		String taskId = "fake-task-id";
+		String dataset = "fake-dataset";
+		String region = "fake-region";
+		String downloadLink = "link1";
+		String federationMember = "fake-task-id";
+		String status = "available";
+
+		ImageTask imageTask = new ImageTask(taskId, dataset, region, new java.util.Date(),
+				downloadLink, ImageTaskState.CREATED, federationMember, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), status, "");
+
+		// Input downloader info
+		String inputDownloderIp = "fake-ip";
+		String InputDownloaderSshPort = "fake-ssh-port";
+		String inputDownloaderNfsPort = "fake-nfs-port";
+
+		Properties properties = new Properties();
+		setUpProperties(properties);
+
+		InputDownloader inputDownloader = new InputDownloader(properties, inputDownloderIp,
+				InputDownloaderSshPort, inputDownloaderNfsPort, federationMember);
+
+		// Expected paths and files
+		String exportDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+		String inputDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "input";
+		String outputDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "output";
+		String preProcessDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+		String logsDirPath = exportDirPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "logs";
+		String metadataDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "metadata";
+
+		File inputDir = new File(inputDirPath);
+		File outputDir = new File(outputDirPath);
+		File preProcessDir = new File(preProcessDirPath);
+		File metadataDir = new File(metadataDirPath);
+		File logsDir = new File(logsDirPath);
+
+		// Exercise
+		inputDownloader.prepareTaskDirStructure(imageTask);
+
+		// Assert
+		Assert.assertTrue(inputDir.exists());
+		Assert.assertTrue(outputDir.exists());
+		Assert.assertTrue(preProcessDir.exists());
+		Assert.assertTrue(metadataDir.exists());
+		Assert.assertTrue(logsDir.exists());
+
+		// Cleaning env
+		String taskDirPath = exportDirPath + File.separator + imageTask.getTaskId();
+		FileUtils.deleteDirectory(new File(taskDirPath));
+	}
+
+	@Test
+	public void testDirectorySetUpWhenAlreadyExists() throws Exception {
+		// Image task info
+		String taskId = "fake-task-id";
+		String dataset = "fake-dataset";
+		String region = "fake-region";
+		String downloadLink = "link1";
+		String federationMember = "fake-task-id";
+		String status = "available";
+
+		ImageTask imageTask = new ImageTask(taskId, dataset, region, new java.util.Date(),
+				downloadLink, ImageTaskState.CREATED, federationMember, 0,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				ImageTask.NON_EXISTENT_DATA, ImageTask.NON_EXISTENT_DATA,
+				new Timestamp(new java.util.Date().getTime()),
+				new Timestamp(new java.util.Date().getTime()), status, "");
+
+		// Input downloader info
+		String inputDownloderIp = "fake-ip";
+		String InputDownloaderSshPort = "fake-ssh-port";
+		String inputDownloaderNfsPort = "fake-nfs-port";
+
+		Properties properties = new Properties();
+		setUpProperties(properties);
+
+		InputDownloader inputDownloader = new InputDownloader(properties, inputDownloderIp,
+				InputDownloaderSshPort, inputDownloaderNfsPort, federationMember);
+
+		// Expected paths and files
+		String exportDirPath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+		String inputDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "input";
+		String outputDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "output";
+		String preProcessDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+		String logsDirPath = exportDirPath + File.separator + imageTask.getTaskId() + File.separator
+				+ "data" + File.separator + "logs";
+		String metadataDirPath = exportDirPath + File.separator + imageTask.getTaskId()
+				+ File.separator + "metadata";
+
+		File inputDir = new File(inputDirPath);
+		File outputDir = new File(outputDirPath);
+		File preProcessDir = new File(preProcessDirPath);
+		File metadataDir = new File(metadataDirPath);
+		File logsDir = new File(logsDirPath);
+
+		inputDir.mkdirs();
+		outputDir.mkdirs();
+		preProcessDir.mkdirs();
+		metadataDir.mkdirs();
+		logsDir.mkdirs();
+
+		// Exercise
+		inputDownloader.prepareTaskDirStructure(imageTask);
+
+		// Assert
+		Assert.assertTrue(inputDir.exists());
+		Assert.assertTrue(outputDir.exists());
+		Assert.assertTrue(preProcessDir.exists());
+		Assert.assertTrue(metadataDir.exists());
+		Assert.assertTrue(logsDir.exists());
+
+		// Cleaning env
+		String taskDirPath = exportDirPath + File.separator + imageTask.getTaskId();
+		FileUtils.deleteDirectory(new File(taskDirPath));
 	}
 	
 	private void setUpProperties(Properties properties) {

@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
@@ -49,8 +54,7 @@ public class PreProcessorImpl implements PreProcessor {
 
 			String hostPreProcessingPath = this.getHostPreProcessingPath(imageTask);
 
-			String containerPreProcessingPath = this.properties
-					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
+			String containerPreProcessingPath = this.getConteinerPreProcessingPath();
 
 			this.createPreProcessingHostPath(hostPreProcessingPath);
 
@@ -59,10 +63,8 @@ public class PreProcessorImpl implements PreProcessor {
 			String containerMetadataPath = this.properties
 					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
 
-			@SuppressWarnings("unchecked")
-			Map<String, String> hostAndContainerDirMap = new HashedMap();
-			hostAndContainerDirMap.put(hostPreProcessingPath, containerPreProcessingPath);
-			hostAndContainerDirMap.put(hostMetadataPath, containerMetadataPath);
+			Map<String, String> hostAndContainerDirMap = getHostContainerMap(hostPreProcessingPath,
+					containerPreProcessingPath, hostMetadataPath, containerMetadataPath);
 
 			String containerId = this.raiseContainer(preProcessorTags, imageTask,
 					hostAndContainerDirMap);
@@ -76,6 +78,21 @@ public class PreProcessorImpl implements PreProcessor {
 					"Failed in the preprocessing of Image Task [" + imageTask.getTaskId() + "]", e);
 		}
 
+	}
+
+	protected Map<String, String> getHostContainerMap(String hostPreProcessingPath,
+			String containerPreProcessingPath, String hostMetadataPath,
+			String containerMetadataPath) {
+		@SuppressWarnings("unchecked")
+		Map<String, String> hostAndContainerDirMap = new HashedMap();
+		hostAndContainerDirMap.put(hostPreProcessingPath, containerPreProcessingPath);
+		hostAndContainerDirMap.put(hostMetadataPath, containerMetadataPath);
+		return hostAndContainerDirMap;
+	}
+
+	protected String getConteinerPreProcessingPath() {
+		return this.properties
+				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
 	}
 
 	@Override
@@ -130,7 +147,7 @@ public class PreProcessorImpl implements PreProcessor {
 		return containerId;
 	}
 
-	private void createPreProcessingHostPath(String hostPath) throws Exception {
+	protected void createPreProcessingHostPath(String hostPath) throws Exception {
 		File file = new File(hostPath);
 		if (!file.exists()) {
 			LOGGER.info("Creating directory [" + hostPath + "]");
@@ -148,7 +165,10 @@ public class PreProcessorImpl implements PreProcessor {
 		this.imageDataStore.updateTaskState(imageTaskId, ImageTaskState.PREPROCESSING);
 		addStateStamp(imageTaskId);
 
-		int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, commandToRun);
+		String usgsEnvVars = "-e USGS_USERNAME=" + properties.getProperty(SapsPropertiesConstants.USGS_USERNAME)
+				+ " -e USGS_PASSWORD=" + properties.getProperty(SapsPropertiesConstants.USGS_PASSWORD);
+
+		int dockerExecExitValue = DockerUtil.execDockerCommand(containerId, usgsEnvVars, commandToRun);
 
 		if (!DockerUtil.removeContainer(containerId)) {
 			LOGGER.error("Error while trying to stop Container [" + containerId + "]");
@@ -185,9 +205,51 @@ public class PreProcessorImpl implements PreProcessor {
 	
 	private void storeMetadata(ImageTask imageTask) throws SQLException, IOException {
 		LOGGER.info("Storing metadata into Catalogue");
-		imageDataStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
-				getKernelVersion(), SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
-				imageTask.getTaskId());
+		if (replacePathsIntoFile(imageTask) && assertMetadataRegisterExists(imageTask)) {
+			imageDataStore.updateMetadataInfo(getMetadataFilePath(imageTask), getOperatingSystem(),
+					getKernelVersion(), SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE,
+					imageTask.getTaskId());
+		}
+	}
+	
+	private boolean assertMetadataRegisterExists(ImageTask imageTask) throws SQLException {
+		try {
+			if (!imageDataStore.metadataRegisterExist(imageTask.getTaskId())) {
+				LOGGER.debug("Task " + imageTask.getTaskId()
+						+ " metadata register not exist yet...Creating one");
+				imageDataStore.dispatchMetadataInfo(imageTask.getTaskId());
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while updating metadata register for task " + imageTask, e);
+			return false;
+		}
+
+		return true;
+	}
+
+	protected boolean replacePathsIntoFile(ImageTask imageTask) {
+		String containerPreprocessPath = properties
+				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
+		String localPreprocessPath = properties.getProperty(
+				SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator + imageTask.getTaskId()
+				+ File.separator + "data" + File.separator + "preprocessing";
+
+		Path path = Paths.get(getMetadataFilePath(imageTask));
+		Charset charset = StandardCharsets.UTF_8;
+
+		try {
+			String content = new String(Files.readAllBytes(path), charset);
+			content = content.replaceAll(containerPreprocessPath, localPreprocessPath);
+			Files.write(path, content.getBytes(charset));
+		} catch (IOException e) {
+			LOGGER.error("Error while replacing " + containerPreprocessPath + " for "
+					+ localPreprocessPath + " in " + getMetadataFilePath(imageTask) + " file");
+			return false;
+		}
+
+		LOGGER.debug("Successfully replaced " + containerPreprocessPath + " by " + localPreprocessPath
+				+ " in " + getMetadataFilePath(imageTask));
+		return true;
 	}
 
 	private String getMetadataFilePath(ImageTask imageTask) {

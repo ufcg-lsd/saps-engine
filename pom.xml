@@ -74,11 +74,11 @@
 			<id>maven-fogbow</id>
 			<url>https://github.com/fogbow/mvn-repo/raw/master/releases/</url>
 		</repository>
-		<repository>
+		<!-- <repository>
             <id>mvn.prov.toolbox.snapshots</id>
       		<name>maven snapshot repository for PROV toolbox</name>
       		<url>http://openprovenance.org/java/maven-snapshots/</url>
-    	</repository>
+    	</repository> -->
 	</repositories>
 
 	<dependencies>
@@ -99,6 +99,7 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
 			<version>1.10.19</version>
+			<scope>test</scope>
 		</dependency>
 		
 		<dependency>
@@ -114,7 +115,7 @@
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.fogbowcloud</groupId>
 			<artifactId>manager</artifactId>
@@ -123,6 +124,22 @@
 				<exclusion>
 					<groupId>org.opennebula</groupId>
 					<artifactId>client</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.restlet.jee</groupId>
+					<artifactId>org.restlet</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.restlet.jee</groupId>
+					<artifactId>org.restlet.ext.slf4j</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.restlet.jee</groupId>
+					<artifactId>org.restlet.ext.jsslutils</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.restlet.jee</groupId>
+					<artifactId>org.restlet.ext.jetty</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -137,7 +154,6 @@
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
 			<version>20090211</version>
-			<type>pom.lastUpdated</type>
 		</dependency>
 		
 		 <dependency>
@@ -156,25 +172,42 @@
 			<artifactId>httpmime</artifactId>
 			<version>4.5</version>
 		</dependency>
-				
+
 		<dependency>
 			<groupId>org.restlet.jse</groupId>
 			<artifactId>org.restlet</artifactId>
-			<version>2.2.0</version>
+			<version>2.3.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.restlet.jse</groupId>
 			<artifactId>org.restlet.ext.jackson</artifactId>
-			<version>2.2.0</version>
+			<version>2.3.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.restlet.jse</groupId>
 			<artifactId>org.restlet.ext.freemarker</artifactId>
-			<version>2.2.0</version>
+			<version>2.3.0</version>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>org.restlet.jee</groupId>
+			<artifactId>org.restlet.ext.slf4j</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restlet.jee</groupId>
+			<artifactId>org.restlet.ext.jsslutils</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.jetty</artifactId>
+			<version>2.3.0</version>
+		</dependency>
 				
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -204,7 +237,8 @@
 			<artifactId>mapdb</artifactId>
 			<version>1.0.9</version>
 		</dependency>
-		
+
+
 		<dependency>
       		<groupId>org.openprovenance.prov</groupId>
       		<artifactId>prov-model</artifactId>

@@ -232,6 +232,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
+	private java.sql.Date javaDateToSqlDate(Date date) {
+		return new java.sql.Date(date.getTime());
+	}
+
 	@Override
 	public ImageTask addImageTask(String taskId, String dataset, String region, Date date,
 			String downloadLink, int priority, String inputGathering, String inputPreprocessing,
@@ -276,7 +280,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(1, imageTask.getTaskId());
 			insertStatement.setString(2, imageTask.getDataset());
 			insertStatement.setString(3, imageTask.getRegion());
-			insertStatement.setDate(4, new java.sql.Date(imageTask.getImageDate().getTime()));
+			insertStatement.setDate(4, javaDateToSqlDate(imageTask.getImageDate()));
 			insertStatement.setString(5, imageTask.getDownloadLink());
 			insertStatement.setString(6, imageTask.getState().getValue());
 			insertStatement.setString(7, imageTask.getFederationMember());
@@ -417,8 +421,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public void updateMetadataInfo(String metadataFilePath, String operatingSystem,
 			String kernelVersion, String componentType, String taskId) throws SQLException {
-		LOGGER.info(
-				"Updating metadata info for component " + componentType + " with taskId " + taskId);
+		LOGGER.info("Updating metadata info for component " + componentType + " with taskId "
+				+ taskId + "\nMetadataFilePath: " + metadataFilePath + " OperatingSystem: "
+				+ operatingSystem + " KernelVersion: " + kernelVersion);
 		if (metadataFilePath == null || metadataFilePath.isEmpty() || operatingSystem == null
 				|| operatingSystem.isEmpty() || kernelVersion == null || kernelVersion.isEmpty()
 				|| componentType == null || componentType.isEmpty() || taskId == null
@@ -583,27 +588,38 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(statement, conn);
 		}
 	}
+	
+	private static final String SELECT_CHECK_METADATA_EXISTS_SQL = "SELECT EXISTS(SELECT 1 FROM "
+			+ PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL + " = ?)";
 
-	// TODO: verify this later
 	@Override
-	public boolean taskExist(String collectionTierImageName) throws SQLException {
-		LOGGER.debug("Verifying if a image " + collectionTierImageName + " exist in database");
+	public boolean metadataRegisterExist(String taskId) throws SQLException {
+		LOGGER.debug("Verifying if task " + taskId + " has a metadata register");
 
 		PreparedStatement statement = null;
 		Connection conn = null;
 		try {
 			conn = getConnection();
-			statement = conn.prepareStatement(SELECT_CHECK_FEDERATION_EXISTS_SQL);
-			statement.setString(1, collectionTierImageName);
+			statement = conn.prepareStatement(SELECT_CHECK_METADATA_EXISTS_SQL);
+			statement.setString(1, taskId);
 			statement.setQueryTimeout(300);
 
 			statement.execute();
 
 			ResultSet rs = statement.getResultSet();
-			return rs.next();
+			if (rs.next()) {
+				boolean found = rs.getBoolean(1); // "found" column
+				if (found) {
+					return true; // Rows exist
+				} else {
+					// Rows not exist
+				}
+			}
 		} finally {
 			close(statement, conn);
 		}
+
+		return false;
 	}
 
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME
@@ -664,7 +680,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
-			+ " VALUES(?, ?, ?)";
+			+ " VALUES(?, ?, now())";
 
 	@Override
 	public void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
@@ -685,7 +701,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement = connection.prepareStatement(INSERT_NEW_STATE_TIMESTAMP_SQL);
 			insertStatement.setString(1, taskId);
 			insertStatement.setString(2, state.getValue());
-			insertStatement.setTimestamp(3, timestamp);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -784,10 +799,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 			close(updateStatement, connection);
 		}
 	}
-	
+
 	private static String UPDATE_IMAGE_STATUS_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET "
 			+ IMAGE_STATUS_COL + " = ? WHERE " + TASK_ID_COL + " = ?";
-	
+
 	@Override
 	public void updateTaskStatus(String taskId, String status) throws SQLException {
 		if (taskId == null || taskId.isEmpty() || status == null) {
@@ -1245,6 +1260,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 			ResultSet rs = selectStatementLimit.getResultSet();
 			List<ImageTask> createdImageTasks = extractImageTaskFrom(rs);
 			rs.close();
+			
+			List<ImageTask> downloadingImageTasks = new ArrayList<ImageTask>();
+			if(createdImageTasks.size() == 0){
+				return downloadingImageTasks;
+			}
 
 			if(createdImageTasks.size() == 0){
 				return createdImageTasks;
@@ -1267,7 +1287,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			rs = selectStatement.getResultSet();
-			List<ImageTask> downloadingImageTasks = extractImageTaskFrom(rs);
+			downloadingImageTasks = extractImageTaskFrom(rs);
 			rs.close();
 			return downloadingImageTasks;
 		} finally {
@@ -1473,7 +1493,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		return getResultSet(selectStatement, columnLabel);
 	}
-	
+
 	private String getResultSet(PreparedStatement selectStatement, String columnLabel)
 			throws SQLException {
 		ResultSet rs = selectStatement.getResultSet();
@@ -1589,6 +1609,46 @@ public class JDBCImageDataStore implements ImageDataStore {
 			removeStatement.execute();
 		} finally {
 			close(removeStatement, connection);
+		}
+	}
+
+	private final String PROCESSED_IMAGES_QUERY = "SELECT * FROM " +
+			IMAGE_TABLE_NAME + " WHERE " +
+			STATE_COL + " = ? AND " +
+			REGION_COL + " = ? AND " +
+			IMAGE_DATE_COL + " BETWEEN ? AND ? AND " +
+			INPUT_PREPROCESSING_TAG + " = ? AND " +
+			INPUT_GATHERING_TAG + " = ? AND " +
+			ALGORITHM_EXECUTION_TAG + " = ?";
+
+	@Override
+	public List<ImageTask> getProcessedImages(
+			String region,
+			Date initDate,
+			Date endDate,
+			String inputGathering,
+			String inputPreprocessing,
+			String algorithmExecution) throws SQLException {
+		PreparedStatement queryStatement = null;
+		Connection connection = null;
+
+		try {
+			connection = getConnection();
+
+			queryStatement = connection.prepareStatement(PROCESSED_IMAGES_QUERY);
+			queryStatement.setString(1, ImageTaskState.ARCHIVED.getValue());
+			queryStatement.setString(2, region);
+			queryStatement.setDate(3, javaDateToSqlDate(initDate));
+			queryStatement.setDate(4, javaDateToSqlDate(endDate));
+			queryStatement.setString(5, inputPreprocessing);
+			queryStatement.setString(6, inputGathering);
+			queryStatement.setString(7, algorithmExecution);
+			queryStatement.setQueryTimeout(300);
+
+			ResultSet result = queryStatement.executeQuery();
+			return extractImageTaskFrom(result);
+		} finally {
+			close(queryStatement, connection);
 		}
 	}
 

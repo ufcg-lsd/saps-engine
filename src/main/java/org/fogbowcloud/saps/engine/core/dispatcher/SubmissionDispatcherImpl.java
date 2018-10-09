@@ -5,15 +5,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
@@ -168,9 +160,11 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
                 List<String> datasets = DatasetUtil.getSatsInOperationByYear(startingYear);
 
                 for (String dataset : datasets) {
-                    int endingYear = endCal.get(Calendar.YEAR);
+                	
+                	LOGGER.debug("----------------------------------------> " +  dataset);
+                	
                     Set<String> regions = repository.getRegionsFromArea(
-                            dataset, startingYear, endingYear, lowerLeftLatitude,
+                            lowerLeftLatitude,
                             lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
 
                     for (String region : regions) {
@@ -192,6 +186,7 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
                         task.setImageTask(iTask);
                         getImageStore().addStateStamp(taskId, ImageTaskState.CREATED,
                                 getImageStore().getTask(taskId).getUpdateTime());
+                        getImageStore().dispatchMetadataInfo(taskId);
 
                         createdTasks.add(task);
                     }
@@ -237,5 +232,33 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
 
     public Properties getProperties() {
         return properties;
+    }
+
+	public List<ImageTask> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
+			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
+			String inputPreprocessing, String inputGathering, String algorithmExecution) {
+        
+		List<ImageTask> filteredTasks = new ArrayList<>();
+        Set<String> regions = new HashSet<>();
+		regions.addAll(repository.getRegionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+				upperRightLongitude));
+		
+        for (String region : regions) {
+            List<ImageTask> iTasks = null;
+            try {
+				iTasks = getImageStore().getProcessedImages(region, initDate, endDate, inputGathering,
+						inputPreprocessing, algorithmExecution);
+                filteredTasks.addAll(iTasks);
+            } catch (SQLException e) {
+                String builder = "Failed to load images with configuration:\n" +
+                        "\tRegion: " + region + "\n" +
+                        "\tInterval: " + initDate + " - " + endDate + "\n" +
+                        "\tPreprocessing: " + inputPreprocessing + "\n" +
+                        "\tGathering: " + inputGathering + "\n" +
+                        "\tAlgorithm: " + algorithmExecution + "\n";
+                LOGGER.error(builder, e);
+            }
+        }
+        return filteredTasks;
     }
 }
