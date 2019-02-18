@@ -1,0 +1,66 @@
+#!/bin/bash
+
+echo "Checking args"
+if [ $# -ne 5 ];
+then
+	echo "Execution using 5 (five) arguments:"
+	echo "arg1 - usgs username."
+	echo "arg2 - usgs password."
+	echo "arg3 - image dataset in format landsat_X, where X (landsat number)."
+	echo "arg4 - image region in format PPPRRR, where P (path) and R (row)."
+	echo "arg5 - image date in format YYYY-MM-DD, where Y (year), M (month) and D (day)."
+	exit 1
+fi
+USGS_USERNAME=$1
+USGS_PASSWORD=$2
+IMAGE_DATASET=$3
+IMAGE_REGION=$4
+IMAGE_DATE=$5
+
+echo "Checking docker"
+which docker &> log
+if [ $? -ne 0 ];
+then
+	apt-get update &>> log
+	apt-get install docker-ce docker-ce-cli containerd.io &>> log
+fi
+
+echo "Declare name images"
+IMAGE_NAME_INPUTDOWNLOADER="fogbow/inputdownloader:latest"
+IMAGE_NAME_WORKER="fogbow/worker:latest"
+
+echo "Pull docker containers"
+docker pull $IMAGE_NAME_INPUTDOWNLOADER &>> log
+docker pull $IMAGE_NAME_WORKER &>> log
+
+echo "Declare name containers"
+CONTAINER_NAME_INPUTDOWNLOADER="inputdownloader_container"
+CONTAINER_NAME_WORKER="worker_container"
+
+echo "Create share folder between containers and host"
+docker ps -a | grep "$CONTAINER_NAME_INPUTDOWNLOADER" &>> log
+if [ $? -eq 0 ];
+then
+	docker stop $CONTAINER_NAME_INPUTDOWNLOADER &>> log
+	docker rm $CONTAINER_NAME_INPUTDOWNLOADER &>> log
+fi
+docker run -it -d --name $CONTAINER_NAME_INPUTDOWNLOADER -v saps-vol:/tmp $IMAGE_NAME_INPUTDOWNLOADER &>> log
+
+docker ps -a | grep "$CONTAINER_NAME_WORKER" &>> log
+if [ $? -eq 0 ];
+then
+	docker stop $CONTAINER_NAME_WORKER &>> log
+        docker rm $CONTAINER_NAME_WORKER &>> log
+fi
+docker run -it -d --name $CONTAINER_NAME_WORKER -v saps-vol:/tmp $IMAGE_NAME_WORKER &>> log
+
+echo "Execute download script in inputdownloader container"
+docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p /tmp/input &>> log
+docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p /home/ubuntu/results &>> log
+docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p /home/ubuntu/metadata &>> log
+docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER sh /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE /tmp/input /tmp/input &>> log
+docker exec $CONTAINER_NAME_INPUTDOWNLAODER mv /home/ubuntu/results /home/ubuntu/metadata /tmp
+
+echo "Running Rscript for SEBAL process in landsat image"
+docker exec $CONTAINER_NAME_WORKER mkdir -p /tmp/preprocess &>> log
+docker exec $CONTAINER_NAME_WORKER bash /home/ubuntu/bin/run.sh /tmp/input /tmp/results /tmp/preprocess /tmp/metadata &>> log
