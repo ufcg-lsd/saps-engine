@@ -17,11 +17,6 @@ IMAGE_REGION=$4
 IMAGE_DATE=$5
 
 #Global variables
-#Exit code variable
-EXIT_CODE_RUN_INPUTDOWNLOADER=
-EXIT_CODE_PREPROCESSOR=
-EXIT_CODE_RUN_WORKER=
-
 #Declare folders name using in process
 IMAGE_DATA_FOLDER="image_data"
 PREPROCESS_FOLDER="preprocess"
@@ -34,7 +29,7 @@ WORKER_SHARED_FOLDER="/local"
 #Declare name images
 IMAGE_NAME_INPUTDOWNLOADER="fogbow/inputdownloader:latest"
 IMAGE_NAME_PREPROCESSOR=""
-IMAGE_NAME_WORKER="fogbow/worker:latest"
+IMAGE_NAME_WORKER="" #fogbow/worker:latest"
 
 #Declare name containers (use container name to manage container lifecycle)
 CONTAINER_NAME_INPUTDOWNLOADER="inputdownloader_container"
@@ -118,7 +113,7 @@ function run_input_download {
     #Create directory of input, results and metadata before execute inputdownloader container
     docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER /home/ubuntu/results /home/ubuntu/metadata
     #Execute run script in inputdownloader container for the download and preprocess of the landsat image
-    EXIT_CODE_INPUTDOWNLOADER=`docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER sh /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER`
+    docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER sh /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER
   fi
 }
 
@@ -126,7 +121,7 @@ function run_preprocessor {
   if [ $IMAGE_NAME_PREPROCESSOR ]
   then
     #Code of the run preprocessor
-    EXIT_CODE_PREPROCESSOR=0
+    :
   fi
 }
 
@@ -138,8 +133,26 @@ function run_worker {
     #Create process directory
     docker exec $CONTAINER_NAME_WORKER mkdir -p $WORKER_SHARED_FOLDER/$PREPROCESS_FOLDER
     #Execute run script in the worker container to generate results of the landsat image
-    EXIT_CODE_WORKER=`docker exec $CONTAINER_NAME_WORKER bash /home/ubuntu/bin/run.sh $WORKER_SHARED_FOLDER/$IMAGE_DATA_FOLDER $WORKER_SHARED_FOLDER/results $WORKER_SHARED_FOLDER/$PREPROCESS_FOLDER $WORKER_SHARED_FOLDER/metadata`
+    docker exec $CONTAINER_NAME_WORKER bash /home/ubuntu/bin/run.sh $WORKER_SHARED_FOLDER/$IMAGE_DATA_FOLDER $WORKER_SHARED_FOLDER/results $WORKER_SHARED_FOLDER/$PREPROCESS_FOLDER $WORKER_SHARED_FOLDER/metadata
   fi
+}
+
+function inputdownloader {
+  pull_image_inputdownloader
+  build_container_inputdownloader
+  run_input_download
+}
+
+function preprocessor {
+  pull_image_preprocessor
+  build_container_preprocessor
+  run_preprocessor
+}
+
+function worker {
+  pull_image_worker
+  build_container_worker
+  run_worker
 }
 
 function exit_handler {
@@ -149,19 +162,25 @@ function exit_handler {
   fi
 }
 
-check_docker
+function main {
+  check_docker
 
-pull_image_inputdownloader
-build_container_inputdownloader
+  #Local variables
+  local exit_code_inputdownloader
+  local exit_code_preprocessor
+  local exit_code_worker
 
-pull_image_preprocessor
-build_container_preprocessor
+  #Capture exit code
+  inputdownloader
+  exit_code_inputdownloader=$?
 
-pull_image_worker
-build_container_worker
+  preprocessor
+  exit_code_preprocessor=$?
 
-run_input_download
-run_preprocessor
-run_worker
+  worker
+  exit_code_worker=$?
 
-echo $EXIT_CODE_INPUTDOWNLOADER $EXIT_CODE_PREPROCESSOR $EXIT_CODE_WORKER
+  echo $exit_code_inputdownloader $exit_code_preprocessor $exit_code_worker
+}
+
+main
