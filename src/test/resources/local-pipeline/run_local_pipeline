@@ -1,38 +1,43 @@
 #!/bin/bash
 
-if [ $# -ne 5 ];
+#Usage: $0 usgs_username usgs_password [landsat_5 | landsat_7 | landsat_8] region_pathrow image_date
+#For example: ./run_local_pipeline <usgs_username> <usgs_password> landsat_5 215065 2011-10-18
+
+#Checking args
+if [ $# -ne 5 ]
 then
-  echo "Usage: usgs_username usgs_password [landsat_5 | landsat_7 | landsat_8] region_pathrow image_date"
-  echo "For example: ./run_local_pipeline <usgs_username> <usgs_password> landsat_5 215065 2011-10-18"
   exit 1
 fi
 
+#Capture args
 USGS_USERNAME=$1
 USGS_PASSWORD=$2
 IMAGE_DATASET=$3
 IMAGE_REGION=$4
 IMAGE_DATE=$5
 
+#Global variables
+#Exit code variable
+EXIT_CODE_PROCESS=
+
+#Declare name images
 IMAGE_NAME_INPUTDOWNLOADER="fogbow/inputdownloader:latest"
 IMAGE_NAME_WORKER="fogbow/worker:latest"
 
+#Declare name containers
 CONTAINER_NAME_INPUTDOWNLOADER="inputdownloader_container"
 CONTAINER_NAME_WORKER="worker_container"
 
-function exit_handler {
-  if [[ $? -ne 0 ]];
-  then
-    exit 1
-  fi
-}
-
 function check_docker {
   which docker
-  exit_handler
 }
 
 function pull_image_inputdownloader {
   docker pull $IMAGE_NAME_INPUTDOWNLOADER
+}
+
+function pull_image_preprocessor {
+  :
 }
 
 function pull_image_worker {
@@ -40,53 +45,99 @@ function pull_image_worker {
 }
 
 function build_container_inputdownloader {
-  docker ps -a | grep "$CONTAINER_NAME_INPUTDOWNLOADER"
-  if [ $? -eq 0 ];
+  EXIT_CODE_PROCESS=$?
+  if [ $EXIT_CODE_PROCESS -eq 0 ]
   then
-    docker stop $CONTAINER_NAME_INPUTDOWNLOADER
-    docker rm $CONTAINER_NAME_INPUTDOWNLOADER
+    #Check if inputdownloader container already exists
+    docker ps -a | grep "$CONTAINER_NAME_INPUTDOWNLOADER"
+    if [ $? -eq 0 ]
+    then
+      #Stop and remove existing inputdownloader container
+      docker stop $CONTAINER_NAME_INPUTDOWNLOADER
+      docker rm $CONTAINER_NAME_INPUTDOWNLOADER
+    fi
+    #Build a inputdownloader container from your image
+    docker run -it -d --name $CONTAINER_NAME_INPUTDOWNLOADER -v saps-vol:/tmp $IMAGE_NAME_INPUTDOWNLOADER
   fi
+}
 
-  docker run -it -d --name $CONTAINER_NAME_INPUTDOWNLOADER -v saps-vol:/tmp $IMAGE_NAME_INPUTDOWNLOADER
+function build_container_preprocessor {
+  :
 }
 
 function build_container_worker {
-  docker ps -a | grep "$CONTAINER_NAME_WORKER"
-  if [ $? -eq 0 ];
+  EXIT_CODE_PROCESS=$?
+  if [ $EXIT_CODE_PROCESS -eq 0 ]
   then
-    docker stop $CONTAINER_NAME_WORKER
-    docker rm $CONTAINER_NAME_WORKER
+    #Check if worker container already exists
+    docker ps -a | grep "$CONTAINER_NAME_WORKER"
+    if [ $? -eq 0 ]
+    then
+      #Stop and remove existing worker container
+      docker stop $CONTAINER_NAME_WORKER
+      docker rm $CONTAINER_NAME_WORKER
+    fi
+    #Build a worker container from your image
+    docker run -it -d --name $CONTAINER_NAME_WORKER -v saps-vol:/tmp $IMAGE_NAME_WORKER
   fi
-  docker run -it -d --name $CONTAINER_NAME_WORKER -v saps-vol:/tmp $IMAGE_NAME_WORKER
 }
 
-function run_download {
-  docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p /tmp/input /home/ubuntu/results /home/ubuntu/metadata
-  docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER sh /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE /tmp/input /tmp/input
+function run_input_download {
+  EXIT_CODE_PROCESS=$?
+  if [ $EXIT_CODE_PROCESS -eq 0 ]
+  then
+    #Create directory of input, results and metadata before execute inputdownloader container
+    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p /tmp/input /home/ubuntu/results /home/ubuntu/metadata
+    #Execute run script in inputdownloader container for the download and preprocess of the landsat image
+    docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER sh /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE /tmp/input /tmp/input
+  fi
+}
+
+function run_preprocessor {
+  :
 }
 
 function run_worker {
-  docker exec $CONTAINER_NAME_INPUTDOWNLAODER mv /home/ubuntu/results /home/ubuntu/metadata /tmp
-  docker exec $CONTAINER_NAME_WORKER mkdir -p /tmp/preprocess
-  docker exec $CONTAINER_NAME_WORKER bash /home/ubuntu/bin/run.sh /tmp/input /tmp/results /tmp/preprocess /tmp/metadata
+  EXIT_CODE_PROCESS=$?
+  if [ $EXIT_CODE_PROCESS -eq 0 ]
+  then
+    #Move directory results and metadata for tmp (share directory)
+    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mv /home/ubuntu/results /home/ubuntu/metadata /tmp
+    #Create process directory
+    docker exec $CONTAINER_NAME_WORKER mkdir -p /tmp/preprocess
+    #Execute run script in the worker container to generate results of the landsat image
+    docker exec $CONTAINER_NAME_WORKER bash /home/ubuntu/bin/run.sh /tmp/input /tmp/results /tmp/preprocess /tmp/metadata
+  fi
+}
+
+function exit_handler {
+  if [[ $EXIT_CODE_PROCESS -ne 0 ]]
+  then
+    finally
+  fi
+}
+
+function finally {
+  exit $EXIT_CODE_PROCESS
 }
 
 check_docker
-
+exit_handler
 pull_image_inputdownloader
 exit_handler
-
-pull_image_worker
-exit_handler
-
 build_container_inputdownloader
 exit_handler
-
+pull_image_preprocessor
+exit_handler
+build_container_preprocessor
+pull_image_worker
+exit_handler
 build_container_worker
 exit_handler
-
-run_download
+run_input_download
 exit_handler
-
+run_preprocessor
+exit_handler
 run_worker
 exit_handler
+finally
