@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#Usage: $0 usgs_username usgs_password [landsat_5 | landsat_7 | landsat_8] region_pathrow image_date
-#For example: ./run_local_pipeline <usgs_username> <usgs_password> landsat_5 215065 2011-10-18
+#For example: $0 <usgs_username> <usgs_password> landsat_5 215065 2011-10-18
 
 #Checking args
 if [ $# -ne 5 ]
 then
+  echo "Usage: $0 usgs_username usgs_password [landsat_5 | landsat_7 | landsat_8] region_pathrow image_date"
   exit 1
 fi
 
@@ -18,35 +18,60 @@ IMAGE_DATE=$5
 
 #Global variables
 #Exit code variable
-EXIT_CODE_PROCESS=
+EXIT_CODE_RUN_INPUTDOWNLOADER=
+EXIT_CODE_PREPROCESSOR=
+EXIT_CODE_RUN_WORKER=
+
+#Declare folders name using in process
+IMAGE_DATA_FOLDER="image_data"
+PREPROCESS_FOLDER="preprocess"
+
+#Declare shared folders name using in docker containers
+INPUTDOWNLOADER_SHARED_FOLDER="/local"
+PREPROCESSOR_SHARED_FOLDER="/local"
+WORKER_SHARED_FOLDER="/local"
 
 #Declare name images
 IMAGE_NAME_INPUTDOWNLOADER="fogbow/inputdownloader:latest"
+IMAGE_NAME_PREPROCESSOR=""
 IMAGE_NAME_WORKER="fogbow/worker:latest"
 
-#Declare name containers
+#Declare name containers (use container name to manage container lifecycle)
 CONTAINER_NAME_INPUTDOWNLOADER="inputdownloader_container"
+CONTAINER_NAME_PREPROCESSOR="preprocessor_container"
 CONTAINER_NAME_WORKER="worker_container"
 
 function check_docker {
   which docker
+  exit_handler
 }
 
 function pull_image_inputdownloader {
-  docker pull $IMAGE_NAME_INPUTDOWNLOADER
+  if [ $IMAGE_NAME_INPUTDOWNLOADER ]
+  then
+    docker pull $IMAGE_NAME_INPUTDOWNLOADER
+    exit_handler
+  fi
 }
 
 function pull_image_preprocessor {
-  :
+  if [ $IMAGE_NAME_PREPROCESSOR ]
+  then
+    docker pull $IMAGE_NAME_PREPROCESSOR
+    exit_handler
+  fi
 }
 
 function pull_image_worker {
-  docker pull $IMAGE_NAME_WORKER
+  if [ $IMAGE_NAME_WORKER ]
+  then
+    docker pull $IMAGE_NAME_WORKER
+    exit_handler
+  fi
 }
 
 function build_container_inputdownloader {
-  EXIT_CODE_PROCESS=$?
-  if [ $EXIT_CODE_PROCESS -eq 0 ]
+  if [ $IMAGE_NAME_INPUTDOWNLOADER ]
   then
     #Check if inputdownloader container already exists
     docker ps -a | grep "$CONTAINER_NAME_INPUTDOWNLOADER"
@@ -56,18 +81,22 @@ function build_container_inputdownloader {
       docker stop $CONTAINER_NAME_INPUTDOWNLOADER
       docker rm $CONTAINER_NAME_INPUTDOWNLOADER
     fi
-    #Build a inputdownloader container from your image
-    docker run -it -d --name $CONTAINER_NAME_INPUTDOWNLOADER -v saps-vol:/tmp $IMAGE_NAME_INPUTDOWNLOADER
+    #Build a inputdownloader container from your image using volume for shared folder between host (saps-vol) and container (INPUTDOWNLOADER_SHARED_FOLDER)
+    docker run -it -d --name $CONTAINER_NAME_INPUTDOWNLOADER -v saps-vol:$INPUTDOWNLOADER_SHARED_FOLDER $IMAGE_NAME_INPUTDOWNLOADER
+    exit_handler
   fi
 }
 
 function build_container_preprocessor {
-  :
+  if [  $IMAGE_NAME_PREPROCESSOR ]
+  then
+    #Code of the build container preprocessor
+    exit_handler
+  fi
 }
 
 function build_container_worker {
-  EXIT_CODE_PROCESS=$?
-  if [ $EXIT_CODE_PROCESS -eq 0 ]
+  if [ $IMAGE_NAME_WORKER ]
   then
     #Check if worker container already exists
     docker ps -a | grep "$CONTAINER_NAME_WORKER"
@@ -77,67 +106,62 @@ function build_container_worker {
       docker stop $CONTAINER_NAME_WORKER
       docker rm $CONTAINER_NAME_WORKER
     fi
-    #Build a worker container from your image
-    docker run -it -d --name $CONTAINER_NAME_WORKER -v saps-vol:/tmp $IMAGE_NAME_WORKER
+    #Build a worker container from your image using volume for shared folder between host (saps-vol) and container (WORKER_SHARED_FOLDER)
+    docker run -it -d --name $CONTAINER_NAME_WORKER -v saps-vol:$WORKER_SHARED_FOLDER $IMAGE_NAME_WORKER
+    exit_handler
   fi
 }
 
 function run_input_download {
-  EXIT_CODE_PROCESS=$?
-  if [ $EXIT_CODE_PROCESS -eq 0 ]
+  if [ $IMAGE_NAME_INPUTDOWNLOADER ]
   then
     #Create directory of input, results and metadata before execute inputdownloader container
-    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p /tmp/input /home/ubuntu/results /home/ubuntu/metadata
+    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER /home/ubuntu/results /home/ubuntu/metadata
     #Execute run script in inputdownloader container for the download and preprocess of the landsat image
-    docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER sh /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE /tmp/input /tmp/input
+    EXIT_CODE_INPUTDOWNLOADER=`docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER sh /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER`
   fi
 }
 
 function run_preprocessor {
-  :
+  if [ $IMAGE_NAME_PREPROCESSOR ]
+  then
+    #Code of the run preprocessor
+    EXIT_CODE_PREPROCESSOR=0
+  fi
 }
 
 function run_worker {
-  EXIT_CODE_PROCESS=$?
-  if [ $EXIT_CODE_PROCESS -eq 0 ]
+  if [ $IMAGE_NAME_WORKER ]
   then
     #Move directory results and metadata for tmp (share directory)
-    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mv /home/ubuntu/results /home/ubuntu/metadata /tmp
+    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mv /home/ubuntu/results /home/ubuntu/metadata $WORKER_SHARED_FOLDER
     #Create process directory
-    docker exec $CONTAINER_NAME_WORKER mkdir -p /tmp/preprocess
+    docker exec $CONTAINER_NAME_WORKER mkdir -p $WORKER_SHARED_FOLDER/$PREPROCESS_FOLDER
     #Execute run script in the worker container to generate results of the landsat image
-    docker exec $CONTAINER_NAME_WORKER bash /home/ubuntu/bin/run.sh /tmp/input /tmp/results /tmp/preprocess /tmp/metadata
+    EXIT_CODE_WORKER=`docker exec $CONTAINER_NAME_WORKER bash /home/ubuntu/bin/run.sh $WORKER_SHARED_FOLDER/$IMAGE_DATA_FOLDER $WORKER_SHARED_FOLDER/results $WORKER_SHARED_FOLDER/$PREPROCESS_FOLDER $WORKER_SHARED_FOLDER/metadata`
   fi
 }
 
 function exit_handler {
-  if [[ $EXIT_CODE_PROCESS -ne 0 ]]
+  if [ $? -ne 0 ]
   then
-    finally
+    exit 1
   fi
 }
 
-function finally {
-  exit $EXIT_CODE_PROCESS
-}
-
 check_docker
-exit_handler
+
 pull_image_inputdownloader
-exit_handler
 build_container_inputdownloader
-exit_handler
+
 pull_image_preprocessor
-exit_handler
 build_container_preprocessor
+
 pull_image_worker
-exit_handler
 build_container_worker
-exit_handler
+
 run_input_download
-exit_handler
 run_preprocessor
-exit_handler
 run_worker
-exit_handler
-finally
+
+echo $EXIT_CODE_INPUTDOWNLOADER $EXIT_CODE_PREPROCESSOR $EXIT_CODE_WORKER
