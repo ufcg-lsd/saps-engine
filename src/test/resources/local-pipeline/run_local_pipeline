@@ -1,0 +1,186 @@
+#!/bin/bash
+
+#For example: $0 <usgs_username> <usgs_password> landsat_5 215065 2011-10-18
+
+#Checking args
+if [ $# -ne 5 ]
+then
+  echo "Usage: $0 usgs_username usgs_password [landsat_5 | landsat_7 | landsat_8] region_pathrow image_date"
+  exit 1
+fi
+
+#Capture args
+USGS_USERNAME=$1
+USGS_PASSWORD=$2
+IMAGE_DATASET=$3
+IMAGE_REGION=$4
+IMAGE_DATE=$5
+
+#Global variables
+#Declare folders name using in process
+IMAGE_DATA_FOLDER="image_data"
+PREPROCESS_FOLDER="preprocess"
+
+#Declare shared folders name using in docker containers
+INPUTDOWNLOADER_SHARED_FOLDER="/local"
+PREPROCESSOR_SHARED_FOLDER="/local"
+WORKER_SHARED_FOLDER="/local"
+
+#Declare name images
+IMAGE_NAME_INPUTDOWNLOADER="fogbow/inputdownloader:latest"
+IMAGE_NAME_PREPROCESSOR=""
+IMAGE_NAME_WORKER="" #fogbow/worker:latest"
+
+#Declare name containers (use container name to manage container lifecycle)
+CONTAINER_NAME_INPUTDOWNLOADER="inputdownloader_container"
+CONTAINER_NAME_PREPROCESSOR="preprocessor_container"
+CONTAINER_NAME_WORKER="worker_container"
+
+function check_docker {
+  which docker
+  exit_handler
+}
+
+function pull_image_inputdownloader {
+  if [ $IMAGE_NAME_INPUTDOWNLOADER ]
+  then
+    docker pull $IMAGE_NAME_INPUTDOWNLOADER
+    exit_handler
+  fi
+}
+
+function pull_image_preprocessor {
+  if [ $IMAGE_NAME_PREPROCESSOR ]
+  then
+    docker pull $IMAGE_NAME_PREPROCESSOR
+    exit_handler
+  fi
+}
+
+function pull_image_worker {
+  if [ $IMAGE_NAME_WORKER ]
+  then
+    docker pull $IMAGE_NAME_WORKER
+    exit_handler
+  fi
+}
+
+function build_container_inputdownloader {
+  if [ $IMAGE_NAME_INPUTDOWNLOADER ]
+  then
+    #Check if inputdownloader container already exists
+    docker ps -a | grep "$CONTAINER_NAME_INPUTDOWNLOADER"
+    if [ $? -eq 0 ]
+    then
+      #Stop and remove existing inputdownloader container
+      docker stop $CONTAINER_NAME_INPUTDOWNLOADER
+      docker rm $CONTAINER_NAME_INPUTDOWNLOADER
+    fi
+    #Build a inputdownloader container from your image using volume for shared folder between host (saps-vol) and container (INPUTDOWNLOADER_SHARED_FOLDER)
+    docker run -it -d --name $CONTAINER_NAME_INPUTDOWNLOADER -v saps-vol:$INPUTDOWNLOADER_SHARED_FOLDER $IMAGE_NAME_INPUTDOWNLOADER
+    exit_handler
+  fi
+}
+
+function build_container_preprocessor {
+  if [  $IMAGE_NAME_PREPROCESSOR ]
+  then
+    #Code of the build container preprocessor
+    exit_handler
+  fi
+}
+
+function build_container_worker {
+  if [ $IMAGE_NAME_WORKER ]
+  then
+    #Check if worker container already exists
+    docker ps -a | grep "$CONTAINER_NAME_WORKER"
+    if [ $? -eq 0 ]
+    then
+      #Stop and remove existing worker container
+      docker stop $CONTAINER_NAME_WORKER
+      docker rm $CONTAINER_NAME_WORKER
+    fi
+    #Build a worker container from your image using volume for shared folder between host (saps-vol) and container (WORKER_SHARED_FOLDER)
+    docker run -it -d --name $CONTAINER_NAME_WORKER -v saps-vol:$WORKER_SHARED_FOLDER $IMAGE_NAME_WORKER
+    exit_handler
+  fi
+}
+
+function run_input_download {
+  if [ $IMAGE_NAME_INPUTDOWNLOADER ]
+  then
+    #Create directory of input, results and metadata before execute inputdownloader container
+    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER /home/ubuntu/results /home/ubuntu/metadata
+    #Execute run script in inputdownloader container for the download and preprocess of the landsat image
+    docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER sh /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER $INPUTDOWNLOADER_SHARED_FOLDER/$IMAGE_DATA_FOLDER
+  fi
+}
+
+function run_preprocessor {
+  if [ $IMAGE_NAME_PREPROCESSOR ]
+  then
+    #Code of the run preprocessor
+    :
+  fi
+}
+
+function run_worker {
+  if [ $IMAGE_NAME_WORKER ]
+  then
+    #Move directory results and metadata for tmp (share directory)
+    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mv /home/ubuntu/results /home/ubuntu/metadata $WORKER_SHARED_FOLDER
+    #Create process directory
+    docker exec $CONTAINER_NAME_WORKER mkdir -p $WORKER_SHARED_FOLDER/$PREPROCESS_FOLDER
+    #Execute run script in the worker container to generate results of the landsat image
+    docker exec $CONTAINER_NAME_WORKER bash /home/ubuntu/bin/run.sh $WORKER_SHARED_FOLDER/$IMAGE_DATA_FOLDER $WORKER_SHARED_FOLDER/results $WORKER_SHARED_FOLDER/$PREPROCESS_FOLDER $WORKER_SHARED_FOLDER/metadata
+  fi
+}
+
+function inputdownloader {
+  pull_image_inputdownloader
+  build_container_inputdownloader
+  run_input_download
+}
+
+function preprocessor {
+  pull_image_preprocessor
+  build_container_preprocessor
+  run_preprocessor
+}
+
+function worker {
+  pull_image_worker
+  build_container_worker
+  run_worker
+}
+
+function exit_handler {
+  if [ $? -ne 0 ]
+  then
+    exit 1
+  fi
+}
+
+function main {
+  check_docker
+
+  #Local variables
+  local exit_code_inputdownloader
+  local exit_code_preprocessor
+  local exit_code_worker
+
+  #Capture exit code
+  inputdownloader
+  exit_code_inputdownloader=$?
+
+  preprocessor
+  exit_code_preprocessor=$?
+
+  worker
+  exit_code_worker=$?
+
+  echo $exit_code_inputdownloader $exit_code_preprocessor $exit_code_worker
+}
+
+main
