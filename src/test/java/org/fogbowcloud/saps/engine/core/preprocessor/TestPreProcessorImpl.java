@@ -29,7 +29,7 @@ public class TestPreProcessorImpl {
 
 	private static final String DEFAULT_EXPORT_PATH = "/local/exports";
 	private Properties properties;
-	private PreProcessorImpl preProcessor;
+	private PreProcessor preProcessor;
 	private ImageDataStore imageStore;
 	private ImageTask imageTask;
 	
@@ -51,7 +51,7 @@ public class TestPreProcessorImpl {
 				"NE", "NE", new Timestamp(date.getTime()), new Timestamp(date.getTime()),
 				"available", "");
 
-		this.preProcessor = Mockito.spy(new PreProcessorImpl(this.properties, this.imageStore));
+		this.preProcessor = Mockito.spy(new PreProcessor(this.properties, this.imageStore));
 	}
 
 	public void testPreProcessImage() throws Exception {

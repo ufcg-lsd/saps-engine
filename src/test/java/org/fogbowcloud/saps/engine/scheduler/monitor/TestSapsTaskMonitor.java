@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.fogbowcloud.blowout.core.model.Command;
+/*import org.fogbowcloud.blowout.core.model.Command;
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
@@ -30,7 +30,7 @@ import org.fogbowcloud.blowout.core.model.TaskState;
 import org.fogbowcloud.blowout.infrastructure.model.AbstractResource;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
-import org.fogbowcloud.blowout.pool.DefaultBlowoutPool;
+import org.fogbowcloud.blowout.pool.DefaultBlowoutPool;*/
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
@@ -45,7 +45,7 @@ import org.junit.rules.ExpectedException;
 
 public class TestSapsTaskMonitor {
 
-	private static final String FAKE_ID = "fakeId";
+	/*private static final String FAKE_ID = "fakeId";
 
 	public long timeout;
 	public ImageDataStore imageStore;
@@ -381,5 +381,5 @@ public class TestSapsTaskMonitor {
 		Assert.assertEquals(ImageTaskState.FAILED,
 				imageStore.getTask(imageTask.getTaskId()).getState());
 		Assert.assertFalse(taskMonitor.getBlowoutPool().getAllTasks().contains(taskImpl));
-	}
+	}*/
 }

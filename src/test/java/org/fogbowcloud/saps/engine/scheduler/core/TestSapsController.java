@@ -5,13 +5,6 @@ import static org.mockito.Mockito.mock;
 
 import java.util.Properties;
 
-import org.fogbowcloud.blowout.core.BlowoutController;
-import org.fogbowcloud.blowout.core.SchedulerInterface;
-import org.fogbowcloud.blowout.core.util.ManagerTimer;
-import org.fogbowcloud.blowout.infrastructure.manager.InfrastructureManager;
-import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
-import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
-import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.junit.Before;
 import org.junit.Rule;
@@ -19,7 +12,7 @@ import org.junit.rules.ExpectedException;
 
 public class TestSapsController {
 	
-	public Properties properties;
+	/*public Properties properties;
 	public BlowoutPool blowoutPool;
 	public ImageDataStore imageStore;
 	public ManagerTimer sebalExecutionTimer;
@@ -46,5 +39,5 @@ public class TestSapsController {
 	}
 	
 	// TODO implements tests
-	
+	*/
 }
