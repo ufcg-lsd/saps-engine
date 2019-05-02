@@ -12,7 +12,7 @@ public class PreProcessorMain {
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		PreProcessor preProcessor = new PreProcessorImpl(properties);
+		PreProcessor preProcessor = new PreProcessor(properties);
 		preProcessor.exec();
 	}
 
