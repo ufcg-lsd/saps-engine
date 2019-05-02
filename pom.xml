@@ -144,11 +144,17 @@
 			</exclusions>
 		</dependency>
 		
-		<dependency>
+		<!--<dependency>
 			<groupId>blowout</groupId>
 			<artifactId>blowout</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+		</dependency>-->
+
+		<dependency>
+            <groupId>org.javaswift</groupId>
+            <artifactId>joss</artifactId>
+            <version>0.9.7</version>
+        </dependency>
 
 		<dependency>
 			<groupId>org.json</groupId>
