@@ -88,7 +88,6 @@ public class SapsPropertiesConstants {
 	public static final String SUBMISSION_REST_SERVER_PORT = "submission_rest_server_port";
 
 	// Specification constants
-	public static final String SPEC_FOGBOW_REQUIREMENTS = "FogbowRequirements";
 	public static final String SPEC_REQUEST_TYPE = "RequestType";
 	public static final String SPEC_GLUE2_CLOUD_COMPUTE_MANAGER_ID = "Glue2CloudComputeManagerID";
 	public static final String BLOWOUT_VERSION_PREFIX = "blowout.version.";
@@ -96,8 +95,6 @@ public class SapsPropertiesConstants {
 	// Infrastructure constants
 	public static final String INFRA_SPECS_BLOCK_CREATING = "infra_specs_block_creating";
 	public static final String INFRA_INITIAL_SPECS_FILE_PATH = "infra_initial_specs_file_path";
-	public static final String INFRA_PROVIDER_CLASS_NAME = "infra_provider_class_name";
-	public static final String INFRA_IS_STATIC = "infra_is_elastic";
 
 	// KeystoneV3 constants
 	public static final String FOGBOW_KEYSTONEV3_UPDATE_PERIOD = "fogbow.keystonev3.swift.token.update.period";
@@ -147,7 +144,6 @@ public class SapsPropertiesConstants {
 	public static final String SAPS_EXPORT_PATH = "saps_export_path";
 	public static final String SAPS_CONTAINER_INPUT_LINKED_PATH = "saps_container_input_linked_path";
 	public static final String SAPS_CONTAINER_METADATA_LINKED_PATH = "saps_container_metadata_linked_path";
-	public static final String BLOWOUT_DIR_PATH = "blowout_dir_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 	public static final String STATIONS_FILE_PATH = "stations_file_path";
 	public static final String BASE_YEAR_DIR_PATH = "base_year_dir_path";
@@ -158,4 +154,9 @@ public class SapsPropertiesConstants {
 
 	public static final String NO_REPLY_EMAIL = "noreply_email";
 	public static final String NO_REPLY_PASS = "noreply_password";
+	
+	/*
+	 *  Arrebol batch jobs execution system configs
+	 */
+	public static final String ARREBOL_BASE_URL = "arrebol_base_url";
 }

@@ -11,10 +11,10 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.core.model.Command;
-import org.fogbowcloud.blowout.core.model.Specification;
-import org.fogbowcloud.blowout.core.model.Task;
-import org.fogbowcloud.blowout.core.model.TaskImpl;
+import org.fogbowcloud.saps.engine.core.command.Command;
+import org.fogbowcloud.saps.engine.core.task.Specification;
+import org.fogbowcloud.saps.engine.core.task.Task;
+import org.fogbowcloud.saps.engine.core.task.TaskImpl;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class SapsTask {
@@ -28,7 +28,7 @@ public class SapsTask {
 	protected static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
 	protected static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
 	protected static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
-	
+
 	protected static final String WORKER_SANDBOX = "worker_sandbox";
 	protected static final String WORKER_REMOTE_USER = "worker_remote_user";
 	protected static final String WORKER_MOUNT_POINT = "worker_mount_point";
@@ -42,9 +42,8 @@ public class SapsTask {
 
 	private static final Logger LOGGER = Logger.getLogger(SapsTask.class);
 
-	public static TaskImpl createSapsTask(TaskImpl taskImpl, Properties properties,
-			Specification spec, String federationMember, String nfsServerIP, String nfsServerPort,
-			String workerContainerRepository, String workerContainerTag) {
+	public static TaskImpl createSapsTask(TaskImpl taskImpl, Properties properties, String federationMember,
+			String nfsServerIP, String nfsServerPort, String workerContainerRepository, String workerContainerTag) {
 		LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
 
 		settingCommonTaskMetadata(properties, taskImpl);
@@ -63,7 +62,7 @@ public class SapsTask {
 		taskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
 		taskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
 				taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + taskImpl.getId());
-		
+
 		taskImpl.putMetadata(METADATA_WORKER_OPERATING_SYSTEM,
 				properties.getProperty(SapsPropertiesConstants.WORKER_OPERATING_SYSTEM));
 		taskImpl.putMetadata(METADATA_WORKER_KERNEL_VERSION,
@@ -79,12 +78,11 @@ public class SapsTask {
 
 		// creating run worker script for this task
 		File localRunScriptFile = createScriptFile(properties, taskImpl);
-		String remoteRunScriptPath = taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
-				+ File.separator + localRunScriptFile.getName();
+		String remoteRunScriptPath = taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + File.separator
+				+ localRunScriptFile.getName();
 
 		// adding commands
-		String scpUploadCommand = createSCPUploadCommand(localRunScriptFile.getAbsolutePath(),
-				remoteRunScriptPath);
+		String scpUploadCommand = createSCPUploadCommand(localRunScriptFile.getAbsolutePath(), remoteRunScriptPath);
 		LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
 		taskImpl.addCommand(new Command(scpUploadCommand, Command.Type.LOCAL));
 
@@ -92,8 +90,7 @@ public class SapsTask {
 		String remoteChmodRunScriptCommand = createChmodScriptCommand(remoteRunScriptPath);
 		taskImpl.addCommand(new Command(remoteChmodRunScriptCommand, Command.Type.REMOTE));
 
-		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath,
-				taskImpl);
+		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath, taskImpl);
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
 		taskImpl.addCommand(new Command(remoteExecScriptCommand, Command.Type.REMOTE));
 
@@ -111,12 +108,9 @@ public class SapsTask {
 				properties.getProperty(MAX_RESOURCE_CONN_RETRIES));
 
 		// sdexs properties
-		task.putMetadata(TaskImpl.METADATA_SANDBOX,
-				properties.getProperty(WORKER_SANDBOX) + "/" + task.getId());
-		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,
-				properties.getProperty(WORKER_SANDBOX) + "/output");
-		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT,
-				properties.getProperty(WORKER_TASK_TIMEOUT));
+		task.putMetadata(TaskImpl.METADATA_SANDBOX, properties.getProperty(WORKER_SANDBOX) + "/" + task.getId());
+		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER, properties.getProperty(WORKER_SANDBOX) + "/output");
+		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT, properties.getProperty(WORKER_TASK_TIMEOUT));
 
 		// repository properties
 		task.putMetadata(METADATA_REPOS_USER, properties.getProperty(WORKER_REMOTE_USER));
@@ -134,10 +128,9 @@ public class SapsTask {
 		String runOutName = pathToRemoteScript.getFileName().toString() + "." + "out";
 		String runErrName = pathToRemoteScript.getFileName().toString() + "." + "err";
 
-		execScriptCommand = "\"nohup " + remoteScript + " >> "
-				+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + File.separator + runOutName
-				+ " 2>> " + taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + File.separator
-				+ runErrName + "\"";
+		execScriptCommand = "\"nohup " + remoteScript + " >> " + taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+				+ File.separator + runOutName + " 2>> " + taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
+				+ File.separator + runErrName + "\"";
 
 		return execScriptCommand;
 	}
@@ -172,18 +165,12 @@ public class SapsTask {
 	}
 
 	public static String replaceVariables(Properties props, TaskImpl task, String command) {
-		command = command.replaceAll(Pattern.quote("${TASK_ID}"),
-				task.getMetadata(METADATA_TASK_ID));
-		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
-				task.getMetadata(TaskImpl.METADATA_SANDBOX));
-		command = command.replaceAll(Pattern.quote("${EXPORT_PATH}"),
-				task.getMetadata(METADATA_EXPORT_PATH));
-		command = command.replaceAll(Pattern.quote("${SAPS_MOUNT_POINT}"),
-				task.getMetadata(METADATA_MOUNT_POINT));
-		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
-				task.getMetadata(METADATA_NFS_SERVER_IP));
-		command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"),
-				task.getMetadata(METADATA_NFS_SERVER_PORT));
+		command = command.replaceAll(Pattern.quote("${TASK_ID}"), task.getMetadata(METADATA_TASK_ID));
+		command = command.replaceAll(Pattern.quote("${SANDBOX}"), task.getMetadata(TaskImpl.METADATA_SANDBOX));
+		command = command.replaceAll(Pattern.quote("${EXPORT_PATH}"), task.getMetadata(METADATA_EXPORT_PATH));
+		command = command.replaceAll(Pattern.quote("${SAPS_MOUNT_POINT}"), task.getMetadata(METADATA_MOUNT_POINT));
+		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"), task.getMetadata(METADATA_NFS_SERVER_IP));
+		command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"), task.getMetadata(METADATA_NFS_SERVER_PORT));
 		command = command.replaceAll(Pattern.quote("${WORKER_CONTAINER_REPOSITORY}"),
 				task.getMetadata(METADATA_WORKER_CONTAINER_REPOSITORY));
 		command = command.replaceAll(Pattern.quote("${WORKER_CONTAINER_TAG}"),

@@ -1,10 +1,10 @@
-package org.fogbowcloud.saps.engine.scheduler;
+package org.fogbowcloud.saps.engine.core.scheduler;
 
 import java.io.FileInputStream;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.scheduler.core.SapsController;
+import org.fogbowcloud.saps.engine.core.scheduler.Scheduler;
 
 public class SchedulerMain {
 
@@ -17,8 +17,10 @@ public class SchedulerMain {
 		FileInputStream input = new FileInputStream(args[0]);
 		properties.load(input);
 		
-		SapsController sebalController = new SapsController(properties);
-		sebalController.start(true);
-		LOGGER.info("Sebal Controller started.");
+		LOGGER.info("Trying to start Saps Controller");
+		Scheduler sapsController = new Scheduler(properties);
+		sapsController.start();
+		
+		LOGGER.info("Saps Controller started.");
 	}
 }
