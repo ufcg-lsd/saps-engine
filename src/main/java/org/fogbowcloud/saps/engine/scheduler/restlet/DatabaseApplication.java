@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
+import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcher;
 import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
@@ -32,12 +32,12 @@ public class DatabaseApplication extends Application {
 	public static final Logger LOGGER = Logger.getLogger(DatabaseApplication.class);
 
 	private Properties properties;
-	private SubmissionDispatcherImpl submissionDispatcher;
+	private SubmissionDispatcher submissionDispatcher;
 	private Component restletComponent;
 
 	public DatabaseApplication(Properties properties) throws Exception {
 		this.properties = properties;
-		this.submissionDispatcher = new SubmissionDispatcherImpl(properties);
+		this.submissionDispatcher = new SubmissionDispatcher(properties);
 
 		// CORS configuration
 		CorsService cors = new CorsService();

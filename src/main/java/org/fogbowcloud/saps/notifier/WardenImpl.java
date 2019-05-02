@@ -13,13 +13,13 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherImpl;
+import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcher;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 
 public class WardenImpl implements Warden {
 
 	private Properties properties;
-	private SubmissionDispatcherImpl dbUtilsImpl;
+	private SubmissionDispatcher dbUtilsImpl;
 
 	public static final Logger LOGGER = Logger.getLogger(WardenImpl.class);
 
@@ -34,7 +34,7 @@ public class WardenImpl implements Warden {
 			FileInputStream input = new FileInputStream(CONF_PATH);
 			properties.load(input);
 
-			dbUtilsImpl = new SubmissionDispatcherImpl(properties);
+			dbUtilsImpl = new SubmissionDispatcher(properties);
 		} catch (IOException e) {
 			LOGGER.error("Error while getting properties", e);
 		} catch (SQLException e) {
@@ -43,7 +43,7 @@ public class WardenImpl implements Warden {
 	}
 
 	// For test only
-	protected WardenImpl(Properties properties, SubmissionDispatcherImpl dbUtilsImpl) {
+	protected WardenImpl(Properties properties, SubmissionDispatcher dbUtilsImpl) {
 		this.properties = properties;
 		this.dbUtilsImpl = dbUtilsImpl;
 	}

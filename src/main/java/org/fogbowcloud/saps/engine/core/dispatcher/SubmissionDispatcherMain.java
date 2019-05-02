@@ -1,18 +1,19 @@
-package org.fogbowcloud.saps.engine.scheduler.restlet;
+package org.fogbowcloud.saps.engine.core.dispatcher;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
+import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
 
 import java.io.FileInputStream;
 import java.util.Properties;
 
-public class RestletServerMain {
+public class SubmissionDispatcherMain {
 
     private static final String ADMIN_EMAIL = "admin_email";
     private static final String ADMIN_USER = "admin_user";
     private static final String ADMIN_PASSWORD = "admin_password";
-    private static final Logger LOGGER = Logger.getLogger(RestletServerMain.class);
+    private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcherMain.class);
 
     public static void main(String[] args) throws Exception {
 

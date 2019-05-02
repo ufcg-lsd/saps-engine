@@ -16,26 +16,25 @@ import org.fogbowcloud.saps.engine.core.repository.USGSNasaRepository;
 import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
 import org.fogbowcloud.saps.notifier.Ward;
 
-public class SubmissionDispatcherImpl implements SubmissionDispatcher {
+public class SubmissionDispatcher {
     public static final int DEFAULT_PRIORITY = 0;
     private final JDBCImageDataStore imageStore;
     private Properties properties;
     private USGSNasaRepository repository;
 
-    private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcherImpl.class);
+    private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcher.class);
 
-    public SubmissionDispatcherImpl(JDBCImageDataStore imageStore, USGSNasaRepository repository) {
+    public SubmissionDispatcher(JDBCImageDataStore imageStore, USGSNasaRepository repository) {
         this.imageStore = imageStore;
         this.repository = repository;
     }
 
-    public SubmissionDispatcherImpl(Properties properties) throws SQLException {
+    public SubmissionDispatcher(Properties properties) throws SQLException {
         this.properties = properties;
         this.imageStore = new JDBCImageDataStore(properties);
         this.repository = new USGSNasaRepository(properties);
     }
 
-    @Override
     public void addUserInDB(String userEmail, String userName, String userPass, boolean userState,
                             boolean userNotify, boolean adminRole) throws SQLException {
         try {
@@ -46,7 +45,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         }
     }
 
-    @Override
     public void updateUserState(String userEmail, boolean userState) throws SQLException {
         try {
             imageStore.updateUserState(userEmail, userState);
@@ -56,7 +54,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         }
     }
 
-    @Override
     public SapsUser getUser(String userEmail) {
         try {
             return imageStore.getUser(userEmail);
@@ -66,7 +63,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         return null;
     }
 
-    @Override
     public void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail)
             throws SQLException {
         try {
@@ -77,7 +73,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         }
     }
 
-    @Override
     public void removeUserNotification(String submissionId, String taskId, String userEmail)
             throws SQLException {
         try {
@@ -88,7 +83,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         }
     }
 
-    @Override
     public boolean isUserNotifiable(String userEmail) throws SQLException {
         try {
             return imageStore.isUserNotifiable(userEmail);
@@ -99,7 +93,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         return false;
     }
 
-    @Override
     public void setTasksToPurge(String day, boolean force) throws SQLException, ParseException {
         List<ImageTask> tasksToPurge = force ? imageStore.getAllTasks()
                 : imageStore.getIn(ImageTaskState.ARCHIVED);
@@ -132,7 +125,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
     }
 
     // FIXME is it necessaty ? "System.out.println" ?
-    @Override
     public void listTasksInDB() throws SQLException, ParseException {
         List<ImageTask> allImageTask = imageStore.getAllTasks();
         for (int i = 0; i < allImageTask.size(); i++) {
@@ -140,7 +132,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         }
     }
 
-    @Override
     public List<Task> fillDB(
             String lowerLeftLatitude, String lowerLeftLongitude,
             String upperRightLatitude, String upperRightLongitude,
@@ -204,7 +195,6 @@ public class SubmissionDispatcherImpl implements SubmissionDispatcher {
         return imageStore.getAllTasks();
     }
 
-    @Override
     public List<Ward> getUsersToNotify() throws SQLException {
         List<Ward> wards = imageStore.getUsersToNotify();
         return wards;
