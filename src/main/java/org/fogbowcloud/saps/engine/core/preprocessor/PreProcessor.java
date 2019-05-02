@@ -28,23 +28,22 @@ import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
 
-public class PreProcessorImpl implements PreProcessor {
+public class PreProcessor{
 
 	private ImageDataStore imageDataStore;
 	private Properties properties;
 
-	public static final Logger LOGGER = Logger.getLogger(PreProcessorImpl.class);
+	public static final Logger LOGGER = Logger.getLogger(PreProcessor.class);
 
-	public PreProcessorImpl(Properties properties) throws SQLException {
+	public PreProcessor(Properties properties) throws SQLException {
 		this(properties, new JDBCImageDataStore(properties));
 	}
 
-	protected PreProcessorImpl(Properties properties, ImageDataStore imageDataStore) {
+	protected PreProcessor(Properties properties, ImageDataStore imageDataStore) {
 		this.properties = properties;
 		this.imageDataStore = imageDataStore;
 	}
 
-	@Override
 	public void preProcessImage(ImageTask imageTask) {
 
 		try {
@@ -95,7 +94,6 @@ public class PreProcessorImpl implements PreProcessor {
 				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
 	}
 
-	@Override
 	public void exec() {
 		LOGGER.info("Executing PreProcessor...");
 		try {
