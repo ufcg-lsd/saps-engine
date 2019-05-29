@@ -327,10 +327,6 @@ public class Scheduler {
 			LOGGER.error("Required property " + SapsPropertiesConstants.INFRA_SPECS_BLOCK_CREATING + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SapsPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH + " was not set");
-			return false;
-		}
 		if (!properties.containsKey(SapsPropertiesConstants.EXECUTION_MONITOR_PERIOD)) {
 			LOGGER.error("Required property " + SapsPropertiesConstants.EXECUTION_MONITOR_PERIOD + " was not set");
 			return false;

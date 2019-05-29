@@ -92,7 +92,6 @@ public class SapsPropertiesConstants {
 
 	// Infrastructure constants
 	public static final String INFRA_SPECS_BLOCK_CREATING = "infra_specs_block_creating";
-	public static final String INFRA_INITIAL_SPECS_FILE_PATH = "infra_initial_specs_file_path";
 
 	// KeystoneV3 constants
 	public static final String FOGBOW_KEYSTONEV3_UPDATE_PERIOD = "fogbow.keystonev3.swift.token.update.period";
