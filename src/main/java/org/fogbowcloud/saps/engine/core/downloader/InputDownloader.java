@@ -496,7 +496,7 @@ public class InputDownloader {
 					+ " " + properties.getProperty(
 							SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
 
-			LOGGER.debug("Command: " + commandToRun);
+			LOGGER.debug("CommandRequestDTO: " + commandToRun);
 
 			String usgsEnvVars = "-e USGS_USERNAME=" + properties.getProperty(SapsPropertiesConstants.USGS_USERNAME)
 					+ " -e USGS_PASSWORD=" + properties.getProperty(SapsPropertiesConstants.USGS_PASSWORD);

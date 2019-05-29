@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.command;
+package org.fogbowcloud.saps.engine.core.dto;
 
 import java.io.Serializable;
 
@@ -6,8 +6,8 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Command implements Serializable{
-	private static final Logger LOGGER = Logger.getLogger(Command.class);
+public class CommandRequestDTO implements Serializable{
+	private static final Logger LOGGER = Logger.getLogger(CommandRequestDTO.class);
 	
 	private static final long serialVersionUID = 5281647552435522413L;
 
@@ -23,7 +23,7 @@ public class Command implements Serializable{
 	private final Type type;
 	private State state = State.UNSTARTED;
 
-	public Command(String command, Type type) {
+	public CommandRequestDTO(String command, Type type) {
 		this.command = command;
 		this.type = type;
 	}
@@ -44,7 +44,7 @@ public class Command implements Serializable{
 		return this.state;
 	}
 
-	public Command clone() {
+	public CommandRequestDTO clone() {
 		return null;
 	}
 	
@@ -61,8 +61,8 @@ public class Command implements Serializable{
 		}
 	}
 
-	public static Command fromJSON(JSONObject commandJSON) {
-		Command command = new Command(commandJSON.optString("command"), 
+	public static CommandRequestDTO fromJSON(JSONObject commandJSON) {
+		CommandRequestDTO command = new CommandRequestDTO(commandJSON.optString("command"),
 				Type.valueOf(commandJSON.optString("type")));
 		command.setState(State.valueOf(commandJSON.optString("state")));
 		return command;

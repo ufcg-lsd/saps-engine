@@ -1,21 +1,10 @@
 package org.fogbowcloud.saps.engine.core.model;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
-import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.command.Command;
-import org.fogbowcloud.saps.engine.core.task.Specification;
-import org.fogbowcloud.saps.engine.core.task.Task;
+import org.fogbowcloud.saps.engine.core.dto.CommandRequestDTO;
 import org.fogbowcloud.saps.engine.core.task.TaskImpl;
-import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 
 public class SapsTask {
 
@@ -42,7 +31,32 @@ public class SapsTask {
 
 	private static final Logger LOGGER = Logger.getLogger(SapsTask.class);
 
-	public static TaskImpl createSapsTask(TaskImpl taskImpl, Properties properties, String federationMember,
+	public static void createTask(TaskImpl taskImpl, ImageTask imageTask){
+		// info shared folder beetweeen host (with NFS) and container
+		// ...
+
+		String imageFolder = imageTask.getTaskId();
+
+		String inputPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "input";
+		String preprocessingPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "preprocessing";;
+		String metadataPath = "/nfs/" + imageFolder + File.separator + "metadada";
+		String outputPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "output";
+		String logPath = "/nfs/" + imageFolder + File.separator + "/output.log";
+
+		// Remove folders
+		String removeFolders = String.format("rm -rf %s %s %s", metadataPath, outputPath, outputPath);
+		taskImpl.addCommand(new CommandRequestDTO(removeFolders, CommandRequestDTO.Type.REMOTE));
+
+		// Create folders
+		String createFolders = String.format("mkdir -p %s %s", metadataPath, preprocessingPath);
+		taskImpl.addCommand(new CommandRequestDTO(createFolders, CommandRequestDTO.Type.REMOTE));
+
+		// Run command
+		String runCommand = String.format("bash /home/ubuntu/run.sh %s %s %s %s &> %s", inputPath, outputPath, preprocessingPath, metadataPath, logPath);
+		taskImpl.addCommand(new CommandRequestDTO(runCommand, CommandRequestDTO.Type.REMOTE));
+	}
+
+	/*public static TaskImpl createSapsTask(TaskImpl taskImpl, Properties properties, String federationMember,
 			String nfsServerIP, String nfsServerPort, String workerContainerRepository, String workerContainerTag) {
 		LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
 
@@ -70,11 +84,11 @@ public class SapsTask {
 
 		// cleaning environment
 		String cleanEnvironment = "sudo rm -rf " + properties.getProperty(WORKER_SANDBOX);
-		taskImpl.addCommand(new Command(cleanEnvironment, Command.Type.REMOTE));
+		taskImpl.addCommand(new CommandRequestDTO(cleanEnvironment, CommandRequestDTO.Type.REMOTE));
 
 		// creating sandbox
 		String mkdirCommand = "mkdir -p " + taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
-		taskImpl.addCommand(new Command(mkdirCommand, Command.Type.REMOTE));
+		taskImpl.addCommand(new CommandRequestDTO(mkdirCommand, CommandRequestDTO.Type.REMOTE));
 
 		// creating run worker script for this task
 		File localRunScriptFile = createScriptFile(properties, taskImpl);
@@ -84,15 +98,15 @@ public class SapsTask {
 		// adding commands
 		String scpUploadCommand = createSCPUploadCommand(localRunScriptFile.getAbsolutePath(), remoteRunScriptPath);
 		LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-		taskImpl.addCommand(new Command(scpUploadCommand, Command.Type.LOCAL));
+		taskImpl.addCommand(new CommandRequestDTO(scpUploadCommand, CommandRequestDTO.Type.LOCAL));
 
 		// adding remote commands
 		String remoteChmodRunScriptCommand = createChmodScriptCommand(remoteRunScriptPath);
-		taskImpl.addCommand(new Command(remoteChmodRunScriptCommand, Command.Type.REMOTE));
+		taskImpl.addCommand(new CommandRequestDTO(remoteChmodRunScriptCommand, CommandRequestDTO.Type.REMOTE));
 
 		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath, taskImpl);
 		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
-		taskImpl.addCommand(new Command(remoteExecScriptCommand, Command.Type.REMOTE));
+		taskImpl.addCommand(new CommandRequestDTO(remoteExecScriptCommand, CommandRequestDTO.Type.REMOTE));
 
 		return taskImpl;
 	}
@@ -178,7 +192,7 @@ public class SapsTask {
 		command = command.replaceAll(Pattern.quote("${REMOTE_COMMAND_EXIT_PATH}"),
 				task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH));
 
-		LOGGER.debug("Command that will be executed: " + command);
+		LOGGER.debug("CommandRequestDTO that will be executed: " + command);
 		return command;
-	}
+	}*/
 }

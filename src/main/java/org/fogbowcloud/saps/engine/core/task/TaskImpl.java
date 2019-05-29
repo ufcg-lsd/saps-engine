@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.command.Command;
+import org.fogbowcloud.saps.engine.core.dto.CommandRequestDTO;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,7 +34,7 @@ public class TaskImpl implements Task {
 	private String uuid;
 	private Specification specification;
 	private TaskState state;
-	private List<Command> commands;
+	private List<CommandRequestDTO> commands;
 	private List<String> commandsStr;
 	private List<String> processes;
 	private Map<String, String> metadata;
@@ -57,7 +57,11 @@ public class TaskImpl implements Task {
 		this.startedRunningAt = Long.MAX_VALUE;
 		this.commandsStr = new ArrayList<>();
 	}
-	
+
+	public TaskImpl(String id, String uuid){
+		this(id, null, uuid);
+	}
+
 	public TaskImpl(String id, Specification specification) {
 		this(id, specification, UUID.randomUUID().toString());
 	}
@@ -91,15 +95,15 @@ public class TaskImpl implements Task {
 			taskClone.putMetadata(attribute, allMetadata.get(attribute));
 		}
 
-		List<Command> commands = getAllCommands();
-		for (Command command : commands) {
+		List<CommandRequestDTO> commands = getAllCommands();
+		for (CommandRequestDTO command : commands) {
 			taskClone.addCommand(command);
 		}
 		return taskClone;
 	}
 
 	@Override
-	public List<Command> getAllCommands() {
+	public List<CommandRequestDTO> getAllCommands() {
 		return commands;
 	}
 
@@ -130,7 +134,7 @@ public class TaskImpl implements Task {
 	}
 
 	@Override
-	public void addCommand(Command command) {
+	public void addCommand(CommandRequestDTO command) {
 		commands.add(command);
 	}
 
@@ -227,7 +231,7 @@ public class TaskImpl implements Task {
 			task.put("uuid", this.getUUID());
 			task.put("state", this.state.getDesc());
 			JSONArray commands = new JSONArray();
-			for (Command command : this.getAllCommands()) {
+			for (CommandRequestDTO command : this.getAllCommands()) {
 				commands.put(command.toJSON());
 			}
 			task.put("commands", commands);
@@ -256,7 +260,7 @@ public class TaskImpl implements Task {
 
 		JSONArray commands = taskJSON.optJSONArray("commands");
 		for (int i = 0; i < commands.length(); i++) {
-			task.addCommand(Command.fromJSON(commands.optJSONObject(i)));
+			task.addCommand(CommandRequestDTO.fromJSON(commands.optJSONObject(i)));
 		}
 
 		JSONObject metadata = taskJSON.optJSONObject("metadata");

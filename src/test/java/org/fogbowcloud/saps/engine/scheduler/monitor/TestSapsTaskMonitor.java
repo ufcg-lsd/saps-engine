@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-/*import org.fogbowcloud.blowout.core.model.Command;
+/*import org.fogbowcloud.blowout.core.model.CommandRequestDTO;
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.Task;
 import org.fogbowcloud.blowout.core.model.TaskImpl;
@@ -219,7 +219,7 @@ public class TestSapsTaskMonitor {
 	public void testProcMonTaskFailedWithMetadata() throws SQLException {
 		String taskId = "fake-id";
 		@SuppressWarnings("unchecked")
-		List<Command> commandList = mock(List.class);
+		List<CommandRequestDTO> commandList = mock(List.class);
 		Specification spec = mock(Specification.class);
 
 		String metadataFilePath = "/fake/export/path/fake-id/metadata/outputDescription.txt";
@@ -275,7 +275,7 @@ public class TestSapsTaskMonitor {
 
 		// Task set
 		@SuppressWarnings("unchecked")
-		List<Command> commandList = mock(List.class);
+		List<CommandRequestDTO> commandList = mock(List.class);
 		Specification spec = mock(Specification.class);
 
 		String metadataFilePath = "/fake/export/path/" + imageTask.getTaskId()
@@ -364,7 +364,7 @@ public class TestSapsTaskMonitor {
 		blowoutPool.addTasks(tasks);
 
 		TaskProcessImpl taskProcess = new TaskProcessImpl(imageTask.getTaskId(),
-				new ArrayList<Command>(), spec, UUID.randomUUID().toString());
+				new ArrayList<CommandRequestDTO>(), spec, UUID.randomUUID().toString());
 		taskProcess.setStatus(TaskState.TIMEDOUT);
 
 		Map<Task, TaskProcess> taskProcesses = new HashMap<>();

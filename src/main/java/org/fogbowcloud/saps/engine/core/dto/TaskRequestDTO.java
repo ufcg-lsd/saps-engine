@@ -6,19 +6,20 @@ import java.util.Map;
 
 import org.fogbowcloud.saps.engine.core.task.Specification;
 
-public class TaskSpecDTO implements Serializable {
+public class TaskRequestDTO implements Serializable {
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
     
     private String id;
+    private String state;
     private Specification spec;
     private List<String> commands;
     private Map<String, String> metadata;
 
-    public TaskSpecDTO(String id, Specification spec, List<String> commands,
-            Map<String, String> metadata) {
+    public TaskRequestDTO(String id, Specification spec, List<String> commands,
+                          Map<String, String> metadata) {
         this.id = id;
         this.spec = spec;
         this.commands = commands;
@@ -26,7 +27,7 @@ public class TaskSpecDTO implements Serializable {
     }
 
     // empty constructor required for Gson.
-    public TaskSpecDTO() {}
+    public TaskRequestDTO() {}
 
     public List<String> getCommands() {
         return this.commands;
@@ -44,9 +45,11 @@ public class TaskSpecDTO implements Serializable {
         return id;
     }
 
+    public String getState(){ return state; }
+
     @Override
     public String toString() {
-        return "TaskSpecDTO [id=" + id + ", spec=" + spec + ", commands=" + commands + ", metadata="
+        return "TaskRequestDTO [id=" + id + ", spec=" + spec + ", commands=" + commands + ", metadata="
                 + metadata + "]";
     }
 

@@ -1,12 +1,11 @@
 package org.fogbowcloud.saps.engine.core.scheduler;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Properties;
@@ -16,25 +15,25 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.database.JDBCJobDataStore;
+import org.fogbowcloud.saps.engine.arrebol.JobSubmitted;
 import org.fogbowcloud.saps.engine.arrebol.Arrebol;
-import org.fogbowcloud.saps.engine.arrebol.ArrebolRequestsHelper;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
+import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
+import org.fogbowcloud.saps.engine.core.dto.TaskResponseDTO;
+import org.fogbowcloud.saps.engine.core.job.JobState;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
+import org.fogbowcloud.saps.engine.core.dto.CommandRequestDTO;
 import org.fogbowcloud.saps.engine.core.task.Specification;
-import org.fogbowcloud.saps.engine.core.task.Task;
 import org.fogbowcloud.saps.engine.core.task.TaskImpl;
+import org.fogbowcloud.saps.engine.core.task.Task;
+import org.fogbowcloud.saps.engine.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
-import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
-import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
-
-import com.google.gson.Gson;
 
 public class Scheduler {
 
@@ -48,53 +47,85 @@ public class Scheduler {
 	private final ImageDataStore imageStore;
 	private final ScheduledExecutorService sapsExecutor;
 	private final Arrebol arrebol;
-	private static ScheduledFuture<?> sapsExecutionTimer;
+	private final Specification workerSpec;
+	private static ScheduledFuture<?> sapsSubmissor;
+	private static ScheduledFuture<?> sapsChecker;
 
 	public Scheduler(Properties properties) throws SapsException, SQLException {
-		this.properties = properties;
-		this.sapsExecutor = Executors.newScheduledThreadPool(1);
-		this.arrebol = new Arrebol(properties);
-		
 		try {
 			LOGGER.debug("Imagestore " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + ":"
 					+ SapsPropertiesConstants.IMAGE_DATASTORE_IP);
-			this.imageStore = new JDBCImageDataStore(getProperties());
+			this.imageStore = new JDBCImageDataStore(properties);
 
 			if (!checkProperties(properties))
 				throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
 		} catch (Exception e) {
 			throw new SapsException("Error while initializing Sebal Controller.", e);
 		}
+
+		this.properties = properties;
+		this.sapsExecutor = Executors.newScheduledThreadPool(1);
+		this.arrebol = new Arrebol(properties);
+		this.workerSpec = new Specification(properties.getProperty(SapsPropertiesConstants.IMAGE_WORKER));
 	}
 
 	public void start() throws Exception {
 		try {
-			final Specification workerSpec = getWorkerSpecFromFile(getProperties());
+			checkTasksRunning();
 
-			sapsExecutionTimer = sapsExecutor.scheduleWithFixedDelay(new Runnable() {
+			sapsSubmissor = sapsExecutor.scheduleWithFixedDelay(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						verifyTasksPreprocessed();
-						addSapsJobs(properties, workerSpec);
-						checkSapsJobs();
+						checkTasksPreprocessed();
+						addSapsJobs(properties);
 					} catch (Exception e) {
 						LOGGER.error("Error while adding tasks", e);
 					}
 				}
 
-			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD)),
-					TimeUnit.MILLISECONDS);
+			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)),
+					TimeUnit.SECONDS);
+
+			sapsChecker = sapsExecutor.scheduleWithFixedDelay(new Runnable() {
+				@Override
+				public void run() {
+					checkSapsJobs();
+				}
+			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)), TimeUnit.SECONDS);
 
 		} catch (Exception e) {
-			LOGGER.error("Error while starting SebalController", e);
+			LOGGER.error("Error while starting Scheduler component", e);
 		}
 	}
 
-	private void verifyTasksPreprocessed() {
+	private void checkTasksRunning() {
+		try {
+			List<ImageTask> imageTasksInStateRunning = imageStore.getIn(ImageTaskState.RUNNING,
+					ImageDataStore.UNLIMITED);
+			LOGGER.debug("Verifying " + imageTasksInStateRunning.size() + " image with state RUNNING");
+			for (ImageTask imageTask : imageTasksInStateRunning) {
+
+				imageTask.setState(ImageTaskState.READY);
+				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+
+				try {
+					imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
+				} catch (SQLException e) {
+					LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
+							+ imageTask.getUpdateTime() + " in Catalogue", e);
+				}
+			}
+		} catch (SQLException e) {
+			LOGGER.error("Error while verify tasks in state preprocessed.", e);
+		}
+	}
+
+	private void checkTasksPreprocessed() {
 		try {
 			List<ImageTask> imageTasksInStatePreprocessed = imageStore.getIn(ImageTaskState.PREPROCESSED,
 					ImageDataStore.UNLIMITED);
+			LOGGER.debug("Verifying " + imageTasksInStatePreprocessed.size() + " image with state PREPROCESSED");
 			for (ImageTask imageTask : imageTasksInStatePreprocessed) {
 
 				String imageNfsServerIP = "";
@@ -136,10 +167,11 @@ public class Scheduler {
 			return false;
 	}
 
-	private void addSapsJobs(final Properties properties, final Specification workerSpec)
+	private void addSapsJobs(final Properties properties)
 			throws Exception {
 		try {
 			List<ImageTask> imageTasksToProcess = imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED);
+			LOGGER.debug("Trying add " + imageTasksToProcess.size() + " images with state READY");
 			for (ImageTask imageTask : imageTasksToProcess) {
 				LOGGER.debug("Image task " + imageTask.getTaskId() + " is in the execution state "
 						+ imageTask.getState().getValue() + " (not finished).");
@@ -156,70 +188,130 @@ public class Scheduler {
 					nfsServerPort = pair.getValue().toString();
 					it.remove();
 				}
-
-				// Getting Worker docker repository and tag
-				ExecutionScriptTag workerDockerInfo = ExecutionScriptTagUtil
-						.getExecutionScritpTag(imageTask.getAlgorithmExecutionTag(), ExecutionScriptTagUtil.WORKER);
 				
-				TaskImpl imageTaskToJob = new TaskImpl(imageTask.getTaskId(), workerSpec,
-						UUID.randomUUID().toString());
+				TaskImpl imageTaskToJob = new TaskImpl(imageTask.getTaskId(), workerSpec, UUID.randomUUID().toString());
 				
 				LOGGER.info("Creating saps task");
-				SapsTask.createSapsTask(imageTaskToJob, properties, federationMember, nfsServerIP, nfsServerPort, workerDockerInfo.getDockerRepository(), workerDockerInfo.getDockerTag());
-				
-				List<Task> teste = new LinkedList<Task>();
-				teste.add(imageTaskToJob);
-				
-				SapsJob imageJob = new SapsJob(federationMember, teste, federationMember);
+				SapsTask.createTask(imageTaskToJob, imageTask);
+
+				SapsJob imageJob = new SapsJob(UUID.randomUUID().toString(), federationMember, imageTask.getTaskId());
+				imageJob.addTask(imageTaskToJob);
+
 				try {
-					String a = arrebol.addJob(imageJob);
-					LOGGER.debug("Result submit job: " + a);
+					String jobId = arrebol.addJob(imageJob);
+					LOGGER.debug("Result submit job: " + jobId);
+
+					arrebol.addJobInList(new JobSubmitted(jobId, imageTask));
+					LOGGER.info("Adding job in list");
 				}catch(SubmitJobException e) {
 					LOGGER.error("Error while trying to send request for Arrebol with new saps job.", e);
 				}
-				
-				// Create Job
-				// Submit Job
 
-				/*imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+
+				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+				imageTask.setState(ImageTaskState.RUNNING);
 				try {
 					imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
 				} catch (SQLException e) {
 					LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
 							+ imageTask.getUpdateTime() + " in Catalogue", e);
-				}*/
+				}
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while getting task.", e);
 		}
+
+		/*Task task01 = new TaskImpl("001", UUID.randomUUID().toString());
+		task01.addCommand(new CommandRequestDTO("sleep 10", CommandRequestDTO.Type.REMOTE));
+
+		SapsJob sapsJob01 = new SapsJob(UUID.randomUUID().toString(), "Thiago", new LinkedList<Task>(), "0001");
+		sapsJob01.addTask(task01);
+
+		try {
+			String jobId = arrebol.addJob(sapsJob01);
+			LOGGER.debug("Result submit job: " + jobId);
+
+			arrebol.addJobInList(new JobSubmitted(jobId, null));
+			LOGGER.info("Adding job in list");
+		}catch(SubmitJobException e) {
+			LOGGER.error("Error while trying to send request for Arrebol with new saps job.", e);
+		}*/
 	}
 
 	private void checkSapsJobs() {
 		try {
-			List<ImageTask> imageTasksInStateRunning = imageStore.getIn(ImageTaskState.RUNNING,
-					ImageDataStore.UNLIMITED);
-			for (ImageTask imageTask : imageTasksInStateRunning) {
+			List<JobSubmitted> jobsSubmitted = arrebol.returnAllJobsSubmitted();
+			LOGGER.debug("Checking jobs " + jobsSubmitted.size() +" submitted for arrebol service");
+			for (JobSubmitted job : jobsSubmitted) {
+				String jobId = job.getJobId();
 
+				LOGGER.info("Checking job " + jobId + " ...");
+
+				JobResponseDTO jobResponse = arrebol.checkStatusJob(jobId);
+
+				if(checkJobFinish(jobResponse)){
+					LOGGER.debug("Job " + jobId + " finished");
+
+					arrebol.removeJob(job);
+
+					ImageTask imageTask = job.getImageTask();
+					imageTask.setState(ImageTaskState.FINISHED);
+
+					try {
+						imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+					}catch(SQLException e){
+						LOGGER.error("Error while update time in task.", e);
+					}
+
+					try {
+						imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
+					} catch (SQLException e) {
+						LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
+								+ imageTask.getUpdateTime() + " in Catalogue", e);
+					}
+				}
+
+				if(checkJobFail(jobResponse)){
+					LOGGER.debug("Job " + jobId + " failed");
+
+					arrebol.removeJob(job);
+
+					ImageTask imageTask = job.getImageTask();
+					imageTask.setState(ImageTaskState.FAILED);
+
+					try {
+						imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+					}catch(SQLException e){
+						LOGGER.error("Error while update time in task.", e);
+					}
+
+					try {
+						imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
+					} catch (SQLException e) {
+						LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
+								+ imageTask.getUpdateTime() + " in Catalogue", e);
+					}
+				}
 			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while check saps jobs.", e);
+		}catch(GetJobException e){
+			LOGGER.error("Error while trying check status jobs submitted.", e);
 		}
+
 	}
 
-	private static Specification getWorkerSpecFromFile(Properties properties) {
-		String workerSpecFile = properties.getProperty(SapsPropertiesConstants.INFRA_INITIAL_SPECS_FILE_PATH);
-		List<Specification> specs = new ArrayList<Specification>();
+	private boolean checkJobFinish(JobResponseDTO jobResponse){
 
-		try {
-			specs = Specification.getSpecificationsFromJSonFile(workerSpecFile);
-			if (specs != null && !specs.isEmpty()) {
-				return specs.get(0);
-			}
-			return null;
-		} catch (IOException e) {
-			LOGGER.error("Error while getting spec from file " + workerSpecFile, e);
-			return null;
+		for(TaskResponseDTO task : jobResponse.getTasks()){
+			if(task.getState().compareTo("FINISHED") != 0)
+				return false;
 		}
+
+		return true;
+	}
+
+	private boolean checkJobFail(JobResponseDTO jobResponse){
+
+		return false;
 	}
 
 	protected static boolean checkProperties(Properties properties) {
@@ -243,8 +335,16 @@ public class Scheduler {
 			LOGGER.error("Required property " + SapsPropertiesConstants.EXECUTION_MONITOR_PERIOD + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD + " was not set");
+		if (!properties.containsKey(SapsPropertiesConstants.IMAGE_WORKER)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_WORKER + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER + " was not set");
 			return false;
 		}
 		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXPORT_PATH)) {

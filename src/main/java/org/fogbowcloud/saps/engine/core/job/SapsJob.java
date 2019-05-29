@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.task.Task;
 import org.fogbowcloud.saps.engine.core.task.TaskImpl;
 import org.json.JSONArray;
@@ -19,7 +20,6 @@ public class SapsJob extends Job implements Serializable {
 	private static final long serialVersionUID = 7780896231796955706L;
 
 	private static final String JSON_HEADER_JOB_ID = "jobId";
-	private static final String JSON_HEADER_JOB_ID_ARREBOL = "jobIdArrebol";
 	private static final String JSON_HEADER_NAME = "name";
 	private static final String JSON_HEADER_UUID = "uuid";
 	private static final String JSON_HEADER_STATE = "state";
@@ -31,25 +31,22 @@ public class SapsJob extends Job implements Serializable {
 	private final String userId;
 	private String name;
 	private JobState state;
-	private String jobIdArrebol;
-	
-	public SapsJob(String jobId, String owner, List<Task> taskList, String userID) {
-		super(taskList);
-		this.name = "";
-		this.jobId = jobId;
-		this.owner = owner;
-		this.userId = userID;
-		this.state = JobState.SUBMITTED;
+
+	public SapsJob(String jobId, String owner, String userId){
+		this(jobId, owner, new LinkedList<Task>(), userId);
 	}
 
-	public SapsJob(String jobId, String owner, List<Task> taskList, String userID, String jobIdArrebol) {
+	public SapsJob(String jobId, String owner, List<Task> taskList, String userID) {
+		this(jobId, owner, taskList, userID, JobState.SUBMITTED);
+	}
+
+	public SapsJob(String jobId, String owner, List<Task> taskList, String userID, JobState jobState){
 		super(taskList);
-		this.name = "";
+		this.name = userID;
 		this.jobId = jobId;
 		this.owner = owner;
 		this.userId = userID;
-		this.state = JobState.SUBMITTED;
-		this.jobIdArrebol = jobIdArrebol;
+		this.state = jobState;
 	}
 
 	public SapsJob(String owner, List<Task> taskList, String userID) {
@@ -63,14 +60,6 @@ public class SapsJob extends Job implements Serializable {
 
 	public String getJobId() {
 		return jobId;
-	}
-	
-	public String getJobIdArrebol() {
-		return jobIdArrebol;
-	}
-	
-	public void setJobIdArrebol(String jobIdArrebol) {
-		this.jobIdArrebol = jobIdArrebol;
 	}
 	
 	public String getId() {
@@ -128,7 +117,6 @@ public class SapsJob extends Job implements Serializable {
 			job.put(JSON_HEADER_OWNER, this.getOwner());
 			job.put(JSON_HEADER_UUID, this.getUserId());
 			job.put(JSON_HEADER_STATE, this.getState().value());
-			job.put(JSON_HEADER_JOB_ID_ARREBOL, this.jobIdArrebol);
 			JSONArray tasks = new JSONArray();
 			Map<String, Task> taskList = this.getTaskList();
 			for (Entry<String, Task> entry : taskList.entrySet()) {
@@ -158,8 +146,7 @@ public class SapsJob extends Job implements Serializable {
 				job.optString(JSON_HEADER_JOB_ID),
 				job.optString(JSON_HEADER_OWNER),
 				tasks,
-				job.optString(JSON_HEADER_UUID),
-						job.optString(JSON_HEADER_JOB_ID_ARREBOL)
+				job.optString(JSON_HEADER_UUID)
 		);
 		sapsJob.setFriendlyName(job.optString(JSON_HEADER_NAME));
 		try {

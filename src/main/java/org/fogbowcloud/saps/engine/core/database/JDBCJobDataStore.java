@@ -17,7 +17,7 @@ import org.json.JSONObject;
 
 public class JDBCJobDataStore implements JobDataStore{
 
-	private static final String JOBS_TABLE_NAME = "iguassu_jobs";
+	private static final String JOBS_TABLE_NAME = "saps_jobs";
 	private static final String JOB_ID = "job_id";
 	private static final String JOB_JSON = "job_json";
 	private static final String JOB_OWNER = "job_owner";

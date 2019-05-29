@@ -88,9 +88,7 @@ public class SapsPropertiesConstants {
 	public static final String SUBMISSION_REST_SERVER_PORT = "submission_rest_server_port";
 
 	// Specification constants
-	public static final String SPEC_REQUEST_TYPE = "RequestType";
-	public static final String SPEC_GLUE2_CLOUD_COMPUTE_MANAGER_ID = "Glue2CloudComputeManagerID";
-	public static final String BLOWOUT_VERSION_PREFIX = "blowout.version.";
+	public static final String IMAGE_WORKER = "image_worker";
 
 	// Infrastructure constants
 	public static final String INFRA_SPECS_BLOCK_CREATING = "infra_specs_block_creating";
@@ -106,7 +104,8 @@ public class SapsPropertiesConstants {
 
 	// Monitors constants
 	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
-	public static final String SAPS_EXECUTION_PERIOD = "saps_execution_period";
+	public static final String SAPS_EXECUTION_PERIOD_SUBMISSOR = "saps_execution_period_submissor";
+	public static final String SAPS_EXECUTION_PERIOD_CHECKER = "saps_execution_period_checker";
 
 	public static final String DEFAULT_ARCHIVER_PERIOD = "default_archiver_period";
 	public static final String DEFAULT_DOWNLOADER_PERIOD = "default_downloader_period";

@@ -1,6 +1,6 @@
 package org.fogbowcloud.saps.engine.core.task;
 
-import org.fogbowcloud.saps.engine.core.command.Command;
+import org.fogbowcloud.saps.engine.core.dto.CommandRequestDTO;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -24,9 +24,9 @@ public interface Task {
 
 	boolean checkTimeOuted();
 
-	void addCommand(Command command);
+	void addCommand(CommandRequestDTO command);
 
-	List<Command> getAllCommands();
+	List<CommandRequestDTO> getAllCommands();
 
 	List<String> getAllCommandsInStr();
 

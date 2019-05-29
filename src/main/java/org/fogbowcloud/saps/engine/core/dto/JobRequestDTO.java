@@ -7,15 +7,15 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JobDTO implements Serializable {
+public class JobRequestDTO implements Serializable {
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
     private String label;
-    private List<TaskSpecDTO> tasksSpecs;
+    private List<TaskRequestDTO> tasksSpecs;
 
-    public JobDTO(SapsJob job) {
+    public JobRequestDTO(SapsJob job) {
         this.tasksSpecs = new ArrayList<>();
         this.label = job.getName();
         populateTaskSpec(job);
@@ -24,7 +24,7 @@ public class JobDTO implements Serializable {
     private void populateTaskSpec(SapsJob job) {
         List<Task> taskList = job.getTasks();
         for (Task task : taskList) {
-            this.tasksSpecs.add(new TaskSpecDTO(task.getId(), task.getSpecification(),
+            this.tasksSpecs.add(new TaskRequestDTO(task.getId(), task.getSpecification(),
                     task.getAllCommandsInStr(), task.getAllMetadata()));
         }
     }
@@ -37,11 +37,16 @@ public class JobDTO implements Serializable {
         this.label = label;
     }
 
-    public List<TaskSpecDTO> getTasksSpecs() {
+    public List<TaskRequestDTO> getTasksSpecs() {
         return tasksSpecs;
     }
 
-    public void setTasksSpecs(List<TaskSpecDTO> tasksSpecs) {
+    public void setTasksSpecs(List<TaskRequestDTO> tasksSpecs) {
         this.tasksSpecs = tasksSpecs;
+    }
+
+    @Override
+    public String toString() {
+        return "JobRequestDTO [label=" + label + ", tasksSpec=" + tasksSpecs + "]";
     }
 }

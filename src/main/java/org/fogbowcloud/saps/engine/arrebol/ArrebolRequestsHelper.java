@@ -11,8 +11,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.infrastructure.http.HttpWrapper;
-import org.fogbowcloud.saps.engine.core.dto.JobDTO;
-import org.fogbowcloud.saps.engine.core.job.Job;
+import org.fogbowcloud.saps.engine.core.dto.JobRequestDTO;
+import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
 import org.fogbowcloud.saps.engine.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.exceptions.SubmitJobException;
@@ -35,7 +35,7 @@ public class ArrebolRequestsHelper {
 	public ArrebolRequestsHelper(Properties properties) {
 		this.properties = properties;
 		this.arrebolBaseUrl = this.properties.getProperty(SapsPropertiesConstants.ARREBOL_BASE_URL);
-		this.gson = new Gson();
+		this.gson = new GsonBuilder().create();
 	}
 
 	public String submitJobToExecution(SapsJob job) throws Exception, SubmitJobException {
@@ -69,17 +69,8 @@ public class ArrebolRequestsHelper {
 		return jobIdArrebol;
 	}
 
-	public JobDTO getJob(String jobArrebolId) throws GetJobException {
-		final String endpoint = this.arrebolBaseUrl + "/job/" + jobArrebolId;
-
-		String jsonResponse;
-		try {
-			jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint, null);
-		} catch (Exception e) {
-			throw new GetJobException("Get Job from Arrebol has FAILED: " + e.getMessage(), e);
-		}
-
-		return this.gson.fromJson(jsonResponse, JobDTO.class);
+	public JobResponseDTO getJob(String jobArrebolId) throws GetJobException {
+		return this.gson.fromJson(getJobJSON(jobArrebolId), JobResponseDTO.class);
 	}
 
 	public String getJobJSON(String jobArrebolId) throws GetJobException {
@@ -99,8 +90,10 @@ public class ArrebolRequestsHelper {
 		LOGGER.info("Building JSON body of Job : [" + job.getId() + "]");
 
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		JobDTO jobDTO = new JobDTO(job);
+		JobRequestDTO jobDTO = new JobRequestDTO(job);
 		String json = gson.toJson(jobDTO);
+
+		LOGGER.info("JSON body: " + json);
 
 		return new StringEntity(json);
 	}

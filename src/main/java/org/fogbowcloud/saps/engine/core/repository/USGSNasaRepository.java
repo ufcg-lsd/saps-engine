@@ -109,7 +109,7 @@ public class USGSNasaRepository implements INPERepository {
 		String loginJsonRequest = "jsonRequest=" + loginJSONObj.toString();
 		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data",
 				loginJsonRequest, usgsJsonUrl + File.separator + "login");
-		LOGGER.debug("Command=" + builder.command());
+		LOGGER.debug("CommandRequestDTO=" + builder.command());
 
 		try {
 			Process p = builder.start();
@@ -176,7 +176,7 @@ public class USGSNasaRepository implements INPERepository {
 	private void downloadInto(ImageTask imageData, String targetFilePath) throws IOException {
 		ProcessBuilder builder = new ProcessBuilder("curl", "-L", "-o", targetFilePath, "-X",
 				"GET", imageData.getDownloadLink());
-		LOGGER.debug("Command=" + builder.command());
+		LOGGER.debug("CommandRequestDTO=" + builder.command());
 
 		try {
 			Process p = builder.start();
@@ -268,7 +268,7 @@ public class USGSNasaRepository implements INPERepository {
 		String downloadJsonRequest = "jsonRequest=" + downloadJSONObj.toString();
 		ProcessBuilder builder = new ProcessBuilder("curl", "-X", "POST", "--data",
 				downloadJsonRequest, usgsJsonUrl + File.separator + "download");
-		LOGGER.debug("Command=" + builder.command());
+		LOGGER.debug("CommandRequestDTO=" + builder.command());
 
 		try {
 			Process p = builder.start();
