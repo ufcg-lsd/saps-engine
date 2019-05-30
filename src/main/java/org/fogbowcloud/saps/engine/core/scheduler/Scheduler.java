@@ -221,7 +221,7 @@ public class Scheduler {
 			LOGGER.error("Error while getting task.", e);
 		}
 
-		/*Task task01 = new TaskImpl("001", UUID.randomUUID().toString());
+		/*Task task01 = new TaskImpl("001", workerSpec, UUID.randomUUID().toString());
 		task01.addCommand(new CommandRequestDTO("sleep 10", CommandRequestDTO.Type.REMOTE));
 
 		SapsJob sapsJob01 = new SapsJob(UUID.randomUUID().toString(), "Thiago", new LinkedList<Task>(), "0001");
@@ -240,6 +240,7 @@ public class Scheduler {
 
 	private void checkSapsJobs() {
 		try {
+			ImageTask imageTask = null;
 			List<JobSubmitted> jobsSubmitted = arrebol.returnAllJobsSubmitted();
 			LOGGER.debug("Checking jobs " + jobsSubmitted.size() +" submitted for arrebol service");
 			for (JobSubmitted job : jobsSubmitted) {
@@ -249,35 +250,25 @@ public class Scheduler {
 
 				JobResponseDTO jobResponse = arrebol.checkStatusJob(jobId);
 
-				if(checkJobFinish(jobResponse)){
+				imageTask = job.getImageTask();
+
+				boolean checkFinish = checkJobFinish(jobResponse);
+				boolean checkFail = checkJobFail(jobResponse);
+
+				if(checkFinish) {
 					LOGGER.debug("Job " + jobId + " finished");
 
-					arrebol.removeJob(job);
-
-					ImageTask imageTask = job.getImageTask();
 					imageTask.setState(ImageTaskState.FINISHED);
-
-					try {
-						imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
-					}catch(SQLException e){
-						LOGGER.error("Error while update time in task.", e);
-					}
-
-					try {
-						imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
-					} catch (SQLException e) {
-						LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
-								+ imageTask.getUpdateTime() + " in Catalogue", e);
-					}
 				}
 
-				if(checkJobFail(jobResponse)){
+				if(checkFail) {
 					LOGGER.debug("Job " + jobId + " failed");
 
-					arrebol.removeJob(job);
-
-					ImageTask imageTask = job.getImageTask();
 					imageTask.setState(ImageTaskState.FAILED);
+				}
+
+				if(checkFinish || checkFail){
+					arrebol.removeJob(job);
 
 					try {
 						imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
@@ -323,14 +314,6 @@ public class Scheduler {
 			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_PORT + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SapsPropertiesConstants.INFRA_SPECS_BLOCK_CREATING)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.INFRA_SPECS_BLOCK_CREATING + " was not set");
-			return false;
-		}
-		if (!properties.containsKey(SapsPropertiesConstants.EXECUTION_MONITOR_PERIOD)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.EXECUTION_MONITOR_PERIOD + " was not set");
-			return false;
-		}
 		if (!properties.containsKey(SapsPropertiesConstants.IMAGE_WORKER)) {
 			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_WORKER + " was not set");
 			return false;
@@ -341,10 +324,6 @@ public class Scheduler {
 		}
 		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)) {
 			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER + " was not set");
-			return false;
-		}
-		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXPORT_PATH)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXPORT_PATH + " was not set");
 			return false;
 		}
 		if (!properties.containsKey(SapsPropertiesConstants.ARREBOL_BASE_URL)) {
