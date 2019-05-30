@@ -90,9 +90,6 @@ public class SapsPropertiesConstants {
 	// Specification constants
 	public static final String IMAGE_WORKER = "image_worker";
 
-	// Infrastructure constants
-	public static final String INFRA_SPECS_BLOCK_CREATING = "infra_specs_block_creating";
-
 	// KeystoneV3 constants
 	public static final String FOGBOW_KEYSTONEV3_UPDATE_PERIOD = "fogbow.keystonev3.swift.token.update.period";
 	public static final String FOGBOW_KEYSTONEV3_PROJECT_ID = "fogbow.keystonev3.project.id";
@@ -102,7 +99,6 @@ public class SapsPropertiesConstants {
 	public static final String FOGBOW_KEYSTONEV3_SWIFT_URL = "fogbow.keystonev3.swift.url";
 
 	// Monitors constants
-	public static final String EXECUTION_MONITOR_PERIOD = "execution_monitor_period";
 	public static final String SAPS_EXECUTION_PERIOD_SUBMISSOR = "saps_execution_period_submissor";
 	public static final String SAPS_EXECUTION_PERIOD_CHECKER = "saps_execution_period_checker";
 
