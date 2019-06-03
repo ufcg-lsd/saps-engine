@@ -101,6 +101,7 @@ public class Scheduler {
 
 				imageTask.setState(ImageTaskState.READY);
 				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+				imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.READY);
 
 				try {
 					imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
