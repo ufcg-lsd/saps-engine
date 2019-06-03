@@ -1,5 +1,7 @@
 package org.fogbowcloud.saps.engine.core.dto;
 
+import org.fogbowcloud.saps.engine.core.task.Specification;
+
 import java.io.Serializable;
 
 public class TaskResponseDTO implements Serializable {

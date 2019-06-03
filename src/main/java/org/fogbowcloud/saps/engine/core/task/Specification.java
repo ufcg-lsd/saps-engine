@@ -24,24 +24,38 @@ public class Specification implements Serializable {
 
 	private static final String IMAGE_STR = "image";
 
+	private static final String REQUIREMENTS_STR = "requirements";
+
 	private static final Logger LOGGER = Logger.getLogger(Specification.class);
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 5255295548723927267L;
-	String image;
 
-	public Specification(String image) {
+	private String image;
+
+	private Map<String, String> requirements;
+
+	public Specification(String image, Map<String, String> requirements){
 		this.image = image;
+		this.requirements = requirements;
 	}
 
 	public String getImage() {
 		return image;
 	}
 
+	public Map<String, String> getRequirements() {
+		return requirements;
+	}
+
 	public void setImage(String image){
 		this.image = image;
+	}
+
+	public void setRequirements (Map<String, String> requirements) {
+		this.requirements = requirements;
 	}
 
 	@Override
@@ -83,6 +97,7 @@ public class Specification implements Serializable {
 		try {
 			JSONObject specification = new JSONObject();
 			specification.put(IMAGE_STR, this.getImage());
+			specification.put(REQUIREMENTS_STR, this.getRequirements());
 			return specification;
 		} catch (JSONException e) {
 			LOGGER.debug("Error while trying to create a JSON from Specification", e);
@@ -91,7 +106,7 @@ public class Specification implements Serializable {
 	}
 
 	public static Specification fromJSON(JSONObject specJSON) {
-		Specification specification = new Specification(specJSON.optString(IMAGE_STR));
+		Specification specification = new Specification(specJSON.optString(IMAGE_STR), new HashMap<String, String>());
 		return specification;
 	}
 

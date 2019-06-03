@@ -11,19 +11,12 @@ public class CommandResponseDTO implements Serializable{
 
     private String command;
     private String state;
-    private String exitCode;
+    private Integer exitcode;
 
-    public CommandResponseDTO(String command, String state){
+    public CommandResponseDTO(String command, String state, Integer exitCode) {
         this.command = command;
         this.state = state;
-    }
-
-    public CommandResponseDTO(){}
-
-    public CommandResponseDTO(String command, String state, String exitCode) {
-        this.command = command;
-        this.state = state;
-        this.exitCode = exitCode;
+        this.exitcode = exitCode;
     }
 
     public String getCommand() {
@@ -34,8 +27,8 @@ public class CommandResponseDTO implements Serializable{
         return state;
     }
 
-    public String getExitCode() {
-        return exitCode;
+    public Integer getExitCode() {
+        return exitcode;
     }
 
     public void setCommand(String command){
@@ -46,13 +39,13 @@ public class CommandResponseDTO implements Serializable{
         this.state = state;
     }
 
-    public void setExitCode(String exitCode){
-        this.exitCode = exitCode;
+    public void setExitCode(Integer exitcode){
+        this.exitcode = exitcode;
     }
 
     @Override
     public String toString() {
         return "CommandResponseDTO [command=" + command + ", state=" + state +
-                ", exitCode=" + exitCode + "]";
+                ", exitcode=" + exitcode + "]";
     }
 }
