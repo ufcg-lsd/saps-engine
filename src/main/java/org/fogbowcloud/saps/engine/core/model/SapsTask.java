@@ -39,7 +39,7 @@ public class SapsTask {
 
 		String inputPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "input";
 		String preprocessingPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "preprocessing";;
-		String metadataPath = "/nfs/" + imageFolder + File.separator + "metadada";
+		String metadataPath = "/nfs/" + imageFolder + File.separator + "metadata";
 		String outputPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "output";
 		String logPath = "/nfs/" + imageFolder + File.separator + "/output.log";
 
@@ -48,7 +48,7 @@ public class SapsTask {
 		taskImpl.addCommand(new CommandRequestDTO(removeFolders, CommandRequestDTO.Type.REMOTE));
 
 		// Create folders
-		String createFolders = String.format("mkdir -p %s %s", metadataPath, preprocessingPath);
+		String createFolders = String.format("mkdir -p %s %s %s", metadataPath, preprocessingPath, outputPath);
 		taskImpl.addCommand(new CommandRequestDTO(createFolders, CommandRequestDTO.Type.REMOTE));
 
 		// Run command
