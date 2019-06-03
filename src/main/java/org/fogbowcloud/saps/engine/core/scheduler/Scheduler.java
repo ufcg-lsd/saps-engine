@@ -135,10 +135,13 @@ public class Scheduler {
 					it.remove();
 				}
 
-				if (verifyTaskOK(imageNfsServerIP, imageNfsServerPort, imageTask.getAlgorithmExecutionTag()))
+				if (verifyTaskOK(imageNfsServerIP, imageNfsServerPort, imageTask.getAlgorithmExecutionTag())) {
+					imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.READY);
 					imageTask.setState(ImageTaskState.READY);
-				else
+				}else {
+					imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FAILED);
 					imageTask.setState(ImageTaskState.FAILED);
+				}
 
 				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 				try {
@@ -203,6 +206,8 @@ public class Scheduler {
 
 				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
 				imageTask.setState(ImageTaskState.RUNNING);
+				imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.RUNNING);
+
 				try {
 					imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
 				} catch (SQLException e) {
@@ -281,9 +286,11 @@ public class Scheduler {
                     if(checkOK) {
                         LOGGER.debug("Job " + jobId + " finished");
                         imageTask.setState(ImageTaskState.FINISHED);
+						imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FINISHED);
                     }else{
                         LOGGER.debug("Job " + jobId + " failed");
                         imageTask.setState(ImageTaskState.FAILED);
+						imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FAILED);
                     }
 
                     jobSubmittedsFinish.add(job);
@@ -309,6 +316,8 @@ public class Scheduler {
             }
 		}catch(GetJobException e){
 			LOGGER.error("Error while trying check status jobs submitted.", e);
+		}catch(SQLException e){
+			LOGGER.error("Error while trying update image state.", e);
 		}
 
 	}
