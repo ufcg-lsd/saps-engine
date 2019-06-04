@@ -52,7 +52,7 @@ public class SapsTask {
 		taskImpl.addCommand(new CommandRequestDTO(createFolders, CommandRequestDTO.Type.REMOTE));
 
 		// Run command
-		String runCommand = String.format("bash /home/ubuntu/bin/run.sh %s %s %s %s &> %s", inputPath, outputPath, preprocessingPath, metadataPath, logPath);
+		String runCommand = String.format("bash /home/ubuntu/bin/run.sh %s %s %s %s > %s", inputPath, outputPath, preprocessingPath, metadataPath, logPath);
 		taskImpl.addCommand(new CommandRequestDTO(runCommand, CommandRequestDTO.Type.REMOTE));
 	}
 
