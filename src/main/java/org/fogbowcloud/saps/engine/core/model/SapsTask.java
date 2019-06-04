@@ -41,8 +41,8 @@ public class SapsTask {
 		String preprocessingPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "preprocessing";;
 		String metadataPath = "/nfs/" + imageFolder + File.separator + "metadata";
 		String outputPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "output";
-		String logPath = "/nfs/" + imageFolder + File.separator + "/output.log";
-		String errorPath = "/nfs/" + imageFolder + File.separator + "/error.log";
+		String logPath = "/nfs/" + imageFolder + File.separator + "output.log";
+		String errorPath = "/nfs/" + imageFolder + File.separator + "error.log";
 
 		// Remove folders
 		String removeFolders = String.format("rm -rf %s %s %s", metadataPath, outputPath, outputPath);
