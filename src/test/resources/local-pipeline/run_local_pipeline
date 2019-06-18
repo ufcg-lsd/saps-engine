@@ -17,6 +17,9 @@ IMAGE_REGION=$4
 IMAGE_DATE=$5
 
 #Global variables
+#Declare folders shared
+HOST_FOLDER="saps-vol"
+
 #Declare folders name using in process
 IMAGE_DATA_FOLDER="image_data"
 PREPROCESS_FOLDER="preprocess"
@@ -29,7 +32,7 @@ WORKER_SHARED_FOLDER="/local"
 #Declare name images
 IMAGE_NAME_INPUTDOWNLOADER="fogbow/inputdownloader:latest"
 IMAGE_NAME_PREPROCESSOR=""
-IMAGE_NAME_WORKER="" #fogbow/worker:latest"
+IMAGE_NAME_WORKER="fogbow/worker:latest"
 
 #Declare name containers (use container name to manage container lifecycle)
 CONTAINER_NAME_INPUTDOWNLOADER="inputdownloader_container"
@@ -77,7 +80,7 @@ function build_container_inputdownloader {
       docker rm $CONTAINER_NAME_INPUTDOWNLOADER
     fi
     #Build a inputdownloader container from your image using volume for shared folder between host (saps-vol) and container (INPUTDOWNLOADER_SHARED_FOLDER)
-    docker run -it -d --name $CONTAINER_NAME_INPUTDOWNLOADER -v saps-vol:$INPUTDOWNLOADER_SHARED_FOLDER $IMAGE_NAME_INPUTDOWNLOADER
+    docker run -it -d --name $CONTAINER_NAME_INPUTDOWNLOADER -v $HOST_FOLDER:$INPUTDOWNLOADER_SHARED_FOLDER $IMAGE_NAME_INPUTDOWNLOADER
     exit_handler
   fi
 }
@@ -102,7 +105,7 @@ function build_container_worker {
       docker rm $CONTAINER_NAME_WORKER
     fi
     #Build a worker container from your image using volume for shared folder between host (saps-vol) and container (WORKER_SHARED_FOLDER)
-    docker run -it -d --name $CONTAINER_NAME_WORKER -v saps-vol:$WORKER_SHARED_FOLDER $IMAGE_NAME_WORKER
+    docker run -it -d --name $CONTAINER_NAME_WORKER -v $HOST_FOLDER:$WORKER_SHARED_FOLDER $IMAGE_NAME_WORKER
     exit_handler
   fi
 }
