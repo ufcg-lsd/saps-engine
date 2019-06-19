@@ -145,6 +145,10 @@ public class SubmissionDispatcher {
         endCal.setTime(endDate);
         endCal.add(Calendar.DAY_OF_YEAR, 1);
 
+        Set<String> regions = repository.getRegionsFromArea(
+                lowerLeftLatitude,
+                lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
+
         while (cal.before(endCal)) {
             try {
                 int startingYear = cal.get(Calendar.YEAR);
@@ -153,10 +157,6 @@ public class SubmissionDispatcher {
                 for (String dataset : datasets) {
                 	
                 	LOGGER.debug("----------------------------------------> " +  dataset);
-                	
-                    Set<String> regions = repository.getRegionsFromArea(
-                            lowerLeftLatitude,
-                            lowerLeftLongitude, upperRightLatitude, upperRightLongitude);
 
                     for (String region : regions) {
                         String taskId = UUID.randomUUID().toString();
