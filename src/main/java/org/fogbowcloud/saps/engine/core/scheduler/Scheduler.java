@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.core.scheduler;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -14,19 +13,16 @@ import org.fogbowcloud.saps.engine.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.dto.*;
-import org.fogbowcloud.saps.engine.core.job.JobState;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.task.Specification;
 import org.fogbowcloud.saps.engine.core.task.TaskImpl;
-import org.fogbowcloud.saps.engine.core.task.Task;
 import org.fogbowcloud.saps.engine.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
-import org.h2.command.Command;
 
 public class Scheduler {
 
