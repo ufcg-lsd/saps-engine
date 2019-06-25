@@ -45,8 +45,8 @@ public class SapsTask {
 		String errorPath = "/nfs/" + imageFolder + File.separator + "error.log";
 
 		// Remove folders
-		String removeFolders = String.format("rm -rf %s %s %s", metadataPath, outputPath, outputPath);
-		taskImpl.addCommand(new CommandRequestDTO(removeFolders, CommandRequestDTO.Type.REMOTE));
+		String removeThings = String.format("rm -rf %s %s %s %s", metadataPath, outputPath, logPath, errorPath);
+		taskImpl.addCommand(new CommandRequestDTO(removeThings, CommandRequestDTO.Type.REMOTE));
 
 		// Create folders
 		String createFolders = String.format("mkdir -p %s %s %s", metadataPath, preprocessingPath, outputPath);
