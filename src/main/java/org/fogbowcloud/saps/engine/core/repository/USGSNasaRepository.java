@@ -298,43 +298,59 @@ public class USGSNasaRepository implements INPERepository {
 	protected void setUSGSAPIKey(String usgsAPIKey) {
 		this.usgsAPIKey = usgsAPIKey;
 	}
-	
+
+	/**
+	 * Get path and row and create format PPPRRR,
+	 * where
+	 * 		PPP is path of scene
+	 * 		RRR is row of scene
+	 */
+	private String formatPathRow(int path, int row){
+		String pathAux = Integer.toString(path);
+		String rowAux = Integer.toString(row);
+		if(rowAux.length() == 1) rowAux = "00" + rowAux;
+		else if(rowAux.length() == 2) rowAux = "0" + rowAux;
+
+		return pathAux + rowAux;
+	}
+
 	/**
 	 * Performs conversion between a region represented by two pointers and returns it as 
 	 * a set of Landsat WRS-2 ID
 	 */
 	public Set<String> getRegionsFromArea(String lowerLeftLatitude, String lowerLeftLongitude,
 			String upperRightLatitude, String upperRightLongitude) {
-		
-		LOGGER.debug("Getting landsat ID of: \n"
-				+ "lower left latitude: " + lowerLeftLatitude + "\n"
-				+ "lower left longitude: " + lowerLeftLongitude + "\n"
-				+ "upper right latitude: " + upperRightLatitude + "\n"
-				+ "upper right longitude: " + upperRightLongitude);
-		
-        String[] middlePoint = getMiddlePoint(lowerLeftLatitude, lowerLeftLongitude,
-        		upperRightLatitude, upperRightLongitude).split(" ");
-        
-        LOGGER.debug("Setting middle point(reference point to the LandSat region): + \n" + 
-        		"latitude: " + middlePoint[0] + "\n" +  
-        		"longitude: " +  middlePoint[1]);
-        
-        String regionIds = "";
-        try {
-            regionIds = getRegionIds(middlePoint[0], middlePoint[1]).trim();
-        } catch (IOException | InterruptedException e) {
-        	LOGGER.error("Error while calling the ConvertToWRS script");
-            e.printStackTrace();
-        }
-        Set<String> regionsFound = new HashSet<>(Arrays.asList(regionIds.split(" ")));
-       
-        LOGGER.debug("Returned regions as set: ");
-        int regionsCount = 1;
-        for (String s: regionsFound) {
-        	LOGGER.debug(regionsCount + "# " + s);
-        	regionsCount++;
-        }
-        
+
+		String regionLowerLeft, regionUpperRight;
+		Set<String> regionsFound = new HashSet<String>();
+
+		try {
+			regionLowerLeft = getRegionIds(lowerLeftLatitude, lowerLeftLongitude).trim();
+			regionUpperRight = getRegionIds(upperRightLatitude, upperRightLongitude).trim();
+
+			int pathRegionLL = Integer.parseInt(regionLowerLeft.substring(0, 3));
+			int rowRegionLL = Integer.parseInt(regionLowerLeft.substring(4, 6));
+
+			int pathRegionUR = Integer.parseInt(regionUpperRight.substring(0, 3));
+			int rowRegionUR = Integer.parseInt(regionUpperRight.substring(4, 6));
+
+			LOGGER.info("pathRegionLL: " + pathRegionLL + "\n"
+					+ "rowRegionLL: " + rowRegionLL + "\n"
+					+ "pathRegionUR: " + pathRegionUR + "\n"
+					+ "rowRegionUR: " + rowRegionUR + "\n");
+
+			for(int i = pathRegionLL; i >= pathRegionUR; i--) {
+				for (int j = rowRegionLL; j >= rowRegionUR; j--)
+					regionsFound.add(formatPathRow(i, j));
+			}
+
+			LOGGER.info("Regions found: " + regionsFound.toString());
+
+		}catch (IOException | InterruptedException e) {
+			LOGGER.error("Error while calling the ConvertToWRS script");
+			e.printStackTrace();
+		}
+
 		return regionsFound;
 	}
 	
@@ -348,22 +364,32 @@ public class USGSNasaRepository implements INPERepository {
 	    double lat2 = Double.parseDouble(upperRightLatitude);
 	    double lon2 = Double.parseDouble(upperRightLongitude);
 
-        double dLon = Math.toRadians(lon2 - lon1);
 
-        //convert to radians
-        lat1 = Math.toRadians(lat1);
-        lat2 = Math.toRadians(lat2);
-        lon1 = Math.toRadians(lon1);
-
-        double Bx = Math.cos(lat2) * Math.cos(dLon);
-        double By = Math.cos(lat2) * Math.sin(dLon);
-        double lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2), Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
-        double lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
-
-        String result = Math.toDegrees(lat3) + " " + Math.toDegrees(lon3);
-        return result;
+	    return getMiddlePoint(lat1, lon1, lat2, lon2);
     }
-	
+
+	/**
+	 * Gets a region on the map represented by two points (the two vertexes of the region) and returns the middle point
+	 */
+	private String getMiddlePoint(double lat1, double lon1,
+								  double lat2, double lon2) {
+
+		double dLon = Math.toRadians(lon2 - lon1);
+
+		//convert to radians
+		lat1 = Math.toRadians(lat1);
+		lat2 = Math.toRadians(lat2);
+		lon1 = Math.toRadians(lon1);
+
+		double Bx = Math.cos(lat2) * Math.cos(dLon);
+		double By = Math.cos(lat2) * Math.sin(dLon);
+		double lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2), Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
+		double lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
+
+		String result = Math.toDegrees(lat3) + " " + Math.toDegrees(lon3);
+		return result;
+	}
+
 	/**
 	 * Gets the Landsat WRS-2 ID's given a point (latitude, longitude) by calling get_wrs.py script
 	 */
