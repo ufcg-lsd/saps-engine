@@ -106,7 +106,7 @@ public class SapsPropertiesConstants {
 	public static final String DEFAULT_DOWNLOADER_PERIOD = "default_downloader_period";
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
 	public static final String PREPROCESSOR_EXECUTION_PERIOD = "preprocessor_execution_period";
-	
+
 	// Provenance data components constants
 	public static final String INPUT_DOWNLOADER_COMPONENT_TYPE = "input_downloader";
 	public static final String PREPROCESSOR_COMPONENT_TYPE = "preprocessor";
@@ -114,7 +114,7 @@ public class SapsPropertiesConstants {
 	public static final String METADATA_TYPE = "metadata";
 	public static final String OS_TYPE = "operating_system";
 	public static final String KERNEL_TYPE = "kernel_version";
-	
+
 	// Preprocessor constants
 	public static final String DEFAULT_PREPROCESSOR_EXECUTION_PERIOD = "60000";
 	public static final String DEFAULT_PREPROCESSOR_RUN_SCRIPT_COMMAND = "/bin/bash /home/ubuntu/run.sh "
@@ -132,6 +132,7 @@ public class SapsPropertiesConstants {
 
 	// Quantities constants
 	public static final String MAX_NUMBER_OF_TASKS = "max_tasks_to_download";
+	public static final String DEFAULT_IMAGE_DIR_SIZE_MB = "default_volume_size";
 
 	// Properties file constants
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
@@ -148,7 +149,7 @@ public class SapsPropertiesConstants {
 
 	public static final String NO_REPLY_EMAIL = "noreply_email";
 	public static final String NO_REPLY_PASS = "noreply_password";
-	
+
 	/*
 	 *  Arrebol batch jobs execution system configs
 	 */

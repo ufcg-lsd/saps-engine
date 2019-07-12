@@ -45,6 +45,7 @@ public class InputDownloader {
 	private String inputDownloaderPort;
 	private String inputDownloaderNfsPort;
 	private final int maxDownloadAttempts;
+	private final long defaultImageDirSize;
 	private String federationMember;
 	private File pendingImageDownloadFile;
 
@@ -52,22 +53,22 @@ public class InputDownloader {
 	protected ConcurrentMap<String, ImageTask> pendingTaskDownloadMap;
 
 	private static final String PENDING_TASK_DOWNLOAD_DB_FILE = "pending-task-download.db";
-	private static final long DEFAULT_IMAGE_DIR_SIZE = 180 * FileUtils.ONE_MB;
 
 	private static final String UNIQUE_CONSTRAINT_VIOLATION_CODE = "23505";
 	private static final int DEFAULT_MAX_DOWNLOAD_ATTEMPTS = 3;
+	private static final long DEFAULT_IMAGE_DIR_SIZE = 1000 * FileUtils.ONE_MB;
 	protected static final int MAX_IMAGES_TO_DOWNLOAD = 1;
-	
+
 	// Script execution codes
 	protected static final int OK_SCRIPT_CODE = 0;
 	protected static final int NOT_FOUNT_SCRIPT_CODE = 3;
-	
+
 	protected static final String IMAGE_NOT_FOUND_FAILED_MSG = "Input Downloader does not found image.";
 
 	public static final Logger LOGGER = Logger.getLogger(InputDownloader.class);
-	
+
 	public InputDownloader(Properties properties, String inputDownloderIp,
-			String InputDownloaderSshPort, String inputDownloaderNfsPort, String federationMember)
+						   String InputDownloaderSshPort, String inputDownloaderNfsPort, String federationMember)
 			throws SQLException {
 		this(properties, new JDBCImageDataStore(properties), inputDownloderIp,
 				InputDownloaderSshPort, inputDownloaderNfsPort, federationMember);
@@ -75,8 +76,8 @@ public class InputDownloader {
 	}
 
 	protected InputDownloader(Properties properties, ImageDataStore imageStore,
-			String inputDownloaderIP, String inputDownloaderPort, String inputDownloaderNfsPort,
-			String federationMember) {
+							  String inputDownloaderIP, String inputDownloaderPort, String inputDownloaderNfsPort,
+							  String federationMember) {
 		try {
 			checkProperties(properties, imageStore, inputDownloaderIP, inputDownloaderPort,
 					inputDownloaderNfsPort, federationMember);
@@ -98,9 +99,16 @@ public class InputDownloader {
 
 		maxDownloadAttempts = (properties
 				.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS) == null)
-						? DEFAULT_MAX_DOWNLOAD_ATTEMPTS
-						: Integer.parseInt(properties
-								.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS));
+				? DEFAULT_MAX_DOWNLOAD_ATTEMPTS
+				: Integer.parseInt(properties
+				.getProperty(SapsPropertiesConstants.MAX_DOWNLOAD_ATTEMPTS));
+
+		defaultImageDirSize = (properties.
+				getProperty(SapsPropertiesConstants.DEFAULT_IMAGE_DIR_SIZE_MB) == null)
+				? DEFAULT_IMAGE_DIR_SIZE
+				: Long.parseLong(properties
+				.getProperty(SapsPropertiesConstants.DEFAULT_IMAGE_DIR_SIZE_MB)) * FileUtils.ONE_MB;
+		LOGGER.info("Default Image Dir Size: " + defaultImageDirSize);
 
 		if (!pendingImageDownloadFile.exists() || !pendingImageDownloadFile.isFile()) {
 			LOGGER.info("Creating map of pending images to download");
@@ -112,8 +120,8 @@ public class InputDownloader {
 	}
 
 	private void checkProperties(Properties properties, ImageDataStore imageStore,
-			String inputDownloaderIP, String inputDownloaderPort, String inputDownloaderNfsPort,
-			String federationMember) throws IllegalArgumentException {
+								 String inputDownloaderIP, String inputDownloaderPort, String inputDownloaderNfsPort,
+								 String federationMember) throws IllegalArgumentException {
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
@@ -338,7 +346,7 @@ public class InputDownloader {
 			return "Operating System Not Recognized";
 		}
 	}
-	
+
 	private String getKernelVersion() throws IOException {
 		if (OSValidator.isUnix()) {
 			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c",
@@ -391,7 +399,7 @@ public class InputDownloader {
 
 		double maxInputUsage = Integer
 				.valueOf(properties.getProperty(SapsPropertiesConstants.MAX_NUMBER_OF_TASKS))
-				* DEFAULT_IMAGE_DIR_SIZE;
+				* defaultImageDirSize;
 
 		double numberOfImagesToDownload = 0.0;
 		double cumulativeInputUsage = 0.0;
@@ -410,7 +418,7 @@ public class InputDownloader {
 						p.waitFor();
 
 						actualInputUsage = getProcessOutput(p);
-						
+
 						if (actualInputUsage != null && !actualInputUsage.isEmpty()) {
 							String[] splited = actualInputUsage.split("\\s+");
 							actualInputUsage = splited[0];
@@ -426,7 +434,7 @@ public class InputDownloader {
 			}
 
 			double freeDisk = maxInputUsage - cumulativeInputUsage;
-			numberOfImagesToDownload = freeDisk / DEFAULT_IMAGE_DIR_SIZE;
+			numberOfImagesToDownload = freeDisk / defaultImageDirSize;
 		} else {
 			throw new RuntimeException(
 					"ExportDirPath: " + exportDirPath + " is not a directory or does not exist");
@@ -492,9 +500,9 @@ public class InputDownloader {
 					+ " " + dataset + " " + imageTask.getRegion() + " "
 					+ dateFormater.format(imageTask.getImageDate()) + " "
 					+ properties
-							.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH)
+					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH)
 					+ " " + properties.getProperty(
-							SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
+					SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
 
 			LOGGER.debug("CommandRequestDTO: " + commandToRun);
 
@@ -512,13 +520,13 @@ public class InputDownloader {
 
 				LOGGER.info("Image " + imageTask + " was downloaded.");
 				return true;
-			} else if (dockerExecExitValue == NOT_FOUNT_SCRIPT_CODE) {			
+			} else if (dockerExecExitValue == NOT_FOUNT_SCRIPT_CODE) {
 				updateTaskStateToFailed(imageTask, IMAGE_NOT_FOUND_FAILED_MSG);
 				updateTaskStatus(imageTask, ImageTask.UNAVAILABLE);
 
 				this.pendingTaskDownloadMap.remove(imageTask.getTaskId());
 				this.pendingTaskDownloadDB.commit();
-				
+
 				LOGGER.info("Image " + imageTask + " failed because image not found. "
 						+ "This Image is " + ImageTask.UNAVAILABLE + ".");
 				return false;
@@ -530,7 +538,7 @@ public class InputDownloader {
 					LOGGER.debug("Error while downloading image from task " + imageTask.getTaskId()
 							+ " in the last try, removing task.");
 					updateTaskStateToFailed(imageTask, errorMsg);
-					
+
 					this.pendingTaskDownloadMap.remove(imageTask.getTaskId());
 					this.pendingTaskDownloadDB.commit();
 
@@ -578,7 +586,7 @@ public class InputDownloader {
 	}
 
 	protected boolean createDirectories(ImageTask imageTask, File inputDir, File outputDir,
-			File preProcessDir, File metadataDir, File logsDir) throws Exception {
+										File preProcessDir, File metadataDir, File logsDir) throws Exception {
 		try {
 			if (!inputDir.exists()) {
 				LOGGER.debug("Creating directory: " + inputDir.getAbsolutePath());
@@ -621,7 +629,7 @@ public class InputDownloader {
 			LOGGER.debug("Error while updating " + imageTask + " status to " + status + ".");
 		}
 	}
-	
+
 	protected void updateTaskStateToFailed(ImageTask imageTask, String errorMsg) {
 		String id = imageTask.getTaskId();
 		LOGGER.debug("Updating image task " + imageTask + " state to Failed.");
@@ -637,7 +645,7 @@ public class InputDownloader {
 			LOGGER.debug("Error while updating " + imageTask + ".");
 		}
 	}
-	
+
 	private void deleteInputsFromDisk(ImageTask imageTask, String exportPath) throws IOException {
 		String inputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
 				+ "data" + File.separator + "input";
@@ -827,7 +835,7 @@ public class InputDownloader {
 	public DB getPendingTaskDB() {
 		return this.pendingTaskDownloadDB;
 	}
-	
+
 	protected ImageDataStore getImageStore() {
 		return imageStore;
 	}
