@@ -18,6 +18,7 @@ IMAGE_DATE=$5
 
 #Global variables
 #Declare folders shared
+
 HOST_FOLDER="/home/saps/workspace/saps-engine/src/test/resources/local-pipeline"
 
 #Declare folders name using in process
