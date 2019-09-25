@@ -14,6 +14,8 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.log4j.Logger;
@@ -32,6 +34,7 @@ public class PreProcessor{
 
 	private ImageDataStore imageDataStore;
 	private Properties properties;
+	private static final String DATE_FORMAT = "yyyy-MM-dd";
 
 	public static final Logger LOGGER = Logger.getLogger(PreProcessor.class);
 
@@ -45,30 +48,28 @@ public class PreProcessor{
 	}
 
 	public void preProcessImage(ImageTask imageTask) {
-
+		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
 		try {
 			ExecutionScriptTag preProcessorTags = this.getContainerImageTags(imageTask);
 
 			this.getDockerImage(preProcessorTags);
 
-			String hostPreProcessingPath = this.getHostPreProcessingPath(imageTask);
+			String rootDirPath = this.properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
+                                + File.separator + imageTask.getTaskId();
 
 			String containerPreProcessingPath = this.getConteinerPreProcessingPath();
 
-			this.createPreProcessingHostPath(hostPreProcessingPath);
+			this.createPreProcessingHostPath(getHostPreProcessingPath(imageTask));
 
-			String hostMetadataPath = this.getHostMetadataPath(imageTask);
-
-			String containerMetadataPath = this.properties
-					.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_METADATA_LINKED_PATH);
-
-			Map<String, String> hostAndContainerDirMap = getHostContainerMap(hostPreProcessingPath,
-					containerPreProcessingPath, hostMetadataPath, containerMetadataPath);
+			Map<String, String> hostAndContainerDirMap = getHostContainerMap(rootDirPath,
+					containerPreProcessingPath);
 
 			String containerId = this.raiseContainer(preProcessorTags, imageTask,
 					hostAndContainerDirMap);
 
-			String commandToRun = SapsPropertiesConstants.DEFAULT_PREPROCESSOR_RUN_SCRIPT_COMMAND;
+			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT) + " "
+					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH) + " " + imageTask.getDataset()
+                                        + " " + imageTask.getRegion() + " " + dateFormater.format(imageTask.getImageDate());
 
 			this.executeContainer(containerId, commandToRun, imageTask);
 
@@ -80,12 +81,10 @@ public class PreProcessor{
 	}
 
 	protected Map<String, String> getHostContainerMap(String hostPreProcessingPath,
-			String containerPreProcessingPath, String hostMetadataPath,
-			String containerMetadataPath) {
+			String containerPreProcessingPath) {
 		@SuppressWarnings("unchecked")
 		Map<String, String> hostAndContainerDirMap = new HashedMap();
 		hostAndContainerDirMap.put(hostPreProcessingPath, containerPreProcessingPath);
-		hostAndContainerDirMap.put(hostMetadataPath, containerMetadataPath);
 		return hostAndContainerDirMap;
 	}
 
@@ -230,7 +229,7 @@ public class PreProcessor{
 				.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH);
 		String localPreprocessPath = properties.getProperty(
 				SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator + imageTask.getTaskId()
-				+ File.separator + "data" + File.separator + "preprocessing";
+				+ File.separator + "preprocessing";
 
 		Path path = Paths.get(getMetadataFilePath(imageTask));
 		Charset charset = StandardCharsets.UTF_8;
@@ -252,8 +251,7 @@ public class PreProcessor{
 
 	private String getMetadataFilePath(ImageTask imageTask) {
 		return properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH) + File.separator
-				+ imageTask.getTaskId() + File.separator + "metadata" + File.separator
-				+ "preprocessingDescription.txt";
+				+ imageTask.getTaskId() + File.separator + "preprocessingDescription.txt";
 	}
 	
 	private String getOperatingSystem() {
@@ -308,13 +306,7 @@ public class PreProcessor{
 
 	protected String getHostPreProcessingPath(ImageTask imageTask) {
 		return this.properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ File.separator + imageTask.getTaskId() + File.separator + "data" + File.separator
-				+ "preprocessing";
-	}
-	
-	protected String getHostMetadataPath(ImageTask imageTask) {
-		return this.properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH)
-				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
+				+ File.separator + imageTask.getTaskId() + File.separator + "preprocessing";
 	}
 
 }
