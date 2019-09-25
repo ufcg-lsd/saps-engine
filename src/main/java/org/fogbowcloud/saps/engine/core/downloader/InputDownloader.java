@@ -479,7 +479,7 @@ public class InputDownloader {
 					inputDownloaderDockerInfo.getDockerRepository(),
 					inputDownloaderDockerInfo.getDockerTag(), hostAndContainerDirMap);
 
-			String dataset = formatDataSet(imageTask.getDataset());
+			String dataset = imageTask.getDataset();
 
 			String commandToRun = properties.getProperty(SapsPropertiesConstants.CONTAINER_SCRIPT) + " "
 					+ properties.getProperty(SapsPropertiesConstants.SAPS_CONTAINER_INPUT_LINKED_PATH) + " " + dataset 
