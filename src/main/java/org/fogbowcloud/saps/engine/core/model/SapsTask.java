@@ -1,6 +1,8 @@
 package org.fogbowcloud.saps.engine.core.model;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dto.CommandRequestDTO;
@@ -8,6 +10,7 @@ import org.fogbowcloud.saps.engine.core.task.TaskImpl;
 
 public class SapsTask {
 
+	private static final String DATE_FORMAT = "yyyy-MM-dd";
 	public static final String METADATA_TASK_ID = "task_id";
 	public static final String METADATA_EXPORT_PATH = "volume_export_path";
 	protected static final String METADATA_REPOS_USER = "repository_user";
@@ -35,25 +38,21 @@ public class SapsTask {
 		// info shared folder beetweeen host (with NFS) and container
 		// ...
 
+		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
 		String imageFolder = imageTask.getTaskId();
-
-		String inputPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "input";
-		String preprocessingPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "preprocessing";;
-		String metadataPath = "/nfs/" + imageFolder + File.separator + "metadata";
-		String outputPath = "/nfs/" + imageFolder + File.separator + "data" + File.separator + "output";
-		String logPath = "/nfs/" + imageFolder + File.separator + "output.log";
-		String errorPath = "/nfs/" + imageFolder + File.separator + "error.log";
+		String rootPath = "/nfs/" + imageFolder;
+		String processingPath = "/nfs/" + imageFolder + File.separator + "processing";
 
 		// Remove folders
-		String removeThings = String.format("rm -rf %s %s %s %s", metadataPath, outputPath, logPath, errorPath);
+		String removeThings = String.format("rm -rf %s", processingPath);
 		taskImpl.addCommand(new CommandRequestDTO(removeThings, CommandRequestDTO.Type.REMOTE));
 
 		// Create folders
-		String createFolders = String.format("mkdir -p %s %s %s", metadataPath, preprocessingPath, outputPath);
+		String createFolders = String.format("mkdir -p %s", processingPath);
 		taskImpl.addCommand(new CommandRequestDTO(createFolders, CommandRequestDTO.Type.REMOTE));
 
 		// Run command
-		String runCommand = String.format("bash /home/ubuntu/bin/run.sh %s %s %s %s > %s 2> %s", inputPath, outputPath, preprocessingPath, metadataPath, logPath, errorPath);
+		String runCommand = String.format("bash /home/saps/run.sh %s %s %s %s", rootPath, imageTask.getDataset(), imageTask.getRegion(), dateFormater.format(imageTask.getImageDate()));
 		taskImpl.addCommand(new CommandRequestDTO(runCommand, CommandRequestDTO.Type.REMOTE));
 	}
 }

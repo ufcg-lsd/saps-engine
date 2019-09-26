@@ -36,7 +36,6 @@ public class Scheduler {
 	private final ImageDataStore imageStore;
 	private final ScheduledExecutorService sapsExecutor;
 	private final Arrebol arrebol;
-	private final Specification workerSpec;
 	private static ScheduledFuture<?> sapsSubmissor;
 	private static ScheduledFuture<?> sapsChecker;
 
@@ -55,7 +54,6 @@ public class Scheduler {
 		this.properties = properties;
 		this.sapsExecutor = Executors.newScheduledThreadPool(1);
 		this.arrebol = new Arrebol(properties);
-		this.workerSpec = new Specification(properties.getProperty(SapsPropertiesConstants.IMAGE_WORKER), new HashMap<String, String>());
 	}
 
 	public void start() throws Exception {
@@ -182,6 +180,10 @@ public class Scheduler {
 					it.remove();
 				}
 				
+				String imageDocker = "fogbow/worker:" + imageTask.getAlgorithmExecutionTag();
+
+				Specification workerSpec = new Specification(imageDocker, new HashMap<String, String>());
+
 				TaskImpl imageTaskToJob = new TaskImpl(imageTask.getTaskId(), workerSpec, UUID.randomUUID().toString());
 				
 				LOGGER.info("Creating saps task");
