@@ -68,7 +68,7 @@
 		<repository>
 			<id>maven-restlet</id>
 			<name>Restlet repository</name>
-			<url>http://maven.restlet.com</url>
+			<url>https://maven.restlet.com</url>
 		</repository>
 		<repository>
 			<id>maven-fogbow</id>
@@ -143,12 +143,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
-		<!--<dependency>
-			<groupId>blowout</groupId>
-			<artifactId>blowout</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>-->
 
 		<dependency>
             <groupId>org.javaswift</groupId>
