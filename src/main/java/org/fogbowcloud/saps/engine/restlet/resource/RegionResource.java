@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
+package org.fogbowcloud.saps.engine.restlet.resource;
 
 import java.sql.SQLException;
 import java.util.*;

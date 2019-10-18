@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
+package org.fogbowcloud.saps.engine.restlet.resource;
 
 import java.io.File;
 import java.io.IOException;

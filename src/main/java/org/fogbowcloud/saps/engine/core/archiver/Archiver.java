@@ -13,13 +13,14 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.archiver.ftp.FTPIntegrationImpl;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.ProvenanceUtilImpl;
-import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.openprovenance.prov.model.Document;
@@ -292,11 +293,6 @@ public class Archiver {
 	protected void finishArchive(ImageTask imageTask) throws IOException, SQLException {
 		LOGGER.debug("Finishing archive for task " + imageTask);
 		imageTask.setState(ImageTaskState.ARCHIVED);
-
-		String stationId = archiverHelper.getStationId(imageTask, properties);
-
-		imageTask.setStationId(stationId);
-		imageTask.setArchiverVersion(archiverVersion);
 
 		try {
 			LOGGER.info("Updating task data in DB");

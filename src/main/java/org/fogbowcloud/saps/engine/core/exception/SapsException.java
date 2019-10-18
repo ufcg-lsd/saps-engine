@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.scheduler.core.exception;
+package org.fogbowcloud.saps.engine.core.exception;
 
 public class SapsException extends Exception {
 

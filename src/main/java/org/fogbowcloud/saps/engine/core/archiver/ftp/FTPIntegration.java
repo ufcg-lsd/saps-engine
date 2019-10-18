@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.archiver;
+package org.fogbowcloud.saps.engine.core.archiver.ftp;
 
 import java.util.Properties;
 

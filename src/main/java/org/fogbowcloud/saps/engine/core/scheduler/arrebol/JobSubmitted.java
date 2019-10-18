@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.arrebol;
+package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 

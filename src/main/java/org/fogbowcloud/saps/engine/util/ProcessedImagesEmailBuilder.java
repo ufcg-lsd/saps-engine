@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.scheduler.util;
+package org.fogbowcloud.saps.engine.util;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpResponse;
@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.manager.core.plugins.identity.openstack.KeystoneV3IdentityPlugin;
 import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
+import org.fogbowcloud.saps.engine.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.notifier.GoogleMail;
 import org.json.JSONArray;
 import org.json.JSONException;

@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.scheduler.Scheduler;
 
 public class SchedulerMain {
 

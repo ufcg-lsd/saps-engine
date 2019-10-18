@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.archiver;
+package org.fogbowcloud.saps.engine.core.archiver.ftp;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,7 +7,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
 
 public class FTPIntegrationImpl implements FTPIntegration{
 	

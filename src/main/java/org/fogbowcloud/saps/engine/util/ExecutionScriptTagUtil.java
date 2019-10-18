@@ -5,7 +5,7 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
+import org.fogbowcloud.saps.engine.core.exception.SapsException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

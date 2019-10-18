@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.scheduler.util;
+package org.fogbowcloud.saps.engine.util;
 
 public class SapsPropertiesConstants {
 

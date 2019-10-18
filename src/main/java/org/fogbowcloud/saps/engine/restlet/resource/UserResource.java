@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
+package org.fogbowcloud.saps.engine.restlet.resource;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpStatus;

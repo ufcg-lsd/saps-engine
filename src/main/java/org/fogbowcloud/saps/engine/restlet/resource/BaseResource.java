@@ -1,9 +1,9 @@
-package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
+package org.fogbowcloud.saps.engine.restlet.resource;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
-import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
+import org.fogbowcloud.saps.engine.restlet.DatabaseApplication;
 import org.restlet.data.Form;
 import org.restlet.resource.ServerResource;
 

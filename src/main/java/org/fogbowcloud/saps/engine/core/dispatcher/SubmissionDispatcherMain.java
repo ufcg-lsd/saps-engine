@@ -3,7 +3,7 @@ package org.fogbowcloud.saps.engine.core.dispatcher;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
-import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
+import org.fogbowcloud.saps.engine.restlet.DatabaseApplication;
 
 import java.io.FileInputStream;
 import java.util.Properties;
