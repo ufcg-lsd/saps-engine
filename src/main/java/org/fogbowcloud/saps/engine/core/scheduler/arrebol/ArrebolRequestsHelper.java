@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.arrebol;
+package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
@@ -9,13 +9,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.infrastructure.http.HttpWrapper;
+import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.core.dto.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
-import org.fogbowcloud.saps.engine.exceptions.GetJobException;
-import org.fogbowcloud.saps.engine.exceptions.SubmitJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 
 import java.util.LinkedList;
 
@@ -96,5 +96,10 @@ public class ArrebolRequestsHelper {
 		LOGGER.info("JSON body: " + json);
 
 		return new StringEntity(json);
+	}
+	
+	//TODO Implement this function
+	public int getCountSlotsInQueue() {
+		return 0;
 	}
 }
