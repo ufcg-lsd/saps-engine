@@ -11,59 +11,51 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ImageTask implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
 	private static final DateFormat DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd");
 
 	public static final String AVAILABLE = "available";
-	public static final String UNAVAILABLE = "unavailable";	
+	public static final String UNAVAILABLE = "unavailable";
 	// FIXME it is necessary ? Review !
 	public static final String PURGED = "purged";
-	
+
 	public static final String NON_EXISTENT_DATA = "NE";
 
 	private String taskId;
 	private String dataset;
 	private String region;
 	private Date imageDate;
-	private String downloadLink;
 	private ImageTaskState state;
 	private String federationMember;
+	private String user;
 	private int priority;
-	private String stationId;
 	private String inputGatheringTag;
 	private String inputPreprocessingTag;
 	private String algorithmExecutionTag;
-	private String archiverVersion;
-	private String blowoutVersion;
 	private Timestamp creationTime;
 	private Timestamp updateTime;
 	private String status;
 	private String error;
 
-	public ImageTask(String taskId, String dataset, String region, Date imageDate,
-			String downloadLink, ImageTaskState state, String federationMember, int priority,
-			String stationId, String inputGatheringTag, String inputPreprocessingTag,
-			String algorithmExecutionTag, String archiverVersion, String blowoutVersion,
-			Timestamp creationTime, Timestamp updateTime, String status, String error) {
+	public ImageTask(String taskId, String dataset, String region, Date imageDate, ImageTaskState state,
+			String federationMember, int priority, String user, String inputGatheringTag, String inputPreprocessingTag,
+			String algorithmExecutionTag, Timestamp creationTime, Timestamp updateTime, String status, String error) {
 		this.taskId = taskId;
 		this.dataset = dataset;
 		this.region = region;
 		this.imageDate = imageDate;
-		this.downloadLink = downloadLink;
 		this.state = state;
 		this.federationMember = federationMember;
 		this.priority = priority;
-		this.stationId = stationId;
 		this.inputGatheringTag = inputGatheringTag;
 		this.inputPreprocessingTag = inputPreprocessingTag;
 		this.algorithmExecutionTag = algorithmExecutionTag;
-		this.archiverVersion = archiverVersion;
-		this.blowoutVersion = blowoutVersion;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
 		this.status = status;
 		this.error = error;
+		this.user = user;
 	}
 
 	public String getTaskId() {
@@ -98,14 +90,6 @@ public class ImageTask implements Serializable {
 		this.imageDate = imageDate;
 	}
 
-	public String getDownloadLink() {
-		return downloadLink;
-	}
-
-	public void setDownloadLink(String downloadLink) {
-		this.downloadLink = downloadLink;
-	}
-
 	public ImageTaskState getState() {
 		return state;
 	}
@@ -130,12 +114,12 @@ public class ImageTask implements Serializable {
 		this.priority = priority;
 	}
 
-	public String getStationId() {
-		return stationId;
+	public String getUser() {
+		return user;
 	}
 
-	public void setStationId(String stationId) {
-		this.stationId = stationId;
+	public void setUser(String user) {
+		this.user = user;
 	}
 
 	public String getInputGatheringTag() {
@@ -160,22 +144,6 @@ public class ImageTask implements Serializable {
 
 	public void setAlgorithmExecutionTag(String algorithmExecutionTag) {
 		this.algorithmExecutionTag = algorithmExecutionTag;
-	}
-
-	public String getArchiverVersion() {
-		return archiverVersion;
-	}
-
-	public void setArchiverVersion(String archiverVersion) {
-		this.archiverVersion = archiverVersion;
-	}
-
-	public String getBlowoutVersion() {
-		return blowoutVersion;
-	}
-
-	public void setBlowoutVersion(String blowoutVersion) {
-		this.blowoutVersion = blowoutVersion;
 	}
 
 	public Timestamp getCreationTime() {
@@ -233,16 +201,13 @@ public class ImageTask implements Serializable {
 		json.put("dataset", dataset);
 		json.put("region", region);
 		json.put("imageDate", DATE_FORMATER.format(imageDate));
-		json.put("downloadLink", downloadLink);
 		json.put("state", state.getValue());
 		json.put("federationMember", federationMember);
 		json.put("priority", priority);
-		json.put("stationId", stationId);
+		json.put("user", user);
 		json.put("inputGatheringTag", inputGatheringTag);
 		json.put("inputPreprocessingTag", inputPreprocessingTag);
 		json.put("algorithmExecutionTag", algorithmExecutionTag);
-		json.put("archiverVersion", archiverVersion);
-		json.put("blowoutVersion", blowoutVersion);
 		json.put("creationTime", creationTime);
 		json.put("updateTime", updateTime);
 		json.put("status", status);
@@ -253,16 +218,12 @@ public class ImageTask implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ImageTask{" + "taskId='" + taskId + '\'' + ", dataset='" + dataset + '\''
-				+ ", region='" + region + '\'' + ", imageDate=" + DATE_FORMATER.format(imageDate)
-				+ ", downloadLink='" + downloadLink + '\'' + ", state=" + state
-				+ ", federationMember='" + federationMember + '\'' + ", priority=" + priority
-				+ ", stationId='" + stationId + '\'' + ", inputGatheringTag='" + inputGatheringTag
-				+ '\'' + ", inputPreprocessingTag='" + inputPreprocessingTag + '\''
-				+ ", algorithmExecutionTag='" + algorithmExecutionTag + '\'' + ", archiverVersion='"
-				+ archiverVersion + '\'' + ", blowoutVersion='" + blowoutVersion + '\''
-				+ ", creationTime=" + creationTime + ", updateTime=" + updateTime + ", status='"
-				+ status + '\'' + ", error='" + error + '\'' + '}';
+		return "ImageTask{" + "taskId='" + taskId + "', dataset='" + dataset + "', region='" + region + "', imageDate="
+				+ DATE_FORMATER.format(imageDate) + ", state='" + state + ", federationMember='" + federationMember
+				+ "', priority=" + priority + ", user='" + user + "', inputGatheringTag='" + inputGatheringTag
+				+ "', inputPreprocessingTag='" + inputPreprocessingTag + "', algorithmExecutionTag='"
+				+ algorithmExecutionTag + "', creationTime=" + creationTime + ", updateTime=" + updateTime
+				+ ", status='" + status + "', error='" + error + "'}";
 	}
 
 	@Override
@@ -282,6 +243,8 @@ public class ImageTask implements Serializable {
 			return false;
 		if (region != null ? !region.equals(imageTask.region) : imageTask.region != null)
 			return false;
+		if (user != null ? !user.equals(imageTask.user) : imageTask.user != null)
+			return false;
 		if (imageDate != null) {
 			if (imageTask.imageDate == null)
 				return false;
@@ -297,39 +260,23 @@ public class ImageTask implements Serializable {
 			if (imageTask.imageDate != null)
 				return false;
 		}
-		if (downloadLink != null ? !downloadLink.equals(imageTask.downloadLink)
-				: imageTask.downloadLink != null)
-			return false;
 		if (state != imageTask.state)
 			return false;
 		if (federationMember != null ? !federationMember.equals(imageTask.federationMember)
 				: imageTask.federationMember != null)
 			return false;
-		if (stationId != null ? !stationId.equals(imageTask.stationId)
-				: imageTask.stationId != null)
-			return false;
 		if (inputGatheringTag != null ? !inputGatheringTag.equals(imageTask.inputGatheringTag)
 				: imageTask.inputGatheringTag != null)
 			return false;
-		if (inputPreprocessingTag != null
-				? !inputPreprocessingTag.equals(imageTask.inputPreprocessingTag)
+		if (inputPreprocessingTag != null ? !inputPreprocessingTag.equals(imageTask.inputPreprocessingTag)
 				: imageTask.inputPreprocessingTag != null)
 			return false;
-		if (algorithmExecutionTag != null
-				? !algorithmExecutionTag.equals(imageTask.algorithmExecutionTag)
+		if (algorithmExecutionTag != null ? !algorithmExecutionTag.equals(imageTask.algorithmExecutionTag)
 				: imageTask.algorithmExecutionTag != null)
 			return false;
-		if (archiverVersion != null ? !archiverVersion.equals(imageTask.archiverVersion)
-				: imageTask.archiverVersion != null)
+		if (creationTime != null ? !creationTime.equals(imageTask.creationTime) : imageTask.creationTime != null)
 			return false;
-		if (blowoutVersion != null ? !blowoutVersion.equals(imageTask.blowoutVersion)
-				: imageTask.blowoutVersion != null)
-			return false;
-		if (creationTime != null ? !creationTime.equals(imageTask.creationTime)
-				: imageTask.creationTime != null)
-			return false;
-		if (updateTime != null ? !updateTime.equals(imageTask.updateTime)
-				: imageTask.updateTime != null)
+		if (updateTime != null ? !updateTime.equals(imageTask.updateTime) : imageTask.updateTime != null)
 			return false;
 		if (status != null ? !status.equals(imageTask.status) : imageTask.status != null)
 			return false;
@@ -342,18 +289,12 @@ public class ImageTask implements Serializable {
 		result = 31 * result + (dataset != null ? dataset.hashCode() : 0);
 		result = 31 * result + (region != null ? region.hashCode() : 0);
 		result = 31 * result + (imageDate != null ? imageDate.hashCode() : 0);
-		result = 31 * result + (downloadLink != null ? downloadLink.hashCode() : 0);
 		result = 31 * result + (state != null ? state.hashCode() : 0);
 		result = 31 * result + (federationMember != null ? federationMember.hashCode() : 0);
 		result = 31 * result + priority;
-		result = 31 * result + (stationId != null ? stationId.hashCode() : 0);
 		result = 31 * result + (inputGatheringTag != null ? inputGatheringTag.hashCode() : 0);
-		result = 31 * result
-				+ (inputPreprocessingTag != null ? inputPreprocessingTag.hashCode() : 0);
-		result = 31 * result
-				+ (algorithmExecutionTag != null ? algorithmExecutionTag.hashCode() : 0);
-		result = 31 * result + (archiverVersion != null ? archiverVersion.hashCode() : 0);
-		result = 31 * result + (blowoutVersion != null ? blowoutVersion.hashCode() : 0);
+		result = 31 * result + (inputPreprocessingTag != null ? inputPreprocessingTag.hashCode() : 0);
+		result = 31 * result + (algorithmExecutionTag != null ? algorithmExecutionTag.hashCode() : 0);
 		result = 31 * result + (creationTime != null ? creationTime.hashCode() : 0);
 		result = 31 * result + (updateTime != null ? updateTime.hashCode() : 0);
 		result = 31 * result + (status != null ? status.hashCode() : 0);

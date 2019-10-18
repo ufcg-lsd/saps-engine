@@ -32,6 +32,7 @@ public interface ImageDataStore {
 			Date date,
 			String downloadLink,
 			int priority,
+			String user,
 			String inputGathering,
 			String inputPreprocessing,
 			String algorithmExecution) throws SQLException;
@@ -68,8 +69,6 @@ public interface ImageDataStore {
 	void updateTaskState(String taskId, ImageTaskState state) throws SQLException;
 	
 	void updateTaskStatus(String taskId, String status) throws SQLException;
-
-	void updateImageMetadata(String taskId, String stationId) throws SQLException;
 
 	boolean isUserNotifiable(String userEmail) throws SQLException;
 

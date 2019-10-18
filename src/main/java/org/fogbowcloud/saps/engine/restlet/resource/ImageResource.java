@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.scheduler.restlet.resource;
+package org.fogbowcloud.saps.engine.restlet.resource;
 
 import java.util.Date;
 import java.util.List;
@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.Submission;
 import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.scheduler.restlet.DatabaseApplication;
+import org.fogbowcloud.saps.engine.restlet.DatabaseApplication;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.restlet.data.Form;
@@ -35,6 +35,9 @@ public class ImageResource extends BaseResource {
 	private static final String PROCESSING_INPUT_GATHERING_TAG = "inputGatheringTag";
 	private static final String PROCESSING_INPUT_PREPROCESSING_TAG = "inputPreprocessingTag";
 	private static final String PROCESSING_ALGORITHM_EXECUTION_TAG = "algorithmExecutionTag";
+	private static final String PRIORITY = "priority";
+	private static final String EMAIL = "email";
+	
 
 	private static final String ADD_IMAGES_MESSAGE_OK = "Tasks successfully added";
 	private static final String PURGE_MESSAGE_OK = "Tasks purged from database";
@@ -135,14 +138,18 @@ public class ImageResource extends BaseResource {
 		String algorithmExecution = form.getFirstValue(PROCESSING_ALGORITHM_EXECUTION_TAG);
 		if (algorithmExecution.isEmpty())
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Algorithm Execution must be informed.");
-
+		String priority = form.getFirstValue(PRIORITY);
+		String email = form.getFirstValue(EMAIL);
+		
 		String builder = "Creating new image process with configuration:\n" +
 				"\tLower Left: " + lowerLeftLatitude + ", " + lowerLeftLongitude + "\n" +
 				"\tUpper Right: " + upperRightLatitude + ", " + upperRightLongitude + "\n" +
 				"\tInterval: " + initDate + " - " + endDate + "\n" +
 				"\tGathering: " + inputGathering + "\n" +
 				"\tPreprocessing: " + inputPreprocessing + "\n" +
-				"\tAlgorithm: " + algorithmExecution + "\n";
+				"\tAlgorithm: " + algorithmExecution + "\n" +
+				"\tPriority: " + priority + "\n" +
+				"\tEmail: " + email;
 		LOGGER.info(builder);
 
 		try {
@@ -155,7 +162,9 @@ public class ImageResource extends BaseResource {
 					endDate,
 					inputGathering,
 					inputPreprocessing,
-					algorithmExecution
+					algorithmExecution,
+					priority,
+					email
 			);
 			if (application.isUserNotifiable(userEmail)) {
 				Submission submission = new Submission(UUID.randomUUID().toString());

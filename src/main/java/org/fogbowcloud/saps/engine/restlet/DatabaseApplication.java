@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.scheduler.restlet;
+package org.fogbowcloud.saps.engine.restlet;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -15,8 +15,8 @@ import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
-import org.fogbowcloud.saps.engine.scheduler.restlet.resource.*;
-import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.restlet.resource.*;
+import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Restlet;
@@ -116,7 +116,9 @@ public class DatabaseApplication extends Application {
 			Date endDate,
 			String inputGathering,
 			String inputPreprocessing,
-			String algorithmExecution) {
+			String algorithmExecution,
+			String priority,
+			String email) {
 		return submissionDispatcher.fillDB(
 				lowerLeftLatitude,
 				lowerLeftLongitude,
@@ -126,7 +128,9 @@ public class DatabaseApplication extends Application {
 				endDate,
 				inputGathering,
 				inputPreprocessing,
-				algorithmExecution
+				algorithmExecution,
+				priority,
+				email
 		);
 	}
 
