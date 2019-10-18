@@ -1,5 +1,5 @@
 {
-  "worker":[
+  "processing":[
     {
       "name":"ufcg-sebal",
       "docker_tag":"ufcg-sebal",
@@ -21,7 +21,7 @@
       "docker_repository":"fogbow/preprocessor"
     }
   ],
-  "input_downloader":[
+  "input_downloading":[
     {
       "name":"usgsapis",
       "docker_tag":"usgsapis",

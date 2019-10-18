@@ -2,8 +2,8 @@ package org.fogbowcloud.saps.engine.util;
 
 public class ExecutionScriptTag {
 
-	public static String INPUT_DOWNLOADER = "input_downloader";
-	public static String WORKER = "worker";
+	public static String INPUT_DOWNLOADER = "input_downloading";
+	public static String WORKER = "processing";
 	public static String PRE_PROCESSING = "pre_processing";
 
 	private String type;
@@ -32,6 +32,10 @@ public class ExecutionScriptTag {
 
 	public String getDockerTag() {
 		return dockerTag;
+	}
+
+	public String formatImageDocker() {
+		return dockerRepository + ":" + dockerTag;
 	}
 
 	@Override
