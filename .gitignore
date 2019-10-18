@@ -8,4 +8,4 @@ pending-task-archive.db.t
 .project
 .idea/
 config/
-*.log
+*.log*
