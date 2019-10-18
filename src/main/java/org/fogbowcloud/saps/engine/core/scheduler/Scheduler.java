@@ -4,25 +4,26 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.arrebol.JobSubmitted;
-import org.fogbowcloud.saps.engine.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.dto.*;
+import org.fogbowcloud.saps.engine.core.exception.SapsException;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.DefaultArrebol;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.core.task.Specification;
 import org.fogbowcloud.saps.engine.core.task.TaskImpl;
-import org.fogbowcloud.saps.engine.exceptions.GetJobException;
-import org.fogbowcloud.saps.engine.exceptions.SubmitJobException;
-import org.fogbowcloud.saps.engine.scheduler.core.exception.SapsException;
-import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
+import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
+import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
 
 public class Scheduler {
 
@@ -30,14 +31,19 @@ public class Scheduler {
 	public static final Logger LOGGER = Logger.getLogger(Scheduler.class);
 
 	// Saps Controller Variables
-	private static String nfsServerIP;
-	private static String nfsServerPort;
 	private final Properties properties;
 	private final ImageDataStore imageStore;
 	private final ScheduledExecutorService sapsExecutor;
-	private final Arrebol arrebol;
-	private static ScheduledFuture<?> sapsSubmissor;
-	private static ScheduledFuture<?> sapsChecker;
+	private final DefaultArrebol arrebol;
+
+	// REMOVE IT
+	public Scheduler() {
+		this.imageStore = null;
+		this.properties = null;
+		this.sapsExecutor = null;
+		this.arrebol = null;
+	}
+	// REMOVE IT
 
 	public Scheduler(Properties properties) throws SapsException, SQLException {
 		try {
@@ -53,310 +59,15 @@ public class Scheduler {
 
 		this.properties = properties;
 		this.sapsExecutor = Executors.newScheduledThreadPool(1);
-		this.arrebol = new Arrebol(properties);
+		this.arrebol = new DefaultArrebol(properties);
 	}
 
-	public void start() throws Exception {
-		try {
-			checkTasksRunning();
-
-			sapsSubmissor = sapsExecutor.scheduleWithFixedDelay(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						checkTasksPreprocessed();
-						addSapsJobs(properties);
-					} catch (Exception e) {
-						LOGGER.error("Error while adding tasks", e);
-					}
-				}
-
-			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)),
-					TimeUnit.SECONDS);
-
-			sapsChecker = sapsExecutor.scheduleWithFixedDelay(new Runnable() {
-				@Override
-				public void run() {
-					checkSapsJobs();
-				}
-			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)), TimeUnit.SECONDS);
-
-		} catch (Exception e) {
-			LOGGER.error("Error while starting Scheduler component", e);
-		}
-	}
-
-	private void checkTasksRunning() {
-		try {
-			List<ImageTask> imageTasksInStateRunning = imageStore.getIn(ImageTaskState.RUNNING,
-					ImageDataStore.UNLIMITED);
-			LOGGER.debug("Verifying " + imageTasksInStateRunning.size() + " image with state RUNNING");
-			for (ImageTask imageTask : imageTasksInStateRunning) {
-
-				imageTask.setState(ImageTaskState.READY);
-				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
-				imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.READY);
-
-				try {
-					imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
-				} catch (SQLException e) {
-					LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
-							+ imageTask.getUpdateTime() + " in Catalogue", e);
-				}
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while verify tasks in state preprocessed.", e);
-		}
-	}
-
-	private void checkTasksPreprocessed() {
-		try {
-			List<ImageTask> imageTasksInStatePreprocessed = imageStore.getIn(ImageTaskState.PREPROCESSED,
-					ImageDataStore.UNLIMITED);
-			LOGGER.debug("Verifying " + imageTasksInStatePreprocessed.size() + " image with state PREPROCESSED");
-			for (ImageTask imageTask : imageTasksInStatePreprocessed) {
-
-				String imageNfsServerIP = "";
-				String imageNfsServerPort = "";
-
-				Map<String, String> nfsConfig = imageStore.getFederationNFSConfig(imageTask.getFederationMember());
-				@SuppressWarnings("rawtypes")
-				Iterator it = nfsConfig.entrySet().iterator();
-				while (it.hasNext()) {
-					@SuppressWarnings("rawtypes")
-					Map.Entry pair = (Map.Entry) it.next();
-					imageNfsServerIP = pair.getKey().toString();
-					imageNfsServerPort = pair.getValue().toString();
-					it.remove();
-				}
-
-				if (verifyTaskOK(imageNfsServerIP, imageNfsServerPort, imageTask.getAlgorithmExecutionTag())) {
-					imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.READY);
-					imageTask.setState(ImageTaskState.READY);
-				}else {
-					imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FAILED);
-					imageTask.setState(ImageTaskState.FAILED);
-				}
-
-				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
-				try {
-					imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
-				} catch (SQLException e) {
-					LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
-							+ imageTask.getUpdateTime() + " in Catalogue", e);
-				}
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while verify tasks in state preprocessed.", e);
-		}
-	}
-
-	private boolean verifyTaskOK(String imageNfsServerIP, String imageNfsServerPort, String algorithmExecutionTag) {
-		if (imageNfsServerIP != "" && imageNfsServerPort != "" && algorithmExecutionTag != "")
-			return true;
-		else
-			return false;
-	}
-
-	private void addSapsJobs(final Properties properties)
-			throws Exception {
-		try {
-			List<ImageTask> imageTasksToProcess = imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED);
-			LOGGER.debug("Trying add " + imageTasksToProcess.size() + " images with state READY");
-			for (ImageTask imageTask : imageTasksToProcess) {
-				LOGGER.debug("Image task " + imageTask.getTaskId() + " is in the execution state "
-						+ imageTask.getState().getValue() + " (not finished).");
-				String federationMember = imageTask.getFederationMember();
-				
-				Map<String, String> nfsConfig = imageStore.getFederationNFSConfig(federationMember);
-
-				@SuppressWarnings("rawtypes")
-				Iterator it = nfsConfig.entrySet().iterator();
-				while (it.hasNext()) {
-					@SuppressWarnings("rawtypes")
-					Map.Entry pair = (Map.Entry) it.next();
-					nfsServerIP = pair.getKey().toString();
-					nfsServerPort = pair.getValue().toString();
-					it.remove();
-				}
-				
-				String imageDocker = "fogbow/worker:" + imageTask.getAlgorithmExecutionTag();
-
-				Specification workerSpec = new Specification(imageDocker, new HashMap<String, String>());
-
-				TaskImpl imageTaskToJob = new TaskImpl(imageTask.getTaskId(), workerSpec, UUID.randomUUID().toString());
-				
-				LOGGER.info("Creating saps task");
-				SapsTask.createTask(imageTaskToJob, imageTask);
-
-				SapsJob imageJob = new SapsJob(UUID.randomUUID().toString(), federationMember, imageTask.getTaskId());
-				imageJob.addTask(imageTaskToJob);
-
-				try {
-					String jobId = arrebol.addJob(imageJob);
-					LOGGER.debug("Result submit job: " + jobId);
-
-					arrebol.addJobInList(new JobSubmitted(jobId, imageTask));
-					LOGGER.info("Adding job in list");
-				}catch(SubmitJobException e) {
-					LOGGER.error("Error while trying to send request for Arrebol with new saps job.", e);
-				}
-
-
-				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
-				imageTask.setState(ImageTaskState.RUNNING);
-				imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.RUNNING);
-
-				try {
-					imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
-				} catch (SQLException e) {
-					LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
-							+ imageTask.getUpdateTime() + " in Catalogue", e);
-				}
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while getting task.", e);
-		}
-
-		/*Task task01 = new TaskImpl("001", workerSpec, UUID.randomUUID().toString());
-		task01.addCommand(new CommandRequestDTO("sleep 10", CommandRequestDTO.Type.REMOTE));
-
-		Task task02 = new TaskImpl("002", workerSpec, UUID.randomUUID().toString());
-		task02.addCommand(new CommandRequestDTO("ls", CommandRequestDTO.Type.REMOTE));
-
-		Task task03 = new TaskImpl("003", workerSpec, UUID.randomUUID().toString());
-		task03.addCommand(new CommandRequestDTO("r", CommandRequestDTO.Type.REMOTE));
-
-		SapsJob sapsJob01 = new SapsJob(UUID.randomUUID().toString(), "Thiago", new LinkedList<Task>(), "0001");
-		sapsJob01.addTask(task01);
-
-		SapsJob sapsJob02 = new SapsJob(UUID.randomUUID().toString(), "Thiago", new LinkedList<Task>(), "0001");
-		sapsJob02.addTask(task02);
-
-		SapsJob sapsJob03 = new SapsJob(UUID.randomUUID().toString(), "Thiago", new LinkedList<Task>(), "0001");
-		sapsJob03.addTask(task03);
-
-        try {
-			String jobId01 = arrebol.addJob(sapsJob01);
-			LOGGER.debug("Result submit job: " + jobId01);
-
-			arrebol.addJobInList(new JobSubmitted(jobId01, null));
-			LOGGER.info("Adding job " + jobId01 + " in list");
-
-			String jobId02 = arrebol.addJob(sapsJob02);
-			LOGGER.debug("Result submit job: " + jobId02);
-
-			arrebol.addJobInList(new JobSubmitted(jobId02, null));
-			LOGGER.info("Adding job " + jobId02 + " in list");
-
-			String jobId03 = arrebol.addJob(sapsJob03);
-			LOGGER.debug("Result submit job: " + jobId03);
-
-			arrebol.addJobInList(new JobSubmitted(jobId03, null));
-			LOGGER.info("Adding job " + jobId03 + " in list");
-		}catch(SubmitJobException e) {
-			LOGGER.error("Error while trying to send request for Arrebol with new saps job.", e);
-		}*/
-	}
-
-	private void checkSapsJobs() {
-		try {
-			ImageTask imageTask = null;
-			List<JobSubmitted> jobsSubmitted = arrebol.returnAllJobsSubmitted();
-			List<JobSubmitted> jobSubmittedsFinish = new LinkedList<JobSubmitted>();
-
-			LOGGER.debug("Checking jobs " + jobsSubmitted.size() +" submitted for arrebol service");
-
-			for (JobSubmitted job : jobsSubmitted) {
-				String jobId = job.getJobId();
-
-				JobResponseDTO jobResponse = arrebol.checkStatusJob(jobId);
-
-				imageTask = job.getImageTask();
-
-                LOGGER.debug("Checking job " + jobId + " ...");
-
-                boolean checkFinish = checkFinish(jobResponse);
-
-				if(checkFinish) {
-
-                    boolean checkOK = checkJobFinish(jobResponse);
-
-                    if(checkOK) {
-                        LOGGER.debug("Job " + jobId + " finished");
-                        imageTask.setState(ImageTaskState.FINISHED);
-						imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FINISHED);
-                    }else{
-                        LOGGER.debug("Job " + jobId + " failed");
-                        imageTask.setState(ImageTaskState.FAILED);
-						imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FAILED);
-                    }
-
-                    jobSubmittedsFinish.add(job);
-
-					try {
-						imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
-					}catch(SQLException e){
-						LOGGER.error("Error while update time in task.", e);
-					}
-
-					try {
-						imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(), imageTask.getUpdateTime());
-					} catch (SQLException e) {
-						LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
-								+ imageTask.getUpdateTime() + " in Catalogue", e);
-					}
-				}
-			}
-
-			for(JobSubmitted jobFinished : jobSubmittedsFinish){
-			    LOGGER.info("Removing job " + jobFinished.getJobId() + " from the list");
-                arrebol.removeJob(jobFinished);
-            }
-		}catch(GetJobException e){
-			LOGGER.error("Error while trying check status jobs submitted.", e);
-		}catch(SQLException e){
-			LOGGER.error("Error while trying update image state.", e);
-		}
-
-	}
-
-    private boolean checkFinish(JobResponseDTO jobResponse){
-
-        for(TaskResponseDTO task : jobResponse.getTasks()) {
-
-            LOGGER.debug("State task: " + task.getState());
-
-            if (task.getState().compareTo("FINISHED") != 0)
-                return false;
-        }
-
-        return true;
-    }
-
-	private boolean checkJobFinish(JobResponseDTO jobResponse){
-
-		for(TaskResponseDTO task : jobResponse.getTasks()){
-			TaskSpecResponseDTO taskSpec = task.getTaskSpec();
-
-			for(CommandResponseDTO command: taskSpec.getCommands()){
-
-				String commandDesc = command.getCommand();
-				String commandState = command.getState();
-				Integer commandExitCode = command.getExitCode();
-
-				LOGGER.info("Command: " + commandDesc);
-				LOGGER.info("State:" + commandState);
-				LOGGER.info("Exit code: " + commandExitCode);
-
-				if(commandExitCode != 0)
-					return false;
-			}
-		}
-
-		return true;
-	}
-
+	/**
+	 * This function checks if the essential properties have been set.
+	 * 
+	 * @param properties saps properties to be check
+	 * @return boolean representation, true (case all properties been set) or false (otherwise)
+	 */
 	protected static boolean checkProperties(Properties properties) {
 		if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_IP)) {
 			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + " was not set");
@@ -371,7 +82,8 @@ public class Scheduler {
 			return false;
 		}
 		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR + " was not set");
+			LOGGER.error(
+					"Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR + " was not set");
 			return false;
 		}
 		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)) {
@@ -387,7 +99,405 @@ public class Scheduler {
 		return true;
 	}
 
+	/**
+	 * Get properties
+	 * 
+	 * @return properties
+	 */
 	public Properties getProperties() {
 		return properties;
+	}
+
+	/**
+	 * Start Scheduler component
+	 * 
+	 * @throws Exception
+	 */
+	public void start() throws Exception {
+		try {
+			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						schedule(arrebol.getCountSlotsInQueue());
+					} catch (Exception | SubmitJobException e) {
+						LOGGER.error("Error while adding tasks", e);
+					}
+				}
+
+			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)),
+					TimeUnit.SECONDS);
+
+			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
+				@Override
+				public void run() {
+					checker();
+				}
+			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)),
+					TimeUnit.SECONDS);
+
+		} catch (Exception e) {
+			LOGGER.error("Error while starting Scheduler component", e);
+		}
+	}
+
+	/**
+	 * This function schedules up to count tasks.
+	 * 
+	 * @param count slots number in Arrebol queue
+	 * @return number of scheduled tasks
+	 */
+	private int schedule(int count) {
+		int remaining;
+
+		remaining = schedule(count, ImageTaskState.READY);
+		remaining = schedule(count, ImageTaskState.PREPROCESSED);
+		remaining = schedule(remaining, ImageTaskState.DOWNLOADED);
+		remaining = schedule(remaining, ImageTaskState.CREATED);
+
+		return remaining;
+	}
+
+	/**
+	 * This function schedules up to count tasks in specific state.
+	 * 
+	 * @param count slots number in Arrebol queue
+	 * @param state tasks state for schedule
+	 * @return number of scheduled tasks in specific state
+	 */
+	private int schedule(int count, ImageTaskState state) {
+		// shortcut. it was solved in the previous schedule
+		if (count <= 0)
+			return count;
+
+		List<ImageTask> tasks = new ArrayList<ImageTask>();
+
+		try {
+			tasks = imageStore.getIn(state, ImageDataStore.UNLIMITED);
+		} catch (SQLException e) {
+			LOGGER.error("Error while schedule tasks.", e);
+		}
+
+		Map<String, List<ImageTask>> tasksByUsers = mapUsers2Tasks(tasks);
+		List<ImageTask> selectedTasks = select(count, tasksByUsers);
+
+		LOGGER.info("Selected tasks: " + selectedTasks);
+
+		ImageTaskState nextState = getNextState(state);
+
+		int countFailedSubmit = 0;
+		for (ImageTask task : selectedTasks) {
+			if (checkPassiveState(task, nextState)) {
+				if (updateStateInCatalog(task, nextState)) {
+					nextState = getNextState(nextState);
+				} else {
+					continue;
+				}
+			}
+
+			if (submitTaskToArrebol(task, nextState)) {
+				updateStateInCatalog(task, nextState);
+			} else {
+				countFailedSubmit++;
+			}
+		}
+
+		if (countFailedSubmit >= 1)
+			return 0;
+
+		return count - selectedTasks.size();
+	}
+
+	/**
+	 * This function ensures that if the state parameter is READY, it updates in the
+	 * catalog and goes to the next state of RUNNING.
+	 * 
+	 * @param task  task to be check
+	 * @param state state to be check
+	 * @return boolean representation, true (state is READY) or false (otherwise)
+	 */
+	private boolean checkPassiveState(ImageTask task, ImageTaskState state) {
+		return state == ImageTaskState.READY;
+	}
+
+	/**
+	 * This function get next state based in current state.
+	 * 
+	 * @param currentState current state
+	 * @return next state
+	 */
+	private ImageTaskState getNextState(ImageTaskState currentState) {
+		if (currentState == ImageTaskState.READY)
+			return ImageTaskState.RUNNING;
+		else if (currentState == ImageTaskState.PREPROCESSED)
+			return ImageTaskState.READY;
+		else if (currentState == ImageTaskState.DOWNLOADED)
+			return ImageTaskState.PREPROCESSING;
+		else
+			return ImageTaskState.DOWNLOADING;
+	}
+
+	/**
+	 * This function update task state in catalog component.
+	 *
+	 * @param task  task to be updated
+	 * @param state new task state
+	 * @return boolean representation reporting success (true) or failure (false) in
+	 *         update state task in catalog
+	 */
+	private boolean updateStateInCatalog(ImageTask task, ImageTaskState state) {
+		task.setState(state);
+
+		try {
+			task.setUpdateTime(imageStore.getTask(task.getTaskId()).getUpdateTime());
+			imageStore.updateTaskState(task.getTaskId(), state);
+			imageStore.addStateStamp(task.getTaskId(), task.getState(), task.getUpdateTime());
+		} catch (SQLException e) {
+			LOGGER.error("Error while adding state " + task.getState() + " timestamp " + task.getUpdateTime()
+					+ " in Catalogue", e);
+			return false;
+		}
+
+		return true;
+	}
+
+	/***
+	 * This function associate each task with a specific user by building an map.
+	 * After that, it sorts each task list by task priority.
+	 * 
+	 * @param tasks list with tasks
+	 * @return user map by tasks
+	 */
+	protected Map<String, List<ImageTask>> mapUsers2Tasks(List<ImageTask> tasks) {
+		Map<String, List<ImageTask>> mapUsersToTasks = new TreeMap<String, List<ImageTask>>();
+
+		for (ImageTask task : tasks) {
+			String user = task.getUser();
+			if (!mapUsersToTasks.containsKey(user))
+				mapUsersToTasks.put(user, new ArrayList<ImageTask>());
+
+			mapUsersToTasks.get(user).add(task);
+		}
+
+		for (String user : mapUsersToTasks.keySet()) {
+			mapUsersToTasks.get(user).sort(new Comparator<ImageTask>() {
+				@Override
+				public int compare(ImageTask task01, ImageTask task02) {
+					return task02.getPriority() - task01.getPriority();
+				}
+			});
+		}
+
+		return mapUsersToTasks;
+	}
+
+	// TODO Change implementation to receive parameter selection algorithm
+	/**
+	 * This function select tasks for schedule up to count.
+	 * 
+	 * @param count slots number in Arrebol queue
+	 * @param tasks user map by tasks
+	 * @return list of selected tasks
+	 */
+	protected List<ImageTask> select(int count, Map<String, List<ImageTask>> tasks) {
+		List<ImageTask> selectedTasks = new LinkedList<ImageTask>();
+
+		while (count > 0 && tasks.size() > 0) {
+			for (String user : tasks.keySet()) {
+				if (count > 0) {
+					selectedTasks.add(tasks.get(user).remove(0));
+					count--;
+
+					if (tasks.get(user).size() == 0)
+						tasks.remove(user);
+				}
+			}
+		}
+
+		return selectedTasks;
+	}
+
+	/**
+	 * This function try submit task to Arrebol.
+	 * 
+	 * @param task task to be submitted
+	 * @return boolean representation reporting success or failure in sending the
+	 *         task to the Arrebol
+	 * @throws Exception
+	 */
+	private boolean submitTaskToArrebol(ImageTask task, ImageTaskState state) {
+
+		LOGGER.info("Trying submit task id " + task.getTaskId() + " in state " + task.getState().getValue()
+				+ " to arrebol");
+
+		String federationMember = task.getFederationMember();
+		String repository = getRepository(state);
+		ExecutionScriptTag imageDockerInfo = null;
+
+		try {
+			imageDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(task.getAlgorithmExecutionTag(), repository);
+		} catch (SapsException e) {
+			LOGGER.error("Error while trying get tag and repository Docker.", e);
+			return false;
+		}
+
+		Specification workerSpec = new Specification(imageDockerInfo.formatImageDocker(),
+				new HashMap<String, String>());
+
+		TaskImpl taskToJob = new TaskImpl(task.getTaskId(), workerSpec, UUID.randomUUID().toString());
+
+		LOGGER.info("Creating saps task");
+		SapsTask.createTask(taskToJob, task);
+
+		SapsJob imageJob = new SapsJob(UUID.randomUUID().toString(), federationMember, task.getTaskId());
+		imageJob.addTask(taskToJob);
+
+		String jobId = null;
+		try {
+			jobId = arrebol.addJob(imageJob);
+			LOGGER.debug("Result submited job: " + jobId);
+		} catch (Exception | SubmitJobException e) {
+			LOGGER.error("Error while trying to send request for Arrebol with new saps job.", e);
+			return false;
+		}
+
+		arrebol.addJobInList(new JobSubmitted(jobId, task));
+		LOGGER.info("Adding job in list");
+
+		return true;
+	}
+
+	/**
+	 * This function get key (repository representation in execution_script_tags
+	 * file) based in state parameter.
+	 * 
+	 * @param state task state to be submitted
+	 * @return key (repository representation)
+	 */
+	private String getRepository(ImageTaskState state) {
+		if (state == ImageTaskState.RUNNING)
+			return ExecutionScriptTagUtil.WORKER;
+		else if (state == ImageTaskState.PREPROCESSING)
+			return ExecutionScriptTagUtil.PRE_PROCESSING;
+		else
+			return ExecutionScriptTagUtil.INPUT_DOWNLOADER;
+	}
+
+	/**
+	 * This function checks if each submitted job was finished. If exists finished
+	 * jobs, for each job is updates state in Catalog and removes a job by list of
+	 * submitted jobs to Arrebol.
+	 * 
+	 */
+	private void checker() {
+
+		ImageTask imageTask = null;
+		List<JobSubmitted> submittedJobs = arrebol.returnAllJobsSubmitted();
+		List<JobSubmitted> finishedJobs = new LinkedList<JobSubmitted>();
+
+		LOGGER.debug("Checking jobs " + submittedJobs.size() + " submitted for arrebol service");
+
+		try {
+			for (JobSubmitted job : submittedJobs) {
+				String jobId = job.getJobId();
+
+				JobResponseDTO jobResponse = arrebol.checkStatusJob(jobId);
+
+				imageTask = job.getImageTask();
+
+				LOGGER.debug("Checking job " + jobId + " ...");
+
+				boolean checkFinish = checkJobWasFinish(jobResponse);
+
+				if (checkFinish) {
+
+					boolean checkOK = checkJobFinishedWithSucess(jobResponse);
+
+					if (checkOK) {
+						LOGGER.debug("Job " + jobId + " finished");
+						imageTask.setState(ImageTaskState.FINISHED);
+						imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FINISHED);
+					} else {
+						LOGGER.debug("Job " + jobId + " failed");
+						imageTask.setState(ImageTaskState.FAILED);
+						imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FAILED);
+					}
+
+					finishedJobs.add(job);
+
+					try {
+						imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
+					} catch (SQLException e) {
+						LOGGER.error("Error while update time in task.", e);
+					}
+
+					try {
+						imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
+								imageTask.getUpdateTime());
+					} catch (SQLException e) {
+						LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
+								+ imageTask.getUpdateTime() + " in Catalogue", e);
+					}
+				}
+			}
+
+			for (JobSubmitted jobFinished : finishedJobs) {
+				LOGGER.info("Removing job " + jobFinished.getJobId() + " from the list");
+				arrebol.removeJob(jobFinished);
+			}
+		} catch (GetJobException e) {
+			LOGGER.error("Error while trying check status jobs submitted.", e);
+		} catch (SQLException e) {
+			LOGGER.error("Error while trying update image state.", e);
+		}
+
+	}
+
+	/**
+	 * This function checks job state was finished.
+	 * 
+	 * @param jobResponse job to be check
+	 * @return boolean representation, true (is was finished) or false (otherwise)
+	 */
+	private boolean checkJobWasFinish(JobResponseDTO jobResponse) {
+
+		for (TaskResponseDTO task : jobResponse.getTasks()) {
+			LOGGER.debug("State task: " + task.getState());
+
+			// TODO Verify values possible for job states
+			if (task.getState().compareTo("FINISHED") != 0)
+				return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * This function checks a finished job was completed with success or failure.
+	 * 
+	 * @param jobResponse job to be check
+	 * @return boolean represetation, true (sucess completed) or false (otherwise)
+	 */
+	private boolean checkJobFinishedWithSucess(JobResponseDTO jobResponse) {
+
+		for (TaskResponseDTO task : jobResponse.getTasks()) {
+			TaskSpecResponseDTO taskSpec = task.getTaskSpec();
+
+			for (CommandResponseDTO command : taskSpec.getCommands()) {
+
+				String commandDesc = command.getCommand();
+				String commandState = command.getState();
+				Integer commandExitCode = command.getExitCode();
+
+				LOGGER.info("Command: " + commandDesc);
+				LOGGER.info("State:" + commandState);
+				LOGGER.info("Exit code: " + commandExitCode);
+
+				if (commandExitCode != 0)
+					return false;
+			}
+		}
+
+		return true;
 	}
 }
