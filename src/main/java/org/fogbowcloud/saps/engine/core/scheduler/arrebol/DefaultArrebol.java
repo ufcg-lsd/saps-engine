@@ -52,8 +52,14 @@ public class DefaultArrebol implements Arrebol{
 	}
 
 	@Override
-	public JobResponseDTO checkStatusJob(String jobId) throws GetJobException{
+	public JobResponseDTO checkStatusJobById(String jobId) throws GetJobException{
 		return arrebolRequestHelper.getJob(jobId);
+	}
+	
+	//TODO implementat method
+	public List<JobResponseDTO> checkStatusJobByName(String JobName) throws GetJobException{
+		return null;
+		//return arrebolRequestHelper.getJobByName(jobName);
 	}
 
 	@Override

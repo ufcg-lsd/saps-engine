@@ -947,6 +947,29 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
+	private static final String SELECT_IMAGES_IN_PROCESSING_TO_ARREBOL_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
+			+ " WHERE " + STATE_COL + " = 'downloading' OR " + STATE_COL + " = 'preprocessing' OR " + STATE_COL
+			+ " = 'running'";
+
+	/**
+	 * get tasks in processing to Arrebol
+	 */
+	public List<ImageTask> getTasksInProcessingState() throws SQLException {
+		Statement statement = null;
+		Connection conn = null;
+		try {
+			conn = getConnection();
+			statement = conn.createStatement();
+			statement.setQueryTimeout(300);
+
+			statement.execute(SELECT_IMAGES_IN_PROCESSING_TO_ARREBOL_SQL);
+			ResultSet rs = statement.getResultSet();
+			return extractImageTaskFrom(rs);
+		} finally {
+			close(statement, conn);
+		}
+	}
+
 	private static final String SELECT_USER_SQL = "SELECT * FROM " + USERS_TABLE_NAME + " WHERE " + USER_EMAIL_COL
 			+ " = ?";
 

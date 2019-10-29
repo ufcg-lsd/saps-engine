@@ -19,7 +19,9 @@ public interface Arrebol {
 
 	public List<JobSubmitted> returnAllJobsSubmitted();
 
-	public JobResponseDTO checkStatusJob(String jobId) throws GetJobException;
+	public JobResponseDTO checkStatusJobById(String jobId) throws GetJobException;
+	
+	public List<JobResponseDTO> checkStatusJobByName(String JobName) throws GetJobException;
 
 	public String checkStatusJobString(String jobId) throws GetJobException;
 	

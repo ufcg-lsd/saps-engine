@@ -80,6 +80,8 @@ public interface ImageDataStore {
 
 	List<ImageTask> getAllTasks() throws SQLException;
 
+	List<ImageTask> getTasksInProcessingState() throws SQLException;
+	
 	List<ImageTask> getIn(ImageTaskState state) throws SQLException;
 
 	List<ImageTask> getIn(ImageTaskState state, int limit) throws SQLException;

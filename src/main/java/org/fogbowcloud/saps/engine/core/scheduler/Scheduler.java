@@ -21,11 +21,15 @@ import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.ArrebolRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.GetJobByIdRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.GetJobByNameRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.LenQueueRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.SubmitJobRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.CatalogRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.GetProcessingTasksRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.GetTasksRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTaskRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTimestampRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
 import org.fogbowcloud.saps.engine.core.task.Specification;
@@ -168,7 +172,42 @@ public class Scheduler {
 
 	// TODO implementation and documentation this method
 	private void recovery() {
+		List<ImageTask> tasksInProcessingState = retry(new GetProcessingTasksRetry(imageStore), CATALOG_SLEEP_SECONDS,
+				"gets tasks in processing state");
+		List<ImageTask> tasksForPopulateSubmittedJobList = new LinkedList<ImageTask>();
 
+		for (ImageTask task : tasksInProcessingState) {
+			if (task.getArrebolJobId().equals(ImageTask.NONE_ARREBOL_JOB_ID)) {
+				String jobName = task.getState().getValue() + "-" + task.getTaskId();
+				List<JobResponseDTO> jobsWithEqualJobName = retry(new GetJobByNameRetry(arrebol, jobName),
+						ARREBOL_SLEEP_SECONDS, "gets job by name");
+				if (jobsWithEqualJobName.size() == 0)
+					rollBackTaskState(task);
+				else if (jobsWithEqualJobName.size() == 1) { // TODO add check jobName ==
+																// jobsWithEqualJobName.get(0).get...
+					String arrebolJobId = jobsWithEqualJobName.get(0).getId();
+					writeArrebolJobIdInCatalog(task, arrebolJobId,
+							"updates task[" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
+					tasksForPopulateSubmittedJobList.add(task);
+				} else {
+					// TODO ????
+				}
+			}
+		}
+
+		arrebol.populateJobList(tasksForPopulateSubmittedJobList);
+	}
+
+	/**
+	 * This function apply rollback in task state and updates in Catalog
+	 * 
+	 * @param task task to be apply rollback
+	 */
+	private void rollBackTaskState(ImageTask task) {
+		ImageTaskState previousState = getPreviousState(task.getState());
+		task.setState(previousState);
+		updateStateInCatalog(task, previousState,
+				"updates task[" + task.getTaskId() + "] with previus state [" + previousState.getValue() + "]");
 	}
 
 	/**
@@ -212,9 +251,11 @@ public class Scheduler {
 		ImageTaskState nextState = getNextState(state);
 
 		for (ImageTask task : selectedTasks) {
-			updateStateInCatalog(task, nextState);
+			updateStateInCatalog(task, nextState,
+					"updates task[" + task.getTaskId() + "] state for " + state.getValue());
 			String arrebolJobId = submitTaskToArrebol(task, nextState);
-			writeArrebolJobIdInCatalog(task, arrebolJobId);
+			writeArrebolJobIdInCatalog(task, arrebolJobId,
+					"updates task[" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
 		}
 
 		return count - selectedTasks.size();
@@ -225,31 +266,32 @@ public class Scheduler {
 	 *
 	 * @param task         task to be updated
 	 * @param arrebolJobId Arrebol job ID of task submitted
+	 * @param message      information message
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
 	 */
-	private void writeArrebolJobIdInCatalog(ImageTask task, String arrebolJobId) {
+	private void writeArrebolJobIdInCatalog(ImageTask task, String arrebolJobId, String message) {
 		task.setArrebolJobId(arrebolJobId);
-		retry(new UpdateTaskRetry(imageStore, task), CATALOG_SLEEP_SECONDS,
-				"updates task[" + task.getTaskId() + "] with Arrebol job ID");
+		retry(new UpdateTaskRetry(imageStore, task), CATALOG_SLEEP_SECONDS, message);
 	}
 
 	/**
 	 * This function updates task state in catalog component.
 	 *
-	 * @param task  task to be updated
-	 * @param state new task state
+	 * @param task    task to be updated
+	 * @param state   new task state
+	 * @param message information message
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
 	 */
-	private boolean updateStateInCatalog(ImageTask task, ImageTaskState state) {
+	private boolean updateStateInCatalog(ImageTask task, ImageTaskState state, String message) {
 		task.setState(state);
 		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_SLEEP_SECONDS,
 				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
 	}
 
 	/**
-	 * This function gets Arrebol capacity for add new jobs
+	 * This function gets Arrebol capacity for add new jobs.
 	 * 
 	 * @return Arrebol capacity
 	 */
@@ -258,7 +300,7 @@ public class Scheduler {
 	}
 
 	/**
-	 * This function gets tasks in specific state in Catalog
+	 * This function gets tasks in specific state in Catalog.
 	 * 
 	 * @param state specific state for get tasks
 	 * @return tasks in specific state
@@ -266,6 +308,17 @@ public class Scheduler {
 	private List<ImageTask> getTasksInCatalog(ImageTaskState state) {
 		return retry(new GetTasksRetry(imageStore, state, ImageDataStore.UNLIMITED), CATALOG_SLEEP_SECONDS,
 				"gets tasks with " + state.getValue() + " state");
+	}
+
+	/**
+	 * This function updates task time stamp and insert new tuple in time stamp
+	 * table.
+	 * 
+	 * @param task    task to be update
+	 * @param message information message
+	 */
+	private void updateTimestampTask(ImageTask task, String message) {
+		retry(new UpdateTimestampRetry(imageStore, task), CATALOG_SLEEP_SECONDS, message);
 	}
 
 	/**
@@ -280,12 +333,13 @@ public class Scheduler {
 	 */
 	@SuppressWarnings("unchecked")
 	private <T> T retry(ArrebolRetry<?> function, int sleepInSeconds, String message) {
-		LOGGER.info("Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
+		LOGGER.info(
+				"[Retry Arrebol function] Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
 
 		while (true) {
 			try {
 				return (T) function.run();
-			} catch (Exception | SubmitJobException e) {
+			} catch (Exception | SubmitJobException | GetJobException e) {
 				LOGGER.error(message);
 				e.printStackTrace();
 			}
@@ -310,7 +364,8 @@ public class Scheduler {
 	 */
 	@SuppressWarnings("unchecked")
 	private <T> T retry(CatalogRetry<?> function, int sleepInSeconds, String message) {
-		LOGGER.info("Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
+		LOGGER.info(
+				"[Retry Catalog function] Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
 
 		while (true) {
 			try {
@@ -336,12 +391,37 @@ public class Scheduler {
 	 * @return next state
 	 */
 	private ImageTaskState getNextState(ImageTaskState currentState) {
+		if (currentState == ImageTaskState.CREATED)
+			return ImageTaskState.DOWNLOADING;
+		if (currentState == ImageTaskState.DOWNLOADING)
+			return ImageTaskState.DOWNLOADED;
+		if (currentState == ImageTaskState.DOWNLOADED)
+			return ImageTaskState.PREPROCESSING;
+		if (currentState == ImageTaskState.PREPROCESSING)
+			return ImageTaskState.READY;
 		if (currentState == ImageTaskState.READY)
 			return ImageTaskState.RUNNING;
-		else if (currentState == ImageTaskState.DOWNLOADED)
-			return ImageTaskState.PREPROCESSING;
-		else
-			return ImageTaskState.DOWNLOADING;
+		if (currentState == ImageTaskState.RUNNING)
+			return ImageTaskState.FINISHED;
+
+		return null;
+	}
+
+	/**
+	 * This function get previous state based in current state.
+	 * 
+	 * @param currentState current state
+	 * @return previous state
+	 */
+	private ImageTaskState getPreviousState(ImageTaskState currentState) {
+		if (currentState == ImageTaskState.RUNNING)
+			return ImageTaskState.READY;
+		if (currentState == ImageTaskState.PREPROCESSING)
+			return ImageTaskState.DOWNLOADED;
+		if (currentState == ImageTaskState.DOWNLOADING)
+			return ImageTaskState.CREATED;
+
+		return null;
 	}
 
 	/***
@@ -440,82 +520,65 @@ public class Scheduler {
 	 * 
 	 */
 	private void checker() {
-
-		ImageTask imageTask = null;
 		List<JobSubmitted> submittedJobs = arrebol.returnAllJobsSubmitted();
 		List<JobSubmitted> finishedJobs = new LinkedList<JobSubmitted>();
 
-		LOGGER.debug("Checking jobs " + submittedJobs.size() + " submitted for arrebol service");
+		LOGGER.debug("Checking " + submittedJobs.size() + " submitted jobs for Arrebol service");
 
-		try {
-			for (JobSubmitted job : submittedJobs) {
-				String jobId = job.getJobId();
+		for (JobSubmitted job : submittedJobs) {
+			String jobId = job.getJobId();
+			ImageTask task = job.getImageTask();
 
-				JobResponseDTO jobResponse = arrebol.checkStatusJob(jobId);
+			JobResponseDTO jobResponse = retry(new GetJobByIdRetry(arrebol, jobId), ARREBOL_SLEEP_SECONDS,
+					"gets job by ID [" + jobId + "]");
+			// rollbackTask(task); //TODO check if exists this job in Arrebol
 
-				imageTask = job.getImageTask();
+			boolean checkFinish = checkJobWasFinish(jobResponse);
 
-				LOGGER.debug("Checking job " + jobId + " ...");
+			if (checkFinish) {
+				boolean checkOK = checkJobFinishedWithSucess(jobResponse);
 
-				boolean checkFinish = checkJobWasFinish(jobResponse);
+				if (checkOK) {
+					ImageTaskState nextState = getNextState(task.getState());
+					updateStateInCatalog(task, nextState,
+							"updates task[" + task.getTaskId() + "] with next state [" + nextState.getValue() + "]");
+				} else
+					updateStateInCatalog(task, ImageTaskState.FAILED,
+							"updates task[" + task.getTaskId() + "] with failed state");
 
-				if (checkFinish) {
+				updateTimestampTask(task, "updates task [" + jobId + "] timestamp");
 
-					boolean checkOK = checkJobFinishedWithSucess(jobResponse);
-
-					if (checkOK) {
-						LOGGER.debug("Job " + jobId + " finished");
-						imageTask.setState(ImageTaskState.FINISHED);
-						imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FINISHED);
-					} else {
-						LOGGER.debug("Job " + jobId + " failed");
-						imageTask.setState(ImageTaskState.FAILED);
-						imageStore.updateTaskState(imageTask.getTaskId(), ImageTaskState.FAILED);
-					}
-
-					finishedJobs.add(job);
-
-					try {
-						imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
-					} catch (SQLException e) {
-						LOGGER.error("Error while update time in task.", e);
-					}
-
-					try {
-						imageStore.addStateStamp(imageTask.getTaskId(), imageTask.getState(),
-								imageTask.getUpdateTime());
-					} catch (SQLException e) {
-						LOGGER.error("Error while adding state " + imageTask.getState() + " timestamp "
-								+ imageTask.getUpdateTime() + " in Catalogue", e);
-					}
-				}
+				finishedJobs.add(job);
 			}
+		}
 
-			for (JobSubmitted jobFinished : finishedJobs) {
-				LOGGER.info("Removing job " + jobFinished.getJobId() + " from the list");
-				arrebol.removeJob(jobFinished);
-			}
-		} catch (GetJobException e) {
-			LOGGER.error("Error while trying check status jobs submitted.", e);
-		} catch (SQLException e) {
-			LOGGER.error("Error while trying update image state.", e);
+		for (JobSubmitted jobFinished : finishedJobs) {
+			LOGGER.info("Removing job [" + jobFinished.getJobId() + "] from the submitted job list");
+			arrebol.removeJob(jobFinished);
 		}
 
 	}
 
+	// TODO implementation and documentation this method
+	private void rollBackTask(ImageTask task) {
+
+	}
+
 	/**
-	 * This function checks job state was finished.
+	 * This function checks job state was finish.
 	 * 
 	 * @param jobResponse job to be check
 	 * @return boolean representation, true (is was finished) or false (otherwise)
 	 */
 	private boolean checkJobWasFinish(JobResponseDTO jobResponse) {
+		LOGGER.debug("Checking if job [" + jobResponse.getId() + "] was finish");
 
 		for (TaskResponseDTO task : jobResponse.getTasks()) {
 			LOGGER.debug("State task: " + task.getState());
 
 			// TODO Verify values possible for job states
-			if (task.getState().compareTo("FINISHED") != 0)
+			if (task.getState().compareTo(TaskResponseDTO.STATE_FAILED) != 0
+					|| task.getState().compareTo(TaskResponseDTO.STATE_FINISHED) != 0)
 				return false;
 		}
 
@@ -543,7 +606,7 @@ public class Scheduler {
 				LOGGER.info("State:" + commandState);
 				LOGGER.info("Exit code: " + commandExitCode);
 
-				if (commandExitCode != 0)
+				if (commandExitCode != 0 || commandState != TaskResponseDTO.STATE_FINISHED)
 					return false;
 			}
 		}
