@@ -15,6 +15,7 @@ public class ImageTask implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final DateFormat DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd");
 
+	public static final String NONE_ARREBOL_JOB_ID = "-1";
 	public static final String AVAILABLE = "available";
 	public static final String UNAVAILABLE = "unavailable";
 	// FIXME it is necessary ? Review !
@@ -27,6 +28,7 @@ public class ImageTask implements Serializable {
 	private String region;
 	private Date imageDate;
 	private ImageTaskState state;
+	private String arrebolJobId;
 	private String federationMember;
 	private String user;
 	private int priority;
@@ -38,7 +40,7 @@ public class ImageTask implements Serializable {
 	private String status;
 	private String error;
 
-	public ImageTask(String taskId, String dataset, String region, Date imageDate, ImageTaskState state,
+	public ImageTask(String taskId, String dataset, String region, Date imageDate, ImageTaskState state, String arrebolJobId,
 			String federationMember, int priority, String user, String inputGatheringTag, String inputPreprocessingTag,
 			String algorithmExecutionTag, Timestamp creationTime, Timestamp updateTime, String status, String error) {
 		this.taskId = taskId;
@@ -46,6 +48,7 @@ public class ImageTask implements Serializable {
 		this.region = region;
 		this.imageDate = imageDate;
 		this.state = state;
+		this.arrebolJobId = arrebolJobId;
 		this.federationMember = federationMember;
 		this.priority = priority;
 		this.inputGatheringTag = inputGatheringTag;
@@ -96,6 +99,14 @@ public class ImageTask implements Serializable {
 
 	public void setState(ImageTaskState state) {
 		this.state = state;
+	}
+
+	public String getArrebolJobId() {
+		return arrebolJobId;
+	}
+
+	public void setArrebolJobId(String arrebolJobId) {
+		this.arrebolJobId = arrebolJobId;
 	}
 
 	public String getFederationMember() {
