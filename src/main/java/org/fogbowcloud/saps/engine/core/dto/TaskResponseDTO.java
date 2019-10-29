@@ -1,7 +1,5 @@
 package org.fogbowcloud.saps.engine.core.dto;
 
-import org.fogbowcloud.saps.engine.core.task.Specification;
-
 import java.io.Serializable;
 
 public class TaskResponseDTO implements Serializable {
@@ -10,6 +8,9 @@ public class TaskResponseDTO implements Serializable {
      */
     private static final long serialVersionUID = 1L;
 
+    public static final String STATE_FAILED = "FAILED";
+    public static final String STATE_FINISHED = "FINISHED";
+    
     private String id;
     private String state;
     private TaskSpecResponseDTO taskSpec;
