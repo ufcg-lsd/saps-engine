@@ -15,10 +15,19 @@ import org.fogbowcloud.saps.engine.core.job.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.DefaultArrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.ArrebolRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.LenQueueRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.SubmitJobRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.CatalogRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.GetTasksRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTaskRetry;
+import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
+import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
 import org.fogbowcloud.saps.engine.core.task.Specification;
 import org.fogbowcloud.saps.engine.core.task.TaskImpl;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
@@ -30,11 +39,15 @@ public class Scheduler {
 	// Constants
 	public static final Logger LOGGER = Logger.getLogger(Scheduler.class);
 
+	private static final int ARREBOL_SLEEP_SECONDS = 5;
+	private static final int CATALOG_SLEEP_SECONDS = 5;
+
 	// Saps Controller Variables
 	private final Properties properties;
 	private final ImageDataStore imageStore;
 	private final ScheduledExecutorService sapsExecutor;
-	private final DefaultArrebol arrebol;
+	private final Arrebol arrebol;
+	private final Selector selector;
 
 	// REMOVE IT
 	public Scheduler() {
@@ -42,6 +55,7 @@ public class Scheduler {
 		this.properties = null;
 		this.sapsExecutor = null;
 		this.arrebol = null;
+		this.selector = null;
 	}
 	// REMOVE IT
 
@@ -60,13 +74,27 @@ public class Scheduler {
 		this.properties = properties;
 		this.sapsExecutor = Executors.newScheduledThreadPool(1);
 		this.arrebol = new DefaultArrebol(properties);
+		this.selector = new DefaultRoundRobin();
+	}
+
+	public Scheduler(Properties properties, ImageDataStore imageStore, ScheduledExecutorService sapsExecutor,
+			Arrebol arrebol, Selector selector) throws SapsException, SQLException {
+		if (!checkProperties(properties))
+			throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
+
+		this.properties = properties;
+		this.imageStore = imageStore;
+		this.sapsExecutor = Executors.newScheduledThreadPool(1);
+		this.arrebol = new DefaultArrebol(properties);
+		this.selector = selector;
 	}
 
 	/**
 	 * This function checks if the essential properties have been set.
 	 * 
 	 * @param properties saps properties to be check
-	 * @return boolean representation, true (case all properties been set) or false (otherwise)
+	 * @return boolean representation, true (case all properties been set) or false
+	 *         (otherwise)
 	 */
 	protected static boolean checkProperties(Properties properties) {
 		if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_IP)) {
@@ -114,17 +142,14 @@ public class Scheduler {
 	 * @throws Exception
 	 */
 	public void start() throws Exception {
+		recovery();
+
 		try {
 			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
 				@Override
 				public void run() {
-					try {
-						schedule(arrebol.getCountSlotsInQueue());
-					} catch (Exception | SubmitJobException e) {
-						LOGGER.error("Error while adding tasks", e);
-					}
+					schedule(getCountSlotsInArrebol());
 				}
-
 			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)),
 					TimeUnit.SECONDS);
 
@@ -141,17 +166,21 @@ public class Scheduler {
 		}
 	}
 
+	// TODO implementation and documentation this method
+	private void recovery() {
+
+	}
+
 	/**
 	 * This function schedules up to count tasks.
 	 * 
 	 * @param count slots number in Arrebol queue
 	 * @return number of scheduled tasks
 	 */
-	private int schedule(int count) {
+	protected int schedule(int count) {
 		int remaining;
 
 		remaining = schedule(count, ImageTaskState.READY);
-		remaining = schedule(count, ImageTaskState.PREPROCESSED);
 		remaining = schedule(remaining, ImageTaskState.DOWNLOADED);
 		remaining = schedule(remaining, ImageTaskState.CREATED);
 
@@ -165,59 +194,139 @@ public class Scheduler {
 	 * @param state tasks state for schedule
 	 * @return number of scheduled tasks in specific state
 	 */
-	private int schedule(int count, ImageTaskState state) {
+	private int schedule(int count, final ImageTaskState state) {
 		// shortcut. it was solved in the previous schedule
 		if (count <= 0)
 			return count;
 
-		List<ImageTask> tasks = new ArrayList<ImageTask>();
-
-		try {
-			tasks = imageStore.getIn(state, ImageDataStore.UNLIMITED);
-		} catch (SQLException e) {
-			LOGGER.error("Error while schedule tasks.", e);
-		}
+		List<ImageTask> tasks = getTasksInCatalog(state);
 
 		Map<String, List<ImageTask>> tasksByUsers = mapUsers2Tasks(tasks);
-		List<ImageTask> selectedTasks = select(count, tasksByUsers);
 
-		LOGGER.info("Selected tasks: " + selectedTasks);
+		LOGGER.info("Tasks by users: " + tasksByUsers);
+
+		List<ImageTask> selectedTasks = selector.select(count, tasksByUsers);
+
+		LOGGER.info("Selected tasks using " + selector.version() + ": " + selectedTasks);
 
 		ImageTaskState nextState = getNextState(state);
 
-		int countFailedSubmit = 0;
 		for (ImageTask task : selectedTasks) {
-			if (checkPassiveState(task, nextState)) {
-				if (updateStateInCatalog(task, nextState)) {
-					nextState = getNextState(nextState);
-				} else {
-					continue;
-				}
-			}
-
-			if (submitTaskToArrebol(task, nextState)) {
-				updateStateInCatalog(task, nextState);
-			} else {
-				countFailedSubmit++;
-			}
+			updateStateInCatalog(task, nextState);
+			String arrebolJobId = submitTaskToArrebol(task, nextState);
+			writeArrebolJobIdInCatalog(task, arrebolJobId);
 		}
-
-		if (countFailedSubmit >= 1)
-			return 0;
 
 		return count - selectedTasks.size();
 	}
 
 	/**
-	 * This function ensures that if the state parameter is READY, it updates in the
-	 * catalog and goes to the next state of RUNNING.
-	 * 
-	 * @param task  task to be check
-	 * @param state state to be check
-	 * @return boolean representation, true (state is READY) or false (otherwise)
+	 * This function updates task with Arrebol job ID in catalog component.
+	 *
+	 * @param task         task to be updated
+	 * @param arrebolJobId Arrebol job ID of task submitted
+	 * @return boolean representation reporting success (true) or failure (false) in
+	 *         update state task in catalog
 	 */
-	private boolean checkPassiveState(ImageTask task, ImageTaskState state) {
-		return state == ImageTaskState.READY;
+	private void writeArrebolJobIdInCatalog(ImageTask task, String arrebolJobId) {
+		task.setArrebolJobId(arrebolJobId);
+		retry(new UpdateTaskRetry(imageStore, task), CATALOG_SLEEP_SECONDS,
+				"updates task[" + task.getTaskId() + "] with Arrebol job ID");
+	}
+
+	/**
+	 * This function updates task state in catalog component.
+	 *
+	 * @param task  task to be updated
+	 * @param state new task state
+	 * @return boolean representation reporting success (true) or failure (false) in
+	 *         update state task in catalog
+	 */
+	private boolean updateStateInCatalog(ImageTask task, ImageTaskState state) {
+		task.setState(state);
+		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_SLEEP_SECONDS,
+				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
+	}
+
+	/**
+	 * This function gets Arrebol capacity for add new jobs
+	 * 
+	 * @return Arrebol capacity
+	 */
+	private int getCountSlotsInArrebol() {
+		return retry(new LenQueueRetry(arrebol), ARREBOL_SLEEP_SECONDS, "gets Arrebol capacity len for add news jobs");
+	}
+
+	/**
+	 * This function gets tasks in specific state in Catalog
+	 * 
+	 * @param state specific state for get tasks
+	 * @return tasks in specific state
+	 */
+	private List<ImageTask> getTasksInCatalog(ImageTaskState state) {
+		return retry(new GetTasksRetry(imageStore, state, ImageDataStore.UNLIMITED), CATALOG_SLEEP_SECONDS,
+				"gets tasks with " + state.getValue() + " state");
+	}
+
+	/**
+	 * This function tries countless times to successfully execute the passed
+	 * function.
+	 * 
+	 * @param <T>            Return type
+	 * @param function       Function passed for execute
+	 * @param sleepInSeconds Time sleep in seconds (case fail)
+	 * @param message        Information message about function passed
+	 * @return Function return
+	 */
+	@SuppressWarnings("unchecked")
+	private <T> T retry(ArrebolRetry<?> function, int sleepInSeconds, String message) {
+		LOGGER.info("Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
+
+		while (true) {
+			try {
+				return (T) function.run();
+			} catch (Exception | SubmitJobException e) {
+				LOGGER.error(message);
+				e.printStackTrace();
+			}
+
+			try {
+				Thread.sleep(Long.valueOf(sleepInSeconds));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * This function tries countless times to successfully execute the passed
+	 * function.
+	 * 
+	 * @param <T>            Return type
+	 * @param function       Function passed for execute
+	 * @param sleepInSeconds Time sleep in seconds (case fail)
+	 * @param message        Information message about function passed
+	 * @return Function return
+	 */
+	@SuppressWarnings("unchecked")
+	private <T> T retry(CatalogRetry<?> function, int sleepInSeconds, String message) {
+		LOGGER.info("Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
+
+		while (true) {
+			try {
+				return (T) function.run();
+			} catch (SQLException e) {
+				LOGGER.error("Failed while " + message);
+				e.printStackTrace();
+			}
+
+			try {
+				LOGGER.info("Sleeping for " + sleepInSeconds + " seconds");
+				Thread.sleep(Long.valueOf(sleepInSeconds));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
@@ -229,36 +338,10 @@ public class Scheduler {
 	private ImageTaskState getNextState(ImageTaskState currentState) {
 		if (currentState == ImageTaskState.READY)
 			return ImageTaskState.RUNNING;
-		else if (currentState == ImageTaskState.PREPROCESSED)
-			return ImageTaskState.READY;
 		else if (currentState == ImageTaskState.DOWNLOADED)
 			return ImageTaskState.PREPROCESSING;
 		else
 			return ImageTaskState.DOWNLOADING;
-	}
-
-	/**
-	 * This function update task state in catalog component.
-	 *
-	 * @param task  task to be updated
-	 * @param state new task state
-	 * @return boolean representation reporting success (true) or failure (false) in
-	 *         update state task in catalog
-	 */
-	private boolean updateStateInCatalog(ImageTask task, ImageTaskState state) {
-		task.setState(state);
-
-		try {
-			task.setUpdateTime(imageStore.getTask(task.getTaskId()).getUpdateTime());
-			imageStore.updateTaskState(task.getTaskId(), state);
-			imageStore.addStateStamp(task.getTaskId(), task.getState(), task.getUpdateTime());
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding state " + task.getState() + " timestamp " + task.getUpdateTime()
-					+ " in Catalogue", e);
-			return false;
-		}
-
-		return true;
 	}
 
 	/***
@@ -291,41 +374,14 @@ public class Scheduler {
 		return mapUsersToTasks;
 	}
 
-	// TODO Change implementation to receive parameter selection algorithm
-	/**
-	 * This function select tasks for schedule up to count.
-	 * 
-	 * @param count slots number in Arrebol queue
-	 * @param tasks user map by tasks
-	 * @return list of selected tasks
-	 */
-	protected List<ImageTask> select(int count, Map<String, List<ImageTask>> tasks) {
-		List<ImageTask> selectedTasks = new LinkedList<ImageTask>();
-
-		while (count > 0 && tasks.size() > 0) {
-			for (String user : tasks.keySet()) {
-				if (count > 0) {
-					selectedTasks.add(tasks.get(user).remove(0));
-					count--;
-
-					if (tasks.get(user).size() == 0)
-						tasks.remove(user);
-				}
-			}
-		}
-
-		return selectedTasks;
-	}
-
 	/**
 	 * This function try submit task to Arrebol.
 	 * 
 	 * @param task task to be submitted
-	 * @return boolean representation reporting success or failure in sending the
-	 *         task to the Arrebol
+	 * @return Arrebol job id
 	 * @throws Exception
 	 */
-	private boolean submitTaskToArrebol(ImageTask task, ImageTaskState state) {
+	private String submitTaskToArrebol(ImageTask task, ImageTaskState state) {
 
 		LOGGER.info("Trying submit task id " + task.getTaskId() + " in state " + task.getState().getValue()
 				+ " to arrebol");
@@ -338,7 +394,7 @@ public class Scheduler {
 			imageDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(task.getAlgorithmExecutionTag(), repository);
 		} catch (SapsException e) {
 			LOGGER.error("Error while trying get tag and repository Docker.", e);
-			return false;
+			return null;
 		}
 
 		Specification workerSpec = new Specification(imageDockerInfo.formatImageDocker(),
@@ -352,19 +408,13 @@ public class Scheduler {
 		SapsJob imageJob = new SapsJob(UUID.randomUUID().toString(), federationMember, task.getTaskId());
 		imageJob.addTask(taskToJob);
 
-		String jobId = null;
-		try {
-			jobId = arrebol.addJob(imageJob);
-			LOGGER.debug("Result submited job: " + jobId);
-		} catch (Exception | SubmitJobException e) {
-			LOGGER.error("Error while trying to send request for Arrebol with new saps job.", e);
-			return false;
-		}
+		String jobId = retry(new SubmitJobRetry(arrebol, imageJob), ARREBOL_SLEEP_SECONDS, "add new job");
+		LOGGER.debug("Result submited job: " + jobId);
 
 		arrebol.addJobInList(new JobSubmitted(jobId, task));
 		LOGGER.info("Adding job in list");
 
-		return true;
+		return jobId;
 	}
 
 	/**
@@ -476,7 +526,7 @@ public class Scheduler {
 	 * This function checks a finished job was completed with success or failure.
 	 * 
 	 * @param jobResponse job to be check
-	 * @return boolean represetation, true (sucess completed) or false (otherwise)
+	 * @return boolean representation, true (success completed) or false (otherwise)
 	 */
 	private boolean checkJobFinishedWithSucess(JobResponseDTO jobResponse) {
 
