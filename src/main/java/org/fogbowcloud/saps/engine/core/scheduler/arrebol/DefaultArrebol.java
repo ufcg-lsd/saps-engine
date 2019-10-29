@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
+import org.fogbowcloud.saps.engine.core.model.ImageTask;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 
@@ -14,11 +15,11 @@ public class DefaultArrebol implements Arrebol{
 	
 	private final ArrebolRequestsHelper arrebolRequestHelper;
 	//private final JDBCJobDataStore jobDataStore;
-	private final Properties properties;
+	//private final Properties properties;
 	private List<JobSubmitted> submittedJobID;
 
 	public DefaultArrebol(Properties properties) throws SQLException {
-		this.properties = properties;
+		//this.properties = properties;
 		this.arrebolRequestHelper = new ArrebolRequestsHelper(properties);
 		//this.jobDataStore = new JDBCJobDataStore(properties);
 		this.submittedJobID = new LinkedList<JobSubmitted>();
@@ -37,6 +38,12 @@ public class DefaultArrebol implements Arrebol{
 	@Override
 	public void addJobInList(JobSubmitted newJob){
 		submittedJobID.add(newJob);
+	}
+	
+	@Override
+	public void populateJobList(List<ImageTask> taskList) {
+		for(ImageTask task : taskList) 
+			submittedJobID.add(new JobSubmitted(task.getArrebolJobId(), task));
 	}
 
 	@Override
