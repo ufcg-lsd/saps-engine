@@ -37,6 +37,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String PRIORITY_COL = "priority";
 	private static final String FEDERATION_MEMBER_COL = "federation_member";
 	private static final String STATE_COL = "state";
+	private static final String ARREBOL_JOB_ID = "arrebol_job_id";
 	private static final String INPUT_GATHERING_TAG = "inputdownloading_tag";
 	private static final String INPUT_PREPROCESSING_TAG = "preprocessing_tag";
 	private static final String ALGORITHM_EXECUTION_TAG = "processing_tag";
@@ -74,7 +75,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	// Insert queries
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<>();
 	private BasicDataSource connectionPool;
@@ -126,12 +127,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME + "(" + TASK_ID_COL
 					+ " VARCHAR(255) PRIMARY KEY, " + DATASET_COL + " VARCHAR(100), " + REGION_COL + " VARCHAR(100), "
-					+ IMAGE_DATE_COL + " DATE, " + STATE_COL + " VARCHAR(100), " + FEDERATION_MEMBER_COL
-					+ " VARCHAR(255), " + PRIORITY_COL + " INTEGER, " + USER_EMAIL_COL + " VARCHAR(255) REFERENCES "
-					+ USERS_TABLE_NAME + "(" + USER_EMAIL_COL + "), " + INPUT_GATHERING_TAG + " VARCHAR(100), "
-					+ INPUT_PREPROCESSING_TAG + " VARCHAR(100), " + ALGORITHM_EXECUTION_TAG + " VARCHAR(100), "
-					+ CREATION_TIME_COL + " TIMESTAMP, " + UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL
-					+ " VARCHAR(255), " + ERROR_MSG_COL + " VARCHAR(255))");
+					+ IMAGE_DATE_COL + " DATE, " + STATE_COL + " VARCHAR(100), " + ARREBOL_JOB_ID + " VARCHAR(100),"
+					+ FEDERATION_MEMBER_COL + " VARCHAR(255), " + PRIORITY_COL + " INTEGER, " + USER_EMAIL_COL
+					+ " VARCHAR(255) REFERENCES " + USERS_TABLE_NAME + "(" + USER_EMAIL_COL + "), "
+					+ INPUT_GATHERING_TAG + " VARCHAR(100), " + INPUT_PREPROCESSING_TAG + " VARCHAR(100), "
+					+ ALGORITHM_EXECUTION_TAG + " VARCHAR(100), " + CREATION_TIME_COL + " TIMESTAMP, "
+					+ UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL + " VARCHAR(255), " + ERROR_MSG_COL
+					+ " VARCHAR(255))");
 
 			statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME + "(" + TASK_ID_COL + " VARCHAR(255), "
 					+ STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL + " TIMESTAMP" + ")");
@@ -227,8 +229,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
 		ImageTask task = new ImageTask(taskId, dataset, region, date, ImageTaskState.CREATED,
-				ImageTask.NON_EXISTENT_DATA, priority, user, inputGathering, inputPreprocessing, algorithmExecution,
-				now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT_DATA);
+				ImageTask.NONE_ARREBOL_JOB_ID, ImageTask.NON_EXISTENT_DATA, priority, user, inputGathering,
+				inputPreprocessing, algorithmExecution, now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT_DATA);
 		addImageTask(task);
 		return task;
 	}
@@ -254,7 +256,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		LOGGER.info("Adding image task " + imageTask.getTaskId() + " with priority " + imageTask.getPriority());
 		LOGGER.info(imageTask.toString());
-		
+
 		PreparedStatement insertStatement = null;
 		Connection connection = null;
 
@@ -267,16 +269,17 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(3, imageTask.getRegion());
 			insertStatement.setDate(4, javaDateToSqlDate(imageTask.getImageDate()));
 			insertStatement.setString(5, imageTask.getState().getValue());
-			insertStatement.setString(6, imageTask.getFederationMember());
-			insertStatement.setInt(7, imageTask.getPriority());
-			insertStatement.setString(8, imageTask.getUser());
-			insertStatement.setString(9, imageTask.getInputGatheringTag());
-			insertStatement.setString(10, imageTask.getInputPreprocessingTag());
-			insertStatement.setString(11, imageTask.getAlgorithmExecutionTag());
-			insertStatement.setTimestamp(12, imageTask.getCreationTime());
-			insertStatement.setTimestamp(13, imageTask.getUpdateTime());
-			insertStatement.setString(14, imageTask.getStatus());
-			insertStatement.setString(15, imageTask.getError());
+			insertStatement.setString(6, imageTask.getArrebolJobId());
+			insertStatement.setString(7, imageTask.getFederationMember());
+			insertStatement.setInt(8, imageTask.getPriority());
+			insertStatement.setString(9, imageTask.getUser());
+			insertStatement.setString(10, imageTask.getInputGatheringTag());
+			insertStatement.setString(11, imageTask.getInputPreprocessingTag());
+			insertStatement.setString(12, imageTask.getAlgorithmExecutionTag());
+			insertStatement.setTimestamp(13, imageTask.getCreationTime());
+			insertStatement.setTimestamp(14, imageTask.getUpdateTime());
+			insertStatement.setString(15, imageTask.getStatus());
+			insertStatement.setString(16, imageTask.getError());
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -1228,10 +1231,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 		while (rs.next()) {
 			imageTasks.add(new ImageTask(rs.getString(TASK_ID_COL), rs.getString(DATASET_COL), rs.getString(REGION_COL),
 					rs.getDate(IMAGE_DATE_COL), ImageTaskState.getStateFromStr(rs.getString(STATE_COL)),
-					rs.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL), rs.getString(USER_EMAIL_COL),
-					rs.getString(INPUT_GATHERING_TAG), rs.getString(INPUT_PREPROCESSING_TAG),
-					rs.getString(ALGORITHM_EXECUTION_TAG), rs.getTimestamp(CREATION_TIME_COL),
-					rs.getTimestamp(UPDATED_TIME_COL), rs.getString(IMAGE_STATUS_COL), rs.getString(ERROR_MSG_COL)));
+					rs.getString(ARREBOL_JOB_ID), rs.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
+					rs.getString(USER_EMAIL_COL), rs.getString(INPUT_GATHERING_TAG),
+					rs.getString(INPUT_PREPROCESSING_TAG), rs.getString(ALGORITHM_EXECUTION_TAG),
+					rs.getTimestamp(CREATION_TIME_COL), rs.getTimestamp(UPDATED_TIME_COL),
+					rs.getString(IMAGE_STATUS_COL), rs.getString(ERROR_MSG_COL)));
 		}
 		return imageTasks;
 	}
