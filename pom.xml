@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.fogbowcloud</groupId>
@@ -74,42 +75,45 @@
 			<id>maven-fogbow</id>
 			<url>https://github.com/fogbow/mvn-repo/raw/master/releases/</url>
 		</repository>
-		<!-- <repository>
-            <id>mvn.prov.toolbox.snapshots</id>
-      		<name>maven snapshot repository for PROV toolbox</name>
-      		<url>http://openprovenance.org/java/maven-snapshots/</url>
-    	</repository> -->
+		<!-- <repository> <id>mvn.prov.toolbox.snapshots</id> <name>maven snapshot 
+			repository for PROV toolbox</name> <url>http://openprovenance.org/java/maven-snapshots/</url> 
+			</repository> -->
 	</repositories>
 
 	<dependencies>
-	
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>2.3</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.4</version>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
 			<version>1.10.19</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>org.powermock</groupId>
-		    <artifactId>powermock-mockito-release-full</artifactId>
-		    <version>1.6.4</version>
-		    <type>pom</type>
-		    <scope>test</scope>
-		</dependency>			
-		
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-mockito-release-full</artifactId>
+			<version>1.6.4</version>
+			<type>pom</type>
+			<scope>test</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -145,22 +149,22 @@
 		</dependency>
 
 		<dependency>
-            <groupId>org.javaswift</groupId>
-            <artifactId>joss</artifactId>
-            <version>0.9.7</version>
-        </dependency>
+			<groupId>org.javaswift</groupId>
+			<artifactId>joss</artifactId>
+			<version>0.9.7</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
 			<version>20090211</version>
 		</dependency>
-		
-		 <dependency>
-         	<groupId>com.googlecode.json-simple</groupId>
-   			<artifactId>json-simple</artifactId>
-   			<version>1.1.1</version>
-		 </dependency>
+
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>1.1.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -208,19 +212,19 @@
 			<artifactId>org.restlet.ext.jetty</artifactId>
 			<version>2.3.0</version>
 		</dependency>
-				
+
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
 			<version>2.0.1</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>9.3-1102-jdbc41</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
@@ -240,20 +244,20 @@
 
 
 		<dependency>
-      		<groupId>org.openprovenance.prov</groupId>
-      		<artifactId>prov-model</artifactId>
-      		<version>0.7.0</version>
-    	</dependency>
-    	<dependency>
-      		<groupId>org.openprovenance.prov</groupId>
-      		<artifactId>prov-interop</artifactId>
-      		<version>0.7.0</version>
-    	</dependency>		
-		
-	<dependency>
-    		<groupId>org.json</groupId>
-    		<artifactId>json</artifactId>
-    		<version>20090211</version>
-	</dependency>
+			<groupId>org.openprovenance.prov</groupId>
+			<artifactId>prov-model</artifactId>
+			<version>0.7.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openprovenance.prov</groupId>
+			<artifactId>prov-interop</artifactId>
+			<version>0.7.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20090211</version>
+		</dependency>
 	</dependencies>
 </project>
