@@ -5,7 +5,11 @@ import java.util.List;
 
 public class JobResponseDTO implements Serializable {
 
-    private String id;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private String id;
     private String label;
     private String jobState;
     private List<TaskResponseDTO> tasks;
