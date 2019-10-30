@@ -170,7 +170,10 @@ public class Scheduler {
 		}
 	}
 
-	// TODO implementation and documentation this method
+	/**
+	 * This function retrieves consistency between the information present in
+	 * Catalog and Arrebol, and starts the list of submitted jobs.
+	 */
 	private void recovery() {
 		List<ImageTask> tasksInProcessingState = retry(new GetProcessingTasksRetry(imageStore), CATALOG_SLEEP_SECONDS,
 				"gets tasks in processing state");
@@ -462,7 +465,6 @@ public class Scheduler {
 	 * @throws Exception
 	 */
 	private String submitTaskToArrebol(ImageTask task, ImageTaskState state) {
-
 		LOGGER.info("Trying submit task id " + task.getTaskId() + " in state " + task.getState().getValue()
 				+ " to arrebol");
 
@@ -523,7 +525,7 @@ public class Scheduler {
 		List<JobSubmitted> submittedJobs = arrebol.returnAllJobsSubmitted();
 		List<JobSubmitted> finishedJobs = new LinkedList<JobSubmitted>();
 
-		LOGGER.debug("Checking " + submittedJobs.size() + " submitted jobs for Arrebol service");
+		LOGGER.info("Checking " + submittedJobs.size() + " submitted jobs for Arrebol service");
 
 		for (JobSubmitted job : submittedJobs) {
 			String jobId = job.getJobId();
@@ -531,25 +533,39 @@ public class Scheduler {
 
 			JobResponseDTO jobResponse = retry(new GetJobByIdRetry(arrebol, jobId), ARREBOL_SLEEP_SECONDS,
 					"gets job by ID [" + jobId + "]");
-			// rollbackTask(task); //TODO check if exists this job in Arrebol
+			LOGGER.debug("Job [" + jobId + "] information returned from Arrebol: " + jobResponse);
+			if (!wasJobFound(jobResponse)) {
+				LOGGER.info("Job [" + jobId + "] not found in Arrebol service, applying status rollback to task ["
+						+ task.getTaskId() + "]");
+
+				rollBackTaskState(task);
+				finishedJobs.add(job);
+				continue;
+			}
 
 			boolean checkFinish = checkJobWasFinish(jobResponse);
-
 			if (checkFinish) {
+				LOGGER.info("Job [" + jobId + "] has been finished");
+				
 				boolean checkOK = checkJobFinishedWithSucess(jobResponse);
 
 				if (checkOK) {
+					LOGGER.info("Job [" + jobId + "] has been finished with sucess");
+					
 					ImageTaskState nextState = getNextState(task.getState());
 					updateStateInCatalog(task, nextState,
 							"updates task[" + task.getTaskId() + "] with next state [" + nextState.getValue() + "]");
-				} else
+				} else {
+					LOGGER.info("Job [" + jobId + "] has been finished with failure");
+					
 					updateStateInCatalog(task, ImageTaskState.FAILED,
 							"updates task[" + task.getTaskId() + "] with failed state");
+				}
 
 				updateTimestampTask(task, "updates task [" + jobId + "] timestamp");
 
 				finishedJobs.add(job);
-			}
+			}else LOGGER.info("Job [" + jobId + "] has NOT been finished");
 		}
 
 		for (JobSubmitted jobFinished : finishedJobs) {
@@ -559,9 +575,16 @@ public class Scheduler {
 
 	}
 
-	// TODO implementation and documentation this method
-	private void rollBackTask(ImageTask task) {
-
+	// TODO implement method
+	/**
+	 * This function checks if job was found in Arrebol service.
+	 *
+	 * @param jobResponse job response
+	 * @return boolean representation, true (case job was found) and false
+	 *         (otherwise)
+	 */
+	private boolean wasJobFound(JobResponseDTO jobResponse) {
+		return true;
 	}
 
 	/**
@@ -571,12 +594,11 @@ public class Scheduler {
 	 * @return boolean representation, true (is was finished) or false (otherwise)
 	 */
 	private boolean checkJobWasFinish(JobResponseDTO jobResponse) {
-		LOGGER.debug("Checking if job [" + jobResponse.getId() + "] was finish");
+		LOGGER.info("Checking if job [" + jobResponse.getId() + "] was finished");
 
 		for (TaskResponseDTO task : jobResponse.getTasks()) {
-			LOGGER.debug("State task: " + task.getState());
+			LOGGER.info("State task: " + task.getState());
 
-			// TODO Verify values possible for job states
 			if (task.getState().compareTo(TaskResponseDTO.STATE_FAILED) != 0
 					|| task.getState().compareTo(TaskResponseDTO.STATE_FINISHED) != 0)
 				return false;
