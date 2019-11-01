@@ -18,6 +18,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.DefaultArrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.ArrebolRetry;
@@ -43,25 +44,16 @@ public class Scheduler {
 	// Constants
 	public static final Logger LOGGER = Logger.getLogger(Scheduler.class);
 
-	private static final int ARREBOL_SLEEP_SECONDS = 5;
-	private static final int CATALOG_SLEEP_SECONDS = 5;
+	private static final int ARREBOL_DEFAULT_SLEEP_SECONDS = 5;
+	private static final int CATALOG_DEFAULT_SLEEP_SECONDS = 5;
 
 	// Saps Controller Variables
-	private final Properties properties;
-	private final ImageDataStore imageStore;
-	private final ScheduledExecutorService sapsExecutor;
-	private final Arrebol arrebol;
-	private final Selector selector;
+	private ScheduledExecutorService sapsExecutor;
+	private Selector selector;
 
-	// REMOVE IT
-	public Scheduler() {
-		this.imageStore = null;
-		this.properties = null;
-		this.sapsExecutor = null;
-		this.arrebol = null;
-		this.selector = null;
-	}
-	// REMOVE IT
+	private Properties properties;
+	private ImageDataStore imageStore;
+	private Arrebol arrebol;
 
 	public Scheduler(Properties properties) throws SapsException, SQLException {
 		try {
@@ -88,9 +80,63 @@ public class Scheduler {
 
 		this.properties = properties;
 		this.imageStore = imageStore;
-		this.sapsExecutor = Executors.newScheduledThreadPool(1);
-		this.arrebol = new DefaultArrebol(properties);
+		this.sapsExecutor = sapsExecutor;
+		this.arrebol = arrebol;
 		this.selector = selector;
+	}
+
+	/**
+	 * This function gets image store
+	 * 
+	 * @return image store
+	 */
+	public ImageDataStore getImageStore() {
+		return imageStore;
+	}
+
+	/**
+	 * This function sets image store
+	 * 
+	 * @param imageStore new image store
+	 */
+	public void setImageStore(ImageDataStore imageStore) {
+		this.imageStore = imageStore;
+	}
+
+	/**
+	 * This function gets Arrebol
+	 * 
+	 * @return arrebol arrebol
+	 */
+	public Arrebol getArrebol() {
+		return arrebol;
+	}
+
+	/**
+	 * This function sets Arrebol
+	 * 
+	 * @param arrebol new Arrebol
+	 */
+	public void setArrebol(Arrebol arrebol) {
+		this.arrebol = arrebol;
+	}
+
+	/**
+	 * This function gets Scheduler properties
+	 * 
+	 * @return properties
+	 */
+	public Properties getProperties() {
+		return properties;
+	}
+
+	/**
+	 * This function sets Scheduler properties
+	 * 
+	 * @param properties new properties
+	 */
+	public void setProperties(Properties properties) {
+		this.properties = properties;
 	}
 
 	/**
@@ -132,15 +178,6 @@ public class Scheduler {
 	}
 
 	/**
-	 * Get properties
-	 * 
-	 * @return properties
-	 */
-	public Properties getProperties() {
-		return properties;
-	}
-
-	/**
 	 * Start Scheduler component
 	 * 
 	 * @throws Exception
@@ -152,7 +189,7 @@ public class Scheduler {
 			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
 				@Override
 				public void run() {
-					schedule(getCountSlotsInArrebol());
+					schedule();
 				}
 			}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)),
 					TimeUnit.SECONDS);
@@ -175,15 +212,15 @@ public class Scheduler {
 	 * Catalog and Arrebol, and starts the list of submitted jobs.
 	 */
 	private void recovery() {
-		List<ImageTask> tasksInProcessingState = retry(new GetProcessingTasksRetry(imageStore), CATALOG_SLEEP_SECONDS,
-				"gets tasks in processing state");
+		List<ImageTask> tasksInProcessingState = retry(new GetProcessingTasksRetry(imageStore),
+				CATALOG_DEFAULT_SLEEP_SECONDS, "gets tasks in processing state");
 		List<ImageTask> tasksForPopulateSubmittedJobList = new LinkedList<ImageTask>();
 
 		for (ImageTask task : tasksInProcessingState) {
 			if (task.getArrebolJobId().equals(ImageTask.NONE_ARREBOL_JOB_ID)) {
 				String jobName = task.getState().getValue() + "-" + task.getTaskId();
 				List<JobResponseDTO> jobsWithEqualJobName = retry(new GetJobByNameRetry(arrebol, jobName),
-						ARREBOL_SLEEP_SECONDS, "gets job by name");
+						ARREBOL_DEFAULT_SLEEP_SECONDS, "gets job by name");
 				if (jobsWithEqualJobName.size() == 0)
 					rollBackTaskState(task);
 				else if (jobsWithEqualJobName.size() == 1) { // TODO add check jobName ==
@@ -214,33 +251,48 @@ public class Scheduler {
 	}
 
 	/**
-	 * This function schedules up to count tasks.
 	 * 
-	 * @param count slots number in Arrebol queue
-	 * @return number of scheduled tasks
+	 * This function starts the task scheduler.
 	 */
-	protected int schedule(int count) {
-		int remaining;
-
-		remaining = schedule(count, ImageTaskState.READY);
-		remaining = schedule(remaining, ImageTaskState.DOWNLOADED);
-		remaining = schedule(remaining, ImageTaskState.CREATED);
-
-		return remaining;
+	protected void schedule() {
+		schedule(getCountSlotsInArrebol());
 	}
 
 	/**
-	 * This function schedules up to count tasks in specific state.
+	 * This function schedules up to count tasks.
 	 * 
-	 * @param count slots number in Arrebol queue
-	 * @param state tasks state for schedule
-	 * @return number of scheduled tasks in specific state
+	 * @param submitionCapacity submition capacity in Arrebol
 	 */
-	private int schedule(int count, final ImageTaskState state) {
-		// shortcut. it was solved in the previous schedule
-		if (count <= 0)
-			return count;
+	private void schedule(int submitionCapacity) {
+		List<ImageTask> selectedTasks = selectTasks(submitionCapacity);
+		submitTasks(selectedTasks);
+	}
 
+	/**
+	 * This function selects tasks following a strategy for submit in Arrebol.
+	 * 
+	 * @param count count of available slots in Arrebol queue
+	 * @return selected tasks list
+	 */
+	protected List<ImageTask> selectTasks(int count) {
+		List<ImageTask> selectedTasks = new LinkedList<ImageTask>();
+		ImageTaskState[] states = { ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED };
+
+		for (ImageTaskState state : states)
+			selectedTasks.addAll(selectTasks(count - selectedTasks.size(), state));
+
+		return selectedTasks;
+	}
+
+	/**
+	 * This function selects tasks in specific state following a strategy for submit
+	 * in Arrebol.
+	 * 
+	 * @param count count of available slots in Arrebol queue
+	 * @param state specific state for selection
+	 * @return selected tasks list in specific state
+	 */
+	private List<ImageTask> selectTasks(int count, final ImageTaskState state) {
 		List<ImageTask> tasks = getTasksInCatalog(state);
 
 		Map<String, List<ImageTask>> tasksByUsers = mapUsers2Tasks(tasks);
@@ -250,18 +302,24 @@ public class Scheduler {
 		List<ImageTask> selectedTasks = selector.select(count, tasksByUsers);
 
 		LOGGER.info("Selected tasks using " + selector.version() + ": " + selectedTasks);
+		return selectedTasks;
+	}
 
-		ImageTaskState nextState = getNextState(state);
-
+	/**
+	 * This function submits tasks for Arrebol and updates state and job IDs in BD.
+	 * 
+	 * @param selectedTasks selected task list for submit to Arrebol
+	 */
+	protected void submitTasks(List<ImageTask> selectedTasks) {
 		for (ImageTask task : selectedTasks) {
+			ImageTaskState nextState = getNextState(task.getState());
+
 			updateStateInCatalog(task, nextState,
-					"updates task[" + task.getTaskId() + "] state for " + state.getValue());
+					"updates task[" + task.getTaskId() + "] state for " + nextState.getValue());
 			String arrebolJobId = submitTaskToArrebol(task, nextState);
 			writeArrebolJobIdInCatalog(task, arrebolJobId,
 					"updates task[" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
 		}
-
-		return count - selectedTasks.size();
 	}
 
 	/**
@@ -275,7 +333,7 @@ public class Scheduler {
 	 */
 	private void writeArrebolJobIdInCatalog(ImageTask task, String arrebolJobId, String message) {
 		task.setArrebolJobId(arrebolJobId);
-		retry(new UpdateTaskRetry(imageStore, task), CATALOG_SLEEP_SECONDS, message);
+		retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
 	/**
@@ -287,9 +345,9 @@ public class Scheduler {
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
 	 */
-	private boolean updateStateInCatalog(ImageTask task, ImageTaskState state, String message) {
+	protected boolean updateStateInCatalog(ImageTask task, ImageTaskState state, String message) {
 		task.setState(state);
-		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_SLEEP_SECONDS,
+		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS,
 				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
 	}
 
@@ -299,7 +357,8 @@ public class Scheduler {
 	 * @return Arrebol capacity
 	 */
 	private int getCountSlotsInArrebol() {
-		return retry(new LenQueueRetry(arrebol), ARREBOL_SLEEP_SECONDS, "gets Arrebol capacity len for add news jobs");
+		return retry(new LenQueueRetry(arrebol), ARREBOL_DEFAULT_SLEEP_SECONDS,
+				"gets Arrebol capacity len for add news jobs");
 	}
 
 	/**
@@ -309,7 +368,7 @@ public class Scheduler {
 	 * @return tasks in specific state
 	 */
 	private List<ImageTask> getTasksInCatalog(ImageTaskState state) {
-		return retry(new GetTasksRetry(imageStore, state, ImageDataStore.UNLIMITED), CATALOG_SLEEP_SECONDS,
+		return retry(new GetTasksRetry(imageStore, state, ImageDataStore.UNLIMITED), CATALOG_DEFAULT_SLEEP_SECONDS,
 				"gets tasks with " + state.getValue() + " state");
 	}
 
@@ -321,7 +380,7 @@ public class Scheduler {
 	 * @param message information message
 	 */
 	private void updateTimestampTask(ImageTask task, String message) {
-		retry(new UpdateTimestampRetry(imageStore, task), CATALOG_SLEEP_SECONDS, message);
+		retry(new UpdateTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
 	/**
@@ -342,7 +401,7 @@ public class Scheduler {
 		while (true) {
 			try {
 				return (T) function.run();
-			} catch (Exception | SubmitJobException | GetJobException e) {
+			} catch (Exception | SubmitJobException | GetJobException | GetCountsSlotsException e) {
 				LOGGER.error(message);
 				e.printStackTrace();
 			}
@@ -449,7 +508,11 @@ public class Scheduler {
 			mapUsersToTasks.get(user).sort(new Comparator<ImageTask>() {
 				@Override
 				public int compare(ImageTask task01, ImageTask task02) {
-					return task02.getPriority() - task01.getPriority();
+					int priorityCompare = task02.getPriority() - task01.getPriority();
+					if (priorityCompare != 0)
+						return priorityCompare;
+					else
+						return task02.getCreationTime().compareTo(task02.getCreationTime());
 				}
 			});
 		}
@@ -490,7 +553,7 @@ public class Scheduler {
 		SapsJob imageJob = new SapsJob(UUID.randomUUID().toString(), federationMember, task.getTaskId());
 		imageJob.addTask(taskToJob);
 
-		String jobId = retry(new SubmitJobRetry(arrebol, imageJob), ARREBOL_SLEEP_SECONDS, "add new job");
+		String jobId = retry(new SubmitJobRetry(arrebol, imageJob), ARREBOL_DEFAULT_SLEEP_SECONDS, "add new job");
 		LOGGER.debug("Result submited job: " + jobId);
 
 		arrebol.addJobInList(new JobSubmitted(jobId, task));
@@ -531,7 +594,7 @@ public class Scheduler {
 			String jobId = job.getJobId();
 			ImageTask task = job.getImageTask();
 
-			JobResponseDTO jobResponse = retry(new GetJobByIdRetry(arrebol, jobId), ARREBOL_SLEEP_SECONDS,
+			JobResponseDTO jobResponse = retry(new GetJobByIdRetry(arrebol, jobId), ARREBOL_DEFAULT_SLEEP_SECONDS,
 					"gets job by ID [" + jobId + "]");
 			LOGGER.debug("Job [" + jobId + "] information returned from Arrebol: " + jobResponse);
 			if (!wasJobFound(jobResponse)) {
@@ -546,18 +609,18 @@ public class Scheduler {
 			boolean checkFinish = checkJobWasFinish(jobResponse);
 			if (checkFinish) {
 				LOGGER.info("Job [" + jobId + "] has been finished");
-				
+
 				boolean checkOK = checkJobFinishedWithSucess(jobResponse);
 
 				if (checkOK) {
 					LOGGER.info("Job [" + jobId + "] has been finished with sucess");
-					
+
 					ImageTaskState nextState = getNextState(task.getState());
 					updateStateInCatalog(task, nextState,
 							"updates task[" + task.getTaskId() + "] with next state [" + nextState.getValue() + "]");
 				} else {
 					LOGGER.info("Job [" + jobId + "] has been finished with failure");
-					
+
 					updateStateInCatalog(task, ImageTaskState.FAILED,
 							"updates task[" + task.getTaskId() + "] with failed state");
 				}
@@ -565,7 +628,8 @@ public class Scheduler {
 				updateTimestampTask(task, "updates task [" + jobId + "] timestamp");
 
 				finishedJobs.add(job);
-			}else LOGGER.info("Job [" + jobId + "] has NOT been finished");
+			} else
+				LOGGER.info("Job [" + jobId + "] has NOT been finished");
 		}
 
 		for (JobSubmitted jobFinished : finishedJobs) {
