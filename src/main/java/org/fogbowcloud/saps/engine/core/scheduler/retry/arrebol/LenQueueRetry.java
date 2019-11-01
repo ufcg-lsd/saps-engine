@@ -1,7 +1,7 @@
 package org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol;
 
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 
 public class LenQueueRetry implements ArrebolRetry<Integer> {
 
@@ -12,7 +12,7 @@ public class LenQueueRetry implements ArrebolRetry<Integer> {
 	}
 
 	@Override
-	public Integer run() throws Exception, SubmitJobException {
+	public Integer run() throws GetCountsSlotsException {
 		return arrebol.getCountSlotsInQueue();
 	}
 
