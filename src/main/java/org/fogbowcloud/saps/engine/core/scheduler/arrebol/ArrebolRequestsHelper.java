@@ -14,6 +14,7 @@ import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.core.dto.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 
@@ -54,7 +55,7 @@ public class ArrebolRequestsHelper {
 
 		try {
 			final String jsonResponse = HttpWrapper.doRequest(HttpPost.METHOD_NAME, jobEndpoint,
-                    new LinkedList<Header>(), requestBody);
+					new LinkedList<Header>(), requestBody);
 
 			JsonObject jobResponse = this.gson.fromJson(jsonResponse, JsonObject.class);
 
@@ -97,9 +98,9 @@ public class ArrebolRequestsHelper {
 
 		return new StringEntity(json);
 	}
-	
-	//TODO Implement this function
-	public int getCountSlotsInQueue() {
+
+	// TODO Implement this function
+	public int getCountSlotsInQueue() throws GetCountsSlotsException {
 		return 0;
 	}
 }
