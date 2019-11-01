@@ -8,6 +8,7 @@ import java.util.Properties;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 
@@ -68,7 +69,7 @@ public class DefaultArrebol implements Arrebol{
 	}
 
 	@Override
-	public int getCountSlotsInQueue() throws Exception, SubmitJobException {
+	public int getCountSlotsInQueue() throws GetCountsSlotsException {
 		return arrebolRequestHelper.getCountSlotsInQueue();
 	}
 }
