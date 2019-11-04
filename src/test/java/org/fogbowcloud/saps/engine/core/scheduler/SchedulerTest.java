@@ -30,7 +30,7 @@ public class SchedulerTest {
 		MockitoAnnotations.initMocks(this);
 	}
 
-	private Scheduler createDefaultScheduler(Selector selector, Arrebol arrebol, ImageDataStore imageStore) {
+	private Scheduler createDefaultScheduler(Selector selector, Arrebol arrebol, ImageDataStore imageStore) throws SapsException, SQLException {
 		Properties properties = new Properties();
 		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_IP, "");
 		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_PORT, "");
@@ -39,16 +39,11 @@ public class SchedulerTest {
 		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER, "");
 		properties.put(SapsPropertiesConstants.ARREBOL_BASE_URL, "");
 
-		try {
-			return new Scheduler(properties, imageStore, null, arrebol, selector);
-		} catch (SapsException | SQLException e) {
-			e.printStackTrace();
-		}
-		return null;
+		return new Scheduler(properties, imageStore, null, arrebol, selector);
 	}
-	
+
 	@Test
-	public void testSelectZeroTasksWithZeroCapacitySubmitionWhenThereIsNoAvailableTasks()
+	public void testSelectZeroTasksWithZeroSubmissionCapacityWhenThereIsNoAvailableTasks()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
@@ -68,7 +63,7 @@ public class SchedulerTest {
 	}
 
 	@Test
-	public void testSelectZeroTasksWithZeroCapacitySubmitionWhenThereIsAvailableTasks()
+	public void testSelectZeroTasksWithZeroSubmissionCapacityWhenThereIsAvailableTasks()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
@@ -99,7 +94,7 @@ public class SchedulerTest {
 	}
 
 	@Test
-	public void testSelectZeroTasksWithFiveCapacitySubmitionWhenThereIsNoAvailableTasks()
+	public void testSelectZeroTasksWithFiveSubmissionCapacityWhenThereIsNoAvailableTasks()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
@@ -119,7 +114,7 @@ public class SchedulerTest {
 	}
 
 	@Test
-	public void testSelectOneTaskWithFiveCapacitySubmitionWhenOneAvailableCreatedTasks()
+	public void testSelectOneTaskWithFiveSubmissionCapacityWhenOneAvailableCreatedTasks()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
@@ -146,7 +141,7 @@ public class SchedulerTest {
 	}
 
 	@Test
-	public void testSelectOneTaskWithFiveCapacitySubmitionWhenOneAvailableDownloadedTasks()
+	public void testSelectOneTaskWithFiveSubmissionCapacityWhenOneAvailableDownloadedTasks()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
@@ -173,7 +168,7 @@ public class SchedulerTest {
 	}
 
 	@Test
-	public void testSelectOneTaskWithFiveCapacitySubmitionWhenOneAvailableReadyTasks()
+	public void testSelectOneTaskWithFiveSubmissionCapacityWhenOneAvailableReadyTasks()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
@@ -200,7 +195,7 @@ public class SchedulerTest {
 	}
 
 	@Test
-	public void testSelectOneReadyTaskWithOneCapacitySubmitionWhenAvailableTasksOneInEachStateReadyDownloadedCreated()
+	public void testSelectOneReadyTaskWithOneSubmissionCapacityWhenAvailableTasksOneInEachStateReadyDownloadedCreated()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
@@ -236,7 +231,7 @@ public class SchedulerTest {
 	}
 
 	@Test
-	public void testSelectOneDownloadedTaskWithOneCapacitySubmitionWhenAvailableTasksOneInEachStateDownloadedCreated()
+	public void testSelectOneDownloadedTaskWithOneSubmissionCapacityWhenAvailableTasksOneInEachStateDownloadedCreated()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
@@ -268,7 +263,7 @@ public class SchedulerTest {
 	}
 
 	@Test
-	public void testSelectTwoDownloadedTaskOfUsersDiffirentsWithOneCapacitySubmitionWhenAvailableTasksTwoInEachStateReadyDownloadedCreated()
+	public void testSelectTwoDownloadedTaskOfUsersDiffirentsWithOneSubmissionCapacityWhenAvailableTasksTwoInEachStateReadyDownloadedCreated()
 			throws Exception, SubmitJobException, GetCountsSlotsException {
 		ImageDataStore imageStore = mock(ImageDataStore.class);
 		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), null, imageStore);
