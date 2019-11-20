@@ -32,7 +32,7 @@ public class TaskImpl implements Task {
 
 	private String id;
 	private String uuid;
-	private Specification specification;
+	private Map<String, String> requirements;
 	private TaskState state;
 	private List<CommandRequestDTO> commands;
 	private List<String> commandsStr;
@@ -43,7 +43,7 @@ public class TaskImpl implements Task {
 	private int retries;
 	private long startedRunningAt;
 
-	public TaskImpl(String id, Specification specification, String uuid) {
+	public TaskImpl(String id, Map<String, String> requirements, String uuid) {
 		this.commands = new ArrayList<>();
 		this.processes = new ArrayList<>();
 		this.metadata = new HashMap<>();
@@ -51,7 +51,7 @@ public class TaskImpl implements Task {
 		this.isFinished = false;
 		this.id = id;
 		this.retries = -1;
-		this.specification = specification;
+		this.requirements = requirements;
 		this.state = TaskState.READY;
 		this.uuid = uuid;
 		this.startedRunningAt = Long.MAX_VALUE;
@@ -62,8 +62,8 @@ public class TaskImpl implements Task {
 		this(id, null, uuid);
 	}
 
-	public TaskImpl(String id, Specification specification) {
-		this(id, specification, UUID.randomUUID().toString());
+	public TaskImpl(String id, Map<String, String> requirements) {
+		this(id, requirements, UUID.randomUUID().toString());
 	}
 
 	private void populateCommandStrList() {
@@ -72,6 +72,11 @@ public class TaskImpl implements Task {
 		}
 	}
 
+	@Override
+	public void putRequirement(String attributeName, String value) {
+		requirements.put(attributeName, value);
+	}
+	
 	@Override
 	public void putMetadata(String attributeName, String value) {
 		metadata.put(attributeName, value);
@@ -83,13 +88,13 @@ public class TaskImpl implements Task {
 	}
 
 	@Override
-	public Specification getSpecification() {
-		return this.specification;
+	public Map<String, String> getRequirements() {
+		return this.requirements;
 	}
 
 	@Override
 	public Task clone() {
-		TaskImpl taskClone = new TaskImpl(UUID.randomUUID() + "_clonedFrom_" + getId(), getSpecification(), getUUID());
+		TaskImpl taskClone = new TaskImpl(UUID.randomUUID() + "_clonedFrom_" + getId(), getRequirements(), getUUID());
 		Map<String, String> allMetadata = getAllMetadata();
 		for (String attribute : allMetadata.keySet()) {
 			taskClone.putMetadata(attribute, allMetadata.get(attribute));
@@ -226,7 +231,13 @@ public class TaskImpl implements Task {
 			task.put("isFinished", this.isFinished());
 			task.put("isFailed", this.isFailed());
 			task.put("id", this.getId());
-			task.put("specification", this.getSpecification().toJSON());
+			
+			JSONObject requirements = new JSONObject();
+			for (Map.Entry<String, String> entry : this.getRequirements().entrySet()) {
+				metadata.put(entry.getKey(), entry.getValue());
+			}
+			task.put("requirements", requirements);
+			
 			task.put("retries", this.getRetries());
 			task.put("uuid", this.getUUID());
 			task.put("state", this.state.getDesc());
@@ -248,14 +259,20 @@ public class TaskImpl implements Task {
 	}
 
 	public static Task fromJSON(JSONObject taskJSON) {
-		Specification specification = Specification.fromJSON(taskJSON.optJSONObject("specification"));
-		Task task = new TaskImpl(taskJSON.optString("id"), specification, taskJSON.optString("uuid"));
+		Task task = new TaskImpl(taskJSON.optString("id"), taskJSON.optString("uuid"));
 		task.setRetries(taskJSON.optInt("retries"));
 		if (taskJSON.optBoolean("isFinished")) {
 			task.finish();
 		}
 		if (taskJSON.optBoolean("isFailed")) {
 			task.fail();
+		}
+		
+		JSONObject requirements = taskJSON.optJSONObject("requiriments");
+		Iterator<?> requirementsKeys = requirements.keys();
+		while (requirementsKeys.hasNext()) {
+			String key = (String) requirementsKeys.next();
+			task.putRequirement(key, requirements.optString(key));
 		}
 
 		JSONArray commands = taskJSON.optJSONArray("commands");
@@ -277,7 +294,7 @@ public class TaskImpl implements Task {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((specification == null) ? 0 : specification.hashCode());
+		result = prime * result + ((requirements == null) ? 0 : requirements.hashCode());
 		return result;
 	}
 
@@ -295,9 +312,9 @@ public class TaskImpl implements Task {
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
-		if (specification == null) {
-			return other.specification == null;
+		if (requirements == null) {
+			return other.requirements == null;
 		} else
-			return specification.equals(other.specification);
+			return requirements.equals(other.requirements);
 	}
 }
