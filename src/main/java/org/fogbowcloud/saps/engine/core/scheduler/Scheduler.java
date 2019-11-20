@@ -33,7 +33,6 @@ import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTaskRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTimestampRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
-import org.fogbowcloud.saps.engine.core.task.Specification;
 import org.fogbowcloud.saps.engine.core.task.TaskImpl;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
@@ -525,11 +524,11 @@ public class Scheduler {
 		String repository = getRepository(state);
 		ExecutionScriptTag imageDockerInfo = getExecutionScriptTag(task, repository);
 
-		Specification workerSpec = new Specification(imageDockerInfo.formatImageDocker(),
-				new HashMap<String, String>());
-
-		TaskImpl taskToJob = new TaskImpl(task.getTaskId(), workerSpec, UUID.randomUUID().toString());
-
+		Map<String, String> requirements = new HashMap<String, String>();
+		requirements.put("image", imageDockerInfo.formatImageDocker());
+		
+		TaskImpl taskToJob = new TaskImpl(task.getTaskId(), requirements, UUID.randomUUID().toString());
+		
 		LOGGER.info("Creating saps task");
 		SapsTask.createTask(taskToJob, task, repository);
 
