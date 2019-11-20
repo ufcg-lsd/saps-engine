@@ -26,5 +26,5 @@ public interface Arrebol {
 
 	public String checkStatusJobString(String jobId) throws GetJobException;
 	
-	public int getCountSlotsInQueue() throws GetCountsSlotsException;
+	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException;
 }
