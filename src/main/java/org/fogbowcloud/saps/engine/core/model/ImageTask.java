@@ -32,17 +32,17 @@ public class ImageTask implements Serializable {
 	private String federationMember;
 	private String user;
 	private int priority;
-	private String inputGatheringTag;
-	private String inputPreprocessingTag;
-	private String algorithmExecutionTag;
+	private String inputdownloadingTag;
+	private String preprocessingTag;
+	private String processingTag;
 	private Timestamp creationTime;
 	private Timestamp updateTime;
 	private String status;
 	private String error;
 
 	public ImageTask(String taskId, String dataset, String region, Date imageDate, ImageTaskState state, String arrebolJobId,
-			String federationMember, int priority, String user, String inputGatheringTag, String inputPreprocessingTag,
-			String algorithmExecutionTag, Timestamp creationTime, Timestamp updateTime, String status, String error) {
+					 String federationMember, int priority, String user, String inputdownloadingTag, String preprocessingTag,
+					 String processingTag, Timestamp creationTime, Timestamp updateTime, String status, String error) {
 		this.taskId = taskId;
 		this.dataset = dataset;
 		this.region = region;
@@ -51,9 +51,9 @@ public class ImageTask implements Serializable {
 		this.arrebolJobId = arrebolJobId;
 		this.federationMember = federationMember;
 		this.priority = priority;
-		this.inputGatheringTag = inputGatheringTag;
-		this.inputPreprocessingTag = inputPreprocessingTag;
-		this.algorithmExecutionTag = algorithmExecutionTag;
+		this.inputdownloadingTag = inputdownloadingTag;
+		this.preprocessingTag = preprocessingTag;
+		this.processingTag = processingTag;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
 		this.status = status;
@@ -133,28 +133,28 @@ public class ImageTask implements Serializable {
 		this.user = user;
 	}
 
-	public String getInputGatheringTag() {
-		return inputGatheringTag;
+	public String getInputdownloadingTag() {
+		return inputdownloadingTag;
 	}
 
-	public void setInputGatheringTag(String inputGatheringTag) {
-		this.inputGatheringTag = inputGatheringTag;
+	public void setInputdownloadingTag(String inputdownloadingTag) {
+		this.inputdownloadingTag = inputdownloadingTag;
 	}
 
-	public String getInputPreprocessingTag() {
-		return inputPreprocessingTag;
+	public String getPreprocessingTag() {
+		return preprocessingTag;
 	}
 
-	public void setInputPreprocessingTag(String inputPreprocessingTag) {
-		this.inputPreprocessingTag = inputPreprocessingTag;
+	public void setPreprocessingTag(String preprocessingTag) {
+		this.preprocessingTag = preprocessingTag;
 	}
 
-	public String getAlgorithmExecutionTag() {
-		return algorithmExecutionTag;
+	public String getProcessingTag() {
+		return processingTag;
 	}
 
-	public void setAlgorithmExecutionTag(String algorithmExecutionTag) {
-		this.algorithmExecutionTag = algorithmExecutionTag;
+	public void setProcessingTag(String processingTag) {
+		this.processingTag = processingTag;
 	}
 
 	public Timestamp getCreationTime() {
@@ -216,9 +216,9 @@ public class ImageTask implements Serializable {
 		json.put("federationMember", federationMember);
 		json.put("priority", priority);
 		json.put("user", user);
-		json.put("inputGatheringTag", inputGatheringTag);
-		json.put("inputPreprocessingTag", inputPreprocessingTag);
-		json.put("algorithmExecutionTag", algorithmExecutionTag);
+		json.put("inputGatheringTag", inputdownloadingTag);
+		json.put("inputPreprocessingTag", preprocessingTag);
+		json.put("algorithmExecutionTag", processingTag);
 		json.put("creationTime", creationTime);
 		json.put("updateTime", updateTime);
 		json.put("status", status);
@@ -231,9 +231,9 @@ public class ImageTask implements Serializable {
 	public String toString() {
 		return "ImageTask{" + "taskId='" + taskId + "', dataset='" + dataset + "', region='" + region + "', imageDate="
 				+ DATE_FORMATER.format(imageDate) + ", state='" + state + ", federationMember='" + federationMember
-				+ "', priority=" + priority + ", user='" + user + "', inputGatheringTag='" + inputGatheringTag
-				+ "', inputPreprocessingTag='" + inputPreprocessingTag + "', algorithmExecutionTag='"
-				+ algorithmExecutionTag + "', creationTime=" + creationTime + ", updateTime=" + updateTime
+				+ "', priority=" + priority + ", user='" + user + "', inputGatheringTag='" + inputdownloadingTag
+				+ "', inputPreprocessingTag='" + preprocessingTag + "', algorithmExecutionTag='"
+				+ processingTag + "', creationTime=" + creationTime + ", updateTime=" + updateTime
 				+ ", status='" + status + "', error='" + error + "'}";
 	}
 
@@ -276,14 +276,14 @@ public class ImageTask implements Serializable {
 		if (federationMember != null ? !federationMember.equals(imageTask.federationMember)
 				: imageTask.federationMember != null)
 			return false;
-		if (inputGatheringTag != null ? !inputGatheringTag.equals(imageTask.inputGatheringTag)
-				: imageTask.inputGatheringTag != null)
+		if (inputdownloadingTag != null ? !inputdownloadingTag.equals(imageTask.inputdownloadingTag)
+				: imageTask.inputdownloadingTag != null)
 			return false;
-		if (inputPreprocessingTag != null ? !inputPreprocessingTag.equals(imageTask.inputPreprocessingTag)
-				: imageTask.inputPreprocessingTag != null)
+		if (preprocessingTag != null ? !preprocessingTag.equals(imageTask.preprocessingTag)
+				: imageTask.preprocessingTag != null)
 			return false;
-		if (algorithmExecutionTag != null ? !algorithmExecutionTag.equals(imageTask.algorithmExecutionTag)
-				: imageTask.algorithmExecutionTag != null)
+		if (processingTag != null ? !processingTag.equals(imageTask.processingTag)
+				: imageTask.processingTag != null)
 			return false;
 		if (creationTime != null ? !creationTime.equals(imageTask.creationTime) : imageTask.creationTime != null)
 			return false;
@@ -303,9 +303,9 @@ public class ImageTask implements Serializable {
 		result = 31 * result + (state != null ? state.hashCode() : 0);
 		result = 31 * result + (federationMember != null ? federationMember.hashCode() : 0);
 		result = 31 * result + priority;
-		result = 31 * result + (inputGatheringTag != null ? inputGatheringTag.hashCode() : 0);
-		result = 31 * result + (inputPreprocessingTag != null ? inputPreprocessingTag.hashCode() : 0);
-		result = 31 * result + (algorithmExecutionTag != null ? algorithmExecutionTag.hashCode() : 0);
+		result = 31 * result + (inputdownloadingTag != null ? inputdownloadingTag.hashCode() : 0);
+		result = 31 * result + (preprocessingTag != null ? preprocessingTag.hashCode() : 0);
+		result = 31 * result + (processingTag != null ? processingTag.hashCode() : 0);
 		result = 31 * result + (creationTime != null ? creationTime.hashCode() : 0);
 		result = 31 * result + (updateTime != null ? updateTime.hashCode() : 0);
 		result = 31 * result + (status != null ? status.hashCode() : 0);

@@ -568,8 +568,8 @@ public class Archiver {
 		try {
 			LOGGER.debug("Generating provenance for task " + imageTask.getTaskId());
 			Document document = provUtilImpl.makeDocument(imageTask.getRegion(),
-					df.format(imageTask.getImageDate()), imageTask.getInputGatheringTag(),
-					imageTask.getInputPreprocessingTag(), imageTask.getAlgorithmExecutionTag(),
+					df.format(imageTask.getImageDate()), imageTask.getInputdownloadingTag(),
+					imageTask.getPreprocessingTag(), imageTask.getProcessingTag(),
 					inputMetadata, inputOS, inputKernelVersion, preprocessingMetadata,
 					preprocessingOS, preprocessingKernelVersion, outputMetadata, outputOS,
 					outputKernelVersion);

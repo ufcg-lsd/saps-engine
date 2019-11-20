@@ -273,9 +273,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(7, imageTask.getFederationMember());
 			insertStatement.setInt(8, imageTask.getPriority());
 			insertStatement.setString(9, imageTask.getUser());
-			insertStatement.setString(10, imageTask.getInputGatheringTag());
-			insertStatement.setString(11, imageTask.getInputPreprocessingTag());
-			insertStatement.setString(12, imageTask.getAlgorithmExecutionTag());
+			insertStatement.setString(10, imageTask.getInputdownloadingTag());
+			insertStatement.setString(11, imageTask.getPreprocessingTag());
+			insertStatement.setString(12, imageTask.getProcessingTag());
 			insertStatement.setTimestamp(13, imageTask.getCreationTime());
 			insertStatement.setTimestamp(14, imageTask.getUpdateTime());
 			insertStatement.setString(15, imageTask.getStatus());
