@@ -48,7 +48,7 @@ public class ArrebolRequestsHelper {
 			throw new Exception("Job with id [" + job.getId() + "] is not well formed to built JSON.");
 		}
 
-		final String jobEndpoint = this.arrebolBaseUrl + "/job";
+		final String jobEndpoint = this.arrebolBaseUrl + "queues/default/jobs";
 
 		String jobIdArrebol;
 		final String JSON_KEY_JOB_ID_ARREBOL = "id";
@@ -75,7 +75,7 @@ public class ArrebolRequestsHelper {
 	}
 
 	public String getJobJSON(String jobArrebolId) throws GetJobException {
-		final String endpoint = this.arrebolBaseUrl + "/job/" + jobArrebolId;
+		final String endpoint = this.arrebolBaseUrl + "queues/default/jobs/" + jobArrebolId;
 
 		String jsonResponse;
 		try {
@@ -99,8 +99,22 @@ public class ArrebolRequestsHelper {
 		return new StringEntity(json);
 	}
 
-	// TODO Implement this function
-	public int getCountSlotsInQueue() throws GetCountsSlotsException {
-		return 0;
+	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException {
+		final String endpoint = this.arrebolBaseUrl + "/queues/" + queueId;
+		final String JSON_KEY_WAITING_JOBS_ARREBOL = "waiting_jobs";
+		
+		
+		int waitingJobs;
+		try {
+			final String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint, null);
+			JsonObject jobResponse = this.gson.fromJson(jsonResponse, JsonObject.class);
+			waitingJobs = jobResponse.get(JSON_KEY_WAITING_JOBS_ARREBOL).getAsInt();
+
+			LOGGER.info("Arrebol in queue id [" + queueId + "] was " + waitingJobs + " waiting jobs");
+		} catch (Exception e) {
+			throw new GetCountsSlotsException("Get waiting jobs from Arrebol queue id [" + queueId + "] has FAILED: " + e.getMessage(), e);
+		}
+		
+		return waitingJobs;
 	}
 }

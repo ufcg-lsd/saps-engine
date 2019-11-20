@@ -46,6 +46,7 @@ public class Scheduler {
 
 	private static final int ARREBOL_DEFAULT_SLEEP_SECONDS = 5;
 	private static final int CATALOG_DEFAULT_SLEEP_SECONDS = 5;
+	private static final int ARREBOL_MAX_WAITING_JOBS = 20;
 
 	// Saps Controller Variables
 	private ScheduledExecutorService sapsExecutor;
@@ -183,7 +184,7 @@ public class Scheduler {
 	 * @throws Exception
 	 */
 	public void start() throws Exception {
-		recovery();
+		//recovery();
 
 		try {
 			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
@@ -251,20 +252,11 @@ public class Scheduler {
 	}
 
 	/**
+	 * This function schedules up to tasks.
 	 * 
-	 * This function starts the task scheduler.
 	 */
-	protected void schedule() {
-		schedule(getCountSlotsInArrebol());
-	}
-
-	/**
-	 * This function schedules up to count tasks.
-	 * 
-	 * @param submitionCapacity submition capacity in Arrebol
-	 */
-	private void schedule(int submitionCapacity) {
-		List<ImageTask> selectedTasks = selectTasks(submitionCapacity);
+	private void schedule() {
+		List<ImageTask> selectedTasks = selectTasks();
 		submitTasks(selectedTasks);
 	}
 
@@ -274,12 +266,12 @@ public class Scheduler {
 	 * @param count count of available slots in Arrebol queue
 	 * @return selected tasks list
 	 */
-	protected List<ImageTask> selectTasks(int count) {
+	protected List<ImageTask> selectTasks() {
 		List<ImageTask> selectedTasks = new LinkedList<ImageTask>();
 		ImageTaskState[] states = { ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED };
 
 		for (ImageTaskState state : states)
-			selectedTasks.addAll(selectTasks(count - selectedTasks.size(), state));
+			selectedTasks.addAll(selectTasks(ARREBOL_MAX_WAITING_JOBS - getCountSlotsInArrebol("default"), state));
 
 		return selectedTasks;
 	}
@@ -356,8 +348,8 @@ public class Scheduler {
 	 * 
 	 * @return Arrebol capacity
 	 */
-	private int getCountSlotsInArrebol() {
-		return retry(new LenQueueRetry(arrebol), ARREBOL_DEFAULT_SLEEP_SECONDS,
+	private int getCountSlotsInArrebol(String queueId) {
+		return retry(new LenQueueRetry(arrebol, queueId), ARREBOL_DEFAULT_SLEEP_SECONDS,
 				"gets Arrebol capacity len for add news jobs");
 	}
 
@@ -533,14 +525,7 @@ public class Scheduler {
 
 		String federationMember = task.getFederationMember();
 		String repository = getRepository(state);
-		ExecutionScriptTag imageDockerInfo = null;
-
-		try {
-			imageDockerInfo = ExecutionScriptTagUtil.getExecutionScritpTag(task.getAlgorithmExecutionTag(), repository);
-		} catch (SapsException e) {
-			LOGGER.error("Error while trying get tag and repository Docker.", e);
-			return null;
-		}
+		ExecutionScriptTag imageDockerInfo = getExecutionScriptTag(task, repository);
 
 		Specification workerSpec = new Specification(imageDockerInfo.formatImageDocker(),
 				new HashMap<String, String>());
@@ -571,11 +556,35 @@ public class Scheduler {
 	 */
 	private String getRepository(ImageTaskState state) {
 		if (state == ImageTaskState.RUNNING)
-			return ExecutionScriptTagUtil.WORKER;
+			return ExecutionScriptTagUtil.PROCESSING;
 		else if (state == ImageTaskState.PREPROCESSING)
 			return ExecutionScriptTagUtil.PRE_PROCESSING;
 		else
 			return ExecutionScriptTagUtil.INPUT_DOWNLOADER;
+	}
+
+	/**
+	 * This function gets script tag based in repository.
+	 *
+	 * @param task task to be submitted
+	 * @param repository task repository
+	 * @return task information (tag, repository, type and name)
+	 */
+	private ExecutionScriptTag getExecutionScriptTag(ImageTask task, String repository){
+		try {
+			String tag = null;
+			if(repository == ExecutionScriptTagUtil.PROCESSING)
+				tag = task.getProcessingTag();
+			else if(repository == ExecutionScriptTagUtil.PRE_PROCESSING)
+				tag = task.getPreprocessingTag();
+			else
+				tag = task.getInputdownloadingTag();
+
+			return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
+		} catch (SapsException e) {
+			LOGGER.error("Error while trying get tag and repository Docker.", e);
+			return null;
+		}
 	}
 
 	/**

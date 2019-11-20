@@ -69,7 +69,7 @@ public class DefaultArrebol implements Arrebol{
 	}
 
 	@Override
-	public int getCountSlotsInQueue() throws GetCountsSlotsException {
-		return arrebolRequestHelper.getCountSlotsInQueue();
+	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException {
+		return arrebolRequestHelper.getCountSlotsInQueue(queueId);
 	}
 }
