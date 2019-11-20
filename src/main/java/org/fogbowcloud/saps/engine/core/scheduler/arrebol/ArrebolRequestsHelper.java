@@ -48,8 +48,8 @@ public class ArrebolRequestsHelper {
 			throw new Exception("Job with id [" + job.getId() + "] is not well formed to built JSON.");
 		}
 
-		final String jobEndpoint = this.arrebolBaseUrl + "queues/default/jobs";
-
+		final String jobEndpoint = this.arrebolBaseUrl + "/queues/default/jobs";
+		
 		String jobIdArrebol;
 		final String JSON_KEY_JOB_ID_ARREBOL = "id";
 
@@ -75,7 +75,7 @@ public class ArrebolRequestsHelper {
 	}
 
 	public String getJobJSON(String jobArrebolId) throws GetJobException {
-		final String endpoint = this.arrebolBaseUrl + "queues/default/jobs/" + jobArrebolId;
+		final String endpoint = this.arrebolBaseUrl + "/queues/default/jobs/" + jobArrebolId;
 
 		String jsonResponse;
 		try {
