@@ -3,7 +3,7 @@ package org.fogbowcloud.saps.engine.core.dto;
 import org.fogbowcloud.saps.engine.core.job.SapsJob;
 import org.fogbowcloud.saps.engine.core.task.Task;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ public class JobRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private String label;
     
-    @JsonProperty("task_specs")
+    @SerializedName("task_specs")
     private List<TaskRequestDTO> tasksSpecs;
 
     public JobRequestDTO(SapsJob job) {
