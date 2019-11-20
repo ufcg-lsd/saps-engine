@@ -391,12 +391,13 @@ public class Scheduler {
 			try {
 				return (T) function.run();
 			} catch (Exception | SubmitJobException | GetJobException | GetCountsSlotsException e) {
-				LOGGER.error(message);
+				LOGGER.error("Failed while " + message);
 				e.printStackTrace();
 			}
 
 			try {
-				Thread.sleep(Long.valueOf(sleepInSeconds));
+				LOGGER.info("Sleeping for " + sleepInSeconds + " seconds");
+				Thread.sleep(Long.valueOf(sleepInSeconds) * 1000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -428,7 +429,7 @@ public class Scheduler {
 
 			try {
 				LOGGER.info("Sleeping for " + sleepInSeconds + " seconds");
-				Thread.sleep(Long.valueOf(sleepInSeconds));
+				Thread.sleep(Long.valueOf(sleepInSeconds) * 1000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
