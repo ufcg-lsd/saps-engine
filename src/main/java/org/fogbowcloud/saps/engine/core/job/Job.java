@@ -27,7 +27,6 @@ public abstract class Job implements Serializable {
 	}
 
 	public void addTask(Task task) {
-		LOGGER.debug("Adding task " + task.getId());
 		taskReadyLock.writeLock().lock();
 		try {
 			getTaskList().put(task.getId(), task);
