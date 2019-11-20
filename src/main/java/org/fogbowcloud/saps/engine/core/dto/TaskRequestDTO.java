@@ -13,7 +13,6 @@ public class TaskRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private String id;
-    private String state;
     private Specification spec;
     private List<String> commands;
     private Map<String, String> metadata;
@@ -44,8 +43,6 @@ public class TaskRequestDTO implements Serializable {
     public String getId() {
         return id;
     }
-
-    public String getState(){ return state; }
 
     @Override
     public String toString() {
