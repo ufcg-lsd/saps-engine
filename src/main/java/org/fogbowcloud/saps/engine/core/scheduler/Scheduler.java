@@ -539,7 +539,6 @@ public class Scheduler {
 		tasks.add(sapsTask);
 
 		SapsJob imageJob = new SapsJob(task.getTaskId(), tasks);
-		imageJob.addTask(sapsTask);
 		LOGGER.info("SAPS job: " + imageJob.toJSON().toString());
 
 		String jobId = retry(new SubmitJobRetry(arrebol, imageJob), ARREBOL_DEFAULT_SLEEP_SECONDS, "add new job");
