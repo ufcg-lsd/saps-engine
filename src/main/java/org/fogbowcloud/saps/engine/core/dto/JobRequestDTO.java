@@ -20,7 +20,7 @@ public class JobRequestDTO implements Serializable {
     private List<TaskRequestDTO> tasksSpecs;
 
     public JobRequestDTO(SapsJob job) {
-        this.tasksSpecs = new ArrayList<>();
+        this.tasksSpecs = new ArrayList<TaskRequestDTO>();
         this.label = job.getName();
         populateTaskSpec(job);
     }

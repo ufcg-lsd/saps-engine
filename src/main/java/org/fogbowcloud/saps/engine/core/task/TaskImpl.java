@@ -113,7 +113,6 @@ public class TaskImpl implements Task {
 	}
 
 	public List<String> getAllCommandsInStr() {
-		populateCommandStrList();
 		return this.commandsStr;
 	}
 
