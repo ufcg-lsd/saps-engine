@@ -16,7 +16,7 @@ public class JobRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private String label;
     
-    @SerializedName("task_specs")
+    @SerializedName("tasks_specs")
     private List<TaskRequestDTO> tasksSpecs;
 
     public JobRequestDTO(SapsJob job) {
