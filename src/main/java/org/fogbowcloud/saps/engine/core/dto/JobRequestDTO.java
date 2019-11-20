@@ -28,7 +28,7 @@ public class JobRequestDTO implements Serializable {
     private void populateTaskSpec(SapsJob job) {
         List<Task> taskList = job.getTasks();
         for (Task task : taskList) {
-            this.tasksSpecs.add(new TaskRequestDTO(task.getId(), task.getSpecification(),
+            this.tasksSpecs.add(new TaskRequestDTO(task.getId(), task.getRequirements(),
                     task.getAllCommandsInStr(), task.getAllMetadata()));
         }
     }

@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface Task {
 
-	Specification getSpecification();
+	Map<String, String> getRequirements();
 
 	Task clone();
 
