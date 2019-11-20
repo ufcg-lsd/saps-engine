@@ -156,10 +156,6 @@ public class Scheduler {
 			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_PORT + " was not set");
 			return false;
 		}
-		if (!properties.containsKey(SapsPropertiesConstants.IMAGE_WORKER)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_WORKER + " was not set");
-			return false;
-		}
 		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)) {
 			LOGGER.error(
 					"Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR + " was not set");
