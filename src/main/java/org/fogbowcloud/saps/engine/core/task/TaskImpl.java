@@ -35,7 +35,6 @@ public class TaskImpl implements Task {
 	private Map<String, String> requirements;
 	private TaskState state;
 	private List<CommandRequestDTO> commands;
-	private List<String> commandsStr;
 	private List<String> processes;
 	private Map<String, String> metadata;
 	private boolean isFailed;
@@ -55,7 +54,6 @@ public class TaskImpl implements Task {
 		this.state = TaskState.READY;
 		this.uuid = uuid;
 		this.startedRunningAt = Long.MAX_VALUE;
-		this.commandsStr = new ArrayList<>();
 	}
 
 	public TaskImpl(String id, String uuid){
@@ -66,10 +64,13 @@ public class TaskImpl implements Task {
 		this(id, requirements, UUID.randomUUID().toString());
 	}
 
-	private void populateCommandStrList() {
-		for (int i = 0; i < this.commands.size(); i++) {
-			this.commandsStr.add(this.commands.get(i).getCommand());
-		}
+	private List<String> populateCommandStrList() {
+		List<String> commandsStr = new ArrayList<String>();
+		
+		for (CommandRequestDTO command : commands) 
+			commandsStr.add(command.getCommand());
+		
+		return commandsStr;
 	}
 
 	@Override
@@ -113,7 +114,7 @@ public class TaskImpl implements Task {
 	}
 
 	public List<String> getAllCommandsInStr() {
-		return this.commandsStr;
+		return populateCommandStrList();
 	}
 
 	@Override
@@ -233,23 +234,26 @@ public class TaskImpl implements Task {
 			
 			JSONObject requirements = new JSONObject();
 			for (Map.Entry<String, String> entry : this.getRequirements().entrySet()) {
-				metadata.put(entry.getKey(), entry.getValue());
+				requirements.put(entry.getKey(), entry.getValue());
 			}
 			task.put("requirements", requirements);
 			
 			task.put("retries", this.getRetries());
 			task.put("uuid", this.getUUID());
 			task.put("state", this.state.getDesc());
+			
 			JSONArray commands = new JSONArray();
 			for (CommandRequestDTO command : this.getAllCommands()) {
 				commands.put(command.toJSON());
 			}
 			task.put("commands", commands);
+			
 			JSONObject metadata = new JSONObject();
 			for (Map.Entry<String, String> entry : this.getAllMetadata().entrySet()) {
 				metadata.put(entry.getKey(), entry.getValue());
 			}
 			task.put("metadata", metadata);
+			
 			return task;
 		} catch (JSONException e) {
 			LOGGER.debug("Error while trying to create a JSON from task", e);
