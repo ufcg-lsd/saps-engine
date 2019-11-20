@@ -517,7 +517,7 @@ public class Scheduler {
 	 * @throws Exception
 	 */
 	private String submitTaskToArrebol(ImageTask task, ImageTaskState state) {
-		LOGGER.info("Trying submit task id " + task.getTaskId() + " in state " + task.getState().getValue()
+		LOGGER.info("Trying submit task id [" + task.getTaskId() + "] in state " + task.getState().getValue()
 				+ " to arrebol");
 
 		String federationMember = task.getFederationMember();
@@ -529,11 +529,14 @@ public class Scheduler {
 		
 		TaskImpl taskToJob = new TaskImpl(task.getTaskId(), requirements, UUID.randomUUID().toString());
 		
-		LOGGER.info("Creating saps task");
+		LOGGER.info("Creating SAPS task ...");
 		SapsTask.createTask(taskToJob, task, repository);
+		LOGGER.info("SAPS task: " + taskToJob.toJSON().toString());
 
+		LOGGER.info("Creating SAPS job ...");
 		SapsJob imageJob = new SapsJob(UUID.randomUUID().toString(), federationMember, task.getTaskId());
 		imageJob.addTask(taskToJob);
+		LOGGER.info("SAPS job: " + imageJob.toJSON().toString());
 
 		String jobId = retry(new SubmitJobRetry(arrebol, imageJob), ARREBOL_DEFAULT_SLEEP_SECONDS, "add new job");
 		LOGGER.debug("Result submited job: " + jobId);
