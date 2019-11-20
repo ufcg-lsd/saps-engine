@@ -6,15 +6,15 @@ import java.io.InputStreamReader;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class FTPIntegrationImpl implements FTPIntegration{
 	
 	public static final Logger LOGGER = Logger.getLogger(FTPIntegrationImpl.class);
 	
 	public int getFiles(Properties properties, String ftpServerIP, String ftpServerPort,
-			String remoteTaskFilesPath, String localTaskFilesPath, ImageTask imageTask) {
+			String remoteTaskFilesPath, String localTaskFilesPath, SapsImage imageTask) {
 		if (localTaskFilesPath == null || remoteTaskFilesPath == null) {
 			return 1;
 		}

@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
-import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class SwiftAPIClient {
 

@@ -6,8 +6,8 @@ import java.util.LinkedList;
 import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
-import org.fogbowcloud.saps.engine.core.job.SapsJob;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
@@ -42,8 +42,8 @@ public class DefaultArrebol implements Arrebol{
 	}
 	
 	@Override
-	public void populateJobList(List<ImageTask> taskList) {
-		for(ImageTask task : taskList) 
+	public void populateJobList(List<SapsImage> taskList) {
+		for(SapsImage task : taskList) 
 			submittedJobID.add(new JobSubmitted(task.getArrebolJobId(), task));
 	}
 

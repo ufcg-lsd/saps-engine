@@ -10,11 +10,10 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.dto.*;
-import org.fogbowcloud.saps.engine.core.exception.SapsException;
-import org.fogbowcloud.saps.engine.core.job.SapsJob;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.DefaultArrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
@@ -33,10 +32,10 @@ import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTaskRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTimestampRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
-import org.fogbowcloud.saps.engine.core.task.TaskImpl;
-import org.fogbowcloud.saps.engine.util.ExecutionScriptTag;
-import org.fogbowcloud.saps.engine.util.ExecutionScriptTagUtil;
-import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
+import org.fogbowcloud.saps.engine.utils.ExecutionScriptTag;
+import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class Scheduler {
 
@@ -179,7 +178,7 @@ public class Scheduler {
 	 * @throws Exception
 	 */
 	public void start() throws Exception {
-		//recovery();
+		// recovery();
 
 		try {
 			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
@@ -208,12 +207,12 @@ public class Scheduler {
 	 * Catalog and Arrebol, and starts the list of submitted jobs.
 	 */
 	private void recovery() {
-		List<ImageTask> tasksInProcessingState = retry(new GetProcessingTasksRetry(imageStore),
+		List<SapsImage> tasksInProcessingState = retry(new GetProcessingTasksRetry(imageStore),
 				CATALOG_DEFAULT_SLEEP_SECONDS, "gets tasks in processing state");
-		List<ImageTask> tasksForPopulateSubmittedJobList = new LinkedList<ImageTask>();
+		List<SapsImage> tasksForPopulateSubmittedJobList = new LinkedList<SapsImage>();
 
-		for (ImageTask task : tasksInProcessingState) {
-			if (task.getArrebolJobId().equals(ImageTask.NONE_ARREBOL_JOB_ID)) {
+		for (SapsImage task : tasksInProcessingState) {
+			if (task.getArrebolJobId().equals(SapsImage.NONE_ARREBOL_JOB_ID)) {
 				String jobName = task.getState().getValue() + "-" + task.getTaskId();
 				List<JobResponseDTO> jobsWithEqualJobName = retry(new GetJobByNameRetry(arrebol, jobName),
 						ARREBOL_DEFAULT_SLEEP_SECONDS, "gets job by name");
@@ -239,7 +238,7 @@ public class Scheduler {
 	 * 
 	 * @param task task to be apply rollback
 	 */
-	private void rollBackTaskState(ImageTask task) {
+	private void rollBackTaskState(SapsImage task) {
 		ImageTaskState previousState = getPreviousState(task.getState());
 		task.setState(previousState);
 		updateStateInCatalog(task, previousState,
@@ -251,7 +250,7 @@ public class Scheduler {
 	 * 
 	 */
 	private void schedule() {
-		List<ImageTask> selectedTasks = selectTasks();
+		List<SapsImage> selectedTasks = selectTasks();
 		submitTasks(selectedTasks);
 	}
 
@@ -261,8 +260,8 @@ public class Scheduler {
 	 * @param count count of available slots in Arrebol queue
 	 * @return selected tasks list
 	 */
-	protected List<ImageTask> selectTasks() {
-		List<ImageTask> selectedTasks = new LinkedList<ImageTask>();
+	protected List<SapsImage> selectTasks() {
+		List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
 		ImageTaskState[] states = { ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED };
 
 		for (ImageTaskState state : states)
@@ -279,16 +278,16 @@ public class Scheduler {
 	 * @param state specific state for selection
 	 * @return selected tasks list in specific state
 	 */
-	private List<ImageTask> selectTasks(int count, final ImageTaskState state) {
+	private List<SapsImage> selectTasks(int count, final ImageTaskState state) {
 		LOGGER.info("Trying select up to " + count + " tasks in state " + state);
-		
-		List<ImageTask> tasks = getTasksInCatalog(state);
 
-		Map<String, List<ImageTask>> tasksByUsers = mapUsers2Tasks(tasks);
+		List<SapsImage> tasks = getTasksInCatalog(state);
+
+		Map<String, List<SapsImage>> tasksByUsers = mapUsers2Tasks(tasks);
 
 		LOGGER.info("Tasks by users: " + tasksByUsers);
 
-		List<ImageTask> selectedTasks = selector.select(count, tasksByUsers);
+		List<SapsImage> selectedTasks = selector.select(count, tasksByUsers);
 
 		LOGGER.info("Selected tasks using " + selector.version() + ": " + selectedTasks);
 		return selectedTasks;
@@ -299,8 +298,8 @@ public class Scheduler {
 	 * 
 	 * @param selectedTasks selected task list for submit to Arrebol
 	 */
-	protected void submitTasks(List<ImageTask> selectedTasks) {
-		for (ImageTask task : selectedTasks) {
+	protected void submitTasks(List<SapsImage> selectedTasks) {
+		for (SapsImage task : selectedTasks) {
 			ImageTaskState nextState = getNextState(task.getState());
 
 			updateStateInCatalog(task, nextState,
@@ -320,7 +319,7 @@ public class Scheduler {
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
 	 */
-	private void writeArrebolJobIdInCatalog(ImageTask task, String arrebolJobId, String message) {
+	private void writeArrebolJobIdInCatalog(SapsImage task, String arrebolJobId, String message) {
 		task.setArrebolJobId(arrebolJobId);
 		retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
@@ -334,7 +333,7 @@ public class Scheduler {
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
 	 */
-	protected boolean updateStateInCatalog(ImageTask task, ImageTaskState state, String message) {
+	protected boolean updateStateInCatalog(SapsImage task, ImageTaskState state, String message) {
 		task.setState(state);
 		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS,
 				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
@@ -356,7 +355,7 @@ public class Scheduler {
 	 * @param state specific state for get tasks
 	 * @return tasks in specific state
 	 */
-	private List<ImageTask> getTasksInCatalog(ImageTaskState state) {
+	private List<SapsImage> getTasksInCatalog(ImageTaskState state) {
 		return retry(new GetTasksRetry(imageStore, state, ImageDataStore.UNLIMITED), CATALOG_DEFAULT_SLEEP_SECONDS,
 				"gets tasks with " + state.getValue() + " state");
 	}
@@ -368,7 +367,7 @@ public class Scheduler {
 	 * @param task    task to be update
 	 * @param message information message
 	 */
-	private void updateTimestampTask(ImageTask task, String message) {
+	private void updateTimestampTask(SapsImage task, String message) {
 		retry(new UpdateTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -483,21 +482,21 @@ public class Scheduler {
 	 * @param tasks list with tasks
 	 * @return user map by tasks
 	 */
-	protected Map<String, List<ImageTask>> mapUsers2Tasks(List<ImageTask> tasks) {
-		Map<String, List<ImageTask>> mapUsersToTasks = new TreeMap<String, List<ImageTask>>();
+	protected Map<String, List<SapsImage>> mapUsers2Tasks(List<SapsImage> tasks) {
+		Map<String, List<SapsImage>> mapUsersToTasks = new TreeMap<String, List<SapsImage>>();
 
-		for (ImageTask task : tasks) {
+		for (SapsImage task : tasks) {
 			String user = task.getUser();
 			if (!mapUsersToTasks.containsKey(user))
-				mapUsersToTasks.put(user, new ArrayList<ImageTask>());
+				mapUsersToTasks.put(user, new ArrayList<SapsImage>());
 
 			mapUsersToTasks.get(user).add(task);
 		}
 
 		for (String user : mapUsersToTasks.keySet()) {
-			mapUsersToTasks.get(user).sort(new Comparator<ImageTask>() {
+			mapUsersToTasks.get(user).sort(new Comparator<SapsImage>() {
 				@Override
-				public int compare(ImageTask task01, ImageTask task02) {
+				public int compare(SapsImage task01, SapsImage task02) {
 					int priorityCompare = task02.getPriority() - task01.getPriority();
 					if (priorityCompare != 0)
 						return priorityCompare;
@@ -517,26 +516,30 @@ public class Scheduler {
 	 * @return Arrebol job id
 	 * @throws Exception
 	 */
-	private String submitTaskToArrebol(ImageTask task, ImageTaskState state) {
+	private String submitTaskToArrebol(SapsImage task, ImageTaskState state) {
 		LOGGER.info("Trying submit task id [" + task.getTaskId() + "] in state " + task.getState().getValue()
 				+ " to arrebol");
 
-		String federationMember = task.getFederationMember();
 		String repository = getRepository(state);
 		ExecutionScriptTag imageDockerInfo = getExecutionScriptTag(task, repository);
 
 		Map<String, String> requirements = new HashMap<String, String>();
 		requirements.put("image", imageDockerInfo.formatImageDocker());
-		
-		TaskImpl taskToJob = new TaskImpl(task.getTaskId(), requirements, UUID.randomUUID().toString());
-		
+
+		List<String> commands = SapsTask.buildCommandList(task, repository);
+
+		Map<String, String> metadata = new HashMap<String, String>();
+
 		LOGGER.info("Creating SAPS task ...");
-		SapsTask.createTask(taskToJob, task, repository);
-		LOGGER.info("SAPS task: " + taskToJob.toJSON().toString());
+		SapsTask sapsTask = new SapsTask(task.getTaskId(), requirements, commands, metadata);
+		LOGGER.info("SAPS task: " + sapsTask.toJSON().toString());
 
 		LOGGER.info("Creating SAPS job ...");
-		SapsJob imageJob = new SapsJob(UUID.randomUUID().toString(), federationMember, task.getTaskId());
-		imageJob.addTask(taskToJob);
+		List<SapsTask> tasks = new LinkedList<SapsTask>();
+		tasks.add(sapsTask);
+
+		SapsJob imageJob = new SapsJob(task.getTaskId(), tasks);
+		imageJob.addTask(sapsTask);
 		LOGGER.info("SAPS job: " + imageJob.toJSON().toString());
 
 		String jobId = retry(new SubmitJobRetry(arrebol, imageJob), ARREBOL_DEFAULT_SLEEP_SECONDS, "add new job");
@@ -567,16 +570,16 @@ public class Scheduler {
 	/**
 	 * This function gets script tag based in repository.
 	 *
-	 * @param task task to be submitted
+	 * @param task       task to be submitted
 	 * @param repository task repository
 	 * @return task information (tag, repository, type and name)
 	 */
-	private ExecutionScriptTag getExecutionScriptTag(ImageTask task, String repository){
+	private ExecutionScriptTag getExecutionScriptTag(SapsImage task, String repository) {
 		try {
 			String tag = null;
-			if(repository == ExecutionScriptTagUtil.PROCESSING)
+			if (repository == ExecutionScriptTagUtil.PROCESSING)
 				tag = task.getProcessingTag();
-			else if(repository == ExecutionScriptTagUtil.PRE_PROCESSING)
+			else if (repository == ExecutionScriptTagUtil.PRE_PROCESSING)
 				tag = task.getPreprocessingTag();
 			else
 				tag = task.getInputdownloadingTag();
@@ -602,7 +605,7 @@ public class Scheduler {
 
 		for (JobSubmitted job : submittedJobs) {
 			String jobId = job.getJobId();
-			ImageTask task = job.getImageTask();
+			SapsImage task = job.getImageTask();
 
 			JobResponseDTO jobResponse = retry(new GetJobByIdRetry(arrebol, jobId), ARREBOL_DEFAULT_SLEEP_SECONDS,
 					"gets job by ID [" + jobId + "]");

@@ -3,7 +3,7 @@ package org.fogbowcloud.saps.engine.core.scheduler.selector;
 import java.util.List;
 import java.util.Map;
 
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public interface Selector {
 
@@ -14,7 +14,7 @@ public interface Selector {
 	 * @param tasks user map by tasks
 	 * @return list of selected tasks
 	 */
-	public List<ImageTask> select(int count, Map<String, List<ImageTask>> tasks);
+	public List<SapsImage> select(int count, Map<String, List<SapsImage>> tasks);
 	
 	/**
 	 * This function returns selector version information

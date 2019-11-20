@@ -17,10 +17,10 @@ import org.fogbowcloud.saps.engine.core.archiver.ftp.FTPIntegrationImpl;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.ProvenanceUtilImpl;
-import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.openprovenance.prov.model.Document;
@@ -32,7 +32,7 @@ public class Archiver {
 	private final SwiftAPIClient swiftAPIClient;
 	private File pendingTaskArchiveFile;
 	private DB pendingTaskArchiveDB;
-	private ConcurrentMap<String, ImageTask> pendingTaskArchiveMap;
+	private ConcurrentMap<String, SapsImage> pendingTaskArchiveMap;
 	private FTPIntegrationImpl ftpImpl;
 	private ArchiverHelper archiverHelper;
 	private String archiverVersion;
@@ -95,9 +95,9 @@ public class Archiver {
 
 			while (true) {
 				cleanUnfinishedArchivedData(properties);
-				List<ImageTask> tasksToArchive = tasksToArchive();
-				for (ImageTask imageTask : tasksToArchive) {
-					if (!imageTask.getStatus().equals(ImageTask.PURGED)) {
+				List<SapsImage> tasksToArchive = tasksToArchive();
+				for (SapsImage imageTask : tasksToArchive) {
+					if (!imageTask.getStatus().equals(SapsImage.PURGED)) {
 						archiveAndUpdateTask(imageTask);
 					}
 				}
@@ -126,8 +126,8 @@ public class Archiver {
 
 	protected void cleanUnfinishedArchivedData(Properties properties) throws Exception {
 		LOGGER.info("Starting garbage collector");
-		Collection<ImageTask> taskList = pendingTaskArchiveMap.values();
-		for (ImageTask imageTask : taskList) {
+		Collection<SapsImage> taskList = pendingTaskArchiveMap.values();
+		for (SapsImage imageTask : taskList) {
 			rollBackArchive(imageTask);
 			deleteAllTaskFilesFromDisk(imageTask, properties);
 			deletePendingInputFilesFromSwift(imageTask, properties);
@@ -136,7 +136,7 @@ public class Archiver {
 		LOGGER.info("Garbage collect finished");
 	}
 
-	private void deleteAllTaskFilesFromDisk(ImageTask imageTask, Properties properties)
+	private void deleteAllTaskFilesFromDisk(SapsImage imageTask, Properties properties)
 			throws IOException {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String taskDirPath = exportPath + File.separator + imageTask.getTaskId();
@@ -149,13 +149,13 @@ public class Archiver {
 		}
 	}
 
-	private void deletePendingOutputFromSwift(ImageTask imageTask, Properties properties)
+	private void deletePendingOutputFromSwift(SapsImage imageTask, Properties properties)
 			throws Exception {
 		LOGGER.debug("Pending task" + imageTask + " still have files in swift");
 		deleteOutputFilesFromSwift(imageTask, properties);
 	}
 
-	protected void deleteInputFromDisk(final ImageTask imageTask, Properties properties)
+	protected void deleteInputFromDisk(final SapsImage imageTask, Properties properties)
 			throws IOException {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String inputsDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
@@ -169,7 +169,7 @@ public class Archiver {
 		}
 	}
 
-	private void deletePreProcessFromDisk(ImageTask imageTask, Properties properties)
+	private void deletePreProcessFromDisk(SapsImage imageTask, Properties properties)
 			throws IOException {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String preProcessDirPath = exportPath + File.separator + imageTask.getTaskId()
@@ -183,7 +183,7 @@ public class Archiver {
 		}
 	}
 
-	protected void deleteOutputFromDisk(final ImageTask imageTask, Properties properties)
+	protected void deleteOutputFromDisk(final SapsImage imageTask, Properties properties)
 			throws IOException {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String outputDirPath = exportPath + File.separator + imageTask.getTaskId() + File.separator
@@ -197,7 +197,7 @@ public class Archiver {
 		}
 	}
 
-	private void deleteMetadataFromDisk(ImageTask imageTask, Properties properties)
+	private void deleteMetadataFromDisk(SapsImage imageTask, Properties properties)
 			throws IOException {
 		String exportPath = properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH);
 		String metadataDirPath = exportPath + File.separator + imageTask.getTaskId()
@@ -211,7 +211,7 @@ public class Archiver {
 		}
 	}
 
-	protected List<ImageTask> tasksToArchive() {
+	protected List<SapsImage> tasksToArchive() {
 		try {
 			return imageStore.getIn(ImageTaskState.FINISHED);
 		} catch (SQLException e) {
@@ -220,7 +220,7 @@ public class Archiver {
 		return Collections.emptyList();
 	}
 
-	protected void archiveAndUpdateTask(ImageTask imageTask)
+	protected void archiveAndUpdateTask(SapsImage imageTask)
 			throws IOException, InterruptedException {
 		try {
 			if (prepareArchive(imageTask)) {
@@ -241,7 +241,7 @@ public class Archiver {
 		}
 	}
 
-	protected boolean prepareArchive(ImageTask imageTask) throws SQLException, IOException {
+	protected boolean prepareArchive(SapsImage imageTask) throws SQLException, IOException {
 		LOGGER.debug("Preparing task " + imageTask.getTaskId() + " to archive");
 		if (imageStore.lockTask(imageTask.getTaskId())) {
 			imageTask.setState(ImageTaskState.ARCHIVING);
@@ -273,7 +273,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected void archive(final ImageTask imageTask) throws Exception {
+	protected void archive(final SapsImage imageTask) throws Exception {
 		LOGGER.debug("Federation member is " + imageTask.getFederationMember());
 
 		getFTPServerInfo(imageTask);
@@ -285,12 +285,12 @@ public class Archiver {
 		}
 	}
 
-	protected void getFTPServerInfo(final ImageTask imageTask) throws SQLException {
+	protected void getFTPServerInfo(final SapsImage imageTask) throws SQLException {
 		ftpServerIP = imageStore.getNFSServerIP(imageTask.getFederationMember());
 		ftpServerPort = imageStore.getNFSServerSshPort(imageTask.getFederationMember());
 	}
 
-	protected void finishArchive(ImageTask imageTask) throws IOException, SQLException {
+	protected void finishArchive(SapsImage imageTask) throws IOException, SQLException {
 		LOGGER.debug("Finishing archive for task " + imageTask);
 		imageTask.setState(ImageTaskState.ARCHIVED);
 
@@ -320,7 +320,7 @@ public class Archiver {
 		LOGGER.debug("Task " + imageTask.getTaskId() + " archived");
 	}
 
-	protected void rollBackArchive(ImageTask imageTask) {
+	protected void rollBackArchive(SapsImage imageTask) {
 		LOGGER.debug("Rolling back Archiver for task " + imageTask);
 		archiverHelper.removeTaskFromPendingMap(imageTask, pendingTaskArchiveDB,
 				pendingTaskArchiveMap);
@@ -345,7 +345,7 @@ public class Archiver {
 		}
 	}
 
-	protected int archiveInputs(final ImageTask imageTask) throws Exception {
+	protected int archiveInputs(final SapsImage imageTask) throws Exception {
 		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
 		int i;
@@ -400,7 +400,7 @@ public class Archiver {
 		return 1;
 	}
 
-	private int archivePreProcess(ImageTask imageTask) throws Exception {
+	private int archivePreProcess(SapsImage imageTask) throws Exception {
 		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
 		int i;
@@ -457,7 +457,7 @@ public class Archiver {
 		return 1;
 	}
 
-	private int archiveMetadata(ImageTask imageTask) throws Exception {
+	private int archiveMetadata(SapsImage imageTask) throws Exception {
 		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
 		int i;
@@ -510,7 +510,7 @@ public class Archiver {
 		return 1;
 	}
 
-	private int generateProvenance(ImageTask imageTask) throws SQLException, IOException {
+	private int generateProvenance(SapsImage imageTask) throws SQLException, IOException {
 		String localTaskProvenancePath = archiverHelper.getLocalTaskMetadataPath(imageTask,
 				properties);
 		File localTaskProvenanceDir = new File(localTaskProvenancePath);
@@ -533,7 +533,7 @@ public class Archiver {
 		return 0;
 	}
 
-	private boolean generateProvenanceFile(ImageTask imageTask) throws SQLException {
+	private boolean generateProvenanceFile(SapsImage imageTask) throws SQLException {
 		ProvenanceUtilImpl provUtilImpl = new ProvenanceUtilImpl();
 		DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 
@@ -585,7 +585,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected void archiveOutputs(final ImageTask imageTask)
+	protected void archiveOutputs(final SapsImage imageTask)
 			throws Exception, IOException, SQLException {
 		LOGGER.debug("MAX_ARCHIVE_TRIES " + MAX_ARCHIVE_TRIES);
 
@@ -648,7 +648,7 @@ public class Archiver {
 		}
 	}
 
-	protected boolean uploadInputFilesToSwift(ImageTask imageTask, File localImageInputFilesDir)
+	protected boolean uploadInputFilesToSwift(SapsImage imageTask, File localImageInputFilesDir)
 			throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
 		String pseudoFolder = getInputPseudoFolder(imageTask);
@@ -683,7 +683,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean uploadPreProcessFilesToSwift(ImageTask imageTask,
+	protected boolean uploadPreProcessFilesToSwift(SapsImage imageTask,
 			File localImagePreProcessFilesDir) throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
 		String pseudoFolder = getPreProcessPseudoFolder(imageTask);
@@ -718,7 +718,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean uploadMetadataFilesToSwift(ImageTask imageTask,
+	protected boolean uploadMetadataFilesToSwift(SapsImage imageTask,
 			File localImageMetadataFilesDir) throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
 		String pseudoFolder = getMetadataPseudoFolder(imageTask);
@@ -753,7 +753,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean uploadOutputFilesToSwift(ImageTask imageTask, File localImageOutputFilesDir)
+	protected boolean uploadOutputFilesToSwift(SapsImage imageTask, File localImageOutputFilesDir)
 			throws Exception {
 		LOGGER.debug("maxSwiftUploadTries=" + MAX_SWIFT_UPLOAD_TRIES);
 		String pseudoFolder = getOutputPseudoFolder(imageTask);
@@ -788,7 +788,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean deletePendingInputFilesFromSwift(ImageTask imageTask, Properties properties)
+	protected boolean deletePendingInputFilesFromSwift(SapsImage imageTask, Properties properties)
 			throws Exception {
 		LOGGER.debug("Deleting " + imageTask + " input files from swift");
 		String containerName = getContainerName();
@@ -812,7 +812,7 @@ public class Archiver {
 		return true;
 	}
 
-	protected boolean deleteOutputFilesFromSwift(ImageTask imageTask, Properties properties)
+	protected boolean deleteOutputFilesFromSwift(SapsImage imageTask, Properties properties)
 			throws Exception {
 		LOGGER.debug("Deleting " + imageTask + " output files from swift");
 		String containerName = getContainerName();
@@ -841,7 +841,7 @@ public class Archiver {
 		return properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
 	}
 
-	private String getInputPseudoFolder(ImageTask imageTask) {
+	private String getInputPseudoFolder(SapsImage imageTask) {
 		if (properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {
 			return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
@@ -854,7 +854,7 @@ public class Archiver {
 				+ "input" + File.separator;
 	}
 
-	private String getPreProcessPseudoFolder(ImageTask imageTask) {
+	private String getPreProcessPseudoFolder(SapsImage imageTask) {
 		if (properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {
 			return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
@@ -867,7 +867,7 @@ public class Archiver {
 				+ "preprocessing" + File.separator;
 	}
 
-	private String getMetadataPseudoFolder(ImageTask imageTask) {
+	private String getMetadataPseudoFolder(SapsImage imageTask) {
 		if (properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {
 			return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
@@ -878,7 +878,7 @@ public class Archiver {
 				+ File.separator + imageTask.getTaskId() + File.separator + "metadata";
 	}
 
-	private String getOutputPseudoFolder(ImageTask imageTask) {
+	private String getOutputPseudoFolder(SapsImage imageTask) {
 		if (properties.getProperty(SapsPropertiesConstants.SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX)
 				.endsWith(File.separator)) {
 			return properties.getProperty(SapsPropertiesConstants.SWIFT_INPUT_PSEUDO_FOLDER_PREFIX)
@@ -891,7 +891,7 @@ public class Archiver {
 				+ "output" + File.separator;
 	}
 	
-	private String getProvenanceFilePath(ImageTask imageTask) {
+	private String getProvenanceFilePath(SapsImage imageTask) {
 		return properties.getProperty(SapsPropertiesConstants.LOCAL_INPUT_OUTPUT_PATH)
 				+ File.separator + imageTask.getTaskId() + File.separator + "metadata"
 				+ File.separator + "saps.provn";

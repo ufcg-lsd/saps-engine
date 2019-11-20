@@ -1,17 +1,17 @@
 package org.fogbowcloud.saps.engine.core.dispatcher;
 
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public class Task {
 
 	private String id;
-	private ImageTask imageTask;
+	private SapsImage imageTask;
 	
 	public Task(String id) {
 		this.id = id;
 	}
 	
-	public Task(String id, ImageTask imageTask) {
+	public Task(String id, SapsImage imageTask) {
 		this.id = id;
 		this.imageTask = imageTask;
 	}
@@ -24,11 +24,11 @@ public class Task {
 		this.id = id;
 	}
 
-	public ImageTask getImageTask() {
+	public SapsImage getImageTask() {
 		return imageTask;
 	}
 
-	public void setImageTask(ImageTask imageTask) {
+	public void setImageTask(SapsImage imageTask) {
 		this.imageTask = imageTask;
 	}
 	

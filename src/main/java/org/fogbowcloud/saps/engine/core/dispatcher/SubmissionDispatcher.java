@@ -12,11 +12,11 @@ import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
-import org.fogbowcloud.saps.notifier.Ward;
 
 public class SubmissionDispatcher {
 	public static final int DEFAULT_PRIORITY = 0;
@@ -93,9 +93,9 @@ public class SubmissionDispatcher {
 	}
 
 	public void setTasksToPurge(String day, boolean force) throws SQLException, ParseException {
-		List<ImageTask> tasksToPurge = force ? imageStore.getAllTasks() : imageStore.getIn(ImageTaskState.ARCHIVED);
+		List<SapsImage> tasksToPurge = force ? imageStore.getAllTasks() : imageStore.getIn(ImageTaskState.ARCHIVED);
 
-		for (ImageTask imageTask : tasksToPurge) {
+		for (SapsImage imageTask : tasksToPurge) {
 			long date = 0;
 			try {
 				date = parseStringToDate(day).getTime();
@@ -103,7 +103,7 @@ public class SubmissionDispatcher {
 				LOGGER.error("Error while parsing string to date", e);
 			}
 			if (isBeforeDay(date, imageTask.getUpdateTime())) {
-				imageTask.setStatus(ImageTask.PURGED);
+				imageTask.setStatus(SapsImage.PURGED);
 
 				imageStore.updateImageTask(imageTask);
 				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
@@ -124,7 +124,7 @@ public class SubmissionDispatcher {
 
 	// FIXME is it necessaty ? "System.out.println" ?
 	public void listTasksInDB() throws SQLException, ParseException {
-		List<ImageTask> allImageTask = imageStore.getAllTasks();
+		List<SapsImage> allImageTask = imageStore.getAllTasks();
 		for (int i = 0; i < allImageTask.size(); i++) {
 			System.out.println(allImageTask.get(i).toString());
 		}
@@ -238,7 +238,7 @@ public class SubmissionDispatcher {
 					for (String region : regions) {
 						String taskId = UUID.randomUUID().toString();
 
-						ImageTask iTask = getImageStore().addImageTask(taskId, dataset, region, cal.getTime(), "None",
+						SapsImage iTask = getImageStore().addImageTask(taskId, dataset, region, cal.getTime(), "None",
 								priority, email, inputGathering, inputPreprocessing, algorithmExecution);
 
 						Task task = new Task(UUID.randomUUID().toString());
@@ -259,7 +259,7 @@ public class SubmissionDispatcher {
 		return createdTasks;
 	}
 
-	public List<ImageTask> getTaskListInDB() throws SQLException, ParseException {
+	public List<SapsImage> getTaskListInDB() throws SQLException, ParseException {
 		return imageStore.getAllTasks();
 	}
 
@@ -268,10 +268,10 @@ public class SubmissionDispatcher {
 		return wards;
 	}
 
-	public ImageTask getTaskInDB(String taskId) throws SQLException {
-		List<ImageTask> allTasks = imageStore.getAllTasks();
+	public SapsImage getTaskInDB(String taskId) throws SQLException {
+		List<SapsImage> allTasks = imageStore.getAllTasks();
 
-		for (ImageTask imageTask : allTasks) {
+		for (SapsImage imageTask : allTasks) {
 			if (imageTask.getTaskId().equals(taskId)) {
 				return imageTask;
 			}
@@ -280,7 +280,7 @@ public class SubmissionDispatcher {
 		return null;
 	}
 
-	public List<ImageTask> getTasksInState(ImageTaskState imageState) throws SQLException {
+	public List<SapsImage> getTasksInState(ImageTaskState imageState) throws SQLException {
 		return this.imageStore.getIn(imageState);
 	}
 
@@ -292,17 +292,17 @@ public class SubmissionDispatcher {
 		return properties;
 	}
 
-	public List<ImageTask> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
+	public List<SapsImage> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
 			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
 			String inputPreprocessing, String inputGathering, String algorithmExecution) {
 
-		List<ImageTask> filteredTasks = new ArrayList<>();
+		List<SapsImage> filteredTasks = new ArrayList<>();
 		Set<String> regions = new HashSet<>();
 		regions.addAll(getRegionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
 				upperRightLongitude));
 
 		for (String region : regions) {
-			List<ImageTask> iTasks = null;
+			List<SapsImage> iTasks = null;
 			try {
 				iTasks = getImageStore().getProcessedImages(region, initDate, endDate, inputGathering,
 						inputPreprocessing, algorithmExecution);

@@ -9,14 +9,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.infrastructure.http.HttpWrapper;
-import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.core.dto.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
-import org.fogbowcloud.saps.engine.core.job.SapsJob;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.http.HttpWrapper;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 import java.util.LinkedList;
 
@@ -45,7 +45,7 @@ public class ArrebolRequestsHelper {
 		try {
 			requestBody = makeJSONBody(job);
 		} catch (UnsupportedEncodingException e) {
-			throw new Exception("Job with id [" + job.getId() + "] is not well formed to built JSON.");
+			throw new Exception("Job is not well formed to built JSON.");
 		}
 
 		final String jobEndpoint = this.arrebolBaseUrl + "/queues/default/jobs";
@@ -61,7 +61,7 @@ public class ArrebolRequestsHelper {
 
 			jobIdArrebol = jobResponse.get(JSON_KEY_JOB_ID_ARREBOL).getAsString();
 
-			LOGGER.info("Job [" + job.getId() + "] was submitted with success to Arrebol.");
+			LOGGER.info("Job was submitted with success to Arrebol.");
 
 		} catch (Exception e) {
 			throw new SubmitJobException("Submit Job to Arrebol has FAILED: " + e.getMessage(), e);
@@ -88,7 +88,7 @@ public class ArrebolRequestsHelper {
 	}
 
 	public StringEntity makeJSONBody(SapsJob job) throws UnsupportedEncodingException {
-		LOGGER.info("Building JSON body of Job : [" + job.getId() + "]");
+		LOGGER.info("Building JSON body of Job ...");
 
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		JobRequestDTO jobDTO = new JobRequestDTO(job);

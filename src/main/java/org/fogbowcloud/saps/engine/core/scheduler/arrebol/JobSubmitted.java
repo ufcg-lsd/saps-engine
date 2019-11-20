@@ -1,13 +1,13 @@
 package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public class JobSubmitted {
 
     private String jobId;
-    private ImageTask imageTask;
+    private SapsImage imageTask;
 
-    public JobSubmitted(String jobId, ImageTask imageTask){
+    public JobSubmitted(String jobId, SapsImage imageTask){
         this.jobId = jobId;
         this.imageTask = imageTask;
     }
@@ -16,7 +16,7 @@ public class JobSubmitted {
         return jobId;
     }
 
-    public ImageTask getImageTask(){
+    public SapsImage getImageTask(){
         return imageTask;
     }
 

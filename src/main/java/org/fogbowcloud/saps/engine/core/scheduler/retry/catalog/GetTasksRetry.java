@@ -4,10 +4,10 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 
-public class GetTasksRetry implements CatalogRetry<List<ImageTask>>{
+public class GetTasksRetry implements CatalogRetry<List<SapsImage>>{
 
 	private ImageDataStore imageStore;
 	private ImageTaskState state;
@@ -20,7 +20,7 @@ public class GetTasksRetry implements CatalogRetry<List<ImageTask>>{
 	}
 	
 	@Override
-	public List<ImageTask> run() throws SQLException {
+	public List<SapsImage> run() throws SQLException {
 		return imageStore.getIn(state, limit);
 	}
 

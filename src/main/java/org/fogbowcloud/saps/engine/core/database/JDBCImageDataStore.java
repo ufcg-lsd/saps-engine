@@ -18,11 +18,11 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.Submission;
 import org.fogbowcloud.saps.engine.core.dispatcher.Task;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
-import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
-import org.fogbowcloud.saps.notifier.Ward;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class JDBCImageDataStore implements ImageDataStore {
 
@@ -224,19 +224,19 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	@Override
-	public ImageTask addImageTask(String taskId, String dataset, String region, Date date, String downloadLink,
+	public SapsImage addImageTask(String taskId, String dataset, String region, Date date, String downloadLink,
 			int priority, String user, String inputGathering, String inputPreprocessing, String algorithmExecution)
 			throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
-		ImageTask task = new ImageTask(taskId, dataset, region, date, ImageTaskState.CREATED,
-				ImageTask.NONE_ARREBOL_JOB_ID, ImageTask.NON_EXISTENT_DATA, priority, user, inputGathering,
-				inputPreprocessing, algorithmExecution, now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT_DATA);
+		SapsImage task = new SapsImage(taskId, dataset, region, date, ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NON_EXISTENT_DATA, priority, user, inputGathering,
+				inputPreprocessing, algorithmExecution, now, now, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA);
 		addImageTask(task);
 		return task;
 	}
 
 	@Override
-	public void addImageTask(ImageTask imageTask) throws SQLException {
+	public void addImageTask(SapsImage imageTask) throws SQLException {
 		if (imageTask.getTaskId() == null || imageTask.getTaskId().isEmpty()) {
 			LOGGER.error("Task with empty id.");
 			throw new IllegalArgumentException("Task with empty id.");
@@ -367,15 +367,15 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			insertStatement = connection.prepareStatement(INSERT_METADATA_INFO_SQL);
 			insertStatement.setString(1, taskId);
-			insertStatement.setString(2, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(3, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(4, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(5, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(6, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(7, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(8, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(9, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(10, ImageTask.NON_EXISTENT_DATA);
+			insertStatement.setString(2, SapsImage.NON_EXISTENT_DATA);
+			insertStatement.setString(3, SapsImage.NON_EXISTENT_DATA);
+			insertStatement.setString(4, SapsImage.NON_EXISTENT_DATA);
+			insertStatement.setString(5, SapsImage.NON_EXISTENT_DATA);
+			insertStatement.setString(6, SapsImage.NON_EXISTENT_DATA);
+			insertStatement.setString(7, SapsImage.NON_EXISTENT_DATA);
+			insertStatement.setString(8, SapsImage.NON_EXISTENT_DATA);
+			insertStatement.setString(9, SapsImage.NON_EXISTENT_DATA);
+			insertStatement.setString(10, SapsImage.NON_EXISTENT_DATA);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -824,7 +824,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ TASK_ID_COL + " = ?";
 
 	@Override
-	public void updateImageTask(ImageTask imagetask) throws SQLException {
+	public void updateImageTask(SapsImage imagetask) throws SQLException {
 		if (imagetask == null) {
 			LOGGER.error("Trying to update null image task.");
 			throw new IllegalArgumentException("Trying to update null image task.");
@@ -931,7 +931,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
 
 	@Override
-	public List<ImageTask> getAllTasks() throws SQLException {
+	public List<SapsImage> getAllTasks() throws SQLException {
 		Statement statement = null;
 		Connection conn = null;
 		try {
@@ -954,7 +954,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	/**
 	 * get tasks in processing to Arrebol
 	 */
-	public List<ImageTask> getTasksInProcessingState() throws SQLException {
+	public List<SapsImage> getTasksInProcessingState() throws SQLException {
 		Statement statement = null;
 		Connection conn = null;
 		try {
@@ -1011,7 +1011,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " WHERE state = ? ORDER BY priority ASC LIMIT ?";
 
 	@Override
-	public List<ImageTask> getIn(ImageTaskState state, int limit) throws SQLException {
+	public List<SapsImage> getIn(ImageTaskState state, int limit) throws SQLException {
 		if (state == null) {
 			LOGGER.error("A state must be given");
 			throw new IllegalArgumentException("Can't recover tasks. State was null.");
@@ -1038,7 +1038,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			}
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
+			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -1053,7 +1053,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " ctime BETWEEN ? AND ? ";
 
 	@Override
-	public List<ImageTask> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
+	public List<SapsImage> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
 			long processDateEnd) throws SQLException {
 
 		PreparedStatement selectStatement = null;
@@ -1116,7 +1116,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
+			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -1125,7 +1125,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	@Override
-	public List<ImageTask> getIn(ImageTaskState state) throws SQLException {
+	public List<SapsImage> getIn(ImageTaskState state) throws SQLException {
 		return getIn(state, UNLIMITED);
 	}
 
@@ -1133,7 +1133,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " WHERE status = ? ORDER BY priority, task_id";
 
 	@Override
-	public List<ImageTask> getPurgedTasks() throws SQLException {
+	public List<SapsImage> getPurgedTasks() throws SQLException {
 		PreparedStatement selectStatement = null;
 		Connection connection = null;
 
@@ -1141,13 +1141,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 			connection = getConnection();
 
 			selectStatement = connection.prepareStatement(SELECT_PURGED_IMAGES_SQL);
-			selectStatement.setString(1, ImageTask.PURGED);
+			selectStatement.setString(1, SapsImage.PURGED);
 			selectStatement.setQueryTimeout(300);
 
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
+			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -1173,7 +1173,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	 * member.
 	 */
 	@Override
-	public List<ImageTask> getImagesToDownload(String federationMember, int limit) throws SQLException {
+	public List<SapsImage> getImagesToDownload(String federationMember, int limit) throws SQLException {
 		// TODO: fix this method
 		/*
 		 * In future versions, if the crawler starts to use a multithread approach this
@@ -1198,16 +1198,16 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			selectStatementLimit = connection.prepareStatement(SELECT_CREATED_IMAGE);
 			selectStatementLimit.setString(1, ImageTaskState.CREATED.getValue());
-			selectStatementLimit.setString(2, ImageTask.AVAILABLE);
+			selectStatementLimit.setString(2, SapsImage.AVAILABLE);
 			selectStatementLimit.setInt(3, limit);
 			selectStatementLimit.setQueryTimeout(300);
 			selectStatementLimit.execute();
 
 			ResultSet rs = selectStatementLimit.getResultSet();
-			List<ImageTask> createdImageTasks = extractImageTaskFrom(rs);
+			List<SapsImage> createdImageTasks = extractImageTaskFrom(rs);
 			rs.close();
 
-			List<ImageTask> downloadingImageTasks = new ArrayList<ImageTask>();
+			List<SapsImage> downloadingImageTasks = new ArrayList<SapsImage>();
 			if (createdImageTasks.size() == 0) {
 				return downloadingImageTasks;
 			}
@@ -1225,7 +1225,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			selectStatement = connection.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
 			selectStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
-			selectStatement.setString(2, ImageTask.AVAILABLE);
+			selectStatement.setString(2, SapsImage.AVAILABLE);
 			selectStatement.setString(3, federationMember);
 			selectStatement.setInt(4, limit);
 			selectStatement.setQueryTimeout(300);
@@ -1249,10 +1249,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return sebalUser;
 	}
 
-	private static List<ImageTask> extractImageTaskFrom(ResultSet rs) throws SQLException {
-		List<ImageTask> imageTasks = new ArrayList<>();
+	private static List<SapsImage> extractImageTaskFrom(ResultSet rs) throws SQLException {
+		List<SapsImage> imageTasks = new ArrayList<>();
 		while (rs.next()) {
-			imageTasks.add(new ImageTask(rs.getString(TASK_ID_COL), rs.getString(DATASET_COL), rs.getString(REGION_COL),
+			imageTasks.add(new SapsImage(rs.getString(TASK_ID_COL), rs.getString(DATASET_COL), rs.getString(REGION_COL),
 					rs.getDate(IMAGE_DATE_COL), ImageTaskState.getStateFromStr(rs.getString(STATE_COL)),
 					rs.getString(ARREBOL_JOB_ID), rs.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
 					rs.getString(USER_EMAIL_COL), rs.getString(INPUT_GATHERING_TAG),
@@ -1266,7 +1266,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String SELECT_TASK_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE task_id = ?";
 
 	@Override
-	public ImageTask getTask(String taskId) throws SQLException {
+	public SapsImage getTask(String taskId) throws SQLException {
 		if (taskId == null) {
 			LOGGER.error("Invalid image task " + taskId);
 			throw new IllegalArgumentException("Invalid image task " + taskId);
@@ -1284,7 +1284,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
+			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas.get(0);
 		} finally {
@@ -1553,7 +1553,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " = ?";
 
 	@Override
-	public List<ImageTask> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
+	public List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
 			String inputPreprocessing, String algorithmExecution) throws SQLException {
 		PreparedStatement queryStatement = null;
 		Connection connection = null;

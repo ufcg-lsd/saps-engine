@@ -11,8 +11,7 @@ import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.job.SapsJob;
-import org.json.JSONException;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.json.JSONObject;
 
 public class JDBCJobDataStore implements JobDataStore{
@@ -27,12 +26,6 @@ public class JDBCJobDataStore implements JobDataStore{
 			+ JOB_OWNER + " VARCHAR(255), "
 			+ JOB_JSON + " TEXT)";
 
-	private static final String INSERT_JOB_TABLE_SQL = "INSERT INTO " + JOBS_TABLE_NAME
-			+ " VALUES(?, ?, ?)";
-
-	private static final String UPDATE_JOB_TABLE_SQL = "UPDATE " + JOBS_TABLE_NAME
-			+ " SET " + JOB_ID + " = ?, " + JOB_OWNER + " = ?, " + JOB_JSON + " = ? WHERE " + JOB_ID + " = ?";
-
 	private static final String GET_ALL_JOB = "SELECT * FROM " + JOBS_TABLE_NAME;
 	private static final String GET_JOB_BY_OWNER = GET_ALL_JOB + " WHERE " + JOB_OWNER + " = ? ";
 	private static final String GET_JOB_BY_JOB_ID = GET_ALL_JOB + " WHERE " + JOB_ID + " = ? AND " + JOB_OWNER + " = ?";
@@ -44,7 +37,6 @@ public class JDBCJobDataStore implements JobDataStore{
 			+ JOB_ID + " = ? AND " + JOB_OWNER + " = ?";
 
 	private static final Logger LOGGER = Logger.getLogger(JDBCJobDataStore.class);
-	private static final String ERROR_WHILE_INITIALIZING_THE_DATA_STORE = "Error while initializing the Job DataStore.";
 
 	private BasicDataSource connectionPool;
 	
@@ -114,81 +106,6 @@ public class JDBCJobDataStore implements JobDataStore{
 			LOGGER.error("Error while initializing DataStore", e);
 		} finally {
 			close(statement, connection);
-		}
-	}
-
-	public boolean insert(SapsJob job) {
-		LOGGER.debug("Inserting job [" + job.getId() + "] with owner [" + job.getOwner() + "]");
-
-		if (job.getId() == null || job.getId().isEmpty()
-				|| job.getOwner() == null || job.getOwner().isEmpty()) {
-			LOGGER.warn("Job Id and owner must not be null.");
-			return false;
-		}
-
-		PreparedStatement preparedStatement = null;
-		Connection connection = null;
-		try {
-			connection = getConnection();
-			connection.setAutoCommit(false);
-			preparedStatement = connection.prepareStatement(INSERT_JOB_TABLE_SQL);
-			preparedStatement.setString(1, job.getId());
-			preparedStatement.setString(2, job.getOwner());
-			preparedStatement.setString(3, job.toJSON().toString());
-
-			preparedStatement.execute();
-			connection.commit();
-			return true;
-		} catch (SQLException e) {
-			LOGGER.error("Couldn't execute statement : " + INSERT_JOB_TABLE_SQL, e);
-			try {
-				if (connection != null) {
-					connection.rollback();
-				}
-			} catch (SQLException e1) {
-				LOGGER.error("Couldn't rollback transaction.", e1);
-			}
-			return false;
-		} finally {
-			close(preparedStatement, connection);
-		}
-	}
-
-	public boolean update(SapsJob job) {
-		LOGGER.debug("Updating job [" + job.getId() + "] from owner [" + job.getOwner() + "]");
-
-		if (job.getId() == null || job.getId().isEmpty()
-				|| job.getOwner() == null || job.getOwner().isEmpty()) {
-			LOGGER.warn("Job Id and owner must not be null.");
-			return false;
-		}
-
-		PreparedStatement preparedStatement = null;
-		Connection connection = null;
-		try {
-			connection = getConnection();
-			connection.setAutoCommit(false);
-			preparedStatement = connection.prepareStatement(UPDATE_JOB_TABLE_SQL);
-			preparedStatement.setString(1, job.getId());
-			preparedStatement.setString(2, job.getOwner());
-			preparedStatement.setString(3, job.toJSON().toString());
-			preparedStatement.setString(4, job.getId());
-			
-			preparedStatement.execute();
-			connection.commit();
-			return true;
-		} catch (SQLException e) {
-			LOGGER.error("Couldn't execute statement : " + UPDATE_JOB_TABLE_SQL, e);
-			try {
-				if (connection != null) {
-					connection.rollback();
-				}
-			} catch (SQLException e1) {
-				LOGGER.error("Couldn't rollback transaction.", e1);
-			}
-			return false;
-		} finally {
-			close(preparedStatement, connection);
 		}
 	}
 

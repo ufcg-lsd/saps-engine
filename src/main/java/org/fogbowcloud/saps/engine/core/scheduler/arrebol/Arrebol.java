@@ -2,8 +2,8 @@ package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 
 import java.util.List;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
-import org.fogbowcloud.saps.engine.core.job.SapsJob;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
@@ -16,7 +16,7 @@ public interface Arrebol {
 	
 	public void addJobInList(JobSubmitted newJob);
 	
-	public void populateJobList(List<ImageTask> taskList);
+	public void populateJobList(List<SapsImage> taskList);
 
 	public List<JobSubmitted> returnAllJobsSubmitted();
 
