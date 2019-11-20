@@ -43,7 +43,7 @@ public class ExecutionScriptTagUtil {
 	}
 	
 	public static ExecutionScriptTag getExecutionScriptTag(String name, String type) throws SapsException {
-		LOGGER.debug("Getting Execution Script Tag by name,type: " + name + ", " + type);
+		LOGGER.debug("Getting Execution Script Tag by name [" + name + "] and type [" + type + "]");
 		JSONObject jsonScriptTagFile = null;
 		try {
 			jsonScriptTagFile = ExecutionScriptTagUtil.getJsonExecutionScriptTag();
