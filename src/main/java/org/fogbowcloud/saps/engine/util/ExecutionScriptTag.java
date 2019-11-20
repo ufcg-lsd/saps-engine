@@ -2,9 +2,9 @@ package org.fogbowcloud.saps.engine.util;
 
 public class ExecutionScriptTag {
 
-	public static String INPUT_DOWNLOADER = "input_downloading";
-	public static String WORKER = "processing";
-	public static String PRE_PROCESSING = "pre_processing";
+	public static String INPUT_DOWNLOADER = "inputdownloading";
+	public static String PROCESSING = "processing";
+	public static String PRE_PROCESSING = "preprocessing";
 
 	private String type;
 	private String name;

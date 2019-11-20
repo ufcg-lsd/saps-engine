@@ -17,7 +17,7 @@ public class ExecutionScriptTagUtil {
 	protected static String DEFAULT_SCRIPT_TAG_JSON_PATH = "resources/execution_script_tags.json";
 	
 	public static String INPUT_DOWNLOADER = ExecutionScriptTag.INPUT_DOWNLOADER;
-	public static String WORKER = ExecutionScriptTag.WORKER;
+	public static String PROCESSING = ExecutionScriptTag.PROCESSING;
 	public static String PRE_PROCESSING = ExecutionScriptTag.PRE_PROCESSING;
 	
 	private static final String NAME_KEY_JSON = "name";
@@ -42,7 +42,7 @@ public class ExecutionScriptTagUtil {
 		}
 	}
 	
-	public static ExecutionScriptTag getExecutionScritpTag(String name, String type) throws SapsException {
+	public static ExecutionScriptTag getExecutionScriptTag(String name, String type) throws SapsException {
 		LOGGER.debug("Getting Execution Script Tag by name,type: " + name + ", " + type);
 		JSONObject jsonScriptTagFile = null;
 		try {
