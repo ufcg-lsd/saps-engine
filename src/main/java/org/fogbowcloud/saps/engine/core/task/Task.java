@@ -9,6 +9,8 @@ import java.util.Map;
 public interface Task {
 
 	Map<String, String> getRequirements();
+	
+	void putRequirement(String attributeName, String value);
 
 	Task clone();
 
