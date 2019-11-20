@@ -281,6 +281,8 @@ public class Scheduler {
 	 * @return selected tasks list in specific state
 	 */
 	private List<ImageTask> selectTasks(int count, final ImageTaskState state) {
+		LOGGER.info("Trying select up to " + count + " tasks in state " + state);
+		
 		List<ImageTask> tasks = getTasksInCatalog(state);
 
 		Map<String, List<ImageTask>> tasksByUsers = mapUsers2Tasks(tasks);
@@ -529,7 +531,7 @@ public class Scheduler {
 		TaskImpl taskToJob = new TaskImpl(task.getTaskId(), workerSpec, UUID.randomUUID().toString());
 
 		LOGGER.info("Creating saps task");
-		SapsTask.createTask(taskToJob, task);
+		SapsTask.createTask(taskToJob, task, repository);
 
 		SapsJob imageJob = new SapsJob(UUID.randomUUID().toString(), federationMember, task.getTaskId());
 		imageJob.addTask(taskToJob);

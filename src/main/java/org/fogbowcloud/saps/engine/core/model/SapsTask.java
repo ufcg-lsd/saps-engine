@@ -34,21 +34,21 @@ public class SapsTask {
 
 	private static final Logger LOGGER = Logger.getLogger(SapsTask.class);
 
-	public static void createTask(TaskImpl taskImpl, ImageTask imageTask){
+	public static void createTask(TaskImpl taskImpl, ImageTask imageTask, String phase){
 		// info shared folder beetweeen host (with NFS) and container
 		// ...
 
 		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
 		String imageFolder = imageTask.getTaskId();
 		String rootPath = "/nfs/" + imageFolder;
-		String processingPath = "/nfs/" + imageFolder + File.separator + "processing";
+		String folderPath = "/nfs/" + imageFolder + File.separator + phase;
 
 		// Remove folders
-		String removeThings = String.format("rm -rf %s", processingPath);
+		String removeThings = String.format("rm -rf %s", folderPath);
 		taskImpl.addCommand(new CommandRequestDTO(removeThings, CommandRequestDTO.Type.REMOTE));
 
 		// Create folders
-		String createFolders = String.format("mkdir -p %s", processingPath);
+		String createFolders = String.format("mkdir -p %s", folderPath);
 		taskImpl.addCommand(new CommandRequestDTO(createFolders, CommandRequestDTO.Type.REMOTE));
 
 		// Run command
