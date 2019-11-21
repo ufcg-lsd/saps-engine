@@ -622,9 +622,10 @@ public class Scheduler {
 			boolean checkFinish = checkJobWasFinish(jobResponse);
 			if (checkFinish) {
 				LOGGER.info("Job [" + jobId + "] has been finished");
-
+				task.setArrebolJobId(SapsImage.NONE_ARREBOL_JOB_ID);
+				
 				boolean checkOK = checkJobFinishedWithSucess(jobResponse);
-
+				
 				if (checkOK) {
 					LOGGER.info("Job [" + jobId + "] has been finished with success");
 
