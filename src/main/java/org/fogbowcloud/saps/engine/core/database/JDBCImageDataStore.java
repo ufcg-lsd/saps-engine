@@ -820,8 +820,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + STATE_COL + " = ?, "
-			+ UPDATED_TIME_COL + " = now(), " + IMAGE_STATUS_COL + " = ?, " + ERROR_MSG_COL + " = ? " + "WHERE "
-			+ TASK_ID_COL + " = ?";
+			+ UPDATED_TIME_COL + " = now(), " + IMAGE_STATUS_COL + " = ?, " + ERROR_MSG_COL + " = ? " + ARREBOL_JOB_ID
+			+ " = ?, " + "WHERE " + TASK_ID_COL + " = ?";
 
 	@Override
 	public void updateImageTask(SapsImage imagetask) throws SQLException {
@@ -840,7 +840,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(1, imagetask.getState().getValue());
 			updateStatement.setString(2, imagetask.getStatus());
 			updateStatement.setString(3, imagetask.getError());
-			updateStatement.setString(4, imagetask.getTaskId());
+			updateStatement.setString(3, imagetask.getArrebolJobId());
+			updateStatement.setString(5, imagetask.getTaskId());
 			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
