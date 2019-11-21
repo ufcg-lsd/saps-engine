@@ -601,6 +601,7 @@ public class Scheduler {
 		List<JobSubmitted> finishedJobs = new LinkedList<JobSubmitted>();
 
 		LOGGER.info("Checking " + submittedJobs.size() + " submitted jobs for Arrebol service");
+		LOGGER.info("Submmitteds jobs list: " + submittedJobs.toString());
 
 		for (JobSubmitted job : submittedJobs) {
 			String jobId = job.getJobId();
@@ -625,7 +626,7 @@ public class Scheduler {
 				boolean checkOK = checkJobFinishedWithSucess(jobResponse);
 
 				if (checkOK) {
-					LOGGER.info("Job [" + jobId + "] has been finished with sucess");
+					LOGGER.info("Job [" + jobId + "] has been finished with success");
 
 					ImageTaskState nextState = getNextState(task.getState());
 					updateStateInCatalog(task, nextState,
@@ -673,10 +674,10 @@ public class Scheduler {
 		LOGGER.info("Checking if job [" + jobResponse.getId() + "] was finished");
 
 		for (TaskResponseDTO task : jobResponse.getTasks()) {
-			LOGGER.info("State task: " + task.getState());
+			LOGGER.info("State task [" + task.getId() + "]: " + task.getState().toLowerCase());
 
 			if (task.getState().compareTo(TaskResponseDTO.STATE_FAILED) != 0
-					|| task.getState().compareTo(TaskResponseDTO.STATE_FINISHED) != 0)
+					&& task.getState().compareTo(TaskResponseDTO.STATE_FINISHED) != 0)
 				return false;
 		}
 
