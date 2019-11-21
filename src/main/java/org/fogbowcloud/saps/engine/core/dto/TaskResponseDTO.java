@@ -2,6 +2,8 @@ package org.fogbowcloud.saps.engine.core.dto;
 
 import java.io.Serializable;
 
+import com.google.gson.annotations.SerializedName;
+
 public class TaskResponseDTO implements Serializable {
     /**
      *
@@ -13,12 +15,13 @@ public class TaskResponseDTO implements Serializable {
     
     private String id;
     private String state;
-    private TaskSpecResponseDTO taskSpec;
+    @SerializedName("tasks_specs")
+    private TaskSpecResponseDTO tasksSpecs;
 
     public TaskResponseDTO(String id, String state, TaskSpecResponseDTO taskSpec) {
         this.id = id;
         this.state = state;
-        this.taskSpec = taskSpec;
+        this.tasksSpecs = taskSpec;
     }
 
     public String getId() {
@@ -28,7 +31,7 @@ public class TaskResponseDTO implements Serializable {
     public String getState(){ return state; }
 
     public TaskSpecResponseDTO getTaskSpec() {
-        return this.taskSpec;
+        return this.tasksSpecs;
     }
 
     public void setId(String id){
@@ -40,13 +43,13 @@ public class TaskResponseDTO implements Serializable {
     }
 
     public void setTaskSpec(TaskSpecResponseDTO taskSpec){
-        this.taskSpec = taskSpec;
+        this.tasksSpecs = taskSpec;
     }
 
     @Override
     public String toString() {
         return "TaskResponseDTO [id=" + id + ", state=" + state + ", taskSpec="
-                + taskSpec + "]";
+                + tasksSpecs + "]";
     }
 
 }
