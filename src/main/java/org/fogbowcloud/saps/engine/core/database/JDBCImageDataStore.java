@@ -821,7 +821,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + STATE_COL + " = ?, "
 			+ UPDATED_TIME_COL + " = now(), " + IMAGE_STATUS_COL + " = ?, " + ERROR_MSG_COL + " = ?, " + ARREBOL_JOB_ID
-			+ " = ?, " + "WHERE " + TASK_ID_COL + " = ?";
+			+ " = ? " + "WHERE " + TASK_ID_COL + " = ?";
 
 	@Override
 	public void updateImageTask(SapsImage imagetask) throws SQLException {
