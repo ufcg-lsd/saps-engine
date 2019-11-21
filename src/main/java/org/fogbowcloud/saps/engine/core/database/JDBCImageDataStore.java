@@ -840,7 +840,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(1, imagetask.getState().getValue());
 			updateStatement.setString(2, imagetask.getStatus());
 			updateStatement.setString(3, imagetask.getError());
-			updateStatement.setString(3, imagetask.getArrebolJobId());
+			updateStatement.setString(4, imagetask.getArrebolJobId());
 			updateStatement.setString(5, imagetask.getTaskId());
 			updateStatement.setQueryTimeout(300);
 
