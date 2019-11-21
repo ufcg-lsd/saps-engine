@@ -705,7 +705,7 @@ public class Scheduler {
 				LOGGER.info("State:" + commandState);
 				LOGGER.info("Exit code: " + commandExitCode);
 
-				if (commandExitCode != 0 || commandState != TaskResponseDTO.STATE_FINISHED)
+				if (commandExitCode != 0 || !commandState.equals(TaskResponseDTO.STATE_FINISHED))
 					return false;
 			}
 		}
