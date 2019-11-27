@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Properties;
@@ -19,7 +18,7 @@ public class DefaultArrebol implements Arrebol{
 	//private final Properties properties;
 	private List<JobSubmitted> submittedJobID;
 
-	public DefaultArrebol(Properties properties) throws SQLException {
+	public DefaultArrebol(Properties properties)  {
 		//this.properties = properties;
 		this.arrebolRequestHelper = new ArrebolRequestsHelper(properties);
 		//this.jobDataStore = new JDBCJobDataStore(properties);
