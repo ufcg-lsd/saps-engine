@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.scheduler.retry.catalog;
+package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
 import java.sql.SQLException;
 import java.util.List;
