@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol;
+package org.fogbowcloud.saps.engine.core.scheduler.arrebol.retry;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol;
+package org.fogbowcloud.saps.engine.core.scheduler.arrebol.retry;
 
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
