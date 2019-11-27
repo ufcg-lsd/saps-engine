@@ -10,6 +10,7 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.CatalogRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.GetProcessingTasksRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.GetTasksRetry;
+import org.fogbowcloud.saps.engine.utils.retry.catalog.RemoveTimestampRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.UpdateTaskRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.UpdateTimestampRetry;
 
@@ -90,20 +91,6 @@ public class CatalogUtils {
 	}
 
 	/**
-	 * This function updates task with Arrebol job ID in catalog component.
-	 *
-	 * @param imageStore   catalog component
-	 * @param task         task to be updated
-	 * @param arrebolJobId Arrebol job ID of task submitted
-	 * @param message      information message
-	 * @return boolean representation reporting success (true) or failure (false) in
-	 *         update state task in catalog
-	 */
-	public static void writeArrebolJobId(ImageDataStore imageStore, SapsImage task, String message) {
-		retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
-	}
-
-	/**
 	 * This function updates task time stamp and insert new tuple in time stamp
 	 * table.
 	 * 
@@ -113,5 +100,16 @@ public class CatalogUtils {
 	 */
 	public static void updateTimestampTask(ImageDataStore imageStore, SapsImage task, String message) {
 		retry(new UpdateTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
+	}
+	
+	/**
+	 * This function remove task time stamp.
+	 * 
+	 * @param imageStore   catalog component
+	 * @param task    task to be update
+	 * @param message information message
+	 */
+	public static void removeTimestampTask(ImageDataStore imageStore, SapsImage task, String message) {
+		retry(new RemoveTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 }
