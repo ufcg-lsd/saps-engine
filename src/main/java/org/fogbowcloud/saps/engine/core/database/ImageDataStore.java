@@ -100,9 +100,6 @@ public interface ImageDataStore {
 
 	String getNFSServerSshPort(String federationMember) throws SQLException;
 	
-	String getMetadataInfo(String taskId, String componentType, String infoType)
-			throws SQLException;
-
 	void dispose();
 
 	boolean lockTask(String taskId) throws SQLException;
