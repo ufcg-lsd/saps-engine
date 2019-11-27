@@ -7,4 +7,4 @@ saps_engine_target_path=$saps_engine_dir_path/target/saps-engine-0.0.1-SNAPSHOT.
 library_path=/usr/local/lib
 debug_port=4000
 
-sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.scheduler.SchedulerMain $saps_engine_conf_path &
+sudo nohup java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.scheduler.SchedulerMain $saps_engine_conf_path &
