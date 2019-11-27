@@ -15,35 +15,21 @@ import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.ArrebolUtils;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.DefaultArrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.ArrebolRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.GetJobByIdRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.GetJobByNameRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.LenQueueRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.arrebol.SubmitJobRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.CatalogRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.GetProcessingTasksRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.GetTasksRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTaskRetry;
-import org.fogbowcloud.saps.engine.core.scheduler.retry.catalog.UpdateTimestampRetry;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class Scheduler {
 
 	// Constants
 	public static final Logger LOGGER = Logger.getLogger(Scheduler.class);
-
-	private static final int ARREBOL_DEFAULT_SLEEP_SECONDS = 5;
-	private static final int CATALOG_DEFAULT_SLEEP_SECONDS = 5;
 	private static final int ARREBOL_MAX_WAITING_JOBS = 20;
 
 	// Saps Controller Variables
@@ -207,15 +193,14 @@ public class Scheduler {
 	 * Catalog and Arrebol, and starts the list of submitted jobs.
 	 */
 	private void recovery() {
-		List<SapsImage> tasksInProcessingState = retry(new GetProcessingTasksRetry(imageStore),
-				CATALOG_DEFAULT_SLEEP_SECONDS, "gets tasks in processing state");
+		List<SapsImage> tasksInProcessingState = getProcessingTasksInCatalog();
 		List<SapsImage> tasksForPopulateSubmittedJobList = new LinkedList<SapsImage>();
 
 		for (SapsImage task : tasksInProcessingState) {
 			if (task.getArrebolJobId().equals(SapsImage.NONE_ARREBOL_JOB_ID)) {
 				String jobName = task.getState().getValue() + "-" + task.getTaskId();
-				List<JobResponseDTO> jobsWithEqualJobName = retry(new GetJobByNameRetry(arrebol, jobName),
-						ARREBOL_DEFAULT_SLEEP_SECONDS, "gets job by name");
+				List<JobResponseDTO> jobsWithEqualJobName = getJobByNameInArrebol(jobName,
+						"gets job by name [" + jobName + "]");
 				if (jobsWithEqualJobName.size() == 0)
 					rollBackTaskState(task);
 				else if (jobsWithEqualJobName.size() == 1) { // TODO add check jobName ==
@@ -227,7 +212,7 @@ public class Scheduler {
 				} else {
 					// TODO ????
 				}
-			}else{
+			} else {
 				String arrebolJobId = task.getArrebolJobId();
 				arrebol.addJobInList(new JobSubmitted(arrebolJobId, task));
 			}
@@ -284,7 +269,8 @@ public class Scheduler {
 	private List<SapsImage> selectTasks(int count, final ImageTaskState state) {
 		LOGGER.info("Trying select up to " + count + " tasks in state " + state);
 
-		List<SapsImage> tasks = getTasksInCatalog(state);
+		List<SapsImage> tasks = getTasksInCatalog(state, ImageDataStore.UNLIMITED,
+				"gets tasks with " + state.getValue() + " state");
 
 		Map<String, List<SapsImage>> tasksByUsers = mapUsers2Tasks(tasks);
 
@@ -310,131 +296,6 @@ public class Scheduler {
 			String arrebolJobId = submitTaskToArrebol(task, nextState);
 			writeArrebolJobIdInCatalog(task, arrebolJobId,
 					"updates task[" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
-		}
-	}
-
-	/**
-	 * This function updates task with Arrebol job ID in catalog component.
-	 *
-	 * @param task         task to be updated
-	 * @param arrebolJobId Arrebol job ID of task submitted
-	 * @param message      information message
-	 * @return boolean representation reporting success (true) or failure (false) in
-	 *         update state task in catalog
-	 */
-	private void writeArrebolJobIdInCatalog(SapsImage task, String arrebolJobId, String message) {
-		task.setArrebolJobId(arrebolJobId);
-		retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
-	}
-
-	/**
-	 * This function updates task state in catalog component.
-	 *
-	 * @param task    task to be updated
-	 * @param state   new task state
-	 * @param message information message
-	 * @return boolean representation reporting success (true) or failure (false) in
-	 *         update state task in catalog
-	 */
-	protected boolean updateStateInCatalog(SapsImage task, ImageTaskState state, String message) {
-		task.setState(state);
-		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS,
-				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
-	}
-
-	/**
-	 * This function gets Arrebol capacity for add new jobs.
-	 * 
-	 * @return Arrebol capacity
-	 */
-	private int getCountSlotsInArrebol(String queueId) {
-		return retry(new LenQueueRetry(arrebol, queueId), ARREBOL_DEFAULT_SLEEP_SECONDS,
-				"gets Arrebol capacity len for add news jobs");
-	}
-
-	/**
-	 * This function gets tasks in specific state in Catalog.
-	 * 
-	 * @param state specific state for get tasks
-	 * @return tasks in specific state
-	 */
-	private List<SapsImage> getTasksInCatalog(ImageTaskState state) {
-		return retry(new GetTasksRetry(imageStore, state, ImageDataStore.UNLIMITED), CATALOG_DEFAULT_SLEEP_SECONDS,
-				"gets tasks with " + state.getValue() + " state");
-	}
-
-	/**
-	 * This function updates task time stamp and insert new tuple in time stamp
-	 * table.
-	 * 
-	 * @param task    task to be update
-	 * @param message information message
-	 */
-	private void updateTimestampTask(SapsImage task, String message) {
-		retry(new UpdateTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
-	}
-
-	/**
-	 * This function tries countless times to successfully execute the passed
-	 * function.
-	 * 
-	 * @param <T>            Return type
-	 * @param function       Function passed for execute
-	 * @param sleepInSeconds Time sleep in seconds (case fail)
-	 * @param message        Information message about function passed
-	 * @return Function return
-	 */
-	@SuppressWarnings("unchecked")
-	private <T> T retry(ArrebolRetry<?> function, int sleepInSeconds, String message) {
-		LOGGER.info(
-				"[Retry Arrebol function] Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
-
-		while (true) {
-			try {
-				return (T) function.run();
-			} catch (Exception | SubmitJobException | GetJobException | GetCountsSlotsException e) {
-				LOGGER.error("Failed while " + message);
-				e.printStackTrace();
-			}
-
-			try {
-				LOGGER.info("Sleeping for " + sleepInSeconds + " seconds");
-				Thread.sleep(Long.valueOf(sleepInSeconds) * 1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	/**
-	 * This function tries countless times to successfully execute the passed
-	 * function.
-	 * 
-	 * @param <T>            Return type
-	 * @param function       Function passed for execute
-	 * @param sleepInSeconds Time sleep in seconds (case fail)
-	 * @param message        Information message about function passed
-	 * @return Function return
-	 */
-	@SuppressWarnings("unchecked")
-	private <T> T retry(CatalogRetry<?> function, int sleepInSeconds, String message) {
-		LOGGER.info(
-				"[Retry Catalog function] Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
-
-		while (true) {
-			try {
-				return (T) function.run();
-			} catch (SQLException e) {
-				LOGGER.error("Failed while " + message);
-				e.printStackTrace();
-			}
-
-			try {
-				LOGGER.info("Sleeping for " + sleepInSeconds + " seconds");
-				Thread.sleep(Long.valueOf(sleepInSeconds) * 1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
@@ -534,7 +395,8 @@ public class Scheduler {
 		Map<String, String> metadata = new HashMap<String, String>();
 
 		LOGGER.info("Creating SAPS task ...");
-		SapsTask sapsTask = new SapsTask(task.getTaskId()+imageDockerInfo.formatImageDocker(), requirements, commands, metadata);
+		SapsTask sapsTask = new SapsTask(task.getTaskId() + imageDockerInfo.formatImageDocker(), requirements, commands,
+				metadata);
 		LOGGER.info("SAPS task: " + sapsTask.toJSON().toString());
 
 		LOGGER.info("Creating SAPS job ...");
@@ -544,7 +406,7 @@ public class Scheduler {
 		SapsJob imageJob = new SapsJob(task.getTaskId(), tasks);
 		LOGGER.info("SAPS job: " + imageJob.toJSON().toString());
 
-		String jobId = retry(new SubmitJobRetry(arrebol, imageJob), ARREBOL_DEFAULT_SLEEP_SECONDS, "add new job");
+		String jobId = submitJobInArrebol(imageJob, "add new job");
 		LOGGER.debug("Result submited job: " + jobId);
 
 		arrebol.addJobInList(new JobSubmitted(jobId, task));
@@ -610,8 +472,7 @@ public class Scheduler {
 			String jobId = job.getJobId();
 			SapsImage task = job.getImageTask();
 
-			JobResponseDTO jobResponse = retry(new GetJobByIdRetry(arrebol, jobId), ARREBOL_DEFAULT_SLEEP_SECONDS,
-					"gets job by ID [" + jobId + "]");
+			JobResponseDTO jobResponse = getJobByIdInArrebol(jobId, "gets job by ID [" + jobId + "]");
 			LOGGER.debug("Job [" + jobId + "] information returned from Arrebol: " + jobResponse);
 			if (!wasJobFound(jobResponse)) {
 				LOGGER.info("Job [" + jobId + "] not found in Arrebol service, applying status rollback to task ["
@@ -626,9 +487,9 @@ public class Scheduler {
 			if (checkFinish) {
 				LOGGER.info("Job [" + jobId + "] has been finished");
 				task.setArrebolJobId(SapsImage.NONE_ARREBOL_JOB_ID);
-				
+
 				boolean checkOK = checkJobFinishedWithSucess(jobResponse);
-				
+
 				if (checkOK) {
 					LOGGER.info("Job [" + jobId + "] has been finished with success");
 
@@ -642,7 +503,7 @@ public class Scheduler {
 							"updates task[" + task.getTaskId() + "] with failed state");
 				}
 
-				updateTimestampTask(task, "updates task [" + jobId + "] timestamp");
+				updateTimestampTaskInCatalog(task, "updates task [" + jobId + "] timestamp");
 
 				finishedJobs.add(job);
 			} else
@@ -716,4 +577,110 @@ public class Scheduler {
 
 		return true;
 	}
+
+	/**
+	 * This function gets Arrebol capacity for add new jobs.
+	 * 
+	 * @param queueId queue identifier in Arrebol
+	 * @return Arrebol queue capacity in queue with identifier
+	 */
+	private int getCountSlotsInArrebol(String queueId) {
+		return ArrebolUtils.getCountSlots(arrebol, queueId);
+	}
+
+	/**
+	 * This function gets job in Arrebol that matching with id.
+	 * 
+	 * @param jobId   job id to be used for matching
+	 * @param message information message
+	 * @return job response that matching with id
+	 */
+	private JobResponseDTO getJobByIdInArrebol(String jobId, String message) {
+		return ArrebolUtils.getJobById(arrebol, jobId, message);
+	}
+
+	/**
+	 * This function gets job list in Arrebol that matching with name.
+	 * 
+	 * @param jobName job label to be used for matching
+	 * @param message information message
+	 * @return job response list that matching with label
+	 */
+	private List<JobResponseDTO> getJobByNameInArrebol(String jobName, String message) {
+		return ArrebolUtils.getJobByName(arrebol, jobName, message);
+	}
+
+	/**
+	 * This function submit job in Arrebol service.
+	 * 
+	 * @param imageJob SAPS job to be submitted
+	 * @param message  information message
+	 * @return job id returned from Arrebol
+	 */
+	private String submitJobInArrebol(SapsJob imageJob, String message) {
+		return ArrebolUtils.submitJob(arrebol, imageJob, message);
+	}
+
+	/**
+	 * This function gets tasks in specific state in Catalog.
+	 * 
+	 * @param state   specific state for get tasks
+	 * @param limit   limit value of tasks to take
+	 * @param message information message
+	 * @return tasks in specific state
+	 */
+	private List<SapsImage> getTasksInCatalog(ImageTaskState state, int limit, String message) {
+		return CatalogUtils.getTasks(imageStore, state, limit,
+				"gets tasks with " + state.getValue() + " state");
+	}
+
+	/**
+	 * This function gets tasks in processing state in catalog component.
+	 * 
+	 * @return processing tasks list
+	 */
+	private List<SapsImage> getProcessingTasksInCatalog() {
+		return CatalogUtils.getProcessingTasks(imageStore, "gets tasks in processing state");
+	}
+
+	/**
+	 * This function updates task with Arrebol job ID in catalog component.
+	 *
+	 * @param task         task to be updated
+	 * @param arrebolJobId Arrebol job ID of task submitted
+	 * @param message      information message
+	 * @return boolean representation reporting success (true) or failure (false) in
+	 *         update state task in catalog
+	 */
+	private void writeArrebolJobIdInCatalog(SapsImage task, String arrebolJobId, String message) {
+		task.setArrebolJobId(arrebolJobId);
+		CatalogUtils.writeArrebolJobId(imageStore, task, message);
+	}
+
+	/**
+	 * This function updates task state in catalog component.
+	 *
+	 * @param task    task to be updated
+	 * @param state   new task state
+	 * @param message information message
+	 * @return boolean representation reporting success (true) or failure (false) in
+	 *         update state task in catalog
+	 */
+	private boolean updateStateInCatalog(SapsImage task, ImageTaskState state, String message) {
+		task.setState(state);
+		return CatalogUtils.updateState(imageStore, task,
+				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
+	}
+
+	/**
+	 * This function updates task time stamp and insert new tuple in time stamp
+	 * table.
+	 * 
+	 * @param task    task to be update
+	 * @param message information message
+	 */
+	private void updateTimestampTaskInCatalog(SapsImage task, String message) {
+		CatalogUtils.updateTimestampTask(imageStore, task, message);
+	}
+
 }
