@@ -82,6 +82,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	public JDBCImageDataStore(Properties properties) throws SQLException {
 
+		if(checkProperties(properties))
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties arg must not be null.");
 		}
@@ -98,6 +99,35 @@ public class JDBCImageDataStore implements ImageDataStore {
 		init(imageStoreIP, imageStorePort, imageStoreURLPrefix, dbUserName, dbUserPass, dbDrive, dbName);
 	}
 
+	private boolean checkProperties(Properties properties) {
+		if (properties == null) {
+			LOGGER.error("Properties arg must not be null.");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_URL_PREFIX)) {
+			LOGGER.error("Required property " + DATASTORE_URL_PREFIX + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_USERNAME)) {
+			LOGGER.error("Required property " + DATASTORE_USERNAME + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_PASSWORD)) {
+			LOGGER.error("Required property " + DATASTORE_PASSWORD + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_DRIVER)) {
+			LOGGER.error("Required property " + DATASTORE_DRIVER + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_NAME)) {
+			LOGGER.error("Required property " + DATASTORE_NAME + " was not set");
+			return false;
+		}
+		LOGGER.debug("All properties for create JDBCImageDataStore are set");
+		return true;
+	}
+	
 	public JDBCImageDataStore(String imageStoreURLPrefix, String imageStoreIP, String imageStorePort, String dbUserName,
 			String dbUserPass, String dbDrive, String dbName) throws SQLException {
 
@@ -1355,96 +1385,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 		} finally {
 			close(selectStatement, connection);
 		}
-	}
-
-	@Override
-	public String getMetadataInfo(String taskId, String componentType, String infoType) throws SQLException {
-		if (taskId == null || taskId.isEmpty() || componentType == null || componentType.isEmpty() || infoType == null
-				|| infoType.isEmpty()) {
-			LOGGER.error("Invalid taskId " + taskId + ", componentType " + componentType + " or infoType " + infoType);
-			throw new IllegalArgumentException(
-					"Invalid taskId " + taskId + ", componentType " + componentType + " or infoType " + infoType);
-		}
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-			return adjustAndExecuteMetadataSelectStatement(connection, taskId, componentType, infoType);
-		} finally {
-			close(selectStatement, connection);
-		}
-	}
-
-	private String adjustAndExecuteMetadataSelectStatement(Connection connection, String taskId, String componentType,
-			String infoType) throws SQLException {
-		String selectStatementSQL = "SELECT ";
-		String columnLabel = null;
-
-		if (componentType.equals(SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE)) {
-			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
-				selectStatementSQL += INPUT_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL
-						+ " = ?";
-				columnLabel = INPUT_METADATA_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
-				selectStatementSQL += INPUT_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = INPUT_OPERATING_SYSTEM_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
-				selectStatementSQL += INPUT_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = INPUT_KERNEL_VERSION_COL;
-			}
-		} else if (componentType.equals(SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE)) {
-			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
-				selectStatementSQL += PREPROCESSING_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = PREPROCESSING_METADATA_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
-				selectStatementSQL += PREPROCESSING_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = PREPROCESSING_OPERATING_SYSTEM_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
-				selectStatementSQL += PREPROCESSING_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = PREPROCESSING_KERNEL_VERSION_COL;
-			}
-		} else if (componentType.equals(SapsPropertiesConstants.WORKER_COMPONENT_TYPE)) {
-			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
-				selectStatementSQL += OUTPUT_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL
-						+ " = ?";
-				columnLabel = OUTPUT_METADATA_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
-				selectStatementSQL += OUTPUT_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = OUTPUT_OPERATING_SYSTEM_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
-				selectStatementSQL += OUTPUT_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = OUTPUT_KERNEL_VERSION_COL;
-			}
-		}
-
-		PreparedStatement selectStatement = connection.prepareStatement(selectStatementSQL);
-		selectStatement.setString(1, taskId);
-		selectStatement.setQueryTimeout(300);
-		selectStatement.execute();
-
-		return getResultSet(selectStatement, columnLabel);
-	}
-
-	private String getResultSet(PreparedStatement selectStatement, String columnLabel) throws SQLException {
-		ResultSet rs = selectStatement.getResultSet();
-
-		try {
-			if (rs.next()) {
-				return rs.getString(columnLabel);
-			}
-		} finally {
-			rs.close();
-		}
-
-		return null;
 	}
 
 	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME
