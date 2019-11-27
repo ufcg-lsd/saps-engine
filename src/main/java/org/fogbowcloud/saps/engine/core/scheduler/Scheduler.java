@@ -47,9 +47,10 @@ public class Scheduler {
 			this.imageStore = new JDBCImageDataStore(properties);
 
 			if (!checkProperties(properties))
-				throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
+				throw new SapsException(
+						"Error on validate the file. Missing properties for start Scheduler Component.");
 		} catch (Exception e) {
-			throw new SapsException("Error while initializing Sebal Controller.", e);
+			throw new SapsException("Error while initializing Scheduler component.", e);
 		}
 
 		this.properties = properties;
@@ -61,7 +62,7 @@ public class Scheduler {
 	public Scheduler(Properties properties, ImageDataStore imageStore, ScheduledExecutorService sapsExecutor,
 			Arrebol arrebol, Selector selector) throws SapsException, SQLException {
 		if (!checkProperties(properties))
-			throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
+			throw new SapsException("Error on validate the file. Missing properties for start Scheduler Component.");
 
 		this.properties = properties;
 		this.imageStore = imageStore;
@@ -131,7 +132,11 @@ public class Scheduler {
 	 * @return boolean representation, true (case all properties been set) or false
 	 *         (otherwise)
 	 */
-	protected static boolean checkProperties(Properties properties) {
+	private static boolean checkProperties(Properties properties) {
+		if (properties == null) {
+			LOGGER.error("Properties arg must not be null.");
+			return false;
+		}
 		if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_IP)) {
 			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + " was not set");
 			return false;
@@ -206,7 +211,8 @@ public class Scheduler {
 				else if (jobsWithEqualJobName.size() == 1) { // TODO add check jobName ==
 																// jobsWithEqualJobName.get(0).get...
 					String arrebolJobId = jobsWithEqualJobName.get(0).getId();
-					writeArrebolJobIdInCatalog(task, arrebolJobId,
+					updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+							arrebolJobId,
 							"updates task[" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
 					tasksForPopulateSubmittedJobList.add(task);
 				} else {
@@ -228,8 +234,8 @@ public class Scheduler {
 	 */
 	private void rollBackTaskState(SapsImage task) {
 		ImageTaskState previousState = getPreviousState(task.getState());
-		task.setState(previousState);
-		updateStateInCatalog(task, previousState,
+		updateStateInCatalog(task, previousState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+				SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task[" + task.getTaskId() + "] with previus state [" + previousState.getValue() + "]");
 	}
 
@@ -291,10 +297,11 @@ public class Scheduler {
 		for (SapsImage task : selectedTasks) {
 			ImageTaskState nextState = getNextState(task.getState());
 
-			updateStateInCatalog(task, nextState,
+			updateStateInCatalog(task, nextState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+					SapsImage.NONE_ARREBOL_JOB_ID,
 					"updates task[" + task.getTaskId() + "] state for " + nextState.getValue());
 			String arrebolJobId = submitTaskToArrebol(task, nextState);
-			writeArrebolJobIdInCatalog(task, arrebolJobId,
+			updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA, arrebolJobId,
 					"updates task[" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
 		}
 	}
@@ -486,7 +493,6 @@ public class Scheduler {
 			boolean checkFinish = checkJobWasFinish(jobResponse);
 			if (checkFinish) {
 				LOGGER.info("Job [" + jobId + "] has been finished");
-				task.setArrebolJobId(SapsImage.NONE_ARREBOL_JOB_ID);
 
 				boolean checkOK = checkJobFinishedWithSucess(jobResponse);
 
@@ -494,16 +500,18 @@ public class Scheduler {
 					LOGGER.info("Job [" + jobId + "] has been finished with success");
 
 					ImageTaskState nextState = getNextState(task.getState());
-					updateStateInCatalog(task, nextState,
+					updateStateInCatalog(task, nextState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+							SapsImage.NONE_ARREBOL_JOB_ID,
 							"updates task[" + task.getTaskId() + "] with next state [" + nextState.getValue() + "]");
 				} else {
 					LOGGER.info("Job [" + jobId + "] has been finished with failure");
 
-					updateStateInCatalog(task, ImageTaskState.FAILED,
-							"updates task[" + task.getTaskId() + "] with failed state");
+					updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
+							"error while execute " + task.getState().getValue() + " phase",
+							SapsImage.NONE_ARREBOL_JOB_ID, "updates task[" + task.getTaskId() + "] with failed state");
 				}
 
-				updateTimestampTaskInCatalog(task, "updates task [" + jobId + "] timestamp");
+				updateTimestampTaskInCatalog(task, "updates task [" + task.getTaskId() + "] timestamp");
 
 				finishedJobs.add(job);
 			} else
@@ -630,8 +638,7 @@ public class Scheduler {
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> getTasksInCatalog(ImageTaskState state, int limit, String message) {
-		return CatalogUtils.getTasks(imageStore, state, limit,
-				"gets tasks with " + state.getValue() + " state");
+		return CatalogUtils.getTasks(imageStore, state, limit, "gets tasks with " + state.getValue() + " state");
 	}
 
 	/**
@@ -644,30 +651,23 @@ public class Scheduler {
 	}
 
 	/**
-	 * This function updates task with Arrebol job ID in catalog component.
+	 * This function updates task state in catalog component.
 	 *
 	 * @param task         task to be updated
-	 * @param arrebolJobId Arrebol job ID of task submitted
+	 * @param state        new task state
+	 * @param status       new task status
+	 * @param error        new error message
+	 * @param arrebolJobId new Arrebol job id
 	 * @param message      information message
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
 	 */
-	private void writeArrebolJobIdInCatalog(SapsImage task, String arrebolJobId, String message) {
-		task.setArrebolJobId(arrebolJobId);
-		CatalogUtils.writeArrebolJobId(imageStore, task, message);
-	}
-
-	/**
-	 * This function updates task state in catalog component.
-	 *
-	 * @param task    task to be updated
-	 * @param state   new task state
-	 * @param message information message
-	 * @return boolean representation reporting success (true) or failure (false) in
-	 *         update state task in catalog
-	 */
-	private boolean updateStateInCatalog(SapsImage task, ImageTaskState state, String message) {
+	private boolean updateStateInCatalog(SapsImage task, ImageTaskState state, String status, String error,
+			String arrebolJobId, String message) {
 		task.setState(state);
+		task.setStatus(status);
+		task.setError(error);
+		task.setArrebolJobId(arrebolJobId);
 		return CatalogUtils.updateState(imageStore, task,
 				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
 	}
