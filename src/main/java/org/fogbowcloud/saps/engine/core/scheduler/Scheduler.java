@@ -178,7 +178,7 @@ public class Scheduler {
 	 * @throws Exception
 	 */
 	public void start() throws Exception {
-		// recovery();
+		recovery();
 
 		try {
 			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
@@ -227,6 +227,9 @@ public class Scheduler {
 				} else {
 					// TODO ????
 				}
+			}else{
+				String arrebolJobId = task.getArrebolJobId();
+				arrebol.addJobInList(new JobSubmitted(arrebolJobId, task));
 			}
 		}
 
@@ -531,7 +534,7 @@ public class Scheduler {
 		Map<String, String> metadata = new HashMap<String, String>();
 
 		LOGGER.info("Creating SAPS task ...");
-		SapsTask sapsTask = new SapsTask(task.getTaskId(), requirements, commands, metadata);
+		SapsTask sapsTask = new SapsTask(task.getTaskId()+imageDockerInfo.formatImageDocker(), requirements, commands, metadata);
 		LOGGER.info("SAPS task: " + sapsTask.toJSON().toString());
 
 		LOGGER.info("Creating SAPS job ...");
