@@ -95,19 +95,7 @@ public class SwiftAPIClient {
 
 	public void uploadFile(String containerName, File file, String pseudFolder)
 			throws Exception {
-		// TODO: test JUnit
-		LOGGER.debug("containerName " + containerName);
-		LOGGER.debug("pseudoFolder " + pseudFolder + " before normalize");
-
-		String completeFileName;
-		if (pseudFolder != null && !pseudFolder.isEmpty()) {
-			pseudFolder = this.normalizePseudFolder(pseudFolder);
-			LOGGER.debug("Pseudo folder " + pseudFolder + " after normalize");
-
-			completeFileName = pseudFolder + file.getName();
-		} else {
-			completeFileName = file.getName();
-		}
+		String completeFileName = pseudFolder + file.getName();
 
 		LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token",
@@ -245,9 +233,6 @@ public class SwiftAPIClient {
 
 			output = ProcessUtil.getOutput(p);
 
-			// TODO: test this
-			// each file has complete path
-			// ex.: fetcher/images/image_name/file.nc
 			return getOutputLinesIntoList(output);
 		} catch (IOException e) {
 			LOGGER.error("Error while listing files from " + containerName);
