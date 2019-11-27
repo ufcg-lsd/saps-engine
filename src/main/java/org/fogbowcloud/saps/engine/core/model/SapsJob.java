@@ -2,18 +2,12 @@ package org.fogbowcloud.saps.engine.core.model;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dto.CommandRequestDTO;
-import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/**
- * It add the job name, job name and sched path to the {@link Job} abstraction.
- */
 public class SapsJob implements Serializable {
 	private static final Logger LOGGER = Logger.getLogger(SapsJob.class);
 	
