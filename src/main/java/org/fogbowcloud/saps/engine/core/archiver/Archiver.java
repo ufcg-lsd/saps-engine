@@ -109,6 +109,26 @@ public class Archiver {
 			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_CONTAINER_NAME + " was not set");
 			return false;
 		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL + " was not set");
+			return false;
+		}
 
 		LOGGER.debug("All properties are set");
 		return true;
