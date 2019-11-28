@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -56,6 +57,7 @@ public class Archiver {
 		this.imageStore = imageStore;
 		this.swiftAPIClient = swiftAPIClient;
 		this.archiverHelper = archiverHelper;
+		this.sapsExecutor = Executors.newScheduledThreadPool(1);
 
 		File pendingTaskArchiveFile = new File("pending-task-archive.db");
 		this.pendingTaskArchiveDB = DBMaker.newFileDB(pendingTaskArchiveFile).make();
