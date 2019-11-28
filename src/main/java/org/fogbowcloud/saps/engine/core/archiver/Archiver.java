@@ -158,8 +158,10 @@ public class Archiver {
 			cleanUnfinishedArchivedData();
 			List<SapsImage> tasksToArchive = tasksToArchive(ImageDataStore.UNLIMITED);
 
-			for (SapsImage imageTask : tasksToArchive)
-				tryTaskArchive(imageTask);
+			for (SapsImage task : tasksToArchive) {
+				LOGGER.info("Try to archive task [" + task.getTaskId() + "]");
+				tryTaskArchive(task);
+			}
 
 		} catch (IOException e) {
 			// TODO upgrade erro message
@@ -315,7 +317,7 @@ public class Archiver {
 	 * @param message information message
 	 */
 	private void updateTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.removeTimestampTask(imageStore, task, message);
+		CatalogUtils.updateTimestampTask(imageStore, task, message);
 	}
 
 	/**
@@ -326,7 +328,7 @@ public class Archiver {
 	 * @param message information message
 	 */
 	private void removeTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.updateTimestampTask(imageStore, task, message);
+		CatalogUtils.removeTimestampTask(imageStore, task, message);
 	}
 
 	protected void rollBackArchive(SapsImage task) {
