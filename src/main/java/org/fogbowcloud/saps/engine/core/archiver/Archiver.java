@@ -29,9 +29,10 @@ public class Archiver {
 	private final Properties properties;
 	private final ImageDataStore imageStore;
 	private final SwiftAPIClient swiftAPIClient;
-	private final DB pendingTaskArchiveDB;
-
-	private ConcurrentMap<String, SapsImage> pendingTaskArchiveMap;
+	//private final DB pendingTaskArchiveDB;
+	
+	//private File pendingTaskArchiveFile;
+	//private ConcurrentMap<String, SapsImage> pendingTaskArchiveMap;
 	private ArchiverHelper archiverHelper;
 	private ScheduledExecutorService sapsExecutor;
 
@@ -59,16 +60,16 @@ public class Archiver {
 		this.archiverHelper = archiverHelper;
 		this.sapsExecutor = Executors.newScheduledThreadPool(1);
 
-		File pendingTaskArchiveFile = new File("pending-task-archive.db");
-		this.pendingTaskArchiveDB = DBMaker.newFileDB(pendingTaskArchiveFile).make();
+		//this.pendingTaskArchiveFile = new File("pending-task-archive.db");
+		//this.pendingTaskArchiveDB = DBMaker.newFileDB(pendingTaskArchiveFile).make();
 
-		if (!pendingTaskArchiveFile.exists() || !pendingTaskArchiveFile.isFile()) {
+		/*if (!pendingTaskArchiveFile.exists() || !pendingTaskArchiveFile.isFile()) {
 			LOGGER.info("Creating map of pending tasks to archive");
 			this.pendingTaskArchiveMap = pendingTaskArchiveDB.createHashMap("map").make();
 		} else {
 			LOGGER.info("Loading map of pending tasks to archive");
 			this.pendingTaskArchiveMap = pendingTaskArchiveDB.getHashMap("map");
-		}
+		}*/
 
 		// Creating Swift container
 		this.swiftAPIClient.createContainer(getContainerName());
@@ -149,7 +150,7 @@ public class Archiver {
 		} catch (Exception e) {
 			LOGGER.error("Error while starting Archiver component", e);
 		} finally {
-			pendingTaskArchiveDB.close();
+			//pendingTaskArchiveDB.close();
 		}
 	}
 
@@ -195,7 +196,7 @@ public class Archiver {
 
 		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 
-		archiverHelper.updatePendingMapAndDB(task, pendingTaskArchiveDB, pendingTaskArchiveMap);
+		//archiverHelper.updatePendingMapAndDB(task, pendingTaskArchiveDB, pendingTaskArchiveMap);
 
 		LOGGER.info("Task [" + taskId + "] ready to archive");
 		return true;
@@ -236,7 +237,7 @@ public class Archiver {
 				SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] with state [" + ImageTaskState.ARCHIVED.getValue() + "]");
 		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
-		archiverHelper.removeTaskFromPendingMap(task, pendingTaskArchiveDB, pendingTaskArchiveMap);
+		//archiverHelper.removeTaskFromPendingMap(task, pendingTaskArchiveDB, pendingTaskArchiveMap);
 		deleteAllTaskFilesFromDisk(task);
 	}
 
@@ -247,12 +248,12 @@ public class Archiver {
 	protected void cleanUnfinishedArchivedData() throws Exception {
 		LOGGER.info("Starting garbage collector");
 
-		Collection<SapsImage> taskList = pendingTaskArchiveMap.values();
-		for (SapsImage imageTask : taskList) {
+		//Collection<SapsImage> taskList = pendingTaskArchiveMap.values();
+		/*for (SapsImage imageTask : taskList) {
 			rollBackArchive(imageTask);
 			cleanTaskFoldersFromDisk(imageTask);
 			deletePendingFilesFromSwift(imageTask);
-		}
+		}*/
 
 		LOGGER.info("Garbage collect finished");
 	}
@@ -335,7 +336,7 @@ public class Archiver {
 		String taskId = task.getTaskId();
 		LOGGER.info("Rolling back Archiver for task [" + taskId + "]");
 
-		archiverHelper.removeTaskFromPendingMap(task, pendingTaskArchiveDB, pendingTaskArchiveMap);
+		//archiverHelper.removeTaskFromPendingMap(task, pendingTaskArchiveDB, pendingTaskArchiveMap);
 		removeTimestampTaskInCatalog(task, "removes task [" + taskId + "] timestamp");
 
 		updateStateInCatalog(task, ImageTaskState.FINISHED, SapsImage.AVAILABLE,
@@ -363,7 +364,7 @@ public class Archiver {
 				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] to failed state");
 		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
-		archiverHelper.removeTaskFromPendingMap(task, pendingTaskArchiveDB, pendingTaskArchiveMap);
+		//archiverHelper.removeTaskFromPendingMap(task, pendingTaskArchiveDB, pendingTaskArchiveMap);
 		return false;
 	}
 
