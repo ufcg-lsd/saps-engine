@@ -58,6 +58,8 @@ public class SwiftAPIClient {
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
 				"post", "--header", SapsPropertiesConstants.SWIFT_CONTAINER_POST_HEADER, containerName);
 
+		LOGGER.debug("Executing command " + builder.command());
+		
 		try {
 			Process p = builder.start();
 			p.waitFor();
