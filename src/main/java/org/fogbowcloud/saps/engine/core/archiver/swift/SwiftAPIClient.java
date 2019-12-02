@@ -56,7 +56,7 @@ public class SwiftAPIClient {
 		// TODO: test JUnit
 		LOGGER.debug("Creating container " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
-				"post", "--header", SapsPropertiesConstants.SWIFT_CONTAINER_POST_HEADER, containerName);
+				"post", containerName);
 
 		LOGGER.debug("Executing command " + builder.command());
 		
