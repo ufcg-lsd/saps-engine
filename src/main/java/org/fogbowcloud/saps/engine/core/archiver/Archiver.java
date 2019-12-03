@@ -193,16 +193,16 @@ public class Archiver {
 		String sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 		String swiftExports = properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX);
 
-		String inputdownloadingLocalDir = sapsExports + File.separator + taskId + File.pathSeparator
+		String inputdownloadingLocalDir = sapsExports + File.separator + taskId + File.separator
 				+ "inputdownloading";
-		String inputdownloadingSwiftDir = swiftExports + File.separator + taskId + File.pathSeparator
+		String inputdownloadingSwiftDir = swiftExports + File.separator + taskId + File.separator
 				+ "inputdownloading";
 
-		String preprocessingLocalDir = sapsExports + File.separator + taskId + File.pathSeparator + "preprocessing";
-		String preprocessingSwiftDir = swiftExports + File.separator + taskId + File.pathSeparator + "preprocessing";
+		String preprocessingLocalDir = sapsExports + File.separator + taskId + File.separator + "preprocessing";
+		String preprocessingSwiftDir = swiftExports + File.separator + taskId + File.separator + "preprocessing";
 
-		String processingLocalDir = sapsExports + File.separator + taskId + File.pathSeparator + "processing";
-		String processingSwiftDir = swiftExports + File.separator + taskId + File.pathSeparator + "processing";
+		String processingLocalDir = sapsExports + File.separator + taskId + File.separator + "processing";
+		String processingSwiftDir = swiftExports + File.separator + taskId + File.separator + "processing";
 		
 		LOGGER.info("Inputdownloading local folder: " + inputdownloadingLocalDir);
 		LOGGER.info("Inputdownloading swift folder: " + inputdownloadingSwiftDir);
