@@ -97,7 +97,7 @@ public class SwiftAPIClient {
 	}
 
 	public void uploadFile(String containerName, File file, String pseudFolder) throws Exception {
-		String completeFileName = pseudFolder + file.getName();
+		String completeFileName = pseudFolder + File.separator + file.getName();
 
 		LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
