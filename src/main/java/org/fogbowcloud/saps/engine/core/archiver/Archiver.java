@@ -191,7 +191,8 @@ public class Archiver {
 	 * This function delete pending files from task in Swift.
 	 * 
 	 * @param task task with files information to be deleted
-	 * @return boolean representation, success (true) or failure (false) to delete files 
+	 * @return boolean representation, success (true) or failure (false) to delete
+	 *         files
 	 * @throws Exception
 	 */
 	private boolean deletePendingFilesFromSwift(SapsImage task) throws Exception {
@@ -200,22 +201,15 @@ public class Archiver {
 
 		LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
 
-		List<String> fileNames = swiftAPIClient.listFilesInContainer(containerName);
+		String prefix = properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX) + File.separator + taskId;
+
+		List<String> fileNames = swiftAPIClient.listFilesWithPrefix(containerName, prefix);
 
 		LOGGER.info("Files List: " + fileNames);
 
 		for (String file : fileNames) {
-			if (file.contains(".TIF") || file.contains("MTL") || file.contains(".tar.gz") || file.contains(".nc")
-					|| file.contains(".csv") || file.contains(".tif")) {
-				LOGGER.debug("Trying to delete file " + file + " from " + containerName);
-				String inputdownloadingSwiftTaskFolder = taskId + File.separator + "inputdownloading";
-				String preprocessingSwiftTaskFolder = taskId + File.separator + "preprocessing";
-				String processingSwiftTaskFolder = taskId + File.separator + "processing";
-
-				swiftAPIClient.deleteFile(containerName, inputdownloadingSwiftTaskFolder, file);
-				swiftAPIClient.deleteFile(containerName, preprocessingSwiftTaskFolder, file);
-				swiftAPIClient.deleteFile(containerName, processingSwiftTaskFolder, file);
-			}
+			LOGGER.debug("Trying to delete file " + file + " from " + containerName);
+			swiftAPIClient.deleteFile(containerName, file);
 		}
 
 		return true;
