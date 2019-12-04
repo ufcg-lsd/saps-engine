@@ -37,7 +37,7 @@ public class JobSubmitted {
 
 	@Override
 	public String toString() {
-		return "JobSubmitted [jobId=" + jobId + ", imageTask=" + imageTask + "]";
+		return jobId;
 	}
 
 }
