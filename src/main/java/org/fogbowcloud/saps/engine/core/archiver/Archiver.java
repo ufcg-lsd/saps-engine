@@ -3,10 +3,8 @@ package org.fogbowcloud.saps.engine.core.archiver;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,8 +19,6 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 
 public class Archiver {
 
@@ -120,7 +116,14 @@ public class Archiver {
 		return true;
 	}
 
+	/**
+	 * Start Archiver component
+	 * 
+	 * @throws Exception
+	 */
 	public void start() throws Exception {
+		cleanUnfinishedArchivedData();
+
 		try {
 			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
 				@Override
@@ -135,30 +138,127 @@ public class Archiver {
 		}
 	}
 
+	/**
+	 * This function cleans unfinished data from incomplete archiving.
+	 * 
+	 * @throws Exception
+	 */
+	private void cleanUnfinishedArchivedData() throws Exception {
+		List<SapsImage> archivingTasks = tasksInArchivingState(ImageDataStore.UNLIMITED);
+
+		LOGGER.info("Rollback in " + archivingTasks.size() + " tasks in archiving state");
+
+		for (SapsImage task : archivingTasks) {
+			LOGGER.info("Applying task [" + task.getTaskId() + "] rollback");
+			rollBackArchive(task);
+			deletePendingFilesFromSwift(task);
+		}
+	}
+
+	/**
+	 * This function gets tasks in finished state in Catalog.
+	 * 
+	 * @param limit   limit value of tasks to take
+	 * @param message information message
+	 * @return tasks in specific state
+	 */
+	private List<SapsImage> tasksInArchivingState(int limit) {
+		return CatalogUtils.getTasks(imageStore, ImageTaskState.ARCHIVING, limit,
+				"gets tasks with " + ImageTaskState.ARCHIVING.getValue() + " state");
+	}
+
+	/**
+	 * This function applies rollback in specific task, returning for finished
+	 * state.
+	 * 
+	 * @param task task to be rollbacked
+	 */
+	private void rollBackArchive(SapsImage task) {
+		String taskId = task.getTaskId();
+		LOGGER.info("Reversing the archiving done in task [" + taskId + "] and returning to state ["
+				+ ImageTaskState.FINISHED.getValue() + "]");
+
+		removeTimestampTaskInCatalog(task, "removes task [" + taskId + "] timestamp");
+
+		updateStateInCatalog(task, ImageTaskState.FINISHED, SapsImage.AVAILABLE,
+				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
+				"updates task [" + taskId + "] to failed state");
+
+		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+	}
+
+	/**
+	 * This function delete pending files from task in Swift.
+	 * 
+	 * @param task task with files information to be deleted
+	 * @return boolean representation, success (true) or failure (false) to delete files 
+	 * @throws Exception
+	 */
+	private boolean deletePendingFilesFromSwift(SapsImage task) throws Exception {
+		String containerName = getContainerName();
+		String taskId = task.getTaskId();
+
+		LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
+
+		List<String> fileNames = swiftAPIClient.listFilesInContainer(containerName);
+
+		LOGGER.info("Files List: " + fileNames);
+
+		for (String file : fileNames) {
+			if (file.contains(".TIF") || file.contains("MTL") || file.contains(".tar.gz") || file.contains(".nc")
+					|| file.contains(".csv") || file.contains(".tif")) {
+				LOGGER.debug("Trying to delete file " + file + " from " + containerName);
+				String inputdownloadingSwiftTaskFolder = taskId + File.separator + "inputdownloading";
+				String preprocessingSwiftTaskFolder = taskId + File.separator + "preprocessing";
+				String processingSwiftTaskFolder = taskId + File.separator + "processing";
+
+				swiftAPIClient.deleteFile(containerName, inputdownloadingSwiftTaskFolder, file);
+				swiftAPIClient.deleteFile(containerName, preprocessingSwiftTaskFolder, file);
+				swiftAPIClient.deleteFile(containerName, processingSwiftTaskFolder, file);
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * This function archives finished tasks.
+	 * 
+	 */
 	private void archiver() {
 		try {
-			cleanUnfinishedArchivedData();
 			List<SapsImage> tasksToArchive = tasksToArchive(ImageDataStore.UNLIMITED);
+
+			LOGGER.info("Finished tasks [" + tasksToArchive.size() + "]: " + tasksToArchive);
 
 			for (SapsImage task : tasksToArchive) {
 				LOGGER.info("Try to archive task [" + task.getTaskId() + "]");
 				tryTaskArchive(task);
 			}
 
-		} catch (IOException e) {
-			// TODO upgrade erro message
-			LOGGER.error("Erro while try archive");
 		} catch (Exception e) {
-			// TODO upgrade erro message
 			LOGGER.error("Erro while try archive");
 		}
 	}
 
+	/**
+	 * This function gets tasks in finished state in Catalog.
+	 * 
+	 * @param limit   limit value of tasks to take
+	 * @param message information message
+	 * @return tasks in specific state
+	 */
 	private List<SapsImage> tasksToArchive(int limit) {
-		return CatalogUtils.getTasks(imageStore, ImageTaskState.FINISHED, ImageDataStore.UNLIMITED,
+		return CatalogUtils.getTasks(imageStore, ImageTaskState.FINISHED, limit,
 				"gets tasks with " + ImageTaskState.FINISHED.getValue() + " state");
 	}
 
+	/**
+	 * This function try to archive a task.
+	 * 
+	 * @param task task to be archived
+	 * @throws IOException
+	 */
 	private void tryTaskArchive(SapsImage task) throws IOException {
 		if (prepareArchive(task) && archiveSwift(task)) {
 			LOGGER.info("SUCCESS in archiving task [" + task.getTaskId() + "]");
@@ -169,6 +269,13 @@ public class Archiver {
 		}
 	}
 
+	/**
+	 * This function prepare a task for archive.
+	 * 
+	 * @param task task to be prepared for archive
+	 * @return boolean representation, success (true) or failure (false) in
+	 *         preparing the task.
+	 */
 	private boolean prepareArchive(SapsImage task) {
 		LOGGER.info("Preparing task [" + task.getTaskId() + "] to archive");
 
@@ -184,6 +291,14 @@ public class Archiver {
 		return true;
 	}
 
+	/**
+	 * This function tries to archive a task trying each folder in order
+	 * (inputdownloading -> preprocessing -> processing).
+	 * 
+	 * @param task task to be archived
+	 * @return boolean representation, success (true) or failure (false) in to
+	 *         archive the three folders.
+	 */
 	private boolean archiveSwift(SapsImage task) {
 		String taskId = task.getTaskId();
 
@@ -193,28 +308,28 @@ public class Archiver {
 		String sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 		String swiftExports = properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX);
 
-		String inputdownloadingLocalDir = sapsExports + File.separator + taskId + File.separator
-				+ "inputdownloading";
-		String inputdownloadingSwiftDir = swiftExports + File.separator + taskId + File.separator
-				+ "inputdownloading";
+		String inputdownloadingLocalDir = sapsExports + File.separator + taskId + File.separator + "inputdownloading";
+		String inputdownloadingSwiftDir = swiftExports + File.separator + taskId + File.separator + "inputdownloading";
 
 		String preprocessingLocalDir = sapsExports + File.separator + taskId + File.separator + "preprocessing";
 		String preprocessingSwiftDir = swiftExports + File.separator + taskId + File.separator + "preprocessing";
 
 		String processingLocalDir = sapsExports + File.separator + taskId + File.separator + "processing";
 		String processingSwiftDir = swiftExports + File.separator + taskId + File.separator + "processing";
-		
+
 		LOGGER.info("Inputdownloading local folder: " + inputdownloadingLocalDir);
 		LOGGER.info("Inputdownloading swift folder: " + inputdownloadingSwiftDir);
 		boolean inputdownloadingSentSuccess = archive(task, inputdownloadingLocalDir, inputdownloadingSwiftDir);
-		
+
 		LOGGER.info("Preprocessing local folder: " + preprocessingLocalDir);
 		LOGGER.info("Preprocessing swift folder: " + preprocessingSwiftDir);
-		boolean preprocessingSentSuccess = inputdownloadingSentSuccess && archive(task, preprocessingLocalDir, preprocessingSwiftDir);
-		
+		boolean preprocessingSentSuccess = inputdownloadingSentSuccess
+				&& archive(task, preprocessingLocalDir, preprocessingSwiftDir);
+
 		LOGGER.info("Processing local folder: " + processingLocalDir);
 		LOGGER.info("Processing swift folder: " + processingSwiftDir);
-		boolean processingSentSuccess = preprocessingSentSuccess && archive(task, processingLocalDir, processingSwiftDir);
+		boolean processingSentSuccess = preprocessingSentSuccess
+				&& archive(task, processingLocalDir, processingSwiftDir);
 
 		LOGGER.info("Archive process result of task [" + task.getTaskId() + ":\nInputdownloading phase: "
 				+ (inputdownloadingSentSuccess ? "Sucesso" : "Falha") + "\n" + "Preprocessing phase: "
@@ -224,6 +339,11 @@ public class Archiver {
 		return inputdownloadingSentSuccess && preprocessingSentSuccess && processingSentSuccess;
 	}
 
+	/**
+	 * This function finishes a success task.
+	 * 
+	 * @param task task to be finished
+	 */
 	private void finishArchive(SapsImage task) {
 		LOGGER.debug("Finishing archive for task [" + task + "]");
 
@@ -235,26 +355,23 @@ public class Archiver {
 		deleteAllTaskFilesFromDisk(task);
 	}
 
+	/**
+	 * This function finishes a failed task.
+	 * 
+	 * @param task task to be finished
+	 */
 	private void failedArchive(SapsImage task) {
-		// deleteAllTaskFilesFromDisk(task);
+		deleteAllTaskFilesFromDisk(task);
 	}
 
-	protected void cleanUnfinishedArchivedData() throws Exception {
-		LOGGER.info("Starting garbage collector");
-
-		// Collection<SapsImage> taskList = pendingTaskArchiveMap.values();
-		/*
-		 * for (SapsImage imageTask : taskList) { rollBackArchive(imageTask);
-		 * cleanTaskFoldersFromDisk(imageTask); deletePendingFilesFromSwift(imageTask);
-		 * }
-		 */
-
-		LOGGER.info("Garbage collect finished");
-	}
-
+	/**
+	 * This function delete directory from task.
+	 * 
+	 * @param task task that contains information to delete your folder
+	 */
 	private void deleteAllTaskFilesFromDisk(SapsImage task) {
 		LOGGER.info("Deleting all task [" + task.getTaskId() + "] files from disk");
-		
+
 		String sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
 		String taskDirPath = sapsExports + File.separator + task.getTaskId();
 
@@ -264,21 +381,6 @@ public class Archiver {
 				FileUtils.deleteDirectory(taskDir);
 			} catch (IOException e) {
 				LOGGER.error("Erro while delete all task files from disk: ", e);
-			}
-		} else
-			LOGGER.info("Path " + taskDirPath + " does not exist or is not a directory!");
-	}
-
-	private void cleanTaskFoldersFromDisk(SapsImage task) {
-		String sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-		String taskDirPath = sapsExports + File.separator + task.getTaskId();
-
-		File taskDir = new File(taskDirPath);
-		if (taskDir.exists() && taskDir.isDirectory()) {
-			try {
-				FileUtils.cleanDirectory(taskDir);
-			} catch (IOException e) {
-				LOGGER.error("Erro while clean all task [" + task.getTaskId() + "] folders from disk: ", e);
 			}
 		} else
 			LOGGER.info("Path " + taskDirPath + " does not exist or is not a directory!");
@@ -328,18 +430,14 @@ public class Archiver {
 		CatalogUtils.removeTimestampTask(imageStore, task, message);
 	}
 
-	protected void rollBackArchive(SapsImage task) {
-		String taskId = task.getTaskId();
-		LOGGER.info("Rolling back Archiver for task [" + taskId + "]");
-
-		removeTimestampTaskInCatalog(task, "removes task [" + taskId + "] timestamp");
-
-		updateStateInCatalog(task, ImageTaskState.FINISHED, SapsImage.AVAILABLE,
-				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
-				"updates task [" + taskId + "] to failed state");
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
-	}
-
+	/**
+	 * This function tries to archive a task folder in Swift.
+	 * 
+	 * @param task     task in archive process
+	 * @param localDir task folder to be archived
+	 * @param swiftDir directory swift to archive new data
+	 * @return boolean representation, success (true) or failure (false) to archive
+	 */
 	private boolean archive(SapsImage task, String localDir, String swiftDir) {
 		LOGGER.info("Trying to archive task [" + task.getTaskId() + "] " + localDir + " folder with a maximum of "
 				+ MAX_ARCHIVE_TRIES + " archiving attempts");
@@ -367,6 +465,14 @@ public class Archiver {
 		return false;
 	}
 
+	/**
+	 * This function tries upload task folder files to Swift.
+	 * 
+	 * @param task     task in archive process
+	 * @param localDir task folder to be archived
+	 * @param swiftDir directory swift to archive new data
+	 * @return boolean representation, success (true) or failure (false) to archive
+	 */
 	private boolean uploadFilesToSwift(SapsImage task, File localDir, String swiftDir) {
 		LOGGER.info("Trying to archive task [" + task.getTaskId() + "] " + localDir + " folder for swift");
 		for (File actualFile : localDir.listFiles()) {
@@ -380,6 +486,13 @@ public class Archiver {
 		return true;
 	}
 
+	/**
+	 * This function tries upload a task folder file to Swift.
+	 * 
+	 * @param actualFile file to be uploaded
+	 * @param swiftDir   directory swift to archive
+	 * @return boolean representation, success (true) or failure (false) to archive
+	 */
 	private boolean uploadFileToSwift(File actualFile, String swiftDir) {
 		String containerName = getContainerName();
 		LOGGER.info("Trying to archive file [" + actualFile.getAbsolutePath() + "] for swift container ["
@@ -395,29 +508,6 @@ public class Archiver {
 		}
 
 		return false;
-	}
-
-	protected boolean deletePendingFilesFromSwift(SapsImage task) throws Exception {
-		LOGGER.debug("Deleting " + task + " input files from swift");
-		String containerName = getContainerName();
-
-		List<String> fileNames = swiftAPIClient.listFilesInContainer(containerName);
-
-		for (String file : fileNames) {
-			if (file.contains(".TIF") || file.contains("MTL") || file.contains(".tar.gz") || file.contains(".nc")
-					|| file.contains(".csv")) {
-				LOGGER.debug("Trying to delete file " + file + " from " + containerName);
-				String inputdownloadingSwiftTaskFolder = task.getTaskId() + File.separator + "inputdownloading";
-				String preprocessingSwiftTaskFolder = task.getTaskId() + File.separator + "preprocessing";
-				String processingSwiftTaskFolder = task.getTaskId() + File.separator + "processing";
-
-				swiftAPIClient.deleteFile(containerName, inputdownloadingSwiftTaskFolder, file);
-				swiftAPIClient.deleteFile(containerName, preprocessingSwiftTaskFolder, file);
-				swiftAPIClient.deleteFile(containerName, processingSwiftTaskFolder, file);
-			}
-		}
-
-		return true;
 	}
 
 	private String getContainerName() {
