@@ -20,6 +20,7 @@ import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.UserResource
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -40,6 +41,9 @@ public class DatabaseApplication extends Application {
 	private Component restletComponent;
 
 	public DatabaseApplication(Properties properties) throws Exception {
+		if (!checkProperties(properties))
+			throw new SapsException("Error on validate the file. Missing properties for start Database Application.");
+
 		this.properties = properties;
 		this.submissionDispatcher = new SubmissionDispatcher(properties);
 
@@ -50,16 +54,21 @@ public class DatabaseApplication extends Application {
 		getServices().add(cors);
 	}
 
-	public void startServer() throws Exception {
-		Properties properties = this.submissionDispatcher.getProperties();
+	private boolean checkProperties(Properties properties2) {
 		if (!properties.containsKey(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT)) {
-			throw new IllegalArgumentException(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT
-					+ " is missing on properties.");
+			LOGGER.error("Required property " + SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT + " was not set");
+			return false;
 		}
-		Integer restServerPort = Integer.valueOf(
-				(String) properties.get(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT));
 
-		LOGGER.info("Starting service on port: " + restServerPort);
+		LOGGER.debug("All properties are set");
+		return true;
+	}
+
+	public void start() throws Exception {
+		Integer restServerPort = Integer
+				.valueOf((String) properties.get(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT));
+
+		LOGGER.info("Starting service on port [ " + restServerPort + "]");
 
 		ConnectorService corsService = new ConnectorService();
 		this.getServices().add(corsService);
@@ -82,13 +91,8 @@ public class DatabaseApplication extends Application {
 		Router router = new Router(getContext());
 		router.attach("/", MainResource.class);
 		router.attach("/ui/{requestPath}", MainResource.class);
-		router.attach(
-				"/static",
-				new Directory(
-						getContext(),
-						"file:///" + new File(DB_WEB_STATIC_ROOT).getAbsolutePath()
-				)
-		);
+		router.attach("/static",
+				new Directory(getContext(), "file:///" + new File(DB_WEB_STATIC_ROOT).getAbsolutePath()));
 		router.attach("/users", UserResource.class);
 		router.attach("/processings", ImageResource.class);
 		router.attach("/images/{imgName}", ImageResource.class);
@@ -102,7 +106,7 @@ public class DatabaseApplication extends Application {
 	public List<SapsImage> getTasks() throws SQLException, ParseException {
 		return submissionDispatcher.getTaskListInDB();
 	}
-	
+
 	public List<SapsImage> getTasksInState(ImageTaskState imageState) throws SQLException {
 		return this.submissionDispatcher.getTasksInState(imageState);
 	}
@@ -111,53 +115,17 @@ public class DatabaseApplication extends Application {
 		return submissionDispatcher.getTaskInDB(taskId);
 	}
 
-	public List<Task> addTasks(
-			String lowerLeftLatitude,
-			String lowerLeftLongitude,
-			String upperRightLatitude,
-			String upperRightLongitude,
-			Date initDate,
-			Date endDate,
-			String inputGathering,
-			String inputPreprocessing,
-			String algorithmExecution,
-			String priority,
-			String email) {
-		return submissionDispatcher.fillDB(
-				lowerLeftLatitude,
-				lowerLeftLongitude,
-				upperRightLatitude,
-				upperRightLongitude,
-				initDate,
-				endDate,
-				inputGathering,
-				inputPreprocessing,
-				algorithmExecution,
-				priority,
-				email
-		);
+	public List<Task> addTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
+			String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
+			String preprocessingPhaseTag, String processingPhaseTag, String priority, String email) {
+		return submissionDispatcher.addNewTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+				upperRightLongitude, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
+				processingPhaseTag, priority, email);
 	}
 
-	public void purgeImage(String day, String force) throws SQLException, ParseException {
-		boolean forceValue;
-
-		if (force.equals("yes")) {
-			forceValue = true;
-		} else {
-			forceValue = false;
-		}
-
-		submissionDispatcher.setTasksToPurge(day, forceValue);
-	}
-
-	public void createUser(String userEmail, String userName, String userPass, boolean userState,
-			boolean userNotify, boolean adminRole) throws SQLException {
-		submissionDispatcher.addUserInDB(userEmail, userName, userPass, userState, userNotify,
-				adminRole);
-	}
-
-	public void updateUserState(String userEmail, boolean userState) throws SQLException {
-		submissionDispatcher.updateUserState(userEmail, userState);
+	public void createUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
+			boolean adminRole) throws SQLException {
+		submissionDispatcher.addUserInDB(userEmail, userName, userPass, userState, userNotify, adminRole);
 	}
 
 	public void addUserNotify(String submissionId, String taskId, String userEmail) throws SQLException {
@@ -176,26 +144,10 @@ public class DatabaseApplication extends Application {
 		return properties;
 	}
 
-	public List<SapsImage> searchProcessedTasks(
-			String lowerLeftLatitude,
-			String lowerLeftLongitude,
-			String upperRightLatitude,
-			String upperRightLongitude,
-			Date initDate,
-			Date endDate,
-			String inputPreprocessing,
-			String inputGathering,
-			String algorithmExecution) {
-		return submissionDispatcher.searchProcessedTasks(
-			lowerLeftLatitude,
-			lowerLeftLongitude,
-			upperRightLatitude,
-			upperRightLongitude,
-			initDate,
-			endDate,
-			inputPreprocessing,
-			inputGathering,
-			algorithmExecution
-		);
+	public List<SapsImage> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
+			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
+			String inputPreprocessing, String inputGathering, String algorithmExecution) {
+		return submissionDispatcher.searchProcessedTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+				upperRightLongitude, initDate, endDate, inputPreprocessing, inputGathering, algorithmExecution);
 	}
 }

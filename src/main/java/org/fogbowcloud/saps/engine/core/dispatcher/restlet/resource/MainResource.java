@@ -20,15 +20,15 @@ public class MainResource extends BaseResource {
 	private void setUpTemplatesConfiguration() throws IOException {
 		if (this.cfg == null) {
 			this.cfg = new Configuration();
-			
+
 			// Specify the source where the template files come from. Here I set a
 			// plain directory for it, but non-file-system sources are possible too:
 			this.cfg.setDirectoryForTemplateLoading(new File("./dbWebHtml/"));
-			
+
 			// Set the preferred charset template files are stored in. UTF-8 is
 			// a good choice in most applications:
 			this.cfg.setDefaultEncoding("UTF-8");
-			
+
 			// Sets how errors will appear.
 			this.cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
 		}

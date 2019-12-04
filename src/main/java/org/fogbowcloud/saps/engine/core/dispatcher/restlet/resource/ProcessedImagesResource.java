@@ -15,33 +15,29 @@ import java.util.Properties;
 
 public class ProcessedImagesResource extends BaseResource {
 
-    public static final Logger LOGGER = Logger.getLogger(ProcessedImagesResource.class);
+	public static final Logger LOGGER = Logger.getLogger(ProcessedImagesResource.class);
 
-    private static final String REQUEST_ATTR_PROCESSED_IMAGES = "images_id[]";
+	private static final String REQUEST_ATTR_PROCESSED_IMAGES = "images_id[]";
 
-    @Post
-    public Representation sendProcessedImagesToEmail(Representation representation) {
-        Form form = new Form(representation);
+	@Post
+	public Representation sendProcessedImagesToEmail(Representation representation) {
+		Form form = new Form(representation);
 
-        String userEmail = form.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
-        String userPass = form.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
-        if (!authenticateUser(userEmail, userPass) || userEmail.equals("anonymous")) {
-            throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
-        }
-        
-        String[] imageIds = form.getValuesArray(REQUEST_ATTR_PROCESSED_IMAGES, true);
-        Properties properties = application.getProperties();
+		String userEmail = form.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
+		String userPass = form.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
+		if (!authenticateUser(userEmail, userPass) || userEmail.equals("anonymous")) {
+			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
+		}
 
-        ProcessedImagesEmailBuilder emailBuilder = new ProcessedImagesEmailBuilder(
-                application,
-                properties,
-                userEmail,
-                Arrays.asList(imageIds)
-        );
+		String[] imageIds = form.getValuesArray(REQUEST_ATTR_PROCESSED_IMAGES, true);
+		Properties properties = application.getProperties();
 
-        Thread thread = new Thread(emailBuilder);
-        thread.start();
+		ProcessedImagesEmailBuilder emailBuilder = new ProcessedImagesEmailBuilder(application, properties, userEmail,
+				Arrays.asList(imageIds));
 
-        return new StringRepresentation("Email será enviado em breve.", MediaType.TEXT_PLAIN);
-    }
+		Thread thread = new Thread(emailBuilder);
+		thread.start();
+
+		return new StringRepresentation("Email será enviado em breve.", MediaType.TEXT_PLAIN);
+	}
 }

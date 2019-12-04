@@ -254,12 +254,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	@Override
-	public SapsImage addImageTask(String taskId, String dataset, String region, Date date, String downloadLink,
-			int priority, String user, String inputGathering, String inputPreprocessing, String algorithmExecution)
-			throws SQLException {
+	public SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
+			String inputGathering, String inputPreprocessing, String algorithmExecution) throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
 		SapsImage task = new SapsImage(taskId, dataset, region, date, ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NON_EXISTENT_DATA, priority, user, inputGathering,
+				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, priority, user, inputGathering,
 				inputPreprocessing, algorithmExecution, now, now, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA);
 		addImageTask(task);
 		return task;
@@ -1160,33 +1159,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public List<SapsImage> getIn(ImageTaskState state) throws SQLException {
 		return getIn(state, UNLIMITED);
-	}
-
-	private static final String SELECT_PURGED_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE "
-			+ IMAGE_STATUS_COL + " = ? ORDER BY " + PRIORITY_COL + ", " + TASK_ID_COL;
-
-	@Override
-	public List<SapsImage> getPurgedTasks() throws SQLException {
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			selectStatement = connection.prepareStatement(SELECT_PURGED_IMAGES_SQL);
-			selectStatement.setString(1, SapsImage.PURGED);
-			selectStatement.setQueryTimeout(300);
-
-			selectStatement.execute();
-
-			ResultSet rs = selectStatement.getResultSet();
-			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
-			rs.close();
-			return imageDatas;
-		} finally {
-			close(selectStatement, connection);
-		}
-
 	}
 
 	private static final String UPDATE_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME + " SET " + STATE_COL

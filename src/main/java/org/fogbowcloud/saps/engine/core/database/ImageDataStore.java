@@ -30,7 +30,6 @@ public interface ImageDataStore {
 			String dataset,
 			String region,
 			Date date,
-			String downloadLink,
 			int priority,
 			String user,
 			String inputGathering,
@@ -85,8 +84,6 @@ public interface ImageDataStore {
 	List<SapsImage> getIn(ImageTaskState state) throws SQLException;
 
 	List<SapsImage> getIn(ImageTaskState state, int limit) throws SQLException;
-
-	List<SapsImage> getPurgedTasks() throws SQLException;
 
 	List<SapsImage> getImagesToDownload(String federationMember, int limit) throws SQLException;
 

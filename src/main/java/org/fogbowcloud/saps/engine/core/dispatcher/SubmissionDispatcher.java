@@ -17,6 +17,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
+import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class SubmissionDispatcher {
 	public static final int DEFAULT_PRIORITY = 0;
@@ -35,32 +36,56 @@ public class SubmissionDispatcher {
 		this.imageStore = new JDBCImageDataStore(properties);
 	}
 
+	/**
+	 * This function adds new user.
+	 * 
+	 * @param userEmail  user email
+	 * @param userName   user name
+	 * @param userPass   user password
+	 * @param userState  user state
+	 * @param userNotify user notify
+	 * @param adminRole  administrator role
+	 * @param message    information message
+	 */
+	private void addNewUserInCatalog(String userEmail, String userName, String userPass, boolean userState,
+			boolean userNotify, boolean adminRole, String message) {
+		CatalogUtils.addNewUser(imageStore, userEmail, userName, userPass, userState, userNotify, adminRole,
+				"add new user [" + userEmail + "]");
+	}
+
+	/**
+	 * This function adds new user in Catalog component.
+	 * 
+	 * @param userEmail  user email
+	 * @param userName   user name
+	 * @param userPass   user password
+	 * @param userState  user state
+	 * @param userNotify user notify
+	 * @param adminRole  administrator role
+	 */
 	public void addUserInDB(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
-			boolean adminRole) throws SQLException {
-		try {
-			imageStore.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding user " + userEmail + " in Catalogue", e);
-			throw new SQLException(e);
-		}
+			boolean adminRole) {
+		addNewUserInCatalog(userEmail, userName, userPass, userState, userNotify, adminRole,
+				"add new user [" + userEmail + "]");
 	}
 
-	public void updateUserState(String userEmail, boolean userState) throws SQLException {
-		try {
-			imageStore.updateUserState(userEmail, userState);
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding user " + userEmail + " in Catalogue", e);
-			throw new SQLException(e);
-		}
+	/**
+	 * This function gets user information.
+	 * 
+	 * @param userEmail user email
+	 * @param message   information message
+	 */
+	private SapsUser getUserInCatalog(String userEmail, String message) {
+		return CatalogUtils.getUser(imageStore, userEmail, message);
 	}
 
+	/**
+	 * This function gets user information in Catalog component.
+	 * 
+	 * @param userEmail user email
+	 */
 	public SapsUser getUser(String userEmail) {
-		try {
-			return imageStore.getUser(userEmail);
-		} catch (SQLException e) {
-			LOGGER.error("Error while trying to get Sebal User with email: " + userEmail + ".", e);
-		}
-		return null;
+		return getUserInCatalog(userEmail, "get user [" + userEmail + "] information");
 	}
 
 	public void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail) throws SQLException {
@@ -92,25 +117,6 @@ public class SubmissionDispatcher {
 		return false;
 	}
 
-	public void setTasksToPurge(String day, boolean force) throws SQLException, ParseException {
-		List<SapsImage> tasksToPurge = force ? imageStore.getAllTasks() : imageStore.getIn(ImageTaskState.ARCHIVED);
-
-		for (SapsImage imageTask : tasksToPurge) {
-			long date = 0;
-			try {
-				date = parseStringToDate(day).getTime();
-			} catch (ParseException e) {
-				LOGGER.error("Error while parsing string to date", e);
-			}
-			if (isBeforeDay(date, imageTask.getUpdateTime())) {
-				imageTask.setStatus(SapsImage.PURGED);
-
-				imageStore.updateImageTask(imageTask);
-				imageTask.setUpdateTime(imageStore.getTask(imageTask.getTaskId()).getUpdateTime());
-			}
-		}
-	}
-
 	protected Date parseStringToDate(String day) throws ParseException {
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 		java.util.Date date = format.parse(day);
@@ -120,14 +126,6 @@ public class SubmissionDispatcher {
 
 	protected boolean isBeforeDay(long date, Timestamp imageTaskDay) {
 		return (imageTaskDay.getTime() <= date);
-	}
-
-	// FIXME is it necessaty ? "System.out.println" ?
-	public void listTasksInDB() throws SQLException, ParseException {
-		List<SapsImage> allImageTask = imageStore.getAllTasks();
-		for (int i = 0; i < allImageTask.size(); i++) {
-			System.out.println(allImageTask.get(i).toString());
-		}
 	}
 
 	private String getMiddlePoint(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
@@ -211,9 +209,30 @@ public class SubmissionDispatcher {
 		return regionsFound;
 	}
 
-	public List<Task> fillDB(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
-			String upperRightLongitude, Date initDate, Date endDate, String inputGathering, String inputPreprocessing,
-			String algorithmExecution, String priorityS, String email) {
+	/**
+	 * This function adds new task in Catalog.
+	 * 
+	 * @param taskId                   task id
+	 * @param dataset                  task dataset
+	 * @param region                   task region
+	 * @param date                     task region
+	 * @param priority                 task priority
+	 * @param userEmail                user email that is creating task
+	 * @param inputdownloadingPhaseTag inputdownloading phase tag
+	 * @param preprocessingPhaseTag    preprocessing phase tag
+	 * @param processingPhaseTag       processing phase tag
+	 * @return new saps image
+	 */
+	private SapsImage addNewTaskInCatalog(String taskId, String dataset, String region, Date date, int priority,
+			String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
+			String processingPhaseTag) {
+		return CatalogUtils.addNewTask(imageStore, taskId, dataset, region, date, priority, userEmail,
+				inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag, "add new task [" + taskId + "]");
+	}
+
+	public List<Task> addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
+			String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
+			String preprocessingPhaseTag, String processingPhaseTag, String priorityS, String email) {
 		List<Task> createdTasks = new ArrayList<>();
 
 		int priority = Integer.parseInt(priorityS);
@@ -238,8 +257,8 @@ public class SubmissionDispatcher {
 					for (String region : regions) {
 						String taskId = UUID.randomUUID().toString();
 
-						SapsImage iTask = getImageStore().addImageTask(taskId, dataset, region, cal.getTime(), "None",
-								priority, email, inputGathering, inputPreprocessing, algorithmExecution);
+						SapsImage iTask = addNewTaskInCatalog(taskId, dataset, region, cal.getTime(), priority, email,
+								inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag);
 
 						Task task = new Task(UUID.randomUUID().toString());
 						task.setImageTask(iTask);
@@ -298,8 +317,8 @@ public class SubmissionDispatcher {
 
 		List<SapsImage> filteredTasks = new ArrayList<>();
 		Set<String> regions = new HashSet<>();
-		regions.addAll(getRegionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
-				upperRightLongitude));
+		regions.addAll(
+				getRegionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude));
 
 		for (String region : regions) {
 			List<SapsImage> iTasks = null;
