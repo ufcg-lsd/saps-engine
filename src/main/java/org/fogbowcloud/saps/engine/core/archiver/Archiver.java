@@ -355,7 +355,14 @@ public class Archiver {
 	 * @param task task to be finished
 	 */
 	private void failedArchive(SapsImage task) {
+		String taskId = task.getTaskId();
+		
 		deleteAllTaskFilesFromDisk(task);
+		
+		updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
+				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
+				"updates task [" + taskId + "] to failed state");
+		updateTimestampTaskInCatalog(task, "updates task [" + taskId  + "] timestamp");
 	}
 
 	/**
@@ -444,18 +451,11 @@ public class Archiver {
 			return false;
 		}
 
-		String taskId = task.getTaskId();
-
 		for (int itry = 0; itry < MAX_ARCHIVE_TRIES; itry++) {
 			if (uploadFilesToSwift(task, localFileDir, swiftDir))
 				return true;
-
 		}
 
-		updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
-				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
-				"updates task [" + taskId + "] to failed state");
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 		return false;
 	}
 
