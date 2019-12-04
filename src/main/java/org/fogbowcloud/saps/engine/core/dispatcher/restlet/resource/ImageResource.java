@@ -2,12 +2,9 @@ package org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource;
 
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.Submission;
-import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.json.JSONArray;
@@ -18,7 +15,6 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
-import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
@@ -39,9 +35,6 @@ public class ImageResource extends BaseResource {
 	private static final String EMAIL = "email";
 
 	private static final String ADD_IMAGES_MESSAGE_OK = "Tasks successfully added";
-	private static final String PURGE_MESSAGE_OK = "Tasks purged from database";
-	private static final String DAY = "day";
-	private static final String FORCE = "force";
 
 	public ImageResource() {
 		super();
@@ -139,25 +132,14 @@ public class ImageResource extends BaseResource {
 
 		String builder = "Creating new image process with configuration:\n" + "\tLower Left: " + lowerLeftLatitude
 				+ ", " + lowerLeftLongitude + "\n" + "\tUpper Right: " + upperRightLatitude + ", " + upperRightLongitude
-				+ "\n" + "\tInterval: " + initDate + " - " + endDate + "\n" + "\tGathering: " + inputdownloadingPhaseTag
-				+ "\n" + "\tPreprocessing: " + preprocessingPhaseTag + "\n" + "\tAlgorithm: " + processingPhaseTag
-				+ "\n" + "\tPriority: " + priority + "\n" + "\tEmail: " + email;
+				+ "\n" + "\tInterval: " + initDate + " - " + endDate + "\n" + "\tInputdownloading tag: "
+				+ inputdownloadingPhaseTag + "\n" + "\tPreprocessing tag: " + preprocessingPhaseTag + "\n"
+				+ "\tProcessing tag: " + processingPhaseTag + "\n" + "\tPriority: " + priority + "\n" + "\tEmail: "
+				+ email;
 		LOGGER.info(builder);
 
-		try {
-			List<Task> createdTasks = application.addTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
-					upperRightLongitude, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
-					processingPhaseTag, priority, email);
-			if (application.isUserNotifiable(userEmail)) {
-				Submission submission = new Submission(UUID.randomUUID().toString());
-				for (Task imageTask : createdTasks) {
-					application.addUserNotify(submission.getId(), imageTask.getId(), userEmail);
-				}
-			}
-		} catch (Exception e) {
-			LOGGER.debug(e.getMessage(), e);
-			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
-		}
+		application.addNewTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude, initDate,
+				endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag, priority, email);
 
 		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK, MediaType.TEXT_PLAIN);
 	}

@@ -184,7 +184,7 @@ public class Archiver {
 				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] to failed state");
 
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 	}
 
 	/**
@@ -279,7 +279,7 @@ public class Archiver {
 				SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] with state [" + ImageTaskState.ARCHIVING.getValue() + "]");
 
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 
 		LOGGER.info("Task [" + taskId + "] ready to archive");
 		return true;
@@ -345,7 +345,7 @@ public class Archiver {
 		updateStateInCatalog(task, ImageTaskState.ARCHIVED, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
 				SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] with state [" + ImageTaskState.ARCHIVED.getValue() + "]");
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 		deleteAllTaskFilesFromDisk(task);
 	}
 
@@ -356,13 +356,13 @@ public class Archiver {
 	 */
 	private void failedArchive(SapsImage task) {
 		String taskId = task.getTaskId();
-		
+
 		deleteAllTaskFilesFromDisk(task);
-		
+
 		updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
 				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] to failed state");
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId  + "] timestamp");
+		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 	}
 
 	/**
@@ -410,14 +410,13 @@ public class Archiver {
 	}
 
 	/**
-	 * This function updates task time stamp and insert new tuple in time stamp
-	 * table.
+	 * This function add new tuple in time stamp table and updates task time stamp.
 	 * 
 	 * @param task    task to be update
 	 * @param message information message
 	 */
-	private void updateTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.updateTimestampTask(imageStore, task, message);
+	private void addTimestampTaskInCatalog(SapsImage task, String message) {
+		CatalogUtils.addTimestampTask(imageStore, task, message);
 	}
 
 	/**

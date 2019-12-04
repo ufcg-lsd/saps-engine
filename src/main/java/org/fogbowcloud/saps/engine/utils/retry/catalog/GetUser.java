@@ -11,7 +11,7 @@ public class GetUser implements CatalogRetry<SapsUser> {
 	private ImageDataStore imageStore;
 	private String userEmail;
 
-	public GetUser(JDBCImageDataStore imageStore, String userEmail) {
+	public GetUser(ImageDataStore imageStore, String userEmail) {
 		this.imageStore = imageStore;
 		this.userEmail = userEmail;
 	}

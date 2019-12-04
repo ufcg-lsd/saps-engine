@@ -127,7 +127,7 @@ public class WardenImpl implements Warden {
 
 	protected SapsImage getImageTask(String taskId) {
 		try {
-			return dbUtilsImpl.getTaskInDB(taskId);
+			return dbUtilsImpl.getTaskById(taskId);
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
 		}

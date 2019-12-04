@@ -25,35 +25,22 @@ public interface ImageDataStore {
 	public String DATASTORE_IP = "datastore_ip";
 	public String DATASTORE_PORT = "datastore_port";
 
-	SapsImage addImageTask(
-			String taskId,
-			String dataset,
-			String region,
-			Date date,
-			int priority,
-			String user,
-			String inputGathering,
-			String inputPreprocessing,
-			String algorithmExecution) throws SQLException;
+	SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
+			String inputGathering, String inputPreprocessing, String algorithmExecution) throws SQLException;
 
 	void addImageTask(SapsImage imageTask) throws SQLException;
 
-	void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
-			throws SQLException;
+	void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
 
-	void addUser(String userEmail, String userName, String userPass, boolean userState,
-			boolean userNotify, boolean adminRole) throws SQLException;
+	void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
+			boolean adminRole) throws SQLException;
 
-	void addUserNotification(String submissionId, String taskId, String userEmail)
-			throws SQLException;
+	void addUserNotification(String submissionId, String taskId, String userEmail) throws SQLException;
 
-	void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember)
-			throws SQLException;
-	
-	void dispatchMetadataInfo(String taskId) throws SQLException;
-	
-	void updateMetadataInfo(String metadataFilePath, String operatingSystem,
-			String kernelVersion, String componentType, String taskId) throws SQLException;
+	void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember) throws SQLException;
+
+	void updateMetadataInfo(String metadataFilePath, String operatingSystem, String kernelVersion, String componentType,
+			String taskId) throws SQLException;
 
 	List<Ward> getUsersToNotify() throws SQLException;
 
@@ -66,13 +53,13 @@ public interface ImageDataStore {
 	void updateTaskError(String taskId, String errorMsg) throws SQLException;
 
 	void updateTaskState(String taskId, ImageTaskState state) throws SQLException;
-	
+
 	void updateTaskStatus(String taskId, String status) throws SQLException;
 
 	boolean isUserNotifiable(String userEmail) throws SQLException;
 
 	boolean deployConfigExists(String federationMember) throws SQLException;
-	
+
 	boolean metadataRegisterExist(String taskId) throws SQLException;
 
 	List<Submission> getAllSubmissions() throws SQLException;
@@ -80,7 +67,7 @@ public interface ImageDataStore {
 	List<SapsImage> getAllTasks() throws SQLException;
 
 	List<SapsImage> getTasksInProcessingState() throws SQLException;
-	
+
 	List<SapsImage> getIn(ImageTaskState state) throws SQLException;
 
 	List<SapsImage> getIn(ImageTaskState state, int limit) throws SQLException;
@@ -96,29 +83,22 @@ public interface ImageDataStore {
 	String getNFSServerIP(String federationMember) throws SQLException;
 
 	String getNFSServerSshPort(String federationMember) throws SQLException;
-	
+
 	void dispose();
 
 	boolean lockTask(String taskId) throws SQLException;
 
 	boolean unlockTask(String taskId) throws SQLException;
 
-	void removeNotification(String submissionId, String taskId, String userEmail)
-			throws SQLException;
+	void removeNotification(String submissionId, String taskId, String userEmail) throws SQLException;
 
-	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp)
-			throws SQLException;
+	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
 
 	void removeDeployConfig(String federationMember) throws SQLException;
 
-	List<SapsImage> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
-			long processDateEnd) throws SQLException;
+	List<SapsImage> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit, long processDateEnd)
+			throws SQLException;
 
-	public List<SapsImage> getProcessedImages(
-			String region,
-			Date initDate,
-			Date endDate,
-			String inputGathering,
-			String inputPreprocessing,
-			String algorithmExecution) throws SQLException;
+	public List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
+			String inputPreprocessing, String algorithmExecution) throws SQLException;
 }

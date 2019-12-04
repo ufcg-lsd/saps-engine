@@ -15,7 +15,7 @@ public class AddNewUser implements CatalogRetry<Void> {
 	private boolean userNotify;
 	private boolean adminRole;
 
-	public AddNewUser(JDBCImageDataStore imageStore, String userEmail, String userName, String userPass,
+	public AddNewUser(ImageDataStore imageStore, String userEmail, String userName, String userPass,
 			boolean userState, boolean userNotify, boolean adminRole) {
 		this.imageStore = imageStore;
 		this.userEmail = userEmail;

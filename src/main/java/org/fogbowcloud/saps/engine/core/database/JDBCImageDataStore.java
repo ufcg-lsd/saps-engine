@@ -378,41 +378,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String INSERT_METADATA_INFO_SQL = "INSERT INTO " + PROVENANCE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-	@Override
-	public void dispatchMetadataInfo(String taskId) throws SQLException {
-		LOGGER.info("Dispatching metadata info for " + taskId + " in Catalogue");
-		if (taskId == null || taskId.isEmpty()) {
-			throw new IllegalArgumentException("Invalid taskId " + taskId);
-		}
-
-		PreparedStatement insertStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			insertStatement = connection.prepareStatement(INSERT_METADATA_INFO_SQL);
-			insertStatement.setString(1, taskId);
-			insertStatement.setString(2, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(3, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(4, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(5, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(6, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(7, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(8, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(9, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(10, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setQueryTimeout(300);
-
-			insertStatement.execute();
-		} finally {
-			close(insertStatement, connection);
-		}
-	}
-
 	private static final String UPDATE_DOWNLOADER_METADATA_INFO_SQL = "UPDATE " + PROVENANCE_TABLE_NAME + " SET "
 			+ INPUT_METADATA_COL + " = ?, " + INPUT_OPERATING_SYSTEM_COL + " = ?, " + INPUT_KERNEL_VERSION_COL
 			+ " = ? WHERE " + TASK_ID_COL + " = ?;";

@@ -20,7 +20,7 @@ public class AddNewTask implements CatalogRetry<SapsImage> {
 	private String preprocessingPhaseTag;
 	private String processingPhaseTag;
 
-	public AddNewTask(JDBCImageDataStore imageStore, String taskId, String dataset, String region, Date date,
+	public AddNewTask(ImageDataStore imageStore, String taskId, String dataset, String region, Date date,
 			int priority, String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
 			String processingPhaseTag) {
 		this.imageStore = imageStore;

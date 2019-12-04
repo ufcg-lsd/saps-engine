@@ -524,7 +524,7 @@ public class Scheduler {
 							SapsImage.NONE_ARREBOL_JOB_ID, "updates task [" + task.getTaskId() + "] with failed state");
 				}
 
-				updateTimestampTaskInCatalog(task, "updates task [" + task.getTaskId() + "] timestamp");
+				addTimestampTaskInCatalog(task, "updates task [" + task.getTaskId() + "] timestamp");
 
 				finishedJobs.add(job);
 			} else
@@ -651,7 +651,7 @@ public class Scheduler {
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> getTasksInCatalog(ImageTaskState state, int limit, String message) {
-		return CatalogUtils.getTasks(imageStore, state, limit, "gets tasks with " + state.getValue() + " state");
+		return CatalogUtils.getTasks(imageStore, state, limit, message);
 	}
 
 	/**
@@ -686,14 +686,13 @@ public class Scheduler {
 	}
 
 	/**
-	 * This function updates task time stamp and insert new tuple in time stamp
-	 * table.
+	 * This function add new tuple in time stamp table and updates task time stamp.
 	 * 
 	 * @param task    task to be update
 	 * @param message information message
 	 */
-	private void updateTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.updateTimestampTask(imageStore, task, message);
+	private void addTimestampTaskInCatalog(SapsImage task, String message) {
+		CatalogUtils.addTimestampTask(imageStore, task, message);
 	}
 
 }
