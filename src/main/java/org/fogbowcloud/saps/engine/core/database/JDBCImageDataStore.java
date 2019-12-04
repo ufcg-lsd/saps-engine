@@ -82,10 +82,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	public JDBCImageDataStore(Properties properties) throws SQLException {
 
-		if(checkProperties(properties))
-		if (properties == null) {
-			throw new IllegalArgumentException("Properties arg must not be null.");
-		}
+		if (checkProperties(properties))
+			if (properties == null) {
+				throw new IllegalArgumentException("Properties arg must not be null.");
+			}
 
 		String imageStoreIP = properties.getProperty(DATASTORE_IP);
 		String imageStorePort = properties.getProperty(DATASTORE_PORT);
@@ -127,7 +127,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 		LOGGER.debug("All properties for create JDBCImageDataStore are set");
 		return true;
 	}
-	
+
 	public JDBCImageDataStore(String imageStoreURLPrefix, String imageStoreIP, String imageStorePort, String dbUserName,
 			String dbUserPass, String dbDrive, String dbName) throws SQLException {
 
@@ -495,8 +495,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String SELECT_NFS_CONFIG_SQL = "SELECT nfs_ip, nfs_port FROM " + DEPLOY_CONFIG_TABLE_NAME
-			+ " WHERE federation_member = ?";
+	private static final String SELECT_NFS_CONFIG_SQL = "SELECT " + NFS_SERVER_IP_COL + ", " + NFS_SERVER_SSH_PORT_COL
+			+ " FROM " + DEPLOY_CONFIG_TABLE_NAME + " WHERE federation_member = ?";
 
 	@Override
 	public Map<String, String> getFederationNFSConfig(String federationMember) throws SQLException {
@@ -742,7 +742,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static String UPDATE_USER_STATE_SQL = "UPDATE " + USERS_TABLE_NAME + " SET active = ? WHERE user_email = ?";
+	private static String UPDATE_USER_STATE_SQL = "UPDATE " + USERS_TABLE_NAME + " SET " + USER_STATE_COL
+			+ " = ? WHERE " + USER_EMAIL_COL + " = ?";
 
 	@Override
 	public void updateUserState(String userEmail, boolean userState) throws SQLException {
@@ -822,8 +823,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static String UPDATE_ERROR_MESSAGE_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + ERROR_MSG_COL
-			+ " = ?, utime = now() WHERE task_id = ?";
+	private static String UPDATE_ERROR_MESSAGE_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + ERROR_MSG_COL + " = ?, "
+			+ UPDATED_TIME_COL + " = now() WHERE " + TASK_ID_COL + " = ?";
 
 	@Override
 	public void updateTaskError(String taskId, String errorMsg) throws SQLException {
@@ -979,8 +980,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String SELECT_IMAGES_IN_PROCESSING_TO_ARREBOL_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE " + STATE_COL + " = 'downloading' OR " + STATE_COL + " = 'preprocessing' OR " + STATE_COL
-			+ " = 'running'";
+			+ " WHERE " + STATE_COL + " = '" + ImageTaskState.DOWNLOADING.getValue() + "' OR " + STATE_COL + " = '"
+			+ ImageTaskState.PREPROCESSING.getValue() + "' OR " + STATE_COL + " = '" + ImageTaskState.RUNNING.getValue()
+			+ "'";
 
 	/**
 	 * get tasks in processing to Arrebol
@@ -1036,10 +1038,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + STATE_COL
-			+ " = ? " + "ORDER BY priority ASC";
+			+ " = ? " + "ORDER BY " + PRIORITY_COL + " ASC";
 
-	private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE state = ? ORDER BY priority ASC LIMIT ?";
+	private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE "
+			+ STATE_COL + " = ? ORDER BY " + PRIORITY_COL + " ASC LIMIT ?";
 
 	@Override
 	public List<SapsImage> getIn(ImageTaskState state, int limit) throws SQLException {
@@ -1079,9 +1081,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	private static final String SELECT_IMAGES_BY_FILTERS_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
 	private static final String SELECT_IMAGES_BY_FILTERS_WHERE_SQL = " WHERE ";
-	private static final String SELECT_IMAGES_BY_FILTERS_STATE_SQL = " state = ? " + IMAGE_TABLE_NAME;
-	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " task_id = ? " + IMAGE_TABLE_NAME;
-	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " ctime BETWEEN ? AND ? ";
+	private static final String SELECT_IMAGES_BY_FILTERS_STATE_SQL = " " + STATE_COL + " = ? " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " " + TASK_ID_COL + " = ? " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " " + CREATION_TIME_COL + " BETWEEN ? AND ? ";
 
 	@Override
 	public List<SapsImage> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
@@ -1160,8 +1162,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return getIn(state, UNLIMITED);
 	}
 
-	private static final String SELECT_PURGED_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE status = ? ORDER BY priority, task_id";
+	private static final String SELECT_PURGED_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE "
+			+ IMAGE_STATUS_COL + " = ? ORDER BY " + PRIORITY_COL + ", " + TASK_ID_COL;
 
 	@Override
 	public List<SapsImage> getPurgedTasks() throws SQLException {
@@ -1294,7 +1296,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return imageTasks;
 	}
 
-	private static final String SELECT_TASK_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE task_id = ?";
+	private static final String SELECT_TASK_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + TASK_ID_COL
+			+ " = ?";
 
 	@Override
 	public SapsImage getTask(String taskId) throws SQLException {
@@ -1323,8 +1326,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String SELECT_NFS_SERVER_IP_SQL = "SELECT nfs_ip FROM " + DEPLOY_CONFIG_TABLE_NAME
-			+ " WHERE federation_member = ?";
+	private static final String SELECT_NFS_SERVER_IP_SQL = "SELECT " + NFS_SERVER_IP_COL + " FROM "
+			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?";
 
 	@Override
 	public String getNFSServerIP(String federation_member) throws SQLException {
@@ -1355,8 +1358,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String SELECT_NFS_SERVER_SSH_PORT_SQL = "SELECT nfs_ssh_port FROM " + DEPLOY_CONFIG_TABLE_NAME
-			+ " WHERE federation_member = ?";
+	private static final String SELECT_NFS_SERVER_SSH_PORT_SQL = "SELECT " + NFS_SERVER_SSH_PORT_COL + " FROM "
+			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?";
 
 	@Override
 	public String getNFSServerSshPort(String federation_member) throws SQLException {
@@ -1387,8 +1390,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME
-			+ " WHERE task_id = ?";
+	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME + " WHERE "
+			+ TASK_ID_COL + " = ?";
 
 	@Override
 	public boolean lockTask(String taskId) throws SQLException {
@@ -1459,8 +1462,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return unlocked;
 	}
 
-	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME
-			+ " WHERE task_id = ? AND state = ? AND utime = ?";
+	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME + " WHERE " + TASK_ID_COL
+			+ " = ? AND " + STATE_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
 
 	@Override
 	public void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
