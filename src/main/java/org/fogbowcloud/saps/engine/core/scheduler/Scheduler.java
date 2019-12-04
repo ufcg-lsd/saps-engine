@@ -281,7 +281,7 @@ public class Scheduler {
 		List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
 
 		if (count <= 0) {
-			LOGGER.info("\n" + "There will be no selection of tasks in the " + state.getValue()
+			LOGGER.info("There will be no selection of tasks in the " + state.getValue()
 					+ " state because there is no capacity for new jobs in Arrebol");
 			return selectedTasks;
 		}
