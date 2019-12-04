@@ -14,14 +14,12 @@ import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobEx
 public class DefaultArrebol implements Arrebol{
 	
 	private final ArrebolRequestsHelper arrebolRequestHelper;
-	//private final JDBCJobDataStore jobDataStore;
 	//private final Properties properties;
 	private List<JobSubmitted> submittedJobID;
 
 	public DefaultArrebol(Properties properties)  {
 		//this.properties = properties;
 		this.arrebolRequestHelper = new ArrebolRequestsHelper(properties);
-		//this.jobDataStore = new JDBCJobDataStore(properties);
 		this.submittedJobID = new LinkedList<JobSubmitted>();
 	}
 
@@ -56,7 +54,7 @@ public class DefaultArrebol implements Arrebol{
 		return arrebolRequestHelper.getJob(jobId);
 	}
 	
-	//TODO implementat method
+	//TODO implement method
 	public List<JobResponseDTO> checkStatusJobByName(String JobName) throws GetJobException{
 		return null;
 		//return arrebolRequestHelper.getJobByName(jobName);
