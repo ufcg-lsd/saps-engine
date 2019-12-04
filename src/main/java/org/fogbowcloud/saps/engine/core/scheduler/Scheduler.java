@@ -213,7 +213,7 @@ public class Scheduler {
 					String arrebolJobId = jobsWithEqualJobName.get(0).getId();
 					updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
 							arrebolJobId,
-							"updates task[" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
+							"updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
 					tasksForPopulateSubmittedJobList.add(task);
 				} else {
 					// TODO ????
@@ -236,7 +236,7 @@ public class Scheduler {
 		ImageTaskState previousState = getPreviousState(task.getState());
 		updateStateInCatalog(task, previousState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
 				SapsImage.NONE_ARREBOL_JOB_ID,
-				"updates task[" + task.getTaskId() + "] with previus state [" + previousState.getValue() + "]");
+				"updates task [" + task.getTaskId() + "] with previus state [" + previousState.getValue() + "]");
 	}
 
 	/**
@@ -258,8 +258,13 @@ public class Scheduler {
 		List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
 		ImageTaskState[] states = { ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED };
 
-		for (ImageTaskState state : states)
-			selectedTasks.addAll(selectTasks(ARREBOL_MAX_WAITING_JOBS - getCountSlotsInArrebol("default"), state));
+		int countUpToTasks = ARREBOL_MAX_WAITING_JOBS - getCountSlotsInArrebol("default");
+
+		for (ImageTaskState state : states) {
+			List<SapsImage> selectedTasksInCurrentState = selectTasks(countUpToTasks, state);
+			selectedTasks.addAll(selectedTasksInCurrentState);
+			countUpToTasks -= selectedTasksInCurrentState.size();
+		}
 
 		return selectedTasks;
 	}
@@ -273,6 +278,14 @@ public class Scheduler {
 	 * @return selected tasks list in specific state
 	 */
 	private List<SapsImage> selectTasks(int count, final ImageTaskState state) {
+		List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
+
+		if (count <= 0) {
+			LOGGER.info("\n" + "There will be no selection of tasks in the " + state.getValue()
+					+ " state because there is no capacity for new jobs in Arrebol");
+			return selectedTasks;
+		}
+
 		LOGGER.info("Trying select up to " + count + " tasks in state " + state);
 
 		List<SapsImage> tasks = getTasksInCatalog(state, ImageDataStore.UNLIMITED,
@@ -282,7 +295,7 @@ public class Scheduler {
 
 		LOGGER.info("Tasks by users: " + tasksByUsers);
 
-		List<SapsImage> selectedTasks = selector.select(count, tasksByUsers);
+		selectedTasks = selector.select(count, tasksByUsers);
 
 		LOGGER.info("Selected tasks using " + selector.version() + ": " + selectedTasks);
 		return selectedTasks;
@@ -299,10 +312,10 @@ public class Scheduler {
 
 			updateStateInCatalog(task, nextState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
 					SapsImage.NONE_ARREBOL_JOB_ID,
-					"updates task[" + task.getTaskId() + "] state for " + nextState.getValue());
+					"updates task [" + task.getTaskId() + "] state for " + nextState.getValue());
 			String arrebolJobId = submitTaskToArrebol(task, nextState);
 			updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA, arrebolJobId,
-					"updates task[" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
+					"updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
 		}
 	}
 
@@ -502,13 +515,13 @@ public class Scheduler {
 					ImageTaskState nextState = getNextState(task.getState());
 					updateStateInCatalog(task, nextState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
 							SapsImage.NONE_ARREBOL_JOB_ID,
-							"updates task[" + task.getTaskId() + "] with next state [" + nextState.getValue() + "]");
+							"updates task [" + task.getTaskId() + "] with next state [" + nextState.getValue() + "]");
 				} else {
 					LOGGER.info("Job [" + jobId + "] has been finished with failure");
 
 					updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
 							"error while execute " + task.getState().getValue() + " phase",
-							SapsImage.NONE_ARREBOL_JOB_ID, "updates task[" + task.getTaskId() + "] with failed state");
+							SapsImage.NONE_ARREBOL_JOB_ID, "updates task [" + task.getTaskId() + "] with failed state");
 				}
 
 				updateTimestampTaskInCatalog(task, "updates task [" + task.getTaskId() + "] timestamp");
@@ -669,7 +682,7 @@ public class Scheduler {
 		task.setError(error);
 		task.setArrebolJobId(arrebolJobId);
 		return CatalogUtils.updateState(imageStore, task,
-				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
+				"updates task [" + task.getTaskId() + "] state for " + state.getValue());
 	}
 
 	/**
