@@ -1,15 +1,21 @@
 package org.fogbowcloud.saps.engine.utils.retry;
 
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.utils.retry.catalog.AddNewTask;
+import org.fogbowcloud.saps.engine.utils.retry.catalog.AddNewUser;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.CatalogRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.GetProcessingTasksRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.GetTasksRetry;
+import org.fogbowcloud.saps.engine.utils.retry.catalog.GetUser;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.RemoveTimestampRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.UpdateTaskRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.UpdateTimestampRetry;
@@ -60,8 +66,7 @@ public class CatalogUtils {
 	 * @param message    information message
 	 * @return tasks in specific state
 	 */
-	public static List<SapsImage> getTasks(ImageDataStore imageStore, ImageTaskState state, int limit,
-			String message) {
+	public static List<SapsImage> getTasks(ImageDataStore imageStore, ImageTaskState state, int limit, String message) {
 		return retry(new GetTasksRetry(imageStore, state, limit), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -94,22 +99,75 @@ public class CatalogUtils {
 	 * This function updates task time stamp and insert new tuple in time stamp
 	 * table.
 	 * 
-	 * @param imageStore   catalog component
-	 * @param task    task to be update
-	 * @param message information message
+	 * @param imageStore catalog component
+	 * @param task       task to be update
+	 * @param message    information message
 	 */
 	public static void updateTimestampTask(ImageDataStore imageStore, SapsImage task, String message) {
 		retry(new UpdateTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
-	
+
 	/**
 	 * This function remove task time stamp.
 	 * 
-	 * @param imageStore   catalog component
-	 * @param task    task to be update
-	 * @param message information message
+	 * @param imageStore catalog component
+	 * @param task       task to be update
+	 * @param message    information message
 	 */
 	public static void removeTimestampTask(ImageDataStore imageStore, SapsImage task, String message) {
 		retry(new RemoveTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
+	}
+
+	/**
+	 * This function adds new user.
+	 * 
+	 * @param imageStore catalog component
+	 * @param userEmail  user email
+	 * @param userName   user name
+	 * @param userPass   user password
+	 * @param userState  user state
+	 * @param userNotify user notify
+	 * @param adminRole  administrator role
+	 * @param message    information message
+	 */
+	public static void addNewUser(JDBCImageDataStore imageStore, String userEmail, String userName, String userPass,
+			boolean userState, boolean userNotify, boolean adminRole, String message) {
+		retry(new AddNewUser(imageStore, userEmail, userName, userPass, userState, userNotify, adminRole),
+				CATALOG_DEFAULT_SLEEP_SECONDS, message);
+	}
+
+	/**
+	 * This function gets user information.
+	 * 
+	 * @param imageStore catalog component
+	 * @param userEmail  user email
+	 * @param message    information message
+	 */
+	public static SapsUser getUser(JDBCImageDataStore imageStore, String userEmail, String message) {
+		return retry(new GetUser(imageStore, userEmail), CATALOG_DEFAULT_SLEEP_SECONDS, message);
+	}
+
+	/**
+	 * This function adds new task.
+	 * 
+	 * @param imageStore               catalog component
+	 * @param taskId                   task id
+	 * @param dataset                  task dataset
+	 * @param region                   task region
+	 * @param date                     task region
+	 * @param priority                 task priority
+	 * @param userEmail                user email that is creating task
+	 * @param inputdownloadingPhaseTag inputdownloading phase tag
+	 * @param preprocessingPhaseTag    preprocessing phase tag
+	 * @param processingPhaseTag       processing phase tag
+	 * @param message                  information message
+	 * @return new saps image
+	 */
+	public static SapsImage addNewTask(JDBCImageDataStore imageStore, String taskId, String dataset, String region,
+			Date date, int priority, String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
+			String processingPhaseTag, String message) {
+		return retry(new AddNewTask(imageStore, taskId, dataset, region, date, priority, userEmail,
+				inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag), CATALOG_DEFAULT_SLEEP_SECONDS,
+				message);
 	}
 }
