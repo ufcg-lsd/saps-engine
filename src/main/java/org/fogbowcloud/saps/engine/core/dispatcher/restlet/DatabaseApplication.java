@@ -118,6 +118,38 @@ public class DatabaseApplication extends Application {
 			LOGGER.error("Required property " + SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT + " was not set");
 			return false;
 		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_AUTH_URL)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_AUTH_URL + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_PROJECT_ID)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_PROJECT_ID + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_USER_ID)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_USER_ID + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_PASSWORD)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_PASSWORD + " was not set");
+			return false;
+		}
 
 		LOGGER.debug("All properties are set");
 		return true;
