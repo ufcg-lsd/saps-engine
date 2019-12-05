@@ -81,7 +81,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		sendErrorEmail(errorBuilder);
 	}
 
-	JSONArray generateAllTasksJsons(StringBuilder errorBuilder) {
+	private JSONArray generateAllTasksJsons(StringBuilder errorBuilder) {
 		JSONArray tasklist = new JSONArray();
 		for (String str : images) {
 			try {
@@ -162,7 +162,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
 	private String generateTempURL(String swiftPath, String container, String filePath, String key)
 			throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
-		String path = swiftPath + "/" + container + "/" + filePath;
+		String path = swiftPath + File.separator + container + File.separator + filePath;
 
 		Formatter objectStoreFormatter = new Formatter();
 		objectStoreFormatter.format("%s\n%s\n%s", "GET", Long.MAX_VALUE, path);
@@ -177,7 +177,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return res;
 	}
 
-	public JSONObject generateTaskEmailJson(String taskId) throws URISyntaxException, IOException, JSONException {
+	private JSONObject generateTaskEmailJson(String taskId) throws URISyntaxException, IOException, JSONException {
 		SapsImage task = application.getTask(taskId);
 		LOGGER.info("Task [" + taskId + "] : " + task);
 
