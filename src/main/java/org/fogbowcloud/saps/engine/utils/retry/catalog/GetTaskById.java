@@ -17,8 +17,7 @@ public class GetTaskById implements CatalogRetry<SapsImage> {
 
 	@Override
 	public SapsImage run() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return imageStore.getTask(taskId);
 	}
 
 }
