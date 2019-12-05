@@ -54,8 +54,7 @@ public class WardenImpl implements Warden {
 			for (Ward ward : getPending()) {
 				SapsImage imageTask = getImageTask(ward.getTaskId());
 				if (imageTask == null) {
-					LOGGER.debug("Image task " + ward.getTaskId()
-							+ " does not exist in main database anymore");
+					LOGGER.debug("Image task " + ward.getTaskId() + " does not exist in main database anymore");
 					removeNonExistentWard(ward);
 				} else {
 					if (reached(ward, imageTask)) {
@@ -64,8 +63,7 @@ public class WardenImpl implements Warden {
 								notified.add(ward);
 							}
 						} catch (Throwable e) {
-							LOGGER.error("Could not notify the user on: " + ward.getEmail()
-									+ " about " + ward, e);
+							LOGGER.error("Could not notify the user on: " + ward.getEmail() + " about " + ward, e);
 						}
 					}
 				}
@@ -82,15 +80,13 @@ public class WardenImpl implements Warden {
 
 	@Override
 	public boolean doNotify(String email, String submissionId, SapsImage context) {
-		String subject = "TASK " + context.getTaskId() + " WITH SUBMISSION_ID " + submissionId
-				+ " ARCHIVED";
+		String subject = "TASK " + context.getTaskId() + " WITH SUBMISSION_ID " + submissionId + " ARCHIVED";
 
-		String message = "The task " + context.getTaskId() + " was ARCHIVED into swift.\n"
-				+ context.toString();
+		String message = "The task " + context.getTaskId() + " was ARCHIVED into swift.\n" + context.toString();
 
 		try {
-			GoogleMail.Send(properties.getProperty(NOREPLY_EMAIL),
-					properties.getProperty(NOREPLY_PASSWORD), email, subject, message);
+			GoogleMail.Send(properties.getProperty(NOREPLY_EMAIL), properties.getProperty(NOREPLY_PASSWORD), email,
+					subject, message);
 			return true;
 		} catch (AddressException e) {
 			LOGGER.error("Error while sending email to " + email, e);
@@ -103,8 +99,7 @@ public class WardenImpl implements Warden {
 
 	private void removeNonExistentWard(Ward ward) {
 		try {
-			dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(),
-					ward.getEmail());
+			dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(), ward.getEmail());
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
 		} catch (NullPointerException e) {
@@ -115,8 +110,7 @@ public class WardenImpl implements Warden {
 	protected void removeNotified(Collection<Ward> notified) {
 		try {
 			for (Ward ward : notified) {
-				dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(),
-						ward.getEmail());
+				dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(), ward.getEmail());
 			}
 		} catch (SQLException e) {
 			LOGGER.error("Error while accessing database", e);
@@ -126,13 +120,7 @@ public class WardenImpl implements Warden {
 	}
 
 	protected SapsImage getImageTask(String taskId) {
-		try {
-			return dbUtilsImpl.getTaskById(taskId);
-		} catch (SQLException e) {
-			LOGGER.error("Error while accessing database", e);
-		}
-
-		return null;
+		return dbUtilsImpl.getTaskById(taskId);
 	}
 
 	protected List<Ward> getPending() {
