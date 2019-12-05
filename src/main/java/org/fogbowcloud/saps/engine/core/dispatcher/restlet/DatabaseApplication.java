@@ -134,6 +134,10 @@ public class DatabaseApplication extends Application {
 			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY + " was not set");
 			return false;
 		}
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_FOLDER_PREFIX + " was not set");
+			return false;
+		}
 		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_AUTH_URL)) {
 			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_AUTH_URL + " was not set");
 			return false;
@@ -230,7 +234,7 @@ public class DatabaseApplication extends Application {
 	 * @return saps image with specific id
 	 * @throws SQLException
 	 */
-	public SapsImage getTask(String taskId) throws SQLException {
+	public SapsImage getTask(String taskId) {
 		return submissionDispatcher.getTaskById(taskId);
 	}
 
