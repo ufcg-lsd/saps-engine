@@ -16,8 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.Submission;
-import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -851,76 +849,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			this.connectionPool.close();
 		} catch (SQLException e) {
 			LOGGER.error("Error wile closing ConnectionPool", e);
-		}
-	}
-
-	private static final String SELECT_ALL_SUBMISSIONS_SQL = "SELECT " + SUBMISSION_ID_COL + " FROM "
-			+ USERS_NOTIFY_TABLE_NAME;
-
-	@Override
-	public List<Submission> getAllSubmissions() throws SQLException {
-		Statement statement = null;
-		Connection conn = null;
-		try {
-			conn = getConnection();
-			statement = conn.createStatement();
-			statement.setQueryTimeout(300);
-
-			statement.execute(SELECT_ALL_SUBMISSIONS_SQL);
-			ResultSet rs = statement.getResultSet();
-			List<Submission> allSubmissions = extractSubmissionFrom(rs);
-			return allSubmissions;
-		} finally {
-			close(statement, conn);
-		}
-	}
-
-	private List<Submission> extractSubmissionFrom(ResultSet rs) throws SQLException {
-		List<Submission> allSubmissions = new ArrayList<Submission>();
-
-		Submission previousSubmission = null;
-		while (rs.next()) {
-			if (previousSubmission == null) {
-				previousSubmission = new Submission(rs.getString(SUBMISSION_ID_COL));
-				previousSubmission.addTask(new Task(rs.getString(TASK_ID_COL)));
-			} else if (previousSubmission.getId().equals(rs.getString(SUBMISSION_ID_COL))) {
-				previousSubmission.addTask(new Task(rs.getString(TASK_ID_COL)));
-			} else if (!previousSubmission.getId().equals(rs.getString(SUBMISSION_ID_COL))) {
-				allSubmissions.add(previousSubmission);
-				previousSubmission = new Submission(rs.getString(SUBMISSION_ID_COL));
-				previousSubmission.addTask(new Task(rs.getString(TASK_ID_COL)));
-			}
-		}
-
-		return allSubmissions;
-	}
-
-	private static final String SELECT_SUBMISSION_SQL = "SELECT * FROM " + USERS_NOTIFY_TABLE_NAME + " WHERE "
-			+ SUBMISSION_ID_COL + " = ?";
-
-	@Override
-	public Submission getSubmission(String submissionId) throws SQLException {
-		PreparedStatement preparedStatement = null;
-		Connection connection = null;
-		try {
-			connection = getConnection();
-			preparedStatement = connection.prepareStatement(SELECT_SUBMISSION_SQL);
-			preparedStatement.setString(1, submissionId);
-			preparedStatement.setQueryTimeout(300);
-
-			preparedStatement.execute();
-			ResultSet rs = preparedStatement.getResultSet();
-			Submission submission = null;
-
-			while (rs.next()) {
-				if (submission == null) {
-					submission = new Submission(rs.getString(SUBMISSION_ID_COL));
-				}
-				submission.addTask(new Task(rs.getString(TASK_ID_COL), getTask(rs.getString(TASK_ID_COL))));
-			}
-			return submission;
-		} finally {
-			close(preparedStatement, connection);
 		}
 	}
 
