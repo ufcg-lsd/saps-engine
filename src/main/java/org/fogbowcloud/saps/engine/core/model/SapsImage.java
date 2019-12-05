@@ -16,11 +16,10 @@ public class SapsImage implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final DateFormat DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd");
 
+	public static final String NONE_FEDERATION_MEMBER = "None";
 	public static final String NONE_ARREBOL_JOB_ID = "-1";
 	public static final String AVAILABLE = "available";
 	public static final String UNAVAILABLE = "unavailable";
-	// FIXME it is necessary ? Review !
-	public static final String PURGED = "purged";
 
 	public static final String NON_EXISTENT_DATA = "NE";
 

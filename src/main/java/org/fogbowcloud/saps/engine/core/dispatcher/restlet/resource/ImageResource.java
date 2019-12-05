@@ -2,12 +2,9 @@ package org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource;
 
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.Submission;
-import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.json.JSONArray;
@@ -18,7 +15,6 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
-import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
@@ -37,13 +33,8 @@ public class ImageResource extends BaseResource {
 	private static final String PROCESSING_ALGORITHM_EXECUTION_TAG = "algorithmExecutionTag";
 	private static final String PRIORITY = "priority";
 	private static final String EMAIL = "email";
-	
 
 	private static final String ADD_IMAGES_MESSAGE_OK = "Tasks successfully added";
-	private static final String PURGE_MESSAGE_OK = "Tasks purged from database";
-	private static final String DAY = "day";
-	private static final String FORCE = "force";
-
 
 	public ImageResource() {
 		super();
@@ -52,8 +43,7 @@ public class ImageResource extends BaseResource {
 	@SuppressWarnings("unchecked")
 	@Get
 	public Representation getTasks() throws Exception {
-		Series<Header> series = (Series<Header>) getRequestAttributes()
-				.get("org.restlet.http.headers");
+		Series<Header> series = (Series<Header>) getRequestAttributes().get("org.restlet.http.headers");
 
 		String userEmail = series.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
 		String userPass = series.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
@@ -63,7 +53,6 @@ public class ImageResource extends BaseResource {
 		}
 
 		String taskId = (String) getRequest().getAttributes().get("taskId");
-
 
 		JSONArray tasksJSON;
 		if (taskId != null) {
@@ -129,84 +118,29 @@ public class ImageResource extends BaseResource {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "All dates must be informed.");
 		}
 
-		String inputGathering = form.getFirstValue(PROCESSING_INPUT_GATHERING_TAG);
-		if (inputGathering.isEmpty())
+		String inputdownloadingPhaseTag = form.getFirstValue(PROCESSING_INPUT_GATHERING_TAG);
+		if (inputdownloadingPhaseTag.isEmpty())
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Input Gathering must be informed.");
-		String inputPreprocessing = form.getFirstValue(PROCESSING_INPUT_PREPROCESSING_TAG);
-		if (inputPreprocessing.isEmpty())
+		String preprocessingPhaseTag = form.getFirstValue(PROCESSING_INPUT_PREPROCESSING_TAG);
+		if (preprocessingPhaseTag.isEmpty())
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Input Preprocessing must be informed.");
-		String algorithmExecution = form.getFirstValue(PROCESSING_ALGORITHM_EXECUTION_TAG);
-		if (algorithmExecution.isEmpty())
+		String processingPhaseTag = form.getFirstValue(PROCESSING_ALGORITHM_EXECUTION_TAG);
+		if (processingPhaseTag.isEmpty())
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Algorithm Execution must be informed.");
 		String priority = form.getFirstValue(PRIORITY);
 		String email = form.getFirstValue(EMAIL);
-		
-		String builder = "Creating new image process with configuration:\n" +
-				"\tLower Left: " + lowerLeftLatitude + ", " + lowerLeftLongitude + "\n" +
-				"\tUpper Right: " + upperRightLatitude + ", " + upperRightLongitude + "\n" +
-				"\tInterval: " + initDate + " - " + endDate + "\n" +
-				"\tGathering: " + inputGathering + "\n" +
-				"\tPreprocessing: " + inputPreprocessing + "\n" +
-				"\tAlgorithm: " + algorithmExecution + "\n" +
-				"\tPriority: " + priority + "\n" +
-				"\tEmail: " + email;
+
+		String builder = "Creating new image process with configuration:\n" + "\tLower Left: " + lowerLeftLatitude
+				+ ", " + lowerLeftLongitude + "\n" + "\tUpper Right: " + upperRightLatitude + ", " + upperRightLongitude
+				+ "\n" + "\tInterval: " + initDate + " - " + endDate + "\n" + "\tInputdownloading tag: "
+				+ inputdownloadingPhaseTag + "\n" + "\tPreprocessing tag: " + preprocessingPhaseTag + "\n"
+				+ "\tProcessing tag: " + processingPhaseTag + "\n" + "\tPriority: " + priority + "\n" + "\tEmail: "
+				+ email;
 		LOGGER.info(builder);
 
-		try {
-			List<Task> createdTasks = application.addTasks(
-					lowerLeftLatitude,
-					lowerLeftLongitude,
-					upperRightLatitude,
-					upperRightLongitude,
-					initDate,
-					endDate,
-					inputGathering,
-					inputPreprocessing,
-					algorithmExecution,
-					priority,
-					email
-			);
-			if (application.isUserNotifiable(userEmail)) {
-				Submission submission = new Submission(UUID.randomUUID().toString());
-				for (Task imageTask : createdTasks) {
-					application.addUserNotify(submission.getId(), imageTask.getId(), userEmail);
-				}
-			}
-		} catch (Exception e) {
-			LOGGER.debug(e.getMessage(), e);
-			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
-		}
+		application.addNewTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude, initDate,
+				endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag, priority, email);
 
 		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK, MediaType.TEXT_PLAIN);
-	}
-
-	@Delete
-	public StringRepresentation purgeTask(Representation entity) throws Exception {
-		Form form = new Form(entity);
-
-		String userEmail = form.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
-		String userPass = form.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
-
-		LOGGER.debug("DELETE with userEmail " + userEmail);
-
-		boolean mustBeAdmin = true;
-		if (!authenticateUser(userEmail, userPass, mustBeAdmin)) {
-			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
-		}
-
-		String day = form.getFirstValue(DAY);
-		String force = form.getFirstValue(FORCE);
-
-		LOGGER.debug("Purging tasks from day " + day);
-		DatabaseApplication application = (DatabaseApplication) getApplication();
-
-		try {
-			application.purgeImage(day, force);
-		} catch (Exception e) {
-			LOGGER.debug(e.getMessage(), e);
-			throw new ResourceException(HttpStatus.SC_BAD_REQUEST, e);
-		}
-
-		return new StringRepresentation(PURGE_MESSAGE_OK, MediaType.APPLICATION_JSON);
 	}
 }

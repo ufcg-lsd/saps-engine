@@ -11,7 +11,6 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcher;
-import org.fogbowcloud.saps.engine.core.dispatcher.Task;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.ImageResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.MainResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.ProcessedImagesResource;
@@ -20,6 +19,7 @@ import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.UserResource
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.restlet.Application;
 import org.restlet.Component;
@@ -40,26 +40,99 @@ public class DatabaseApplication extends Application {
 	private Component restletComponent;
 
 	public DatabaseApplication(Properties properties) throws Exception {
+		if (!checkProperties(properties))
+			throw new SapsException("Error on validate the file. Missing properties for start Database Application.");
+
 		this.properties = properties;
 		this.submissionDispatcher = new SubmissionDispatcher(properties);
 
-		// CORS configuration
 		CorsService cors = new CorsService();
 		cors.setAllowedOrigins(new HashSet<>(Collections.singletonList("*")));
 		cors.setAllowedCredentials(true);
 		getServices().add(cors);
 	}
 
-	public void startServer() throws Exception {
-		Properties properties = this.submissionDispatcher.getProperties();
-		if (!properties.containsKey(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT)) {
-			throw new IllegalArgumentException(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT
-					+ " is missing on properties.");
-		}
-		Integer restServerPort = Integer.valueOf(
-				(String) properties.get(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT));
+	/**
+	 * This function gets Scheduler properties
+	 * 
+	 * @return properties
+	 */
+	public Properties getProperties() {
+		return properties;
+	}
 
-		LOGGER.info("Starting service on port: " + restServerPort);
+	/**
+	 * This function sets Scheduler properties
+	 * 
+	 * @param properties new properties
+	 */
+	public void setProperties(Properties properties) {
+		this.properties = properties;
+	}
+
+	/**
+	 * This function gets submission dispatcher
+	 * 
+	 * @return submission dispatcher
+	 */
+	public SubmissionDispatcher getSubmissionDispatcher() {
+		return submissionDispatcher;
+	}
+
+	/**
+	 * This function sets submission dispatcher
+	 * 
+	 * @param submissionDispatcher new submission dispatcher
+	 */
+	public void setSubmissionDispatcher(SubmissionDispatcher submissionDispatcher) {
+		this.submissionDispatcher = submissionDispatcher;
+	}
+
+	/**
+	 * This function gets restlet component
+	 * 
+	 * @return restlet component
+	 */
+	public Component getRestletComponent() {
+		return restletComponent;
+	}
+
+	/**
+	 * This function sets restlet component
+	 * 
+	 * @param restletComponent new restlet component
+	 */
+	public void setRestletComponent(Component restletComponent) {
+		this.restletComponent = restletComponent;
+	}
+
+	/**
+	 * This function checks if the essential properties have been set.
+	 * 
+	 * @param properties saps properties to be check
+	 * @return boolean representation, true (case all properties been set) or false
+	 *         (otherwise)
+	 */
+	private boolean checkProperties(Properties properties) {
+		if (!properties.containsKey(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT + " was not set");
+			return false;
+		}
+
+		LOGGER.debug("All properties are set");
+		return true;
+	}
+
+	/**
+	 * Start Dispatcher component
+	 * 
+	 * @throws Exception
+	 */
+	public void start() throws Exception {
+		Integer restServerPort = Integer
+				.valueOf((String) properties.get(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT));
+
+		LOGGER.info("Starting service on port [ " + restServerPort + "]");
 
 		ConnectorService corsService = new ConnectorService();
 		this.getServices().add(corsService);
@@ -77,18 +150,15 @@ public class DatabaseApplication extends Application {
 	}
 
 	@Override
+	/**
+	 * This function define application routes
+	 */
 	public Restlet createInboundRoot() {
-		// TODO: change endpoints for new SAPS dashboard
 		Router router = new Router(getContext());
 		router.attach("/", MainResource.class);
 		router.attach("/ui/{requestPath}", MainResource.class);
-		router.attach(
-				"/static",
-				new Directory(
-						getContext(),
-						"file:///" + new File(DB_WEB_STATIC_ROOT).getAbsolutePath()
-				)
-		);
+		router.attach("/static",
+				new Directory(getContext(), "file:///" + new File(DB_WEB_STATIC_ROOT).getAbsolutePath()));
 		router.attach("/users", UserResource.class);
 		router.attach("/processings", ImageResource.class);
 		router.attach("/images/{imgName}", ImageResource.class);
@@ -99,65 +169,76 @@ public class DatabaseApplication extends Application {
 		return router;
 	}
 
+	/**
+	 * This function gets tasks list in Catalog.
+	 * 
+	 * @return tasks list
+	 * @throws SQLException
+	 * @throws ParseException
+	 */
 	public List<SapsImage> getTasks() throws SQLException, ParseException {
-		return submissionDispatcher.getTaskListInDB();
-	}
-	
-	public List<SapsImage> getTasksInState(ImageTaskState imageState) throws SQLException {
-		return this.submissionDispatcher.getTasksInState(imageState);
+		return submissionDispatcher.getAllTasks();
 	}
 
+	/**
+	 * This function gets tasks with specific state in Catalog.
+	 * 
+	 * @param state task state to be searched
+	 * @return tasks list with specific state
+	 * @throws SQLException
+	 */
+	public List<SapsImage> getTasksInState(ImageTaskState state) throws SQLException {
+		return this.submissionDispatcher.getTasksInState(state);
+	}
+
+	/**
+	 * This function get saps image with specific id in Catalog.
+	 * 
+	 * @param taskId task id to be searched
+	 * @return saps image with specific id
+	 * @throws SQLException
+	 */
 	public SapsImage getTask(String taskId) throws SQLException {
-		return submissionDispatcher.getTaskInDB(taskId);
+		return submissionDispatcher.getTaskById(taskId);
 	}
 
-	public List<Task> addTasks(
-			String lowerLeftLatitude,
-			String lowerLeftLongitude,
-			String upperRightLatitude,
-			String upperRightLongitude,
-			Date initDate,
-			Date endDate,
-			String inputGathering,
-			String inputPreprocessing,
-			String algorithmExecution,
-			String priority,
-			String email) {
-		return submissionDispatcher.fillDB(
-				lowerLeftLatitude,
-				lowerLeftLongitude,
-				upperRightLatitude,
-				upperRightLongitude,
-				initDate,
-				endDate,
-				inputGathering,
-				inputPreprocessing,
-				algorithmExecution,
-				priority,
-				email
-		);
+	/**
+	 * This function add new tasks in Catalog.
+	 * 
+	 * @param lowerLeftLatitude        lower left latitude (coordinate)
+	 * @param lowerLeftLongitude       lower left longitude (coordinate)
+	 * @param upperRightLatitude       upper right latitude (coordinate)
+	 * @param upperRightLongitude      upper right longitude (coordinate)
+	 * @param initDate                 initial date
+	 * @param endDate                  end date
+	 * @param inputdownloadingPhaseTag inputdownloading phase tag
+	 * @param preprocessingPhaseTag    preprocessing phase tag
+	 * @param processingPhaseTag       processing phase tag
+	 * @param priority                 priority of new tasks
+	 * @param email                    user email
+	 */
+	public void addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
+			String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
+			String preprocessingPhaseTag, String processingPhaseTag, String priority, String email) {
+		submissionDispatcher.addNewTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude,
+				initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag,
+				Integer.parseInt(priority), email);
 	}
 
-	public void purgeImage(String day, String force) throws SQLException, ParseException {
-		boolean forceValue;
-
-		if (force.equals("yes")) {
-			forceValue = true;
-		} else {
-			forceValue = false;
-		}
-
-		submissionDispatcher.setTasksToPurge(day, forceValue);
-	}
-
-	public void createUser(String userEmail, String userName, String userPass, boolean userState,
-			boolean userNotify, boolean adminRole) throws SQLException {
-		submissionDispatcher.addUserInDB(userEmail, userName, userPass, userState, userNotify,
-				adminRole);
-	}
-
-	public void updateUserState(String userEmail, boolean userState) throws SQLException {
-		submissionDispatcher.updateUserState(userEmail, userState);
+	/**
+	 * This function add new user in Catalog.
+	 * 
+	 * @param userEmail  user email
+	 * @param userName   user name
+	 * @param userPass   user password
+	 * @param userState  user state
+	 * @param userNotify user notify
+	 * @param adminRole  administrator role
+	 * @throws SQLException
+	 */
+	public void createUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
+			boolean adminRole) throws SQLException {
+		submissionDispatcher.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
 	}
 
 	public void addUserNotify(String submissionId, String taskId, String userEmail) throws SQLException {
@@ -168,34 +249,37 @@ public class DatabaseApplication extends Application {
 		return submissionDispatcher.isUserNotifiable(userEmail);
 	}
 
+	/**
+	 * This function gets user information in Catalog.
+	 * 
+	 * @param userEmail user email
+	 * @return saps user
+	 */
 	public SapsUser getUser(String userEmail) {
 		return submissionDispatcher.getUser(userEmail);
 	}
 
-	public Properties getProperties() {
-		return properties;
-	}
-
-	public List<SapsImage> searchProcessedTasks(
-			String lowerLeftLatitude,
-			String lowerLeftLongitude,
-			String upperRightLatitude,
-			String upperRightLongitude,
-			Date initDate,
-			Date endDate,
-			String inputPreprocessing,
-			String inputGathering,
-			String algorithmExecution) {
-		return submissionDispatcher.searchProcessedTasks(
-			lowerLeftLatitude,
-			lowerLeftLongitude,
-			upperRightLatitude,
-			upperRightLongitude,
-			initDate,
-			endDate,
-			inputPreprocessing,
-			inputGathering,
-			algorithmExecution
-		);
+	/**
+	 * This function search all processed tasks from area (between latitude and
+	 * longitude coordinates) between initial date and end date with
+	 * inputdownloading, preprocessing and processing tags.
+	 * 
+	 * @param lowerLeftLatitude        lower left latitude (coordinate)
+	 * @param lowerLeftLongitude       lower left longitude (coordinate)
+	 * @param upperRightLatitude       upper right latitude (coordinate)
+	 * @param upperRightLongitude      upper right longitude (coordinate)
+	 * @param initDate                 initial date
+	 * @param endDate                  end date
+	 * @param inputdownloadingPhaseTag inputdownloading phase tag
+	 * @param preprocessingPhaseTag    preprocessing phase tag
+	 * @param processingPhaseTag       processing phase tag
+	 * @return processed tasks list following description
+	 */
+	public List<SapsImage> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
+			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
+			String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
+		return submissionDispatcher.searchProcessedTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+				upperRightLongitude, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
+				processingPhaseTag);
 	}
 }

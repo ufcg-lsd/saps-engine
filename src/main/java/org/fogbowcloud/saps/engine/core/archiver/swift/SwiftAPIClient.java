@@ -147,35 +147,19 @@ public class SwiftAPIClient {
 		}
 	}
 
-	public void deleteFile(String containerName, String pseudFolder, String fileName) {
-		// TODO: test JUnit
-		LOGGER.debug("fileName " + fileName);
-		LOGGER.debug("containerName " + containerName);
-
-		String completeFileName;
-		if (pseudFolder != null && !pseudFolder.isEmpty()) {
-			pseudFolder = this.normalizePseudFolder(pseudFolder);
-			LOGGER.debug("Pseudo folder " + pseudFolder + " after normalize");
-
-			completeFileName = pseudFolder + fileName;
-		} else {
-			completeFileName = fileName;
-		}
-
-		LOGGER.debug("Deleting " + completeFileName + " from " + containerName);
+	public void deleteFile(String containerName, String filePath) {
+		LOGGER.debug("Deleting " + filePath + " from " + containerName);
 		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
-				"delete", containerName, completeFileName);
+				"delete", containerName, filePath);
 
 		try {
 			Process p = builder.start();
 			p.waitFor();
-		} catch (IOException e) {
-			LOGGER.error("Error while deleting file " + completeFileName + " from container " + containerName, e);
-		} catch (InterruptedException e) {
-			LOGGER.error("Error while deleting file " + completeFileName + " from container " + containerName, e);
+		} catch (IOException | InterruptedException e) {
+			LOGGER.error("Error while deleting " + filePath + " from container " + containerName, e);
 		}
 
-		LOGGER.debug("Object " + completeFileName + " deleted successfully from " + containerName);
+		LOGGER.debug(filePath + " file deleted successfully from " + containerName);
 	}
 
 	protected int numberOfFilesInContainer(String containerName) {

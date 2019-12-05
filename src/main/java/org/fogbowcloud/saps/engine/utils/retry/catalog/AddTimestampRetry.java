@@ -5,12 +5,12 @@ import java.sql.SQLException;
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
-public class UpdateTimestampRetry implements CatalogRetry<Void>{
+public class AddTimestampRetry implements CatalogRetry<Void>{
 
 	private ImageDataStore imageStore;
 	private SapsImage task;
 
-	public UpdateTimestampRetry(ImageDataStore imageStore, SapsImage task) {
+	public AddTimestampRetry(ImageDataStore imageStore, SapsImage task) {
 		this.imageStore = imageStore;
 		this.task = task;
 	}

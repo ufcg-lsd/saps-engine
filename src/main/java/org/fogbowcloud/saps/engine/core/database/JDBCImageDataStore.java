@@ -254,12 +254,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	@Override
-	public SapsImage addImageTask(String taskId, String dataset, String region, Date date, String downloadLink,
-			int priority, String user, String inputGathering, String inputPreprocessing, String algorithmExecution)
-			throws SQLException {
+	public SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
+			String inputGathering, String inputPreprocessing, String algorithmExecution) throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
 		SapsImage task = new SapsImage(taskId, dataset, region, date, ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NON_EXISTENT_DATA, priority, user, inputGathering,
+				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, priority, user, inputGathering,
 				inputPreprocessing, algorithmExecution, now, now, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA);
 		addImageTask(task);
 		return task;
@@ -371,41 +370,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(2, nfsSshPort);
 			insertStatement.setString(3, nfsPort);
 			insertStatement.setString(4, federationMember);
-			insertStatement.setQueryTimeout(300);
-
-			insertStatement.execute();
-		} finally {
-			close(insertStatement, connection);
-		}
-	}
-
-	private static final String INSERT_METADATA_INFO_SQL = "INSERT INTO " + PROVENANCE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-	@Override
-	public void dispatchMetadataInfo(String taskId) throws SQLException {
-		LOGGER.info("Dispatching metadata info for " + taskId + " in Catalogue");
-		if (taskId == null || taskId.isEmpty()) {
-			throw new IllegalArgumentException("Invalid taskId " + taskId);
-		}
-
-		PreparedStatement insertStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			insertStatement = connection.prepareStatement(INSERT_METADATA_INFO_SQL);
-			insertStatement.setString(1, taskId);
-			insertStatement.setString(2, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(3, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(4, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(5, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(6, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(7, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(8, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(9, SapsImage.NON_EXISTENT_DATA);
-			insertStatement.setString(10, SapsImage.NON_EXISTENT_DATA);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -1160,33 +1124,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 	@Override
 	public List<SapsImage> getIn(ImageTaskState state) throws SQLException {
 		return getIn(state, UNLIMITED);
-	}
-
-	private static final String SELECT_PURGED_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE "
-			+ IMAGE_STATUS_COL + " = ? ORDER BY " + PRIORITY_COL + ", " + TASK_ID_COL;
-
-	@Override
-	public List<SapsImage> getPurgedTasks() throws SQLException {
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			selectStatement = connection.prepareStatement(SELECT_PURGED_IMAGES_SQL);
-			selectStatement.setString(1, SapsImage.PURGED);
-			selectStatement.setQueryTimeout(300);
-
-			selectStatement.execute();
-
-			ResultSet rs = selectStatement.getResultSet();
-			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
-			rs.close();
-			return imageDatas;
-		} finally {
-			close(selectStatement, connection);
-		}
-
 	}
 
 	private static final String UPDATE_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME + " SET " + STATE_COL

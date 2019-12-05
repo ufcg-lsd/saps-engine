@@ -184,14 +184,15 @@ public class Archiver {
 				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] to failed state");
 
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 	}
 
 	/**
 	 * This function delete pending files from task in Swift.
 	 * 
 	 * @param task task with files information to be deleted
-	 * @return boolean representation, success (true) or failure (false) to delete files 
+	 * @return boolean representation, success (true) or failure (false) to delete
+	 *         files
 	 * @throws Exception
 	 */
 	private boolean deletePendingFilesFromSwift(SapsImage task) throws Exception {
@@ -200,22 +201,15 @@ public class Archiver {
 
 		LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
 
-		List<String> fileNames = swiftAPIClient.listFilesInContainer(containerName);
+		String prefix = properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX) + File.separator + taskId;
+
+		List<String> fileNames = swiftAPIClient.listFilesWithPrefix(containerName, prefix);
 
 		LOGGER.info("Files List: " + fileNames);
 
 		for (String file : fileNames) {
-			if (file.contains(".TIF") || file.contains("MTL") || file.contains(".tar.gz") || file.contains(".nc")
-					|| file.contains(".csv") || file.contains(".tif")) {
-				LOGGER.debug("Trying to delete file " + file + " from " + containerName);
-				String inputdownloadingSwiftTaskFolder = taskId + File.separator + "inputdownloading";
-				String preprocessingSwiftTaskFolder = taskId + File.separator + "preprocessing";
-				String processingSwiftTaskFolder = taskId + File.separator + "processing";
-
-				swiftAPIClient.deleteFile(containerName, inputdownloadingSwiftTaskFolder, file);
-				swiftAPIClient.deleteFile(containerName, preprocessingSwiftTaskFolder, file);
-				swiftAPIClient.deleteFile(containerName, processingSwiftTaskFolder, file);
-			}
+			LOGGER.debug("Trying to delete file " + file + " from " + containerName);
+			swiftAPIClient.deleteFile(containerName, file);
 		}
 
 		return true;
@@ -285,7 +279,7 @@ public class Archiver {
 				SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] with state [" + ImageTaskState.ARCHIVING.getValue() + "]");
 
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 
 		LOGGER.info("Task [" + taskId + "] ready to archive");
 		return true;
@@ -351,7 +345,7 @@ public class Archiver {
 		updateStateInCatalog(task, ImageTaskState.ARCHIVED, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
 				SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] with state [" + ImageTaskState.ARCHIVED.getValue() + "]");
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 		deleteAllTaskFilesFromDisk(task);
 	}
 
@@ -361,7 +355,14 @@ public class Archiver {
 	 * @param task task to be finished
 	 */
 	private void failedArchive(SapsImage task) {
+		String taskId = task.getTaskId();
+
 		deleteAllTaskFilesFromDisk(task);
+
+		updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
+				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
+				"updates task [" + taskId + "] to failed state");
+		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 	}
 
 	/**
@@ -409,14 +410,13 @@ public class Archiver {
 	}
 
 	/**
-	 * This function updates task time stamp and insert new tuple in time stamp
-	 * table.
+	 * This function add new tuple in time stamp table and updates task time stamp.
 	 * 
 	 * @param task    task to be update
 	 * @param message information message
 	 */
-	private void updateTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.updateTimestampTask(imageStore, task, message);
+	private void addTimestampTaskInCatalog(SapsImage task, String message) {
+		CatalogUtils.addTimestampTask(imageStore, task, message);
 	}
 
 	/**
@@ -450,18 +450,11 @@ public class Archiver {
 			return false;
 		}
 
-		String taskId = task.getTaskId();
-
 		for (int itry = 0; itry < MAX_ARCHIVE_TRIES; itry++) {
 			if (uploadFilesToSwift(task, localFileDir, swiftDir))
 				return true;
-
 		}
 
-		updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
-				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
-				"updates task [" + taskId + "] to failed state");
-		updateTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 		return false;
 	}
 

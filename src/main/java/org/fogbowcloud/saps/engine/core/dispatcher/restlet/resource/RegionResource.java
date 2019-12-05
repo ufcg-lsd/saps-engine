@@ -40,9 +40,8 @@ public class RegionResource extends BaseResource {
 	@SuppressWarnings("unchecked")
 	@Get
 	public Representation getNumberImagesProcessedByRegion() throws SQLException {
-		
-		Series<Header> series = (Series<Header>) getRequestAttributes()
-				.get("org.restlet.http.headers");
+
+		Series<Header> series = (Series<Header>) getRequestAttributes().get("org.restlet.http.headers");
 
 		String userEmail = series.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
 		String userPass = series.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
@@ -50,7 +49,7 @@ public class RegionResource extends BaseResource {
 		if (!authenticateUser(userEmail, userPass)) {
 			throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 		}
-		
+
 		List<SapsImage> imageTasks = this.application.getTasksInState(ImageTaskState.ARCHIVED);
 
 		Map<String, Integer> regionsFrequency = new HashMap<>();
@@ -74,8 +73,7 @@ public class RegionResource extends BaseResource {
 			LOGGER.error("Error while trying creating JSONObject");
 		}
 
-		return new StringRepresentation(result.toString(),
-				MediaType.APPLICATION_JSON);
+		return new StringRepresentation(result.toString(), MediaType.APPLICATION_JSON);
 	}
 
 	@Post
@@ -120,29 +118,18 @@ public class RegionResource extends BaseResource {
 		if (algorithmExecution.isEmpty())
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Algorithm Execution must be informed.");
 
-		String builder = "Recovering processed images with settings:\n" +
-				"\tLower Left: " + lowerLeftLatitude + ", " + lowerLeftLongitude + "\n" +
-				"\tUpper Right: " + upperRightLatitude + ", " + upperRightLongitude + "\n" +
-				"\tInterval: " + initDate + " - " + endDate + "\n" +
-				"\tGathering: " + inputGathering + "\n" +
-				"\tPreprocessing: " + inputPreprocessing + "\n" +
-				"\tAlgorithm: " + algorithmExecution + "\n";
+		String builder = "Recovering processed images with settings:\n" + "\tLower Left: " + lowerLeftLatitude + ", "
+				+ lowerLeftLongitude + "\n" + "\tUpper Right: " + upperRightLatitude + ", " + upperRightLongitude + "\n"
+				+ "\tInterval: " + initDate + " - " + endDate + "\n" + "\tGathering: " + inputGathering + "\n"
+				+ "\tPreprocessing: " + inputPreprocessing + "\n" + "\tAlgorithm: " + algorithmExecution + "\n";
 		LOGGER.info(builder);
 
 		// TODO uncomment when USGS comes back up
-		List<SapsImage> tasks = application.searchProcessedTasks(
-				lowerLeftLatitude,
-				lowerLeftLongitude,
-				upperRightLatitude,
-				upperRightLongitude,
-				initDate,
-				endDate,
-				inputPreprocessing,
-				inputGathering,
-				algorithmExecution
-		);
+		List<SapsImage> tasks = application.searchProcessedTasks(lowerLeftLatitude, lowerLeftLongitude,
+				upperRightLatitude, upperRightLongitude, initDate, endDate, inputPreprocessing, inputGathering,
+				algorithmExecution);
 		JSONArray arr = new JSONArray();
-		for (SapsImage task: tasks) {
+		for (SapsImage task : tasks) {
 			try {
 				arr.put(task.toJSON());
 			} catch (JSONException e) {
