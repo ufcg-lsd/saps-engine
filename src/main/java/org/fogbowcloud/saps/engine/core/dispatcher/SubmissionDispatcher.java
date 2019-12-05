@@ -352,7 +352,7 @@ public class SubmissionDispatcher {
 	 * @return SAPS image with id
 	 * @throws SQLException
 	 */
-	public SapsImage getTaskById(String taskId) throws SQLException {
+	public SapsImage getTaskById(String taskId) {
 		return getTaskByIdInCatalog(taskId);
 	}
 
