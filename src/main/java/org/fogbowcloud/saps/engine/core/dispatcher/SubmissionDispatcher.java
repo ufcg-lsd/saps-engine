@@ -397,7 +397,7 @@ public class SubmissionDispatcher {
 				preprocessingPhaseTag, processingPhaseTag,
 				"gets all processed tasks with region [" + region + "], inputdownloading tag ["
 						+ inputdownloadingPhaseTag + "], preprocessing tag [" + preprocessingPhaseTag
-						+ ", processing tag [" + processingPhaseTag + " beetwen " + initDate + " and " + endDate);
+						+ "], processing tag [" + processingPhaseTag + "] beetwen " + initDate + " and " + endDate);
 	}
 
 	/**
