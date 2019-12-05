@@ -24,7 +24,7 @@ public class SubmissionDispatcherMain {
         properties.load(input);
 
         DatabaseApplication databaseApplication = new DatabaseApplication(properties);
-        databaseApplication.start();
+        databaseApplication.startServer();
 
         String userEmail = properties.getProperty(ADMIN_EMAIL);
         SapsUser user = databaseApplication.getUser(userEmail);

@@ -128,7 +128,7 @@ public class DatabaseApplication extends Application {
 	 * 
 	 * @throws Exception
 	 */
-	public void start() throws Exception {
+	public void startServer() throws Exception {
 		Integer restServerPort = Integer
 				.valueOf((String) properties.get(SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT));
 
