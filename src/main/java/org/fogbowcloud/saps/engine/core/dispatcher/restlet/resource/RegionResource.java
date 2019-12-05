@@ -108,26 +108,27 @@ public class RegionResource extends BaseResource {
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "All dates must be informed.");
 		}
 
-		String inputGathering = form.getFirstValue(PROCESSING_INPUT_GATHERING_TAG);
-		if (inputGathering.isEmpty())
+		String inputdownloadingPhaseTag = form.getFirstValue(PROCESSING_INPUT_GATHERING_TAG);
+		if (inputdownloadingPhaseTag.isEmpty())
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Input Gathering must be informed.");
-		String inputPreprocessing = form.getFirstValue(PROCESSING_INPUT_PREPROCESSING_TAG);
-		if (inputPreprocessing.isEmpty())
+		String preprocessingPhaseTag = form.getFirstValue(PROCESSING_INPUT_PREPROCESSING_TAG);
+		if (preprocessingPhaseTag.isEmpty())
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Input Preprocessing must be informed.");
-		String algorithmExecution = form.getFirstValue(PROCESSING_ALGORITHM_EXECUTION_TAG);
-		if (algorithmExecution.isEmpty())
+		String processingPhaseTag = form.getFirstValue(PROCESSING_ALGORITHM_EXECUTION_TAG);
+		if (processingPhaseTag.isEmpty())
 			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, "Algorithm Execution must be informed.");
 
 		String builder = "Recovering processed images with settings:\n" + "\tLower Left: " + lowerLeftLatitude + ", "
 				+ lowerLeftLongitude + "\n" + "\tUpper Right: " + upperRightLatitude + ", " + upperRightLongitude + "\n"
-				+ "\tInterval: " + initDate + " - " + endDate + "\n" + "\tGathering: " + inputGathering + "\n"
-				+ "\tPreprocessing: " + inputPreprocessing + "\n" + "\tAlgorithm: " + algorithmExecution + "\n";
+				+ "\tInterval: " + initDate + " - " + endDate + "\n" + "\tInputdownloading Tag: "
+				+ inputdownloadingPhaseTag + "\n" + "\tPreprocessing tag: " + preprocessingPhaseTag + "\n"
+				+ "\tProcessing tag: " + processingPhaseTag + "\n";
 		LOGGER.info(builder);
 
 		// TODO uncomment when USGS comes back up
 		List<SapsImage> tasks = application.searchProcessedTasks(lowerLeftLatitude, lowerLeftLongitude,
-				upperRightLatitude, upperRightLongitude, initDate, endDate, inputPreprocessing, inputGathering,
-				algorithmExecution);
+				upperRightLatitude, upperRightLongitude, initDate, endDate, inputdownloadingPhaseTag,
+				preprocessingPhaseTag, processingPhaseTag);
 		JSONArray arr = new JSONArray();
 		for (SapsImage task : tasks) {
 			try {
