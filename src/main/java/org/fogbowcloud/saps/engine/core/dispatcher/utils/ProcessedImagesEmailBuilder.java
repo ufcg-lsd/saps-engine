@@ -28,7 +28,6 @@ import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
-import java.sql.SQLException;
 import java.util.*;
 
 public class ProcessedImagesEmailBuilder implements Runnable {
@@ -49,7 +48,9 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	private static final String IMAGE_DATE = "imageDate";
 	private static final String NAME = "name";
 	private static final String URL = "url";
-	private static final String FILES = "files";
+	private static final String INPUTDOWNLOADING = "inputdownloading";
+	private static final String PREPROCESSING = "preprocessing";
+	private static final String PROCESSING = "processing";
 	private static final String STATUS = "status";
 
 	private DatabaseApplication application;
@@ -84,22 +85,10 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		JSONArray tasklist = new JSONArray();
 		for (String str : images) {
 			try {
-				tasklist.put(generateTaskEmailJson(properties, str));
+				tasklist.put(generateTaskEmailJson(str));
 			} catch (IOException | URISyntaxException | IllegalArgumentException e) {
 				LOGGER.error("Failed to fetch image from object store.", e);
 				errorBuilder.append("Failed to fetch image from object store.").append("\n")
-						.append(ExceptionUtils.getStackTrace(e)).append("\n");
-				try {
-					JSONObject task = new JSONObject();
-					task.put(TASK_ID, str);
-					task.put(STATUS, UNAVAILABLE);
-					tasklist.put(task);
-				} catch (JSONException e1) {
-					LOGGER.error("Failed to create UNAVAILABLE task json.", e);
-				}
-			} catch (SQLException e) {
-				LOGGER.error("Failed to fetch image from database.", e);
-				errorBuilder.append("Failed to fetch image from database.").append("\n")
 						.append(ExceptionUtils.getStackTrace(e)).append("\n");
 				try {
 					JSONObject task = new JSONObject();
@@ -171,7 +160,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return toHexString(mac.doFinal(data.getBytes()));
 	}
 
-	String generateTempURL(String swiftPath, String container, String filePath, String key)
+	private String generateTempURL(String swiftPath, String container, String filePath, String key)
 			throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
 		String path = swiftPath + "/" + container + "/" + filePath;
 
@@ -188,88 +177,108 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return res;
 	}
 
-	JSONObject generateTaskEmailJson(Properties properties, String taskId)
-			throws URISyntaxException, IOException, SQLException, JSONException {
-		JSONObject result = new JSONObject();
-
-		String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
-		String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
-		String objectStoreContainer = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER);
-		String objectStoreKey = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY);
-
+	public JSONObject generateTaskEmailJson(String taskId) throws URISyntaxException, IOException, JSONException {
 		SapsImage task = application.getTask(taskId);
-
 		LOGGER.info("Task [" + taskId + "] : " + task);
 
-		List<String> files = getTaskFilesFromObjectStore(properties, objectStoreHost, objectStorePath,
-				objectStoreContainer, task);
+		LOGGER.info("Creating JSON representation for task [" + taskId + "]");
+
+		JSONObject result = new JSONObject();
 
 		result.put(TASK_ID, task.getTaskId());
 		result.put(REGION, task.getRegion());
 		result.put(COLLECTION_TIER_NAME, task.getCollectionTierName());
 		result.put(IMAGE_DATE, task.getImageDate());
 
-		JSONArray filelist = new JSONArray();
+		prepareTaskFolder(result, task, INPUTDOWNLOADING);
+		prepareTaskFolder(result, task, PREPROCESSING);
+		prepareTaskFolder(result, task, PROCESSING);
+
+		return result;
+	}
+
+	private void prepareTaskFolder(JSONObject result, SapsImage task, String folder)
+			throws URISyntaxException, IOException, JSONException {
+
+		String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
+		String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
+		String objectStoreContainer = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER);
+		String objectStoreKey = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY);
+		String swiftPrefixFolder = properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX);
+
+		List<String> files = getTaskFilesFromObjectStore(objectStoreHost, objectStorePath, objectStoreContainer,
+				swiftPrefixFolder, folder, task);
+
+		JSONArray folderFileList = new JSONArray();
 		for (String str : files) {
 			File f = new File(str);
 			String fileName = f.getName();
 			try {
-				JSONObject fileobject = new JSONObject();
-				fileobject.put(NAME, fileName);
-				fileobject.put(URL,
+				JSONObject fileObject = new JSONObject();
+				fileObject.put(NAME, fileName);
+				fileObject.put(URL,
 						"https://" + objectStoreHost
 								+ generateTempURL(objectStorePath, objectStoreContainer, str, objectStoreKey)
 								+ "&filename=" + fileName);
-				filelist.put(fileobject);
+				folderFileList.put(fileObject);
 			} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
 				LOGGER.error("Failed to generate download link for file " + str, e);
 				try {
-					JSONObject fileobject = new JSONObject();
-					fileobject.put(NAME, fileName);
-					fileobject.put(URL, UNAVAILABLE);
-					filelist.put(fileobject);
+					JSONObject fileObject = new JSONObject();
+					fileObject.put(NAME, fileName);
+					fileObject.put(URL, UNAVAILABLE);
+					folderFileList.put(fileObject);
 				} catch (JSONException e1) {
 					LOGGER.error("Failed to create UNAVAILABLE temp url json.", e);
 				}
 			}
 		}
-		result.put(FILES, filelist);
+		result.put(folder, folderFileList);
 
-		return result;
 	}
 
-	List<String> getTaskFilesFromObjectStore(Properties properties, String objectStoreHost, String objectStorePath,
-			String objectStoreContainer, SapsImage task) throws URISyntaxException, IOException {
-		Token token = getKeystoneToken(properties);
+	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
+			String objectStoreContainer, String swiftPrefixFolder, String taskFolder, SapsImage task)
+			throws URISyntaxException, IOException {
+		Token token = getKeystoneToken();
 
 		HttpClient client = HttpClients.createDefault();
-		HttpGet httpget = prepObjectStoreRequest(objectStoreHost, objectStorePath, objectStoreContainer, task, token);
+		HttpGet httpget = prepObjectStoreRequest(objectStoreHost, objectStorePath, objectStoreContainer,
+				swiftPrefixFolder, taskFolder, task, token);
 		HttpResponse response = client.execute(httpget);
 
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
 	}
 
-	private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer,
-			SapsImage task, Token token) throws URISyntaxException {
-		LOGGER.info("Build URI: objectStorehost [" + objectStoreHost + "], objectStorePath [" + objectStorePath
-				+ "], objectStoreContainer [" + objectStoreContainer + "], token [" + token + "] and task [" + task
-				+ "]");
-		URI uri = new URIBuilder().setScheme("https").setHost(objectStoreHost)
-				.setPath(objectStorePath + "/" + objectStoreContainer)
-				.addParameter("path", "archiver/" + task.getTaskId() + "/processing/").build();
-		LOGGER.debug("Getting list of files for task [" + task.getTaskId() + "] from " + uri);
-		HttpGet httpget = new HttpGet(uri);
-		httpget.addHeader("X-Auth-Token", token.getAccessId());
-		return httpget;
-	}
-
-	private Token getKeystoneToken(Properties properties) {
+	private Token getKeystoneToken() {
 		KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin(properties);
+
 		Map<String, String> credentials = new HashMap<>();
 		credentials.put(AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
 		credentials.put(PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
 		credentials.put(USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
 		credentials.put(PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
+
 		return keystone.createToken(credentials);
+	}
+
+	private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer,
+			String swiftPrefixFolder, String taskFolder, SapsImage task, Token token) throws URISyntaxException {
+		String uriParameter = swiftPrefixFolder + File.separator + task.getTaskId() + File.separator + taskFolder
+				+ File.separator;
+
+		LOGGER.info("Build URI: objectStorehost [" + objectStoreHost + "], objectStorePath [" + objectStorePath
+				+ "], objectStoreContainer [" + objectStoreContainer + "], parameter [" + uriParameter + "] token ["
+				+ token + "] and task [" + task + "]");
+
+		URI uri = new URIBuilder().setScheme("https").setHost(objectStoreHost)
+				.setPath(objectStorePath + "/" + objectStoreContainer).addParameter("path", uriParameter).build();
+
+		LOGGER.info("Getting list of files for task [" + task.getTaskId() + "] from " + uri);
+
+		HttpGet httpget = new HttpGet(uri);
+		httpget.addHeader("X-Auth-Token", token.getAccessId());
+
+		return httpget;
 	}
 }
