@@ -11,14 +11,16 @@ import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSl
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 
-public class DefaultArrebol implements Arrebol{
+public class DefaultArrebol implements Arrebol {
+
+	private static final int ARREBOL_MAX_WAITING_JOBS = 20;
 	
 	private final ArrebolRequestsHelper arrebolRequestHelper;
-	//private final Properties properties;
+	// private final Properties properties;
 	private List<JobSubmitted> submittedJobID;
 
-	public DefaultArrebol(Properties properties)  {
-		//this.properties = properties;
+	public DefaultArrebol(Properties properties) {
+		// this.properties = properties;
 		this.arrebolRequestHelper = new ArrebolRequestsHelper(properties);
 		this.submittedJobID = new LinkedList<JobSubmitted>();
 	}
@@ -29,44 +31,44 @@ public class DefaultArrebol implements Arrebol{
 	}
 
 	@Override
-	public void removeJob(JobSubmitted job){
+	public void removeJob(JobSubmitted job) {
 		submittedJobID.remove(job);
 	}
-	
+
 	@Override
-	public void addJobInList(JobSubmitted newJob){
+	public void addJobInList(JobSubmitted newJob) {
 		submittedJobID.add(newJob);
 	}
-	
+
 	@Override
 	public void populateJobList(List<SapsImage> taskList) {
-		for(SapsImage task : taskList) 
+		for (SapsImage task : taskList)
 			submittedJobID.add(new JobSubmitted(task.getArrebolJobId(), task));
 	}
 
 	@Override
-	public List<JobSubmitted> returnAllJobsSubmitted(){
+	public List<JobSubmitted> returnAllJobsSubmitted() {
 		return submittedJobID;
 	}
 
 	@Override
-	public JobResponseDTO checkStatusJobById(String jobId) throws GetJobException{
+	public JobResponseDTO checkStatusJobById(String jobId) throws GetJobException {
 		return arrebolRequestHelper.getJob(jobId);
 	}
-	
-	//TODO implement method
-	public List<JobResponseDTO> checkStatusJobByName(String JobName) throws GetJobException{
+
+	// TODO implement method
+	public List<JobResponseDTO> checkStatusJobByName(String JobName) throws GetJobException {
 		return null;
-		//return arrebolRequestHelper.getJobByName(jobName);
+		// return arrebolRequestHelper.getJobByName(jobName);
 	}
 
 	@Override
-	public String checkStatusJobString(String jobId) throws GetJobException{
+	public String checkStatusJobString(String jobId) throws GetJobException {
 		return arrebolRequestHelper.getJobJSON(jobId);
 	}
 
 	@Override
 	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException {
-		return arrebolRequestHelper.getCountSlotsInQueue(queueId);
+		return ARREBOL_MAX_WAITING_JOBS - arrebolRequestHelper.getCountSlotsInQueue(queueId);
 	}
 }
