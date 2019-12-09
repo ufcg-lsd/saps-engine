@@ -1,7 +1,6 @@
 package org.fogbowcloud.saps.engine.core.dispatcher;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.*;
@@ -131,25 +130,39 @@ public class SubmissionDispatcher {
 		return false;
 	}
 
-	private static String getRegionIds(String latitude, String longitude) throws IOException, InterruptedException {
+	/**
+	 * This function calling get_wrs (Python script) passing latitude and longitude
+	 * as paramater.
+	 * 
+	 * @param latitude  latitude (point coordinate)
+	 * @param longitude longitude (point coordinate)
+	 * @return scene path/row from latitude and longitude coordinates
+	 * @throws Exception
+	 */
+	private static String getRegionIds(String latitude, String longitude) throws Exception {
 
 		LOGGER.debug("Calling get_wrs.py and passing (" + latitude + ", " + longitude + ") as parameter");
-		Process processBuildScript = new ProcessBuilder("python", "./scripts/get_wrs.py", latitude, longitude).start();
+		Process builder = new ProcessBuilder("python", "./scripts/get_wrs.py", latitude, longitude).start();
 
-		LOGGER.debug("Waiting for the process...");
-		processBuildScript.waitFor();
+		LOGGER.debug("Waiting for the process for execute command [" + builder.toString() + "] ...");
+		builder.waitFor();
 		LOGGER.debug("Process ended.");
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(processBuildScript.getInputStream()));
-		StringBuilder builder = new StringBuilder();
+		String result = null;
+
+		if (builder.exitValue() != 0)
+			throw new Exception("Process output exit code: " + builder.exitValue());
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(builder.getInputStream()));
+		StringBuilder builderS = new StringBuilder();
 
 		String line;
 		while ((line = reader.readLine()) != null) {
-			builder.append(line);
-			builder.append(System.getProperty("line.separator"));
+			builderS.append(line);
+			builderS.append(System.getProperty("line.separator"));
 		}
 
-		String result = builder.toString();
+		result = builderS.toString();
 
 		LOGGER.debug("Process output (regions ID's): \n" + result);
 
@@ -168,68 +181,49 @@ public class SubmissionDispatcher {
 	private Set<String> regionsFromArea(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
 			String upperRightLongitude) {
 
-		LOGGER.debug("Getting landsat ID of: \n" + "lower left latitude: " + lowerLeftLatitude + "\n"
-				+ "lower left longitude: " + lowerLeftLongitude + "\n" + "upper right latitude: " + upperRightLatitude
-				+ "\n" + "upper right longitude: " + upperRightLongitude);
+		String regionLowerLeft, regionUpperRight;
+		Set<String> regionsFound = new HashSet<String>();
 
-		String[] middlePoint = getMiddlePoint(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
-				upperRightLongitude).split(" ");
-
-		LOGGER.debug("Setting middle point(reference point to the LandSat region): + \n" + "latitude: " + middlePoint[0]
-				+ "\n" + "longitude: " + middlePoint[1]);
-
-		String regionIds = "";
 		try {
-			// TODO add check in get_wrs script
-			regionIds = getRegionIds(middlePoint[0], middlePoint[1]).trim();
-		} catch (IOException | InterruptedException e) {
-			LOGGER.error("Error while calling the ConvertToWRS script");
-			e.printStackTrace();
-		}
-		Set<String> regionsFound = new HashSet<>(Arrays.asList(regionIds.split(" ")));
+			regionLowerLeft = getRegionIds(lowerLeftLatitude, lowerLeftLongitude).trim();
+			regionUpperRight = getRegionIds(upperRightLatitude, upperRightLongitude).trim();
 
-		LOGGER.debug("Returned regions as set: ");
-		int regionsCount = 1;
-		for (String s : regionsFound) {
-			LOGGER.debug(regionsCount + "# " + s);
-			regionsCount++;
+			int pathRegionLL = Integer.parseInt(regionLowerLeft.substring(0, 3));
+			int rowRegionLL = Integer.parseInt(regionLowerLeft.substring(4, 6));
+
+			int pathRegionUR = Integer.parseInt(regionUpperRight.substring(0, 3));
+			int rowRegionUR = Integer.parseInt(regionUpperRight.substring(4, 6));
+
+			LOGGER.info("pathRegionLL: " + pathRegionLL + "\n" + "rowRegionLL: " + rowRegionLL + "\n" + "pathRegionUR: "
+					+ pathRegionUR + "\n" + "rowRegionUR: " + rowRegionUR + "\n");
+
+			for (int i = pathRegionLL; i >= pathRegionUR; i--) {
+				for (int j = rowRegionLL; j >= rowRegionUR; j--)
+					regionsFound.add(formatPathRow(i, j));
+			}
+
+			LOGGER.info("Regions found: " + regionsFound.toString());
+
+		} catch (Exception e) {
+			LOGGER.error("Error while calling the ConvertToWRS script", e);
 		}
 
 		return regionsFound;
 	}
 
 	/**
-	 * This function returns middle point based in latitude and longitude
-	 * coordinates.
-	 * 
-	 * @param lowerLeftLatitude   lower left latitude (coordinate)
-	 * @param lowerLeftLongitude  lower left longitude (coordinate)
-	 * @param upperRightLatitude  upper right latitude (coordinate)
-	 * @param upperRightLongitude upper right longitude (coordinate)
-	 * @return middle point
+	 * Get path and row and create format PPPRRR, where PPP is path of scene RRR is
+	 * row of scene
 	 */
-	private String getMiddlePoint(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
-			String upperRightLongitude) {
-		double lat1 = Double.parseDouble(lowerLeftLatitude);
-		double lon1 = Double.parseDouble(lowerLeftLongitude);
-		double lat2 = Double.parseDouble(upperRightLatitude);
-		double lon2 = Double.parseDouble(upperRightLongitude);
+	private String formatPathRow(int path, int row) {
+		String pathAux = Integer.toString(path);
+		String rowAux = Integer.toString(row);
+		if (rowAux.length() == 1)
+			rowAux = "00" + rowAux;
+		else if (rowAux.length() == 2)
+			rowAux = "0" + rowAux;
 
-		double dLon = Math.toRadians(lon2 - lon1);
-
-		// convert to radians
-		lat1 = Math.toRadians(lat1);
-		lat2 = Math.toRadians(lat2);
-		lon1 = Math.toRadians(lon1);
-
-		double Bx = Math.cos(lat2) * Math.cos(dLon);
-		double By = Math.cos(lat2) * Math.sin(dLon);
-		double lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2),
-				Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
-		double lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
-
-		String result = Math.toDegrees(lat3) + " " + Math.toDegrees(lon3);
-		return result;
+		return pathAux + rowAux;
 	}
 
 	/**
