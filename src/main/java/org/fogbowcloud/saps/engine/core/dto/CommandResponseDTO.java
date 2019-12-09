@@ -2,50 +2,45 @@ package org.fogbowcloud.saps.engine.core.dto;
 
 import java.io.Serializable;
 
-import org.apache.log4j.Logger;
+public class CommandResponseDTO implements Serializable {
+	private static final long serialVersionUID = 5281647552435522413L;
 
-public class CommandResponseDTO implements Serializable{
-    private static final Logger LOGGER = Logger.getLogger(CommandResponseDTO.class);
+	private String command;
+	private String state;
+	private Integer exitcode;
 
-    private static final long serialVersionUID = 5281647552435522413L;
+	public CommandResponseDTO(String command, String state, Integer exitCode) {
+		this.command = command;
+		this.state = state;
+		this.exitcode = exitCode;
+	}
 
-    private String command;
-    private String state;
-    private Integer exitcode;
+	public String getCommand() {
+		return command;
+	}
 
-    public CommandResponseDTO(String command, String state, Integer exitCode) {
-        this.command = command;
-        this.state = state;
-        this.exitcode = exitCode;
-    }
+	public String getState() {
+		return state;
+	}
 
-    public String getCommand() {
-        return command;
-    }
+	public Integer getExitCode() {
+		return exitcode;
+	}
 
-    public String getState() {
-        return state;
-    }
+	public void setCommand(String command) {
+		this.command = command;
+	}
 
-    public Integer getExitCode() {
-        return exitcode;
-    }
+	public void setState(String state) {
+		this.state = state;
+	}
 
-    public void setCommand(String command){
-        this.command = command;
-    }
+	public void setExitCode(Integer exitcode) {
+		this.exitcode = exitcode;
+	}
 
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    public void setExitCode(Integer exitcode){
-        this.exitcode = exitcode;
-    }
-
-    @Override
-    public String toString() {
-        return "CommandResponseDTO [command=" + command + ", state=" + state +
-                ", exitcode=" + exitcode + "]";
-    }
+	@Override
+	public String toString() {
+		return "CommandResponseDTO [command=" + command + ", state=" + state + ", exitcode=" + exitcode + "]";
+	}
 }

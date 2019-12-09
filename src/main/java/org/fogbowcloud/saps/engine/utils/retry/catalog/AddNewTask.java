@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
-import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public class AddNewTask implements CatalogRetry<SapsImage> {
@@ -20,8 +19,8 @@ public class AddNewTask implements CatalogRetry<SapsImage> {
 	private String preprocessingPhaseTag;
 	private String processingPhaseTag;
 
-	public AddNewTask(ImageDataStore imageStore, String taskId, String dataset, String region, Date date,
-			int priority, String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
+	public AddNewTask(ImageDataStore imageStore, String taskId, String dataset, String region, Date date, int priority,
+			String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
 			String processingPhaseTag) {
 		this.imageStore = imageStore;
 		this.taskId = taskId;
