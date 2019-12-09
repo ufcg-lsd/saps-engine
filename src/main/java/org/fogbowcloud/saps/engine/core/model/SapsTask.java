@@ -1,197 +1,167 @@
 package org.fogbowcloud.saps.engine.core.model;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
-import java.util.regex.Pattern;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.blowout.core.model.Command;
-import org.fogbowcloud.blowout.core.model.Specification;
-import org.fogbowcloud.blowout.core.model.Task;
-import org.fogbowcloud.blowout.core.model.TaskImpl;
-import org.fogbowcloud.saps.engine.scheduler.util.SapsPropertiesConstants;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class SapsTask {
 
-	public static final String METADATA_TASK_ID = "task_id";
-	public static final String METADATA_EXPORT_PATH = "volume_export_path";
-	protected static final String METADATA_REPOS_USER = "repository_user";
-	protected static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
-	protected static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
-	protected static final String METADATA_MOUNT_POINT = "mount_point";
-	protected static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
-	protected static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
-	protected static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
-	
-	protected static final String WORKER_SANDBOX = "worker_sandbox";
-	protected static final String WORKER_REMOTE_USER = "worker_remote_user";
-	protected static final String WORKER_MOUNT_POINT = "worker_mount_point";
-	protected static final String WORKER_EXPORT_PATH = "saps_export_path";
-	protected static final String WORKER_TASK_TIMEOUT = "worker_task_timeout";
-	protected static final String SAPS_WORKER_RUN_SCRIPT_PATH = "saps_worker_run_script_path";
-	protected static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
-
-	public static final String METADATA_WORKER_OPERATING_SYSTEM = "worker_operating_system";
-	public static final String METADATA_WORKER_KERNEL_VERSION = "worker_kernel_version";
-
 	private static final Logger LOGGER = Logger.getLogger(SapsTask.class);
+	
+	private static final String DATE_FORMAT = "yyyy-MM-dd";
 
-	public static TaskImpl createSapsTask(TaskImpl taskImpl, Properties properties,
-			Specification spec, String federationMember, String nfsServerIP, String nfsServerPort,
-			String workerContainerRepository, String workerContainerTag) {
-		LOGGER.debug("Creating Saps task " + taskImpl.getId() + " for Blowout");
+	private static final String JSON_HEADER_ID = "id";
+	private static final String JSON_HEADER_REQUIREMENTS = "requirements";
+	private static final String JSON_HEADER_COMMANDS = "commands";
+	private static final String JSON_HEADER_METADATA = "metadata";
 
-		settingCommonTaskMetadata(properties, taskImpl);
+	private String id;
+	private Map<String, String> requirements;
+	private List<String> commands;
+	private Map<String, String> metadata;
 
-		// setting image R execution properties
-		taskImpl.putMetadata(METADATA_TASK_ID, taskImpl.getId());
-		taskImpl.putMetadata(METADATA_WORKER_CONTAINER_REPOSITORY, workerContainerRepository);
-		taskImpl.putMetadata(METADATA_WORKER_CONTAINER_TAG, workerContainerTag);
-		taskImpl.putMetadata(METADATA_EXPORT_PATH, properties.getProperty(WORKER_EXPORT_PATH));
-		taskImpl.putMetadata(METADATA_MAX_TASK_EXECUTION_TIME,
-				properties.getProperty(METADATA_MAX_TASK_EXECUTION_TIME));
+	public SapsTask(String id, Map<String, String> requirements, List<String> commands, Map<String, String> metadata) {
+		this.id = id;
+		this.requirements = requirements;
+		this.commands = commands;
+		this.metadata = metadata;
+	}
 
-		taskImpl.putMetadata(METADATA_MOUNT_POINT, properties.getProperty(WORKER_MOUNT_POINT));
+	public SapsTask(String id) {
+		this(id, new HashMap<String, String>(), new LinkedList<String>(), new HashMap<String, String>());
+	}
 
-		taskImpl.putMetadata(METADATA_NFS_SERVER_IP, nfsServerIP);
-		taskImpl.putMetadata(METADATA_NFS_SERVER_PORT, nfsServerPort);
-		taskImpl.putMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH,
-				taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + "/exit_" + taskImpl.getId());
+	public static List<String> buildCommandList(SapsImage task, String phase) {
+		// info shared folder beetweeen host (with NFS) and container
+		// ...
+
+		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
+		String imageFolder = task.getTaskId();
+		String rootPath = "/nfs/" + imageFolder;
+		String folderPath = "/nfs/" + imageFolder + File.separator + phase;
+		List<String> commands = new LinkedList<String>();
+
+		// Remove folders
+		String removeThings = String.format("rm -rf %s", folderPath);
+		commands.add(removeThings);
+
+		// Create folders
+		String createFolders = String.format("mkdir -p %s", folderPath);
+		commands.add(createFolders);
+
+		// Run command
+		String runCommand = String.format("bash /home/saps/run.sh %s %s %s %s", rootPath, task.getDataset(),
+				task.getRegion(), dateFormater.format(task.getImageDate()));
+		commands.add(runCommand);
 		
-		taskImpl.putMetadata(METADATA_WORKER_OPERATING_SYSTEM,
-				properties.getProperty(SapsPropertiesConstants.WORKER_OPERATING_SYSTEM));
-		taskImpl.putMetadata(METADATA_WORKER_KERNEL_VERSION,
-				properties.getProperty(SapsPropertiesConstants.WORKER_KERNEL_VERSION));
-
-		// cleaning environment
-		String cleanEnvironment = "sudo rm -rf " + properties.getProperty(WORKER_SANDBOX);
-		taskImpl.addCommand(new Command(cleanEnvironment, Command.Type.REMOTE));
-
-		// creating sandbox
-		String mkdirCommand = "mkdir -p " + taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX);
-		taskImpl.addCommand(new Command(mkdirCommand, Command.Type.REMOTE));
-
-		// creating run worker script for this task
-		File localRunScriptFile = createScriptFile(properties, taskImpl);
-		String remoteRunScriptPath = taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX)
-				+ File.separator + localRunScriptFile.getName();
-
-		// adding commands
-		String scpUploadCommand = createSCPUploadCommand(localRunScriptFile.getAbsolutePath(),
-				remoteRunScriptPath);
-		LOGGER.debug("ScpUploadCommand=" + scpUploadCommand);
-		taskImpl.addCommand(new Command(scpUploadCommand, Command.Type.LOCAL));
-
-		// adding remote commands
-		String remoteChmodRunScriptCommand = createChmodScriptCommand(remoteRunScriptPath);
-		taskImpl.addCommand(new Command(remoteChmodRunScriptCommand, Command.Type.REMOTE));
-
-		String remoteExecScriptCommand = createRemoteScriptExecCommand(remoteRunScriptPath,
-				taskImpl);
-		LOGGER.debug("remoteExecCommand=" + remoteExecScriptCommand);
-		taskImpl.addCommand(new Command(remoteExecScriptCommand, Command.Type.REMOTE));
-
-		return taskImpl;
+		return commands;
 	}
 
-	protected static String createSCPUploadCommand(String localFilePath, String remoteFilePath) {
-		return "scp -i $PRIVATE_KEY_FILE -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -P $SSH_PORT "
-				+ localFilePath + " $SSH_USER@$HOST:" + remoteFilePath;
+	public String getId() {
+		return id;
 	}
 
-	private static void settingCommonTaskMetadata(Properties properties, Task task) {
-		// task property
-		task.putMetadata(TaskImpl.METADATA_MAX_RESOURCE_CONN_RETRIES,
-				properties.getProperty(MAX_RESOURCE_CONN_RETRIES));
-
-		// sdexs properties
-		task.putMetadata(TaskImpl.METADATA_SANDBOX,
-				properties.getProperty(WORKER_SANDBOX) + "/" + task.getId());
-		task.putMetadata(TaskImpl.METADATA_REMOTE_OUTPUT_FOLDER,
-				properties.getProperty(WORKER_SANDBOX) + "/output");
-		task.putMetadata(TaskImpl.METADATA_TASK_TIMEOUT,
-				properties.getProperty(WORKER_TASK_TIMEOUT));
-
-		// repository properties
-		task.putMetadata(METADATA_REPOS_USER, properties.getProperty(WORKER_REMOTE_USER));
-		task.putMetadata(METADATA_MOUNT_POINT, properties.getProperty(WORKER_MOUNT_POINT));
+	public void setId(String id) {
+		this.id = id;
 	}
 
-	private static String createChmodScriptCommand(String remoteScript) {
-		return "\"chmod +x " + remoteScript + "\"";
+	public Map<String, String> getRequirements() {
+		return requirements;
 	}
 
-	private static String createRemoteScriptExecCommand(String remoteScript, TaskImpl taskImpl) {
-
-		Path pathToRemoteScript = Paths.get(remoteScript);
-		String execScriptCommand = null;
-		String runOutName = pathToRemoteScript.getFileName().toString() + "." + "out";
-		String runErrName = pathToRemoteScript.getFileName().toString() + "." + "err";
-
-		execScriptCommand = "\"nohup " + remoteScript + " >> "
-				+ taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + File.separator + runOutName
-				+ " 2>> " + taskImpl.getMetadata(TaskImpl.METADATA_SANDBOX) + File.separator
-				+ runErrName + "\"";
-
-		return execScriptCommand;
+	public void setRequirements(Map<String, String> requirements) {
+		this.requirements = requirements;
+	}
+	
+	public void addRequirement(String key, String value) {
+		this.requirements.put(key, value);
 	}
 
-	protected static File createScriptFile(Properties props, TaskImpl task) {
-		File tempFile = null;
-		FileOutputStream fos = null;
-		FileInputStream fis = null;
+	public List<String> getCommands() {
+		return commands;
+	}
+
+	public void setCommands(List<String> commands) {
+		this.commands = commands;
+	}
+	
+	public void addCommand(String command) {
+		this.commands.add(command);
+	}
+
+	public Map<String, String> getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(Map<String, String> metadata) {
+		this.metadata = metadata;
+	}
+	
+	public void addMetadata(String key, String value) {
+		this.metadata.put(key, value);
+	}
+
+	public JSONObject toJSON() {
 		try {
-			tempFile = File.createTempFile("temp-worker-run-", ".sh");
-			fis = new FileInputStream(props.getProperty(SAPS_WORKER_RUN_SCRIPT_PATH));
+			JSONObject sapsTask = new JSONObject();
+			sapsTask.put(JSON_HEADER_ID, this.getId());
 
-			String origExec = IOUtils.toString(fis);
-			fos = new FileOutputStream(tempFile);
-			IOUtils.write(replaceVariables(props, task, origExec), fos);
-		} catch (IOException e) {
-			LOGGER.error("Error while creating script " + tempFile.getName() + " file", e);
-		} finally {
-			try {
-				if (fis != null) {
-					fis.close();
-				}
-				if (fos != null) {
-					fos.close();
-				}
-			} catch (Throwable t) {
-				LOGGER.error(t);
-				// Do nothing, best effort
-			}
+			JSONObject requirements = new JSONObject();
+			for (Map.Entry<String, String> entry : this.getRequirements().entrySet())
+				requirements.put(entry.getKey(), entry.getValue());
+			sapsTask.put(JSON_HEADER_REQUIREMENTS, requirements);
+
+			JSONArray commands = new JSONArray();
+			for (String command : this.getCommands())
+				commands.put(command);
+			sapsTask.put(JSON_HEADER_COMMANDS, commands);
+
+			JSONObject metadata = new JSONObject();
+			for (Map.Entry<String, String> entry : this.getMetadata().entrySet())
+				metadata.put(entry.getKey(), entry.getValue());
+			sapsTask.put(JSON_HEADER_METADATA, metadata);
+
+			return sapsTask;
+		} catch (JSONException e) {
+			LOGGER.debug("Error while trying to create a JSON from task", e);
+			return null;
 		}
-		return tempFile;
 	}
 
-	public static String replaceVariables(Properties props, TaskImpl task, String command) {
-		command = command.replaceAll(Pattern.quote("${TASK_ID}"),
-				task.getMetadata(METADATA_TASK_ID));
-		command = command.replaceAll(Pattern.quote("${SANDBOX}"),
-				task.getMetadata(TaskImpl.METADATA_SANDBOX));
-		command = command.replaceAll(Pattern.quote("${EXPORT_PATH}"),
-				task.getMetadata(METADATA_EXPORT_PATH));
-		command = command.replaceAll(Pattern.quote("${SAPS_MOUNT_POINT}"),
-				task.getMetadata(METADATA_MOUNT_POINT));
-		command = command.replaceAll(Pattern.quote("${NFS_SERVER_IP}"),
-				task.getMetadata(METADATA_NFS_SERVER_IP));
-		command = command.replaceAll(Pattern.quote("${NFS_SERVER_PORT}"),
-				task.getMetadata(METADATA_NFS_SERVER_PORT));
-		command = command.replaceAll(Pattern.quote("${WORKER_CONTAINER_REPOSITORY}"),
-				task.getMetadata(METADATA_WORKER_CONTAINER_REPOSITORY));
-		command = command.replaceAll(Pattern.quote("${WORKER_CONTAINER_TAG}"),
-				task.getMetadata(METADATA_WORKER_CONTAINER_TAG));
-		command = command.replaceAll(Pattern.quote("${REMOTE_COMMAND_EXIT_PATH}"),
-				task.getMetadata(TaskImpl.METADATA_REMOTE_COMMAND_EXIT_PATH));
+	public static SapsTask fromJSON(JSONObject taskJSON) {
+		SapsTask sapsTask = new SapsTask(taskJSON.optString(JSON_HEADER_ID));
 
-		LOGGER.debug("Command that will be executed: " + command);
-		return command;
+		JSONObject requirements = taskJSON.optJSONObject(JSON_HEADER_REQUIREMENTS);
+		Iterator<?> requirementsKeys = requirements.keys();
+		while (requirementsKeys.hasNext()) {
+			String key = (String) requirementsKeys.next();
+			sapsTask.addRequirement(key, requirements.optString(key));
+		}
+
+		JSONArray commands = taskJSON.optJSONArray("commands");
+		for (int i = 0; i < commands.length(); i++)
+			try {
+				sapsTask.addCommand((String) commands.toString(i));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+
+		JSONObject metadata = taskJSON.optJSONObject("metadata");
+		Iterator<?> metadataKeys = metadata.keys();
+		while (metadataKeys.hasNext()) {
+			String key = (String) metadataKeys.next();
+			sapsTask.addMetadata(key, metadata.optString(key));
+		}
+		return sapsTask;
 	}
 }
