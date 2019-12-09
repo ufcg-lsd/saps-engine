@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ps xau | grep SchedulerMain | awk '{print $2}' | xargs sudo kill

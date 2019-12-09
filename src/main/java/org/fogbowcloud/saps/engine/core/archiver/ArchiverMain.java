@@ -11,6 +11,6 @@ public class ArchiverMain {
 		properties.load(input);
 		
 		Archiver Fetcher = new Archiver(properties);
-		Fetcher.exec();
+		Fetcher.start();
 	}
 }

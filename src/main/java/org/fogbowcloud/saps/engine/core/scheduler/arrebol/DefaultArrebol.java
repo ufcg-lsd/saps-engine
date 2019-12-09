@@ -1,13 +1,12 @@
 package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
-import org.fogbowcloud.saps.engine.core.job.SapsJob;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
@@ -15,14 +14,12 @@ import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobEx
 public class DefaultArrebol implements Arrebol{
 	
 	private final ArrebolRequestsHelper arrebolRequestHelper;
-	//private final JDBCJobDataStore jobDataStore;
 	//private final Properties properties;
 	private List<JobSubmitted> submittedJobID;
 
-	public DefaultArrebol(Properties properties) throws SQLException {
+	public DefaultArrebol(Properties properties)  {
 		//this.properties = properties;
 		this.arrebolRequestHelper = new ArrebolRequestsHelper(properties);
-		//this.jobDataStore = new JDBCJobDataStore(properties);
 		this.submittedJobID = new LinkedList<JobSubmitted>();
 	}
 
@@ -42,8 +39,8 @@ public class DefaultArrebol implements Arrebol{
 	}
 	
 	@Override
-	public void populateJobList(List<ImageTask> taskList) {
-		for(ImageTask task : taskList) 
+	public void populateJobList(List<SapsImage> taskList) {
+		for(SapsImage task : taskList) 
 			submittedJobID.add(new JobSubmitted(task.getArrebolJobId(), task));
 	}
 
@@ -57,7 +54,7 @@ public class DefaultArrebol implements Arrebol{
 		return arrebolRequestHelper.getJob(jobId);
 	}
 	
-	//TODO implementat method
+	//TODO implement method
 	public List<JobResponseDTO> checkStatusJobByName(String JobName) throws GetJobException{
 		return null;
 		//return arrebolRequestHelper.getJobByName(jobName);
@@ -69,7 +66,7 @@ public class DefaultArrebol implements Arrebol{
 	}
 
 	@Override
-	public int getCountSlotsInQueue() throws GetCountsSlotsException {
-		return arrebolRequestHelper.getCountSlotsInQueue();
+	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException {
+		return arrebolRequestHelper.getCountSlotsInQueue(queueId);
 	}
 }

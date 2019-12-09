@@ -9,3 +9,4 @@ pending-task-archive.db.t
 .idea/
 config/
 *.log*
+nohup.out

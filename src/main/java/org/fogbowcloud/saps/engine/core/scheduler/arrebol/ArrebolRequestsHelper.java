@@ -9,14 +9,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.infrastructure.http.HttpWrapper;
-import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.core.dto.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
-import org.fogbowcloud.saps.engine.core.job.SapsJob;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.http.HttpWrapper;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 import java.util.LinkedList;
 
@@ -45,11 +45,11 @@ public class ArrebolRequestsHelper {
 		try {
 			requestBody = makeJSONBody(job);
 		} catch (UnsupportedEncodingException e) {
-			throw new Exception("Job with id [" + job.getId() + "] is not well formed to built JSON.");
+			throw new Exception("Job is not well formed to built JSON.");
 		}
 
-		final String jobEndpoint = this.arrebolBaseUrl + "/job";
-
+		final String jobEndpoint = this.arrebolBaseUrl + "/queues/default/jobs";
+		
 		String jobIdArrebol;
 		final String JSON_KEY_JOB_ID_ARREBOL = "id";
 
@@ -61,7 +61,7 @@ public class ArrebolRequestsHelper {
 
 			jobIdArrebol = jobResponse.get(JSON_KEY_JOB_ID_ARREBOL).getAsString();
 
-			LOGGER.info("Job [" + job.getId() + "] was submitted with success to Arrebol.");
+			LOGGER.info("Job was submitted with success to Arrebol.");
 
 		} catch (Exception e) {
 			throw new SubmitJobException("Submit Job to Arrebol has FAILED: " + e.getMessage(), e);
@@ -75,7 +75,7 @@ public class ArrebolRequestsHelper {
 	}
 
 	public String getJobJSON(String jobArrebolId) throws GetJobException {
-		final String endpoint = this.arrebolBaseUrl + "/job/" + jobArrebolId;
+		final String endpoint = this.arrebolBaseUrl + "/queues/default/jobs/" + jobArrebolId;
 
 		String jsonResponse;
 		try {
@@ -88,7 +88,7 @@ public class ArrebolRequestsHelper {
 	}
 
 	public StringEntity makeJSONBody(SapsJob job) throws UnsupportedEncodingException {
-		LOGGER.info("Building JSON body of Job : [" + job.getId() + "]");
+		LOGGER.info("Building JSON body of Job ...");
 
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		JobRequestDTO jobDTO = new JobRequestDTO(job);
@@ -99,8 +99,22 @@ public class ArrebolRequestsHelper {
 		return new StringEntity(json);
 	}
 
-	// TODO Implement this function
-	public int getCountSlotsInQueue() throws GetCountsSlotsException {
-		return 0;
+	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException {
+		final String endpoint = this.arrebolBaseUrl + "/queues/" + queueId;
+		final String JSON_KEY_WAITING_JOBS_ARREBOL = "waiting_jobs";
+		
+		
+		int waitingJobs;
+		try {
+			final String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint, null);
+			JsonObject jobResponse = this.gson.fromJson(jsonResponse, JsonObject.class);
+			waitingJobs = jobResponse.get(JSON_KEY_WAITING_JOBS_ARREBOL).getAsInt();
+
+			LOGGER.info("Arrebol in queue id [" + queueId + "] was " + waitingJobs + " waiting jobs");
+		} catch (Exception e) {
+			throw new GetCountsSlotsException("Get waiting jobs from Arrebol queue id [" + queueId + "] has FAILED: " + e.getMessage(), e);
+		}
+		
+		return waitingJobs;
 	}
 }

@@ -4,13 +4,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public class DefaultRoundRobin implements Selector {
 
 	@Override
-	public List<ImageTask> select(int count, Map<String, List<ImageTask>> tasks) {
-		List<ImageTask> selectedTasks = new LinkedList<ImageTask>();
+	public List<SapsImage> select(int count, Map<String, List<SapsImage>> tasks) {
+		List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
 		List<String> usersForDelete = new LinkedList<String>();
 
 		while (count > 0 && tasks.size() > 0) {

@@ -16,13 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.Submission;
-import org.fogbowcloud.saps.engine.core.dispatcher.Task;
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
-import org.fogbowcloud.saps.engine.util.SapsPropertiesConstants;
-import org.fogbowcloud.saps.notifier.Ward;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class JDBCImageDataStore implements ImageDataStore {
 
@@ -82,9 +80,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	public JDBCImageDataStore(Properties properties) throws SQLException {
 
-		if (properties == null) {
-			throw new IllegalArgumentException("Properties arg must not be null.");
-		}
+		if (checkProperties(properties))
+			if (properties == null) {
+				throw new IllegalArgumentException("Properties arg must not be null.");
+			}
 
 		String imageStoreIP = properties.getProperty(DATASTORE_IP);
 		String imageStorePort = properties.getProperty(DATASTORE_PORT);
@@ -96,6 +95,35 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 		LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort);
 		init(imageStoreIP, imageStorePort, imageStoreURLPrefix, dbUserName, dbUserPass, dbDrive, dbName);
+	}
+
+	private boolean checkProperties(Properties properties) {
+		if (properties == null) {
+			LOGGER.error("Properties arg must not be null.");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_URL_PREFIX)) {
+			LOGGER.error("Required property " + DATASTORE_URL_PREFIX + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_USERNAME)) {
+			LOGGER.error("Required property " + DATASTORE_USERNAME + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_PASSWORD)) {
+			LOGGER.error("Required property " + DATASTORE_PASSWORD + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_DRIVER)) {
+			LOGGER.error("Required property " + DATASTORE_DRIVER + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(DATASTORE_NAME)) {
+			LOGGER.error("Required property " + DATASTORE_NAME + " was not set");
+			return false;
+		}
+		LOGGER.debug("All properties for create JDBCImageDataStore are set");
+		return true;
 	}
 
 	public JDBCImageDataStore(String imageStoreURLPrefix, String imageStoreIP, String imageStorePort, String dbUserName,
@@ -224,19 +252,18 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	@Override
-	public ImageTask addImageTask(String taskId, String dataset, String region, Date date, String downloadLink,
-			int priority, String user, String inputGathering, String inputPreprocessing, String algorithmExecution)
-			throws SQLException {
+	public SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
+			String inputGathering, String inputPreprocessing, String algorithmExecution) throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
-		ImageTask task = new ImageTask(taskId, dataset, region, date, ImageTaskState.CREATED,
-				ImageTask.NONE_ARREBOL_JOB_ID, ImageTask.NON_EXISTENT_DATA, priority, user, inputGathering,
-				inputPreprocessing, algorithmExecution, now, now, ImageTask.AVAILABLE, ImageTask.NON_EXISTENT_DATA);
+		SapsImage task = new SapsImage(taskId, dataset, region, date, ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, priority, user, inputGathering,
+				inputPreprocessing, algorithmExecution, now, now, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA);
 		addImageTask(task);
 		return task;
 	}
 
 	@Override
-	public void addImageTask(ImageTask imageTask) throws SQLException {
+	public void addImageTask(SapsImage imageTask) throws SQLException {
 		if (imageTask.getTaskId() == null || imageTask.getTaskId().isEmpty()) {
 			LOGGER.error("Task with empty id.");
 			throw new IllegalArgumentException("Task with empty id.");
@@ -273,9 +300,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(7, imageTask.getFederationMember());
 			insertStatement.setInt(8, imageTask.getPriority());
 			insertStatement.setString(9, imageTask.getUser());
-			insertStatement.setString(10, imageTask.getInputGatheringTag());
-			insertStatement.setString(11, imageTask.getInputPreprocessingTag());
-			insertStatement.setString(12, imageTask.getAlgorithmExecutionTag());
+			insertStatement.setString(10, imageTask.getInputdownloadingTag());
+			insertStatement.setString(11, imageTask.getPreprocessingTag());
+			insertStatement.setString(12, imageTask.getProcessingTag());
 			insertStatement.setTimestamp(13, imageTask.getCreationTime());
 			insertStatement.setTimestamp(14, imageTask.getUpdateTime());
 			insertStatement.setString(15, imageTask.getStatus());
@@ -341,41 +368,6 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setString(2, nfsSshPort);
 			insertStatement.setString(3, nfsPort);
 			insertStatement.setString(4, federationMember);
-			insertStatement.setQueryTimeout(300);
-
-			insertStatement.execute();
-		} finally {
-			close(insertStatement, connection);
-		}
-	}
-
-	private static final String INSERT_METADATA_INFO_SQL = "INSERT INTO " + PROVENANCE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-	@Override
-	public void dispatchMetadataInfo(String taskId) throws SQLException {
-		LOGGER.info("Dispatching metadata info for " + taskId + " in Catalogue");
-		if (taskId == null || taskId.isEmpty()) {
-			throw new IllegalArgumentException("Invalid taskId " + taskId);
-		}
-
-		PreparedStatement insertStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			insertStatement = connection.prepareStatement(INSERT_METADATA_INFO_SQL);
-			insertStatement.setString(1, taskId);
-			insertStatement.setString(2, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(3, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(4, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(5, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(6, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(7, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(8, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(9, ImageTask.NON_EXISTENT_DATA);
-			insertStatement.setString(10, ImageTask.NON_EXISTENT_DATA);
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -465,8 +457,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String SELECT_NFS_CONFIG_SQL = "SELECT nfs_ip, nfs_port FROM " + DEPLOY_CONFIG_TABLE_NAME
-			+ " WHERE federation_member = ?";
+	private static final String SELECT_NFS_CONFIG_SQL = "SELECT " + NFS_SERVER_IP_COL + ", " + NFS_SERVER_SSH_PORT_COL
+			+ " FROM " + DEPLOY_CONFIG_TABLE_NAME + " WHERE federation_member = ?";
 
 	@Override
 	public Map<String, String> getFederationNFSConfig(String federationMember) throws SQLException {
@@ -712,7 +704,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static String UPDATE_USER_STATE_SQL = "UPDATE " + USERS_TABLE_NAME + " SET active = ? WHERE user_email = ?";
+	private static String UPDATE_USER_STATE_SQL = "UPDATE " + USERS_TABLE_NAME + " SET " + USER_STATE_COL
+			+ " = ? WHERE " + USER_EMAIL_COL + " = ?";
 
 	@Override
 	public void updateUserState(String userEmail, boolean userState) throws SQLException {
@@ -792,8 +785,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static String UPDATE_ERROR_MESSAGE_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + ERROR_MSG_COL
-			+ " = ?, utime = now() WHERE task_id = ?";
+	private static String UPDATE_ERROR_MESSAGE_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + ERROR_MSG_COL + " = ?, "
+			+ UPDATED_TIME_COL + " = now() WHERE " + TASK_ID_COL + " = ?";
 
 	@Override
 	public void updateTaskError(String taskId, String errorMsg) throws SQLException {
@@ -820,11 +813,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + STATE_COL + " = ?, "
-			+ UPDATED_TIME_COL + " = now(), " + IMAGE_STATUS_COL + " = ?, " + ERROR_MSG_COL + " = ? " + "WHERE "
-			+ TASK_ID_COL + " = ?";
+			+ UPDATED_TIME_COL + " = now(), " + IMAGE_STATUS_COL + " = ?, " + ERROR_MSG_COL + " = ?, " + ARREBOL_JOB_ID
+			+ " = ? " + "WHERE " + TASK_ID_COL + " = ?";
 
 	@Override
-	public void updateImageTask(ImageTask imagetask) throws SQLException {
+	public void updateImageTask(SapsImage imagetask) throws SQLException {
 		if (imagetask == null) {
 			LOGGER.error("Trying to update null image task.");
 			throw new IllegalArgumentException("Trying to update null image task.");
@@ -840,7 +833,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 			updateStatement.setString(1, imagetask.getState().getValue());
 			updateStatement.setString(2, imagetask.getStatus());
 			updateStatement.setString(3, imagetask.getError());
-			updateStatement.setString(4, imagetask.getTaskId());
+			updateStatement.setString(4, imagetask.getArrebolJobId());
+			updateStatement.setString(5, imagetask.getTaskId());
 			updateStatement.setQueryTimeout(300);
 
 			updateStatement.execute();
@@ -858,80 +852,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String SELECT_ALL_SUBMISSIONS_SQL = "SELECT " + SUBMISSION_ID_COL + " FROM "
-			+ USERS_NOTIFY_TABLE_NAME;
-
-	@Override
-	public List<Submission> getAllSubmissions() throws SQLException {
-		Statement statement = null;
-		Connection conn = null;
-		try {
-			conn = getConnection();
-			statement = conn.createStatement();
-			statement.setQueryTimeout(300);
-
-			statement.execute(SELECT_ALL_SUBMISSIONS_SQL);
-			ResultSet rs = statement.getResultSet();
-			List<Submission> allSubmissions = extractSubmissionFrom(rs);
-			return allSubmissions;
-		} finally {
-			close(statement, conn);
-		}
-	}
-
-	private List<Submission> extractSubmissionFrom(ResultSet rs) throws SQLException {
-		List<Submission> allSubmissions = new ArrayList<Submission>();
-
-		Submission previousSubmission = null;
-		while (rs.next()) {
-			if (previousSubmission == null) {
-				previousSubmission = new Submission(rs.getString(SUBMISSION_ID_COL));
-				previousSubmission.addTask(new Task(rs.getString(TASK_ID_COL)));
-			} else if (previousSubmission.getId().equals(rs.getString(SUBMISSION_ID_COL))) {
-				previousSubmission.addTask(new Task(rs.getString(TASK_ID_COL)));
-			} else if (!previousSubmission.getId().equals(rs.getString(SUBMISSION_ID_COL))) {
-				allSubmissions.add(previousSubmission);
-				previousSubmission = new Submission(rs.getString(SUBMISSION_ID_COL));
-				previousSubmission.addTask(new Task(rs.getString(TASK_ID_COL)));
-			}
-		}
-
-		return allSubmissions;
-	}
-
-	private static final String SELECT_SUBMISSION_SQL = "SELECT * FROM " + USERS_NOTIFY_TABLE_NAME + " WHERE "
-			+ SUBMISSION_ID_COL + " = ?";
-
-	@Override
-	public Submission getSubmission(String submissionId) throws SQLException {
-		PreparedStatement preparedStatement = null;
-		Connection connection = null;
-		try {
-			connection = getConnection();
-			preparedStatement = connection.prepareStatement(SELECT_SUBMISSION_SQL);
-			preparedStatement.setString(1, submissionId);
-			preparedStatement.setQueryTimeout(300);
-
-			preparedStatement.execute();
-			ResultSet rs = preparedStatement.getResultSet();
-			Submission submission = null;
-
-			while (rs.next()) {
-				if (submission == null) {
-					submission = new Submission(rs.getString(SUBMISSION_ID_COL));
-				}
-				submission.addTask(new Task(rs.getString(TASK_ID_COL), getTask(rs.getString(TASK_ID_COL))));
-			}
-			return submission;
-		} finally {
-			close(preparedStatement, connection);
-		}
-	}
-
 	private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
 
 	@Override
-	public List<ImageTask> getAllTasks() throws SQLException {
+	public List<SapsImage> getAllTasks() throws SQLException {
 		Statement statement = null;
 		Connection conn = null;
 		try {
@@ -948,13 +872,14 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String SELECT_IMAGES_IN_PROCESSING_TO_ARREBOL_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE " + STATE_COL + " = 'downloading' OR " + STATE_COL + " = 'preprocessing' OR " + STATE_COL
-			+ " = 'running'";
+			+ " WHERE " + STATE_COL + " = '" + ImageTaskState.DOWNLOADING.getValue() + "' OR " + STATE_COL + " = '"
+			+ ImageTaskState.PREPROCESSING.getValue() + "' OR " + STATE_COL + " = '" + ImageTaskState.RUNNING.getValue()
+			+ "'";
 
 	/**
 	 * get tasks in processing to Arrebol
 	 */
-	public List<ImageTask> getTasksInProcessingState() throws SQLException {
+	public List<SapsImage> getTasksInProcessingState() throws SQLException {
 		Statement statement = null;
 		Connection conn = null;
 		try {
@@ -1005,13 +930,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + STATE_COL
-			+ " = ? " + "ORDER BY priority ASC";
+			+ " = ? " + "ORDER BY " + PRIORITY_COL + " ASC";
 
-	private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE state = ? ORDER BY priority ASC LIMIT ?";
+	private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE "
+			+ STATE_COL + " = ? ORDER BY " + PRIORITY_COL + " ASC LIMIT ?";
 
 	@Override
-	public List<ImageTask> getIn(ImageTaskState state, int limit) throws SQLException {
+	public List<SapsImage> getIn(ImageTaskState state, int limit) throws SQLException {
 		if (state == null) {
 			LOGGER.error("A state must be given");
 			throw new IllegalArgumentException("Can't recover tasks. State was null.");
@@ -1038,7 +963,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			}
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
+			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -1048,12 +973,12 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	private static final String SELECT_IMAGES_BY_FILTERS_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
 	private static final String SELECT_IMAGES_BY_FILTERS_WHERE_SQL = " WHERE ";
-	private static final String SELECT_IMAGES_BY_FILTERS_STATE_SQL = " state = ? " + IMAGE_TABLE_NAME;
-	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " task_id = ? " + IMAGE_TABLE_NAME;
-	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " ctime BETWEEN ? AND ? ";
+	private static final String SELECT_IMAGES_BY_FILTERS_STATE_SQL = " " + STATE_COL + " = ? " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_NAME_SQL = " " + TASK_ID_COL + " = ? " + IMAGE_TABLE_NAME;
+	private static final String SELECT_IMAGES_BY_FILTERS_PERIOD = " " + CREATION_TIME_COL + " BETWEEN ? AND ? ";
 
 	@Override
-	public List<ImageTask> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
+	public List<SapsImage> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit,
 			long processDateEnd) throws SQLException {
 
 		PreparedStatement selectStatement = null;
@@ -1116,7 +1041,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
+			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas;
 		} finally {
@@ -1125,35 +1050,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	@Override
-	public List<ImageTask> getIn(ImageTaskState state) throws SQLException {
+	public List<SapsImage> getIn(ImageTaskState state) throws SQLException {
 		return getIn(state, UNLIMITED);
-	}
-
-	private static final String SELECT_PURGED_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-			+ " WHERE status = ? ORDER BY priority, task_id";
-
-	@Override
-	public List<ImageTask> getPurgedTasks() throws SQLException {
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			selectStatement = connection.prepareStatement(SELECT_PURGED_IMAGES_SQL);
-			selectStatement.setString(1, ImageTask.PURGED);
-			selectStatement.setQueryTimeout(300);
-
-			selectStatement.execute();
-
-			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
-			rs.close();
-			return imageDatas;
-		} finally {
-			close(selectStatement, connection);
-		}
-
 	}
 
 	private static final String UPDATE_LIMITED_IMAGES_TO_DOWNLOAD = "UPDATE " + IMAGE_TABLE_NAME + " SET " + STATE_COL
@@ -1173,7 +1071,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 	 * member.
 	 */
 	@Override
-	public List<ImageTask> getImagesToDownload(String federationMember, int limit) throws SQLException {
+	public List<SapsImage> getImagesToDownload(String federationMember, int limit) throws SQLException {
 		// TODO: fix this method
 		/*
 		 * In future versions, if the crawler starts to use a multithread approach this
@@ -1198,16 +1096,16 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			selectStatementLimit = connection.prepareStatement(SELECT_CREATED_IMAGE);
 			selectStatementLimit.setString(1, ImageTaskState.CREATED.getValue());
-			selectStatementLimit.setString(2, ImageTask.AVAILABLE);
+			selectStatementLimit.setString(2, SapsImage.AVAILABLE);
 			selectStatementLimit.setInt(3, limit);
 			selectStatementLimit.setQueryTimeout(300);
 			selectStatementLimit.execute();
 
 			ResultSet rs = selectStatementLimit.getResultSet();
-			List<ImageTask> createdImageTasks = extractImageTaskFrom(rs);
+			List<SapsImage> createdImageTasks = extractImageTaskFrom(rs);
 			rs.close();
 
-			List<ImageTask> downloadingImageTasks = new ArrayList<ImageTask>();
+			List<SapsImage> downloadingImageTasks = new ArrayList<SapsImage>();
 			if (createdImageTasks.size() == 0) {
 				return downloadingImageTasks;
 			}
@@ -1225,7 +1123,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 			selectStatement = connection.prepareStatement(SELECT_DOWNLOADING_IMAGES_BY_FEDERATION_MEMBER);
 			selectStatement.setString(1, ImageTaskState.DOWNLOADING.getValue());
-			selectStatement.setString(2, ImageTask.AVAILABLE);
+			selectStatement.setString(2, SapsImage.AVAILABLE);
 			selectStatement.setString(3, federationMember);
 			selectStatement.setInt(4, limit);
 			selectStatement.setQueryTimeout(300);
@@ -1249,10 +1147,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return sebalUser;
 	}
 
-	private static List<ImageTask> extractImageTaskFrom(ResultSet rs) throws SQLException {
-		List<ImageTask> imageTasks = new ArrayList<>();
+	private static List<SapsImage> extractImageTaskFrom(ResultSet rs) throws SQLException {
+		List<SapsImage> imageTasks = new ArrayList<>();
 		while (rs.next()) {
-			imageTasks.add(new ImageTask(rs.getString(TASK_ID_COL), rs.getString(DATASET_COL), rs.getString(REGION_COL),
+			imageTasks.add(new SapsImage(rs.getString(TASK_ID_COL), rs.getString(DATASET_COL), rs.getString(REGION_COL),
 					rs.getDate(IMAGE_DATE_COL), ImageTaskState.getStateFromStr(rs.getString(STATE_COL)),
 					rs.getString(ARREBOL_JOB_ID), rs.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
 					rs.getString(USER_EMAIL_COL), rs.getString(INPUT_GATHERING_TAG),
@@ -1263,10 +1161,11 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return imageTasks;
 	}
 
-	private static final String SELECT_TASK_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE task_id = ?";
+	private static final String SELECT_TASK_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + TASK_ID_COL
+			+ " = ?";
 
 	@Override
-	public ImageTask getTask(String taskId) throws SQLException {
+	public SapsImage getTask(String taskId) throws SQLException {
 		if (taskId == null) {
 			LOGGER.error("Invalid image task " + taskId);
 			throw new IllegalArgumentException("Invalid image task " + taskId);
@@ -1284,7 +1183,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			selectStatement.execute();
 
 			ResultSet rs = selectStatement.getResultSet();
-			List<ImageTask> imageDatas = extractImageTaskFrom(rs);
+			List<SapsImage> imageDatas = extractImageTaskFrom(rs);
 			rs.close();
 			return imageDatas.get(0);
 		} finally {
@@ -1292,8 +1191,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String SELECT_NFS_SERVER_IP_SQL = "SELECT nfs_ip FROM " + DEPLOY_CONFIG_TABLE_NAME
-			+ " WHERE federation_member = ?";
+	private static final String SELECT_NFS_SERVER_IP_SQL = "SELECT " + NFS_SERVER_IP_COL + " FROM "
+			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?";
 
 	@Override
 	public String getNFSServerIP(String federation_member) throws SQLException {
@@ -1324,8 +1223,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	private static final String SELECT_NFS_SERVER_SSH_PORT_SQL = "SELECT nfs_ssh_port FROM " + DEPLOY_CONFIG_TABLE_NAME
-			+ " WHERE federation_member = ?";
+	private static final String SELECT_NFS_SERVER_SSH_PORT_SQL = "SELECT " + NFS_SERVER_SSH_PORT_COL + " FROM "
+			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?";
 
 	@Override
 	public String getNFSServerSshPort(String federation_member) throws SQLException {
@@ -1356,98 +1255,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		}
 	}
 
-	@Override
-	public String getMetadataInfo(String taskId, String componentType, String infoType) throws SQLException {
-		if (taskId == null || taskId.isEmpty() || componentType == null || componentType.isEmpty() || infoType == null
-				|| infoType.isEmpty()) {
-			LOGGER.error("Invalid taskId " + taskId + ", componentType " + componentType + " or infoType " + infoType);
-			throw new IllegalArgumentException(
-					"Invalid taskId " + taskId + ", componentType " + componentType + " or infoType " + infoType);
-		}
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-			return adjustAndExecuteMetadataSelectStatement(connection, taskId, componentType, infoType);
-		} finally {
-			close(selectStatement, connection);
-		}
-	}
-
-	private String adjustAndExecuteMetadataSelectStatement(Connection connection, String taskId, String componentType,
-			String infoType) throws SQLException {
-		String selectStatementSQL = "SELECT ";
-		String columnLabel = null;
-
-		if (componentType.equals(SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE)) {
-			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
-				selectStatementSQL += INPUT_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL
-						+ " = ?";
-				columnLabel = INPUT_METADATA_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
-				selectStatementSQL += INPUT_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = INPUT_OPERATING_SYSTEM_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
-				selectStatementSQL += INPUT_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = INPUT_KERNEL_VERSION_COL;
-			}
-		} else if (componentType.equals(SapsPropertiesConstants.PREPROCESSOR_COMPONENT_TYPE)) {
-			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
-				selectStatementSQL += PREPROCESSING_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = PREPROCESSING_METADATA_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
-				selectStatementSQL += PREPROCESSING_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = PREPROCESSING_OPERATING_SYSTEM_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
-				selectStatementSQL += PREPROCESSING_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = PREPROCESSING_KERNEL_VERSION_COL;
-			}
-		} else if (componentType.equals(SapsPropertiesConstants.WORKER_COMPONENT_TYPE)) {
-			if (infoType.equals(SapsPropertiesConstants.METADATA_TYPE)) {
-				selectStatementSQL += OUTPUT_METADATA_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL
-						+ " = ?";
-				columnLabel = OUTPUT_METADATA_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.OS_TYPE)) {
-				selectStatementSQL += OUTPUT_OPERATING_SYSTEM_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = OUTPUT_OPERATING_SYSTEM_COL;
-			} else if (infoType.equals(SapsPropertiesConstants.KERNEL_TYPE)) {
-				selectStatementSQL += OUTPUT_KERNEL_VERSION_COL + " FROM " + PROVENANCE_TABLE_NAME + " WHERE "
-						+ TASK_ID_COL + " = ?";
-				columnLabel = OUTPUT_KERNEL_VERSION_COL;
-			}
-		}
-
-		PreparedStatement selectStatement = connection.prepareStatement(selectStatementSQL);
-		selectStatement.setString(1, taskId);
-		selectStatement.setQueryTimeout(300);
-		selectStatement.execute();
-
-		return getResultSet(selectStatement, columnLabel);
-	}
-
-	private String getResultSet(PreparedStatement selectStatement, String columnLabel) throws SQLException {
-		ResultSet rs = selectStatement.getResultSet();
-
-		try {
-			if (rs.next()) {
-				return rs.getString(columnLabel);
-			}
-		} finally {
-			rs.close();
-		}
-
-		return null;
-	}
-
-	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME
-			+ " WHERE task_id = ?";
+	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME + " WHERE "
+			+ TASK_ID_COL + " = ?";
 
 	@Override
 	public boolean lockTask(String taskId) throws SQLException {
@@ -1518,8 +1327,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 		return unlocked;
 	}
 
-	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME
-			+ " WHERE task_id = ? AND state = ? AND utime = ?";
+	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME + " WHERE " + TASK_ID_COL
+			+ " = ? AND " + STATE_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
 
 	@Override
 	public void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
@@ -1553,7 +1362,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 			+ " = ?";
 
 	@Override
-	public List<ImageTask> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
+	public List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
 			String inputPreprocessing, String algorithmExecution) throws SQLException {
 		PreparedStatement queryStatement = null;
 		Connection connection = null;

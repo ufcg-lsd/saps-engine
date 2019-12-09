@@ -3,56 +3,165 @@ package org.fogbowcloud.saps.engine.core.model;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dto.CommandRequestDTO;
-import org.fogbowcloud.saps.engine.core.task.TaskImpl;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class SapsTask {
 
-	private static final String DATE_FORMAT = "yyyy-MM-dd";
-	public static final String METADATA_TASK_ID = "task_id";
-	public static final String METADATA_EXPORT_PATH = "volume_export_path";
-	protected static final String METADATA_REPOS_USER = "repository_user";
-	protected static final String METADATA_NFS_SERVER_IP = "nfs_server_ip";
-	protected static final String METADATA_NFS_SERVER_PORT = "nfs_server_port";
-	protected static final String METADATA_MOUNT_POINT = "mount_point";
-	protected static final String METADATA_WORKER_CONTAINER_REPOSITORY = "worker_container_repository";
-	protected static final String METADATA_WORKER_CONTAINER_TAG = "worker_container_tag";
-	protected static final String METADATA_MAX_TASK_EXECUTION_TIME = "max_task_execution_time";
-
-	protected static final String WORKER_SANDBOX = "worker_sandbox";
-	protected static final String WORKER_REMOTE_USER = "worker_remote_user";
-	protected static final String WORKER_MOUNT_POINT = "worker_mount_point";
-	protected static final String WORKER_EXPORT_PATH = "saps_export_path";
-	protected static final String WORKER_TASK_TIMEOUT = "worker_task_timeout";
-	protected static final String SAPS_WORKER_RUN_SCRIPT_PATH = "saps_worker_run_script_path";
-	protected static final String MAX_RESOURCE_CONN_RETRIES = "max_resource_conn_retries";
-
-	public static final String METADATA_WORKER_OPERATING_SYSTEM = "worker_operating_system";
-	public static final String METADATA_WORKER_KERNEL_VERSION = "worker_kernel_version";
-
 	private static final Logger LOGGER = Logger.getLogger(SapsTask.class);
+	
+	private static final String DATE_FORMAT = "yyyy-MM-dd";
 
-	public static void createTask(TaskImpl taskImpl, ImageTask imageTask){
+	private static final String JSON_HEADER_ID = "id";
+	private static final String JSON_HEADER_REQUIREMENTS = "requirements";
+	private static final String JSON_HEADER_COMMANDS = "commands";
+	private static final String JSON_HEADER_METADATA = "metadata";
+
+	private String id;
+	private Map<String, String> requirements;
+	private List<String> commands;
+	private Map<String, String> metadata;
+
+	public SapsTask(String id, Map<String, String> requirements, List<String> commands, Map<String, String> metadata) {
+		this.id = id;
+		this.requirements = requirements;
+		this.commands = commands;
+		this.metadata = metadata;
+	}
+
+	public SapsTask(String id) {
+		this(id, new HashMap<String, String>(), new LinkedList<String>(), new HashMap<String, String>());
+	}
+
+	public static List<String> buildCommandList(SapsImage task, String phase) {
 		// info shared folder beetweeen host (with NFS) and container
 		// ...
 
 		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
-		String imageFolder = imageTask.getTaskId();
+		String imageFolder = task.getTaskId();
 		String rootPath = "/nfs/" + imageFolder;
-		String processingPath = "/nfs/" + imageFolder + File.separator + "processing";
+		String folderPath = "/nfs/" + imageFolder + File.separator + phase;
+		List<String> commands = new LinkedList<String>();
 
 		// Remove folders
-		String removeThings = String.format("rm -rf %s", processingPath);
-		taskImpl.addCommand(new CommandRequestDTO(removeThings, CommandRequestDTO.Type.REMOTE));
+		String removeThings = String.format("rm -rf %s", folderPath);
+		commands.add(removeThings);
 
 		// Create folders
-		String createFolders = String.format("mkdir -p %s", processingPath);
-		taskImpl.addCommand(new CommandRequestDTO(createFolders, CommandRequestDTO.Type.REMOTE));
+		String createFolders = String.format("mkdir -p %s", folderPath);
+		commands.add(createFolders);
 
 		// Run command
-		String runCommand = String.format("bash /home/saps/run.sh %s %s %s %s", rootPath, imageTask.getDataset(), imageTask.getRegion(), dateFormater.format(imageTask.getImageDate()));
-		taskImpl.addCommand(new CommandRequestDTO(runCommand, CommandRequestDTO.Type.REMOTE));
+		String runCommand = String.format("bash /home/saps/run.sh %s %s %s %s", rootPath, task.getDataset(),
+				task.getRegion(), dateFormater.format(task.getImageDate()));
+		commands.add(runCommand);
+		
+		return commands;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public Map<String, String> getRequirements() {
+		return requirements;
+	}
+
+	public void setRequirements(Map<String, String> requirements) {
+		this.requirements = requirements;
+	}
+	
+	public void addRequirement(String key, String value) {
+		this.requirements.put(key, value);
+	}
+
+	public List<String> getCommands() {
+		return commands;
+	}
+
+	public void setCommands(List<String> commands) {
+		this.commands = commands;
+	}
+	
+	public void addCommand(String command) {
+		this.commands.add(command);
+	}
+
+	public Map<String, String> getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(Map<String, String> metadata) {
+		this.metadata = metadata;
+	}
+	
+	public void addMetadata(String key, String value) {
+		this.metadata.put(key, value);
+	}
+
+	public JSONObject toJSON() {
+		try {
+			JSONObject sapsTask = new JSONObject();
+			sapsTask.put(JSON_HEADER_ID, this.getId());
+
+			JSONObject requirements = new JSONObject();
+			for (Map.Entry<String, String> entry : this.getRequirements().entrySet())
+				requirements.put(entry.getKey(), entry.getValue());
+			sapsTask.put(JSON_HEADER_REQUIREMENTS, requirements);
+
+			JSONArray commands = new JSONArray();
+			for (String command : this.getCommands())
+				commands.put(command);
+			sapsTask.put(JSON_HEADER_COMMANDS, commands);
+
+			JSONObject metadata = new JSONObject();
+			for (Map.Entry<String, String> entry : this.getMetadata().entrySet())
+				metadata.put(entry.getKey(), entry.getValue());
+			sapsTask.put(JSON_HEADER_METADATA, metadata);
+
+			return sapsTask;
+		} catch (JSONException e) {
+			LOGGER.debug("Error while trying to create a JSON from task", e);
+			return null;
+		}
+	}
+
+	public static SapsTask fromJSON(JSONObject taskJSON) {
+		SapsTask sapsTask = new SapsTask(taskJSON.optString(JSON_HEADER_ID));
+
+		JSONObject requirements = taskJSON.optJSONObject(JSON_HEADER_REQUIREMENTS);
+		Iterator<?> requirementsKeys = requirements.keys();
+		while (requirementsKeys.hasNext()) {
+			String key = (String) requirementsKeys.next();
+			sapsTask.addRequirement(key, requirements.optString(key));
+		}
+
+		JSONArray commands = taskJSON.optJSONArray("commands");
+		for (int i = 0; i < commands.length(); i++)
+			try {
+				sapsTask.addCommand((String) commands.toString(i));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+
+		JSONObject metadata = taskJSON.optJSONObject("metadata");
+		Iterator<?> metadataKeys = metadata.keys();
+		while (metadataKeys.hasNext()) {
+			String key = (String) metadataKeys.next();
+			sapsTask.addMetadata(key, metadata.optString(key));
+		}
+		return sapsTask;
 	}
 }

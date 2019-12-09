@@ -14,14 +14,18 @@
       "docker_repository":"fogbow/worker"
     }
   ],
-  "pre_processing":[
+  "preprocessing":[
     {
       "name":"default",
       "docker_tag":"default",
       "docker_repository":"fogbow/preprocessor"
+    },{
+      "name":"legacy",
+      "docker_tag":"legacy",
+      "docker_repository":"fogbow/preprocessor"
     }
   ],
-  "input_downloading":[
+  "inputdownloading":[
     {
       "name":"usgsapis",
       "docker_tag":"usgsapis",

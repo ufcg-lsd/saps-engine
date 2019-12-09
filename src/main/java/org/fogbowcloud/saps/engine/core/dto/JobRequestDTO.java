@@ -1,7 +1,9 @@
 package org.fogbowcloud.saps.engine.core.dto;
 
-import org.fogbowcloud.saps.engine.core.job.SapsJob;
-import org.fogbowcloud.saps.engine.core.task.Task;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
+import org.fogbowcloud.saps.engine.core.model.SapsTask;
+
+import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,19 +15,21 @@ public class JobRequestDTO implements Serializable {
      */
     private static final long serialVersionUID = 1L;
     private String label;
+    
+    @SerializedName("tasks_specs")
     private List<TaskRequestDTO> tasksSpecs;
 
     public JobRequestDTO(SapsJob job) {
-        this.tasksSpecs = new ArrayList<>();
+        this.tasksSpecs = new ArrayList<TaskRequestDTO>();
         this.label = job.getName();
         populateTaskSpec(job);
     }
 
     private void populateTaskSpec(SapsJob job) {
-        List<Task> taskList = job.getTasks();
-        for (Task task : taskList) {
-            this.tasksSpecs.add(new TaskRequestDTO(task.getId(), task.getSpecification(),
-                    task.getAllCommandsInStr(), task.getAllMetadata()));
+        List<SapsTask> taskList = job.getTasksList();
+        for (SapsTask task : taskList) {
+            this.tasksSpecs.add(new TaskRequestDTO(task.getId(), task.getRequirements(),
+                    task.getCommands(), task.getMetadata()));
         }
     }
 

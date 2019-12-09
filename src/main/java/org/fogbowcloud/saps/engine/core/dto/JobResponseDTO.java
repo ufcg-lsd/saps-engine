@@ -3,6 +3,8 @@ package org.fogbowcloud.saps.engine.core.dto;
 import java.io.Serializable;
 import java.util.List;
 
+import com.google.gson.annotations.SerializedName;
+
 public class JobResponseDTO implements Serializable {
 
     /**
@@ -11,6 +13,8 @@ public class JobResponseDTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String id;
     private String label;
+    
+    @SerializedName("job_state")
     private String jobState;
     private List<TaskResponseDTO> tasks;
 
