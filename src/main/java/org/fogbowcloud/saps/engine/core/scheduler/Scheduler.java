@@ -30,7 +30,6 @@ public class Scheduler {
 
 	// Constants
 	public static final Logger LOGGER = Logger.getLogger(Scheduler.class);
-	private static final int ARREBOL_MAX_WAITING_JOBS = 20;
 
 	// Saps Controller Variables
 	private ScheduledExecutorService sapsExecutor;
@@ -258,7 +257,7 @@ public class Scheduler {
 		List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
 		ImageTaskState[] states = { ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED };
 
-		int countUpToTasks = ARREBOL_MAX_WAITING_JOBS - getCountSlotsInArrebol("default");
+		int countUpToTasks = getCountSlotsInArrebol("default");
 
 		for (ImageTaskState state : states) {
 			List<SapsImage> selectedTasksInCurrentState = selectTasks(countUpToTasks, state);
@@ -557,15 +556,16 @@ public class Scheduler {
 	 * @return boolean representation, true (is was finished) or false (otherwise)
 	 */
 	private boolean checkJobWasFinish(JobResponseDTO jobResponse) {
-		LOGGER.info("Checking if job [" + jobResponse.getId() + "] was finished");
+		String jobId = jobResponse.getId();
+		String jobState = jobResponse.getJobState().toUpperCase();
 
-		for (TaskResponseDTO task : jobResponse.getTasks()) {
-			LOGGER.info("State task [" + task.getId() + "]: " + task.getState().toLowerCase());
+		LOGGER.info("Checking if job [" + jobId + "] was finished");
 
-			if (task.getState().compareTo(TaskResponseDTO.STATE_FAILED) != 0
-					&& task.getState().compareTo(TaskResponseDTO.STATE_FINISHED) != 0)
-				return false;
-		}
+		LOGGER.info("State task [" + jobId + "]: " + jobState);
+
+		if (jobState.compareTo(TaskResponseDTO.STATE_FAILED) != 0
+				&& jobState.compareTo(TaskResponseDTO.STATE_FINISHED) != 0)
+			return false;
 
 		return true;
 	}
