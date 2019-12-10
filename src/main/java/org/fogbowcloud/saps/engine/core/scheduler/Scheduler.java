@@ -560,8 +560,7 @@ public class Scheduler {
 		String jobState = jobResponse.getJobState().toUpperCase();
 
 		LOGGER.info("Checking if job [" + jobId + "] was finished");
-
-		LOGGER.info("State task [" + jobId + "]: " + jobState);
+		LOGGER.info("State job [" + jobId + "]: " + jobState);
 
 		if (jobState.compareTo(TaskResponseDTO.STATE_FAILED) != 0
 				&& jobState.compareTo(TaskResponseDTO.STATE_FINISHED) != 0)
