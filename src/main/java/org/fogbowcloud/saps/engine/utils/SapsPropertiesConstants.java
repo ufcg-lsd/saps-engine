@@ -103,6 +103,7 @@ public class SapsPropertiesConstants {
 	public static final String SAPS_EXECUTION_PERIOD_SUBMISSOR = "saps_execution_period_submissor";
 	public static final String SAPS_EXECUTION_PERIOD_CHECKER = "saps_execution_period_checker";
 	public static final String SAPS_EXECUTION_PERIOD_ARCHIVER = "saps_execution_period_archiver";
+	public static final String SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR = "saps_execution_period_garbage_collector";
 
 	public static final String DEFAULT_ARCHIVER_PERIOD = "default_archiver_period";
 	public static final String DEFAULT_DOWNLOADER_PERIOD = "default_downloader_period";
