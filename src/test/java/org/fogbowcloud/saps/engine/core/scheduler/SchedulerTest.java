@@ -1,176 +1,485 @@
 package org.fogbowcloud.saps.engine.core.scheduler;
 
-import static org.junit.Assert.*;
-
+import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 
-import org.fogbowcloud.saps.engine.core.model.ImageTask;
-import org.fogbowcloud.saps.engine.core.model.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
+import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
 
 public class SchedulerTest {
 
-	Scheduler scheduler = new Scheduler();
-	List<ImageTask> tasksL1Created = new ArrayList<ImageTask>();
-	List<ImageTask> tasksL1Downloaded = new ArrayList<ImageTask>();
-	List<ImageTask> tasksL1Preprocessed = new ArrayList<ImageTask>();
-	
 	@Before
-	public void setUpL1Created() {
-		ImageTask task01 = new ImageTask("1", "landsat_8", "217066", new Date(), ImageTaskState.CREATED, "", 5,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task02 = new ImageTask("2", "landsat_8", "217066", new Date(), ImageTaskState.CREATED, "", 4,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task03 = new ImageTask("3", "landsat_8", "217066", new Date(), ImageTaskState.CREATED, "", 3,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		
-		ImageTask task04 = new ImageTask("4", "landsat_8", "217066", new Date(), ImageTaskState.CREATED, "", 3,
-				"user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task05 = new ImageTask("5", "landsat_8", "217066", new Date(), ImageTaskState.CREATED, "", 5,
-				"user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		
-		ImageTask task06 = new ImageTask("6", "landsat_8", "217066", new Date(), ImageTaskState.CREATED, "", 2,
-				"user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
+	public void init() {
+		MockitoAnnotations.initMocks(this);
+	}
 
-		tasksL1Created.add(task01);
-		tasksL1Created.add(task02);
-		tasksL1Created.add(task03);
-		tasksL1Created.add(task04);
-		tasksL1Created.add(task05);
-		tasksL1Created.add(task06);
-	}
-	
-	@Before
-	public void setUpL1Downloaded() {
-		ImageTask task01 = new ImageTask("1", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED, "", 5,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task02 = new ImageTask("2", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED, "", 4,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task03 = new ImageTask("3", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED, "", 3,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		
-		ImageTask task04 = new ImageTask("4", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED, "", 3,
-				"user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task05 = new ImageTask("5", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED, "", 5,
-				"user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		
-		ImageTask task06 = new ImageTask("6", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED, "", 2,
-				"user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
+	private Scheduler createDefaultScheduler(Selector selector, Arrebol arrebol, ImageDataStore imageStore)
+			throws SapsException, SQLException {
+		Properties properties = new Properties();
+		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_IP, "");
+		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_PORT, "");
+		properties.put(SapsPropertiesConstants.IMAGE_WORKER, "");
+		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR, "");
+		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER, "");
+		properties.put(SapsPropertiesConstants.ARREBOL_BASE_URL, "");
 
-		tasksL1Downloaded.add(task01);
-		tasksL1Downloaded.add(task02);
-		tasksL1Downloaded.add(task03);
-		tasksL1Downloaded.add(task04);
-		tasksL1Downloaded.add(task05);
-		tasksL1Downloaded.add(task06);
+		return new Scheduler(properties, imageStore, null, arrebol, selector);
 	}
-	
-	@Before
-	public void setUpL1Preprocessed() {
-		ImageTask task01 = new ImageTask("1", "landsat_8", "217066", new Date(), ImageTaskState.PREPROCESSED, "", 5,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task02 = new ImageTask("2", "landsat_8", "217066", new Date(), ImageTaskState.PREPROCESSED, "", 4,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task03 = new ImageTask("3", "landsat_8", "217066", new Date(), ImageTaskState.PREPROCESSED, "", 3,
-				"user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		
-		ImageTask task04 = new ImageTask("4", "landsat_8", "217066", new Date(), ImageTaskState.PREPROCESSED, "", 3,
-				"user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		ImageTask task05 = new ImageTask("5", "landsat_8", "217066", new Date(), ImageTaskState.PREPROCESSED, "", 5,
-				"user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
-		
-		ImageTask task06 = new ImageTask("6", "landsat_8", "217066", new Date(), ImageTaskState.PREPROCESSED, "", 2,
-				"user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1), "", "");
 
-		tasksL1Preprocessed.add(task01);
-		tasksL1Preprocessed.add(task02);
-		tasksL1Preprocessed.add(task03);
-		tasksL1Preprocessed.add(task04);
-		tasksL1Preprocessed.add(task05);
-		tasksL1Preprocessed.add(task06);
-	}
-	
 	@Test
-	public void testMapUserToTasksWithTasksL1Created() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Created);
-		
-		assert (mapUserToTasks.get("user1").size() == 3);
-		assert (mapUserToTasks.get("user2").size() == 2);
-		assert (mapUserToTasks.get("user3").size() == 1);
-		
+	public void testSelectZeroTasksWithZeroSubmissionCapacityWhenThereIsNoAvailableTasks()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(0);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
-	
+
 	@Test
-	public void testMapUserToTasksWithTasksL1Downloaded() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Downloaded);
-		
-		assert (mapUserToTasks.get("user1").size() == 3);
-		assert (mapUserToTasks.get("user2").size() == 2);
-		assert (mapUserToTasks.get("user3").size() == 1);
-		
+	public void testSelectZeroTasksWithZeroSubmissionCapacityWhenThereIsAvailableTasks()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+		createdTasks.add(new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", ""));
+
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		downloadedTasks.add(new SapsImage("2", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 3, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", ""));
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		readyTasks.add(new SapsImage("3", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", ""));
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(0);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
-	
+
 	@Test
-	public void testMapUserToTasksWithTasksL1Preprocessed() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Preprocessed);
-		
-		assert (mapUserToTasks.get("user1").size() == 3);
-		assert (mapUserToTasks.get("user2").size() == 2);
-		assert (mapUserToTasks.get("user3").size() == 1);
-		
+	public void testSelectZeroTasksWithFiveSubmissionCapacityWhenThereIsNoAvailableTasks()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(5);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
-	
+
 	@Test
-	public void testSelectWithTasksL1Created() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Created);
-		
-		List<ImageTask> selectedTasks = scheduler.select(5, mapUserToTasks);
-		assert (selectedTasks.size() == 5);
+	public void testSelectOneTaskWithFiveSubmissionCapacityWhenOneAvailableCreatedTasks()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+
+		SapsImage task01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		createdTasks.add(task01);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(5);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(task01);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
-	
+
 	@Test
-	public void test2SelectWithTasksL1Created() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Created);
-		
-		List<ImageTask> selectedTasks = scheduler.select(7, mapUserToTasks);
-		assert (selectedTasks.size() == 6);
+	public void testSelectOneTaskWithFiveSubmissionCapacityWhenOneAvailableDownloadedTasks()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+
+		SapsImage task01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		downloadedTasks.add(task01);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(5);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(task01);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
-	
+
 	@Test
-	public void testSelectWithTasksL1Downloaded() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Downloaded);
-		
-		List<ImageTask> selectedTasks = scheduler.select(5, mapUserToTasks);
-		assert (selectedTasks.size() == 5);
+	public void testSelectOneTaskWithFiveSubmissionCapacityWhenOneAvailableReadyTasks()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+
+		SapsImage task01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		readyTasks.add(task01);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(5);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(task01);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
-	
+
 	@Test
-	public void test2SelectWithTasksL1Downloaded() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Downloaded);
-		
-		List<ImageTask> selectedTasks = scheduler.select(7, mapUserToTasks);
-		assert (selectedTasks.size() == 6);
+	public void testSelectOneReadyTaskWithOneSubmissionCapacityWhenAvailableTasksOneInEachStateReadyDownloadedCreated()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		readyTasks.add(readyTask01);
+
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		SapsImage downloadedTask01 = new SapsImage("2", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		downloadedTasks.add(downloadedTask01);
+
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+		SapsImage createdTask01 = new SapsImage("3", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		createdTasks.add(createdTask01);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(1);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(readyTask01);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
-	
+
 	@Test
-	public void testSelectWithTasksL1Preprocessed() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Preprocessed);
-		
-		List<ImageTask> selectedTasks = scheduler.select(5, mapUserToTasks);
-		assert (selectedTasks.size() == 5);
+	public void testSelectOneDownloadedTaskWithOneSubmissionCapacityWhenAvailableTasksOneInEachStateDownloadedCreated()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		SapsImage downloadedTask01 = new SapsImage("1", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		downloadedTasks.add(downloadedTask01);
+
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+		SapsImage createdTask01 = new SapsImage("2", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		createdTasks.add(createdTask01);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(1);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(downloadedTask01);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
-	
+
 	@Test
-	public void test2SelectWithTasksL1Preprocessed() {
-		Map<String, List<ImageTask>> mapUserToTasks = scheduler.mapUsers2Tasks(tasksL1Preprocessed);
-		
-		List<ImageTask> selectedTasks = scheduler.select(7, mapUserToTasks);
-		assert (selectedTasks.size() == 6);
+	public void testSelectTwoDownloadedTaskOfUsersDiffirentsWithTwoSubmissionCapacityWhenAvailableTasksTwoInEachStateReadyDownloadedCreated()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage readyTask02 = new SapsImage("2", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		readyTasks.add(readyTask01);
+		readyTasks.add(readyTask02);
+
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		SapsImage downloadedTask01 = new SapsImage("3", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage downloadedTask02 = new SapsImage("4", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		downloadedTasks.add(downloadedTask01);
+		downloadedTasks.add(downloadedTask02);
+
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+		SapsImage createdTask01 = new SapsImage("5", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage createdTask02 = new SapsImage("6", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		createdTasks.add(createdTask01);
+		createdTasks.add(createdTask02);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(2);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(readyTask01);
+		expectedSelectedTasks.add(readyTask02);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
+	}
+
+	@Test
+	public void testSelectTwoReadyAndOneDownloadTasksWithThreeSubmissionCapacityWhenAvailableTasksInEachStateTwoReadyOneDownloadedThreeCreated()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage readyTask02 = new SapsImage("2", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		readyTasks.add(readyTask01);
+		readyTasks.add(readyTask02);
+
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		SapsImage downloadedTask01 = new SapsImage("3", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		downloadedTasks.add(downloadedTask01);
+
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+		SapsImage createdTask01 = new SapsImage("4", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage createdTask02 = new SapsImage("5", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage createdTask03 = new SapsImage("6", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		createdTasks.add(createdTask01);
+		createdTasks.add(createdTask02);
+		createdTasks.add(createdTask03);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(3);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(readyTask01);
+		expectedSelectedTasks.add(readyTask02);
+		expectedSelectedTasks.add(downloadedTask01);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
+	}
+
+	@Test
+	public void testSelectOneReadyAndTwoDownloadTasksWithThreeSubmissionCapacityWhenAvailableTasksInEachStateOneReadyTwoDownloadedThreeCreated()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		readyTasks.add(readyTask01);
+
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		SapsImage downloadedTask01 = new SapsImage("2", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage downloadedTask02 = new SapsImage("3", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		downloadedTasks.add(downloadedTask01);
+		downloadedTasks.add(downloadedTask02);
+
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+		SapsImage createdTask01 = new SapsImage("4", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage createdTask02 = new SapsImage("5", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage createdTask03 = new SapsImage("6", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		createdTasks.add(createdTask01);
+		createdTasks.add(createdTask02);
+		createdTasks.add(createdTask03);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(3);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(readyTask01);
+		expectedSelectedTasks.add(downloadedTask01);
+		expectedSelectedTasks.add(downloadedTask02);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
+	}
+
+	@Test
+	public void testSelectThreeTasksOneOfEachStateWithThreeSubmissionCapacityWhenAvailableTasksInEachStateOneReadyOneDownloadedThreeCreated()
+			throws Exception, SubmitJobException, GetCountsSlotsException {
+		ImageDataStore imageStore = mock(ImageDataStore.class);
+		Arrebol arrebol = mock(Arrebol.class);
+		Scheduler scheduler = createDefaultScheduler(new DefaultRoundRobin(), arrebol, imageStore);
+
+		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
+		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		readyTasks.add(readyTask01);
+
+		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
+		SapsImage downloadedTask01 = new SapsImage("2", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		downloadedTasks.add(downloadedTask01);
+
+		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
+		SapsImage createdTask01 = new SapsImage("4", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage createdTask02 = new SapsImage("5", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		SapsImage createdTask03 = new SapsImage("6", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
+				"", "");
+		createdTasks.add(createdTask01);
+		createdTasks.add(createdTask02);
+		createdTasks.add(createdTask03);
+
+		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
+		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
+		when(imageStore.getIn(ImageTaskState.CREATED, ImageDataStore.UNLIMITED)).thenReturn(createdTasks);
+		when(arrebol.getCountSlotsInQueue("default")).thenReturn(3);
+
+		List<SapsImage> selectedTasks = scheduler.selectTasks();
+
+		List<SapsImage> expectedSelectedTasks = new LinkedList<SapsImage>();
+		expectedSelectedTasks.add(readyTask01);
+		expectedSelectedTasks.add(downloadedTask01);
+		expectedSelectedTasks.add(createdTask01);
+
+		Assert.assertEquals(expectedSelectedTasks, selectedTasks);
 	}
 
 }
