@@ -74,6 +74,11 @@ public class Archiver {
 			LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_PORT + " was not set");
 			return false;
 		}
+		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR
+					+ " was not set");
+			return false;
+		}
 		if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER)) {
 			LOGGER.error(
 					"Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER + " was not set");
@@ -124,18 +129,47 @@ public class Archiver {
 	public void start() throws Exception {
 		cleanUnfinishedArchivedData();
 
-		try {
-			sapsExecutor.scheduleWithFixedDelay(new Runnable() {
-				@Override
-				public void run() {
-					archiver();
-				}
-			}, 0, Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER)),
-					TimeUnit.SECONDS);
+		sapsExecutor.scheduleWithFixedDelay(new Runnable() {
+			@Override
+			public void run() {
+				garbageCollector();
+			}
+		}, 0, Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR)),
+				TimeUnit.SECONDS);
 
-		} catch (Exception e) {
-			LOGGER.error("Error while starting Archiver component", e);
-		}
+		sapsExecutor.scheduleWithFixedDelay(new Runnable() {
+			@Override
+			public void run() {
+				archiver();
+			}
+		}, 0, Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER)),
+				TimeUnit.SECONDS);
+	}
+
+	/**
+	 * This function is an garbage collector deleting data directory from failed
+	 * tasks.
+	 */
+	private void garbageCollector() {
+		List<SapsImage> failedTasks = tasksInFailedState(ImageDataStore.UNLIMITED);
+
+		LOGGER.info("Deleting data directory from " + failedTasks.size() + " failed tasks");
+
+		for (SapsImage task : failedTasks)
+			deleteAllTaskFilesFromDisk(task);
+
+	}
+
+	/**
+	 * This function gets tasks in failed state in Catalog.
+	 * 
+	 * @param limit   limit value of tasks to take
+	 * @param message information message
+	 * @return tasks in specific state
+	 */
+	private List<SapsImage> tasksInFailedState(int limit) {
+		return CatalogUtils.getTasks(imageStore, ImageTaskState.FAILED, limit,
+				"gets tasks with " + ImageTaskState.FAILED.getValue() + " state");
 	}
 
 	/**
