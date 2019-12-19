@@ -26,6 +26,7 @@ public class Archiver {
 	private final ImageDataStore imageStore;
 	private final SwiftAPIClient swiftAPIClient;
 	private ScheduledExecutorService sapsExecutor;
+	private final boolean executionMode;
 
 	private static int MAX_ARCHIVE_TRIES = 1;
 	private static int MAX_SWIFT_UPLOAD_TRIES = 2;
@@ -49,6 +50,11 @@ public class Archiver {
 		this.imageStore = imageStore;
 		this.swiftAPIClient = swiftAPIClient;
 		this.sapsExecutor = Executors.newScheduledThreadPool(1);
+		this.executionMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
+				.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER).toLowerCase().equals("true");
+
+		if (this.executionMode && !checkPropertiesDebugMode(properties))
+			throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
 
 		// Creating Swift container
 		this.swiftAPIClient.createContainer(getContainerName());
@@ -61,7 +67,7 @@ public class Archiver {
 	 * @return boolean representation, true (case all properties been set) or false
 	 *         (otherwise)
 	 */
-	protected static boolean checkProperties(Properties properties) {
+	private boolean checkProperties(Properties properties) {
 		if (properties == null) {
 			LOGGER.error("Properties arg must not be null.");
 			return false;
@@ -118,6 +124,24 @@ public class Archiver {
 		}
 
 		LOGGER.debug("All properties are set");
+		return true;
+	}
+
+	/**
+	 * This function checks if properties for debug mode have been set.
+	 * 
+	 * @param properties saps properties to be check
+	 * @return boolean representation, true (case all properties been set) or false
+	 *         (otherwise)
+	 */
+	private boolean checkPropertiesDebugMode(Properties properties) {
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS
+					+ " was not set (it's necessary when debug mode)");
+			return false;
+		}
+
+		LOGGER.debug("All properties for debug mode are set");
 		return true;
 	}
 
@@ -257,11 +281,12 @@ public class Archiver {
 		try {
 			List<SapsImage> tasksToArchive = tasksToArchive(ImageDataStore.UNLIMITED);
 
-			LOGGER.info("Finished tasks [" + tasksToArchive.size() + "]: " + tasksToArchive);
+			LOGGER.info("Trying to archive " + tasksToArchive.size() + " finished tasks: " + tasksToArchive);
 
 			for (SapsImage task : tasksToArchive) {
 				LOGGER.info("Try to archive task [" + task.getTaskId() + "]");
 				tryTaskArchive(task);
+				deleteAllTaskFilesFromDisk(task);
 			}
 
 		} catch (Exception e) {
@@ -288,7 +313,8 @@ public class Archiver {
 	 * @throws IOException
 	 */
 	private void tryTaskArchive(SapsImage task) throws IOException {
-		if (prepareArchive(task) && archiveSwift(task)) {
+		if (prepareArchive(task)
+				&& archiveSwift(task, properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX))) {
 			LOGGER.info("SUCCESS in archiving task [" + task.getTaskId() + "]");
 			finishArchive(task);
 		} else {
@@ -327,14 +353,13 @@ public class Archiver {
 	 * @return boolean representation, success (true) or failure (false) in to
 	 *         archive the three folders.
 	 */
-	private boolean archiveSwift(SapsImage task) {
+	private boolean archiveSwift(SapsImage task, String swiftExports) {
 		String taskId = task.getTaskId();
 
 		LOGGER.info("Attempting to archive task [" + taskId + "] with a maximum of " + MAX_ARCHIVE_TRIES
 				+ " archiving attempts for each folder (inputdownloading, preprocessing, processing)");
 
 		String sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-		String swiftExports = properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX);
 
 		String inputdownloadingLocalDir = sapsExports + File.separator + taskId + File.separator + "inputdownloading";
 		String inputdownloadingSwiftDir = swiftExports + File.separator + taskId + File.separator + "inputdownloading";
@@ -380,7 +405,6 @@ public class Archiver {
 				SapsImage.NONE_ARREBOL_JOB_ID,
 				"updates task [" + taskId + "] with state [" + ImageTaskState.ARCHIVED.getValue() + "]");
 		addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
-		deleteAllTaskFilesFromDisk(task);
 	}
 
 	/**
@@ -390,8 +414,6 @@ public class Archiver {
 	 */
 	private void failedArchive(SapsImage task) {
 		String taskId = task.getTaskId();
-
-		deleteAllTaskFilesFromDisk(task);
 
 		updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
 				"Max archive tries" + MAX_ARCHIVE_TRIES + " reached", SapsImage.NONE_ARREBOL_JOB_ID,
@@ -412,6 +434,9 @@ public class Archiver {
 
 		File taskDir = new File(taskDirPath);
 		if (taskDir.exists() && taskDir.isDirectory()) {
+			if (this.executionMode && task.getState().equals(ImageTaskState.FAILED))
+				archiveSwift(task,
+						properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS));
 			try {
 				FileUtils.deleteDirectory(taskDir);
 			} catch (IOException e) {
