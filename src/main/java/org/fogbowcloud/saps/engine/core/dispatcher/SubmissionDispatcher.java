@@ -13,6 +13,9 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
+import org.fogbowcloud.saps.engine.utils.ExecutionScriptTag;
+import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class SubmissionDispatcher {
@@ -238,13 +241,18 @@ public class SubmissionDispatcher {
 	 * @param inputdownloadingPhaseTag inputdownloading phase tag
 	 * @param preprocessingPhaseTag    preprocessing phase tag
 	 * @param processingPhaseTag       processing phase tag
+	 * @param digestProcessing
+	 * @param processingPhaseTag2
+	 * @param digestPreprocessing
 	 * @return new saps image
 	 */
 	private SapsImage addNewTaskInCatalog(String taskId, String dataset, String region, Date date, int priority,
-			String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
-			String processingPhaseTag) {
+			String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
+			String preprocessingPhaseTag, String digestPreprocessing, String processingPhaseTag,
+			String digestProcessing) {
 		return CatalogUtils.addNewTask(imageStore, taskId, dataset, region, date, priority, userEmail,
-				inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag, "add new task [" + taskId + "]");
+				inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
+				processingPhaseTag, digestProcessing, "add new task [" + taskId + "]");
 	}
 
 	/**
@@ -282,6 +290,17 @@ public class SubmissionDispatcher {
 		endCal.setTime(endDate);
 		endCal.add(Calendar.DAY_OF_YEAR, 1);
 
+		ExecutionScriptTag imageDockerInputdownloading = getExecutionScriptTag(ExecutionScriptTagUtil.INPUT_DOWNLOADER,
+				inputdownloadingPhaseTag);
+		ExecutionScriptTag imageDockerPreprocessing = getExecutionScriptTag(ExecutionScriptTagUtil.PRE_PROCESSING,
+				preprocessingPhaseTag);
+		ExecutionScriptTag imageDockerProcessing = getExecutionScriptTag(ExecutionScriptTagUtil.PROCESSING,
+				processingPhaseTag);
+
+		String digestInputdownloading = getDigest(imageDockerInputdownloading);
+		String digestPreprocessing = getDigest(imageDockerPreprocessing);
+		String digestProcessing = getDigest(imageDockerProcessing);
+
 		Set<String> regions = regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
 				upperRightLongitude);
 
@@ -296,12 +315,40 @@ public class SubmissionDispatcher {
 					String taskId = UUID.randomUUID().toString();
 
 					SapsImage task = addNewTaskInCatalog(taskId, dataset, region, cal.getTime(), priority, email,
-							inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag);
+							inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag,
+							digestPreprocessing, processingPhaseTag, digestProcessing);
 					addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
 				}
 			}
 			cal.add(Calendar.DAY_OF_YEAR, 1);
 		}
+	}
+
+	/**
+	 * This function gets script tag based in repository.
+	 *
+	 * @param repository task repository
+	 * @param tag        task tag
+	 * @return task information (tag, repository, type and name)
+	 */
+	private ExecutionScriptTag getExecutionScriptTag(String repository, String tag) {
+		try {
+			return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
+		} catch (SapsException e) {
+			LOGGER.error("Error while trying get tag and repository Docker.", e);
+			return null;
+		}
+	}
+
+	/**
+	 * This function gets immutable identifier based in repository and tag
+	 * 
+	 * @param imageDockerInfo image docker information
+	 * @return immutable identifier that match with repository and tag passed
+	 */
+	// TODO implement method
+	private String getDigest(ExecutionScriptTag imageDockerInfo) {
+		return null;
 	}
 
 	/**
