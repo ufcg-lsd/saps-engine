@@ -51,7 +51,7 @@ public class Archiver {
 		this.swiftAPIClient = swiftAPIClient;
 		this.sapsExecutor = Executors.newScheduledThreadPool(1);
 		this.executionMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
-				.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER).toLowerCase().equals("true");
+				.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
 
 		if (this.executionMode && !checkPropertiesDebugMode(properties))
 			throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
