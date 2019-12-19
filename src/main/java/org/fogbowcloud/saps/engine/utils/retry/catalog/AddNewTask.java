@@ -16,12 +16,16 @@ public class AddNewTask implements CatalogRetry<SapsImage> {
 	private int priority;
 	private String userEmail;
 	private String inputdownloadingPhaseTag;
+	private String digestInputdownloading;
 	private String preprocessingPhaseTag;
+	private String digestPreprocessing;
 	private String processingPhaseTag;
+	private String digestProcessing;
 
 	public AddNewTask(ImageDataStore imageStore, String taskId, String dataset, String region, Date date, int priority,
-			String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
-			String processingPhaseTag) {
+			String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
+			String preprocessingPhaseTag, String digestPreprocessing, String processingPhaseTag,
+			String digestProcessing) {
 		this.imageStore = imageStore;
 		this.taskId = taskId;
 		this.dataset = dataset;
@@ -30,14 +34,18 @@ public class AddNewTask implements CatalogRetry<SapsImage> {
 		this.priority = priority;
 		this.userEmail = userEmail;
 		this.inputdownloadingPhaseTag = inputdownloadingPhaseTag;
+		this.digestInputdownloading = digestInputdownloading;
 		this.preprocessingPhaseTag = preprocessingPhaseTag;
+		this.digestPreprocessing = digestPreprocessing;
 		this.processingPhaseTag = processingPhaseTag;
+		this.digestProcessing = digestProcessing;
 	}
 
 	@Override
 	public SapsImage run() throws SQLException {
 		return imageStore.addImageTask(taskId, dataset, region, date, priority, userEmail, inputdownloadingPhaseTag,
-				preprocessingPhaseTag, processingPhaseTag);
+				digestInputdownloading, preprocessingPhaseTag, digestPreprocessing, processingPhaseTag,
+				digestProcessing);
 	}
 
 }
