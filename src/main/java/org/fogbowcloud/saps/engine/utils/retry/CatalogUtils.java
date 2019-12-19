@@ -165,11 +165,12 @@ public class CatalogUtils {
 	 * @return new SAPS image
 	 */
 	public static SapsImage addNewTask(ImageDataStore imageStore, String taskId, String dataset, String region,
-			Date date, int priority, String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
-			String processingPhaseTag, String message) {
+			Date date, int priority, String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
+			String preprocessingPhaseTag, String digestPreprocessing, String processingPhaseTag,
+			String digestProcessing, String message) {
 		return retry(new AddNewTask(imageStore, taskId, dataset, region, date, priority, userEmail,
-				inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag), CATALOG_DEFAULT_SLEEP_SECONDS,
-				message);
+				inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
+				processingPhaseTag, digestProcessing), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
 	/**
