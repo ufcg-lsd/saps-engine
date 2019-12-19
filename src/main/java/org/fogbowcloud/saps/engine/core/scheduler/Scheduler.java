@@ -406,15 +406,17 @@ public class Scheduler {
 		String repository = getRepository(state);
 		ExecutionScriptTag imageDockerInfo = getExecutionScriptTag(task, repository);
 
+		String formatImageWithDigest = getFormatImageWithDigest(imageDockerInfo, state, task);
+
 		Map<String, String> requirements = new HashMap<String, String>();
-		requirements.put("image", imageDockerInfo.formatImageDocker());
+		requirements.put("image", formatImageWithDigest);
 
 		List<String> commands = SapsTask.buildCommandList(task, repository);
 
 		Map<String, String> metadata = new HashMap<String, String>();
 
 		LOGGER.info("Creating SAPS task ...");
-		SapsTask sapsTask = new SapsTask(task.getTaskId() + imageDockerInfo.formatImageDocker(), requirements, commands,
+		SapsTask sapsTask = new SapsTask(task.getTaskId() + "#" + formatImageWithDigest, requirements, commands,
 				metadata);
 		LOGGER.info("SAPS task: " + sapsTask.toJSON().toString());
 
@@ -472,6 +474,15 @@ public class Scheduler {
 			LOGGER.error("Error while trying get tag and repository Docker.", e);
 			return null;
 		}
+	}
+
+	private String getFormatImageWithDigest(ExecutionScriptTag imageDockerInfo, ImageTaskState state, SapsImage task) {
+		if (state == ImageTaskState.RUNNING)
+			return imageDockerInfo.getDockerRepository() + "@" + task.getDigestProcessing();
+		else if (state == ImageTaskState.PREPROCESSING)
+			return imageDockerInfo.getDockerRepository() + "@" + task.getDigestPreprocessing();
+		else
+			return imageDockerInfo.getDockerRepository() + "@" + task.getDigestInputdownloading();
 	}
 
 	/**
