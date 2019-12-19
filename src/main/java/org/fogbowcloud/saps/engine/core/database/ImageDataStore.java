@@ -25,7 +25,8 @@ public interface ImageDataStore {
 	public String DATASTORE_PORT = "datastore_port";
 
 	SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
-			String inputGathering, String inputPreprocessing, String algorithmExecution) throws SQLException;
+			String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
+			String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws SQLException;
 
 	void addImageTask(SapsImage imageTask) throws SQLException;
 
