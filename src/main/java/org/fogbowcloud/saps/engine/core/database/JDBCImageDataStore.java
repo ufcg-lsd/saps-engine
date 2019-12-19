@@ -36,9 +36,12 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private static final String FEDERATION_MEMBER_COL = "federation_member";
 	private static final String STATE_COL = "state";
 	private static final String ARREBOL_JOB_ID = "arrebol_job_id";
-	private static final String INPUT_GATHERING_TAG = "inputdownloading_tag";
-	private static final String INPUT_PREPROCESSING_TAG = "preprocessing_tag";
-	private static final String ALGORITHM_EXECUTION_TAG = "processing_tag";
+	private static final String INPUTDOWNLOADING_TAG = "inputdownloading_tag";
+	private static final String PREPROCESSING_TAG = "preprocessing_tag";
+	private static final String PROCESSING_TAG = "processing_tag";
+	private static final String INPUTDOWNLOADING_DIGEST = "inputdownloading_digest";
+	private static final String PREPROCESSING_DIGEST = "preprocessing_digest";
+	private static final String PROCESSING_DIGEST = "processing_digest";
 	private static final String CREATION_TIME_COL = "creation_time";
 	private static final String UPDATED_TIME_COL = "updated_time";
 	private static final String IMAGE_STATUS_COL = "status";
@@ -73,7 +76,7 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	// Insert queries
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<>();
 	private BasicDataSource connectionPool;
@@ -158,8 +161,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 					+ IMAGE_DATE_COL + " DATE, " + STATE_COL + " VARCHAR(100), " + ARREBOL_JOB_ID + " VARCHAR(100),"
 					+ FEDERATION_MEMBER_COL + " VARCHAR(255), " + PRIORITY_COL + " INTEGER, " + USER_EMAIL_COL
 					+ " VARCHAR(255) REFERENCES " + USERS_TABLE_NAME + "(" + USER_EMAIL_COL + "), "
-					+ INPUT_GATHERING_TAG + " VARCHAR(100), " + INPUT_PREPROCESSING_TAG + " VARCHAR(100), "
-					+ ALGORITHM_EXECUTION_TAG + " VARCHAR(100), " + CREATION_TIME_COL + " TIMESTAMP, "
+					+ INPUTDOWNLOADING_TAG + " VARCHAR(100), " + INPUTDOWNLOADING_DIGEST + " VARCHAR(255), "
+					+ PREPROCESSING_TAG + " VARCHAR(100), " + PREPROCESSING_DIGEST + " VARCHAR(255), " + PROCESSING_TAG
+					+ " VARCHAR(100), " + PROCESSING_DIGEST + " VARCHAR(255), " + CREATION_TIME_COL + " TIMESTAMP, "
 					+ UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL + " VARCHAR(255), " + ERROR_MSG_COL
 					+ " VARCHAR(255))");
 
@@ -253,11 +257,13 @@ public class JDBCImageDataStore implements ImageDataStore {
 
 	@Override
 	public SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
-			String inputGathering, String inputPreprocessing, String algorithmExecution) throws SQLException {
+			String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
+			String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
 		SapsImage task = new SapsImage(taskId, dataset, region, date, ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, priority, user, inputGathering,
-				inputPreprocessing, algorithmExecution, now, now, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA);
+				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, priority, user,
+				inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
+				processingPhaseTag, digestProcessing, now, now, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA);
 		addImageTask(task);
 		return task;
 	}
@@ -301,12 +307,15 @@ public class JDBCImageDataStore implements ImageDataStore {
 			insertStatement.setInt(8, imageTask.getPriority());
 			insertStatement.setString(9, imageTask.getUser());
 			insertStatement.setString(10, imageTask.getInputdownloadingTag());
-			insertStatement.setString(11, imageTask.getPreprocessingTag());
-			insertStatement.setString(12, imageTask.getProcessingTag());
-			insertStatement.setTimestamp(13, imageTask.getCreationTime());
-			insertStatement.setTimestamp(14, imageTask.getUpdateTime());
-			insertStatement.setString(15, imageTask.getStatus());
-			insertStatement.setString(16, imageTask.getError());
+			insertStatement.setString(11, imageTask.getDigestInputdownloading());
+			insertStatement.setString(12, imageTask.getPreprocessingTag());
+			insertStatement.setString(13, imageTask.getDigestPreprocessing());
+			insertStatement.setString(14, imageTask.getProcessingTag());
+			insertStatement.setString(15, imageTask.getDigestProcessing());
+			insertStatement.setTimestamp(16, imageTask.getCreationTime());
+			insertStatement.setTimestamp(17, imageTask.getUpdateTime());
+			insertStatement.setString(18, imageTask.getStatus());
+			insertStatement.setString(19, imageTask.getError());
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
@@ -1153,8 +1162,9 @@ public class JDBCImageDataStore implements ImageDataStore {
 			imageTasks.add(new SapsImage(rs.getString(TASK_ID_COL), rs.getString(DATASET_COL), rs.getString(REGION_COL),
 					rs.getDate(IMAGE_DATE_COL), ImageTaskState.getStateFromStr(rs.getString(STATE_COL)),
 					rs.getString(ARREBOL_JOB_ID), rs.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
-					rs.getString(USER_EMAIL_COL), rs.getString(INPUT_GATHERING_TAG),
-					rs.getString(INPUT_PREPROCESSING_TAG), rs.getString(ALGORITHM_EXECUTION_TAG),
+					rs.getString(USER_EMAIL_COL), rs.getString(INPUTDOWNLOADING_TAG),
+					rs.getString(INPUTDOWNLOADING_DIGEST), rs.getString(PREPROCESSING_TAG),
+					rs.getString(PREPROCESSING_DIGEST), rs.getString(PROCESSING_TAG), rs.getString(PROCESSING_DIGEST),
 					rs.getTimestamp(CREATION_TIME_COL), rs.getTimestamp(UPDATED_TIME_COL),
 					rs.getString(IMAGE_STATUS_COL), rs.getString(ERROR_MSG_COL)));
 		}
@@ -1357,9 +1367,8 @@ public class JDBCImageDataStore implements ImageDataStore {
 	}
 
 	private final String PROCESSED_IMAGES_QUERY = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + STATE_COL
-			+ " = ? AND " + REGION_COL + " = ? AND " + IMAGE_DATE_COL + " BETWEEN ? AND ? AND "
-			+ INPUT_PREPROCESSING_TAG + " = ? AND " + INPUT_GATHERING_TAG + " = ? AND " + ALGORITHM_EXECUTION_TAG
-			+ " = ?";
+			+ " = ? AND " + REGION_COL + " = ? AND " + IMAGE_DATE_COL + " BETWEEN ? AND ? AND " + PREPROCESSING_TAG
+			+ " = ? AND " + INPUTDOWNLOADING_TAG + " = ? AND " + PROCESSING_TAG + " = ?";
 
 	@Override
 	public List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
