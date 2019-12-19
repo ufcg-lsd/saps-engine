@@ -315,6 +315,7 @@ public class Scheduler {
 			String arrebolJobId = submitTaskToArrebol(task, nextState);
 			updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA, arrebolJobId,
 					"updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
+			addTimestampTaskInCatalog(task, "updates task [" + task.getTaskId() + "] timestamp");
 		}
 	}
 
