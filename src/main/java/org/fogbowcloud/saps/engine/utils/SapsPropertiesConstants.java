@@ -67,6 +67,7 @@ public class SapsPropertiesConstants {
 	// Swift constants
 	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
 	public static final String SWIFT_FOLDER_PREFIX = "swift_folder_prefix";
+	public static final String SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS = "swift_folder_prefix_debug_failed_tasks";
 	public static final String SWIFT_INPUT_PSEUDO_FOLDER_PREFIX = "swift_input_pseud_folder_prefix";
 	public static final String SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX = "swift_output_pseud_folder_prefix";
 	public static final String SWIFT_USERNAME = "swift_username";
@@ -104,6 +105,9 @@ public class SapsPropertiesConstants {
 	public static final String SAPS_EXECUTION_PERIOD_CHECKER = "saps_execution_period_checker";
 	public static final String SAPS_EXECUTION_PERIOD_ARCHIVER = "saps_execution_period_archiver";
 	public static final String SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR = "saps_execution_period_garbage_collector";
+
+	// EXecution mode constants
+	public static final String SAPS_EXECUTION_DEBUG_MODE = "saps_execution_debug_mode";
 
 	public static final String DEFAULT_ARCHIVER_PERIOD = "default_archiver_period";
 	public static final String DEFAULT_DOWNLOADER_PERIOD = "default_downloader_period";
