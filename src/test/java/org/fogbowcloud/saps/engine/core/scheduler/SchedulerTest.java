@@ -74,18 +74,18 @@ public class SchedulerTest {
 
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 		createdTasks.add(new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", ""));
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", ""));
 
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		downloadedTasks.add(new SapsImage("2", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 3, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", ""));
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 3, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", ""));
 
 		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
 		readyTasks.add(new SapsImage("3", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", ""));
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", ""));
 
 		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
 		when(imageStore.getIn(ImageTaskState.DOWNLOADED, ImageDataStore.UNLIMITED)).thenReturn(downloadedTasks);
@@ -132,8 +132,8 @@ public class SchedulerTest {
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 
 		SapsImage task01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		createdTasks.add(task01);
 
 		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
@@ -161,8 +161,8 @@ public class SchedulerTest {
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 
 		SapsImage task01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		downloadedTasks.add(task01);
 
 		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
@@ -190,8 +190,8 @@ public class SchedulerTest {
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 
 		SapsImage task01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		readyTasks.add(task01);
 
 		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
@@ -216,20 +216,20 @@ public class SchedulerTest {
 
 		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
 		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		readyTasks.add(readyTask01);
 
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		SapsImage downloadedTask01 = new SapsImage("2", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		downloadedTasks.add(downloadedTask01);
 
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 		SapsImage createdTask01 = new SapsImage("3", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		createdTasks.add(createdTask01);
 
 		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
@@ -256,14 +256,14 @@ public class SchedulerTest {
 
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		SapsImage downloadedTask01 = new SapsImage("1", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		downloadedTasks.add(downloadedTask01);
 
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 		SapsImage createdTask01 = new SapsImage("2", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		createdTasks.add(createdTask01);
 
 		when(imageStore.getIn(ImageTaskState.READY, ImageDataStore.UNLIMITED)).thenReturn(readyTasks);
@@ -288,31 +288,31 @@ public class SchedulerTest {
 
 		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
 		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage readyTask02 = new SapsImage("2", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		readyTasks.add(readyTask01);
 		readyTasks.add(readyTask02);
 
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		SapsImage downloadedTask01 = new SapsImage("3", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage downloadedTask02 = new SapsImage("4", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		downloadedTasks.add(downloadedTask01);
 		downloadedTasks.add(downloadedTask02);
 
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 		SapsImage createdTask01 = new SapsImage("5", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage createdTask02 = new SapsImage("6", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		createdTasks.add(createdTask01);
 		createdTasks.add(createdTask02);
 
@@ -339,30 +339,30 @@ public class SchedulerTest {
 
 		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
 		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage readyTask02 = new SapsImage("2", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		readyTasks.add(readyTask01);
 		readyTasks.add(readyTask02);
 
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		SapsImage downloadedTask01 = new SapsImage("3", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		downloadedTasks.add(downloadedTask01);
 
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 		SapsImage createdTask01 = new SapsImage("4", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage createdTask02 = new SapsImage("5", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage createdTask03 = new SapsImage("6", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		createdTasks.add(createdTask01);
 		createdTasks.add(createdTask02);
 		createdTasks.add(createdTask03);
@@ -391,30 +391,30 @@ public class SchedulerTest {
 
 		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
 		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		readyTasks.add(readyTask01);
 
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		SapsImage downloadedTask01 = new SapsImage("2", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage downloadedTask02 = new SapsImage("3", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		downloadedTasks.add(downloadedTask01);
 		downloadedTasks.add(downloadedTask02);
 
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 		SapsImage createdTask01 = new SapsImage("4", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage createdTask02 = new SapsImage("5", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage createdTask03 = new SapsImage("6", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		createdTasks.add(createdTask01);
 		createdTasks.add(createdTask02);
 		createdTasks.add(createdTask03);
@@ -443,26 +443,26 @@ public class SchedulerTest {
 
 		List<SapsImage> readyTasks = new LinkedList<SapsImage>();
 		SapsImage readyTask01 = new SapsImage("1", "landsat_8", "217066", new Date(), ImageTaskState.READY,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		readyTasks.add(readyTask01);
 
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		SapsImage downloadedTask01 = new SapsImage("2", "landsat_7", "217066", new Date(), ImageTaskState.DOWNLOADED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		downloadedTasks.add(downloadedTask01);
 
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 		SapsImage createdTask01 = new SapsImage("4", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user1", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage createdTask02 = new SapsImage("5", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user2", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		SapsImage createdTask03 = new SapsImage("6", "landsat_5", "217066", new Date(), ImageTaskState.CREATED,
-				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "nop", "aio", new Timestamp(1), new Timestamp(1),
-				"", "");
+				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "", "nop", "", "aio", "", new Timestamp(1),
+				new Timestamp(1), "", "");
 		createdTasks.add(createdTask01);
 		createdTasks.add(createdTask02);
 		createdTasks.add(createdTask03);
