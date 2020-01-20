@@ -10,14 +10,14 @@ public class TaskRequestDTO implements Serializable {
      */
     private static final long serialVersionUID = 1L;
     
-    private String id;
+    private String label;
     private Map<String, String> requirements;
     private List<String> commands;
     private Map<String, String> metadata;
 
-    public TaskRequestDTO(String id, Map<String, String> requirements, List<String> commands,
+    public TaskRequestDTO(String label, Map<String, String> requirements, List<String> commands,
                           Map<String, String> metadata) {
-        this.id = id;
+        this.label = label;
         this.requirements = requirements;
         this.commands = commands;
         this.metadata = metadata;
@@ -38,13 +38,9 @@ public class TaskRequestDTO implements Serializable {
         return this.metadata;
     }
 
-    public String getId() {
-        return id;
-    }
-
     @Override
     public String toString() {
-        return "TaskRequestDTO [id=" + id + ", requirements=" + requirements+ ", commands=" + commands + ", metadata="
+        return "TaskRequestDTO [id=" + label + ", requirements=" + requirements+ ", commands=" + commands + ", metadata="
                 + metadata + "]";
     }
 
