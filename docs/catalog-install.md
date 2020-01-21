@@ -32,7 +32,7 @@ Once the database was created, you need to grant access to external clients:
   ```
 
 ## Test
-To test the deploy and configuration of the SAPS catalog (assuming it is accessible via the ```$catalog_ip_address``` IP address), one can try opening a conection to it from another machine, using the below command:
+To test the deploy and configuration of the SAPS catalog (assuming it is accessible via the ```$catalog_ip_address``` IP address), one can try opening a conection to it from another machine (it is necessary to have PostgreSQL installed), using the below command:
 
 ```
 psql -h $catalog_ip_address -p 5432 $catalog_db_name $catalog_user
