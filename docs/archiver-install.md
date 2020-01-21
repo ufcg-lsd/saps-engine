@@ -1,29 +1,54 @@
 # Install and Configure Archiver
+
+TODO: describe Archiver purpose
   
 ## Dependencies
-First of all, configure the timezone and NTP client as shown below:
 
-  ```
-  1. bash -c ‘echo "America/Recife" > /etc/timezone’
-  2. dpkg-reconfigure -f noninteractive tzdata
-  3. apt-get update
-  4. apt install -y ntp
-  5. sed -i "/server 0.ubuntu.pool.ntp.org/d" /etc/ntp.conf
-  6. sed -i "/server 1.ubuntu.pool.ntp.org/d" /etc/ntp.conf
-  7. sed -i "/server 2.ubuntu.pool.ntp.org/d" /etc/ntp.conf
-  8. sed -i "/server 3.ubuntu.pool.ntp.org/d" /etc/ntp.conf
-  9. sed -i "/server ntp.ubuntu.com/d" /etc/ntp.conf
-  10. bash -c ‘echo "server ntp.lsd.ufcg.edu.br" >> /etc/ntp.conf’
-  11. service ntp restart
-  ```
+In an apt-based Linux distro, type the below commands to install SAPS Archiver dependencies.
 
-After this, the Docker image of the Archiver component can be pulled, and a container running this image can be started, using the following commands:
+```
+sudo apt-get update
+sudo apt-get install openjdk-8-jdk
+sudo apt-get -y install maven
+sudo apt-get -y install git
+sudo apt install python-swiftclient
+sudo apt-get install -y nfs-kernel-server
+```
 
-  ```
-  1. docker pull fogbow/archiver
-  2. docker run -td -v fogbow/archiver
-  3. container_id=$(docker ps | grep “fogbow/archiver" | awk '{print $1}')
-  ```
+In addition to above Linux packages, the Archiver also depends on three codebases: 1) ```fogbow-mono-manager```; 2) ```fogbow-mono-cli```; and 3) the own ```saps-engine``` repository (which holds the Archive code). To fetch and compile the source code of these repositories, follow the below steps:
+
+```
+# fogbow-mono-manager repository
+git clone https://github.com/fogbow/fogbow-mono-manager.git
+cd fogbow-mono-manager
+git checkout develop
+mvn install -Dmaven.test.skip=true
+
+# fogbow-mono-cli repository
+git clone https://github.com/fogbow/fogbow-mono-cli.git
+cd fogbow-mono-cli
+git checkout develop
+mvn install -Dmaven.test.skip=true
+
+# saps-engine repository
+git clone https://github.com/ufcg-lsd/saps-engine
+cd saps-engine
+git checkout develop
+mvn install -Dmaven.test.skip=true
+```
+
+## Configure
+
+The first part of SAPS Archiver configuration deals with the setup of the NFS server temporary storage. Before starting the NFS daemon, please choose an directory, ```$nfs_server_folder_path```, in your machine local file system. The NFS daemon will hold the exported files within this directory. Below commands setup the NFS server:
+
+```
+mkdir -p $nfs_server_folder_path
+echo "$nfs_server_folder_path *(rw,insecure,no_subtree_check,async,no_root_squash)" >> /etc/exports
+sudo service nfs-kernel-server restart
+```
+
+# ALERT: Below instructions are outdated
+
 
 ## Configure
 The Archiver component can also be customized through its configuration file (example available [here](../examples/archiver.conf.example)):
