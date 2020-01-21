@@ -47,138 +47,83 @@ echo "$nfs_server_folder_path *(rw,insecure,no_subtree_check,async,no_root_squas
 sudo service nfs-kernel-server restart
 ```
 
-# ALERT: Below instructions are outdated
-
-
 ## Configure
-The Archiver component can also be customized through its configuration file (example available [here](../examples/archiver.conf.example)):
 
-  ```
-  # Catalogue database URL prefix (ex.: jdbc:postgresql://)
-  datastore_url_prefix=
+The Archiver configuration file (```archiver.conf```) customize this component to interact with other componenents, including the SAPS Catalog, the temporary and permanent storages.
 
-  # Catalogue database ip
-  datastore_ip=
+```
+##### Archiver properties #####
+# Time sleep to run the archiving routine (default = 300)
+saps_execution_period_archiver=300
+# Time sleep to run the failed task cleanup routine (default = 30)
+saps_execution_period_garbage_collector=30
+# Debug mode (default = true)
+saps_execution_debug_mode=true
 
-  # Catalogue database port
-  datastore_port=
+##### Catalog #####
+# URL prefix (default = jdbc:postgresql://)
+datastore_url_prefix=jdbc:postgresql://
+# IP address
+datastore_ip=$catalog_ip_address
+# Port (default = 5432)
+datastore_port=5432
+# DB name
+datastore_name=$catalog_db_name
+# Driver (default = org.postgresql.Driver)
+datastore_driver=org.postgresql.Driver
+# Username
+datastore_username=$catalog_user
+#Password
+datastore_password=$catalog_passwd
 
-  # Catalogue database name
-  datastore_name=
+##### Temporary Storage (NFS) #####
+# Path mounted by the client
+saps_export_path=$nfs_server_folder_path
 
-  # Catalogue database driver
-  datastore_driver=
+##### Permanent storage (Swift) #####
+# Folder prefix for to archive failed tasks case debug mode is true (default = trash)
+swift_folder_prefix_debug_failed_tasks=trash
+# Folder prefix for to archive success tasks (default = archiver)
+swift_folder_prefix=$swift_folder_prefix
+# Container name
+swift_container_name=$swift_container_name
+# Username
+swift_username=$swift_username
+# Password
+swift_password=$swift_password
+# Tenant or project name
+swift_tenant_name=$swift_tenant_name
+# Auth URL
+swift_auth_url=$swift_auth_url
 
-  # Catalogue database user name
-  datastore_username=
+##### Fogbow Keystone #####
+# Project ID
+fogbow.keystonev3.project.id=$fogbow_keystonev3_project_id
+# User ID
+fogbow.keystonev3.user.id=$fogbow_keystonev3_user_id
+# Password
+fogbow.keystonev3.password=$fogbow_keystonev3_password
+# Auth URL
+fogbow.keystonev3.auth.url=$fogbow_keystonev3_auth_url
+# Swift URL
+fogbow.keystonev3.swift.url=$fogbow_keystonev3_swift_url
+# Token update period (default = 1800000)
+fogbow.keystonev3.swift.token.update.period=1800000
 
-  # Catalogue database user password
-  datastore_password=
-
-  # Archiver SFTP script path
-  saps_sftp_script_path=
-
-  # Default FTP server user
-  default_ftp_server_user=
-
-  # Default FTP server port
-  default_ftp_server_port=
-
-  # FTP server export path
-  saps_export_path=
-
-  # Local files path
-  local_input_output_path=
-
-  # SAPS execution period
-  saps_execution_period=
-
-  # Default Archiver loop period
-  default_archiver_period=
-
-  # Swift container name
-  swift_container_name=
-
-  # Swift input pseudo folder prefix
-  swift_input_pseud_folder_prefix=
-
-  # Swift output pseudo folder prefix
-  swift_output_pseud_folder_prefix=
-
-  # Swift user name
-  swift_username=
-
-  # Swift user password
-  swift_password=
-
-  # Swift tenant id
-  swift_tenant_id=
-
-  # Swift tenant name
-  swift_tenant_name=
-
-  # Swift authorization URL
-  swift_auth_url=
-
-  # Keystone V3 project id
-  fogbow.keystonev3.project.id=
-
-  # Keystone V3 user id
-  fogbow.keystonev3.user.id=
-
-  # Keystone V3 user password
-  fogbow.keystonev3.password=
-
-  # Keystone V3 authorization URL
-  fogbow.keystonev3.auth.url=
-
-  # Keystone V3 Swift authorization URL
-  fogbow.keystonev3.swift.url=
-
-  # Keystone V3 Swift token update period
-  fogbow.keystonev3.swift.token.update.period=
-
-  # Fogbow-cli directory path
-  fogbow_cli_path=
-  ```
-
-Once edited, the configuration file needs to be copied to the container:
-
-  ```
-  docker cp archiver.conf <container_id>:/home/ubuntu/saps-engine/config
-  ```
+##### Fogbow CLI #####
+# Fogbow CLI folder path
+fogbow_cli_path=$fogbow_mono_cli_folder_path
+```
 
 ## Run
-Before running the Archiver, the saps-engine/bin/start-archiver configuration file (example available [here](../bin/start-archiver)) also needs to be edited.
+Once the configuration file is customized, below command are used to start and stop the Archiver component.
 
-  ```
-  # SAPS Engine directory path (Usually /home/ubuntu/saps-engine)
-  saps_engine_dir_path=
+```
+# Start command
+bash bin/start-archiver
+```
 
-  # Scheduler configuration file path
-  saps_engine_conf_path=
-
-  # Scheduler log file path
-  saps_engine_log_properties_path=
-
-  # Scheduler target file path (ex.: target/saps-engine-0.0.1-SNAPSHOT.jar:target/lib)
-  saps_engine_target_path=
-
-  # Local library path
-  library_path=
-
-  # Debug port
-  debug_port=
-  ```
-
-Then, it needs to be copied to the container:
-
-  ```
-  docker cp start-archiver <container_id>:/home/ubuntu/saps-engine/bin
-  ```
-
-Finally, run the Archiver using:
-
-  ```
-  docker exec <container_id> bash -c “cd /home/ubuntu/saps-engine && bash bin/start-archiver &”
-  ```
+```
+# Stop command
+bash bin/stop-archiver
+```
