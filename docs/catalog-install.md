@@ -38,4 +38,4 @@ To test the deploy and configuration of the SAPS catalog (assuming it is accessi
 psql -h $catalog_ip_address -p 5432 $catalog_db_name $catalog_user
 ```
 
-Note that, we are using the default PostgreSQL database port, 5432, and the Ingress traffic had to allowed previously.
+Note that, we are using the default PostgreSQL database port, 5432, and the Ingress traffic had to allowed previously. Also, note that the PostgreSQL dependencies are required to run the above command.
