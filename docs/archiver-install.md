@@ -6,7 +6,7 @@ TODO: describe Archiver purpose
 
 In an apt-based Linux distro, type the below commands to install SAPS Archiver dependencies.
 
-```
+```bash
 sudo apt-get update
 sudo apt-get install openjdk-8-jdk
 sudo apt-get -y install maven
@@ -88,25 +88,25 @@ swift_folder_prefix=$swift_folder_prefix
 # Container name
 swift_container_name=$swift_container_name
 # Username
-swift_username=$swift_username
+swift_username=$openstack_username
 # Password
-swift_password=$swift_password
+swift_password=$openstack_password
 # Tenant or project name
-swift_tenant_name=$swift_tenant_name
-# Auth URL
-swift_auth_url=$swift_auth_url
+swift_tenant_name=$openstack_project_name
+# Identity URL + version (e.g. https://<dominio>:5000/v1)
+swift_auth_url=$openstack_identity_url
 
 ##### Fogbow Keystone #####
 # Project ID
-fogbow.keystonev3.project.id=$fogbow_keystonev3_project_id
+fogbow.keystonev3.project.id=$openstack_project_id
 # User ID
-fogbow.keystonev3.user.id=$fogbow_keystonev3_user_id
+fogbow.keystonev3.user.id=$openstack_user_id
 # Password
-fogbow.keystonev3.password=$fogbow_keystonev3_password
-# Auth URL
-fogbow.keystonev3.auth.url=$fogbow_keystonev3_auth_url
-# Swift URL
-fogbow.keystonev3.swift.url=$fogbow_keystonev3_swift_url
+fogbow.keystonev3.password=$openstack_password
+# Identity URL (e.g. https://<dominio>:5000)
+fogbow.keystonev3.auth.url=$openstack_identity_url
+# Object Store URL (e.g. https://<dominio>:8080/swift/v1)
+fogbow.keystonev3.swift.url=$openstack_object_store_url
 # Token update period (default = 1800000)
 fogbow.keystonev3.swift.token.update.period=1800000
 
