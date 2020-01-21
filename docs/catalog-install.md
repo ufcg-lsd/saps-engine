@@ -1,6 +1,6 @@
 # Install and Configure Catalog
 
-The SAPS Catalog component is implemented as a plain PostgreSQL database. Here, we install and configure the required dependencies to run the PostgreSQL. The database schema will be created later during the execution of the Dispatcher component.
+The Service Catalog component mantains the state of the tasks submitted to the SAPS. It is implemented as a plain PostgreSQL database. Here, we install and configure the required dependencies to run the PostgreSQL. The database schema will be created later during the execution of the Dispatcher component.
 
 ## Dependencies
 In an apt-based Linux distro, type the below commands to install PostgreSQL packages.
