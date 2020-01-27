@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class SwiftAPIClient {
@@ -31,7 +32,10 @@ public class SwiftAPIClient {
 
 	public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
 
-	public SwiftAPIClient(Properties properties) {
+	public SwiftAPIClient(Properties properties) throws SapsException {
+		if (!checkProperties(properties))
+			throw new SapsException("Error on validate the file. Missing properties for start Swift API Client.");
+
 		this.properties = properties;
 
 		projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
@@ -52,6 +56,31 @@ public class SwiftAPIClient {
 		}
 	}
 
+	private boolean checkProperties(Properties properties) {
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL + " was not set");
+			return false;
+		}
+		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL)) {
+			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL + " was not set");
+			return false;
+		}
+		LOGGER.debug("All properties are set");
+		return true;
+	}
+
 	public void createContainer(String containerName) {
 		// TODO: test JUnit
 		LOGGER.debug("Creating container " + containerName);
@@ -59,7 +88,7 @@ public class SwiftAPIClient {
 				"post", containerName);
 
 		LOGGER.debug("Executing command " + builder.command());
-		
+
 		try {
 			Process p = builder.start();
 			p.waitFor();
