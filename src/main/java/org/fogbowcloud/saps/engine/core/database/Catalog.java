@@ -60,8 +60,6 @@ public interface Catalog {
 
 	boolean deployConfigExists(String federationMember) throws SQLException;
 
-	boolean metadataRegisterExist(String taskId) throws SQLException;
-
 	List<SapsImage> getAllTasks() throws SQLException;
 
 	List<SapsImage> getTasksInProcessingState() throws SQLException;

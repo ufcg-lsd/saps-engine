@@ -564,39 +564,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private static final String SELECT_CHECK_METADATA_EXISTS_SQL = "SELECT EXISTS(SELECT 1 FROM "
-			+ PROVENANCE_TABLE_NAME + " WHERE " + TASK_ID_COL + " = ?)";
-
-	@Override
-	public boolean metadataRegisterExist(String taskId) throws SQLException {
-		LOGGER.debug("Verifying if task " + taskId + " has a metadata register");
-
-		PreparedStatement statement = null;
-		Connection conn = null;
-		try {
-			conn = getConnection();
-			statement = conn.prepareStatement(SELECT_CHECK_METADATA_EXISTS_SQL);
-			statement.setString(1, taskId);
-			statement.setQueryTimeout(300);
-
-			statement.execute();
-
-			ResultSet rs = statement.getResultSet();
-			if (rs.next()) {
-				boolean found = rs.getBoolean(1); // "found" column
-				if (found) {
-					return true; // Rows exist
-				} else {
-					// Rows not exist
-				}
-			}
-		} finally {
-			close(statement, conn);
-		}
-
-		return false;
-	}
-
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME + " WHERE "
 			+ SUBMISSION_ID_COL + " = ? AND " + TASK_ID_COL + " = ? AND " + USER_EMAIL_COL + " = ?";
 
