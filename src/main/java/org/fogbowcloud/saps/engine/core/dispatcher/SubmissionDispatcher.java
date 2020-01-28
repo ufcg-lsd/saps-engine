@@ -35,24 +35,6 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function gets image store
-	 * 
-	 * @return image store
-	 */
-	public Catalog getImageStore() {
-		return imageStore;
-	}
-
-	/**
-	 * This function sets image store
-	 * 
-	 * @param imageStore new image store
-	 */
-	public void setImageStore(Catalog imageStore) {
-		this.imageStore = imageStore;
-	}
-
-	/**
 	 * This function adds new user.
 	 * 
 	 * @param userEmail  user email
