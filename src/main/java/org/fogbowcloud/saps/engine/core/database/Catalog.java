@@ -58,8 +58,6 @@ public interface Catalog {
 
 	boolean isUserNotifiable(String userEmail) throws SQLException;
 
-	boolean deployConfigExists(String federationMember) throws SQLException;
-
 	List<SapsImage> getAllTasks() throws SQLException;
 
 	List<SapsImage> getTasksInProcessingState() throws SQLException;

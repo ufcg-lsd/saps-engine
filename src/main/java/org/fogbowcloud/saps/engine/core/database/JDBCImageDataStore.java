@@ -540,30 +540,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private static final String SELECT_CHECK_FEDERATION_EXISTS_SQL = "SELECT EXISTS(SELECT 1 FROM "
-			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?)";
-
-	@Override
-	public boolean deployConfigExists(String federationMember) throws SQLException {
-		LOGGER.debug("Verifying if a deploy config for " + federationMember + " exists in database");
-
-		PreparedStatement statement = null;
-		Connection conn = null;
-		try {
-			conn = getConnection();
-			statement = conn.prepareStatement(SELECT_CHECK_FEDERATION_EXISTS_SQL);
-			statement.setString(1, federationMember);
-			statement.setQueryTimeout(300);
-
-			statement.execute();
-
-			ResultSet rs = statement.getResultSet();
-			return rs.next();
-		} finally {
-			close(statement, conn);
-		}
-	}
-
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME + " WHERE "
 			+ SUBMISSION_ID_COL + " = ? AND " + TASK_ID_COL + " = ? AND " + USER_EMAIL_COL + " = ?";
 
