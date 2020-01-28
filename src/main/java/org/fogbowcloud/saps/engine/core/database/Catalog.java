@@ -92,9 +92,6 @@ public interface Catalog {
 
 	void removeDeployConfig(String federationMember) throws SQLException;
 
-	List<SapsImage> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit, long processDateEnd)
-			throws SQLException;
-
 	List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
 			String inputPreprocessing, String algorithmExecution) throws SQLException;
 }
