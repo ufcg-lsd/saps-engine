@@ -82,8 +82,6 @@ public interface Catalog {
 
 	void dispose();
 
-	boolean lockTask(String taskId) throws SQLException;
-
 	void removeNotification(String submissionId, String taskId, String userEmail) throws SQLException;
 
 	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;

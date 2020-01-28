@@ -1162,45 +1162,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private final String LOCK_IMAGE_SQL = "SELECT pg_try_advisory_lock(?) FROM " + IMAGE_TABLE_NAME + " WHERE "
-			+ TASK_ID_COL + " = ?";
-
-	@Override
-	public boolean lockTask(String taskId) throws SQLException {
-		if (taskId == null) {
-			LOGGER.error("Invalid taskId " + taskId);
-			throw new IllegalArgumentException("Invalid state " + taskId);
-		}
-
-		PreparedStatement lockImageStatement = null;
-		Connection connection = null;
-
-		boolean locked = false;
-		try {
-			connection = getConnection();
-			lockImageStatement = connection.prepareStatement(LOCK_IMAGE_SQL);
-			final int imageHashCode = taskId.hashCode();
-			lockImageStatement.setInt(1, imageHashCode);
-			lockImageStatement.setString(2, taskId);
-			lockImageStatement.setQueryTimeout(300);
-
-			ResultSet rs = lockImageStatement.executeQuery();
-			if (rs.next()) {
-				locked = rs.getBoolean(1);
-			}
-
-			if (locked) {
-				lockedImages.put(taskId, connection);
-				close(lockImageStatement);
-			}
-		} finally {
-			if (!locked) {
-				close(lockImageStatement, connection);
-			}
-		}
-		return locked;
-	}
-
 	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME + " WHERE " + TASK_ID_COL
 			+ " = ? AND " + STATE_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
 
