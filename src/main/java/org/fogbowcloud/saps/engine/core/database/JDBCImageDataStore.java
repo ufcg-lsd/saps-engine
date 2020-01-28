@@ -264,31 +264,26 @@ public class JDBCImageDataStore implements Catalog {
 				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, priority, user,
 				inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
 				processingPhaseTag, digestProcessing, now, now, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA);
-		addImageTask(task);
-		return task;
-	}
-
-	@Override
-	public void addImageTask(SapsImage imageTask) throws SQLException {
-		if (imageTask.getTaskId() == null || imageTask.getTaskId().isEmpty()) {
+		
+		if (task.getTaskId() == null || task.getTaskId().isEmpty()) {
 			LOGGER.error("Task with empty id.");
 			throw new IllegalArgumentException("Task with empty id.");
 		}
-		if (imageTask.getDataset() == null || imageTask.getDataset().isEmpty()) {
+		if (task.getDataset() == null || task.getDataset().isEmpty()) {
 			LOGGER.error("Task with empty dataset.");
 			throw new IllegalArgumentException("Task with empty dataset.");
 		}
-		if (imageTask.getImageDate() == null) {
+		if (task.getImageDate() == null) {
 			LOGGER.error("Task must have a date.");
 			throw new IllegalArgumentException("Task must have a date.");
 		}
-		if (imageTask.getUser() == null || imageTask.getUser().isEmpty()) {
+		if (task.getUser() == null || task.getUser().isEmpty()) {
 			LOGGER.error("Task must have a user.");
 			throw new IllegalArgumentException("Task must have a user.");
 		}
 
-		LOGGER.info("Adding image task " + imageTask.getTaskId() + " with priority " + imageTask.getPriority());
-		LOGGER.info(imageTask.toString());
+		LOGGER.info("Adding image task " + task.getTaskId() + " with priority " + task.getPriority());
+		LOGGER.info(task.toString());
 
 		PreparedStatement insertStatement = null;
 		Connection connection = null;
@@ -297,31 +292,33 @@ public class JDBCImageDataStore implements Catalog {
 			connection = getConnection();
 
 			insertStatement = connection.prepareStatement(INSERT_FULL_IMAGE_TASK_SQL);
-			insertStatement.setString(1, imageTask.getTaskId());
-			insertStatement.setString(2, imageTask.getDataset());
-			insertStatement.setString(3, imageTask.getRegion());
-			insertStatement.setDate(4, javaDateToSqlDate(imageTask.getImageDate()));
-			insertStatement.setString(5, imageTask.getState().getValue());
-			insertStatement.setString(6, imageTask.getArrebolJobId());
-			insertStatement.setString(7, imageTask.getFederationMember());
-			insertStatement.setInt(8, imageTask.getPriority());
-			insertStatement.setString(9, imageTask.getUser());
-			insertStatement.setString(10, imageTask.getInputdownloadingTag());
-			insertStatement.setString(11, imageTask.getDigestInputdownloading());
-			insertStatement.setString(12, imageTask.getPreprocessingTag());
-			insertStatement.setString(13, imageTask.getDigestPreprocessing());
-			insertStatement.setString(14, imageTask.getProcessingTag());
-			insertStatement.setString(15, imageTask.getDigestProcessing());
-			insertStatement.setTimestamp(16, imageTask.getCreationTime());
-			insertStatement.setTimestamp(17, imageTask.getUpdateTime());
-			insertStatement.setString(18, imageTask.getStatus());
-			insertStatement.setString(19, imageTask.getError());
+			insertStatement.setString(1, task.getTaskId());
+			insertStatement.setString(2, task.getDataset());
+			insertStatement.setString(3, task.getRegion());
+			insertStatement.setDate(4, javaDateToSqlDate(task.getImageDate()));
+			insertStatement.setString(5, task.getState().getValue());
+			insertStatement.setString(6, task.getArrebolJobId());
+			insertStatement.setString(7, task.getFederationMember());
+			insertStatement.setInt(8, task.getPriority());
+			insertStatement.setString(9, task.getUser());
+			insertStatement.setString(10, task.getInputdownloadingTag());
+			insertStatement.setString(11, task.getDigestInputdownloading());
+			insertStatement.setString(12, task.getPreprocessingTag());
+			insertStatement.setString(13, task.getDigestPreprocessing());
+			insertStatement.setString(14, task.getProcessingTag());
+			insertStatement.setString(15, task.getDigestProcessing());
+			insertStatement.setTimestamp(16, task.getCreationTime());
+			insertStatement.setTimestamp(17, task.getUpdateTime());
+			insertStatement.setString(18, task.getStatus());
+			insertStatement.setString(19, task.getError());
 			insertStatement.setQueryTimeout(300);
 
 			insertStatement.execute();
 		} finally {
 			close(insertStatement, connection);
 		}
+		
+		return task;
 	}
 
 	private static final String INSERT_USER_NOTIFICATION_SQL = "INSERT INTO " + USERS_NOTIFY_TABLE_NAME

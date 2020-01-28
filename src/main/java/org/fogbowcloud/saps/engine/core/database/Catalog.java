@@ -28,8 +28,6 @@ public interface Catalog {
 			String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
 			String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws SQLException;
 
-	void addImageTask(SapsImage imageTask) throws SQLException;
-
 	void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
 
 	void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
