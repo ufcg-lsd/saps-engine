@@ -66,8 +66,6 @@ public interface Catalog {
 
 	List<SapsImage> getTasksInProcessingState() throws SQLException;
 
-	List<SapsImage> getIn(ImageTaskState state) throws SQLException;
-
 	List<SapsImage> getIn(ImageTaskState state, int limit) throws SQLException;
 
 	SapsImage getTask(String taskId) throws SQLException;

@@ -946,11 +946,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	@Override
-	public List<SapsImage> getIn(ImageTaskState state) throws SQLException {
-		return getIn(state, UNLIMITED);
-	}
-
 	private static SapsUser extractSapsUserFrom(ResultSet rs) throws SQLException {
 		SapsUser sebalUser = new SapsUser(rs.getString(USER_EMAIL_COL), rs.getString(USER_NAME_COL),
 				rs.getString(USER_PASSWORD_COL), rs.getBoolean(USER_STATE_COL), rs.getBoolean(USER_NOTIFY_COL),
