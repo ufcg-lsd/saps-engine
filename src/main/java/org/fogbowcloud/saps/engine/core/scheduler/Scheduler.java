@@ -7,7 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.dto.*;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -36,7 +36,7 @@ public class Scheduler {
 	private Selector selector;
 
 	private Properties properties;
-	private ImageDataStore imageStore;
+	private Catalog imageStore;
 	private Arrebol arrebol;
 
 	public Scheduler(Properties properties) throws SapsException, SQLException {
@@ -58,7 +58,7 @@ public class Scheduler {
 		this.selector = new DefaultRoundRobin();
 	}
 
-	public Scheduler(Properties properties, ImageDataStore imageStore, ScheduledExecutorService sapsExecutor,
+	public Scheduler(Properties properties, Catalog imageStore, ScheduledExecutorService sapsExecutor,
 			Arrebol arrebol, Selector selector) throws SapsException, SQLException {
 		if (!checkProperties(properties))
 			throw new SapsException("Error on validate the file. Missing properties for start Scheduler Component.");
@@ -75,7 +75,7 @@ public class Scheduler {
 	 * 
 	 * @return image store
 	 */
-	public ImageDataStore getImageStore() {
+	public Catalog getImageStore() {
 		return imageStore;
 	}
 
@@ -84,7 +84,7 @@ public class Scheduler {
 	 * 
 	 * @param imageStore new image store
 	 */
-	public void setImageStore(ImageDataStore imageStore) {
+	public void setImageStore(Catalog imageStore) {
 		this.imageStore = imageStore;
 	}
 
@@ -287,7 +287,7 @@ public class Scheduler {
 
 		LOGGER.info("Trying select up to " + count + " tasks in state " + state);
 
-		List<SapsImage> tasks = getTasksInCatalog(state, ImageDataStore.UNLIMITED,
+		List<SapsImage> tasks = getTasksInCatalog(state, Catalog.UNLIMITED,
 				"gets tasks with " + state.getValue() + " state");
 
 		Map<String, List<SapsImage>> tasksByUsers = mapUsers2Tasks(tasks);
