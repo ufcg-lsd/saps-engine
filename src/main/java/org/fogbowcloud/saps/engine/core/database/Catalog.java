@@ -44,8 +44,6 @@ public interface Catalog {
 
 	List<Ward> getUsersToNotify() throws SQLException;
 
-	Map<String, String> getFederationNFSConfig(String federationMember) throws SQLException;
-
 	void updateImageTask(SapsImage imageTask) throws SQLException;
 
 	boolean isUserNotifiable(String userEmail) throws SQLException;

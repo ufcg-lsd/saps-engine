@@ -466,32 +466,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private static final String SELECT_NFS_CONFIG_SQL = "SELECT " + NFS_SERVER_IP_COL + ", " + NFS_SERVER_SSH_PORT_COL
-			+ " FROM " + DEPLOY_CONFIG_TABLE_NAME + " WHERE federation_member = ?";
-
-	@Override
-	public Map<String, String> getFederationNFSConfig(String federationMember) throws SQLException {
-
-		LOGGER.debug("Getting NFS configuration for " + federationMember);
-
-		PreparedStatement statement = null;
-		Connection conn = null;
-		try {
-			conn = getConnection();
-			statement = conn.prepareStatement(SELECT_NFS_CONFIG_SQL);
-			statement.setString(1, federationMember);
-			statement.setQueryTimeout(300);
-
-			statement.execute();
-
-			ResultSet rs = statement.getResultSet();
-			HashMap<String, String> nfsConfig = extractNFSConfigFrom(rs);
-			return nfsConfig;
-		} finally {
-			close(statement, conn);
-		}
-	}
-
 	private List<Ward> extractUsersToNotifyFrom(ResultSet rs) throws SQLException {
 
 		List<Ward> wards = new ArrayList<>();
