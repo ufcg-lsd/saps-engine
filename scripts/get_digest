@@ -22,4 +22,9 @@ then
   exit 1
 fi
 
+if [ ${#DIGEST} -ne 71 ]
+then
+  exit 2
+fi
+
 echo $DIGEST
