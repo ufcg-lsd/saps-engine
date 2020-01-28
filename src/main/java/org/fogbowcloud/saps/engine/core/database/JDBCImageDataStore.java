@@ -686,32 +686,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private static String UPDATE_IMAGE_STATUS_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + IMAGE_STATUS_COL
-			+ " = ? WHERE " + TASK_ID_COL + " = ?";
-
-	@Override
-	public void updateTaskStatus(String taskId, String status) throws SQLException {
-		if (taskId == null || taskId.isEmpty() || status == null) {
-			LOGGER.error("Invalid image task " + taskId + " or status " + status);
-			throw new IllegalArgumentException("Invalid image task " + taskId + " or state " + status);
-		}
-		PreparedStatement updateStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			updateStatement = connection.prepareStatement(UPDATE_IMAGE_STATUS_SQL);
-			updateStatement.setString(1, status);
-			updateStatement.setString(2, taskId);
-			updateStatement.setQueryTimeout(300);
-
-			updateStatement.execute();
-		} finally {
-			close(updateStatement, connection);
-		}
-	}
-
 	private static String UPDATE_ERROR_MESSAGE_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + ERROR_MSG_COL + " = ?, "
 			+ UPDATED_TIME_COL + " = now() WHERE " + TASK_ID_COL + " = ?";
 
