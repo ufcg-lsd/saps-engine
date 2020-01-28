@@ -20,6 +20,7 @@ import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class JDBCImageDataStore implements ImageDataStore {
@@ -81,12 +82,10 @@ public class JDBCImageDataStore implements ImageDataStore {
 	private Map<String, Connection> lockedImages = new ConcurrentHashMap<>();
 	private BasicDataSource connectionPool;
 
-	public JDBCImageDataStore(Properties properties) throws SQLException {
+	public JDBCImageDataStore(Properties properties) throws SQLException, SapsException {
 
-		if (checkProperties(properties))
-			if (properties == null) {
-				throw new IllegalArgumentException("Properties arg must not be null.");
-			}
+		if (!checkProperties(properties)) 
+			throw new SapsException("Error on validate the file. Missing properties for start JDBC connection.");
 
 		String imageStoreIP = properties.getProperty(DATASTORE_IP);
 		String imageStorePort = properties.getProperty(DATASTORE_PORT);
