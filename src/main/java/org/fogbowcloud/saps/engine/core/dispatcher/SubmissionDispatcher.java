@@ -22,16 +22,16 @@ public class SubmissionDispatcher {
 	public static final int DEFAULT_PRIORITY = 0;
 	public static final String DEFAULT_USER = "admin";
 
-	private Catalog imageStore;
+	private Catalog catalog;
 
 	private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcher.class);
 
 	public SubmissionDispatcher(Catalog imageStore) {
-		this.imageStore = imageStore;
+		this.catalog = imageStore;
 	}
 
 	public SubmissionDispatcher(Properties properties) throws SQLException {
-		this.imageStore = new JDBCImageDataStore(properties);
+		this.catalog = new JDBCImageDataStore(properties);
 	}
 
 	/**
@@ -53,7 +53,7 @@ public class SubmissionDispatcher {
 	 */
 	public void addUser(String email, String name, String password, boolean state, boolean notify,
 			boolean adminRole) {
-		CatalogUtils.addNewUser(imageStore, email, name, password, state, notify, adminRole,
+		CatalogUtils.addNewUser(catalog, email, name, password, state, notify, adminRole,
 				"add new user [" + email + "]");
 	}
 
@@ -64,7 +64,7 @@ public class SubmissionDispatcher {
 	 * @param message   information message
 	 */
 	private SapsUser getUserInCatalog(String userEmail, String message) {
-		return CatalogUtils.getUser(imageStore, userEmail, message);
+		return CatalogUtils.getUser(catalog, userEmail, message);
 	}
 
 	/**
@@ -78,7 +78,7 @@ public class SubmissionDispatcher {
 
 	public void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail) throws SQLException {
 		try {
-			imageStore.addUserNotification(submissionId, taskId, userEmail);
+			catalog.addUserNotification(submissionId, taskId, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while adding task " + taskId + " notification for user " + userEmail + " in Catalogue",
 					e);
@@ -87,7 +87,7 @@ public class SubmissionDispatcher {
 
 	public void removeUserNotification(String submissionId, String taskId, String userEmail) throws SQLException {
 		try {
-			imageStore.removeNotification(submissionId, taskId, userEmail);
+			catalog.removeNotification(submissionId, taskId, userEmail);
 		} catch (SQLException e) {
 			LOGGER.error(
 					"Error while removing task " + taskId + " notification for user " + userEmail + " from Catalogue",
@@ -97,7 +97,7 @@ public class SubmissionDispatcher {
 
 	public boolean isUserNotifiable(String userEmail) throws SQLException {
 		try {
-			return imageStore.isUserNotifiable(userEmail);
+			return catalog.isUserNotifiable(userEmail);
 		} catch (SQLException e) {
 			LOGGER.error("Error while verifying user notify", e);
 		}
@@ -222,7 +222,7 @@ public class SubmissionDispatcher {
 			String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
 			String preprocessingPhaseTag, String digestPreprocessing, String processingPhaseTag,
 			String digestProcessing) {
-		return CatalogUtils.addNewTask(imageStore, taskId, dataset, region, date, priority, userEmail,
+		return CatalogUtils.addNewTask(catalog, taskId, dataset, region, date, priority, userEmail,
 				inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
 				processingPhaseTag, digestProcessing, "add new task [" + taskId + "]");
 	}
@@ -234,7 +234,7 @@ public class SubmissionDispatcher {
 	 * @param message information message
 	 */
 	private void addTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.addTimestampTask(imageStore, task, message);
+		CatalogUtils.addTimestampTask(catalog, task, message);
 	}
 
 	/**
@@ -349,11 +349,11 @@ public class SubmissionDispatcher {
 	/**
 	 * This function get all tasks in Catalog.
 	 * 
-	 * @param imageStore catalog component
+	 * @param catalog catalog component
 	 * @return SAPS image list
 	 */
 	private List<SapsImage> getAllTasksInCatalog() {
-		return CatalogUtils.getAllTasks(imageStore, "get all tasks");
+		return CatalogUtils.getAllTasks(catalog, "get all tasks");
 	}
 
 	/**
@@ -367,7 +367,7 @@ public class SubmissionDispatcher {
 
 	// TODO
 	public List<Ward> getUsersToNotify() throws SQLException {
-		List<Ward> wards = imageStore.getUsersToNotify();
+		List<Ward> wards = catalog.getUsersToNotify();
 		return wards;
 	}
 
@@ -378,7 +378,7 @@ public class SubmissionDispatcher {
 	 * @return SAPS image with id
 	 */
 	private SapsImage getTaskByIdInCatalog(String taskId) {
-		return CatalogUtils.getTaskById(imageStore, taskId, "gets task with id [" + taskId + "]");
+		return CatalogUtils.getTaskById(catalog, taskId, "gets task with id [" + taskId + "]");
 	}
 
 	/**
@@ -401,7 +401,7 @@ public class SubmissionDispatcher {
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> getTasksInCatalog(ImageTaskState state, int limit, String message) {
-		return CatalogUtils.getTasks(imageStore, state, limit, message);
+		return CatalogUtils.getTasks(catalog, state, limit, message);
 	}
 
 	/**
@@ -429,7 +429,7 @@ public class SubmissionDispatcher {
 	 */
 	private List<SapsImage> getProcessedTasksInCatalog(String region, Date initDate, Date endDate,
 			String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
-		return CatalogUtils.getProcessedTasks(imageStore, region, initDate, endDate, inputdownloadingPhaseTag,
+		return CatalogUtils.getProcessedTasks(catalog, region, initDate, endDate, inputdownloadingPhaseTag,
 				preprocessingPhaseTag, processingPhaseTag,
 				"gets all processed tasks with region [" + region + "], inputdownloading tag ["
 						+ inputdownloadingPhaseTag + "], preprocessing tag [" + preprocessingPhaseTag
