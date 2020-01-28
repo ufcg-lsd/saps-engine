@@ -30,7 +30,7 @@ public class SubmissionDispatcher {
 		this.imageStore = imageStore;
 	}
 
-	public SubmissionDispatcher(Properties properties) throws SQLException {
+	public SubmissionDispatcher(Properties properties) throws SQLException, SapsException {
 		this.imageStore = new JDBCImageDataStore(properties);
 	}
 
@@ -354,7 +354,7 @@ public class SubmissionDispatcher {
 		String result = null;
 
 		try {
-			Process builder = new ProcessBuilder("bash", "./scripts/get_digest.sh", dockerRepository, dockerTag)
+			Process builder = new ProcessBuilder("bash", "./scripts/get_digest", dockerRepository, dockerTag)
 					.start();
 
 			LOGGER.debug("Waiting for the process for execute command: " + builder.toString());

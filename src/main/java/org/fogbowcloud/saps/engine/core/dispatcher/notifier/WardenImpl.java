@@ -15,6 +15,7 @@ import javax.mail.internet.AddressException;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcher;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
 
 public class WardenImpl implements Warden {
 
@@ -28,7 +29,7 @@ public class WardenImpl implements Warden {
 	private static final String NOREPLY_PASSWORD = "noreply_password";
 	private static final String DEFAULT_SLEEP_TIME = "default_sleep_time";
 
-	public WardenImpl() {
+	public WardenImpl() throws SapsException {
 		try {
 			properties = new Properties();
 			FileInputStream input = new FileInputStream(CONF_PATH);
