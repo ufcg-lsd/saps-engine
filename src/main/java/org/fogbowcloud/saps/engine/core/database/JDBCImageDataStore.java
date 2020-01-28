@@ -631,34 +631,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private static String UPDATE_USER_STATE_SQL = "UPDATE " + USERS_TABLE_NAME + " SET " + USER_STATE_COL
-			+ " = ? WHERE " + USER_EMAIL_COL + " = ?";
-
-	@Override
-	public void updateUserState(String userEmail, boolean userState) throws SQLException {
-
-		LOGGER.info("Updating user " + userEmail + " state to " + userState);
-		if (userEmail == null || userEmail.isEmpty()) {
-			throw new IllegalArgumentException("Invalid user " + userEmail);
-		}
-
-		PreparedStatement updateStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			updateStatement = connection.prepareStatement(UPDATE_USER_STATE_SQL);
-			updateStatement.setBoolean(1, userState);
-			updateStatement.setString(2, userEmail);
-			updateStatement.setQueryTimeout(300);
-
-			updateStatement.execute();
-		} finally {
-			close(updateStatement, connection);
-		}
-	}
-
 	private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + STATE_COL + " = ?, "
 			+ UPDATED_TIME_COL + " = now(), " + IMAGE_STATUS_COL + " = ?, " + ERROR_MSG_COL + " = ?, " + ARREBOL_JOB_ID
 			+ " = ? " + "WHERE " + TASK_ID_COL + " = ?";

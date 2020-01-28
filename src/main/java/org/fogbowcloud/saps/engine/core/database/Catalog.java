@@ -46,8 +46,6 @@ public interface Catalog {
 
 	Map<String, String> getFederationNFSConfig(String federationMember) throws SQLException;
 
-	void updateUserState(String userEmail, boolean state) throws SQLException;
-
 	void updateImageTask(SapsImage imageTask) throws SQLException;
 
 	boolean isUserNotifiable(String userEmail) throws SQLException;
