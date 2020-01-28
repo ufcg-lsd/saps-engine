@@ -409,17 +409,6 @@ public class JDBCImageDataStore implements Catalog {
 		return wards;
 	}
 
-	private HashMap<String, String> extractNFSConfigFrom(ResultSet rs) throws SQLException {
-
-		HashMap<String, String> nfsConfig = new HashMap<String, String>();
-
-		while (rs.next()) {
-			nfsConfig.put(rs.getString(NFS_SERVER_IP_COL), rs.getString(NFS_SERVER_PORT_COL));
-		}
-
-		return nfsConfig;
-	}
-
 	private static final String SELECT_USER_NOTIFIABLE_SQL = "SELECT " + USER_NOTIFY_COL + " FROM " + USERS_TABLE_NAME
 			+ " WHERE " + USER_EMAIL_COL + " = ?";
 
