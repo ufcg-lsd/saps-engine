@@ -50,8 +50,6 @@ public interface Catalog {
 
 	void updateImageTask(SapsImage imageTask) throws SQLException;
 
-	void updateTaskError(String taskId, String errorMsg) throws SQLException;
-
 	boolean isUserNotifiable(String userEmail) throws SQLException;
 
 	List<SapsImage> getAllTasks() throws SQLException;
