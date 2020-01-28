@@ -70,8 +70,6 @@ public interface Catalog {
 
 	List<SapsImage> getIn(ImageTaskState state, int limit) throws SQLException;
 
-	List<SapsImage> getImagesToDownload(String federationMember, int limit) throws SQLException;
-
 	SapsImage getTask(String taskId) throws SQLException;
 
 	SapsUser getUser(String userEmail) throws SQLException;
