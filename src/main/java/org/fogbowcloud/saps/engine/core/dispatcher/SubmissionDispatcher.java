@@ -35,36 +35,26 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function adds new user.
+	 * This function is responsible for passing on the information of a new SAPS
+	 * user to the communication approach with the Catalog that he will try until he
+	 * succeeds. The email, name and password are defined by the user in which the
+	 * email and password will be used for authentication on the SAPS platform.
+	 * There are three other pieces of information that are:
 	 * 
-	 * @param userEmail  user email
-	 * @param userName   user name
-	 * @param userPass   user password
-	 * @param userState  user state
-	 * @param userNotify user notify
-	 * @param adminRole  administrator role
-	 * @param message    information message
-	 */
-	private void addNewUserInCatalog(String userEmail, String userName, String userPass, boolean userState,
-			boolean userNotify, boolean adminRole, String message) {
-		CatalogUtils.addNewUser(imageStore, userEmail, userName, userPass, userState, userNotify, adminRole,
-				"add new user [" + userEmail + "]");
-	}
-
-	/**
-	 * This function adds new user in Catalog component.
+	 * - notify: informs the user about their tasks by email.
 	 * 
-	 * @param userEmail  user email
-	 * @param userName   user name
-	 * @param userPass   user password
-	 * @param userState  user state
-	 * @param userNotify user notify
-	 * @param adminRole  administrator role
+	 * - state: informs if the user is able to authenticate on the SAPS platform.
+	 * 
+	 * - administrative role: informs if the user is an administrator of the SAPS
+	 * platform.
+	 * 
+	 * These three pieces of information are booleans and are controlled by an
+	 * administrator. By default, state and administrative function are false.
 	 */
-	public void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
+	public void addUser(String email, String name, String password, boolean state, boolean notify,
 			boolean adminRole) {
-		addNewUserInCatalog(userEmail, userName, userPass, userState, userNotify, adminRole,
-				"add new user [" + userEmail + "]");
+		CatalogUtils.addNewUser(imageStore, email, name, password, state, notify, adminRole,
+				"add new user [" + email + "]");
 	}
 
 	/**
