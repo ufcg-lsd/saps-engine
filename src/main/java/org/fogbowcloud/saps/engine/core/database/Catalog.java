@@ -39,9 +39,6 @@ public interface Catalog {
 
 	void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember) throws SQLException;
 
-	void updateMetadataInfo(String metadataFilePath, String operatingSystem, String kernelVersion, String componentType,
-			String taskId) throws SQLException;
-
 	List<Ward> getUsersToNotify() throws SQLException;
 
 	void updateImageTask(SapsImage imageTask) throws SQLException;

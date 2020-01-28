@@ -397,40 +397,6 @@ public class JDBCImageDataStore implements Catalog {
 			+ OUTPUT_METADATA_COL + " = ?, " + OUTPUT_OPERATING_SYSTEM_COL + " = ?, " + OUTPUT_KERNEL_VERSION_COL
 			+ " = ? WHERE " + TASK_ID_COL + " = ?;";
 
-	@Override
-	public void updateMetadataInfo(String metadataFilePath, String operatingSystem, String kernelVersion,
-			String componentType, String taskId) throws SQLException {
-		LOGGER.info("Updating metadata info for component " + componentType + " with taskId " + taskId
-				+ "\nMetadataFilePath: " + metadataFilePath + " OperatingSystem: " + operatingSystem
-				+ " KernelVersion: " + kernelVersion);
-		if (metadataFilePath == null || metadataFilePath.isEmpty() || operatingSystem == null
-				|| operatingSystem.isEmpty() || kernelVersion == null || kernelVersion.isEmpty()
-				|| componentType == null || componentType.isEmpty() || taskId == null || taskId.isEmpty()) {
-			throw new IllegalArgumentException("Invalid metadataFilePath " + metadataFilePath + ", operatingSystem "
-					+ operatingSystem + ", kernelVersion " + kernelVersion + ", componentType " + componentType
-					+ " or taskId " + taskId);
-		}
-
-		PreparedStatement updateStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			updateStatement = adjustMetadataStatementToComponent(componentType, updateStatement, connection);
-
-			updateStatement.setString(1, metadataFilePath);
-			updateStatement.setString(2, operatingSystem);
-			updateStatement.setString(3, kernelVersion);
-			updateStatement.setString(4, taskId);
-			updateStatement.setQueryTimeout(300);
-
-			updateStatement.execute();
-		} finally {
-			close(updateStatement, connection);
-		}
-	}
-
 	protected PreparedStatement adjustMetadataStatementToComponent(String componentType,
 			PreparedStatement insertStatement, Connection connection) throws SQLException {
 		if (componentType.equals(SapsPropertiesConstants.INPUT_DOWNLOADER_COMPONENT_TYPE)) {
