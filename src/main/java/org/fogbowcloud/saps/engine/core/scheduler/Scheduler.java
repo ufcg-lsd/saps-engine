@@ -429,7 +429,7 @@ public class Scheduler {
 		LOGGER.info("SAPS job: " + imageJob.toJSON().toString());
 
 		String jobId = submitJobInArrebol(imageJob, "add new job");
-		LOGGER.debug("Result submited job: " + jobId);
+		LOGGER.debug("Result submitted job: " + jobId);
 
 		arrebol.addJobInList(new JobSubmitted(jobId, task));
 		LOGGER.info("Adding job in list");
