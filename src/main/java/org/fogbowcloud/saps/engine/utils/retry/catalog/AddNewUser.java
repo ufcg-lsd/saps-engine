@@ -2,11 +2,11 @@ package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
 import java.sql.SQLException;
 
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 
 public class AddNewUser implements CatalogRetry<Void> {
 
-	private ImageDataStore imageStore;
+	private Catalog imageStore;
 	private String userEmail;
 	private String userName;
 	private String userPass;
@@ -14,7 +14,7 @@ public class AddNewUser implements CatalogRetry<Void> {
 	private boolean userNotify;
 	private boolean adminRole;
 
-	public AddNewUser(ImageDataStore imageStore, String userEmail, String userName, String userPass, boolean userState,
+	public AddNewUser(Catalog imageStore, String userEmail, String userName, String userPass, boolean userState,
 			boolean userNotify, boolean adminRole) {
 		this.imageStore = imageStore;
 		this.userEmail = userEmail;

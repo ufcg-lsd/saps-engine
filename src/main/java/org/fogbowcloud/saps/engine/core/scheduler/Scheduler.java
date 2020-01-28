@@ -7,7 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.dto.*;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -36,7 +36,7 @@ public class Scheduler {
 	private Selector selector;
 
 	private Properties properties;
-	private ImageDataStore imageStore;
+	private Catalog imageStore;
 	private Arrebol arrebol;
 
 	public Scheduler(Properties properties) throws SapsException, SQLException {
@@ -58,7 +58,7 @@ public class Scheduler {
 		this.selector = new DefaultRoundRobin();
 	}
 
-	public Scheduler(Properties properties, ImageDataStore imageStore, ScheduledExecutorService sapsExecutor,
+	public Scheduler(Properties properties, Catalog imageStore, ScheduledExecutorService sapsExecutor,
 			Arrebol arrebol, Selector selector) throws SapsException, SQLException {
 		if (!checkProperties(properties))
 			throw new SapsException("Error on validate the file. Missing properties for start Scheduler Component.");
@@ -75,7 +75,7 @@ public class Scheduler {
 	 * 
 	 * @return image store
 	 */
-	public ImageDataStore getImageStore() {
+	public Catalog getImageStore() {
 		return imageStore;
 	}
 
@@ -84,7 +84,7 @@ public class Scheduler {
 	 * 
 	 * @param imageStore new image store
 	 */
-	public void setImageStore(ImageDataStore imageStore) {
+	public void setImageStore(Catalog imageStore) {
 		this.imageStore = imageStore;
 	}
 
@@ -287,7 +287,7 @@ public class Scheduler {
 
 		LOGGER.info("Trying select up to " + count + " tasks in state " + state);
 
-		List<SapsImage> tasks = getTasksInCatalog(state, ImageDataStore.UNLIMITED,
+		List<SapsImage> tasks = getTasksInCatalog(state, Catalog.UNLIMITED,
 				"gets tasks with " + state.getValue() + " state");
 
 		Map<String, List<SapsImage>> tasksByUsers = mapUsers2Tasks(tasks);
@@ -315,6 +315,7 @@ public class Scheduler {
 			String arrebolJobId = submitTaskToArrebol(task, nextState);
 			updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA, arrebolJobId,
 					"updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
+			addTimestampTaskInCatalog(task, "updates task [" + task.getTaskId() + "] timestamp");
 		}
 	}
 
@@ -406,15 +407,17 @@ public class Scheduler {
 		String repository = getRepository(state);
 		ExecutionScriptTag imageDockerInfo = getExecutionScriptTag(task, repository);
 
+		String formatImageWithDigest = getFormatImageWithDigest(imageDockerInfo, state, task);
+
 		Map<String, String> requirements = new HashMap<String, String>();
-		requirements.put("image", imageDockerInfo.formatImageDocker());
+		requirements.put("image", formatImageWithDigest);
 
 		List<String> commands = SapsTask.buildCommandList(task, repository);
 
 		Map<String, String> metadata = new HashMap<String, String>();
 
 		LOGGER.info("Creating SAPS task ...");
-		SapsTask sapsTask = new SapsTask(task.getTaskId() + imageDockerInfo.formatImageDocker(), requirements, commands,
+		SapsTask sapsTask = new SapsTask(task.getTaskId() + "#" + formatImageWithDigest, requirements, commands,
 				metadata);
 		LOGGER.info("SAPS task: " + sapsTask.toJSON().toString());
 
@@ -472,6 +475,15 @@ public class Scheduler {
 			LOGGER.error("Error while trying get tag and repository Docker.", e);
 			return null;
 		}
+	}
+
+	private String getFormatImageWithDigest(ExecutionScriptTag imageDockerInfo, ImageTaskState state, SapsImage task) {
+		if (state == ImageTaskState.RUNNING)
+			return imageDockerInfo.getDockerRepository() + "@" + task.getDigestProcessing();
+		else if (state == ImageTaskState.PREPROCESSING)
+			return imageDockerInfo.getDockerRepository() + "@" + task.getDigestPreprocessing();
+		else
+			return imageDockerInfo.getDockerRepository() + "@" + task.getDigestInputdownloading();
 	}
 
 	/**

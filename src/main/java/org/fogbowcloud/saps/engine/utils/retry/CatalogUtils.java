@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -68,7 +68,7 @@ public class CatalogUtils {
 	 * @param message    information message
 	 * @return tasks in specific state
 	 */
-	public static List<SapsImage> getTasks(ImageDataStore imageStore, ImageTaskState state, int limit, String message) {
+	public static List<SapsImage> getTasks(Catalog imageStore, ImageTaskState state, int limit, String message) {
 		return retry(new GetTasksRetry(imageStore, state, limit), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -82,7 +82,7 @@ public class CatalogUtils {
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
 	 */
-	public static boolean updateState(ImageDataStore imageStore, SapsImage task, String message) {
+	public static boolean updateState(Catalog imageStore, SapsImage task, String message) {
 		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -93,7 +93,7 @@ public class CatalogUtils {
 	 * @param message    information message
 	 * @return processing tasks list
 	 */
-	public static List<SapsImage> getProcessingTasks(ImageDataStore imageStore, String message) {
+	public static List<SapsImage> getProcessingTasks(Catalog imageStore, String message) {
 		return retry(new GetProcessingTasksRetry(imageStore), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -104,7 +104,7 @@ public class CatalogUtils {
 	 * @param task       task to be update
 	 * @param message    information message
 	 */
-	public static void addTimestampTask(ImageDataStore imageStore, SapsImage task, String message) {
+	public static void addTimestampTask(Catalog imageStore, SapsImage task, String message) {
 		retry(new AddTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -115,7 +115,7 @@ public class CatalogUtils {
 	 * @param task       task to be update
 	 * @param message    information message
 	 */
-	public static void removeTimestampTask(ImageDataStore imageStore, SapsImage task, String message) {
+	public static void removeTimestampTask(Catalog imageStore, SapsImage task, String message) {
 		retry(new RemoveTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -131,7 +131,7 @@ public class CatalogUtils {
 	 * @param adminRole  administrator role
 	 * @param message    information message
 	 */
-	public static void addNewUser(ImageDataStore imageStore, String userEmail, String userName, String userPass,
+	public static void addNewUser(Catalog imageStore, String userEmail, String userName, String userPass,
 			boolean userState, boolean userNotify, boolean adminRole, String message) {
 		retry(new AddNewUser(imageStore, userEmail, userName, userPass, userState, userNotify, adminRole),
 				CATALOG_DEFAULT_SLEEP_SECONDS, message);
@@ -144,7 +144,7 @@ public class CatalogUtils {
 	 * @param userEmail  user email
 	 * @param message    information message
 	 */
-	public static SapsUser getUser(ImageDataStore imageStore, String userEmail, String message) {
+	public static SapsUser getUser(Catalog imageStore, String userEmail, String message) {
 		return retry(new GetUser(imageStore, userEmail), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -164,12 +164,13 @@ public class CatalogUtils {
 	 * @param message                  information message
 	 * @return new SAPS image
 	 */
-	public static SapsImage addNewTask(ImageDataStore imageStore, String taskId, String dataset, String region,
-			Date date, int priority, String userEmail, String inputdownloadingPhaseTag, String preprocessingPhaseTag,
-			String processingPhaseTag, String message) {
+	public static SapsImage addNewTask(Catalog imageStore, String taskId, String dataset, String region,
+			Date date, int priority, String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
+			String preprocessingPhaseTag, String digestPreprocessing, String processingPhaseTag,
+			String digestProcessing, String message) {
 		return retry(new AddNewTask(imageStore, taskId, dataset, region, date, priority, userEmail,
-				inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag), CATALOG_DEFAULT_SLEEP_SECONDS,
-				message);
+				inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
+				processingPhaseTag, digestProcessing), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
 	/**
@@ -178,7 +179,7 @@ public class CatalogUtils {
 	 * @param taskId task id to be searched
 	 * @return SAPS image with task id informed
 	 */
-	public static SapsImage getTaskById(ImageDataStore imageStore, String taskId, String message) {
+	public static SapsImage getTaskById(Catalog imageStore, String taskId, String message) {
 		return retry(new GetTaskById(imageStore, taskId), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
@@ -195,7 +196,7 @@ public class CatalogUtils {
 	 * @param message                  information message
 	 * @return SAPS image list with archived state
 	 */
-	public static List<SapsImage> getProcessedTasks(ImageDataStore imageStore, String region, Date initDate,
+	public static List<SapsImage> getProcessedTasks(Catalog imageStore, String region, Date initDate,
 			Date endDate, String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag,
 			String message) {
 
@@ -209,7 +210,7 @@ public class CatalogUtils {
 	 * @param imageStore catalog component
 	 * @return SAPS image list
 	 */
-	public static List<SapsImage> getAllTasks(ImageDataStore imageStore, String message) {
+	public static List<SapsImage> getAllTasks(Catalog imageStore, String message) {
 		return retry(new GetAllTasks(imageStore), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 }

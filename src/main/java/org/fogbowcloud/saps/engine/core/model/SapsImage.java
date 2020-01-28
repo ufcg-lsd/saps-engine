@@ -33,16 +33,20 @@ public class SapsImage implements Serializable {
 	private String user;
 	private int priority;
 	private String inputdownloadingTag;
+	private String digestInputdownloading;
 	private String preprocessingTag;
+	private String digestPreprocessing;
 	private String processingTag;
+	private String digestProcessing;
 	private Timestamp creationTime;
 	private Timestamp updateTime;
 	private String status;
 	private String error;
 
-	public SapsImage(String taskId, String dataset, String region, Date imageDate, ImageTaskState state, String arrebolJobId,
-					 String federationMember, int priority, String user, String inputdownloadingTag, String preprocessingTag,
-					 String processingTag, Timestamp creationTime, Timestamp updateTime, String status, String error) {
+	public SapsImage(String taskId, String dataset, String region, Date imageDate, ImageTaskState state,
+			String arrebolJobId, String federationMember, int priority, String user, String inputdownloadingTag,
+			String digestInputdownloading, String preprocessingTag, String digestPreprocessing, String processingTag,
+			String digestProcessing, Timestamp creationTime, Timestamp updateTime, String status, String error) {
 		this.taskId = taskId;
 		this.dataset = dataset;
 		this.region = region;
@@ -52,8 +56,11 @@ public class SapsImage implements Serializable {
 		this.federationMember = federationMember;
 		this.priority = priority;
 		this.inputdownloadingTag = inputdownloadingTag;
+		this.digestInputdownloading = digestInputdownloading;
 		this.preprocessingTag = preprocessingTag;
+		this.digestPreprocessing = digestPreprocessing;
 		this.processingTag = processingTag;
+		this.digestProcessing = digestProcessing;
 		this.creationTime = creationTime;
 		this.updateTime = updateTime;
 		this.status = status;
@@ -141,6 +148,14 @@ public class SapsImage implements Serializable {
 		this.inputdownloadingTag = inputdownloadingTag;
 	}
 
+	public String getDigestInputdownloading() {
+		return digestInputdownloading;
+	}
+
+	public void setDigestInputdownloading(String digestInputdownloading) {
+		this.digestInputdownloading = digestInputdownloading;
+	}
+
 	public String getPreprocessingTag() {
 		return preprocessingTag;
 	}
@@ -149,12 +164,28 @@ public class SapsImage implements Serializable {
 		this.preprocessingTag = preprocessingTag;
 	}
 
+	public String getDigestPreprocessing() {
+		return digestPreprocessing;
+	}
+
+	public void setDigestPreprocessing(String digestPreprocessing) {
+		this.digestPreprocessing = digestPreprocessing;
+	}
+
 	public String getProcessingTag() {
 		return processingTag;
 	}
 
 	public void setProcessingTag(String processingTag) {
 		this.processingTag = processingTag;
+	}
+
+	public String getDigestProcessing() {
+		return digestProcessing;
+	}
+
+	public void setDigestProcessing(String digestProcessing) {
+		this.digestProcessing = digestProcessing;
 	}
 
 	public Timestamp getCreationTime() {
@@ -232,9 +263,9 @@ public class SapsImage implements Serializable {
 		return "ImageTask{" + "taskId='" + taskId + "', dataset='" + dataset + "', region='" + region + "', imageDate="
 				+ DATE_FORMATER.format(imageDate) + ", state='" + state + ", federationMember='" + federationMember
 				+ "', priority=" + priority + ", user='" + user + "', inputGatheringTag='" + inputdownloadingTag
-				+ "', inputPreprocessingTag='" + preprocessingTag + "', algorithmExecutionTag='"
-				+ processingTag + "', creationTime=" + creationTime + ", updateTime=" + updateTime
-				+ ", status='" + status + "', error='" + error + "'}";
+				+ "', inputPreprocessingTag='" + preprocessingTag + "', algorithmExecutionTag='" + processingTag
+				+ "', creationTime=" + creationTime + ", updateTime=" + updateTime + ", status='" + status
+				+ "', error='" + error + "'}";
 	}
 
 	@Override
@@ -282,8 +313,7 @@ public class SapsImage implements Serializable {
 		if (preprocessingTag != null ? !preprocessingTag.equals(imageTask.preprocessingTag)
 				: imageTask.preprocessingTag != null)
 			return false;
-		if (processingTag != null ? !processingTag.equals(imageTask.processingTag)
-				: imageTask.processingTag != null)
+		if (processingTag != null ? !processingTag.equals(imageTask.processingTag) : imageTask.processingTag != null)
 			return false;
 		if (creationTime != null ? !creationTime.equals(imageTask.creationTime) : imageTask.creationTime != null)
 			return false;
