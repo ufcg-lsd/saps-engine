@@ -84,8 +84,6 @@ public interface Catalog {
 
 	boolean lockTask(String taskId) throws SQLException;
 
-	boolean unlockTask(String taskId) throws SQLException;
-
 	void removeNotification(String submissionId, String taskId, String userEmail) throws SQLException;
 
 	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
