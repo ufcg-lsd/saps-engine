@@ -77,8 +77,6 @@ public class JDBCImageDataStore implements Catalog {
 	// Insert queries
 	private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
 			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-	private Map<String, Connection> lockedImages = new ConcurrentHashMap<>();
 	private BasicDataSource connectionPool;
 
 	public JDBCImageDataStore(Properties properties) throws SQLException {
