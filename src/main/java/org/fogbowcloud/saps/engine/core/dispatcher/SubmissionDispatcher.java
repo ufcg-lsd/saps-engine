@@ -50,21 +50,30 @@ public class SubmissionDispatcher {
 	 * 
 	 * These three pieces of information are booleans and are controlled by an
 	 * administrator. By default, state and administrative function are false.
+	 * 
+	 * 
+	 * Note: The message parameter is a string that will be displayed in the SAPS
+	 * log before attempting to communicate with the Catalog using the retry
+	 * approach.
 	 */
-	public void addUser(String email, String name, String password, boolean state, boolean notify,
-			boolean adminRole) {
+	public void addUserInCatalog(String email, String name, String password, boolean state, boolean notify, boolean adminRole) {
 		CatalogUtils.addNewUser(catalog, email, name, password, state, notify, adminRole,
 				"add new user [" + email + "]");
 	}
 
 	/**
-	 * This function gets user information.
 	 * 
-	 * @param userEmail user email
-	 * @param message   information message
+	 * This function calls a function that uses the approach of communicating with
+	 * the Catalog trying to even try to retrieve the user's information based on
+	 * the email passed by parameter (which is the primary key of the SAPS user
+	 * scheme, that is, there are not two users with same email).
+	 * 
+	 * Note: The message parameter is a string that will be displayed in the SAPS
+	 * log before attempting to communicate with the Catalog using the retry
+	 * approach.
 	 */
-	private SapsUser getUserInCatalog(String userEmail, String message) {
-		return CatalogUtils.getUser(catalog, userEmail, message);
+	private SapsUser getUserInCatalog(String email, String message) {
+		return CatalogUtils.getUser(catalog, email, message);
 	}
 
 	/**
