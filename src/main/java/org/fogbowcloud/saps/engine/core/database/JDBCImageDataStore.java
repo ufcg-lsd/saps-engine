@@ -23,7 +23,7 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
-public class JDBCImageDataStore implements ImageDataStore {
+public class JDBCImageDataStore implements Catalog {
 
 	private static final Logger LOGGER = Logger.getLogger(JDBCImageDataStore.class);
 

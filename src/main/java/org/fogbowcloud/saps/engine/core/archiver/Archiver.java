@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.SwiftPermanentStorage;
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -25,7 +25,8 @@ import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 public class Archiver {
 
 	private final Properties properties;
-	private final ImageDataStore imageStore;
+
+	private final Catalog catalog;
 	private final PermanentStorage permanentStorage;
 	private ScheduledExecutorService sapsExecutor;
 	private final boolean executionDebugMode;
@@ -40,13 +41,12 @@ public class Archiver {
 				+ properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_PORT));
 	}
 
-	protected Archiver(Properties properties, ImageDataStore imageStore, ArchiverHelper archiverHelper)
-			throws SapsException {
+	protected Archiver(Properties properties, Catalog catalog, ArchiverHelper archiverHelper) throws SapsException {
 		if (!checkProperties(properties))
 			throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
 
 		this.properties = properties;
-		this.imageStore = imageStore;
+		this.catalog = catalog;
 		this.sapsExecutor = Executors.newScheduledThreadPool(1);
 		this.permanentStorage = createStorageInstance(
 				properties.getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE));
@@ -146,7 +146,7 @@ public class Archiver {
 	 * tasks.
 	 */
 	private void garbageCollector() {
-		List<SapsImage> failedTasks = tasksInFailedState(ImageDataStore.UNLIMITED);
+		List<SapsImage> failedTasks = tasksInFailedState(Catalog.UNLIMITED);
 
 		LOGGER.info("Deleting data directory from " + failedTasks.size() + " failed tasks");
 
@@ -163,7 +163,7 @@ public class Archiver {
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksInFailedState(int limit) {
-		return CatalogUtils.getTasks(imageStore, ImageTaskState.FAILED, limit,
+		return CatalogUtils.getTasks(catalog, ImageTaskState.FAILED, limit,
 				"gets tasks with " + ImageTaskState.FAILED.getValue() + " state");
 	}
 
@@ -173,7 +173,7 @@ public class Archiver {
 	 * @throws Exception
 	 */
 	private void cleanUnfinishedArchivedData() throws Exception {
-		List<SapsImage> archivingTasks = tasksInArchivingState(ImageDataStore.UNLIMITED);
+		List<SapsImage> archivingTasks = tasksInArchivingState(Catalog.UNLIMITED);
 
 		LOGGER.info("Rollback in " + archivingTasks.size() + " tasks in archiving state");
 
@@ -193,7 +193,7 @@ public class Archiver {
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksInArchivingState(int limit) {
-		return CatalogUtils.getTasks(imageStore, ImageTaskState.ARCHIVING, limit,
+		return CatalogUtils.getTasks(catalog, ImageTaskState.ARCHIVING, limit,
 				"gets tasks with " + ImageTaskState.ARCHIVING.getValue() + " state");
 	}
 
@@ -223,7 +223,7 @@ public class Archiver {
 	 */
 	private void archiver() {
 		try {
-			List<SapsImage> tasksToArchive = tasksToArchive(ImageDataStore.UNLIMITED);
+			List<SapsImage> tasksToArchive = tasksToArchive(Catalog.UNLIMITED);
 
 			LOGGER.info("Trying to archive " + tasksToArchive.size() + " finished tasks: " + tasksToArchive);
 
@@ -246,7 +246,7 @@ public class Archiver {
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksToArchive(int limit) {
-		return CatalogUtils.getTasks(imageStore, ImageTaskState.FINISHED, limit,
+		return CatalogUtils.getTasks(catalog, ImageTaskState.FINISHED, limit,
 				"gets tasks with " + ImageTaskState.FINISHED.getValue() + " state");
 	}
 
@@ -360,7 +360,7 @@ public class Archiver {
 		task.setStatus(status);
 		task.setError(error);
 		task.setArrebolJobId(arrebolJobId);
-		return CatalogUtils.updateState(imageStore, task,
+		return CatalogUtils.updateState(catalog, task,
 				"updates task[" + task.getTaskId() + "] state for " + state.getValue());
 	}
 
@@ -371,7 +371,7 @@ public class Archiver {
 	 * @param message information message
 	 */
 	private void addTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.addTimestampTask(imageStore, task, message);
+		CatalogUtils.addTimestampTask(catalog, task, message);
 	}
 
 	/**
@@ -382,6 +382,6 @@ public class Archiver {
 	 * @param message information message
 	 */
 	private void removeTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.removeTimestampTask(imageStore, task, message);
+		CatalogUtils.removeTimestampTask(catalog, task, message);
 	}
 }

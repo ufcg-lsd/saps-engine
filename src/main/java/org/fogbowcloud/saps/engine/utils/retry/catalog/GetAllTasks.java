@@ -3,14 +3,14 @@ package org.fogbowcloud.saps.engine.utils.retry.catalog;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public class GetAllTasks implements CatalogRetry<List<SapsImage>> {
 
-	private ImageDataStore imageStore;
+	private Catalog imageStore;
 
-	public GetAllTasks(ImageDataStore imageStore) {
+	public GetAllTasks(Catalog imageStore) {
 		this.imageStore = imageStore;
 	}
 

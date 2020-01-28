@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -22,11 +22,11 @@ public class SubmissionDispatcher {
 	public static final int DEFAULT_PRIORITY = 0;
 	public static final String DEFAULT_USER = "admin";
 
-	private ImageDataStore imageStore;
+	private Catalog imageStore;
 
 	private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcher.class);
 
-	public SubmissionDispatcher(ImageDataStore imageStore) {
+	public SubmissionDispatcher(Catalog imageStore) {
 		this.imageStore = imageStore;
 	}
 
@@ -39,7 +39,7 @@ public class SubmissionDispatcher {
 	 * 
 	 * @return image store
 	 */
-	public ImageDataStore getImageStore() {
+	public Catalog getImageStore() {
 		return imageStore;
 	}
 
@@ -48,7 +48,7 @@ public class SubmissionDispatcher {
 	 * 
 	 * @param imageStore new image store
 	 */
-	public void setImageStore(ImageDataStore imageStore) {
+	public void setImageStore(Catalog imageStore) {
 		this.imageStore = imageStore;
 	}
 
@@ -441,7 +441,7 @@ public class SubmissionDispatcher {
 	 * @return tasks in specific state
 	 */
 	public List<SapsImage> getTasksInState(ImageTaskState state) throws SQLException {
-		return getTasksInCatalog(state, ImageDataStore.UNLIMITED, "gets tasks with " + state.getValue() + " state");
+		return getTasksInCatalog(state, Catalog.UNLIMITED, "gets tasks with " + state.getValue() + " state");
 	}
 
 	/**

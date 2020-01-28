@@ -2,15 +2,15 @@ package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
 import java.sql.SQLException;
 
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public class AddTimestampRetry implements CatalogRetry<Void>{
 
-	private ImageDataStore imageStore;
+	private Catalog imageStore;
 	private SapsImage task;
 
-	public AddTimestampRetry(ImageDataStore imageStore, SapsImage task) {
+	public AddTimestampRetry(Catalog imageStore, SapsImage task) {
 		this.imageStore = imageStore;
 		this.task = task;
 	}

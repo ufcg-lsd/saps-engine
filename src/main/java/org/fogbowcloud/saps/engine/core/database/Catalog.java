@@ -11,7 +11,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 
-public interface ImageDataStore {
+public interface Catalog {
 
 	public String NONE = "None";
 	public int UNLIMITED = -1;
