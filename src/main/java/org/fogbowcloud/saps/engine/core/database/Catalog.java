@@ -90,8 +90,6 @@ public interface Catalog {
 
 	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
 
-	void removeDeployConfig(String federationMember) throws SQLException;
-
 	List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
 			String inputPreprocessing, String algorithmExecution) throws SQLException;
 }

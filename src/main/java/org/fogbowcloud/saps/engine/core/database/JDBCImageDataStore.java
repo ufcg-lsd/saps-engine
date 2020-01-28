@@ -627,31 +627,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private static final String REMOVE_DEPLOY_CONFIG_SQL = "DELETE FROM " + DEPLOY_CONFIG_TABLE_NAME + " WHERE "
-			+ FEDERATION_MEMBER_COL + " = ?";
-
-	@Override
-	public void removeDeployConfig(String federationMember) throws SQLException {
-		LOGGER.debug("Removing register for " + federationMember + " from database");
-		if (federationMember == null || federationMember.isEmpty()) {
-			throw new IllegalArgumentException("Invalid federationMember " + federationMember);
-		}
-
-		PreparedStatement insertStatement = null;
-		Connection connection = null;
-		try {
-			connection = getConnection();
-
-			insertStatement = connection.prepareStatement(REMOVE_DEPLOY_CONFIG_SQL);
-			insertStatement.setString(1, federationMember);
-			insertStatement.setQueryTimeout(300);
-
-			insertStatement.execute();
-		} finally {
-			close(insertStatement, connection);
-		}
-	}
-
 	private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
 			+ " VALUES(?, ?, now())";
 
