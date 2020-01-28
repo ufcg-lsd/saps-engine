@@ -826,16 +826,7 @@ public class JDBCImageDataStore implements Catalog {
 			close(updateStatement, connection);
 		}
 	}
-
-	@Override
-	public void dispose() {
-		try {
-			this.connectionPool.close();
-		} catch (SQLException e) {
-			LOGGER.error("Error wile closing ConnectionPool", e);
-		}
-	}
-
+	
 	private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
 
 	@Override
