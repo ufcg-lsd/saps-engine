@@ -13,16 +13,16 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 
 public interface Catalog {
 
-	public String NONE = "None";
-	public int UNLIMITED = -1;
+	String NONE = "None";
+	int UNLIMITED = -1;
 
-	public String DATASTORE_USERNAME = "datastore_username";
-	public String DATASTORE_PASSWORD = "datastore_password";
-	public String DATASTORE_DRIVER = "datastore_driver";
-	public String DATASTORE_URL_PREFIX = "datastore_url_prefix";
-	public String DATASTORE_NAME = "datastore_name";
-	public String DATASTORE_IP = "datastore_ip";
-	public String DATASTORE_PORT = "datastore_port";
+	String DATASTORE_USERNAME = "datastore_username";
+	String DATASTORE_PASSWORD = "datastore_password";
+	String DATASTORE_DRIVER = "datastore_driver";
+	String DATASTORE_URL_PREFIX = "datastore_url_prefix";
+	String DATASTORE_NAME = "datastore_name";
+	String DATASTORE_IP = "datastore_ip";
+	String DATASTORE_PORT = "datastore_port";
 
 	SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
 			String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
@@ -95,6 +95,6 @@ public interface Catalog {
 	List<SapsImage> getTasksByFilter(ImageTaskState state, String taskId, long processDateInit, long processDateEnd)
 			throws SQLException;
 
-	public List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
+	List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
 			String inputPreprocessing, String algorithmExecution) throws SQLException;
 }
