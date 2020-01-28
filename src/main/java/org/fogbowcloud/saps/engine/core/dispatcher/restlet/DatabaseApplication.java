@@ -39,7 +39,7 @@ public class DatabaseApplication extends Application {
 	private SubmissionDispatcher submissionDispatcher;
 	private Component restletComponent;
 
-	public DatabaseApplication(Properties properties) throws Exception {
+	public DatabaseApplication(Properties properties) throws SapsException, SQLException {
 		if (!checkProperties(properties))
 			throw new SapsException("Error on validate the file. Missing properties for start Database Application.");
 
