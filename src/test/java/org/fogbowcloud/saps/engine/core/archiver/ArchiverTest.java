@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-import org.fogbowcloud.saps.engine.core.database.ImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
@@ -26,35 +26,61 @@ public class ArchiverTest {
 		MockitoAnnotations.initMocks(this);
 	}
 
-	private Properties createDefaultProperties() {
+	private Properties createArchiverDefaultProperties() {
 		Properties properties = new Properties();
-		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_IP, "");
-		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_PORT, "");
-		properties.put(SapsPropertiesConstants.IMAGE_WORKER, "");
-		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR, "");
-		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER, "");
-		properties.put(SapsPropertiesConstants.ARREBOL_BASE_URL, "");
 		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_IP, "");
 		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_PORT, "");
 		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR, "");
 		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER, "");
 		properties.put(SapsPropertiesConstants.SAPS_EXPORT_PATH, "");
 		properties.put(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE, "swift");
-		
+
 		return properties;
 	}
 
-	@Test (expected = SapsException.class)
+	private Properties createArchiverSwiftDefaultProperties() {
+		Properties properties = createArchiverDefaultProperties();
+		properties.put(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX, "");
+		properties.put(SapsPropertiesConstants.SWIFT_CONTAINER_NAME, "");
+
+		return properties;
+	}
+
+	private Properties createDefaultAllProperties() {
+		Properties properties = createArchiverSwiftDefaultProperties();
+		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID, "");
+		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID, "");
+		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD, "");
+		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL, "");
+		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL, "");
+
+		return properties;
+	}
+
+	@Test(expected = SapsException.class)
 	public void testNoSetProperty() throws SapsException, SQLException {
 		Properties properties = new Properties();
-		Archiver archiver = new Archiver(properties);
+		new Archiver(properties);
 	}
-	
-	@Test (expected = SapsException.class)
-	public void testNoSetPropertyForSwiftAPIClient()
-			throws Exception, SubmitJobException, GetCountsSlotsException {
-		ImageDataStore imageStore = mock(ImageDataStore.class);
-		Properties properties = createDefaultProperties();
-		Archiver archiver = new Archiver(properties, imageStore, new ArchiverHelper());
+
+	@Test(expected = SapsException.class)
+	public void testNoSetPropertyForSwiftPermanentStorage() throws SapsException {
+		Catalog imageStore = mock(Catalog.class);
+		Properties properties = createArchiverDefaultProperties();
+		new Archiver(properties, imageStore, new ArchiverHelper());
+	}
+
+	@Test(expected = SapsException.class)
+	public void testNoSetPropertyForSwiftAPIClient() throws SapsException {
+		Catalog imageStore = mock(Catalog.class);
+		Properties properties = createArchiverSwiftDefaultProperties();
+		new Archiver(properties, imageStore, new ArchiverHelper());
+	}
+
+	@Test(expected = SapsException.class)
+	public void testAllSetProperty() throws SapsException {
+		Catalog imageStore = mock(Catalog.class);
+		Properties properties = createDefaultAllProperties();
+		new Archiver(properties, imageStore, new ArchiverHelper());
 	}
 }
