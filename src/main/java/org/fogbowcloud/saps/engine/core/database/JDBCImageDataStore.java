@@ -353,38 +353,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private static final String INSERT_DEPLOY_CONFIG_SQL = "INSERT INTO " + DEPLOY_CONFIG_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?)";
-
-	@Override
-	public void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember)
-			throws SQLException {
-		LOGGER.info("Adding NFS IP " + nfsIP + " and port " + nfsPort + " from " + federationMember + " in DB");
-		if (nfsIP == null || nfsIP.isEmpty() || nfsSshPort == null || nfsSshPort.isEmpty() || nfsPort == null
-				|| nfsPort.isEmpty() || federationMember == null || federationMember.isEmpty()) {
-			throw new IllegalArgumentException("Invalid NFS IP " + nfsIP + ", ssh port " + nfsSshPort + ", port "
-					+ nfsPort + " or federation member " + federationMember);
-		}
-
-		PreparedStatement insertStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			insertStatement = connection.prepareStatement(INSERT_DEPLOY_CONFIG_SQL);
-			insertStatement.setString(1, nfsIP);
-			insertStatement.setString(2, nfsSshPort);
-			insertStatement.setString(3, nfsPort);
-			insertStatement.setString(4, federationMember);
-			insertStatement.setQueryTimeout(300);
-
-			insertStatement.execute();
-		} finally {
-			close(insertStatement, connection);
-		}
-	}
-
 	private static final String UPDATE_DOWNLOADER_METADATA_INFO_SQL = "UPDATE " + PROVENANCE_TABLE_NAME + " SET "
 			+ INPUT_METADATA_COL + " = ?, " + INPUT_OPERATING_SYSTEM_COL + " = ?, " + INPUT_KERNEL_VERSION_COL
 			+ " = ? WHERE " + TASK_ID_COL + " = ?;";

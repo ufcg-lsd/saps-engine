@@ -37,8 +37,6 @@ public interface Catalog {
 
 	void addUserNotification(String submissionId, String taskId, String userEmail) throws SQLException;
 
-	void addDeployConfig(String nfsIP, String nfsSshPort, String nfsPort, String federationMember) throws SQLException;
-
 	List<Ward> getUsersToNotify() throws SQLException;
 
 	void updateImageTask(SapsImage imageTask) throws SQLException;
