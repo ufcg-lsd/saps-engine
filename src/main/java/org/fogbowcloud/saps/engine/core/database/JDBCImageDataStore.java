@@ -1121,38 +1121,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 	}
 
-	private static final String SELECT_NFS_SERVER_SSH_PORT_SQL = "SELECT " + NFS_SERVER_SSH_PORT_COL + " FROM "
-			+ DEPLOY_CONFIG_TABLE_NAME + " WHERE " + FEDERATION_MEMBER_COL + " = ?";
-
-	@Override
-	public String getNFSServerSshPort(String federation_member) throws SQLException {
-		if (federation_member == null || federation_member.isEmpty()) {
-			LOGGER.error("Invalid federationMember " + federation_member);
-			throw new IllegalArgumentException("Invalid federationMember " + federation_member);
-		}
-		PreparedStatement selectStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			selectStatement = connection.prepareStatement(SELECT_NFS_SERVER_SSH_PORT_SQL);
-			selectStatement.setString(1, federation_member);
-			selectStatement.setQueryTimeout(300);
-
-			selectStatement.execute();
-
-			ResultSet rs = selectStatement.getResultSet();
-			if (rs.next()) {
-				return rs.getString(NFS_SERVER_SSH_PORT_COL);
-			}
-			rs.close();
-			return null;
-		} finally {
-			close(selectStatement, connection);
-		}
-	}
-
 	private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME + " WHERE " + TASK_ID_COL
 			+ " = ? AND " + STATE_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
 

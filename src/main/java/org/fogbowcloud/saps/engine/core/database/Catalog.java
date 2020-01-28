@@ -78,8 +78,6 @@ public interface Catalog {
 
 	String getNFSServerIP(String federationMember) throws SQLException;
 
-	String getNFSServerSshPort(String federationMember) throws SQLException;
-
 	void removeNotification(String submissionId, String taskId, String userEmail) throws SQLException;
 
 	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
