@@ -74,17 +74,8 @@ public class SubmissionDispatcher {
 	 * log before attempting to communicate with the Catalog using the retry
 	 * approach.
 	 */
-	private SapsUser getUserInCatalog(String email, String message) {
-		return CatalogUtils.getUser(catalog, email, message);
-	}
-
-	/**
-	 * This function gets user information in Catalog component.
-	 * 
-	 * @param userEmail user email
-	 */
-	public SapsUser getUser(String userEmail) {
-		return getUserInCatalog(userEmail, "get user [" + userEmail + "] information");
+	public SapsUser getUserInCatalog(String email) {
+		return CatalogUtils.getUser(catalog, email, "get user [" + email + "] information");
 	}
 
 	public void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail) throws SQLException {
