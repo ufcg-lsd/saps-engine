@@ -278,7 +278,7 @@ public class SubmissionDispatcher {
 	 * This function retrieves all information from all tasks registered in the
 	 * Catalog using the communication mechanism using the retry approach.
 	 */
-	public List<SapsImage> getAllTasks() {
+	public List<SapsImage> getAllTasksInCatalog() {
 		return CatalogUtils.getAllTasks(catalog, "get all tasks");
 	}
 

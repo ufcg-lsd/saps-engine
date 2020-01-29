@@ -213,7 +213,7 @@ public class DatabaseApplication extends Application {
 	 * @throws ParseException
 	 */
 	public List<SapsImage> getTasks() throws SQLException, ParseException {
-		return submissionDispatcher.getAllTasks();
+		return submissionDispatcher.getAllTasksInCatalog();
 	}
 
 	/**
