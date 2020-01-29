@@ -37,9 +37,10 @@ public class SubmissionDispatcher {
 	/**
 	 * This function is responsible for passing on the information of a new SAPS
 	 * user to the communication approach with the Catalog that he will try until he
-	 * succeeds. The email, name and password are defined by the user in which the
-	 * email and password will be used for authentication on the SAPS platform.
-	 * There are three other pieces of information that are:
+	 * succeeds. The email (primary key of the SAPS user scheme), name and password
+	 * are defined by the user in which the email and password will be used for
+	 * authentication on the SAPS platform. There are three other pieces of
+	 * information that are:
 	 * 
 	 * - notify: informs the user about their tasks by email.
 	 * 
@@ -56,7 +57,8 @@ public class SubmissionDispatcher {
 	 * log before attempting to communicate with the Catalog using the retry
 	 * approach.
 	 */
-	public void addUserInCatalog(String email, String name, String password, boolean state, boolean notify, boolean adminRole) {
+	public void addUserInCatalog(String email, String name, String password, boolean state, boolean notify,
+			boolean adminRole) {
 		CatalogUtils.addNewUser(catalog, email, name, password, state, notify, adminRole,
 				"add new user [" + email + "]");
 	}
