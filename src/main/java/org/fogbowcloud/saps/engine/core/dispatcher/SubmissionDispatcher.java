@@ -314,27 +314,16 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function gets tasks in specific state in Catalog.
+	 * This function retrieves a collection of tasks in a given state registered in
+	 * the Catalog using the communication mechanism that uses the retry approach.
 	 * 
-	 * @param state   specific state for get tasks
-	 * @param limit   limit value of tasks to take
-	 * @param message information message
-	 * @return tasks in specific state
+	 * Note: The message parameter is a string that will be displayed in the SAPS
+	 * log before attempting to communicate with the Catalog using the retry
+	 * approach.
 	 */
-	private List<SapsImage> getTasksInCatalog(ImageTaskState state, int limit, String message) {
-		return CatalogUtils.getTasks(catalog, state, limit, message);
-	}
-
-	/**
-	 * This function gets tasks in specific state.
-	 * 
-	 * @param state   specific state for get tasks
-	 * @param limit   limit value of tasks to take
-	 * @param message information message
-	 * @return tasks in specific state
-	 */
-	public List<SapsImage> getTasksInState(ImageTaskState state) throws SQLException {
-		return getTasksInCatalog(state, Catalog.UNLIMITED, "gets tasks with " + state.getValue() + " state");
+	public List<SapsImage> getTasksInCatalog(ImageTaskState state) throws SQLException {
+		return CatalogUtils.getTasks(catalog, state, Catalog.UNLIMITED,
+				"gets tasks with " + state.getValue() + " state");
 	}
 
 	/**
