@@ -68,7 +68,8 @@ public class SubmissionDispatcher {
 	 * This function calls a function that uses the approach of communicating with
 	 * the Catalog trying to even try to retrieve the user's information based on
 	 * the email passed by parameter (which is the primary key of the SAPS user
-	 * scheme, that is, there are not two users with same email).
+	 * scheme, that is, there are not two users with same email). The return of this
+	 * function is an object that contains the information retrieved from the User.
 	 * 
 	 * Note: The message parameter is a string that will be displayed in the SAPS
 	 * log before attempting to communicate with the Catalog using the retry
@@ -79,21 +80,81 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function adds new task in Catalog.
 	 * 
-	 * @param taskId                   task id
-	 * @param dataset                  task dataset
-	 * @param region                   task region
-	 * @param date                     task region
-	 * @param priority                 task priority
-	 * @param userEmail                user email that is creating task
-	 * @param inputdownloadingPhaseTag inputdownloading phase tag
-	 * @param preprocessingPhaseTag    preprocessing phase tag
-	 * @param processingPhaseTag       processing phase tag
-	 * @param digestProcessing
-	 * @param processingPhaseTag2
-	 * @param digestPreprocessing
-	 * @return new saps image
+	 * This function sends information from a new SAPS task to the communication
+	 * mechanism with the Catalog in order to insert it into the schema, causing the
+	 * platform to receive a new workload. This information is:
+	 * 
+	 * - TaskId: a unique identifier for the SAPS task created automatically using a
+	 * UUID class (immutable universally unique identifier, represents a 128-bit
+	 * value).
+	 * 
+	 * - Dataset: it is the type of data set of a certain satellite that this task
+	 * belongs to, being an enum that is used by the steps of the task processing
+	 * for the correct execution of the algorithms. Their values ​​can be:
+	 * 
+	 * -- landsat_5: indicates that the task belongs to the LANDSAT 5 satellite
+	 * dataset (https://www.usgs.gov/land-resources/nli/landsat/landsat-5).
+	 * 
+	 * -- landsat_7: indicates that the task belongs to the LANDSAT 7 satellite
+	 * dataset (https://www.usgs.gov/land-resources/nli/landsat/landsat-7).
+	 * 
+	 * -- landsat_8: indicates that the task belongs to the LANDSAT 8 satellite data
+	 * set (https://www.usgs.gov/land-resources/nli/landsat/landsat-8).
+	 * 
+	 * - Region: is the location of the satellite data following the global notation
+	 * system for Landsat data (WRS:
+	 * https://landsat.gsfc.nasa.gov/the-worldwide-reference-system), following the
+	 * PPPRRR form, where P is the path number (with 3 characters) and R is the row
+	 * number (also with 3 characters).
+	 * 
+	 * - date: is the date on which the satellite data was collected following the
+	 * Gregorian calendar. Its value is a string in the format YYYY/MM/DD, where Y
+	 * is the year with 4 characters, M is the month with 2 characters and D is the
+	 * day with 2 characters.
+	 * 
+	 * - priority: it is an integer in the range 0 to 31 that indicates how priority
+	 * the task processing is.
+	 * 
+	 * - userEmail: it is the email of the task owner (this information is obtained
+	 * automatically by the authenticated user on the platform).
+	 * 
+	 * - inputdownloadingPhaseTag: is the version of the algorithm that will be used
+	 * in the task's inputdownloading step.
+	 * 
+	 * - preprocessingPhaseTag: is the version of the algorithm that will be used in
+	 * the task's preprocessing step.
+	 * 
+	 * - processingPhaseTag: is the version of the algorithm that will be used in
+	 * the task's processing step.
+	 * 
+	 * - digestInputdownloading: is the immutable identifier (digest) of the Docker
+	 * image of the version defined in the inputdownloading step
+	 * (inputdownloadingPhaseTag).
+	 * 
+	 * - digestPreprocessing: is the immutable identifier (digest) of the Docker
+	 * image of the version defined in the preprocessing step
+	 * (preprocessingPhaseTag).
+	 * 
+	 * - digestProcessing: is the immutable identifier (digest) of the Docker image
+	 * of the version defined in the processing step (processingPhaseTag).
+	 * 
+	 * The return of this function is an object with the SAPS task information.
+	 * 
+	 * Note 1: The digest is obtained automatically when the task is submitted to
+	 * SAPS.
+	 * 
+	 * Note 2: This information belongs to different classes of subjects on the SAP
+	 * platform, we have information on:
+	 * 
+	 * - satellite data: dataset, region and date.
+	 * 
+	 * - SAPS schema: taskID, priority, userEmail.
+	 * 
+	 * - versions of the processing step algorithms: inputdownloadingPhaseTag,
+	 * preprocessingPhaseTag and processingPhaseTag
+	 * 
+	 * - Docker: digestInputdownloading, digestPreprocessing and digestProcessing
 	 */
 	private SapsImage addNewTaskInCatalog(String taskId, String dataset, String region, Date date, int priority,
 			String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
