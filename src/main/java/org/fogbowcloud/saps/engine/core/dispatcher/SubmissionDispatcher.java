@@ -321,7 +321,7 @@ public class SubmissionDispatcher {
 	 * log before attempting to communicate with the Catalog using the retry
 	 * approach.
 	 */
-	public List<SapsImage> getTasksInCatalog(ImageTaskState state) throws SQLException {
+	public List<SapsImage> getTasksWithStateInCatalog(ImageTaskState state) throws SQLException {
 		return CatalogUtils.getTasks(catalog, state, Catalog.UNLIMITED,
 				"gets tasks with " + state.getValue() + " state");
 	}
