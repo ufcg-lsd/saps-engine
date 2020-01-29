@@ -303,11 +303,10 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function gets task by id.
 	 * 
-	 * @param taskId task id to be searched
-	 * @return SAPS image with id
-	 * @throws SQLException
+	 * This function retrieves the task information based on the past id registered
+	 * in the Catalog using the communication mechanism that uses the retry
+	 * approach.
 	 */
 	public SapsImage getTaskById(String taskId) {
 		return getTaskByIdInCatalog(taskId);
