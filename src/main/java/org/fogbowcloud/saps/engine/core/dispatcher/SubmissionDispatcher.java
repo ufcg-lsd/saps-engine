@@ -40,22 +40,18 @@ public class SubmissionDispatcher {
 	 * succeeds. The email (primary key of the SAPS user scheme), name and password
 	 * are defined by the user in which the email and password will be used for
 	 * authentication on the SAPS platform. There are three other pieces of
-	 * information that are:
-	 * 
-	 * - notify: informs the user about their tasks by email.
-	 * 
-	 * - state: informs if the user is able to authenticate on the SAPS platform.
-	 * 
+	 * information that are:<br>
+	 * - notify: informs the user about their tasks by email.<br>
+	 * - state: informs if the user is able to authenticate on the SAPS
+	 * platform.<br>
 	 * - administrative role: informs if the user is an administrator of the SAPS
-	 * platform.
-	 * 
+	 * platform.<br>
 	 * These three pieces of information are booleans and are controlled by an
-	 * administrator. By default, state and administrative function are false.
-	 * 
+	 * administrator. By default, state and administrative function are false.<br>
 	 * 
 	 * Note: The message parameter is a string that will be displayed in the SAPS
 	 * log before attempting to communicate with the Catalog using the retry
-	 * approach.
+	 * approach.<br>
 	 */
 	public void addUserInCatalog(String email, String name, String password, boolean state, boolean notify,
 			boolean adminRole) {
@@ -69,7 +65,8 @@ public class SubmissionDispatcher {
 	 * the Catalog trying to even try to retrieve the user's information based on
 	 * the email passed by parameter (which is the primary key of the SAPS user
 	 * scheme, that is, there are not two users with same email). The return of this
-	 * function is an object that contains the information retrieved from the User.
+	 * function is an object that contains the information retrieved from the
+	 * User.<br>
 	 * 
 	 * Note: The message parameter is a string that will be displayed in the SAPS
 	 * log before attempting to communicate with the Catalog using the retry
@@ -83,78 +80,78 @@ public class SubmissionDispatcher {
 	 * 
 	 * This function sends information from a new SAPS task to the communication
 	 * mechanism with the Catalog in order to insert it into the schema, causing the
-	 * platform to receive a new workload. This information is:
+	 * platform to receive a new workload. This information is:<br>
 	 * 
 	 * - TaskId: a unique identifier for the SAPS task created automatically using a
 	 * UUID class (immutable universally unique identifier, represents a 128-bit
-	 * value).
+	 * value).<br>
 	 * 
 	 * - Dataset: it is the type of data set of a certain satellite that this task
 	 * belongs to, being an enum that is used by the steps of the task processing
-	 * for the correct execution of the algorithms. Their values ​​can be:
+	 * for the correct execution of the algorithms. Their values ​​can be:<br>
 	 * 
 	 * -- landsat_5: indicates that the task belongs to the LANDSAT 5 satellite
-	 * dataset (https://www.usgs.gov/land-resources/nli/landsat/landsat-5).
+	 * dataset (https://www.usgs.gov/land-resources/nli/landsat/landsat-5).<br>
 	 * 
 	 * -- landsat_7: indicates that the task belongs to the LANDSAT 7 satellite
-	 * dataset (https://www.usgs.gov/land-resources/nli/landsat/landsat-7).
+	 * dataset (https://www.usgs.gov/land-resources/nli/landsat/landsat-7).<br>
 	 * 
 	 * -- landsat_8: indicates that the task belongs to the LANDSAT 8 satellite data
-	 * set (https://www.usgs.gov/land-resources/nli/landsat/landsat-8).
+	 * set (https://www.usgs.gov/land-resources/nli/landsat/landsat-8).<br>
 	 * 
 	 * - Region: is the location of the satellite data following the global notation
 	 * system for Landsat data (WRS:
 	 * https://landsat.gsfc.nasa.gov/the-worldwide-reference-system), following the
 	 * PPPRRR form, where P is the path number (with 3 characters) and R is the row
-	 * number (also with 3 characters).
+	 * number (also with 3 characters).<br>
 	 * 
 	 * - date: is the date on which the satellite data was collected following the
 	 * Gregorian calendar. Its value is a string in the format YYYY/MM/DD, where Y
 	 * is the year with 4 characters, M is the month with 2 characters and D is the
-	 * day with 2 characters.
+	 * day with 2 characters.<br>
 	 * 
 	 * - priority: it is an integer in the range 0 to 31 that indicates how priority
-	 * the task processing is.
+	 * the task processing is.<br>
 	 * 
 	 * - userEmail: it is the email of the task owner (this information is obtained
-	 * automatically by the authenticated user on the platform).
+	 * automatically by the authenticated user on the platform).<br>
 	 * 
 	 * - inputdownloadingPhaseTag: is the version of the algorithm that will be used
-	 * in the task's inputdownloading step.
+	 * in the task's inputdownloading step.<br>
 	 * 
 	 * - preprocessingPhaseTag: is the version of the algorithm that will be used in
-	 * the task's preprocessing step.
+	 * the task's preprocessing step.<br>
 	 * 
 	 * - processingPhaseTag: is the version of the algorithm that will be used in
-	 * the task's processing step.
+	 * the task's processing step.<br>
 	 * 
 	 * - digestInputdownloading: is the immutable identifier (digest) of the Docker
 	 * image of the version defined in the inputdownloading step
-	 * (inputdownloadingPhaseTag).
+	 * (inputdownloadingPhaseTag).<br>
 	 * 
 	 * - digestPreprocessing: is the immutable identifier (digest) of the Docker
 	 * image of the version defined in the preprocessing step
-	 * (preprocessingPhaseTag).
+	 * (preprocessingPhaseTag).<br>
 	 * 
 	 * - digestProcessing: is the immutable identifier (digest) of the Docker image
-	 * of the version defined in the processing step (processingPhaseTag).
+	 * of the version defined in the processing step (processingPhaseTag).<br>
 	 * 
-	 * The return of this function is an object with the SAPS task information.
+	 * The return of this function is an object with the SAPS task information.<br>
 	 * 
 	 * Note 1: The digest is obtained automatically when the task is submitted to
-	 * SAPS.
+	 * SAPS.<br>
 	 * 
 	 * Note 2: This information belongs to different classes of subjects on the SAP
-	 * platform, we have information on:
+	 * platform, we have information on:<br>
 	 * 
-	 * - satellite data: dataset, region and date.
+	 * - satellite data: dataset, region and date.<br>
 	 * 
-	 * - SAPS schema: taskID, priority, userEmail.
+	 * - SAPS schema: taskID, priority, userEmail.<br>
 	 * 
 	 * - versions of the processing step algorithms: inputdownloadingPhaseTag,
-	 * preprocessingPhaseTag and processingPhaseTag
+	 * preprocessingPhaseTag and processingPhaseTag.<br>
 	 * 
-	 * - Docker: digestInputdownloading, digestPreprocessing and digestProcessing
+	 * - Docker: digestInputdownloading, digestPreprocessing and digestProcessing.<br>
 	 */
 	private SapsImage addNewTaskInCatalog(String taskId, String dataset, String region, Date date, int priority,
 			String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
