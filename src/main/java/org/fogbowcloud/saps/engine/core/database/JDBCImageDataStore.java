@@ -315,35 +315,6 @@ public class JDBCImageDataStore implements Catalog {
 		return task;
 	}
 
-	private static final String INSERT_USER_NOTIFICATION_SQL = "INSERT INTO " + USERS_NOTIFY_TABLE_NAME
-			+ " VALUES(?, ?, ?)";
-
-	@Override
-	public void addUserNotification(String submissionId, String taskId, String userEmail) throws SQLException {
-		LOGGER.info(
-				"Adding image task " + taskId + " from submission " + submissionId + " notification for " + userEmail);
-		if (taskId == null || taskId.isEmpty() || userEmail == null || userEmail.isEmpty()) {
-			throw new IllegalArgumentException("Invalid task id " + taskId + " or user " + userEmail);
-		}
-
-		PreparedStatement insertStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			insertStatement = connection.prepareStatement(INSERT_USER_NOTIFICATION_SQL);
-			insertStatement.setString(1, submissionId);
-			insertStatement.setString(2, taskId);
-			insertStatement.setString(3, userEmail);
-			insertStatement.setQueryTimeout(300);
-
-			insertStatement.execute();
-		} finally {
-			close(insertStatement, connection);
-		}
-	}
-
 	private static final String UPDATE_DOWNLOADER_METADATA_INFO_SQL = "UPDATE " + PROVENANCE_TABLE_NAME + " SET "
 			+ INPUT_METADATA_COL + " = ?, " + INPUT_OPERATING_SYSTEM_COL + " = ?, " + INPUT_KERNEL_VERSION_COL
 			+ " = ? WHERE " + TASK_ID_COL + " = ?;";

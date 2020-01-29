@@ -31,8 +31,6 @@ public interface Catalog {
 	void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
 			boolean adminRole) throws SQLException;
 
-	void addUserNotification(String submissionId, String taskId, String userEmail) throws SQLException;
-
 	List<Ward> getUsersToNotify() throws SQLException;
 
 	void updateImageTask(SapsImage imageTask) throws SQLException;
