@@ -97,28 +97,6 @@ public class WardenImpl implements Warden {
 		return false;
 	}
 
-	private void removeNonExistentWard(Ward ward) {
-		try {
-			dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(), ward.getEmail());
-		} catch (SQLException e) {
-			LOGGER.error("Error while accessing database", e);
-		} catch (NullPointerException e) {
-			LOGGER.error("Ward is null", e);
-		}
-	}
-
-	protected void removeNotified(Collection<Ward> notified) {
-		try {
-			for (Ward ward : notified) {
-				dbUtilsImpl.removeUserNotification(ward.getSubmissionId(), ward.getTaskId(), ward.getEmail());
-			}
-		} catch (SQLException e) {
-			LOGGER.error("Error while accessing database", e);
-		} catch (NullPointerException e) {
-			LOGGER.error("Ward list is null", e);
-		}
-	}
-
 	protected SapsImage getImageTask(String taskId) {
 		return dbUtilsImpl.getTaskById(taskId);
 	}
