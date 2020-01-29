@@ -42,17 +42,19 @@ public class ExecutionScriptTagUtil {
 		}
 	}
 	
-	public static ExecutionScriptTag getExecutionScriptTag(String name, String type) throws SapsException {
+	public static ExecutionScriptTag getExecutionScriptTag(String name, String type)  {
 		LOGGER.debug("Getting Execution Script Tag by name [" + name + "] and type [" + type + "]");
 		JSONObject jsonScriptTagFile = null;
+		ExecutionScriptTag executionScriptTag = null;
 		try {
 			jsonScriptTagFile = ExecutionScriptTagUtil.getJsonExecutionScriptTag();
+			
+			executionScriptTag = findExecutionScriptTag(name, type, jsonScriptTagFile);
+			LOGGER.debug("Execution Script Tag Found: " + executionScriptTag.toString());
 		} catch (Exception e) {
-			throw new SapsException(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
 		}	
 		
-		ExecutionScriptTag executionScriptTag = findExecutionScriptTag(name, type, jsonScriptTagFile);
-		LOGGER.debug("Execution Script Tag Found: " + executionScriptTag.toString());
 		return executionScriptTag;
 	}
 	
