@@ -78,15 +78,6 @@ public class SubmissionDispatcher {
 		return CatalogUtils.getUser(catalog, email, "get user [" + email + "] information");
 	}
 
-	public void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail) throws SQLException {
-		try {
-			catalog.addUserNotification(submissionId, taskId, userEmail);
-		} catch (SQLException e) {
-			LOGGER.error("Error while adding task " + taskId + " notification for user " + userEmail + " in Catalogue",
-					e);
-		}
-	}
-
 	public void removeUserNotification(String submissionId, String taskId, String userEmail) throws SQLException {
 		try {
 			catalog.removeNotification(submissionId, taskId, userEmail);
