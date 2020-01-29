@@ -292,7 +292,7 @@ public class DatabaseApplication extends Application {
 	 * @return saps user
 	 */
 	public SapsUser getUser(String userEmail) {
-		return submissionDispatcher.getUser(userEmail);
+		return submissionDispatcher.getUserInCatalog(userEmail);
 	}
 
 	/**
