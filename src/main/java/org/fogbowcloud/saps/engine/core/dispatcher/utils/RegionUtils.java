@@ -96,7 +96,7 @@ public class RegionUtils {
 	 * Get path and row and create format PPPRRR, where PPP is path of scene RRR is
 	 * row of scene
 	 */
-	private String formatPathRow(int path, int row) {
+	private static String formatPathRow(int path, int row) {
 		String pathAux = Integer.toString(path);
 		String rowAux = Integer.toString(row);
 		if (rowAux.length() == 1)
