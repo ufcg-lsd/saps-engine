@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.util;
+package org.fogbowcloud.saps.engine.core.dispatcher.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
