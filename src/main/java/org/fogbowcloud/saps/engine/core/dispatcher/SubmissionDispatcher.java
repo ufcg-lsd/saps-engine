@@ -338,20 +338,52 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function search all processed tasks from area (between latitude and
-	 * longitude coordinates) between initial date and end date with
-	 * inputdownloading, preprocessing and processing tags.
+	 * This function seeks to retrieve data from successful tasks registered in the
+	 * Catalog processed by SAPS by filtering for some information such as:
 	 * 
-	 * @param lowerLeftLatitude        lower left latitude (coordinate)
-	 * @param lowerLeftLongitude       lower left longitude (coordinate)
-	 * @param upperRightLatitude       upper right latitude (coordinate)
-	 * @param upperRightLongitude      upper right longitude (coordinate)
-	 * @param initDate                 initial date
-	 * @param endDate                  end date
-	 * @param inputdownloadingPhaseTag inputdownloading phase tag
-	 * @param preprocessingPhaseTag    preprocessing phase tag
-	 * @param processingPhaseTag       processing phase tag
-	 * @return processed tasks list following description
+	 * - lowerLeftLatitude: is a geographic coordinate plus the lower left defined
+	 * in the sphere which is the angle between the plane of the equator and the
+	 * normal to the reference surface indicating the vertex of the polygon formed
+	 * together with the information lowerLeftLongitude, upperRightLatitude and
+	 * upperRightLongitude.<br>
+	 * 
+	 * - lowerLeftLongitude: is a geographic coordinate plus the lower left defined
+	 * in the sphere measured in degrees, from 0 to 180 towards east or west, from
+	 * the Greenwich Meridian indicating the vertex of the polygon formed together
+	 * with the information lowerLeftLatitude, upperRightLatitude and
+	 * upperRightLongitude.<br>
+	 * 
+	 * - upperRightLatitude: is a geographic coordinate plus the upper right defined
+	 * in the sphere which is the angle between the plane of the equator and the
+	 * normal to the reference surface indicating the vertex of the polygon formed
+	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
+	 * upperRightLongitude.<br>
+	 * 
+	 * - upperRightLongitude: is a geographic coordinate plus the upper right
+	 * defined in the sphere measured in degrees, from 0 to 180 towards east or
+	 * west, from the Greenwich Meridian indicating the vertex of the polygon formed
+	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
+	 * upperRightLatitude.<br>
+	 * 
+	 * - initDate: It is the start date (according to the Gregorian calendar) of the
+	 * search interval to which the satellite data collection date for the
+	 * successful task should belong.<br>
+	 * 
+	 * - endDate: It is the end date (according to the Gregorian calendar) of the
+	 * search interval to which the satellite data collection date of the successful
+	 * task must belong..<br>
+	 * 
+	 * - inputdownloadingPhaseTag: is the version of the algorithm that was used in
+	 * the task's inputdownloading step, in which you want to recover.<br>
+	 * 
+	 * - preprocessingPhaseTag: is the version of the algorithm that was used in the
+	 * task's preprocessing step, in which you want to recover.<br>
+	 * 
+	 * - processingPhaseTag: is the version of the algorithm that was used in the
+	 * task's processing step, in which you want to recover.<br>
+	 * 
+	 * This function returns a collection of successful tasks that match past
+	 * information.
 	 */
 	public List<SapsImage> searchProcessedTasksInCatalog(String lowerLeftLatitude, String lowerLeftLongitude,
 			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
