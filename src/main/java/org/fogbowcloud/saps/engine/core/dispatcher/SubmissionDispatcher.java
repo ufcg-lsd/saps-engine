@@ -13,6 +13,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.dispatcher.utils.DatasetUtil;
+import org.fogbowcloud.saps.engine.core.dispatcher.utils.DigestUtil;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
@@ -245,9 +246,9 @@ public class SubmissionDispatcher {
 		ExecutionScriptTag imageDockerProcessing = ExecutionScriptTagUtil.getExecutionScriptTag(processingPhaseTag,
 				ExecutionScriptTagUtil.PROCESSING);
 
-		String digestInputdownloading = getDigest(imageDockerInputdownloading);
-		String digestPreprocessing = getDigest(imageDockerPreprocessing);
-		String digestProcessing = getDigest(imageDockerProcessing);
+		String digestInputdownloading = DigestUtil.getDigest(imageDockerInputdownloading);
+		String digestPreprocessing = DigestUtil.getDigest(imageDockerPreprocessing);
+		String digestProcessing = DigestUtil.getDigest(imageDockerProcessing);
 
 		Set<String> regions = RegionUtil.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
 				upperRightLongitude);
@@ -270,40 +271,6 @@ public class SubmissionDispatcher {
 			}
 			cal.add(Calendar.DAY_OF_YEAR, 1);
 		}
-	}
-
-	/**
-	 * This function gets immutable identifier based in repository and tag
-	 * 
-	 * @param imageDockerInfo image docker information
-	 * @return immutable identifier that match with repository and tag passed
-	 */
-	private String getDigest(ExecutionScriptTag imageDockerInfo) {
-
-		String dockerRepository = imageDockerInfo.getDockerRepository();
-		String dockerTag = imageDockerInfo.getDockerTag();
-
-		String result = null;
-
-		try {
-			Process builder = new ProcessBuilder("bash", "./scripts/get_digest.sh", dockerRepository, dockerTag)
-					.start();
-
-			LOGGER.debug("Waiting for the process for execute command: " + builder.toString());
-			builder.waitFor();
-
-			if (builder.exitValue() != 0)
-				throw new Exception("Process output exit code: " + builder.exitValue());
-
-			BufferedReader reader = new BufferedReader(new InputStreamReader(builder.getInputStream()));
-
-			result = reader.readLine();
-		} catch (Exception e) {
-			LOGGER.error("Error while trying get digest from Docker image [" + dockerRepository + "] with tag ["
-					+ dockerTag + "].", e);
-		}
-
-		return result;
 	}
 
 	/**
