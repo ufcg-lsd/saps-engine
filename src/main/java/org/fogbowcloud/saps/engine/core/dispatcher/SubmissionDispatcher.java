@@ -78,16 +78,6 @@ public class SubmissionDispatcher {
 		return CatalogUtils.getUser(catalog, email, "get user [" + email + "] information");
 	}
 
-	public void removeUserNotification(String submissionId, String taskId, String userEmail) throws SQLException {
-		try {
-			catalog.removeNotification(submissionId, taskId, userEmail);
-		} catch (SQLException e) {
-			LOGGER.error(
-					"Error while removing task " + taskId + " notification for user " + userEmail + " from Catalogue",
-					e);
-		}
-	}
-
 	/**
 	 * This function calling get_wrs (Python script) passing latitude and longitude
 	 * as paramater.

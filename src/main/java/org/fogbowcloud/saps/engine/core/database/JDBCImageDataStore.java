@@ -374,36 +374,6 @@ public class JDBCImageDataStore implements Catalog {
 		return wards;
 	}
 
-	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME + " WHERE "
-			+ SUBMISSION_ID_COL + " = ? AND " + TASK_ID_COL + " = ? AND " + USER_EMAIL_COL + " = ?";
-
-	@Override
-	public void removeNotification(String submissionId, String taskId, String userEmail) throws SQLException {
-		LOGGER.debug("Removing task " + taskId + " notification for " + userEmail);
-		if (submissionId == null || submissionId.isEmpty() || taskId == null || taskId.isEmpty() || userEmail == null
-				|| userEmail.isEmpty()) {
-			throw new IllegalArgumentException(
-					"Invalid submissionId " + submissionId + ", taskId " + taskId + " or user " + userEmail);
-		}
-
-		PreparedStatement insertStatement = null;
-		Connection connection = null;
-
-		try {
-			connection = getConnection();
-
-			insertStatement = connection.prepareStatement(REMOVE_USER_NOTIFY_SQL);
-			insertStatement.setString(1, submissionId);
-			insertStatement.setString(2, taskId);
-			insertStatement.setString(3, userEmail);
-			insertStatement.setQueryTimeout(300);
-
-			insertStatement.execute();
-		} finally {
-			close(insertStatement, connection);
-		}
-	}
-
 	private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
 			+ " VALUES(?, ?, now())";
 
