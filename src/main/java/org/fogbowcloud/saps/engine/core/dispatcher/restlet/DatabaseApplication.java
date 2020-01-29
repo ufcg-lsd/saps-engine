@@ -274,7 +274,7 @@ public class DatabaseApplication extends Application {
 	 */
 	public void createUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
 			boolean adminRole) throws SQLException {
-		submissionDispatcher.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
+		submissionDispatcher.addUserInCatalog(userEmail, userName, userPass, userState, userNotify, adminRole);
 	}
 
 	public void addUserNotify(String submissionId, String taskId, String userEmail) throws SQLException {
