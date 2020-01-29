@@ -235,7 +235,7 @@ public class DatabaseApplication extends Application {
 	 * @throws SQLException
 	 */
 	public SapsImage getTask(String taskId) {
-		return submissionDispatcher.getTaskById(taskId);
+		return submissionDispatcher.getTaskByIdInCatalog(taskId);
 	}
 
 	/**

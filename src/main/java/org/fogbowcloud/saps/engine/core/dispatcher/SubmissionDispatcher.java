@@ -298,7 +298,7 @@ public class SubmissionDispatcher {
 	 * in the Catalog using the communication mechanism that uses the retry
 	 * approach.
 	 */
-	public SapsImage getTaskById(String taskId) {
+	public SapsImage getTaskByIdInCatalog(String taskId) {
 		return CatalogUtils.getTaskById(catalog, taskId, "gets task with id [" + taskId + "]");
 	}
 
