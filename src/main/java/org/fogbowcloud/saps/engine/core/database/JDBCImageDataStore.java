@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Properties;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -337,41 +336,6 @@ public class JDBCImageDataStore implements Catalog {
 			insertStatement = connection.prepareStatement(UPDATE_OUTPUT_METADATA_INFO_SQL);
 		}
 		return insertStatement;
-	}
-
-	private static final String SELECT_ALL_USERS_TO_NOTIFY_SQL = "SELECT * FROM " + USERS_NOTIFY_TABLE_NAME;
-
-	@Override
-	public List<Ward> getUsersToNotify() throws SQLException {
-
-		LOGGER.debug("Getting all users to notify");
-
-		Statement statement = null;
-		Connection conn = null;
-		try {
-			conn = getConnection();
-			statement = conn.createStatement();
-			statement.setQueryTimeout(300);
-
-			statement.execute(SELECT_ALL_USERS_TO_NOTIFY_SQL);
-			ResultSet rs = statement.getResultSet();
-			List<Ward> wards = extractUsersToNotifyFrom(rs);
-			return wards;
-		} finally {
-			close(statement, conn);
-		}
-	}
-
-	private List<Ward> extractUsersToNotifyFrom(ResultSet rs) throws SQLException {
-
-		List<Ward> wards = new ArrayList<>();
-
-		while (rs.next()) {
-			wards.add(new Ward(rs.getString(SUBMISSION_ID_COL), rs.getString(TASK_ID_COL), ImageTaskState.ARCHIVED,
-					rs.getString(USER_EMAIL_COL)));
-		}
-
-		return wards;
 	}
 
 	private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME

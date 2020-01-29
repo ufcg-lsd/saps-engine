@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
-import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -30,8 +29,6 @@ public interface Catalog {
 
 	void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
 			boolean adminRole) throws SQLException;
-
-	List<Ward> getUsersToNotify() throws SQLException;
 
 	void updateImageTask(SapsImage imageTask) throws SQLException;
 

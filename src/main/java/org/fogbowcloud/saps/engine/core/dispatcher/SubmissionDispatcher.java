@@ -8,7 +8,6 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -336,12 +335,6 @@ public class SubmissionDispatcher {
 	 */
 	public List<SapsImage> getAllTasks() {
 		return getAllTasksInCatalog();
-	}
-
-	// TODO
-	public List<Ward> getUsersToNotify() throws SQLException {
-		List<Ward> wards = catalog.getUsersToNotify();
-		return wards;
 	}
 
 	/**
