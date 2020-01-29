@@ -338,26 +338,6 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function gets all processed tasks in Catalog.
-	 * 
-	 * @param region                   task region
-	 * @param initDate                 initial date
-	 * @param endDate                  end date
-	 * @param inputdownloadingPhaseTag inputdownloading phase tag
-	 * @param preprocessingPhaseTag    preprocessing phase tag
-	 * @param processingPhaseTag       processing phase tag
-	 * @return processed tasks list
-	 */
-	private List<SapsImage> getProcessedTasksInCatalog(String region, Date initDate, Date endDate,
-			String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
-		return CatalogUtils.getProcessedTasks(catalog, region, initDate, endDate, inputdownloadingPhaseTag,
-				preprocessingPhaseTag, processingPhaseTag,
-				"gets all processed tasks with region [" + region + "], inputdownloading tag ["
-						+ inputdownloadingPhaseTag + "], preprocessing tag [" + preprocessingPhaseTag
-						+ "], processing tag [" + processingPhaseTag + "] beetwen " + initDate + " and " + endDate);
-	}
-
-	/**
 	 * This function search all processed tasks from area (between latitude and
 	 * longitude coordinates) between initial date and end date with
 	 * inputdownloading, preprocessing and processing tags.
@@ -373,7 +353,7 @@ public class SubmissionDispatcher {
 	 * @param processingPhaseTag       processing phase tag
 	 * @return processed tasks list following description
 	 */
-	public List<SapsImage> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
+	public List<SapsImage> searchProcessedTasksInCatalog(String lowerLeftLatitude, String lowerLeftLongitude,
 			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
 			String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
 
@@ -382,8 +362,11 @@ public class SubmissionDispatcher {
 				upperRightLongitude);
 
 		for (String region : regions) {
-			List<SapsImage> tasksInCurrentRegion = getProcessedTasksInCatalog(region, initDate, endDate,
-					inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag);
+			List<SapsImage> tasksInCurrentRegion = CatalogUtils.getProcessedTasks(catalog, region, initDate, endDate,
+					inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag,
+					"gets all processed tasks with region [" + region + "], inputdownloading tag ["
+							+ inputdownloadingPhaseTag + "], preprocessing tag [" + preprocessingPhaseTag
+							+ "], processing tag [" + processingPhaseTag + "] beetwen " + initDate + " and " + endDate);
 			filteredTasks.addAll(tasksInCurrentRegion);
 		}
 		return filteredTasks;
