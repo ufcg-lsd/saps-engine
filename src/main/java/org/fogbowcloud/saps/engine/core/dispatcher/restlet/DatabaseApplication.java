@@ -306,7 +306,7 @@ public class DatabaseApplication extends Application {
 	public List<SapsImage> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
 			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
 			String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
-		return submissionDispatcher.searchProcessedTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+		return submissionDispatcher.searchProcessedTasksInCatalog(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
 				upperRightLongitude, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
 				processingPhaseTag);
 	}
