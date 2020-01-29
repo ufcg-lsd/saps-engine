@@ -460,21 +460,16 @@ public class Scheduler {
 	 * @param repository task repository
 	 * @return task information (tag, repository, type and name)
 	 */
-	private ExecutionScriptTag getExecutionScriptTag(SapsImage task, String repository) {
-		try {
-			String tag = null;
-			if (repository == ExecutionScriptTagUtil.PROCESSING)
-				tag = task.getProcessingTag();
-			else if (repository == ExecutionScriptTagUtil.PRE_PROCESSING)
-				tag = task.getPreprocessingTag();
-			else
-				tag = task.getInputdownloadingTag();
+	private ExecutionScriptTag getExecutionScriptTag(SapsImage task, String repository) {		
+		String tag = null;
+		if (repository == ExecutionScriptTagUtil.PROCESSING)
+			tag = task.getProcessingTag();
+		else if (repository == ExecutionScriptTagUtil.PRE_PROCESSING)
+			tag = task.getPreprocessingTag();
+		else
+			tag = task.getInputdownloadingTag();
 
-			return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
-		} catch (SapsException e) {
-			LOGGER.error("Error while trying get tag and repository Docker.", e);
-			return null;
-		}
+		return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
 	}
 
 	private String getFormatImageWithDigest(ExecutionScriptTag imageDockerInfo, ImageTaskState state, SapsImage task) {
