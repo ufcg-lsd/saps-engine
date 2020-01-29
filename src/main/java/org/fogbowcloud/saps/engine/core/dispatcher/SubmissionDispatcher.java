@@ -274,22 +274,12 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function get all tasks in Catalog.
-	 * 
-	 * @param catalog catalog component
-	 * @return SAPS image list
-	 */
-	private List<SapsImage> getAllTasksInCatalog() {
-		return CatalogUtils.getAllTasks(catalog, "get all tasks");
-	}
-
-	/**
 	 * 
 	 * This function retrieves all information from all tasks registered in the
 	 * Catalog using the communication mechanism using the retry approach.
 	 */
 	public List<SapsImage> getAllTasks() {
-		return getAllTasksInCatalog();
+		return CatalogUtils.getAllTasks(catalog, "get all tasks");
 	}
 
 	/**
