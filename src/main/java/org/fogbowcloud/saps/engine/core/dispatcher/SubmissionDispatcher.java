@@ -284,9 +284,9 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function get all tasks.
 	 * 
-	 * @return SAPS image list
+	 * This function retrieves all information from all tasks registered in the
+	 * Catalog using the communication mechanism using the retry approach.
 	 */
 	public List<SapsImage> getAllTasks() {
 		return getAllTasksInCatalog();
