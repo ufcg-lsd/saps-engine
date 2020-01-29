@@ -7,9 +7,9 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-public class RegionUtils {
+public class RegionUtil {
 
-	private static final Logger LOGGER = Logger.getLogger(RegionUtils.class);
+	private static final Logger LOGGER = Logger.getLogger(RegionUtil.class);
 
 	/**
 	 * This function calling get_wrs (Python script) passing latitude and longitude
@@ -66,8 +66,8 @@ public class RegionUtils {
 		Set<String> regionsFound = new HashSet<String>();
 
 		try {
-			regionLowerLeft = RegionUtils.getRegionIds(lowerLeftLatitude, lowerLeftLongitude).trim();
-			regionUpperRight = RegionUtils.getRegionIds(upperRightLatitude, upperRightLongitude).trim();
+			regionLowerLeft = RegionUtil.getRegionIds(lowerLeftLatitude, lowerLeftLongitude).trim();
+			regionUpperRight = RegionUtil.getRegionIds(upperRightLatitude, upperRightLongitude).trim();
 
 			int pathRegionLL = Integer.parseInt(regionLowerLeft.substring(0, 3));
 			int rowRegionLL = Integer.parseInt(regionLowerLeft.substring(4, 6));

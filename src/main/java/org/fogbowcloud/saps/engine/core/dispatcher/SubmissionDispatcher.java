@@ -8,7 +8,7 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
-import org.fogbowcloud.saps.engine.core.dispatcher.utils.RegionUtils;
+import org.fogbowcloud.saps.engine.core.dispatcher.utils.RegionUtil;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -249,7 +249,7 @@ public class SubmissionDispatcher {
 		String digestPreprocessing = getDigest(imageDockerPreprocessing);
 		String digestProcessing = getDigest(imageDockerProcessing);
 
-		Set<String> regions = RegionUtils.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+		Set<String> regions = RegionUtil.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
 				upperRightLongitude);
 
 		while (cal.before(endCal)) {
@@ -427,7 +427,7 @@ public class SubmissionDispatcher {
 			String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
 
 		List<SapsImage> filteredTasks = new ArrayList<>();
-		Set<String> regions = RegionUtils.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+		Set<String> regions = RegionUtil.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
 				upperRightLongitude);
 
 		for (String region : regions) {
