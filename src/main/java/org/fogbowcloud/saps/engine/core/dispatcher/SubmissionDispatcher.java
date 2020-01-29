@@ -238,12 +238,12 @@ public class SubmissionDispatcher {
 		endCal.setTime(endDate);
 		endCal.add(Calendar.DAY_OF_YEAR, 1);
 
-		ExecutionScriptTag imageDockerInputdownloading = getExecutionScriptTag(ExecutionScriptTagUtil.INPUT_DOWNLOADER,
-				inputdownloadingPhaseTag);
-		ExecutionScriptTag imageDockerPreprocessing = getExecutionScriptTag(ExecutionScriptTagUtil.PRE_PROCESSING,
-				preprocessingPhaseTag);
-		ExecutionScriptTag imageDockerProcessing = getExecutionScriptTag(ExecutionScriptTagUtil.PROCESSING,
-				processingPhaseTag);
+		ExecutionScriptTag imageDockerInputdownloading = ExecutionScriptTagUtil
+				.getExecutionScriptTag(inputdownloadingPhaseTag, ExecutionScriptTagUtil.INPUT_DOWNLOADER);
+		ExecutionScriptTag imageDockerPreprocessing = ExecutionScriptTagUtil
+				.getExecutionScriptTag(preprocessingPhaseTag, ExecutionScriptTagUtil.PRE_PROCESSING);
+		ExecutionScriptTag imageDockerProcessing = ExecutionScriptTagUtil.getExecutionScriptTag(processingPhaseTag,
+				ExecutionScriptTagUtil.PROCESSING);
 
 		String digestInputdownloading = getDigest(imageDockerInputdownloading);
 		String digestPreprocessing = getDigest(imageDockerPreprocessing);
@@ -269,22 +269,6 @@ public class SubmissionDispatcher {
 				}
 			}
 			cal.add(Calendar.DAY_OF_YEAR, 1);
-		}
-	}
-
-	/**
-	 * This function gets script tag based in repository.
-	 *
-	 * @param repository task repository
-	 * @param tag        task tag
-	 * @return task information (tag, repository, type and name)
-	 */
-	private ExecutionScriptTag getExecutionScriptTag(String repository, String tag) {
-		try {
-			return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
-		} catch (SapsException e) {
-			LOGGER.error("Error while trying get tag and repository Docker.", e);
-			return null;
 		}
 	}
 
