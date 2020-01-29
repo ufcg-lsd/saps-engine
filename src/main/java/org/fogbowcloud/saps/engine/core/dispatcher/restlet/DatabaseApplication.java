@@ -277,10 +277,6 @@ public class DatabaseApplication extends Application {
 		submissionDispatcher.addUserInCatalog(userEmail, userName, userPass, userState, userNotify, adminRole);
 	}
 
-	public boolean isUserNotifiable(String userEmail) throws SQLException {
-		return submissionDispatcher.isUserNotifiable(userEmail);
-	}
-
 	/**
 	 * This function gets user information in Catalog.
 	 * 

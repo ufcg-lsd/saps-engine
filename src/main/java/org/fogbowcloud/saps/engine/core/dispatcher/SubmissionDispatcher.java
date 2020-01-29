@@ -88,16 +88,6 @@ public class SubmissionDispatcher {
 		}
 	}
 
-	public boolean isUserNotifiable(String userEmail) throws SQLException {
-		try {
-			return catalog.isUserNotifiable(userEmail);
-		} catch (SQLException e) {
-			LOGGER.error("Error while verifying user notify", e);
-		}
-
-		return false;
-	}
-
 	/**
 	 * This function calling get_wrs (Python script) passing latitude and longitude
 	 * as paramater.

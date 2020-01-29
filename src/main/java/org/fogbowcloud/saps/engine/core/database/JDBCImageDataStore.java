@@ -258,7 +258,7 @@ public class JDBCImageDataStore implements Catalog {
 				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, priority, user,
 				inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
 				processingPhaseTag, digestProcessing, now, now, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA);
-		
+
 		if (task.getTaskId() == null || task.getTaskId().isEmpty()) {
 			LOGGER.error("Task with empty id.");
 			throw new IllegalArgumentException("Task with empty id.");
@@ -311,7 +311,7 @@ public class JDBCImageDataStore implements Catalog {
 		} finally {
 			close(insertStatement, connection);
 		}
-		
+
 		return task;
 	}
 
@@ -372,31 +372,6 @@ public class JDBCImageDataStore implements Catalog {
 		}
 
 		return wards;
-	}
-
-	private static final String SELECT_USER_NOTIFIABLE_SQL = "SELECT " + USER_NOTIFY_COL + " FROM " + USERS_TABLE_NAME
-			+ " WHERE " + USER_EMAIL_COL + " = ?";
-
-	@Override
-	public boolean isUserNotifiable(String userEmail) throws SQLException {
-		LOGGER.debug("Verifying if user is notifiable");
-
-		PreparedStatement statement = null;
-		Connection conn = null;
-		try {
-			conn = getConnection();
-			statement = conn.prepareStatement(SELECT_USER_NOTIFIABLE_SQL);
-			statement.setString(1, userEmail);
-			statement.setQueryTimeout(300);
-
-			statement.execute();
-
-			ResultSet rs = statement.getResultSet();
-			rs.next();
-			return rs.getBoolean(1);
-		} finally {
-			close(statement, conn);
-		}
 	}
 
 	private static final String REMOVE_USER_NOTIFY_SQL = "DELETE FROM " + USERS_NOTIFY_TABLE_NAME + " WHERE "
@@ -520,7 +495,7 @@ public class JDBCImageDataStore implements Catalog {
 			close(updateStatement, connection);
 		}
 	}
-	
+
 	private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
 
 	@Override
