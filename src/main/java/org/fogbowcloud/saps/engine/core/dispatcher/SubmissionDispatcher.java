@@ -12,7 +12,7 @@ import org.fogbowcloud.saps.engine.core.dispatcher.utils.RegionUtils;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.util.DatasetUtil;
+import org.fogbowcloud.saps.engine.core.dispatcher.utils.DatasetUtil;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
@@ -47,11 +47,8 @@ public class SubmissionDispatcher {
 	 * - administrative role: informs if the user is an administrator of the SAPS
 	 * platform.<br>
 	 * These three pieces of information are booleans and are controlled by an
-	 * administrator. By default, state and administrative function are false.<br>
+	 * administrator. By default, state and administrative function are false.
 	 * 
-	 * Note: The message parameter is a string that will be displayed in the SAPS
-	 * log before attempting to communicate with the Catalog using the retry
-	 * approach.<br>
 	 */
 	public void addUserInCatalog(String email, String name, String password, boolean state, boolean notify,
 			boolean adminRole) {
@@ -65,12 +62,7 @@ public class SubmissionDispatcher {
 	 * the Catalog trying to even try to retrieve the user's information based on
 	 * the email passed by parameter (which is the primary key of the SAPS user
 	 * scheme, that is, there are not two users with same email). The return of this
-	 * function is an object that contains the information retrieved from the
-	 * User.<br>
-	 * 
-	 * Note: The message parameter is a string that will be displayed in the SAPS
-	 * log before attempting to communicate with the Catalog using the retry
-	 * approach.
+	 * function is an object that contains the information retrieved from the User.
 	 */
 	public SapsUser getUserInCatalog(String email) {
 		return CatalogUtils.getUser(catalog, email, "get user [" + email + "] information");
@@ -151,7 +143,8 @@ public class SubmissionDispatcher {
 	 * - versions of the processing step algorithms: inputdownloadingPhaseTag,
 	 * preprocessingPhaseTag and processingPhaseTag.<br>
 	 * 
-	 * - Docker: digestInputdownloading, digestPreprocessing and digestProcessing.<br>
+	 * - Docker: digestInputdownloading, digestPreprocessing and
+	 * digestProcessing.<br>
 	 */
 	private SapsImage addNewTaskInCatalog(String taskId, String dataset, String region, Date date, int priority,
 			String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
@@ -163,33 +156,81 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * This function add new tuple in time stamp table and updates task time stamp.
+	 * This function is responsible for creating a new timestamp of the task in the
+	 * Catalog, and this communication action is carried out using the retry
+	 * approach. Its general use is given right after a change in the status of a
+	 * task (e.g. a task has changed state and you want to record that change and
+	 * its timestamp for some analysis or processing log).<br>
 	 * 
-	 * @param task    task to be update
-	 * @param message information message
+	 * 
+	 * Note: The message parameter is a string that will be displayed in the SAPS
+	 * log before attempting to communicate with the Catalog using the retry
+	 * approach.
 	 */
 	private void addTimestampTaskInCatalog(SapsImage task, String message) {
 		CatalogUtils.addTimestampTask(catalog, task, message);
 	}
 
 	/**
-	 * This function add new tasks in Catalog.
+	 * This function is responsible for receiving information regarding a new
+	 * processing submission made on the SAPS platform and it is desired to extract
+	 * the N tasks (from this information) and insert them in the Catalog generating
+	 * workload. Are they:<br>
 	 * 
-	 * @param lowerLeftLatitude        lower left latitude (coordinate)
-	 * @param lowerLeftLongitude       lower left longitude (coordinate)
-	 * @param upperRightLatitude       upper right latitude (coordinate)
-	 * @param upperRightLongitude      upper right longitude (coordinate)
-	 * @param initDate                 initial date
-	 * @param endDate                  end date
-	 * @param inputdownloadingPhaseTag inputdownloading phase tag
-	 * @param preprocessingPhaseTag    preprocessing phase tag
-	 * @param processingPhaseTag       processing phase tag
-	 * @param priority                 priority of new tasks
-	 * @param email                    user email
+	 * - lowerLeftLatitude: is a geographic coordinate plus the lower left defined
+	 * in the sphere which is the angle between the plane of the equator and the
+	 * normal to the reference surface indicating the vertex of the polygon formed
+	 * together with the information lowerLeftLongitude, upperRightLatitude and
+	 * upperRightLongitude.<br>
+	 * 
+	 * - lowerLeftLongitude: is a geographic coordinate plus the lower left defined
+	 * in the sphere measured in degrees, from 0 to 180 towards east or west, from
+	 * the Greenwich Meridian indicating the vertex of the polygon formed together
+	 * with the information lowerLeftLatitude, upperRightLatitude and
+	 * upperRightLongitude.<br>
+	 * 
+	 * - upperRightLatitude: is a geographic coordinate plus the upper right defined
+	 * in the sphere which is the angle between the plane of the equator and the
+	 * normal to the reference surface indicating the vertex of the polygon formed
+	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
+	 * upperRightLongitude.<br>
+	 * 
+	 * - upperRightLongitude: is a geographic coordinate plus the upper right
+	 * defined in the sphere measured in degrees, from 0 to 180 towards east or
+	 * west, from the Greenwich Meridian indicating the vertex of the polygon formed
+	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
+	 * upperRightLatitude.<br>
+	 * 
+	 * - initDate: It is the starting date (according to the Gregorian calendar) of
+	 * the interval in which the satellite data collection date must belong. If it
+	 * belongs, a SAPS task will be created to process the satellite data.<br>
+	 * 
+	 * - endDate: It is the end date (according to the Gregorian calendar) of the
+	 * interval in which the satellite data collection date must belong. If this
+	 * belongs, a SAPS task will be created to process the satellite data.<br>
+	 * 
+	 * - inputdownloadingPhaseTag: is the version of the algorithm that will be used
+	 * in the task's inputdownloading step.<br>
+	 * 
+	 * - preprocessingPhaseTag: is the version of the algorithm that will be used in
+	 * the task's preprocessing step.<br>
+	 * 
+	 * - processingPhaseTag: is the version of the algorithm that will be used in
+	 * the task's processing step.<br>
+	 * 
+	 * - priority: it is an integer in the range 0 to 31 that indicates how priority
+	 * the task processing is.<br>
+	 * 
+	 * - userEmail: it is the email of the task owner (this information is obtained
+	 * automatically by the authenticated user on the platform).<br>
+	 * 
+	 * Note: This function also seeks other information to form the SAPS task such
+	 * as capturing the digests of the SAPS processing steps and extracting the
+	 * satellite data dataset.
 	 */
 	public void addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
 			String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
-			String preprocessingPhaseTag, String processingPhaseTag, int priority, String email) {
+			String preprocessingPhaseTag, String processingPhaseTag, int priority, String userEmail) {
 
 		GregorianCalendar cal = new GregorianCalendar();
 		cal.setTime(initDate);
@@ -221,7 +262,7 @@ public class SubmissionDispatcher {
 				for (String region : regions) {
 					String taskId = UUID.randomUUID().toString();
 
-					SapsImage task = addNewTaskInCatalog(taskId, dataset, region, cal.getTime(), priority, email,
+					SapsImage task = addNewTaskInCatalog(taskId, dataset, region, cal.getTime(), priority, userEmail,
 							inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag,
 							digestPreprocessing, processingPhaseTag, digestProcessing);
 					addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
