@@ -1,86 +1,59 @@
 package org.fogbowcloud.saps.engine.core.archiver;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Properties;
 
+import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.storage.SwiftPermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.database.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.testng.Assert;
 
 public class ArchiverTest {
-	@Before
-	public void init() {
-		MockitoAnnotations.initMocks(this);
-	}
 
-	private Properties createArchiverDefaultProperties() {
-		Properties properties = new Properties();
-		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_IP, "");
-		properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_PORT, "");
-		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR, "");
-		properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER, "");
-		properties.put(SapsPropertiesConstants.SAPS_EXPORT_PATH, "");
-		properties.put(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE, "swift");
+    @Before
+    public void init() {
+        MockitoAnnotations.initMocks(this);
+    }
 
-		return properties;
-	}
+    private Properties createDefaultProperties() throws IOException {
+        Properties properties = new Properties();
+        FileInputStream input = new FileInputStream("src/test/resources/archiver-test.conf");
+        properties.load(input);
+        return properties;
+    }
 
-	private Properties createArchiverSwiftDefaultProperties() {
-		Properties properties = createArchiverDefaultProperties();
-		properties.put(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX, "");
-		properties.put(SapsPropertiesConstants.SWIFT_CONTAINER_NAME, "");
+    @Test
+    //TODO change name this test method
+    public void test01() throws Exception {
+        SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+        Properties properties = createDefaultProperties();
+        PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-		return properties;
-	}
+        SapsImage task01 = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
 
-	private Properties createDefaultAllProperties() {
-		Properties properties = createArchiverSwiftDefaultProperties();
-		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID, "");
-		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID, "");
-		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD, "");
-		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL, "");
-		properties.put(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL, "");
+        Mockito.doAnswer((i) -> {
+            return null;
+        }).when(swiftAPIClient).uploadFile(Mockito.anyString(), Mockito.any(File.class), Mockito.anyString());
 
-		return properties;
-	}
+        boolean archiveTask01 = permanentStorage.archive(task01);
 
-	@Test(expected = SapsException.class)
-	public void testNoSetProperty() throws SapsException, SQLException {
-		Properties properties = new Properties();
-		new Archiver(properties);
-	}
-
-	@Test(expected = SapsException.class)
-	public void testNoSetPropertyForSwiftPermanentStorage() throws SapsException {
-		Catalog imageStore = mock(Catalog.class);
-		Properties properties = createArchiverDefaultProperties();
-		new Archiver(properties, imageStore, new ArchiverHelper());
-	}
-
-	@Test(expected = SapsException.class)
-	public void testNoSetPropertyForSwiftAPIClient() throws SapsException {
-		Catalog imageStore = mock(Catalog.class);
-		Properties properties = createArchiverSwiftDefaultProperties();
-		new Archiver(properties, imageStore, new ArchiverHelper());
-	}
-
-	@Test(expected = SapsException.class)
-	public void testAllSetProperty() throws SapsException {
-		Catalog imageStore = mock(Catalog.class);
-		Properties properties = createDefaultAllProperties();
-		new Archiver(properties, imageStore, new ArchiverHelper());
-	}
+        Assert.assertEquals(archiveTask01, true);
+    }
 }
