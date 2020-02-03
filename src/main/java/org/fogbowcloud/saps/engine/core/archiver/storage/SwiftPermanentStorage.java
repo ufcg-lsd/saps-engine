@@ -55,11 +55,11 @@ public class SwiftPermanentStorage implements PermanentStorage {
 			LOGGER.error("Properties arg must not be null.");
 			return false;
 		}
-		if (properties.containsKey(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX)) {
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX)) {
 			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_FOLDER_PREFIX + " was not set");
 			return false;
 		}
-		if (properties.containsKey(SapsPropertiesConstants.SWIFT_CONTAINER_NAME)) {
+		if (!properties.containsKey(SapsPropertiesConstants.SWIFT_CONTAINER_NAME)) {
 			LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_CONTAINER_NAME + " was not set");
 			return false;
 		}
