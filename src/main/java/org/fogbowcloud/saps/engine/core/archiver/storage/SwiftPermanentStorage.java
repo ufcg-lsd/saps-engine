@@ -27,7 +27,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
 	public SwiftPermanentStorage(Properties properties) throws SapsException {
 		if (!checkProperties(properties))
 			throw new SapsException(
-					"Error on validate the file. Missing properties for start Swift Perminent Storage.");
+					"Error on validate the file. Missing properties for start Swift Permanent Storage.");
 
 		this.executionMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
 				.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
