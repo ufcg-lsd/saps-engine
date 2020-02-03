@@ -24,7 +24,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     public static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
 
-    public SwiftPermanentStorage(Properties properties) throws SapsException {
+    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws SapsException {
         if (!checkProperties(properties))
             throw new SapsException(
                     "Error on validate the file. Missing properties for start Swift Permanent Storage.");
@@ -35,12 +35,16 @@ public class SwiftPermanentStorage implements PermanentStorage {
         if (this.executionMode && !checkPropertiesDebugMode(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
 
-        this.swiftAPIClient = new SwiftAPIClient(properties);
+        this.swiftAPIClient = swiftAPIClient;
         this.properties = properties;
         this.sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
         this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
 
         this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME));
+    }
+
+    public SwiftPermanentStorage(Properties properties) throws SapsException {
+        this(properties, new SwiftAPIClient(properties));
     }
 
     /**
