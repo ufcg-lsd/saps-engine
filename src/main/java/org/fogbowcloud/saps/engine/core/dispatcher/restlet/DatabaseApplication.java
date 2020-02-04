@@ -224,7 +224,7 @@ public class DatabaseApplication extends Application {
 	 * @throws SQLException
 	 */
 	public List<SapsImage> getTasksInState(ImageTaskState state) throws SQLException {
-		return this.submissionDispatcher.getTasksWithStateInCatalog(state);
+		return this.submissionDispatcher.getTasksByStateInCatalog(state);
 	}
 
 	/**
