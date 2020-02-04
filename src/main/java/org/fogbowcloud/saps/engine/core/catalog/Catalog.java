@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -37,7 +38,7 @@ public interface Catalog {
 
     List<SapsImage> getTasksByState(ImageTaskState state, int limit) throws SQLException;
 
-    SapsImage getTaskById(String taskId) throws SQLException;
+    SapsImage getTaskById(String taskId) throws SQLException, TaskNotFoundException;
 
     SapsUser getUserByEmail(String userEmail) throws SQLException;
 

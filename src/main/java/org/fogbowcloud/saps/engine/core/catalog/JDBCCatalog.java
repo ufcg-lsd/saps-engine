@@ -13,6 +13,7 @@ import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -705,7 +706,7 @@ public class JDBCCatalog implements Catalog {
             + " = ?";
 
     @Override
-    public SapsImage getTaskById(String taskId) throws SQLException {
+    public SapsImage getTaskById(String taskId) throws SQLException, TaskNotFoundException {
         if (taskId == null) {
             LOGGER.error("Invalid image task " + taskId);
             throw new IllegalArgumentException("Invalid image task " + taskId);
@@ -724,6 +725,10 @@ public class JDBCCatalog implements Catalog {
 
             ResultSet rs = selectStatement.getResultSet();
             List<SapsImage> imageDatas = extractImageTaskFrom(rs);
+
+            if(imageDatas.size() == 0)
+                throw new TaskNotFoundException("There is no task with id");
+
             rs.close();
             return imageDatas.get(0);
         } finally {
