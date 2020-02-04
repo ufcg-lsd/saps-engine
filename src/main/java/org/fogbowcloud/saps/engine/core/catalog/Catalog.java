@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.database;
+package org.fogbowcloud.saps.engine.core.catalog;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;

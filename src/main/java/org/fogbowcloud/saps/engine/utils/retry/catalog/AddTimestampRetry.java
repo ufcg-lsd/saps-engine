@@ -2,7 +2,7 @@ package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
 import java.sql.SQLException;
 
-import org.fogbowcloud.saps.engine.core.database.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public class AddTimestampRetry implements CatalogRetry<Void>{

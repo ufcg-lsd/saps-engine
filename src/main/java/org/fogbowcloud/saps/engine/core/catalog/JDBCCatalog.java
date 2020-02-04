@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.database;
+package org.fogbowcloud.saps.engine.core.catalog;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
