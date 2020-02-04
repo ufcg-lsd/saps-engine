@@ -1,4 +1,40 @@
-### Install and Configure Dashboard and Submission Dispatcher
+# Install and Configure Submission Dispatcher
+
+The SAPS Submission dispatcher is responsible for receiving and validating user requests before sending them to the SAPS Service Catalog.
+
+## Dependencies
+
+## Configure
+
+In an apt-based Linux distro, type the below commands to install the Submission Dispatcer dependencies.
+
+```
+sudo apt-get -y install openjdk-8-jdk
+sudo apt-get -y install maven
+sudo apt-get -y install git
+sudo apt install -y python-swiftclient
+sudo apt-get install -y python-gdal
+sudo apt-get install -y python-shapely
+sudo apt-get install nfs-common
+```
+
+In addition to above Linux packages, the Dispatcher also depends on three codebases: 1) ```fogbow-mono-manager```; and 2) the own saps-engine repository (which holds the Dispatcher code). To fetch and compile the source code of these repositories, follow the below steps:
+
+```
+# fogbow-mono-manager repository
+git clone https://github.com/fogbow/fogbow-mono-manager.git
+cd fogbow-mono-manager
+git checkout develop
+mvn install -Dmaven.test.skip=true
+
+# saps-engine repository
+sudo apt-get update
+git clone https://github.com/ufcg-lsd/saps-engine.git
+git checkout develop
+mvn install
+```
+
+# Below info is outdated
 
 #### Dashboard and Submission Dispatcher
 Once raised, the VM must contain all the necessary dependencies. In order to do that, follow the steps below:

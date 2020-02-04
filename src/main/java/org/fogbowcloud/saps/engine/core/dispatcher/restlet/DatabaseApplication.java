@@ -213,7 +213,7 @@ public class DatabaseApplication extends Application {
 	 * @throws ParseException
 	 */
 	public List<SapsImage> getTasks() throws SQLException, ParseException {
-		return submissionDispatcher.getAllTasks();
+		return submissionDispatcher.getAllTasksInCatalog();
 	}
 
 	/**
@@ -224,7 +224,7 @@ public class DatabaseApplication extends Application {
 	 * @throws SQLException
 	 */
 	public List<SapsImage> getTasksInState(ImageTaskState state) throws SQLException {
-		return this.submissionDispatcher.getTasksInState(state);
+		return this.submissionDispatcher.getTasksByStateInCatalog(state);
 	}
 
 	/**
@@ -235,7 +235,7 @@ public class DatabaseApplication extends Application {
 	 * @throws SQLException
 	 */
 	public SapsImage getTask(String taskId) {
-		return submissionDispatcher.getTaskById(taskId);
+		return submissionDispatcher.getTaskByIdInCatalog(taskId);
 	}
 
 	/**
@@ -274,15 +274,7 @@ public class DatabaseApplication extends Application {
 	 */
 	public void createUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
 			boolean adminRole) throws SQLException {
-		submissionDispatcher.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
-	}
-
-	public void addUserNotify(String submissionId, String taskId, String userEmail) throws SQLException {
-		submissionDispatcher.addTaskNotificationIntoDB(submissionId, taskId, userEmail);
-	}
-
-	public boolean isUserNotifiable(String userEmail) throws SQLException {
-		return submissionDispatcher.isUserNotifiable(userEmail);
+		submissionDispatcher.addUserInCatalog(userEmail, userName, userPass, userState, userNotify, adminRole);
 	}
 
 	/**
@@ -292,7 +284,7 @@ public class DatabaseApplication extends Application {
 	 * @return saps user
 	 */
 	public SapsUser getUser(String userEmail) {
-		return submissionDispatcher.getUser(userEmail);
+		return submissionDispatcher.getUserInCatalog(userEmail);
 	}
 
 	/**
@@ -314,7 +306,7 @@ public class DatabaseApplication extends Application {
 	public List<SapsImage> searchProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
 			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
 			String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
-		return submissionDispatcher.searchProcessedTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+		return submissionDispatcher.searchProcessedTasksInCatalog(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
 				upperRightLongitude, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
 				processingPhaseTag);
 	}

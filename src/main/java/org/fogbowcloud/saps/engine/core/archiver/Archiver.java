@@ -14,8 +14,8 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.SwiftPermanentStorage;
-import org.fogbowcloud.saps.engine.core.database.Catalog;
-import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
+import org.fogbowcloud.saps.engine.core.catalog.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
@@ -34,7 +34,7 @@ public class Archiver {
 	public static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
 	public Archiver(Properties properties) throws SapsException, SQLException {
-		this(properties, new JDBCImageDataStore(properties), new ArchiverHelper());
+		this(properties, new JDBCCatalog(properties), new ArchiverHelper());
 
 		LOGGER.info("Creating Archiver");
 		LOGGER.info("Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP) + ":"
@@ -52,8 +52,6 @@ public class Archiver {
 				properties.getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE));
 		this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
 				.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
-
-		
 	}
 
 	/**
@@ -159,7 +157,6 @@ public class Archiver {
 	 * This function gets tasks in failed state in Catalog.
 	 * 
 	 * @param limit   limit value of tasks to take
-	 * @param message information message
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksInFailedState(int limit) {
@@ -189,7 +186,6 @@ public class Archiver {
 	 * This function gets tasks in finished state in Catalog.
 	 * 
 	 * @param limit   limit value of tasks to take
-	 * @param message information message
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksInArchivingState(int limit) {
@@ -242,7 +238,6 @@ public class Archiver {
 	 * This function gets tasks in finished state in Catalog.
 	 * 
 	 * @param limit   limit value of tasks to take
-	 * @param message information message
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksToArchive(int limit) {

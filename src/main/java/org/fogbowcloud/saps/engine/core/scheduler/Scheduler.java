@@ -7,8 +7,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.database.Catalog;
-import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
+import org.fogbowcloud.saps.engine.core.catalog.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.dto.*;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
@@ -43,7 +43,7 @@ public class Scheduler {
 		try {
 			LOGGER.debug("Imagestore " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + ":"
 					+ SapsPropertiesConstants.IMAGE_DATASTORE_IP);
-			this.imageStore = new JDBCImageDataStore(properties);
+			this.imageStore = new JDBCCatalog(properties);
 
 			if (!checkProperties(properties))
 				throw new SapsException(
@@ -460,21 +460,16 @@ public class Scheduler {
 	 * @param repository task repository
 	 * @return task information (tag, repository, type and name)
 	 */
-	private ExecutionScriptTag getExecutionScriptTag(SapsImage task, String repository) {
-		try {
-			String tag = null;
-			if (repository == ExecutionScriptTagUtil.PROCESSING)
-				tag = task.getProcessingTag();
-			else if (repository == ExecutionScriptTagUtil.PRE_PROCESSING)
-				tag = task.getPreprocessingTag();
-			else
-				tag = task.getInputdownloadingTag();
+	private ExecutionScriptTag getExecutionScriptTag(SapsImage task, String repository) {		
+		String tag = null;
+		if (repository == ExecutionScriptTagUtil.PROCESSING)
+			tag = task.getProcessingTag();
+		else if (repository == ExecutionScriptTagUtil.PRE_PROCESSING)
+			tag = task.getPreprocessingTag();
+		else
+			tag = task.getInputdownloadingTag();
 
-			return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
-		} catch (SapsException e) {
-			LOGGER.error("Error while trying get tag and repository Docker.", e);
-			return null;
-		}
+		return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
 	}
 
 	private String getFormatImageWithDigest(ExecutionScriptTag imageDockerInfo, ImageTaskState state, SapsImage task) {
