@@ -32,7 +32,7 @@ public interface Catalog {
 
 	List<SapsImage> getAllTasks() throws SQLException;
 
-	List<SapsImage> getTasksInProcessingState() throws SQLException;
+	List<SapsImage> getTasksInProcessingStates() throws SQLException;
 
 	List<SapsImage> getTasksByState(ImageTaskState state, int limit) throws SQLException;
 

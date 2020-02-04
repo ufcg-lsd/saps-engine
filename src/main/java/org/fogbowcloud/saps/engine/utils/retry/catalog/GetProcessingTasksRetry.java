@@ -16,7 +16,7 @@ public class GetProcessingTasksRetry implements CatalogRetry<List<SapsImage>>{
 	
 	@Override
 	public List<SapsImage> run() throws SQLException {
-		return imageStore.getTasksInProcessingState();
+		return imageStore.getTasksInProcessingStates();
 	}
 
 }

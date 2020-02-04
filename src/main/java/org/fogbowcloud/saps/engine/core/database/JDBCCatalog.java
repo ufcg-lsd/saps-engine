@@ -585,7 +585,7 @@ public class JDBCCatalog implements Catalog {
 	/**
 	 * get tasks in processing to Arrebol
 	 */
-	public List<SapsImage> getTasksInProcessingState() throws SQLException {
+	public List<SapsImage> getTasksInProcessingStates() throws SQLException {
 		Statement statement = null;
 		Connection conn = null;
 		try {
