@@ -40,8 +40,7 @@ public class ArchiverTest {
     }
 
     @Test
-    //TODO change name this test method
-    public void test01() throws Exception {
+    public void testToArchiveSuccessfulTask() throws Exception {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultProperties();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
