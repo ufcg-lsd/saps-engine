@@ -258,9 +258,9 @@ public class JDBCCatalog implements Catalog {
 	}
 
 	@Override
-	public SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
-			String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
-			String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws SQLException {
+	public SapsImage addTask(String taskId, String dataset, String region, Date date, int priority, String user,
+							 String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
+							 String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws SQLException {
 		Timestamp now = new Timestamp(System.currentTimeMillis());
 		SapsImage task = new SapsImage(taskId, dataset, region, date, ImageTaskState.CREATED,
 				SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, priority, user,

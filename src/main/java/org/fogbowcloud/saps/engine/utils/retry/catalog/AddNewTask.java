@@ -43,7 +43,7 @@ public class AddNewTask implements CatalogRetry<SapsImage> {
 
 	@Override
 	public SapsImage run() throws SQLException {
-		return imageStore.addImageTask(taskId, dataset, region, date, priority, userEmail, inputdownloadingPhaseTag,
+		return imageStore.addTask(taskId, dataset, region, date, priority, userEmail, inputdownloadingPhaseTag,
 				digestInputdownloading, preprocessingPhaseTag, digestPreprocessing, processingPhaseTag,
 				digestProcessing);
 	}

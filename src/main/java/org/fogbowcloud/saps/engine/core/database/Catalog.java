@@ -13,9 +13,9 @@ public interface Catalog {
 
 	int UNLIMITED = -1;
 
-	SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
-			String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
-			String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws SQLException;
+	SapsImage addTask(String taskId, String dataset, String region, Date date, int priority, String user,
+					  String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
+					  String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws SQLException;
 
 	void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
 
