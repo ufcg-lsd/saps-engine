@@ -17,7 +17,7 @@ public class UpdateTaskRetry implements CatalogRetry<Boolean>{
 	
 	@Override
 	public Boolean run() throws SQLException {
-		task.setUpdateTime(imageStore.getTask(task.getTaskId()).getUpdateTime());
+		task.setUpdateTime(imageStore.getTaskById(task.getTaskId()).getUpdateTime());
 		imageStore.updateImageTask(task);
 		return true;
 	}

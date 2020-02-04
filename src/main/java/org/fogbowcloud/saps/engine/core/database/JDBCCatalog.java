@@ -704,7 +704,7 @@ public class JDBCCatalog implements Catalog {
 			+ " = ?";
 
 	@Override
-	public SapsImage getTask(String taskId) throws SQLException {
+	public SapsImage getTaskById(String taskId) throws SQLException {
 		if (taskId == null) {
 			LOGGER.error("Invalid image task " + taskId);
 			throw new IllegalArgumentException("Invalid image task " + taskId);
