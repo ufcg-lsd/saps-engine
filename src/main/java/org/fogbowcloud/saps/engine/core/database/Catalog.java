@@ -14,14 +14,6 @@ public interface Catalog {
 	String NONE = "None";
 	int UNLIMITED = -1;
 
-	String DATASTORE_USERNAME = "datastore_username";
-	String DATASTORE_PASSWORD = "datastore_password";
-	String DATASTORE_DRIVER = "datastore_driver";
-	String DATASTORE_URL_PREFIX = "datastore_url_prefix";
-	String DATASTORE_NAME = "datastore_name";
-	String DATASTORE_IP = "datastore_ip";
-	String DATASTORE_PORT = "datastore_port";
-
 	SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
 			String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
 			String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws SQLException;

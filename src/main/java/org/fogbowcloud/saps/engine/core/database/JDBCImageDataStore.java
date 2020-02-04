@@ -20,6 +20,14 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class JDBCImageDataStore implements Catalog {
 
+	private String DATASTORE_USERNAME = "datastore_username";
+	private String DATASTORE_PASSWORD = "datastore_password";
+	private String DATASTORE_DRIVER = "datastore_driver";
+	private String DATASTORE_URL_PREFIX = "datastore_url_prefix";
+	private String DATASTORE_NAME = "datastore_name";
+	private String DATASTORE_IP = "datastore_ip";
+	private String DATASTORE_PORT = "datastore_port";
+
 	private static final Logger LOGGER = Logger.getLogger(JDBCImageDataStore.class);
 
 	private static final String IMAGE_TABLE_NAME = "TASKS";
