@@ -26,7 +26,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.internal.matchers.StartsWith;
 import org.testng.Assert;
 
-public class ArchiverTest {
+public class SwiftPermanentStorageTest {
 
     @Before
     public void init() {
@@ -90,7 +90,6 @@ public class ArchiverTest {
         SapsImage task02 = new SapsImage("2", "", "", new Date(), ImageTaskState.FAILED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
 
         Mockito.doAnswer((i) -> {
-            System.out.println(i);
             return null;
         }).when(swiftAPIClient).uploadFile(Mockito.anyString(), Mockito.any(File.class), Mockito.argThat(new StartsWith("archiver")));
 
