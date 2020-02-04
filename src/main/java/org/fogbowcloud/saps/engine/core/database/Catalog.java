@@ -11,7 +11,6 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 
 public interface Catalog {
 
-	String NONE = "None";
 	int UNLIMITED = -1;
 
 	SapsImage addImageTask(String taskId, String dataset, String region, Date date, int priority, String user,
