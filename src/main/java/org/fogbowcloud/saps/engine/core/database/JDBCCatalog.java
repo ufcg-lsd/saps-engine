@@ -605,7 +605,7 @@ public class JDBCCatalog implements Catalog {
 			+ " = ?";
 
 	@Override
-	public SapsUser getUser(String userEmail) throws SQLException {
+	public SapsUser getUserByEmail(String userEmail) throws SQLException {
 
 		if (userEmail == null || userEmail.isEmpty()) {
 			LOGGER.error("Invalid userEmail " + userEmail);

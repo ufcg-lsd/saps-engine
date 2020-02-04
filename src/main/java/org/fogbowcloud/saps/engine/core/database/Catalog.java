@@ -38,7 +38,7 @@ public interface Catalog {
 
 	SapsImage getTaskById(String taskId) throws SQLException;
 
-	SapsUser getUser(String userEmail) throws SQLException;
+	SapsUser getUserByEmail(String userEmail) throws SQLException;
 
 	void removeNotification(String submissionId, String taskId, String userEmail) throws SQLException;
 

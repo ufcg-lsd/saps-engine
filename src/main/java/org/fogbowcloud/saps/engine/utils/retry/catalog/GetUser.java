@@ -18,7 +18,7 @@ public class GetUser implements CatalogRetry<SapsUser> {
 	@Override
 	public SapsUser run() throws SQLException {
 		try {
-			return imageStore.getUser(userEmail);
+			return imageStore.getUserByEmail(userEmail);
 		} catch (SQLException e) {
 			// nothing
 		}
