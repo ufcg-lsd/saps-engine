@@ -28,9 +28,14 @@ import org.testng.Assert;
 
 public class SwiftPermanentStorageTest {
 
+    private SapsImage task01, task02;
+
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
+
+        task01 = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
+        task02 = new SapsImage("2", "", "", new Date(), ImageTaskState.FAILED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
     }
 
     private Properties createDefaultPropertiesWithoutArchiverInDebugMode() throws IOException {
@@ -53,8 +58,6 @@ public class SwiftPermanentStorageTest {
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        SapsImage task01 = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
-
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).uploadFile(Mockito.anyString(), Mockito.any(File.class), Mockito.argThat(new StartsWith("archiver")));
@@ -69,8 +72,6 @@ public class SwiftPermanentStorageTest {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
-
-        SapsImage task01 = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
 
         Mockito.doAnswer((i) -> {
             throw new Exception();
@@ -87,8 +88,6 @@ public class SwiftPermanentStorageTest {
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        SapsImage task02 = new SapsImage("2", "", "", new Date(), ImageTaskState.FAILED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
-
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).uploadFile(Mockito.anyString(), Mockito.any(File.class), Mockito.argThat(new StartsWith("archiver")));
@@ -103,8 +102,6 @@ public class SwiftPermanentStorageTest {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
-
-        SapsImage task02 = new SapsImage("2", "", "", new Date(), ImageTaskState.FAILED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
 
         Mockito.doAnswer((i) -> {
             throw new Exception();
@@ -121,8 +118,6 @@ public class SwiftPermanentStorageTest {
         Properties properties = createDefaultPropertiesWithArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        SapsImage task01 = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
-
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).uploadFile(Mockito.anyString(), Mockito.any(File.class), Mockito.anyString());
@@ -137,8 +132,6 @@ public class SwiftPermanentStorageTest {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
-
-        SapsImage task01 = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
 
         Mockito.doAnswer((i) -> {
             throw new Exception();
@@ -155,8 +148,6 @@ public class SwiftPermanentStorageTest {
         Properties properties = createDefaultPropertiesWithArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        SapsImage task02 = new SapsImage("2", "", "", new Date(), ImageTaskState.FAILED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
-
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).uploadFile(Mockito.anyString(), Mockito.any(File.class), Mockito.anyString());
@@ -171,8 +162,6 @@ public class SwiftPermanentStorageTest {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
-
-        SapsImage task02 = new SapsImage("2", "", "", new Date(), ImageTaskState.FAILED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
 
         Mockito.doAnswer((i) -> {
             throw new Exception();
