@@ -7,7 +7,7 @@ import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.database.Catalog;
-import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
+import org.fogbowcloud.saps.engine.core.database.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -31,7 +31,7 @@ public class SubmissionDispatcher {
 	}
 
 	public SubmissionDispatcher(Properties properties) throws SQLException {
-		this.imageStore = new JDBCImageDataStore(properties);
+		this.imageStore = new JDBCCatalog(properties);
 	}
 
 	/**

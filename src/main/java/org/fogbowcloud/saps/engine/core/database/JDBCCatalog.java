@@ -18,7 +18,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
-public class JDBCImageDataStore implements Catalog {
+public class JDBCCatalog implements Catalog {
 
 	private String DATASTORE_USERNAME = "datastore_username";
 	private String DATASTORE_PASSWORD = "datastore_password";
@@ -28,7 +28,7 @@ public class JDBCImageDataStore implements Catalog {
 	private String DATASTORE_IP = "datastore_ip";
 	private String DATASTORE_PORT = "datastore_port";
 
-	private static final Logger LOGGER = Logger.getLogger(JDBCImageDataStore.class);
+	private static final Logger LOGGER = Logger.getLogger(JDBCCatalog.class);
 
 	private static final String IMAGE_TABLE_NAME = "TASKS";
 	private static final String STATES_TABLE_NAME = "TIMESTAMPS";
@@ -83,7 +83,7 @@ public class JDBCImageDataStore implements Catalog {
 			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	private BasicDataSource connectionPool;
 
-	public JDBCImageDataStore(Properties properties) throws SQLException {
+	public JDBCCatalog(Properties properties) throws SQLException {
 
 		if (checkProperties(properties))
 			if (properties == null) {
@@ -131,8 +131,8 @@ public class JDBCImageDataStore implements Catalog {
 		return true;
 	}
 
-	public JDBCImageDataStore(String imageStoreURLPrefix, String imageStoreIP, String imageStorePort, String dbUserName,
-			String dbUserPass, String dbDrive, String dbName) throws SQLException {
+	public JDBCCatalog(String imageStoreURLPrefix, String imageStoreIP, String imageStorePort, String dbUserName,
+					   String dbUserPass, String dbDrive, String dbName) throws SQLException {
 
 		init(imageStoreIP, imageStorePort, imageStoreURLPrefix, dbUserName, dbUserPass, dbDrive, dbName);
 	}
