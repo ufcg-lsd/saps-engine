@@ -4,9 +4,9 @@ import java.sql.SQLException;
 import java.util.*;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.database.Catalog;
-import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
 import org.fogbowcloud.saps.engine.core.dispatcher.utils.RegionUtil;
+import org.fogbowcloud.saps.engine.core.catalog.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -17,19 +17,13 @@ import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class SubmissionDispatcher {
-	public static final int DEFAULT_PRIORITY = 0;
-	public static final String DEFAULT_USER = "admin";
 
 	private Catalog catalog;
 
 	private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcher.class);
 
-	public SubmissionDispatcher(Catalog imageStore) {
-		this.catalog = imageStore;
-	}
-
 	public SubmissionDispatcher(Properties properties) throws SQLException {
-		this.catalog = new JDBCImageDataStore(properties);
+		this.catalog  = new JDBCCatalog(properties);
 	}
 
 	/**

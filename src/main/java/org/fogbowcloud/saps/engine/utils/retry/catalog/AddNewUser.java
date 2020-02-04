@@ -2,7 +2,7 @@ package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
 import java.sql.SQLException;
 
-import org.fogbowcloud.saps.engine.core.database.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 
 public class AddNewUser implements CatalogRetry<Void> {
 

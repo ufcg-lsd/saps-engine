@@ -12,8 +12,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
-import org.fogbowcloud.saps.engine.core.database.Catalog;
-import org.fogbowcloud.saps.engine.core.database.JDBCImageDataStore;
+import org.fogbowcloud.saps.engine.core.catalog.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
@@ -34,7 +34,7 @@ public class Archiver {
 	public static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
 	public Archiver(Properties properties) throws SapsException, SQLException {
-		this(properties, new JDBCImageDataStore(properties), new SwiftAPIClient(properties), new ArchiverHelper());
+		this(properties, new JDBCCatalog(properties), new SwiftAPIClient(properties), new ArchiverHelper());
 
 		LOGGER.info("Creating Archiver");
 		LOGGER.info("Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP) + ":"
