@@ -21,7 +21,7 @@ public class GetTasksRetry implements CatalogRetry<List<SapsImage>>{
 	
 	@Override
 	public List<SapsImage> run() throws SQLException {
-		return imageStore.getIn(state, limit);
+		return imageStore.getTasksByState(state, limit);
 	}
 
 }

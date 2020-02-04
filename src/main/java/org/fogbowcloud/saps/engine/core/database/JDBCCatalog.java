@@ -642,7 +642,7 @@ public class JDBCCatalog implements Catalog {
 			+ STATE_COL + " = ? ORDER BY " + PRIORITY_COL + " ASC LIMIT ?";
 
 	@Override
-	public List<SapsImage> getIn(ImageTaskState state, int limit) throws SQLException {
+	public List<SapsImage> getTasksByState(ImageTaskState state, int limit) throws SQLException {
 		if (state == null) {
 			LOGGER.error("A state must be given");
 			throw new IllegalArgumentException("Can't recover tasks. State was null.");
