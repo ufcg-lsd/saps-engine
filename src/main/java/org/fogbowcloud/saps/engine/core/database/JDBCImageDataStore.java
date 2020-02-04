@@ -342,7 +342,7 @@ public class JDBCImageDataStore implements Catalog {
 			+ " VALUES(?, ?, now())";
 
 	@Override
-	public void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
+	public void addStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
 		if (taskId == null || taskId.isEmpty() || state == null) {
 			LOGGER.error("Task id or state was null.");
 			throw new IllegalArgumentException("Task id or state was null.");
