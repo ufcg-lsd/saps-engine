@@ -44,6 +44,6 @@ public interface Catalog {
 
 	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
 
-	List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
-			String inputPreprocessing, String algorithmExecution) throws SQLException;
+	List<SapsImage> getSuccessfullyProcessedTasks(String region, Date initDate, Date endDate, String inputGathering,
+												  String inputPreprocessing, String algorithmExecution) throws SQLException;
 }

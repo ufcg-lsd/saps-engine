@@ -30,7 +30,7 @@ public class GetProcessedTasks implements CatalogRetry<List<SapsImage>> {
 
 	@Override
 	public List<SapsImage> run() throws SQLException {
-		return imageStore.getProcessedImages(region, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
+		return imageStore.getSuccessfullyProcessedTasks(region, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
 				processingPhaseTag);
 	}
 

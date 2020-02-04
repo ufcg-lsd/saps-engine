@@ -764,8 +764,8 @@ public class JDBCCatalog implements Catalog {
 			+ " = ? AND " + INPUTDOWNLOADING_TAG + " = ? AND " + PROCESSING_TAG + " = ?";
 
 	@Override
-	public List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
-			String inputPreprocessing, String algorithmExecution) throws SQLException {
+	public List<SapsImage> getSuccessfullyProcessedTasks(String region, Date initDate, Date endDate, String inputGathering,
+														 String inputPreprocessing, String algorithmExecution) throws SQLException {
 		PreparedStatement queryStatement = null;
 		Connection connection = null;
 
