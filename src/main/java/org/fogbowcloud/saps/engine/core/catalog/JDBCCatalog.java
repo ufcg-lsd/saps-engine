@@ -14,6 +14,7 @@ import java.util.Properties;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.UserNotFoundException;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -607,7 +608,7 @@ public class JDBCCatalog implements Catalog {
             + " = ?";
 
     @Override
-    public SapsUser getUserByEmail(String userEmail) throws SQLException {
+    public SapsUser getUserByEmail(String userEmail) throws SQLException, UserNotFoundException {
 
         if (userEmail == null || userEmail.isEmpty()) {
             LOGGER.error("Invalid userEmail " + userEmail);
@@ -631,7 +632,7 @@ public class JDBCCatalog implements Catalog {
                 return sebalUser;
             }
             rs.close();
-            return null;
+            throw new UserNotFoundException("There is no user with email");
         } finally {
             close(selectStatement, connection);
         }

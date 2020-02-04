@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.UserNotFoundException;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -40,7 +41,7 @@ public interface Catalog {
 
     SapsImage getTaskById(String taskId) throws SQLException, TaskNotFoundException;
 
-    SapsUser getUserByEmail(String userEmail) throws SQLException;
+    SapsUser getUserByEmail(String userEmail) throws SQLException, UserNotFoundException;
 
     void removeNotification(String submissionId, String taskId, String userEmail) throws SQLException;
 
