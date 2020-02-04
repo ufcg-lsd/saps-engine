@@ -42,7 +42,7 @@ public interface Catalog {
 
 	SapsUser getUser(String userEmail) throws SQLException;
 
-	void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
+	void removeStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
 
 	List<SapsImage> getProcessedImages(String region, Date initDate, Date endDate, String inputGathering,
 			String inputPreprocessing, String algorithmExecution) throws SQLException;

@@ -606,7 +606,7 @@ public class JDBCImageDataStore implements Catalog {
 			+ " = ? AND " + STATE_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
 
 	@Override
-	public void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
+	public void removeStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
 		LOGGER.info("Removing task " + taskId + " state " + state.getValue() + " with timestamp " + timestamp);
 		if (taskId == null || taskId.isEmpty() || state == null) {
 			LOGGER.error("Invalid task " + taskId + " or state " + state.getValue());
