@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.utils.RegionUtil;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogConstants;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -61,7 +63,6 @@ public class SubmissionDispatcher {
 	}
 
 	/**
-	 * 
 	 * This function sends information from a new SAPS task to the communication
 	 * mechanism with the Catalog in order to insert it into the schema, causing the
 	 * platform to receive a new workload. This information is:<br>
@@ -69,7 +70,7 @@ public class SubmissionDispatcher {
 	 * - TaskId: a unique identifier for the SAPS task created automatically using a
 	 * UUID class (immutable universally unique identifier, represents a 128-bit
 	 * value).<br>
-	 * 
+	 *
 	 * - Dataset: it is the type of data set of a certain satellite that this task
 	 * belongs to, being an enum that is used by the steps of the task processing
 	 * for the correct execution of the algorithms. Their values ​​can be:<br>
@@ -292,7 +293,7 @@ public class SubmissionDispatcher {
 	 * approach.
 	 */
 	public List<SapsImage> getTasksByStateInCatalog(ImageTaskState state) throws SQLException {
-		return CatalogUtils.getTasks(catalog, state, Catalog.UNLIMITED,
+		return CatalogUtils.getTasks(catalog, state, CatalogConstants.UNLIMITED,
 				"gets tasks with " + state.getValue() + " state");
 	}
 
@@ -317,7 +318,7 @@ public class SubmissionDispatcher {
 	 * normal to the reference surface indicating the vertex of the polygon formed
 	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
 	 * upperRightLongitude.<br>
-	 * 
+	 *
 	 * - upperRightLongitude: is a geographic coordinate plus the upper right
 	 * defined in the sphere measured in degrees, from 0 to 180 towards east or
 	 * west, from the Greenwich Meridian indicating the vertex of the polygon formed

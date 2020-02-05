@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
@@ -34,15 +35,14 @@ public class Archiver {
 	public static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
 	public Archiver(Properties properties) throws SapsException, SQLException {
-		this(properties, new JDBCCatalog(properties), new SwiftAPIClient(properties), new ArchiverHelper());
+		this(properties, new JDBCCatalog(properties), new SwiftAPIClient(properties));
 
 		LOGGER.info("Creating Archiver");
 		LOGGER.info("Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP) + ":"
 				+ properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_PORT));
 	}
 
-	protected Archiver(Properties properties, Catalog imageStore, SwiftAPIClient swiftAPIClient,
-			ArchiverHelper archiverHelper) throws SapsException {
+	protected Archiver(Properties properties, Catalog imageStore, SwiftAPIClient swiftAPIClient) throws SapsException {
 		if (!checkProperties(properties))
 			throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
 
@@ -175,7 +175,7 @@ public class Archiver {
 	 * tasks.
 	 */
 	private void garbageCollector() {
-		List<SapsImage> failedTasks = tasksInFailedState(Catalog.UNLIMITED);
+		List<SapsImage> failedTasks = tasksInFailedState(CatalogConstants.UNLIMITED);
 
 		LOGGER.info("Deleting data directory from " + failedTasks.size() + " failed tasks");
 
@@ -188,7 +188,6 @@ public class Archiver {
 	 * This function gets tasks in failed state in Catalog.
 	 * 
 	 * @param limit   limit value of tasks to take
-	 * @param message information message
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksInFailedState(int limit) {
@@ -202,7 +201,7 @@ public class Archiver {
 	 * @throws Exception
 	 */
 	private void cleanUnfinishedArchivedData() throws Exception {
-		List<SapsImage> archivingTasks = tasksInArchivingState(Catalog.UNLIMITED);
+		List<SapsImage> archivingTasks = tasksInArchivingState(CatalogConstants.UNLIMITED);
 
 		LOGGER.info("Rollback in " + archivingTasks.size() + " tasks in archiving state");
 
@@ -217,7 +216,6 @@ public class Archiver {
 	 * This function gets tasks in finished state in Catalog.
 	 * 
 	 * @param limit   limit value of tasks to take
-	 * @param message information message
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksInArchivingState(int limit) {
@@ -279,7 +277,7 @@ public class Archiver {
 	 */
 	private void archiver() {
 		try {
-			List<SapsImage> tasksToArchive = tasksToArchive(Catalog.UNLIMITED);
+			List<SapsImage> tasksToArchive = tasksToArchive(CatalogConstants.UNLIMITED);
 
 			LOGGER.info("Trying to archive " + tasksToArchive.size() + " finished tasks: " + tasksToArchive);
 
@@ -298,7 +296,6 @@ public class Archiver {
 	 * This function gets tasks in finished state in Catalog.
 	 * 
 	 * @param limit   limit value of tasks to take
-	 * @param message information message
 	 * @return tasks in specific state
 	 */
 	private List<SapsImage> tasksToArchive(int limit) {
