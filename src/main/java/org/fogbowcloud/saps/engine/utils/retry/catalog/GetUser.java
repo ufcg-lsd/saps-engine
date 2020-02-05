@@ -1,7 +1,5 @@
 package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
-import java.sql.SQLException;
-
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -17,7 +15,7 @@ public class GetUser implements CatalogRetry<SapsUser> {
 	}
 
 	@Override
-	public SapsUser run() throws SQLException {
+	public SapsUser run(){
 		try {
 			return imageStore.getUserByEmail(userEmail);
 		} catch (CatalogException e) {

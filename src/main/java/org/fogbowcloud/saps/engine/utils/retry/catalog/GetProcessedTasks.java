@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -30,7 +29,7 @@ public class GetProcessedTasks implements CatalogRetry<List<SapsImage>> {
 	}
 
 	@Override
-	public List<SapsImage> run() throws SQLException {
+	public List<SapsImage> run(){
 		return imageStore.getTasksByFilters(ImageTaskState.ARCHIVED, region, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
 				processingPhaseTag);
 	}
