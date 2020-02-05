@@ -605,32 +605,6 @@ public class JDBCCatalog implements Catalog {
         }
     }
 
-    private static final String SELECT_IMAGES_IN_PROCESSING_TO_ARREBOL_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME
-            + " WHERE " + STATE_COL + " = '" + ImageTaskState.DOWNLOADING.getValue() + "' OR " + STATE_COL + " = '"
-            + ImageTaskState.PREPROCESSING.getValue() + "' OR " + STATE_COL + " = '" + ImageTaskState.RUNNING.getValue()
-            + "'";
-
-    /**
-     * get tasks in processing to Arrebol
-     */
-    public List<SapsImage> getTasksInProcessingStates() throws CatalogException {
-        Statement statement = null;
-        Connection conn = null;
-        try {
-            conn = getConnection();
-            statement = conn.createStatement();
-            statement.setQueryTimeout(300);
-
-            statement.execute(SELECT_IMAGES_IN_PROCESSING_TO_ARREBOL_SQL);
-            ResultSet rs = statement.getResultSet();
-            return extractImageTaskFrom(rs);
-        } catch (SQLException e) {
-            throw new CatalogException("Error while select tasks in processing states");
-        } finally {
-            close(statement, conn);
-        }
-    }
-
     private static final String SELECT_USER_SQL = "SELECT * FROM " + USERS_TABLE_NAME + " WHERE " + USER_EMAIL_COL
             + " = ?";
 
@@ -667,38 +641,41 @@ public class JDBCCatalog implements Catalog {
         }
     }
 
-    private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + STATE_COL
-            + " = ? " + "ORDER BY " + PRIORITY_COL + " ASC";
+    private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE ? ORDER BY "
+            + PRIORITY_COL + " ASC";
 
-    private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE "
-            + STATE_COL + " = ? ORDER BY " + PRIORITY_COL + " ASC LIMIT ?";
+    private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE ? ORDER BY "
+            + PRIORITY_COL + " ASC LIMIT ?";
 
     @Override
-    public List<SapsImage> getTasksByState(ImageTaskState state, int limit) throws CatalogException {
-        if (state == null) {
+    public List<SapsImage> getTasksByState(int limit, ImageTaskState... tasksStates) throws CatalogException {
+        if (tasksStates == null) {
             LOGGER.error("A state must be given");
             throw new IllegalArgumentException("Can't recover tasks. State was null.");
         }
         PreparedStatement selectStatement = null;
         Connection connection = null;
-
         try {
             connection = getConnection();
 
             if (limit == CatalogConstants.UNLIMITED) {
                 selectStatement = connection.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
-                selectStatement.setString(1, state.getValue());
                 selectStatement.setQueryTimeout(300);
-
-                selectStatement.execute();
             } else {
                 selectStatement = connection.prepareStatement(SELECT_LIMITED_IMAGES_IN_STATE_SQL);
-                selectStatement.setString(1, state.getValue());
                 selectStatement.setInt(2, limit);
                 selectStatement.setQueryTimeout(300);
-
-                selectStatement.execute();
             }
+
+            String whereCondition = "";
+            for(int i = 0; i < tasksStates.length; i++){
+                whereCondition += STATE_COL + " = " + tasksStates[i].getValue();
+                if(i < tasksStates.length - 1)
+                    whereCondition += " OR ";
+            }
+
+            selectStatement.setString(1, whereCondition);
+            selectStatement.execute();
 
             ResultSet rs = selectStatement.getResultSet();
             List<SapsImage> imageDatas = extractImageTaskFrom(rs);

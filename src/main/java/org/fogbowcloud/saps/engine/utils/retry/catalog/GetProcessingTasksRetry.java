@@ -4,7 +4,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 
 public class GetProcessingTasksRetry implements CatalogRetry<List<SapsImage>>{
 
@@ -16,7 +18,8 @@ public class GetProcessingTasksRetry implements CatalogRetry<List<SapsImage>>{
 	
 	@Override
 	public List<SapsImage> run() throws SQLException {
-		return imageStore.getTasksInProcessingStates();
+		ImageTaskState[] states = {ImageTaskState.DOWNLOADING, ImageTaskState.PREPROCESSING, ImageTaskState.RUNNING};
+		return imageStore.getTasksByState(CatalogConstants.UNLIMITED, states);
 	}
 
 }
