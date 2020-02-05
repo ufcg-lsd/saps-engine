@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
@@ -24,6 +25,10 @@ import org.mockito.MockitoAnnotations;
 import static org.mockito.Mockito.*;
 
 public class SchedulerTest {
+
+	private ImageTaskState[] readyState = {ImageTaskState.READY};
+	private ImageTaskState[] downloadedState = {ImageTaskState.DOWNLOADED};
+	private ImageTaskState[] createdState = {ImageTaskState.CREATED};
 
 	@Before
 	public void init() {
@@ -54,9 +59,9 @@ public class SchedulerTest {
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(0);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -87,9 +92,9 @@ public class SchedulerTest {
 				SapsImage.NONE_ARREBOL_JOB_ID, "", 5, "user3", "nop", "", "nop", "", "aio", "", new Timestamp(1),
 				new Timestamp(1), "", ""));
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(0);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -109,9 +114,9 @@ public class SchedulerTest {
 		List<SapsImage> downloadedTasks = new LinkedList<SapsImage>();
 		List<SapsImage> createdTasks = new LinkedList<SapsImage>();
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(5);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -136,9 +141,9 @@ public class SchedulerTest {
 				new Timestamp(1), "", "");
 		createdTasks.add(task01);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(5);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -165,9 +170,9 @@ public class SchedulerTest {
 				new Timestamp(1), "", "");
 		downloadedTasks.add(task01);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(5);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -194,9 +199,9 @@ public class SchedulerTest {
 				new Timestamp(1), "", "");
 		readyTasks.add(task01);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(5);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -232,9 +237,9 @@ public class SchedulerTest {
 				new Timestamp(1), "", "");
 		createdTasks.add(createdTask01);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(1);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -266,9 +271,9 @@ public class SchedulerTest {
 				new Timestamp(1), "", "");
 		createdTasks.add(createdTask01);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(1);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -316,9 +321,9 @@ public class SchedulerTest {
 		createdTasks.add(createdTask01);
 		createdTasks.add(createdTask02);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(2);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -367,9 +372,9 @@ public class SchedulerTest {
 		createdTasks.add(createdTask02);
 		createdTasks.add(createdTask03);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(3);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -419,9 +424,9 @@ public class SchedulerTest {
 		createdTasks.add(createdTask02);
 		createdTasks.add(createdTask03);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(3);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
@@ -467,9 +472,9 @@ public class SchedulerTest {
 		createdTasks.add(createdTask02);
 		createdTasks.add(createdTask03);
 
-		when(imageStore.getTasksByState(ImageTaskState.READY, Catalog.UNLIMITED)).thenReturn(readyTasks);
-		when(imageStore.getTasksByState(ImageTaskState.DOWNLOADED, Catalog.UNLIMITED)).thenReturn(downloadedTasks);
-		when(imageStore.getTasksByState(ImageTaskState.CREATED, Catalog.UNLIMITED)).thenReturn(createdTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, readyState)).thenReturn(readyTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, downloadedState)).thenReturn(downloadedTasks);
+		when(imageStore.getTasksByState(CatalogConstants.UNLIMITED, createdState)).thenReturn(createdTasks);
 		when(arrebol.getCountSlotsInQueue("default")).thenReturn(3);
 
 		List<SapsImage> selectedTasks = scheduler.selectTasks();
