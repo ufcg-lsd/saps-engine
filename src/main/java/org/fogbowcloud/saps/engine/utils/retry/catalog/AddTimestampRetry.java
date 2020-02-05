@@ -1,7 +1,5 @@
 package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
-import java.sql.SQLException;
-
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
@@ -16,7 +14,7 @@ public class AddTimestampRetry implements CatalogRetry<Void>{
 	}
 	
 	@Override
-	public Void run() throws SQLException {
+	public Void run(){
 		task.setUpdateTime(imageStore.getTaskById(task.getTaskId()).getUpdateTime());
 		imageStore.addStateChangeTime(task.getTaskId(), task.getState(), task.getUpdateTime());
 		return null;
