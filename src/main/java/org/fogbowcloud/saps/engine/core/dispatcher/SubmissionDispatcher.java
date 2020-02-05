@@ -8,6 +8,7 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
@@ -107,7 +108,7 @@ public class SubmissionDispatcher {
 	public void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail) throws SQLException {
 		try {
 			imageStore.addUserNotification(submissionId, taskId, userEmail);
-		} catch (SQLException e) {
+		} catch (CatalogException e) {
 			LOGGER.error("Error while adding task " + taskId + " notification for user " + userEmail + " in Catalogue",
 					e);
 		}
@@ -116,7 +117,7 @@ public class SubmissionDispatcher {
 	public void removeUserNotification(String submissionId, String taskId, String userEmail) throws SQLException {
 		try {
 			imageStore.removeNotification(submissionId, taskId, userEmail);
-		} catch (SQLException e) {
+		} catch (CatalogException e) {
 			LOGGER.error(
 					"Error while removing task " + taskId + " notification for user " + userEmail + " from Catalogue",
 					e);
@@ -126,7 +127,7 @@ public class SubmissionDispatcher {
 	public boolean isUserNotifiable(String userEmail) throws SQLException {
 		try {
 			return imageStore.isUserNotifiable(userEmail);
-		} catch (SQLException e) {
+		} catch (CatalogException e) {
 			LOGGER.error("Error while verifying user notify", e);
 		}
 
@@ -242,7 +243,6 @@ public class SubmissionDispatcher {
 	 * @param preprocessingPhaseTag    preprocessing phase tag
 	 * @param processingPhaseTag       processing phase tag
 	 * @param digestProcessing
-	 * @param processingPhaseTag2
 	 * @param digestPreprocessing
 	 * @return new saps image
 	 */
@@ -376,8 +376,7 @@ public class SubmissionDispatcher {
 
 	/**
 	 * This function get all tasks in Catalog.
-	 * 
-	 * @param imageStore catalog component
+	 *
 	 * @return SAPS image list
 	 */
 	private List<SapsImage> getAllTasksInCatalog() {
@@ -436,8 +435,6 @@ public class SubmissionDispatcher {
 	 * This function gets tasks in specific state.
 	 * 
 	 * @param state   specific state for get tasks
-	 * @param limit   limit value of tasks to take
-	 * @param message information message
 	 * @return tasks in specific state
 	 */
 	public List<SapsImage> getTasksInState(ImageTaskState state) throws SQLException {
