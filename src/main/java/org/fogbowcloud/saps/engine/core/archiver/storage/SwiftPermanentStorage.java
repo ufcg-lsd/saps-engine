@@ -55,18 +55,23 @@ public class SwiftPermanentStorage implements PermanentStorage {
      * (otherwise)
      */
     private boolean checkProperties(Properties properties) {
+        String[] propertiesSet = {
+                SapsPropertiesConstants.SWIFT_FOLDER_PREFIX,
+                SapsPropertiesConstants.SWIFT_CONTAINER_NAME
+        };
+
         if (properties == null) {
             LOGGER.error("Properties arg must not be null.");
             return false;
         }
-        if (!properties.containsKey(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_FOLDER_PREFIX + " was not set");
-            return false;
+
+        for(String property : propertiesSet){
+            if (!properties.containsKey(property)) {
+                LOGGER.error("Required property " + property + " was not set");
+                return false;
+            }
         }
-        if (!properties.containsKey(SapsPropertiesConstants.SWIFT_CONTAINER_NAME)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.SWIFT_CONTAINER_NAME + " was not set");
-            return false;
-        }
+
         LOGGER.debug("All properties are set");
         return true;
     }

@@ -54,26 +54,26 @@ public class SwiftAPIClient {
 	}
 
 	private boolean checkProperties(Properties properties) {
-		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID + " was not set");
+		String[] propertiesSet = {
+				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID,
+				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID,
+				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD,
+				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL,
+				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL
+		};
+
+		if (properties == null) {
+			LOGGER.error("Properties arg must not be null.");
 			return false;
 		}
-		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID + " was not set");
-			return false;
+
+		for(String property : propertiesSet){
+			if (!properties.containsKey(property)) {
+				LOGGER.error("Required property " + property + " was not set");
+				return false;
+			}
 		}
-		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD + " was not set");
-			return false;
-		}
-		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL + " was not set");
-			return false;
-		}
-		if (!properties.containsKey(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL)) {
-			LOGGER.error("Required property " + SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL + " was not set");
-			return false;
-		}
+
 		LOGGER.debug("All properties are set");
 		return true;
 	}
