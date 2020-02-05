@@ -16,6 +16,7 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -51,11 +52,45 @@ public class SwiftPermanentStorageTest {
         return properties;
     }
 
+    private Properties createFailurePropertiesWithoutArchiverInDebugMode() throws IOException {
+        Properties properties = new Properties();
+        FileInputStream input = new FileInputStream("src/test/resources/archiver-test.failconf");
+        properties.load(input);
+        return properties;
+    }
+
     private Properties createDefaultPropertiesWithArchiverInDebugMode() throws IOException {
         Properties properties = new Properties();
         FileInputStream input = new FileInputStream("src/test/resources/archiver-test-debug-mode.conf");
         properties.load(input);
         return properties;
+    }
+
+    private Properties createFailurePropertiesWithArchiverInDebugMode() throws IOException {
+        Properties properties = new Properties();
+        FileInputStream input = new FileInputStream("src/test/resources/archiver-test-debug-mode.failconf");
+        properties.load(input);
+        return properties;
+    }
+
+    @Test (expected = SapsException.class)
+    public void failureTestToBuildArchiveBecausePropertiesIsNull() throws SapsException {
+        SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+        new SwiftPermanentStorage(null, swiftAPIClient);
+    }
+
+    @Test (expected = SapsException.class)
+    public void failureTestToBuildArchiveWithoutDebugMode() throws SapsException, IOException {
+        SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+        Properties properties = createFailurePropertiesWithoutArchiverInDebugMode();
+        new SwiftPermanentStorage(properties, swiftAPIClient);
+    }
+
+    @Test (expected = SapsException.class)
+    public void failureTestToBuildArchiveInDebugMode() throws SapsException, IOException {
+        SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
+        Properties properties = createFailurePropertiesWithArchiverInDebugMode();
+        new SwiftPermanentStorage(properties, swiftAPIClient);
     }
 
     @Test
@@ -191,7 +226,6 @@ public class SwiftPermanentStorageTest {
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
         Mockito.doAnswer((i) -> {
-            System.out.println(i);
             throw new Exception();
         }).when(swiftAPIClient).uploadFile(Mockito.anyString(), Mockito.any(File.class), Mockito.argThat(new StartsWith("trash")));
 
@@ -204,7 +238,7 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteSuccessfulTaskWithoutArchiverInDebugMode() throws Exception{
+    public void testToDeleteSuccessfulTaskWithoutArchiverInDebugMode() throws IOException, SapsException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -214,8 +248,9 @@ public class SwiftPermanentStorageTest {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.eq("saps-test"), Mockito.argThat(new StartsWith("archiver/1")));
 
-        permanentStorage.delete(task01);
+        boolean deleteTask01 = permanentStorage.delete(task01);
 
+        Assert.assertEquals(deleteTask01, true);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix("saps-test", "archiver/1");
         Mockito.verify(swiftAPIClient, Mockito.times(1)).deleteFile("saps-test", "archiver/1/inputdownloading/file.ip");
         Mockito.verify(swiftAPIClient, Mockito.times(1)).deleteFile("saps-test", "archiver/1/preprocessing/file.pp");
@@ -223,7 +258,7 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteFailureTaskWithoutArchiverInDebugMode() throws Exception{
+    public void testToDeleteFailureTaskWithoutArchiverInDebugMode() throws IOException, SapsException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -233,47 +268,46 @@ public class SwiftPermanentStorageTest {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.eq("saps-test"), Mockito.argThat(new StartsWith("trash/2")));
 
-        permanentStorage.delete(task02);
+        boolean deleteTask02 = permanentStorage.delete(task02);
 
+        Assert.assertEquals(deleteTask02, true);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix("saps-test", "trash/2");
         Mockito.verify(swiftAPIClient, Mockito.times(1)).deleteFile("saps-test", "trash/2/inputdownloading/file.ip");
     }
 
-    /*@Test (expected = Exception.class)
-    public void testToDeleteFailureTaskButListFilesWithPrefixMethodFailsWithoutArchiverInDebugMode() throws Exception{
+    @Test
+    public void testToDeleteSuccessfulTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode() throws IOException, SapsException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        Mockito.when(swiftAPIClient.listFilesWithPrefix(Mockito.eq("saps-test"), Mockito.eq("trash/2"))).thenThrow(Exception.class);
+        Mockito.when(swiftAPIClient.listFilesWithPrefix(Mockito.eq("saps-test"), Mockito.eq("archiver/1"))).thenReturn(new ArrayList<String>());
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.anyString(), Mockito.anyString());
 
-        try {
-            permanentStorage.delete(task02);
-            Assert.fail();
-        }catch(Exception e){
-            Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix("saps-test", "trash/2");
-            Mockito.verify(swiftAPIClient, Mockito.times(0)).deleteFile(Mockito.anyString(), Mockito.anyString());
-        }
-    }*/
+        boolean deleteTask01 = permanentStorage.delete(task01);
 
-    /*@Test
-    public void testFailsTheFirstTimeWhenTryingToUploadTheSuccessfulTask() throws Exception {
+        Assert.assertEquals(deleteTask01, true);
+        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix("saps-test", "archiver/1");
+        Mockito.verify(swiftAPIClient, Mockito.times(0)).deleteFile(Mockito.anyString(), Mockito.anyString());
+    }
+
+    @Test
+    public void testToDeleteFailureTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode() throws IOException, SapsException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        SapsImage task01 = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED, SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "", "", "", new Timestamp(1), new Timestamp(1), "", "");
-
+        Mockito.when(swiftAPIClient.listFilesWithPrefix(Mockito.eq("saps-test"), Mockito.eq("trash/2"))).thenReturn(new ArrayList<String>());
         Mockito.doAnswer((i) -> {
-            System.out.println(i);
-            throw new Exception();
-        }).when(swiftAPIClient).uploadFile(Mockito.anyString(), Mockito.any(File.class), Mockito.anyString());
+            return null;
+        }).when(swiftAPIClient).deleteFile(Mockito.anyString(), Mockito.anyString());
 
-        boolean archiveTask01 = permanentStorage.archive(task01);
+        boolean deleteTask02 = permanentStorage.delete(task02);
 
-        Assert.assertEquals(archiveTask01, true);
-    }*/
+        Assert.assertEquals(deleteTask02, true);
+        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix("saps-test", "trash/2");
+        Mockito.verify(swiftAPIClient, Mockito.times(0)).deleteFile(Mockito.anyString(), Mockito.anyString());
+    }
 }
