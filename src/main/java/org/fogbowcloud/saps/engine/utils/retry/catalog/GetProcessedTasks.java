@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 
 public class GetProcessedTasks implements CatalogRetry<List<SapsImage>> {
 
@@ -30,7 +31,7 @@ public class GetProcessedTasks implements CatalogRetry<List<SapsImage>> {
 
 	@Override
 	public List<SapsImage> run() throws SQLException {
-		return imageStore.getSuccessfullyProcessedTasks(region, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
+		return imageStore.getTasksByFilters(ImageTaskState.ARCHIVED, region, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
 				processingPhaseTag);
 	}
 

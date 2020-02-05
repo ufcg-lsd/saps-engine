@@ -788,12 +788,12 @@ public class JDBCCatalog implements Catalog {
         }
     }
 
-    private final String PROCESSED_IMAGES_QUERY = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + STATE_COL
+    private final String SELECT_TASKS_BY_FILTERS_QUERY = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + STATE_COL
             + " = ? AND " + REGION_COL + " = ? AND " + IMAGE_DATE_COL + " BETWEEN ? AND ? AND " + PREPROCESSING_TAG
             + " = ? AND " + INPUTDOWNLOADING_TAG + " = ? AND " + PROCESSING_TAG + " = ?";
 
     @Override
-    public List<SapsImage> getSuccessfullyProcessedTasks(String region, Date initDate, Date endDate, String inputGathering,
+    public List<SapsImage> getTasksByFilters(ImageTaskState state, String region, Date initDate, Date endDate, String inputGathering,
                                                          String inputPreprocessing, String algorithmExecution) throws CatalogException {
         PreparedStatement queryStatement = null;
         Connection connection = null;
@@ -801,8 +801,8 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            queryStatement = connection.prepareStatement(PROCESSED_IMAGES_QUERY);
-            queryStatement.setString(1, ImageTaskState.ARCHIVED.getValue());
+            queryStatement = connection.prepareStatement(SELECT_TASKS_BY_FILTERS_QUERY);
+            queryStatement.setString(1, state.getValue());
             queryStatement.setString(2, region);
             queryStatement.setDate(3, javaDateToSqlDate(initDate));
             queryStatement.setDate(4, javaDateToSqlDate(endDate));
