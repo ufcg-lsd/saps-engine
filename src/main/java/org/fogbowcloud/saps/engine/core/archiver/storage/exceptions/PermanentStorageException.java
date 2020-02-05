@@ -7,4 +7,8 @@ public class PermanentStorageException extends RuntimeException {
     public PermanentStorageException(String msg){
         super(msg);
     }
+
+    public PermanentStorageException(String msg, Throwable t){
+        super(msg, t);
+    }
 }
