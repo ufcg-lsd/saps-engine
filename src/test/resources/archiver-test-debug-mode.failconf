@@ -9,7 +9,7 @@ datastore_password=
 
 saps_execution_period_archiver=
 saps_execution_period_garbage_collector=
-saps_execution_debug_mode=
+saps_execution_debug_mode=true
 
 saps_permanent_storage_type=swift
 
@@ -17,6 +17,8 @@ saps_permanent_storage_type=swift
 saps_export_path=src/test/resources/archiver-test
 
 # Configuração do sft
+swift_folder_prefix=archiver
+swift_container_name=saps-test
 swift_input_pseud_folder_prefix=
 swift_output_pseud_folder_prefix=
 swift_username=
