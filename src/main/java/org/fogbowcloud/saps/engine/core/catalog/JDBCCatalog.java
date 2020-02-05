@@ -13,6 +13,7 @@ import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.UserNotFoundException;
@@ -684,7 +685,7 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            if (limit == UNLIMITED) {
+            if (limit == CatalogConstants.UNLIMITED) {
                 selectStatement = connection.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
                 selectStatement.setString(1, state.getValue());
                 selectStatement.setQueryTimeout(300);

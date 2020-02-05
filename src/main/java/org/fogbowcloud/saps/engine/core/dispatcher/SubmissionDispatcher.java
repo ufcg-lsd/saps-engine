@@ -8,6 +8,7 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -438,7 +439,7 @@ public class SubmissionDispatcher {
 	 * @return tasks in specific state
 	 */
 	public List<SapsImage> getTasksInState(ImageTaskState state) throws SQLException {
-		return getTasksInCatalog(state, Catalog.UNLIMITED, "gets tasks with " + state.getValue() + " state");
+		return getTasksInCatalog(state, CatalogConstants.UNLIMITED, "gets tasks with " + state.getValue() + " state");
 	}
 
 	/**

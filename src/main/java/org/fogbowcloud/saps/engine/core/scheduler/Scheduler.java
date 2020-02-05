@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
+import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.dto.*;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
@@ -249,8 +250,7 @@ public class Scheduler {
 
 	/**
 	 * This function selects tasks following a strategy for submit in Arrebol.
-	 * 
-	 * @param count count of available slots in Arrebol queue
+	 *
 	 * @return selected tasks list
 	 */
 	protected List<SapsImage> selectTasks() {
@@ -287,7 +287,7 @@ public class Scheduler {
 
 		LOGGER.info("Trying select up to " + count + " tasks in state " + state);
 
-		List<SapsImage> tasks = getTasksInCatalog(state, Catalog.UNLIMITED,
+		List<SapsImage> tasks = getTasksInCatalog(state, CatalogConstants.UNLIMITED,
 				"gets tasks with " + state.getValue() + " state");
 
 		Map<String, List<SapsImage>> tasksByUsers = mapUsers2Tasks(tasks);
