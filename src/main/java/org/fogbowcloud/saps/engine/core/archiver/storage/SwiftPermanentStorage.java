@@ -217,10 +217,9 @@ public class SwiftPermanentStorage implements PermanentStorage {
      * @param task task with files information to be deleted
      * @return boolean representation, success (true) or failure (false) to delete
      * files
-     * @throws Exception
      */
     @Override
-    public boolean delete(SapsImage task) throws Exception {
+    public boolean delete(SapsImage task) {
         String taskId = task.getTaskId();
 
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
