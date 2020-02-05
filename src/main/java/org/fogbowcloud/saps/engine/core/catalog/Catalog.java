@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.core.catalog;
 
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -18,14 +17,14 @@ public interface Catalog {
                       String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
                       String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws CatalogException;
 
-    void addStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
+    void addStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws CatalogException;
 
     void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
-                 boolean adminRole) throws SQLException;
+                 boolean adminRole) throws CatalogException;
 
-    void updateImageTask(SapsImage imageTask) throws SQLException;
+    void updateImageTask(SapsImage imageTask) throws CatalogException;
 
-    List<SapsImage> getAllTasks() throws SQLException;
+    List<SapsImage> getAllTasks() throws CatalogException;
 
     List<SapsImage> getTasksByState(int limit, ImageTaskState... tasksStates) throws CatalogException;
 
@@ -33,7 +32,7 @@ public interface Catalog {
 
     SapsUser getUserByEmail(String userEmail) throws CatalogException, UserNotFoundException;
 
-    void removeStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException;
+    void removeStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws CatalogException;
 
     List<SapsImage> getTasksByFilters(ImageTaskState state, String region, Date initDate, Date endDate, String inputGathering,
                                                   String inputPreprocessing, String algorithmExecution) throws CatalogException;
