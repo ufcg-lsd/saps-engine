@@ -15,8 +15,6 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 
 public interface Catalog {
 
-    int UNLIMITED = -1;
-
     SapsImage addTask(String taskId, String dataset, String region, Date date, int priority, String user,
                       String inputdownloadingPhaseTag, String digestInputdownloading, String preprocessingPhaseTag,
                       String digestPreprocessing, String processingPhaseTag, String digestProcessing) throws CatalogException;
