@@ -34,9 +34,7 @@ public interface Catalog {
 
     List<SapsImage> getAllTasks() throws CatalogException;
 
-    List<SapsImage> getTasksInProcessingStates() throws CatalogException;
-
-    List<SapsImage> getTasksByState(ImageTaskState state, int limit) throws CatalogException;
+    List<SapsImage> getTasksByState(int limit, ImageTaskState... tasksStates) throws CatalogException;
 
     SapsImage getTaskById(String taskId) throws CatalogException, TaskNotFoundException;
 
