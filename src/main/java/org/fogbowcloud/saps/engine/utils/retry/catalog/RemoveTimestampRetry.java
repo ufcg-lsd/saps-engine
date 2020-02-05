@@ -16,7 +16,7 @@ public class RemoveTimestampRetry implements CatalogRetry<Void> {
 
 	@Override
 	public Void run() throws SQLException {
-		imageStore.removeStateStamp(task.getTaskId(), task.getState(), task.getUpdateTime());
+		imageStore.removeStateChangeTime(task.getTaskId(), task.getState(), task.getUpdateTime());
 		return null;
 	}
 }

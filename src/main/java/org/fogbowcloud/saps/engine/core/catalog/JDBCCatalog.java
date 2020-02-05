@@ -473,7 +473,7 @@ public class JDBCCatalog implements Catalog {
             + " VALUES(?, ?, now())";
 
     @Override
-    public void addStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
+    public void addStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
         if (taskId == null || taskId.isEmpty() || state == null) {
             LOGGER.error("Task id or state was null.");
             throw new IllegalArgumentException("Task id or state was null.");
@@ -741,7 +741,7 @@ public class JDBCCatalog implements Catalog {
             + " = ? AND " + STATE_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
 
     @Override
-    public void removeStateStamp(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
+    public void removeStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws SQLException {
         LOGGER.info("Removing task " + taskId + " state " + state.getValue() + " with timestamp " + timestamp);
         if (taskId == null || taskId.isEmpty() || state == null) {
             LOGGER.error("Invalid task " + taskId + " or state " + state.getValue());

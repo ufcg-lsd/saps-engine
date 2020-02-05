@@ -18,7 +18,7 @@ public class AddTimestampRetry implements CatalogRetry<Void>{
 	@Override
 	public Void run() throws SQLException {
 		task.setUpdateTime(imageStore.getTaskById(task.getTaskId()).getUpdateTime());
-		imageStore.addStateStamp(task.getTaskId(), task.getState(), task.getUpdateTime());
+		imageStore.addStateChangeTime(task.getTaskId(), task.getState(), task.getUpdateTime());
 		return null;
 	}
 	
