@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
-import java.sql.SQLException;
 import java.util.Date;
 
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
@@ -42,7 +41,7 @@ public class AddNewTask implements CatalogRetry<SapsImage> {
 	}
 
 	@Override
-	public SapsImage run() throws SQLException {
+	public SapsImage run(){
 		return imageStore.addTask(taskId, dataset, region, date, priority, userEmail, inputdownloadingPhaseTag,
 				digestInputdownloading, preprocessingPhaseTag, digestPreprocessing, processingPhaseTag,
 				digestProcessing);

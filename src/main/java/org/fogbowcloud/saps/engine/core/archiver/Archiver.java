@@ -16,6 +16,7 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
+import org.fogbowcloud.saps.engine.core.catalog.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
@@ -34,14 +35,14 @@ public class Archiver {
 	public static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
 	public Archiver(Properties properties) throws SapsException, SQLException {
-		this(properties, new JDBCCatalog(properties), new ArchiverHelper());
+		this(properties, new JDBCCatalog(properties));
 
 		LOGGER.info("Creating Archiver");
 		LOGGER.info("Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP) + ":"
 				+ properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_PORT));
 	}
 
-	protected Archiver(Properties properties, Catalog catalog, ArchiverHelper archiverHelper) throws SapsException {
+	protected Archiver(Properties properties, Catalog catalog) throws SapsException {
 		if (!checkProperties(properties))
 			throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
 
@@ -144,7 +145,7 @@ public class Archiver {
 	 * tasks.
 	 */
 	private void garbageCollector() {
-		List<SapsImage> failedTasks = tasksInFailedState(Catalog.UNLIMITED);
+		List<SapsImage> failedTasks = tasksInFailedState(CatalogConstants.UNLIMITED);
 
 		LOGGER.info("Deleting data directory from " + failedTasks.size() + " failed tasks");
 
@@ -170,7 +171,7 @@ public class Archiver {
 	 * @throws Exception
 	 */
 	private void cleanUnfinishedArchivedData() throws Exception {
-		List<SapsImage> archivingTasks = tasksInArchivingState(Catalog.UNLIMITED);
+		List<SapsImage> archivingTasks = tasksInArchivingState(CatalogConstants.UNLIMITED);
 
 		LOGGER.info("Rollback in " + archivingTasks.size() + " tasks in archiving state");
 
@@ -219,7 +220,7 @@ public class Archiver {
 	 */
 	private void archiver() {
 		try {
-			List<SapsImage> tasksToArchive = tasksToArchive(Catalog.UNLIMITED);
+			List<SapsImage> tasksToArchive = tasksToArchive(CatalogConstants.UNLIMITED);
 
 			LOGGER.info("Trying to archive " + tasksToArchive.size() + " finished tasks: " + tasksToArchive);
 

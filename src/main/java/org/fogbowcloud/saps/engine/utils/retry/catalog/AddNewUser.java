@@ -1,7 +1,5 @@
 package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
-import java.sql.SQLException;
-
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 
 public class AddNewUser implements CatalogRetry<Void> {
@@ -26,7 +24,7 @@ public class AddNewUser implements CatalogRetry<Void> {
 	}
 
 	@Override
-	public Void run() throws SQLException {
+	public Void run(){
 		imageStore.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
 		return null;
 	}
