@@ -8,7 +8,7 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
-import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogConstants;
+import org.fogbowcloud.saps.engine.core.catalog.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;

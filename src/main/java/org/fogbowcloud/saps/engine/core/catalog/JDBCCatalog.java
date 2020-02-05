@@ -13,7 +13,6 @@ import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.UserNotFoundException;
