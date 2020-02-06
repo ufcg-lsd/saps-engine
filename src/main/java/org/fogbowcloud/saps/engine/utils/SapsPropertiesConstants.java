@@ -162,4 +162,6 @@ public class SapsPropertiesConstants {
 	 *  Arrebol batch jobs execution system configs
 	 */
 	public static final String ARREBOL_BASE_URL = "arrebol_base_url";
+
+	public static final String NFS_PERMANENT_STORAGE_PATH = "nfs_permanent_storage_path";
 }

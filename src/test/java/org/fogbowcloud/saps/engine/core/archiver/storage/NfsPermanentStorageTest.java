@@ -9,7 +9,6 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 public class NfsPermanentStorageTest {
@@ -17,16 +16,11 @@ public class NfsPermanentStorageTest {
     private static final String nfsStorageTestPath = "src/test/resources/nfs-storage-test";
     private static final String sapsExportTestPath = "src/test/resources/archiver-test";
 
-    @Before
-    public void setUp() throws Exception {
-        FileUtils.forceMkdir(new File(nfsStorageTestPath));
-    }
-
     @Test
     public void testArchive() {
         Properties properties = new Properties();
         properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, sapsExportTestPath);
-        properties.setProperty("nfs_storage_path", nfsStorageTestPath);
+        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, nfsStorageTestPath);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
             SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",

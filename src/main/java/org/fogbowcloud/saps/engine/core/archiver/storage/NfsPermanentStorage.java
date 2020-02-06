@@ -22,7 +22,7 @@ public class NfsPermanentStorage implements PermanentStorage {
 
 	public NfsPermanentStorage(Properties properties) {
 		this.sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-		this.nfsStoragePath = properties.getProperty("nfs_storage_path");
+		this.nfsStoragePath = properties.getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
 	}
 
 	@Override
