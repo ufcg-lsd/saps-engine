@@ -67,7 +67,7 @@ public class Archiver {
 		if (lType.equals("swift"))
 			return new SwiftPermanentStorage(properties);
 		if (lType.equals("nfs"))
-			return new NfsPermanentStorage();
+			return new NfsPermanentStorage(properties);
 
 		throw new SapsException("Failed to recognize type of permanent storage");
 	}
