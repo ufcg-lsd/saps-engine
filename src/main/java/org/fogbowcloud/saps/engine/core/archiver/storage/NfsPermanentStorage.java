@@ -35,15 +35,13 @@ public class NfsPermanentStorage implements PermanentStorage {
 		String preprocessingLocalDir = String.format(PREPROCESSING_DIR_PATTERN, sapsExports, taskId);
 		String processingLocalDir = String.format(PROCESSING_DIR_PATTERN, sapsExports, taskId);
 
+		String nfsTaskDirPath = createTaskDir(task.getTaskId());
 		try {
-			File nfsTaskDir = new File(String.format(TASK_DIR_PATTERN, nfsStoragePath, taskId));
-			FileUtils.forceMkdir(nfsTaskDir);
-			copyDirToDir(inputdownloadingLocalDir, nfsTaskDir.getAbsolutePath());
-			copyDirToDir(preprocessingLocalDir, nfsTaskDir.getAbsolutePath());
-			copyDirToDir(processingLocalDir, nfsTaskDir.getAbsolutePath());
+			copyDirToDir(inputdownloadingLocalDir, nfsTaskDirPath);
+			copyDirToDir(preprocessingLocalDir, nfsTaskDirPath);
+			copyDirToDir(processingLocalDir, nfsTaskDirPath);
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
-			return false;
+			throw new PermanentStorageException("Error while copying local directories to nfs task dir [" + nfsTaskDirPath + "]", e);
 		}
 		return true;
 	}
@@ -67,6 +65,21 @@ public class NfsPermanentStorage implements PermanentStorage {
 		// If the destination directory did exist, then this method merges the source with the destination, with the source taking precedence.
 		LOGGER.debug("Copying [" + src + "] into [" + dest + "]");
 		FileUtils.copyDirectoryToDirectory(srcDir, destDir);
+	}
+
+	private String createTaskDir(String taskId) {
+		File storage_dir = new File(nfsStoragePath);
+		if (!storage_dir.exists()) {
+			throw new PermanentStorageException("The nfs storage directory [" + nfsStoragePath + "] was not found");
+		}
+		File nfsTaskDir = new File(String.format(TASK_DIR_PATTERN, nfsStoragePath, taskId));
+		try {
+			FileUtils.forceMkdir(nfsTaskDir);
+		} catch (IOException e) {
+			throw new PermanentStorageException("Could not create task dir [" + nfsTaskDir.getAbsolutePath() + "] on nfs storage", e);
+		}
+		return nfsTaskDir.getAbsolutePath();
+
 	}
 
 }
