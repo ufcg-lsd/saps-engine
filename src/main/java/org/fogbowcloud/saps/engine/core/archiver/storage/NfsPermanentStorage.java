@@ -50,6 +50,9 @@ public class NfsPermanentStorage implements PermanentStorage {
 	public boolean delete(SapsImage task) throws PermanentStorageException {
 		String taskDirPath = String.format(TASK_DIR_PATTERN, nfsStoragePath, task.getTaskId());
 		File taskDir = new File(taskDirPath);
+		if (!taskDir.exists()) {
+			throw new PermanentStorageException("The task dir [" + taskDirPath + "] was not found on nfs storage directory [" + nfsStoragePath + "]");
+		}
 		try {
 			FileUtils.deleteDirectory(taskDir);
 		} catch (IOException e) {
