@@ -8,8 +8,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.manager.core.plugins.identity.openstack.KeystoneV3IdentityPlugin;
-import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.saps.engine.core.dispatcher.notifier.GoogleMail;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -240,17 +238,17 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
 			String objectStoreContainer, String swiftPrefixFolder, String taskFolder, SapsImage task)
 			throws URISyntaxException, IOException {
-		Token token = getKeystoneToken();
+		String accessId = getKeystoneToken();
 
 		HttpClient client = HttpClients.createDefault();
 		HttpGet httpget = prepObjectStoreRequest(objectStoreHost, objectStorePath, objectStoreContainer,
-				swiftPrefixFolder, taskFolder, task, token);
+				swiftPrefixFolder, taskFolder, task, accessId);
 		HttpResponse response = client.execute(httpget);
 
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
 	}
 
-	private Token getKeystoneToken() {
+	private String getKeystoneToken() {
 		KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin(properties);
 
 		Map<String, String> credentials = new HashMap<>();
@@ -259,17 +257,17 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		credentials.put(USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
 		credentials.put(PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
 
-		return keystone.createToken(credentials);
+		return keystone.createAccessId(credentials);
 	}
 
 	private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer,
-			String swiftPrefixFolder, String taskFolder, SapsImage task, Token token) throws URISyntaxException {
+			String swiftPrefixFolder, String taskFolder, SapsImage task, String accessId) throws URISyntaxException {
 		String uriParameter = swiftPrefixFolder + File.separator + task.getTaskId() + File.separator + taskFolder
 				+ File.separator;
 
 		LOGGER.info("Build URI: objectStorehost [" + objectStoreHost + "], objectStorePath [" + objectStorePath
 				+ "], objectStoreContainer [" + objectStoreContainer + "], parameter [" + uriParameter + "] token ["
-				+ token + "] and task [" + task + "]");
+				+ accessId + "] and task [" + task + "]");
 
 		URI uri = new URIBuilder().setScheme("https").setHost(objectStoreHost)
 				.setPath(objectStorePath + "/" + objectStoreContainer).addParameter("path", uriParameter).build();
@@ -277,7 +275,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		LOGGER.info("Getting list of files for task [" + task.getTaskId() + "] from " + uri);
 
 		HttpGet httpget = new HttpGet(uri);
-		httpget.addHeader("X-Auth-Token", token.getAccessId());
+		httpget.addHeader("X-Auth-Token", accessId);
 
 		return httpget;
 	}
