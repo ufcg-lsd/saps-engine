@@ -25,7 +25,7 @@ public class Archiver {
     private final Properties properties;
     private final Catalog catalog;
     private final SwiftAPIClient swiftAPIClient;
-    private ScheduledExecutorService sapsExecutor;
+    private final ScheduledExecutorService sapsExecutor;
     private final boolean executionMode;
 
     private static int MAX_ARCHIVE_TRIES = 1;
