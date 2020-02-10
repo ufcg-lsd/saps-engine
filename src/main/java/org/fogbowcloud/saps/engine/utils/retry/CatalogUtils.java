@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.utils.retry;
 
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -21,6 +20,7 @@ import org.fogbowcloud.saps.engine.utils.retry.catalog.GetUser;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.RemoveTimestampRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.UpdateTaskRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.AddTimestampRetry;
+import org.fogbowcloud.saps.engine.utils.retry.catalog.exceptions.CatalogRetryException;
 
 public class CatalogUtils {
 
@@ -45,7 +45,7 @@ public class CatalogUtils {
 		while (true) {
 			try {
 				return (T) function.run();
-			} catch (SQLException e) {
+			} catch (CatalogRetryException e) {
 				LOGGER.error("Failed while " + message);
 				e.printStackTrace();
 			}
@@ -77,7 +77,6 @@ public class CatalogUtils {
 	 *
 	 * @param imageStore catalog component
 	 * @param task       task to be updated
-	 * @param state      new task state
 	 * @param message    information message
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
