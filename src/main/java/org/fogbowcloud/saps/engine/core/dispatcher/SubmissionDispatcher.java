@@ -19,7 +19,7 @@ import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class SubmissionDispatcher {
 
-    private Catalog catalog;
+    private final Catalog catalog;
 
     private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcher.class);
 
@@ -31,22 +31,8 @@ public class SubmissionDispatcher {
         this.catalog = new JDBCCatalog(properties);
     }
 
-    /**
-     * This function gets image store
-     *
-     * @return image store
-     */
     public Catalog getCatalog() {
         return catalog;
-    }
-
-    /**
-     * This function sets image store
-     *
-     * @param catalog new image store
-     */
-    public void setCatalog(Catalog catalog) {
-        this.catalog = catalog;
     }
 
     /**
