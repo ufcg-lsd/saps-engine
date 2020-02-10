@@ -792,8 +792,8 @@ public class JDBCCatalog implements Catalog {
             + " = ? AND " + INPUTDOWNLOADING_TAG + " = ? AND " + PROCESSING_TAG + " = ?";
 
     @Override
-    public List<SapsImage> getTasksByFilters(ImageTaskState state, String region, Date initDate, Date endDate, String inputGathering,
-                                                         String inputPreprocessing, String algorithmExecution) throws CatalogException {
+    public List<SapsImage> filterTasks(ImageTaskState state, String region, Date initDate, Date endDate, String inputGathering,
+                                       String preprocessingTag, String processingTag) throws CatalogException {
         PreparedStatement queryStatement = null;
         Connection connection = null;
 
@@ -805,9 +805,9 @@ public class JDBCCatalog implements Catalog {
             queryStatement.setString(2, region);
             queryStatement.setDate(3, javaDateToSqlDate(initDate));
             queryStatement.setDate(4, javaDateToSqlDate(endDate));
-            queryStatement.setString(5, inputPreprocessing);
+            queryStatement.setString(5, preprocessingTag);
             queryStatement.setString(6, inputGathering);
-            queryStatement.setString(7, algorithmExecution);
+            queryStatement.setString(7, processingTag);
             queryStatement.setQueryTimeout(300);
 
             ResultSet result = queryStatement.executeQuery();

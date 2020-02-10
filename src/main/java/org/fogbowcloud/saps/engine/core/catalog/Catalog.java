@@ -43,6 +43,6 @@ public interface Catalog {
 
     void removeStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws CatalogException;
 
-    List<SapsImage> getTasksByFilters(ImageTaskState state, String region, Date initDate, Date endDate, String inputGathering,
-                                                  String inputPreprocessing, String algorithmExecution) throws CatalogException;
+    List<SapsImage> filterTasks(ImageTaskState state, String region, Date initDate, Date endDate, String inputdownloadingTag,
+                                String preprocessingTag, String processingTag) throws CatalogException;
 }
