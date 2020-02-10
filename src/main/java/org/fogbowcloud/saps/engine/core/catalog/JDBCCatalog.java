@@ -361,7 +361,7 @@ public class JDBCCatalog implements Catalog {
     private static final String INSERT_NEW_USER_SQL = "INSERT INTO " + USERS_TABLE_NAME + " VALUES(?, ?, ?, ?, ?, ?)";
 
     @Override
-    public void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
+    public void addUser(String userEmail, String userName, String userPass, boolean isEnable, boolean userNotify,
                         boolean adminRole) throws CatalogException {
 
         LOGGER.info("Adding user " + userName + " into DB");
@@ -379,7 +379,7 @@ public class JDBCCatalog implements Catalog {
             insertStatement.setString(1, userEmail);
             insertStatement.setString(2, userName);
             insertStatement.setString(3, userPass);
-            insertStatement.setBoolean(4, userState);
+            insertStatement.setBoolean(4, isEnable);
             insertStatement.setBoolean(5, userNotify);
             insertStatement.setBoolean(6, adminRole);
             insertStatement.setQueryTimeout(300);

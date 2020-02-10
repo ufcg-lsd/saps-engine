@@ -62,7 +62,7 @@ public interface Catalog {
 
     void addStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws CatalogException;
 
-    void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
+    void addUser(String userEmail, String userName, String userPass, boolean isEnable, boolean userNotify,
                  boolean adminRole) throws CatalogException;
 
     void updateImageTask(SapsImage imageTask) throws CatalogException;
