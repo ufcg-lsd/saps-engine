@@ -62,6 +62,20 @@ public interface Catalog {
 
     void addStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws CatalogException;
 
+    /**
+     * This function is responsible for passing on the information of a new SAPS user to the communication approach
+     * with the Catalog that he will try until he succeeds. The email (primary key of the SAPS user scheme), name
+     * and password are defined by the user in which the email and password will be used for authentication on the
+     * SAPS platform.
+     *
+     * @param userEmail user email used for authentication on the SAPS platform
+     * @param userName user name on the SAPS platform
+     * @param userPass user password used for authentication on the SAPS platform
+     * @param isEnable informs if the user is able to authenticate on the SAPS platform
+     * @param userNotify informs the user about their tasks by email
+     * @param adminRole informs if the user is an administrator of the SAPS platform
+     * @throws CatalogException if any unexpected behavior occurs.
+     */
     void addUser(String userEmail, String userName, String userPass, boolean isEnable, boolean userNotify,
                  boolean adminRole) throws CatalogException;
 
