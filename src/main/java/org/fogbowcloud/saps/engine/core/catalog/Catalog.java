@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.core.catalog;
 
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
