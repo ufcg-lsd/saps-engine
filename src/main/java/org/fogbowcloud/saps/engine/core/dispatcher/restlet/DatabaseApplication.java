@@ -277,14 +277,6 @@ public class DatabaseApplication extends Application {
 		submissionDispatcher.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
 	}
 
-	public void addUserNotify(String submissionId, String taskId, String userEmail) throws SQLException {
-		submissionDispatcher.addTaskNotificationIntoDB(submissionId, taskId, userEmail);
-	}
-
-	public boolean isUserNotifiable(String userEmail) throws SQLException {
-		return submissionDispatcher.isUserNotifiable(userEmail);
-	}
-
 	/**
 	 * This function gets user information in Catalog.
 	 * 

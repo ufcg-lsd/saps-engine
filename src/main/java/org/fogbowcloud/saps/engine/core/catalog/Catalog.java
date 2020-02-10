@@ -7,7 +7,6 @@ import java.util.List;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.UserNotFoundException;
-import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -23,13 +22,7 @@ public interface Catalog {
     void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
                  boolean adminRole) throws CatalogException;
 
-    void addUserNotification(String submissionId, String taskId, String userEmail) throws CatalogException;
-
-    List<Ward> getUsersToNotify() throws CatalogException;
-
     void updateImageTask(SapsImage imageTask) throws CatalogException;
-
-    boolean isUserNotifiable(String userEmail) throws CatalogException;
 
     List<SapsImage> getAllTasks() throws CatalogException;
 
@@ -38,8 +31,6 @@ public interface Catalog {
     SapsImage getTaskById(String taskId) throws CatalogException, TaskNotFoundException;
 
     SapsUser getUserByEmail(String userEmail) throws CatalogException, UserNotFoundException;
-
-    void removeNotification(String submissionId, String taskId, String userEmail) throws CatalogException;
 
     void removeStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws CatalogException;
 

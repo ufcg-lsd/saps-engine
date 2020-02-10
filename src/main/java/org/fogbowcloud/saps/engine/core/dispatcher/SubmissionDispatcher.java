@@ -9,8 +9,6 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.catalog.CatalogConstants;
-import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
-import org.fogbowcloud.saps.engine.core.dispatcher.notifier.Ward;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -104,35 +102,6 @@ public class SubmissionDispatcher {
 	 */
 	public SapsUser getUser(String userEmail) {
 		return getUserInCatalog(userEmail, "get user [" + userEmail + "] information");
-	}
-
-	public void addTaskNotificationIntoDB(String submissionId, String taskId, String userEmail) throws SQLException {
-		try {
-			imageStore.addUserNotification(submissionId, taskId, userEmail);
-		} catch (CatalogException e) {
-			LOGGER.error("Error while adding task " + taskId + " notification for user " + userEmail + " in Catalogue",
-					e);
-		}
-	}
-
-	public void removeUserNotification(String submissionId, String taskId, String userEmail) throws SQLException {
-		try {
-			imageStore.removeNotification(submissionId, taskId, userEmail);
-		} catch (CatalogException e) {
-			LOGGER.error(
-					"Error while removing task " + taskId + " notification for user " + userEmail + " from Catalogue",
-					e);
-		}
-	}
-
-	public boolean isUserNotifiable(String userEmail) throws SQLException {
-		try {
-			return imageStore.isUserNotifiable(userEmail);
-		} catch (CatalogException e) {
-			LOGGER.error("Error while verifying user notify", e);
-		}
-
-		return false;
 	}
 
 	/**
@@ -391,12 +360,6 @@ public class SubmissionDispatcher {
 	 */
 	public List<SapsImage> getAllTasks() {
 		return getAllTasksInCatalog();
-	}
-
-	// TODO
-	public List<Ward> getUsersToNotify() throws SQLException {
-		List<Ward> wards = imageStore.getUsersToNotify();
-		return wards;
 	}
 
 	/**
