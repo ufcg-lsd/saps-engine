@@ -71,10 +71,6 @@
 			<name>Restlet repository</name>
 			<url>https://maven.restlet.com</url>
 		</repository>
-		<repository>
-			<id>maven-fogbow</id>
-			<url>https://github.com/fogbow/mvn-repo/raw/master/releases/</url>
-		</repository>
 		<!-- <repository> <id>mvn.prov.toolbox.snapshots</id> <name>maven snapshot 
 			repository for PROV toolbox</name> <url>http://openprovenance.org/java/maven-snapshots/</url> 
 			</repository> -->
@@ -118,34 +114,6 @@
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.fogbowcloud</groupId>
-			<artifactId>manager</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.opennebula</groupId>
-					<artifactId>client</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.restlet.jee</groupId>
-					<artifactId>org.restlet</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.restlet.jee</groupId>
-					<artifactId>org.restlet.ext.slf4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.restlet.jee</groupId>
-					<artifactId>org.restlet.ext.jsslutils</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.restlet.jee</groupId>
-					<artifactId>org.restlet.ext.jetty</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -259,5 +227,12 @@
 			<artifactId>json</artifactId>
 			<version>20090211</version>
 		</dependency>
+
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>javax.mail-api</artifactId>
+			<version>1.6.0</version>
+		</dependency>
+
 	</dependencies>
 </project>
