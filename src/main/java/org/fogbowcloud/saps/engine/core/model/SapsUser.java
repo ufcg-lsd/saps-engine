@@ -31,7 +31,7 @@ public class SapsUser {
 		return userPassword;
 	}
 	
-	public boolean getEnable() {
+	public boolean isEnable() {
 		return isEnable;
 	}
 
@@ -63,7 +63,7 @@ public class SapsUser {
 			return getUserEmail().equals(other.getUserEmail())
 					&& getUserName().equals(other.getUserName())
 					&& getUserPassword().equals(other.getUserPassword())
-					&& getEnable() == other.getEnable()
+					&& isEnable() == other.isEnable()
 					&& getUserNotify() == other.getUserNotify()
 					&& getAdminRole() == other.getAdminRole();
 		}

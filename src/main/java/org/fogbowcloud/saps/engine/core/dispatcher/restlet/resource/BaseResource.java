@@ -33,7 +33,7 @@ public class BaseResource extends ServerResource {
 
 		SapsUser user = application.getUser(userEmail);
 		String md5Pass = DigestUtils.md5Hex(userPass);
-		if (user != null && user.getUserPassword().equals(md5Pass) && user.getEnable()) {
+		if (user != null && user.getUserPassword().equals(md5Pass) && user.isEnable()) {
 			if (mustBeAdmin && !user.getAdminRole()) {
 				// the user must be an admin and the logged user is not
 				LOGGER.error("Admin level account needed for this action.");
