@@ -10,17 +10,15 @@ public class GetTasksRetry implements CatalogRetry<List<SapsImage>>{
 
 	private Catalog imageStore;
 	private ImageTaskState[] states;
-	private Integer limit;
 	
-	public GetTasksRetry(Catalog imageStore, ImageTaskState state, Integer limit) {
+	public GetTasksRetry(Catalog imageStore, ImageTaskState state) {
 		this.imageStore = imageStore;
 		this.states = new ImageTaskState[]{state};
-		this.limit = limit;
 	}
 	
 	@Override
 	public List<SapsImage> run() {
-		return imageStore.getTasksByState(limit, states);
+		return imageStore.getTasksByState(states);
 	}
 
 }

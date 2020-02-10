@@ -8,7 +8,6 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
-import org.fogbowcloud.saps.engine.core.catalog.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -19,8 +18,6 @@ import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class SubmissionDispatcher {
-    public static final int DEFAULT_PRIORITY = 0;
-    public static final String DEFAULT_USER = "admin";
 
     private Catalog catalog;
 
@@ -387,12 +384,11 @@ public class SubmissionDispatcher {
      * This function gets tasks in specific state in Catalog.
      *
      * @param state   specific state for get tasks
-     * @param limit   limit value of tasks to take
      * @param message information message
      * @return tasks in specific state
      */
-    private List<SapsImage> getTasksInCatalog(ImageTaskState state, int limit, String message) {
-        return CatalogUtils.getTasks(catalog, state, limit, message);
+    private List<SapsImage> getTasksInCatalog(ImageTaskState state, String message) {
+        return CatalogUtils.getTasks(catalog, state, message);
     }
 
     /**
@@ -402,7 +398,7 @@ public class SubmissionDispatcher {
      * @return tasks in specific state
      */
     public List<SapsImage> getTasksInState(ImageTaskState state) throws SQLException {
-        return getTasksInCatalog(state, CatalogConstants.UNLIMITED, "gets tasks with " + state.getValue() + " state");
+        return getTasksInCatalog(state, "gets tasks with " + state.getValue() + " state");
     }
 
     /**

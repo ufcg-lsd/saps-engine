@@ -64,12 +64,11 @@ public class CatalogUtils {
 	 * 
 	 * @param imageStore catalog component
 	 * @param state      specific state for get tasks
-	 * @param limit      limit value of tasks to take
 	 * @param message    information message
 	 * @return tasks in specific state
 	 */
-	public static List<SapsImage> getTasks(Catalog imageStore, ImageTaskState state, int limit, String message) {
-		return retry(new GetTasksRetry(imageStore, state, limit), CATALOG_DEFAULT_SLEEP_SECONDS, message);
+	public static List<SapsImage> getTasks(Catalog imageStore, ImageTaskState state, String message) {
+		return retry(new GetTasksRetry(imageStore, state), CATALOG_DEFAULT_SLEEP_SECONDS, message);
 	}
 
 	/**

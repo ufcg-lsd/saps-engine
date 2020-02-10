@@ -485,11 +485,8 @@ public class JDBCCatalog implements Catalog {
     private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE ? ORDER BY "
             + PRIORITY_COL + " ASC";
 
-    private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE ? ORDER BY "
-            + PRIORITY_COL + " ASC LIMIT ?";
-
     @Override
-    public List<SapsImage> getTasksByState(int limit, ImageTaskState... tasksStates) throws CatalogException {
+    public List<SapsImage> getTasksByState(ImageTaskState... tasksStates) throws CatalogException {
         if (tasksStates == null) {
             LOGGER.error("A state must be given");
             throw new IllegalArgumentException("Can't recover tasks. State was null.");
@@ -499,14 +496,8 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            if (limit == CatalogConstants.UNLIMITED) {
-                selectStatement = connection.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
-                selectStatement.setQueryTimeout(300);
-            } else {
-                selectStatement = connection.prepareStatement(SELECT_LIMITED_IMAGES_IN_STATE_SQL);
-                selectStatement.setInt(2, limit);
-                selectStatement.setQueryTimeout(300);
-            }
+            selectStatement = connection.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
+            selectStatement.setQueryTimeout(300);
 
             String whereCondition = "";
             for(int i = 0; i < tasksStates.length; i++){

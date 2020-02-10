@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
-import org.fogbowcloud.saps.engine.core.catalog.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
@@ -176,7 +175,7 @@ public class Archiver {
      * tasks.
      */
     private void garbageCollector() {
-        List<SapsImage> failedTasks = tasksInFailedState(CatalogConstants.UNLIMITED);
+        List<SapsImage> failedTasks = tasksInFailedState();
 
         LOGGER.info("Deleting data directory from " + failedTasks.size() + " failed tasks");
 
@@ -188,11 +187,10 @@ public class Archiver {
     /**
      * This function gets tasks in failed state in Catalog.
      *
-     * @param limit limit value of tasks to take
      * @return tasks in specific state
      */
-    private List<SapsImage> tasksInFailedState(int limit) {
-        return CatalogUtils.getTasks(catalog, ImageTaskState.FAILED, limit,
+    private List<SapsImage> tasksInFailedState() {
+        return CatalogUtils.getTasks(catalog, ImageTaskState.FAILED,
                 "gets tasks with " + ImageTaskState.FAILED.getValue() + " state");
     }
 
@@ -202,7 +200,7 @@ public class Archiver {
      * @throws Exception
      */
     private void cleanUnfinishedArchivedData() throws Exception {
-        List<SapsImage> archivingTasks = tasksInArchivingState(CatalogConstants.UNLIMITED);
+        List<SapsImage> archivingTasks = tasksInArchivingState();
 
         LOGGER.info("Rollback in " + archivingTasks.size() + " tasks in archiving state");
 
@@ -216,11 +214,10 @@ public class Archiver {
     /**
      * This function gets tasks in finished state in Catalog.
      *
-     * @param limit limit value of tasks to take
      * @return tasks in specific state
      */
-    private List<SapsImage> tasksInArchivingState(int limit) {
-        return CatalogUtils.getTasks(catalog, ImageTaskState.ARCHIVING, limit,
+    private List<SapsImage> tasksInArchivingState() {
+        return CatalogUtils.getTasks(catalog, ImageTaskState.ARCHIVING,
                 "gets tasks with " + ImageTaskState.ARCHIVING.getValue() + " state");
     }
 
@@ -277,7 +274,7 @@ public class Archiver {
      */
     private void archiver() {
         try {
-            List<SapsImage> tasksToArchive = tasksToArchive(CatalogConstants.UNLIMITED);
+            List<SapsImage> tasksToArchive = tasksToArchive();
 
             LOGGER.info("Trying to archive " + tasksToArchive.size() + " finished tasks: " + tasksToArchive);
 
@@ -295,11 +292,10 @@ public class Archiver {
     /**
      * This function gets tasks in finished state in Catalog.
      *
-     * @param limit limit value of tasks to take
      * @return tasks in specific state
      */
-    private List<SapsImage> tasksToArchive(int limit) {
-        return CatalogUtils.getTasks(catalog, ImageTaskState.FINISHED, limit,
+    private List<SapsImage> tasksToArchive() {
+        return CatalogUtils.getTasks(catalog, ImageTaskState.FINISHED,
                 "gets tasks with " + ImageTaskState.FINISHED.getValue() + " state");
     }
 

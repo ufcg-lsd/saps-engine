@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
-import org.fogbowcloud.saps.engine.core.catalog.CatalogConstants;
 import org.fogbowcloud.saps.engine.core.dto.*;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
@@ -286,7 +285,7 @@ public class Scheduler {
 
         LOGGER.info("Trying select up to " + count + " tasks in state " + state);
 
-        List<SapsImage> tasks = getTasksInCatalog(state, CatalogConstants.UNLIMITED,
+        List<SapsImage> tasks = getTasksInCatalog(state,
                 "gets tasks with " + state.getValue() + " state");
 
         Map<String, List<SapsImage>> tasksByUsers = mapUsers2Tasks(tasks);
@@ -656,12 +655,11 @@ public class Scheduler {
      * This function gets tasks in specific state in Catalog.
      *
      * @param state   specific state for get tasks
-     * @param limit   limit value of tasks to take
      * @param message information message
      * @return tasks in specific state
      */
-    private List<SapsImage> getTasksInCatalog(ImageTaskState state, int limit, String message) {
-        return CatalogUtils.getTasks(catalog, state, limit, message);
+    private List<SapsImage> getTasksInCatalog(ImageTaskState state, String message) {
+        return CatalogUtils.getTasks(catalog, state, message);
     }
 
     /**
