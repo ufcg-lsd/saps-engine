@@ -6,9 +6,7 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.utils.RegionUtil;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
-import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
-import org.fogbowcloud.saps.engine.core.catalog.CatalogConstants;
-import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
+import org.fogbowcloud.saps.engine.core.catalog.jdbc.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -20,347 +18,233 @@ import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class SubmissionDispatcher {
 
-	private Catalog catalog;
+    private final Catalog catalog;
 
-	private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcher.class);
+    private static final Logger LOGGER = Logger.getLogger(SubmissionDispatcher.class);
 
-	public SubmissionDispatcher(Properties properties) throws SQLException {
-		this.catalog  = new JDBCCatalog(properties);
-	}
+    public SubmissionDispatcher(Catalog catalog) {
+        this.catalog = catalog;
+    }
 
-	/**
-	 * This function is responsible for passing on the information of a new SAPS
-	 * user to the communication approach with the Catalog that he will try until he
-	 * succeeds. The email (primary key of the SAPS user scheme), name and password
-	 * are defined by the user in which the email and password will be used for
-	 * authentication on the SAPS platform. There are three other pieces of
-	 * information that are:<br>
-	 * - notify: informs the user about their tasks by email.<br>
-	 * - state: informs if the user is able to authenticate on the SAPS
-	 * platform.<br>
-	 * - administrative role: informs if the user is an administrator of the SAPS
-	 * platform.<br>
-	 * These three pieces of information are booleans and are controlled by an
-	 * administrator. By default, state and administrative function are false.
-	 * 
-	 */
-	public void addUserInCatalog(String email, String name, String password, boolean state, boolean notify,
-			boolean adminRole) {
-		CatalogUtils.addNewUser(catalog, email, name, password, state, notify, adminRole,
-				"add new user [" + email + "]");
-	}
+    public SubmissionDispatcher(Properties properties) throws SQLException {
+        this.catalog = new JDBCCatalog(properties);
+    }
 
-	/**
-	 * 
-	 * This function calls a function that uses the approach of communicating with
-	 * the Catalog trying to even try to retrieve the user's information based on
-	 * the email passed by parameter (which is the primary key of the SAPS user
-	 * scheme, that is, there are not two users with same email). The return of this
-	 * function is an object that contains the information retrieved from the User.
-	 */
-	public SapsUser getUserInCatalog(String email) {
-		return CatalogUtils.getUser(catalog, email, "get user [" + email + "] information");
-	}
+    /**
+     * It adds new User in {@code Catalog}.
+     *
+     * @param email     user email used for authentication on the SAPS platform
+     * @param name      user name on the SAPS platform
+     * @param password  user password used for authentication on the SAPS platform
+     * @param notify    informs the user about their tasks by email.<br>
+     * @param state     informs if the user is able to authenticate on the SAPS platform (it for default is false)
+     * @param adminRole administrative role: informs if the user is an administrator of the SAPS platform (it for default is false)
+     */
+    public void addUser(String email, String name, String password, boolean state, boolean notify,
+                        boolean adminRole) {
+        CatalogUtils.addNewUser(catalog, email, name, password, state, notify, adminRole,
+                "add new user [" + email + "]");
+    }
 
-	/**
-	 * This function sends information from a new SAPS task to the communication
-	 * mechanism with the Catalog in order to insert it into the schema, causing the
-	 * platform to receive a new workload. This information is:<br>
-	 * 
-	 * - TaskId: a unique identifier for the SAPS task created automatically using a
-	 * UUID class (immutable universally unique identifier, represents a 128-bit
-	 * value).<br>
-	 *
-	 * - Dataset: it is the type of data set of a certain satellite that this task
-	 * belongs to, being an enum that is used by the steps of the task processing
-	 * for the correct execution of the algorithms. Their values ​​can be:<br>
-	 * 
-	 * -- landsat_5: indicates that the task belongs to the LANDSAT 5 satellite
-	 * dataset (https://www.usgs.gov/land-resources/nli/landsat/landsat-5).<br>
-	 * 
-	 * -- landsat_7: indicates that the task belongs to the LANDSAT 7 satellite
-	 * dataset (https://www.usgs.gov/land-resources/nli/landsat/landsat-7).<br>
-	 * 
-	 * -- landsat_8: indicates that the task belongs to the LANDSAT 8 satellite data
-	 * set (https://www.usgs.gov/land-resources/nli/landsat/landsat-8).<br>
-	 * 
-	 * - Region: is the location of the satellite data following the global notation
-	 * system for Landsat data (WRS:
-	 * https://landsat.gsfc.nasa.gov/the-worldwide-reference-system), following the
-	 * PPPRRR form, where P is the path number (with 3 characters) and R is the row
-	 * number (also with 3 characters).<br>
-	 * 
-	 * - date: is the date on which the satellite data was collected following the
-	 * Gregorian calendar. Its value is a string in the format YYYY/MM/DD, where Y
-	 * is the year with 4 characters, M is the month with 2 characters and D is the
-	 * day with 2 characters.<br>
-	 * 
-	 * - priority: it is an integer in the range 0 to 31 that indicates how priority
-	 * the task processing is.<br>
-	 * 
-	 * - userEmail: it is the email of the task owner (this information is obtained
-	 * automatically by the authenticated user on the platform).<br>
-	 * 
-	 * - inputdownloadingPhaseTag: is the version of the algorithm that will be used
-	 * in the task's inputdownloading step.<br>
-	 * 
-	 * - preprocessingPhaseTag: is the version of the algorithm that will be used in
-	 * the task's preprocessing step.<br>
-	 * 
-	 * - processingPhaseTag: is the version of the algorithm that will be used in
-	 * the task's processing step.<br>
-	 * 
-	 * - digestInputdownloading: is the immutable identifier (digest) of the Docker
-	 * image of the version defined in the inputdownloading step
-	 * (inputdownloadingPhaseTag).<br>
-	 * 
-	 * - digestPreprocessing: is the immutable identifier (digest) of the Docker
-	 * image of the version defined in the preprocessing step
-	 * (preprocessingPhaseTag).<br>
-	 * 
-	 * - digestProcessing: is the immutable identifier (digest) of the Docker image
-	 * of the version defined in the processing step (processingPhaseTag).<br>
-	 * 
-	 * The return of this function is an object with the SAPS task information.<br>
-	 * 
-	 * Note 1: The digest is obtained automatically when the task is submitted to
-	 * SAPS.<br>
-	 * 
-	 * Note 2: This information belongs to different classes of subjects on the SAP
-	 * platform, we have information on:<br>
-	 * 
-	 * - satellite data: dataset, region and date.<br>
-	 * 
-	 * - SAPS schema: taskID, priority, userEmail.<br>
-	 * 
-	 * - versions of the processing step algorithms: inputdownloadingPhaseTag,
-	 * preprocessingPhaseTag and processingPhaseTag.<br>
-	 * 
-	 * - Docker: digestInputdownloading, digestPreprocessing and
-	 * digestProcessing.<br>
-	 */
-	private SapsImage addNewTaskInCatalog(String taskId, String dataset, String region, Date date, int priority,
-			String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
-			String preprocessingPhaseTag, String digestPreprocessing, String processingPhaseTag,
-			String digestProcessing) {
-		return CatalogUtils.addNewTask(catalog, taskId, dataset, region, date, priority, userEmail,
-				inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
-				processingPhaseTag, digestProcessing, "add new task [" + taskId + "]");
-	}
+    /**
+     * It gets {@code SapsUser} in {@code Catalog}.
+     *
+     * @return an {@code SapsUser} with equal email
+     */
+    public SapsUser getUser(String email) {
+        return CatalogUtils.getUser(catalog, email, "get user [" + email + "] information");
+    }
 
-	/**
-	 * This function is responsible for creating a new timestamp of the task in the
-	 * Catalog, and this communication action is carried out using the retry
-	 * approach. Its general use is given right after a change in the status of a
-	 * task (e.g. a task has changed state and you want to record that change and
-	 * its timestamp for some analysis or processing log).<br>
-	 * 
-	 * 
-	 * Note: The message parameter is a string that will be displayed in the SAPS
-	 * log before attempting to communicate with the Catalog using the retry
-	 * approach.
-	 */
-	private void addTimestampTaskInCatalog(SapsImage task, String message) {
-		CatalogUtils.addTimestampTask(catalog, task, message);
-	}
+    /**
+     * It adds a new Task in {@code Catalog}.<br>
+     *
+     * @param taskId                   an unique identifier for the SAPS task.
+     * @param dataset                  it is the type of data set associated with the new task to be created. Their values ​​can be:<br>
+     *                                 -- landsat_5: indicates that the task is related to the LANDSAT 5 satellite
+     *                                 (https://www.usgs.gov/land-resources/nli/landsat/landsat-5)<br>
+     *                                 -- landsat_7: indicates that the task is related to the LANDSAT 7 satellite
+     *                                 (https://www.usgs.gov/land-resources/nli/landsat/landsat-7)<br>
+     *                                 -- landsat_8: indicates that the task is related with the LANDSAT 8 satellite data set
+     *                                 (https://www.usgs.gov/land-resources/nli/landsat/landsat-8)<br>
+     * @param region                   is the location of the satellite data following the global notation system for Landsat data (WRS:
+     *                                 https://landsat.gsfc.nasa.gov/the-worldwide-reference-system), following the PPPRRR form, where PPP
+     *                                 is a length-3 to the path number and RRR is a length-3 to the row number.
+     * @param date                     is the date on which the satellite data was collected following the YYYY/MM/DD format.
+     * @param priority                 is an integer in the [0, 31] range that indicates the priority of task processing.
+     * @param userEmail                it is the email of the user that has submitted the task
+     * @param inputdownloadingPhaseTag is the version of the algorithm that will be used in the task's inputdownloading step
+     * @param digestInputdownloading   is the version of the algorithm that will be used in the task's preprocessing step
+     * @param preprocessingPhaseTag    is the version of the algorithm that will be used in the task's processing step
+     * @param digestPreprocessing      is the immutable identifier (digest) of the Docker image of the version defined
+     *                                 in the inputdownloading step (inputdownloadingPhaseTag)
+     * @param processingPhaseTag       is the immutable identifier (digest) of the Docker image of the version defined
+     *                                 in the preprocessing step (preprocessingPhaseTag)
+     * @param digestProcessing         is the immutable identifier (digest) of the Docker image of the version defined
+     *                                 in the processing step (processingPhaseTag)
+     * @return the new {@code SapsImage} created and added to this {@code Catalog}.
+     */
+    private SapsImage addTask(String taskId, String dataset, String region, Date date, int priority,
+                              String userEmail, String inputdownloadingPhaseTag, String digestInputdownloading,
+                              String preprocessingPhaseTag, String digestPreprocessing, String processingPhaseTag,
+                              String digestProcessing) {
+        return CatalogUtils.addNewTask(catalog, taskId, dataset, region, date, priority, userEmail,
+                inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag, digestPreprocessing,
+                processingPhaseTag, digestProcessing, "add new task [" + taskId + "]");
+    }
 
-	/**
-	 * This function is responsible for receiving information regarding a new
-	 * processing submission made on the SAPS platform and it is desired to extract
-	 * the N tasks (from this information) and insert them in the Catalog generating
-	 * workload. Are they:<br>
-	 * 
-	 * - lowerLeftLatitude: is a geographic coordinate plus the lower left defined
-	 * in the sphere which is the angle between the plane of the equator and the
-	 * normal to the reference surface indicating the vertex of the polygon formed
-	 * together with the information lowerLeftLongitude, upperRightLatitude and
-	 * upperRightLongitude.<br>
-	 * 
-	 * - lowerLeftLongitude: is a geographic coordinate plus the lower left defined
-	 * in the sphere measured in degrees, from 0 to 180 towards east or west, from
-	 * the Greenwich Meridian indicating the vertex of the polygon formed together
-	 * with the information lowerLeftLatitude, upperRightLatitude and
-	 * upperRightLongitude.<br>
-	 * 
-	 * - upperRightLatitude: is a geographic coordinate plus the upper right defined
-	 * in the sphere which is the angle between the plane of the equator and the
-	 * normal to the reference surface indicating the vertex of the polygon formed
-	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
-	 * upperRightLongitude.<br>
-	 * 
-	 * - upperRightLongitude: is a geographic coordinate plus the upper right
-	 * defined in the sphere measured in degrees, from 0 to 180 towards east or
-	 * west, from the Greenwich Meridian indicating the vertex of the polygon formed
-	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
-	 * upperRightLatitude.<br>
-	 * 
-	 * - initDate: It is the starting date (according to the Gregorian calendar) of
-	 * the interval in which the satellite data collection date must belong. If it
-	 * belongs, a SAPS task will be created to process the satellite data.<br>
-	 * 
-	 * - endDate: It is the end date (according to the Gregorian calendar) of the
-	 * interval in which the satellite data collection date must belong. If this
-	 * belongs, a SAPS task will be created to process the satellite data.<br>
-	 * 
-	 * - inputdownloadingPhaseTag: is the version of the algorithm that will be used
-	 * in the task's inputdownloading step.<br>
-	 * 
-	 * - preprocessingPhaseTag: is the version of the algorithm that will be used in
-	 * the task's preprocessing step.<br>
-	 * 
-	 * - processingPhaseTag: is the version of the algorithm that will be used in
-	 * the task's processing step.<br>
-	 * 
-	 * - priority: it is an integer in the range 0 to 31 that indicates how priority
-	 * the task processing is.<br>
-	 * 
-	 * - userEmail: it is the email of the task owner (this information is obtained
-	 * automatically by the authenticated user on the platform).<br>
-	 * 
-	 * Note: This function also seeks other information to form the SAPS task such
-	 * as capturing the digests of the SAPS processing steps and extracting the
-	 * satellite data dataset.
-	 */
-	public void addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
-			String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
-			String preprocessingPhaseTag, String processingPhaseTag, int priority, String userEmail) {
+    private void addTimestampTaskInCatalog(SapsImage task, String message) {
+        CatalogUtils.addTimestampTask(catalog, task, message);
+    }
 
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(initDate);
-		GregorianCalendar endCal = new GregorianCalendar();
-		endCal.setTime(endDate);
-		endCal.add(Calendar.DAY_OF_YEAR, 1);
+    /**
+     * It gets information about a new processing submission and extract N {@code SapsImage} for adds them in {@code Catalog}.
+     *
+     * @param lowerLeftLatitude        is a geographic coordinate plus the lower left defined
+     *                                 in the sphere which is the angle between the plane of the equator and the
+     *                                 normal to the reference surface indicating the vertex of the polygon formed
+     *                                 together with the information lowerLeftLongitude, upperRightLatitude and
+     *                                 upperRightLongitude.
+     * @param lowerLeftLongitude       is a geographic coordinate plus the lower left defined
+     *                                 in the sphere measured in degrees, from 0 to 180 towards east or west, from
+     *                                 the Greenwich Meridian indicating the vertex of the polygon formed together
+     *                                 with the information lowerLeftLatitude, upperRightLatitude and
+     *                                 upperRightLongitude.
+     * @param upperRightLatitude       is a geographic coordinate plus the upper right defined
+     *                                 in the sphere which is the angle between the plane of the equator and the
+     *                                 normal to the reference surface indicating the vertex of the polygon formed
+     *                                 together with the information lowerLeftLatitude, lowerLeftLongitude and
+     *                                 upperRightLongitude.
+     * @param upperRightLongitude      is a geographic coordinate plus the upper right
+     *                                 defined in the sphere measured in degrees, from 0 to 180 towards east or
+     *                                 west, from the Greenwich Meridian indicating the vertex of the polygon formed
+     *                                 together with the information lowerLeftLatitude, lowerLeftLongitude and
+     *                                 upperRightLatitude.
+     * @param initDate                 it is the starting date (according to the Gregorian calendar) of
+     *                                 the interval in which the satellite data collection date must belong. If it
+     *                                 belongs, a SAPS task will be created to process the satellite data.
+     * @param endDate                  It is the end date (according to the Gregorian calendar) of the
+     *                                 interval in which the satellite data collection date must belong. If this
+     *                                 belongs, a SAPS task will be created to process the satellite data.
+     * @param inputdownloadingPhaseTag is the version of the algorithm that will be used
+     *                                 in the task's inputdownloading step.
+     * @param preprocessingPhaseTag    is the version of the algorithm that will be used in
+     *                                 the task's preprocessing step.
+     * @param processingPhaseTag       is the version of the algorithm that will be used in
+     *                                 the task's processing step.
+     * @param priority                 it is an integer in the range 0 to 31 that indicates how priority
+     *                                 the task processing is.
+     * @param userEmail                it is the email of the task owner (this information is obtained
+     *                                 automatically by the authenticated user on the platform).
+     */
+    public void addTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
+                         String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
+                         String preprocessingPhaseTag, String processingPhaseTag, int priority, String userEmail) {
 
-		ExecutionScriptTag imageDockerInputdownloading = ExecutionScriptTagUtil
-				.getExecutionScriptTag(inputdownloadingPhaseTag, ExecutionScriptTagUtil.INPUT_DOWNLOADER);
-		ExecutionScriptTag imageDockerPreprocessing = ExecutionScriptTagUtil
-				.getExecutionScriptTag(preprocessingPhaseTag, ExecutionScriptTagUtil.PRE_PROCESSING);
-		ExecutionScriptTag imageDockerProcessing = ExecutionScriptTagUtil.getExecutionScriptTag(processingPhaseTag,
-				ExecutionScriptTagUtil.PROCESSING);
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTime(initDate);
+        GregorianCalendar endCal = new GregorianCalendar();
+        endCal.setTime(endDate);
+        endCal.add(Calendar.DAY_OF_YEAR, 1);
 
-		String digestInputdownloading = DigestUtil.getDigest(imageDockerInputdownloading);
-		String digestPreprocessing = DigestUtil.getDigest(imageDockerPreprocessing);
-		String digestProcessing = DigestUtil.getDigest(imageDockerProcessing);
+        ExecutionScriptTag imageDockerInputdownloading = ExecutionScriptTagUtil
+                .getExecutionScriptTag(inputdownloadingPhaseTag, ExecutionScriptTagUtil.INPUT_DOWNLOADER);
+        ExecutionScriptTag imageDockerPreprocessing = ExecutionScriptTagUtil
+                .getExecutionScriptTag(preprocessingPhaseTag, ExecutionScriptTagUtil.PRE_PROCESSING);
+        ExecutionScriptTag imageDockerProcessing = ExecutionScriptTagUtil.getExecutionScriptTag(processingPhaseTag,
+                ExecutionScriptTagUtil.PROCESSING);
 
-		Set<String> regions = RegionUtil.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
-				upperRightLongitude);
+        String digestInputdownloading = DigestUtil.getDigest(imageDockerInputdownloading);
+        String digestPreprocessing = DigestUtil.getDigest(imageDockerPreprocessing);
+        String digestProcessing = DigestUtil.getDigest(imageDockerProcessing);
 
-		while (cal.before(endCal)) {
-			int startingYear = cal.get(Calendar.YEAR);
-			List<String> datasets = DatasetUtil.getSatsInOperationByYear(startingYear);
+        Set<String> regions = RegionUtil.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+                upperRightLongitude);
 
-			for (String dataset : datasets) {
-				LOGGER.debug("Adding new tasks with dataset " + dataset);
+        while (cal.before(endCal)) {
+            int startingYear = cal.get(Calendar.YEAR);
+            List<String> datasets = DatasetUtil.getSatsInOperationByYear(startingYear);
 
-				for (String region : regions) {
-					String taskId = UUID.randomUUID().toString();
+            for (String dataset : datasets) {
+                LOGGER.debug("Adding new tasks with dataset " + dataset);
 
-					SapsImage task = addNewTaskInCatalog(taskId, dataset, region, cal.getTime(), priority, userEmail,
-							inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag,
-							digestPreprocessing, processingPhaseTag, digestProcessing);
-					addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
-				}
-			}
-			cal.add(Calendar.DAY_OF_YEAR, 1);
-		}
-	}
+                for (String region : regions) {
+                    String taskId = UUID.randomUUID().toString();
 
-	/**
-	 * 
-	 * This function retrieves all information from all tasks registered in the
-	 * Catalog using the communication mechanism using the retry approach.
-	 */
-	public List<SapsImage> getAllTasksInCatalog() {
-		return CatalogUtils.getAllTasks(catalog, "get all tasks");
-	}
+                    SapsImage task = addTask(taskId, dataset, region, cal.getTime(), priority, userEmail,
+                            inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag,
+                            digestPreprocessing, processingPhaseTag, digestProcessing);
+                    addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+                }
+            }
+            cal.add(Calendar.DAY_OF_YEAR, 1);
+        }
+    }
 
-	/**
-	 * 
-	 * This function retrieves the task information based on the past id registered
-	 * in the Catalog using the communication mechanism that uses the retry
-	 * approach.
-	 */
-	public SapsImage getTaskByIdInCatalog(String taskId) {
-		return CatalogUtils.getTaskById(catalog, taskId, "gets task with id [" + taskId + "]");
-	}
+    public List<SapsImage> getAllTasks() {
+        return CatalogUtils.getAllTasks(catalog, "get all tasks");
+    }
 
-	/**
-	 * This function retrieves a collection of tasks in a given state registered in
-	 * the Catalog using the communication mechanism that uses the retry approach.
-	 * 
-	 * Note: The message parameter is a string that will be displayed in the SAPS
-	 * log before attempting to communicate with the Catalog using the retry
-	 * approach.
-	 */
-	public List<SapsImage> getTasksByStateInCatalog(ImageTaskState state) throws SQLException {
-		return CatalogUtils.getTasks(catalog, state, CatalogConstants.UNLIMITED,
-				"gets tasks with " + state.getValue() + " state");
-	}
+    public SapsImage getTaskById(String taskId) {
+        return CatalogUtils.getTaskById(catalog, taskId, "gets task with id [" + taskId + "]");
+    }
 
-	/**
-	 * This function seeks to retrieve data from successful tasks registered in the
-	 * Catalog processed by SAPS by filtering for some information such as:
-	 * 
-	 * - lowerLeftLatitude: is a geographic coordinate plus the lower left defined
-	 * in the sphere which is the angle between the plane of the equator and the
-	 * normal to the reference surface indicating the vertex of the polygon formed
-	 * together with the information lowerLeftLongitude, upperRightLatitude and
-	 * upperRightLongitude.<br>
-	 * 
-	 * - lowerLeftLongitude: is a geographic coordinate plus the lower left defined
-	 * in the sphere measured in degrees, from 0 to 180 towards east or west, from
-	 * the Greenwich Meridian indicating the vertex of the polygon formed together
-	 * with the information lowerLeftLatitude, upperRightLatitude and
-	 * upperRightLongitude.<br>
-	 * 
-	 * - upperRightLatitude: is a geographic coordinate plus the upper right defined
-	 * in the sphere which is the angle between the plane of the equator and the
-	 * normal to the reference surface indicating the vertex of the polygon formed
-	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
-	 * upperRightLongitude.<br>
-	 *
-	 * - upperRightLongitude: is a geographic coordinate plus the upper right
-	 * defined in the sphere measured in degrees, from 0 to 180 towards east or
-	 * west, from the Greenwich Meridian indicating the vertex of the polygon formed
-	 * together with the information lowerLeftLatitude, lowerLeftLongitude and
-	 * upperRightLatitude.<br>
-	 * 
-	 * - initDate: It is the start date (according to the Gregorian calendar) of the
-	 * search interval to which the satellite data collection date for the
-	 * successful task should belong.<br>
-	 * 
-	 * - endDate: It is the end date (according to the Gregorian calendar) of the
-	 * search interval to which the satellite data collection date of the successful
-	 * task must belong..<br>
-	 * 
-	 * - inputdownloadingPhaseTag: is the version of the algorithm that was used in
-	 * the task's inputdownloading step, in which you want to recover.<br>
-	 * 
-	 * - preprocessingPhaseTag: is the version of the algorithm that was used in the
-	 * task's preprocessing step, in which you want to recover.<br>
-	 * 
-	 * - processingPhaseTag: is the version of the algorithm that was used in the
-	 * task's processing step, in which you want to recover.<br>
-	 * 
-	 * This function returns a collection of successful tasks that match past
-	 * information.
-	 */
-	public List<SapsImage> searchProcessedTasksInCatalog(String lowerLeftLatitude, String lowerLeftLongitude,
-			String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
-			String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
+    public List<SapsImage> getTasksByState(ImageTaskState state) throws SQLException {
+        return CatalogUtils.getTasks(catalog, state,
+                "gets tasks with " + state.getValue() + " state");
+    }
 
-		List<SapsImage> filteredTasks = new ArrayList<>();
-		Set<String> regions = RegionUtil.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
-				upperRightLongitude);
+    /**
+     * It gets processed {@code SapsImage} in {@code Catalog} by filtering for parameters.
+     *
+     * @param lowerLeftLatitude        is a geographic coordinate plus the lower left defined
+     *                                 in the sphere which is the angle between the plane of the equator and the
+     *                                 normal to the reference surface indicating the vertex of the polygon formed
+     *                                 together with the information lowerLeftLongitude, upperRightLatitude and
+     *                                 upperRightLongitude.
+     * @param lowerLeftLongitude       is a geographic coordinate plus the lower left defined
+     *                                 in the sphere measured in degrees, from 0 to 180 towards east or west, from
+     *                                 the Greenwich Meridian indicating the vertex of the polygon formed together
+     *                                 with the information lowerLeftLatitude, upperRightLatitude and
+     *                                 upperRightLongitude.
+     * @param upperRightLatitude       is a geographic coordinate plus the upper right defined
+     *                                 in the sphere which is the angle between the plane of the equator and the
+     *                                 normal to the reference surface indicating the vertex of the polygon formed
+     *                                 together with the information lowerLeftLatitude, lowerLeftLongitude and
+     *                                 upperRightLongitude.
+     * @param upperRightLongitude      is a geographic coordinate plus the upper right
+     *                                 defined in the sphere measured in degrees, from 0 to 180 towards east or
+     *                                 west, from the Greenwich Meridian indicating the vertex of the polygon formed
+     *                                 together with the information lowerLeftLatitude, lowerLeftLongitude and
+     *                                 upperRightLatitude.
+     * @param initDate                 it is the starting date (according to the Gregorian calendar) of
+     *                                 the interval in which the satellite data collection date must belong. If it
+     *                                 belongs, a SAPS task will be created to process the satellite data.
+     * @param endDate                  It is the end date (according to the Gregorian calendar) of the
+     *                                 interval in which the satellite data collection date must belong. If this
+     *                                 belongs, a SAPS task will be created to process the satellite data.
+     * @param inputdownloadingPhaseTag is the version of the algorithm that will be used
+     *                                 in the task's inputdownloading step.
+     * @param preprocessingPhaseTag    is the version of the algorithm that will be used in
+     *                                 the task's preprocessing step.
+     * @param processingPhaseTag       is the version of the algorithm that will be used in
+     *                                 the task's processing step.
+     */
+    public List<SapsImage> getProcessedTasks(String lowerLeftLatitude, String lowerLeftLongitude,
+                                             String upperRightLatitude, String upperRightLongitude, Date initDate, Date endDate,
+                                             String inputdownloadingPhaseTag, String preprocessingPhaseTag, String processingPhaseTag) {
 
-		for (String region : regions) {
-			List<SapsImage> tasksInCurrentRegion = CatalogUtils.getProcessedTasks(catalog, region, initDate, endDate,
-					inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag,
-					"gets all processed tasks with region [" + region + "], inputdownloading tag ["
-							+ inputdownloadingPhaseTag + "], preprocessing tag [" + preprocessingPhaseTag
-							+ "], processing tag [" + processingPhaseTag + "] beetwen " + initDate + " and " + endDate);
-			filteredTasks.addAll(tasksInCurrentRegion);
-		}
-		return filteredTasks;
-	}
+        List<SapsImage> filteredTasks = new ArrayList<>();
+        Set<String> regions = RegionUtil.regionsFromArea(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude,
+                upperRightLongitude);
+
+        for (String region : regions) {
+            List<SapsImage> tasksInCurrentRegion = CatalogUtils.getProcessedTasks(catalog, region, initDate, endDate,
+                    inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag,
+                    "gets all processed tasks with region [" + region + "], inputdownloading tag ["
+                            + inputdownloadingPhaseTag + "], preprocessing tag [" + preprocessingPhaseTag
+                            + "], processing tag [" + processingPhaseTag + "] beetwen " + initDate + " and " + endDate);
+            filteredTasks.addAll(tasksInCurrentRegion);
+        }
+        return filteredTasks;
+    }
 }

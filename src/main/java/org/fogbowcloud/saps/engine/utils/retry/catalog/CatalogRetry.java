@@ -1,8 +1,8 @@
 package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
-import java.sql.SQLException;
+import org.fogbowcloud.saps.engine.utils.retry.catalog.exceptions.CatalogRetryException;
 
 public interface CatalogRetry<T> {
 
-	T run() throws SQLException;
+	T run() throws CatalogRetryException;
 }
