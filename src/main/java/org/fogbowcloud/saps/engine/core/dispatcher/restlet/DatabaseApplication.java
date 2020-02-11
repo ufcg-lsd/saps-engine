@@ -2,7 +2,6 @@ package org.fogbowcloud.saps.engine.core.dispatcher.restlet;
 
 import java.io.File;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -64,7 +63,7 @@ public class DatabaseApplication extends Application {
                 SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH,
                 SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER,
                 SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY,
-                SapsPropertiesConstants.SWIFT_FOLDER_PREFIX,
+                SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER,
                 SapsPropertiesConstants.SWIFT_AUTH_URL,
                 SapsPropertiesConstants.SWIFT_PROJECT_ID,
                 SapsPropertiesConstants.SWIFT_USER_ID,

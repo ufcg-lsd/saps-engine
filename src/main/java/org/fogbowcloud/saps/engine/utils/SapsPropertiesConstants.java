@@ -66,8 +66,8 @@ public class SapsPropertiesConstants {
 
 	// Swift constants
 	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
-	public static final String SWIFT_FOLDER_PREFIX = "swift_folder_prefix";
-	public static final String SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS = "swift_folder_prefix_debug_failed_tasks";
+	public static final String PERMANENT_STORAGE_TASKS_FOLDER = "permanent_storage_tasks_folder";
+	public static final String PERMANENT_STORAGE_DEBUG_TASKS_FOLDER = "permanent_storage_debug_tasks_folder";
 	public static final String SWIFT_INPUT_PSEUDO_FOLDER_PREFIX = "swift_input_pseud_folder_prefix";
 	public static final String SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX = "swift_output_pseud_folder_prefix";
 	public static final String SWIFT_USERNAME = "swift_username";
