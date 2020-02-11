@@ -13,7 +13,7 @@ public interface PermanentStorage {
 	 * @return boolean representation, success (true) or failure (false) in to
 	 *         archive the three folders.
 	 */
-	public boolean archive(SapsImage task) throws PermanentStorageException;
+	boolean archive(SapsImage task) throws PermanentStorageException;
 
 	/**
 	 * This function delete all files from task in Permanent Storage.
@@ -23,6 +23,6 @@ public interface PermanentStorage {
 	 *         files
 	 * @throws Exception
 	 */
-	public boolean delete(SapsImage task) throws PermanentStorageException;
+	boolean delete(SapsImage task) throws PermanentStorageException;
 
 }
