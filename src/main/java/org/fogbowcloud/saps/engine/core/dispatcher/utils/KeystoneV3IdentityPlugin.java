@@ -1,27 +1,30 @@
 package org.fogbowcloud.saps.engine.core.dispatcher.utils;
 
+import java.io.IOException;
 import java.util.Map;
-import java.util.Properties;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
+import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class KeystoneV3IdentityPlugin {
 
-    public static final String PROJECT_ID = "projectId";
-    public static final String PASSWORD = "password";
-    public static final String USER_ID = "userId";
-    public static final String AUTH_URL = "authUrl";
-    private final static Logger LOGGER = Logger.getLogger(KeystoneV3IdentityPlugin.class);
-    private static final String IDENTITY_URL = "identity_url";
+    static final String PROJECT_ID = "projectId";
+    static final String PASSWORD = "password";
+    static final String USER_ID = "userId";
+    static final String AUTH_URL = "authUrl";
+    private static final Logger LOGGER = Logger.getLogger(KeystoneV3IdentityPlugin.class);
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String ACCEPT = "Accept";
+    private static final String JSON_CONTENT_TYPE = "application/json";
     private static final String X_SUBJECT_TOKEN = "X-Subject-Token";
-    private static final String PASSWORD_PROP = "password";
     private static final String IDENTITY_PROP = "identity";
     private static final String PROJECT_PROP = "project";
     private static final String METHODS_PROP = "methods";
@@ -29,20 +32,11 @@ public class KeystoneV3IdentityPlugin {
     private static final String AUTH_PROP = "auth";
     private static final String USER_PROP = "user";
     private static final String ID_PROP = "id";
-    public static String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
-    private String keystoneUrl;
-    private String v3TokensEndpoint;
+    private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    public KeystoneV3IdentityPlugin(Properties properties) {
-        this.keystoneUrl =
-            properties.getProperty(IDENTITY_URL) == null ? properties.getProperty(AUTH_URL)
-                : properties.getProperty(IDENTITY_URL);
-        this.v3TokensEndpoint = keystoneUrl + V3_TOKENS_ENDPOINT_PATH;
-    }
+    String createAccessId(Map<String, String> credentials) throws IOException {
 
-    public String createAccessId(Map<String, String> credentials) {
-
-        LOGGER.debug("Creating new Token");
+        LOGGER.debug("Creating new access id");
 
         JSONObject json;
         try {
@@ -52,40 +46,38 @@ public class KeystoneV3IdentityPlugin {
             throw new RuntimeException(e);
         }
 
-        String authUrl = credentials.get(AUTH_URL);
-        String currentTokenEndpoint = v3TokensEndpoint;
-        if (authUrl != null && !authUrl.isEmpty()) {
-            currentTokenEndpoint = authUrl + V3_TOKENS_ENDPOINT_PATH;
+        String keyStoneUrl = credentials.get(AUTH_URL) + V3_TOKENS_ENDPOINT_PATH;
+        StringEntity body = new StringEntity(json.toString(), Charsets.UTF_8);
+        HttpPost request = new HttpPost(keyStoneUrl);
+        request.addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE);
+        request.addHeader(ACCEPT, JSON_CONTENT_TYPE);
+        request.setEntity(body);
+        HttpResponse response = HttpClients.createMinimal().execute(request);
+        StatusLine status = response.getStatusLine();
+        if (status.getStatusCode() != HttpStatus.CREATED_201) {
+            throw new KeystoneException(
+                "Access id request failed; " + "Status [" + status.getStatusCode() + " - " + status
+                    .getReasonPhrase() + "]");
         }
-
-        String accessId = null;
-        try {
-            StringEntity body = new StringEntity(json.toString(), Charsets.UTF_8);
-            HttpPost request = new HttpPost(currentTokenEndpoint);
-            request.setEntity(body);
-            HttpResponse response = HttpClients.createMinimal().execute(request);
-            accessId = response.getFirstHeader(X_SUBJECT_TOKEN).getValue();
-        } catch (Exception e) {
-
-        }
+        String accessId = response.getFirstHeader(X_SUBJECT_TOKEN).getValue();
         return accessId;
     }
 
-    protected JSONObject mountJson(Map<String, String> credentials) throws JSONException {
+    private JSONObject mountJson(Map<String, String> credentials) throws JSONException {
         JSONObject projectId = new JSONObject();
         projectId.put(ID_PROP, credentials.get(PROJECT_ID));
         JSONObject project = new JSONObject();
         project.put(PROJECT_PROP, projectId);
 
         JSONObject userProperties = new JSONObject();
-        userProperties.put(PASSWORD_PROP, credentials.get(PASSWORD));
+        userProperties.put(PASSWORD, credentials.get(PASSWORD));
         userProperties.put(ID_PROP, credentials.get(USER_ID));
         JSONObject password = new JSONObject();
         password.put(USER_PROP, userProperties);
 
         JSONObject identity = new JSONObject();
-        identity.put(METHODS_PROP, new JSONArray(new String[]{PASSWORD_PROP}));
-        identity.put(PASSWORD_PROP, password);
+        identity.put(METHODS_PROP, new JSONArray(new String[]{PASSWORD}));
+        identity.put(PASSWORD, password);
 
         JSONObject auth = new JSONObject();
         auth.put(SCOPE_PROP, project);
