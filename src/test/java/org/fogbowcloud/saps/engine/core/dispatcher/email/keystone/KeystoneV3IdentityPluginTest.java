@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.dispatcher.utils;
+package org.fogbowcloud.saps.engine.core.dispatcher.email.keystone;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -9,6 +9,7 @@ import java.security.KeyStoreException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityPlugin;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.junit.Test;
 

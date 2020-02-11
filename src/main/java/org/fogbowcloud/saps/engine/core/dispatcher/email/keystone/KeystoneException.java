@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.dispatcher.utils;
+package org.fogbowcloud.saps.engine.core.dispatcher.email.keystone;
 
 public class KeystoneException extends RuntimeException {
 

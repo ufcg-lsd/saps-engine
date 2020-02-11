@@ -1,6 +1,5 @@
-package org.fogbowcloud.saps.engine.core.dispatcher.utils;
+package org.fogbowcloud.saps.engine.core.dispatcher.email;
 
-import java.security.KeyStoreException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -9,7 +8,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.notifier.GoogleMail;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityPlugin;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;

@@ -2,7 +2,7 @@ package org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.utils.ProcessedImagesEmailBuilder;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.ProcessedImagesEmailBuilder;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;

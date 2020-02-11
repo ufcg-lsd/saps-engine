@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.dispatcher.utils;
+package org.fogbowcloud.saps.engine.core.dispatcher.email.keystone;
 
 import java.io.IOException;
 import java.util.Map;
@@ -16,10 +16,10 @@ import org.json.JSONObject;
 
 public class KeystoneV3IdentityPlugin {
 
-    static final String PROJECT_ID = "projectId";
-    static final String PASSWORD = "password";
-    static final String USER_ID = "userId";
-    static final String AUTH_URL = "authUrl";
+    public static final String PROJECT_ID = "projectId";
+    public static final String PASSWORD = "password";
+    public static final String USER_ID = "userId";
+    public static final String AUTH_URL = "authUrl";
     private static final Logger LOGGER = Logger.getLogger(KeystoneV3IdentityPlugin.class);
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String ACCEPT = "Accept";
@@ -34,7 +34,7 @@ public class KeystoneV3IdentityPlugin {
     private static final String ID_PROP = "id";
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    String createAccessId(Map<String, String> credentials) throws IOException {
+    public String createAccessId(Map<String, String> credentials) throws IOException {
 
         LOGGER.debug("Creating new access id");
 
