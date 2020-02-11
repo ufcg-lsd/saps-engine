@@ -1,27 +1,24 @@
 package org.fogbowcloud.saps.engine.utils.retry.catalog;
 
-import java.sql.SQLException;
 import java.util.List;
 
-import org.fogbowcloud.saps.engine.core.database.Catalog;
+import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 
 public class GetTasksRetry implements CatalogRetry<List<SapsImage>>{
 
 	private Catalog imageStore;
-	private ImageTaskState state;
-	private Integer limit;
+	private ImageTaskState[] states;
 	
-	public GetTasksRetry(Catalog imageStore, ImageTaskState state, Integer limit) {
+	public GetTasksRetry(Catalog imageStore, ImageTaskState state) {
 		this.imageStore = imageStore;
-		this.state = state;
-		this.limit = limit;
+		this.states = new ImageTaskState[]{state};
 	}
 	
 	@Override
-	public List<SapsImage> run() throws SQLException {
-		return imageStore.getIn(state, limit);
+	public List<SapsImage> run() {
+		return imageStore.getTasksByState(states);
 	}
 
 }
