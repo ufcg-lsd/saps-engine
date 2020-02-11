@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.core.dispatcher.utils;
 
+import java.security.KeyStoreException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -35,11 +36,6 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 	private static final String UNAVAILABLE = "UNAVAILABLE";
 	private static final String TEMP_DIR_URL = "%s?temp_url_sig=%s&temp_url_expires=%s";
-
-	private static final String PROJECT_ID = "projectId";
-	private static final String PASSWORD = "password";
-	private static final String USER_ID = "userId";
-	private static final String AUTH_URL = "authUrl";
 	private static final String TASK_ID = "taskId";
 	private static final String REGION = "region";
 	private static final String COLLECTION_TIER_NAME = "collectionTierName";
@@ -238,6 +234,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
 			String objectStoreContainer, String swiftPrefixFolder, String taskFolder, SapsImage task)
 			throws URISyntaxException, IOException {
+
 		String accessId = getKeystoneToken();
 
 		HttpClient client = HttpClients.createDefault();
@@ -248,14 +245,14 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
 	}
 
-	private String getKeystoneToken() {
-		KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin(properties);
+	private String getKeystoneToken() throws IOException {
+		KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin();
 
 		Map<String, String> credentials = new HashMap<>();
-		credentials.put(AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
-		credentials.put(PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
-		credentials.put(USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
-		credentials.put(PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
+		credentials.put(KeystoneV3IdentityPlugin.AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
+		credentials.put(KeystoneV3IdentityPlugin.PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
+		credentials.put(KeystoneV3IdentityPlugin.USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
+		credentials.put(KeystoneV3IdentityPlugin.PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
 
 		return keystone.createAccessId(credentials);
 	}
