@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.archiver;
+package org.fogbowcloud.saps.engine.core.archiver.storage;
 
 import static org.mockito.Mockito.mock;
 
