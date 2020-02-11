@@ -2,7 +2,6 @@ package org.fogbowcloud.saps.engine.core.archiver;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -16,11 +15,12 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
-import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
+import org.fogbowcloud.saps.engine.core.catalog.jdbc.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class Archiver {
@@ -33,12 +33,8 @@ public class Archiver {
 
     public static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
-    public Archiver(Properties properties) throws SapsException, SQLException {
+    public Archiver(Properties properties) throws SapsException {
         this(properties, new JDBCCatalog(properties));
-
-        LOGGER.info("Creating Archiver");
-        LOGGER.info("Imagestore " + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_IP) + ":"
-                + properties.getProperty(SapsPropertiesConstants.IMAGE_DATASTORE_PORT));
     }
 
     protected Archiver(Properties properties, Catalog catalog) throws SapsException {
@@ -54,7 +50,7 @@ public class Archiver {
     }
 
     /**
-     * it create an instance from declared {@code PermanentStorage} type.
+     * It creates an instance from declared {@code PermanentStorage} type.
      *
      * @param type permanent storage type to be created
      * @return {@code PermanentStorage} instance
@@ -71,39 +67,16 @@ public class Archiver {
     }
 
     private boolean checkProperties(Properties properties) {
-        if (properties == null) {
-            LOGGER.error("Properties arg must not be null.");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_IP)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_PORT)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_PORT + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR
-                    + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER)) {
-            LOGGER.error(
-                    "Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXPORT_PATH)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXPORT_PATH + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE + " was not set");
-            return false;
-        }
+		String[] propertiesSet = {
+				SapsPropertiesConstants.IMAGE_DATASTORE_IP,
+				SapsPropertiesConstants.IMAGE_DATASTORE_PORT,
+				SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR,
+				SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER,
+				SapsPropertiesConstants.SAPS_EXPORT_PATH,
+				SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE
+		};
 
-        LOGGER.debug("All properties are set");
-        return true;
+		return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
     public void start() throws ArchiverException {
@@ -117,7 +90,7 @@ public class Archiver {
     }
 
     /**
-     * it is an garbage collector deleting data directory from {@code ImageTaskState.FAILED} tasks.
+     * Its an garbage collector deleting data directory from {@code ImageTaskState.FAILED} tasks.
      */
     private void garbageCollector() {
         List<SapsImage> failedTasks = tasksInFailedState();
@@ -129,7 +102,7 @@ public class Archiver {
     }
 
     /**
-     * it gets tasks in failed state in {@code Catalog}.
+     * It gets tasks in failed state in {@code Catalog}.
      *
      * @return {@code SapsImage} list in {@code ImageTaskState.FAILED} state
      */
@@ -139,7 +112,7 @@ public class Archiver {
     }
 
     /**
-     * its cleans unfinished data from incomplete {@code ImageTaskState.ARCHIVING}.
+     * It cleans unfinished data from incomplete {@code ImageTaskState.ARCHIVING}.
      *
      * @throws ArchiverException
      */
@@ -156,7 +129,7 @@ public class Archiver {
     }
 
     /**
-     * its gets tasks in archiving state in {@code Catalog}.
+     * It gets tasks in archiving state in {@code Catalog}.
      *
      * @return {@code SapsImage} list in {@code ImageTaskState.ARCHIVING} state
      */
@@ -166,7 +139,7 @@ public class Archiver {
     }
 
     /**
-     * it applies rollback in specific {@code SapsImage}, returning for {@code ImageTaskState.FINISHED} state.
+     * It applies rollback in specific {@code SapsImage}, returning for {@code ImageTaskState.FINISHED} state.
      *
      * @param task {@code SapsImage} to be rollbacked
      */
@@ -185,7 +158,7 @@ public class Archiver {
     }
 
     /**
-     * it archives {@code ImageTaskState.FINISHED} {@code SapsImage} in {@code PermanentStorage}.
+     * It archives {@code ImageTaskState.FINISHED} {@code SapsImage} in {@code PermanentStorage}.
      */
     private void archiver() {
         List<SapsImage> tasksToArchive = tasksToArchive();
@@ -200,7 +173,7 @@ public class Archiver {
     }
 
     /**
-     * it gets {@code SapsImage} list in {@code ImageTaskState.FINISHED} state in {@code Catalog}.
+     * It gets {@code SapsImage} list in {@code ImageTaskState.FINISHED} state in {@code Catalog}.
      *
      * @return {@code SapsImage} list in {@code ImageTaskState.FINISHED} state
      */
@@ -210,7 +183,7 @@ public class Archiver {
     }
 
     /**
-     * it try to archive a {@code SapsImage} in {@code PermanentStorage}.
+     * It try to archive a {@code SapsImage} in {@code PermanentStorage}.
      *
      * @param task {@code SapsImage} to be archived
      */
@@ -225,7 +198,7 @@ public class Archiver {
     }
 
     /**
-     * it prepares a {@code SapsImage} for archive.
+     * It prepares a {@code SapsImage} for archive.
      *
      * @param task {@code SapsImage} to be prepared for archive
      * @return success (true) or failure (false) in preparing the {@code SapsImage}.
@@ -245,7 +218,7 @@ public class Archiver {
     }
 
     /**
-     * its finishes a success {@code SapsImage}.
+     * It finishes a success {@code SapsImage}.
      *
      * @param task {@code SapsImage} to be finished
      */
@@ -259,7 +232,7 @@ public class Archiver {
     }
 
     /**
-     * its finishes a {@code SapsImage} in {@code ImageTaskState.FAILED} state.
+     * It finishes a {@code SapsImage} in {@code ImageTaskState.FAILED} state.
      *
      * @param task {@code SapsImage} to be finished
      */
@@ -273,7 +246,7 @@ public class Archiver {
     }
 
     /**
-     * its deletes directory from {@code SapsImage}.
+     * It deletes directory from {@code SapsImage}.
      *
      * @param task {@code SapsImage} that contains information to delete your folder
      */
@@ -297,7 +270,7 @@ public class Archiver {
     }
 
     /**
-     * its updates {@code SapsImage} state in {@code Catalog}.
+     * It updates {@code SapsImage} state in {@code Catalog}.
      *
      * @param task         task to be updated
      * @param state        new task state
@@ -319,7 +292,7 @@ public class Archiver {
     }
 
     /**
-     * its adds new tuple in timestamp table and updates {@code SapsImage} timestamp.
+     * It adds new tuple in timestamp table and updates {@code SapsImage} timestamp.
      *
      * @param task    task to be update
      * @param message information message
@@ -329,7 +302,7 @@ public class Archiver {
     }
 
     /**
-     * its removes {@code SapsImage} timestamp.
+     * It removes {@code SapsImage} timestamp.
      *
      * @param task    task to be remove
      * @param message information message

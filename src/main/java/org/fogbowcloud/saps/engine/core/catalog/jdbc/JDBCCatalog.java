@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.catalog;
+package org.fogbowcloud.saps.engine.core.catalog.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -6,147 +6,63 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.UserNotFoundException;
+import org.fogbowcloud.saps.engine.core.catalog.jdbc.exceptions.JDBCCatalogException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class JDBCCatalog implements Catalog {
 
-    private String DATASTORE_USERNAME = "datastore_username";
-    private String DATASTORE_PASSWORD = "datastore_password";
-    private String DATASTORE_DRIVER = "datastore_driver";
-    private String DATASTORE_URL_PREFIX = "datastore_url_prefix";
-    private String DATASTORE_NAME = "datastore_name";
-    private String DATASTORE_IP = "datastore_ip";
-    private String DATASTORE_PORT = "datastore_port";
-
     private static final Logger LOGGER = Logger.getLogger(JDBCCatalog.class);
 
-    private static final String IMAGE_TABLE_NAME = "TASKS";
-    private static final String STATES_TABLE_NAME = "TIMESTAMPS";
-    private static final String TASK_ID_COL = "task_id";
-    private static final String DATASET_COL = "dataset";
-    private static final String REGION_COL = "region";
-    private static final String IMAGE_DATE_COL = "image_date";
-    private static final String PRIORITY_COL = "priority";
-    private static final String FEDERATION_MEMBER_COL = "federation_member";
-    private static final String STATE_COL = "state";
-    private static final String ARREBOL_JOB_ID = "arrebol_job_id";
-    private static final String INPUTDOWNLOADING_TAG = "inputdownloading_tag";
-    private static final String PREPROCESSING_TAG = "preprocessing_tag";
-    private static final String PROCESSING_TAG = "processing_tag";
-    private static final String INPUTDOWNLOADING_DIGEST = "inputdownloading_digest";
-    private static final String PREPROCESSING_DIGEST = "preprocessing_digest";
-    private static final String PROCESSING_DIGEST = "processing_digest";
-    private static final String CREATION_TIME_COL = "creation_time";
-    private static final String UPDATED_TIME_COL = "updated_time";
-    private static final String IMAGE_STATUS_COL = "status";
-    private static final String ERROR_MSG_COL = "error_msg";
+    private final BasicDataSource connectionPool;
 
-    private static final String USERS_TABLE_NAME = "USERS";
-    private static final String USER_EMAIL_COL = "user_email";
-    private static final String USER_NAME_COL = "user_name";
-    private static final String USER_PASSWORD_COL = "user_password";
-    private static final String USER_STATE_COL = "active";
-    private static final String USER_NOTIFY_COL = "user_notify";
-    private static final String ADMIN_ROLE_COL = "admin_role";
+    public JDBCCatalog(Properties properties) throws JDBCCatalogException {
+        if (!checkProperties(properties))
+            throw new JDBCCatalogException("Error on validate the file. Missing properties for start JDBC Catalog.");
 
-    private static final String USERS_NOTIFY_TABLE_NAME = "NOTIFY";
-    private static final String SUBMISSION_ID_COL = "submission_id";
+        String dbIP = properties.getProperty(JDBCCatalogConstants.Database.IP);
+        String dbPort = properties.getProperty(JDBCCatalogConstants.Database.PORT);
+        String dbURLPrefix = properties.getProperty(JDBCCatalogConstants.Database.URL_PREFIX);
+        String dbUserName = properties.getProperty(JDBCCatalogConstants.Database.USERNAME);
+        String dbUserPass = properties.getProperty(JDBCCatalogConstants.Database.PASSWORD);
+        String dbDrive = properties.getProperty(JDBCCatalogConstants.Database.DRIVER);
+        String dbName = properties.getProperty(JDBCCatalogConstants.Database.NAME);
 
-    private static final String DEPLOY_CONFIG_TABLE_NAME = "DEPLOY_CONFIG";
-    private static final String NFS_SERVER_IP_COL = "nfs_ip";
-    private static final String NFS_SERVER_SSH_PORT_COL = "nfs_ssh_port";
-    private static final String NFS_SERVER_PORT_COL = "nfs_port";
+        LOGGER.info("Creating connection pool for Catalog " + dbIP + ":" + dbPort);
+        this.connectionPool = createConnectionPool(dbURLPrefix, dbIP, dbPort, dbUserName, dbUserPass,
+                dbDrive, dbName);
 
-    private static final String PROVENANCE_TABLE_NAME = "PROVENANCE_DATA";
-    private static final String INPUT_METADATA_COL = "input_metadata";
-    private static final String INPUT_OPERATING_SYSTEM_COL = "input_operating_system";
-    private static final String INPUT_KERNEL_VERSION_COL = "input_kernel_version";
-    private static final String PREPROCESSING_METADATA_COL = "preprocessing_metadata";
-    private static final String PREPROCESSING_OPERATING_SYSTEM_COL = "preprocessing_operating_system";
-    private static final String PREPROCESSING_KERNEL_VERSION_COL = "preprocessing_kernel_version";
-    private static final String OUTPUT_METADATA_COL = "output_metadata";
-    private static final String OUTPUT_OPERATING_SYSTEM_COL = "output_operating_system";
-    private static final String OUTPUT_KERNEL_VERSION_COL = "output_kernel_version";
+        LOGGER.info("Creating (if not exists) tables for SAPS schema");
+        createTable();
 
-    // Insert queries
-    private static final String INSERT_FULL_IMAGE_TASK_SQL = "INSERT INTO " + IMAGE_TABLE_NAME
-            + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    private BasicDataSource connectionPool;
-
-    public JDBCCatalog(Properties properties) throws SQLException {
-
-        if (checkProperties(properties))
-            if (properties == null) {
-                throw new IllegalArgumentException("Properties arg must not be null.");
-            }
-
-        String imageStoreIP = properties.getProperty(DATASTORE_IP);
-        String imageStorePort = properties.getProperty(DATASTORE_PORT);
-        String imageStoreURLPrefix = properties.getProperty(DATASTORE_URL_PREFIX);
-        String dbUserName = properties.getProperty(DATASTORE_USERNAME);
-        String dbUserPass = properties.getProperty(DATASTORE_PASSWORD);
-        String dbDrive = properties.getProperty(DATASTORE_DRIVER);
-        String dbName = properties.getProperty(DATASTORE_NAME);
-
-        LOGGER.info("Imagestore " + imageStoreIP + ":" + imageStorePort);
-        init(imageStoreIP, imageStorePort, imageStoreURLPrefix, dbUserName, dbUserPass, dbDrive, dbName);
+        LOGGER.info("JDBC Catalog class created");
     }
 
     private boolean checkProperties(Properties properties) {
-        if (properties == null) {
-            LOGGER.error("Properties arg must not be null.");
-            return false;
-        }
-        if (!properties.containsKey(DATASTORE_URL_PREFIX)) {
-            LOGGER.error("Required property " + DATASTORE_URL_PREFIX + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(DATASTORE_USERNAME)) {
-            LOGGER.error("Required property " + DATASTORE_USERNAME + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(DATASTORE_PASSWORD)) {
-            LOGGER.error("Required property " + DATASTORE_PASSWORD + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(DATASTORE_DRIVER)) {
-            LOGGER.error("Required property " + DATASTORE_DRIVER + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(DATASTORE_NAME)) {
-            LOGGER.error("Required property " + DATASTORE_NAME + " was not set");
-            return false;
-        }
-        LOGGER.debug("All properties for create JDBCImageDataStore are set");
-        return true;
+        String[] propertiesSet = {
+                JDBCCatalogConstants.Database.IP,
+                JDBCCatalogConstants.Database.USERNAME,
+                JDBCCatalogConstants.Database.PASSWORD,
+                JDBCCatalogConstants.Database.DRIVER,
+                JDBCCatalogConstants.Database.NAME
+        };
+
+        return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
-    public JDBCCatalog(String imageStoreURLPrefix, String imageStoreIP, String imageStorePort, String dbUserName,
-                       String dbUserPass, String dbDrive, String dbName) throws SQLException {
-
-        init(imageStoreIP, imageStorePort, imageStoreURLPrefix, dbUserName, dbUserPass, dbDrive, dbName);
-    }
-
-    private void init(String imageStoreIP, String imageStorePort, String imageStoreURLPrefix, String dbUserName,
-                      String dbUserPass, String dbDrive, String dbName) throws SQLException {
-        connectionPool = createConnectionPool(imageStoreURLPrefix, imageStoreIP, imageStorePort, dbUserName, dbUserPass,
-                dbDrive, dbName);
-        createTable();
-    }
-
-    private void createTable() throws SQLException {
+    private void createTable() throws JDBCCatalogException {
 
         Connection connection = null;
         Statement statement = null;
@@ -155,64 +71,32 @@ public class JDBCCatalog implements Catalog {
             connection = getConnection();
             statement = connection.createStatement();
 
-            statement.execute("CREATE TABLE IF NOT EXISTS " + USERS_TABLE_NAME + "(" + USER_EMAIL_COL
-                    + " VARCHAR(255) PRIMARY KEY, " + USER_NAME_COL + " VARCHAR(255), " + USER_PASSWORD_COL
-                    + " VARCHAR(100), " + USER_STATE_COL + " BOOLEAN, " + USER_NOTIFY_COL + " BOOLEAN, "
-                    + ADMIN_ROLE_COL + " BOOLEAN)");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS " + IMAGE_TABLE_NAME + "(" + TASK_ID_COL
-                    + " VARCHAR(255) PRIMARY KEY, " + DATASET_COL + " VARCHAR(100), " + REGION_COL + " VARCHAR(100), "
-                    + IMAGE_DATE_COL + " DATE, " + STATE_COL + " VARCHAR(100), " + ARREBOL_JOB_ID + " VARCHAR(100),"
-                    + FEDERATION_MEMBER_COL + " VARCHAR(255), " + PRIORITY_COL + " INTEGER, " + USER_EMAIL_COL
-                    + " VARCHAR(255) REFERENCES " + USERS_TABLE_NAME + "(" + USER_EMAIL_COL + "), "
-                    + INPUTDOWNLOADING_TAG + " VARCHAR(100), " + INPUTDOWNLOADING_DIGEST + " VARCHAR(255), "
-                    + PREPROCESSING_TAG + " VARCHAR(100), " + PREPROCESSING_DIGEST + " VARCHAR(255), " + PROCESSING_TAG
-                    + " VARCHAR(100), " + PROCESSING_DIGEST + " VARCHAR(255), " + CREATION_TIME_COL + " TIMESTAMP, "
-                    + UPDATED_TIME_COL + " TIMESTAMP, " + IMAGE_STATUS_COL + " VARCHAR(255), " + ERROR_MSG_COL
-                    + " VARCHAR(255))");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS " + STATES_TABLE_NAME + "(" + TASK_ID_COL + " VARCHAR(255), "
-                    + STATE_COL + " VARCHAR(100), " + UPDATED_TIME_COL + " TIMESTAMP" + ")");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS " + USERS_NOTIFY_TABLE_NAME + "(" + SUBMISSION_ID_COL
-                    + " VARCHAR(255), " + TASK_ID_COL + " VARCHAR(255), " + USER_EMAIL_COL + " VARCHAR(255), "
-                    + " PRIMARY KEY(" + SUBMISSION_ID_COL + ", " + TASK_ID_COL + ", " + USER_EMAIL_COL + "))");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS " + DEPLOY_CONFIG_TABLE_NAME + "(" + NFS_SERVER_IP_COL
-                    + " VARCHAR(100), " + NFS_SERVER_SSH_PORT_COL + " VARCHAR(100), " + NFS_SERVER_PORT_COL
-                    + " VARCHAR(100), " + FEDERATION_MEMBER_COL + " VARCHAR(255), " + " PRIMARY KEY("
-                    + NFS_SERVER_IP_COL + ", " + NFS_SERVER_SSH_PORT_COL + ", " + NFS_SERVER_PORT_COL + ", "
-                    + FEDERATION_MEMBER_COL + "))");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS " + PROVENANCE_TABLE_NAME + "(" + TASK_ID_COL
-                    + " VARCHAR(255) PRIMARY KEY, " + INPUT_METADATA_COL + " VARCHAR(255), "
-                    + INPUT_OPERATING_SYSTEM_COL + " VARCHAR(100), " + INPUT_KERNEL_VERSION_COL + " VARCHAR(100), "
-                    + PREPROCESSING_METADATA_COL + " VARCHAR(255), " + PREPROCESSING_OPERATING_SYSTEM_COL
-                    + " VARCHAR(100), " + PREPROCESSING_KERNEL_VERSION_COL + " VARCHAR(100), " + OUTPUT_METADATA_COL
-                    + " VARCHAR(255), " + OUTPUT_OPERATING_SYSTEM_COL + " VARCHAR(100), " + OUTPUT_KERNEL_VERSION_COL
-                    + " VARCHAR(100))");
+            statement.execute(JDBCCatalogConstants.CreateTable.USERS);
+            statement.execute(JDBCCatalogConstants.CreateTable.TASKS);
+            statement.execute(JDBCCatalogConstants.CreateTable.TIMESTAMPS);
+            statement.execute(JDBCCatalogConstants.CreateTable.NOTIFY);
+            statement.execute(JDBCCatalogConstants.CreateTable.DEPLOY_CONFIG);
+            statement.execute(JDBCCatalogConstants.CreateTable.PROVENANCE_DATA);
 
             statement.close();
         } catch (SQLException e) {
             LOGGER.error("Error while initializing DataStore", e);
-            throw e;
+            throw new JDBCCatalogException("Error while initializing DataStore");
         } finally {
             close(statement, connection);
         }
     }
 
-    private BasicDataSource createConnectionPool(String imageStoreURLPrefix, String imageStoreIP, String imageStorePort,
+    private BasicDataSource createConnectionPool(String dbURLPrefix, String dbIP, String dbPort,
                                                  String dbUserName, String dbUserPass, String dbDriver, String dbName) {
+        String url = dbURLPrefix + dbIP + ":" + dbPort + "/" + dbName;
 
-        String url = imageStoreURLPrefix + imageStoreIP + ":" + imageStorePort + "/" + dbName;
-
-        LOGGER.debug("DatastoreURL: " + url);
+        LOGGER.debug("Catalog URL: " + url);
 
         BasicDataSource pool = new BasicDataSource();
         pool.setUsername(dbUserName);
         pool.setPassword(dbUserPass);
         pool.setDriverClassName(dbDriver);
-
         pool.setUrl(url);
         pool.setInitialSize(1);
 
@@ -220,7 +104,6 @@ public class JDBCCatalog implements Catalog {
     }
 
     public Connection getConnection() throws CatalogException {
-
         try {
             return connectionPool.getConnection();
         } catch (SQLException e) {
@@ -295,7 +178,7 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            insertStatement = connection.prepareStatement(INSERT_FULL_IMAGE_TASK_SQL);
+            insertStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Insert.TASK);
             insertStatement.setString(1, task.getTaskId());
             insertStatement.setString(2, task.getDataset());
             insertStatement.setString(3, task.getRegion());
@@ -327,9 +210,6 @@ public class JDBCCatalog implements Catalog {
         return task;
     }
 
-    private static final String INSERT_NEW_STATE_TIMESTAMP_SQL = "INSERT INTO " + STATES_TABLE_NAME
-            + " VALUES(?, ?, now())";
-
     @Override
     public void addStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws CatalogException {
         if (taskId == null || taskId.isEmpty() || state == null) {
@@ -345,7 +225,7 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            insertStatement = connection.prepareStatement(INSERT_NEW_STATE_TIMESTAMP_SQL);
+            insertStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Insert.TIMESTAMP);
             insertStatement.setString(1, taskId);
             insertStatement.setString(2, state.getValue());
             insertStatement.setQueryTimeout(300);
@@ -357,8 +237,6 @@ public class JDBCCatalog implements Catalog {
             close(insertStatement, connection);
         }
     }
-
-    private static final String INSERT_NEW_USER_SQL = "INSERT INTO " + USERS_TABLE_NAME + " VALUES(?, ?, ?, ?, ?, ?)";
 
     @Override
     public void addUser(String userEmail, String userName, String userPass, boolean isEnable, boolean userNotify,
@@ -375,7 +253,7 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            insertStatement = connection.prepareStatement(INSERT_NEW_USER_SQL);
+            insertStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Insert.USER);
             insertStatement.setString(1, userEmail);
             insertStatement.setString(2, userName);
             insertStatement.setString(3, userPass);
@@ -392,10 +270,6 @@ public class JDBCCatalog implements Catalog {
         }
     }
 
-    private static final String UPDATE_IMAGEDATA_SQL = "UPDATE " + IMAGE_TABLE_NAME + " SET " + STATE_COL + " = ?, "
-            + UPDATED_TIME_COL + " = now(), " + IMAGE_STATUS_COL + " = ?, " + ERROR_MSG_COL + " = ?, " + ARREBOL_JOB_ID
-            + " = ? " + "WHERE " + TASK_ID_COL + " = ?";
-
     @Override
     public void updateImageTask(SapsImage imagetask) throws CatalogException {
         if (imagetask == null) {
@@ -409,7 +283,7 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            updateStatement = connection.prepareStatement(UPDATE_IMAGEDATA_SQL);
+            updateStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Update.TASK);
             updateStatement.setString(1, imagetask.getState().getValue());
             updateStatement.setString(2, imagetask.getStatus());
             updateStatement.setString(3, imagetask.getError());
@@ -425,8 +299,6 @@ public class JDBCCatalog implements Catalog {
         }
     }
 
-    private static final String SELECT_ALL_IMAGES_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME;
-
     @Override
     public List<SapsImage> getAllTasks() throws CatalogException {
         Statement statement = null;
@@ -436,18 +308,15 @@ public class JDBCCatalog implements Catalog {
             statement = conn.createStatement();
             statement.setQueryTimeout(300);
 
-            statement.execute(SELECT_ALL_IMAGES_SQL);
+            statement.execute(JDBCCatalogConstants.Queries.Select.TASKS);
             ResultSet rs = statement.getResultSet();
-            return extractImageTaskFrom(rs);
+            return JDBCCatalogUtil.extractSapsTasks(rs);
         } catch (SQLException e) {
             throw new CatalogException("Error while select all tasks");
         } finally {
             close(statement, conn);
         }
     }
-
-    private static final String SELECT_USER_SQL = "SELECT * FROM " + USERS_TABLE_NAME + " WHERE " + USER_EMAIL_COL
-            + " = ?";
 
     @Override
     public SapsUser getUserByEmail(String userEmail) throws CatalogException, UserNotFoundException {
@@ -462,7 +331,7 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            selectStatement = connection.prepareStatement(SELECT_USER_SQL);
+            selectStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Select.USER);
             selectStatement.setString(1, userEmail);
             selectStatement.setQueryTimeout(300);
 
@@ -470,7 +339,7 @@ public class JDBCCatalog implements Catalog {
 
             ResultSet rs = selectStatement.getResultSet();
             if (rs.next()) {
-                SapsUser sebalUser = extractSapsUserFrom(rs);
+                SapsUser sebalUser = JDBCCatalogUtil.extractSapsUser(rs);
                 return sebalUser;
             }
             rs.close();
@@ -481,9 +350,6 @@ public class JDBCCatalog implements Catalog {
             close(selectStatement, connection);
         }
     }
-
-    private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE ? ORDER BY "
-            + PRIORITY_COL + " ASC";
 
     @Override
     public List<SapsImage> getTasksByState(ImageTaskState... tasksStates) throws CatalogException {
@@ -496,13 +362,13 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            selectStatement = connection.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
+            selectStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Select.TASKS_BY_STATE_ORDER_BY_PRIORITY_ASC);
             selectStatement.setQueryTimeout(300);
 
             String whereCondition = "";
-            for(int i = 0; i < tasksStates.length; i++){
-                whereCondition += STATE_COL + " = " + tasksStates[i].getValue();
-                if(i < tasksStates.length - 1)
+            for (int i = 0; i < tasksStates.length; i++) {
+                whereCondition += JDBCCatalogConstants.Tables.Task.STATE + " = " + tasksStates[i].getValue();
+                if (i < tasksStates.length - 1)
                     whereCondition += " OR ";
             }
 
@@ -510,7 +376,7 @@ public class JDBCCatalog implements Catalog {
             selectStatement.execute();
 
             ResultSet rs = selectStatement.getResultSet();
-            List<SapsImage> imageDatas = extractImageTaskFrom(rs);
+            List<SapsImage> imageDatas = JDBCCatalogUtil.extractSapsTasks(rs);
             rs.close();
             return imageDatas;
         } catch (SQLException e) {
@@ -519,42 +385,6 @@ public class JDBCCatalog implements Catalog {
             close(selectStatement, connection);
         }
     }
-
-    private static SapsUser extractSapsUserFrom(ResultSet rs) throws CatalogException {
-        SapsUser sebalUser = null;
-        try {
-            sebalUser = new SapsUser(rs.getString(USER_EMAIL_COL), rs.getString(USER_NAME_COL),
-                    rs.getString(USER_PASSWORD_COL), rs.getBoolean(USER_STATE_COL), rs.getBoolean(USER_NOTIFY_COL),
-                    rs.getBoolean(ADMIN_ROLE_COL));
-        } catch (SQLException e) {
-            throw new CatalogException("Error while extract user");
-        }
-
-        return sebalUser;
-    }
-
-    private static List<SapsImage> extractImageTaskFrom(ResultSet rs) throws CatalogException {
-        List<SapsImage> imageTasks = new ArrayList<>();
-        while (true) {
-            try {
-                if (!rs.next()) break;
-                imageTasks.add(new SapsImage(rs.getString(TASK_ID_COL), rs.getString(DATASET_COL), rs.getString(REGION_COL),
-                        rs.getDate(IMAGE_DATE_COL), ImageTaskState.getStateFromStr(rs.getString(STATE_COL)),
-                        rs.getString(ARREBOL_JOB_ID), rs.getString(FEDERATION_MEMBER_COL), rs.getInt(PRIORITY_COL),
-                        rs.getString(USER_EMAIL_COL), rs.getString(INPUTDOWNLOADING_TAG),
-                        rs.getString(INPUTDOWNLOADING_DIGEST), rs.getString(PREPROCESSING_TAG),
-                        rs.getString(PREPROCESSING_DIGEST), rs.getString(PROCESSING_TAG), rs.getString(PROCESSING_DIGEST),
-                        rs.getTimestamp(CREATION_TIME_COL), rs.getTimestamp(UPDATED_TIME_COL),
-                        rs.getString(IMAGE_STATUS_COL), rs.getString(ERROR_MSG_COL)));
-            } catch (SQLException e) {
-                throw new CatalogException("Error while extract task");
-            }
-        }
-        return imageTasks;
-    }
-
-    private static final String SELECT_TASK_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + TASK_ID_COL
-            + " = ?";
 
     @Override
     public SapsImage getTaskById(String taskId) throws CatalogException, TaskNotFoundException {
@@ -568,14 +398,14 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            selectStatement = connection.prepareStatement(SELECT_TASK_SQL);
+            selectStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Select.TASK);
             selectStatement.setString(1, taskId);
             selectStatement.setQueryTimeout(300);
 
             selectStatement.execute();
 
             ResultSet rs = selectStatement.getResultSet();
-            List<SapsImage> imageDatas = extractImageTaskFrom(rs);
+            List<SapsImage> imageDatas = JDBCCatalogUtil.extractSapsTasks(rs);
 
             if (imageDatas.size() == 0)
                 throw new TaskNotFoundException("There is no task with id");
@@ -588,9 +418,6 @@ public class JDBCCatalog implements Catalog {
             close(selectStatement, connection);
         }
     }
-
-    private static final String REMOVE_STATE_SQL = "DELETE FROM " + STATES_TABLE_NAME + " WHERE " + TASK_ID_COL
-            + " = ? AND " + STATE_COL + " = ? AND " + UPDATED_TIME_COL + " = ?";
 
     @Override
     public void removeStateChangeTime(String taskId, ImageTaskState state, Timestamp timestamp) throws CatalogException {
@@ -607,7 +434,7 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            removeStatement = connection.prepareStatement(REMOVE_STATE_SQL);
+            removeStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Delete.TIMESTAMP);
             removeStatement.setString(1, taskId);
             removeStatement.setString(2, state.getValue());
             removeStatement.setTimestamp(3, timestamp);
@@ -621,10 +448,6 @@ public class JDBCCatalog implements Catalog {
         }
     }
 
-    private final String SELECT_TASKS_BY_FILTERS_QUERY = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE " + STATE_COL
-            + " = ? AND " + REGION_COL + " = ? AND " + IMAGE_DATE_COL + " BETWEEN ? AND ? AND " + PREPROCESSING_TAG
-            + " = ? AND " + INPUTDOWNLOADING_TAG + " = ? AND " + PROCESSING_TAG + " = ?";
-
     @Override
     public List<SapsImage> filterTasks(ImageTaskState state, String region, Date initDate, Date endDate, String inputGathering,
                                        String preprocessingTag, String processingTag) throws CatalogException {
@@ -634,7 +457,7 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            queryStatement = connection.prepareStatement(SELECT_TASKS_BY_FILTERS_QUERY);
+            queryStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Select.FILTER_TASKS);
             queryStatement.setString(1, state.getValue());
             queryStatement.setString(2, region);
             queryStatement.setDate(3, javaDateToSqlDate(initDate));
@@ -645,12 +468,11 @@ public class JDBCCatalog implements Catalog {
             queryStatement.setQueryTimeout(300);
 
             ResultSet result = queryStatement.executeQuery();
-            return extractImageTaskFrom(result);
+            return JDBCCatalogUtil.extractSapsTasks(result);
         } catch (SQLException e) {
             throw new CatalogException("Error while getting tasks by filters");
         } finally {
             close(queryStatement, connection);
         }
     }
-
 }

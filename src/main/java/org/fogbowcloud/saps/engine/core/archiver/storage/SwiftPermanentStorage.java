@@ -10,6 +10,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class SwiftPermanentStorage implements PermanentStorage {
 
@@ -26,54 +27,31 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws SapsException {
         if (!checkProperties(properties))
-            throw new SapsException(
-                    "Error on validate the file. Missing properties for start Swift Permanent Storage.");
-
-        this.executionMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
-                .getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
-
-        if (this.executionMode && !checkPropertiesDebugMode(properties))
-            throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
+            throw new SapsException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
 
         this.swiftAPIClient = swiftAPIClient;
         this.properties = properties;
         this.sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
         this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
-
         this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME));
+        this.executionMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
+                .getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
+
+        if (this.executionMode && !checkPropertiesDebugMode(properties))
+            throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
     }
 
     public SwiftPermanentStorage(Properties properties) throws SapsException {
         this(properties, new SwiftAPIClient(properties));
     }
 
-    /**
-     * This function checks if the essential properties from Swift permanent storage have been set.
-     *
-     * @param properties Swift permanent storage properties to be check
-     * @return boolean representation, true (case all properties been set) or false
-     * (otherwise)
-     */
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
                 SapsPropertiesConstants.SWIFT_FOLDER_PREFIX,
                 SapsPropertiesConstants.SWIFT_CONTAINER_NAME
         };
 
-        if (properties == null) {
-            LOGGER.error("Properties arg must not be null.");
-            return false;
-        }
-
-        for(String property : propertiesSet){
-            if (!properties.containsKey(property)) {
-                LOGGER.error("Required property " + property + " was not set");
-                return false;
-            }
-        }
-
-        LOGGER.debug("All properties are set");
-        return true;
+        return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
     /**
