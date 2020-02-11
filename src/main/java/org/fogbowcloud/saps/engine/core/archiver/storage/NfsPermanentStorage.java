@@ -1,9 +1,10 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_DIR_PATTERN;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_DIR_PATTERN;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_DIR_PATTERN;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.TASK_DIR_PATTERN;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_FOLDER;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PERMANENT_STORAGE_TASK_DIR_PATTERN;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_FOLDER;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_FOLDER;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.SAPS_TASK_STAGE_DIR_PATTERN;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 public class NfsPermanentStorage implements PermanentStorage {
@@ -19,11 +22,30 @@ public class NfsPermanentStorage implements PermanentStorage {
     public static final Logger LOGGER = Logger.getLogger(NfsPermanentStorage.class);
     private final String sapsExports;
     private final String nfsStoragePath;
+    private final boolean debugMode;
+    private Properties properties;
 
-    public NfsPermanentStorage(Properties properties) {
+
+    public NfsPermanentStorage(Properties properties) throws SapsException {
         this.sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
         this.nfsStoragePath = properties
             .getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
+        this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
+            .getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
+        if (this.debugMode && !checkPropertiesDebugMode(properties))
+            throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
+        this.properties = properties;
+    }
+
+    private boolean checkPropertiesDebugMode(Properties properties) {
+        if (!properties.containsKey(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)) {
+            LOGGER.error("Required property " + SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER
+                + " was not set (it's necessary when debug mode)");
+            return false;
+        }
+
+        LOGGER.debug("All properties for debug mode are set");
+        return true;
     }
 
     @Override
@@ -32,13 +54,14 @@ public class NfsPermanentStorage implements PermanentStorage {
 
         LOGGER.info("Archiving task [" + task.getTaskId() + "] to permanent storage.");
 
-        String inputdownloadingLocalDir = String
-            .format(INPUTDOWNLOADING_DIR_PATTERN, sapsExports, taskId);
-        String preprocessingLocalDir = String
-            .format(PREPROCESSING_DIR_PATTERN, sapsExports, taskId);
-        String processingLocalDir = String.format(PROCESSING_DIR_PATTERN, sapsExports, taskId);
+        String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, sapsExports, taskId, INPUTDOWNLOADING_FOLDER);
+        String preprocessingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, sapsExports, taskId, PREPROCESSING_FOLDER);
+        String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, sapsExports, taskId, PROCESSING_FOLDER);
 
-        String nfsTaskDirPath = createTaskDir(task.getTaskId());
+        String nfsTaskFolder = (task.getState() == ImageTaskState.FAILED && this.debugMode)
+            ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
+            : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
+        String nfsTaskDirPath = createTaskDir(nfsTaskFolder, task.getTaskId());
         try {
             copyDirToDir(inputdownloadingLocalDir, nfsTaskDirPath);
             copyDirToDir(preprocessingLocalDir, nfsTaskDirPath);
@@ -53,7 +76,10 @@ public class NfsPermanentStorage implements PermanentStorage {
 
     @Override
     public boolean delete(SapsImage task) throws PermanentStorageException {
-        String taskDirPath = String.format(TASK_DIR_PATTERN, nfsStoragePath, task.getTaskId());
+        String nfsTaskFolder = (task.getState() == ImageTaskState.FAILED && this.debugMode)
+            ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
+            : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
+        String taskDirPath = String.format(PERMANENT_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, nfsTaskFolder, task.getTaskId());
         File taskDir = new File(taskDirPath);
         if (!taskDir.exists()) {
             throw new PermanentStorageException(
@@ -77,13 +103,13 @@ public class NfsPermanentStorage implements PermanentStorage {
         FileUtils.copyDirectoryToDirectory(srcDir, destDir);
     }
 
-    private String createTaskDir(String taskId) {
+    private String createTaskDir(String tasksFolder, String taskId) {
         File storage_dir = new File(nfsStoragePath);
         if (!storage_dir.exists()) {
             throw new PermanentStorageException(
                 "The nfs storage directory [" + nfsStoragePath + "] was not found");
         }
-        File nfsTaskDir = new File(String.format(TASK_DIR_PATTERN, nfsStoragePath, taskId));
+        File nfsTaskDir = new File(String.format(PERMANENT_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, tasksFolder, taskId));
         try {
             FileUtils.forceMkdir(nfsTaskDir);
         } catch (IOException e) {
