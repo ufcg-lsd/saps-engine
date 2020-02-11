@@ -9,19 +9,16 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 public class GetTasksRetry implements CatalogRetry<List<SapsImage>>{
 
 	private Catalog imageStore;
-	private ImageTaskState state;
-	private Integer limit;
+	private ImageTaskState[] states;
 	
-	public GetTasksRetry(Catalog imageStore, ImageTaskState state, Integer limit) {
+	public GetTasksRetry(Catalog imageStore, ImageTaskState state) {
 		this.imageStore = imageStore;
-		this.state = state;
-		this.limit = limit;
+		this.states = new ImageTaskState[]{state};
 	}
 	
 	@Override
 	public List<SapsImage> run() {
-		ImageTaskState[] states = {state};
-		return imageStore.getTasksByState(limit, states);
+		return imageStore.getTasksByState(states);
 	}
 
 }

@@ -1,23 +1,20 @@
 package org.fogbowcloud.saps.engine.core.model;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class SapsUser {
 	
 	private String userEmail;
 	private String userName;
 	private String userPassword;
-	private boolean active;
+	private boolean isEnable;
 	private boolean userNotify;
 	private boolean adminRole;
 	
 	public SapsUser(String userEmail, String userName, String userPassword,
-			boolean active, boolean userNotify, boolean adminRole) {
+					boolean isEnable, boolean userNotify, boolean adminRole) {
 		this.userEmail = userEmail;
 		this.userName = userName;
 		this.userPassword = userPassword;
-		this.active = active;
+		this.isEnable = isEnable;
 		this.userNotify = userNotify;
 		this.adminRole = adminRole;
 	}
@@ -34,8 +31,8 @@ public class SapsUser {
 		return userPassword;
 	}
 	
-	public boolean getActive() {
-		return active;
+	public boolean isEnable() {
+		return isEnable;
 	}
 
 	public boolean getUserNotify() {
@@ -53,39 +50,10 @@ public class SapsUser {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-
-	public void setUserPassword(String userPassword) {
-		this.userPassword = userPassword;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
-	}
-
-	public void setUserNotify(boolean userNotify) {
-		this.userNotify = userNotify;
-	}
-
-	public void setAdminRole(boolean adminRole) {
-		this.adminRole = adminRole;
-	}
 	
 	public String toString() {
 		return userEmail + ", " + userName + ", " + userPassword + ", "
-				+ active + ", " + userNotify + ", " + adminRole;
-	}
-	
-	public JSONObject toJSON() throws JSONException {
-		JSONObject json = new JSONObject();
-		
-		json.put("userEmail", userEmail);
-		json.put("userName", userName);
-		json.put("userPassword", userPassword);
-		json.put("active", active);
-		json.put("userNotify", userNotify);
-		json.put("adminRole", adminRole);
-						
-		return json;
+				+ isEnable + ", " + userNotify + ", " + adminRole;
 	}
 	
 	@Override
@@ -95,7 +63,7 @@ public class SapsUser {
 			return getUserEmail().equals(other.getUserEmail())
 					&& getUserName().equals(other.getUserName())
 					&& getUserPassword().equals(other.getUserPassword())
-					&& getActive() == other.getActive()
+					&& isEnable() == other.isEnable()
 					&& getUserNotify() == other.getUserNotify()
 					&& getAdminRole() == other.getAdminRole();
 		}

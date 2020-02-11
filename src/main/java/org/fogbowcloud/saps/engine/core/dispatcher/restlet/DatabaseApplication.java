@@ -53,60 +53,6 @@ public class DatabaseApplication extends Application {
 	}
 
 	/**
-	 * This function gets Scheduler properties
-	 * 
-	 * @return properties
-	 */
-	public Properties getProperties() {
-		return properties;
-	}
-
-	/**
-	 * This function sets Scheduler properties
-	 * 
-	 * @param properties new properties
-	 */
-	public void setProperties(Properties properties) {
-		this.properties = properties;
-	}
-
-	/**
-	 * This function gets submission dispatcher
-	 * 
-	 * @return submission dispatcher
-	 */
-	public SubmissionDispatcher getSubmissionDispatcher() {
-		return submissionDispatcher;
-	}
-
-	/**
-	 * This function sets submission dispatcher
-	 * 
-	 * @param submissionDispatcher new submission dispatcher
-	 */
-	public void setSubmissionDispatcher(SubmissionDispatcher submissionDispatcher) {
-		this.submissionDispatcher = submissionDispatcher;
-	}
-
-	/**
-	 * This function gets restlet component
-	 * 
-	 * @return restlet component
-	 */
-	public Component getRestletComponent() {
-		return restletComponent;
-	}
-
-	/**
-	 * This function sets restlet component
-	 * 
-	 * @param restletComponent new restlet component
-	 */
-	public void setRestletComponent(Component restletComponent) {
-		this.restletComponent = restletComponent;
-	}
-
-	/**
 	 * This function checks if the essential properties have been set.
 	 * 
 	 * @param properties saps properties to be check
@@ -274,7 +220,11 @@ public class DatabaseApplication extends Application {
 	 */
 	public void createUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
 			boolean adminRole) throws SQLException {
+<<<<<<< HEAD
 		submissionDispatcher.addUserInCatalog(userEmail, userName, userPass, userState, userNotify, adminRole);
+=======
+		submissionDispatcher.addUser(userEmail, userName, userPass, userState, userNotify, adminRole);
+>>>>>>> 17fde90a51a179812a4c46c8786a6478a0c9ef17
 	}
 
 	/**

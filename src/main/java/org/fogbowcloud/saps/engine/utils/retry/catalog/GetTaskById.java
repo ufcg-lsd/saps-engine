@@ -14,7 +14,7 @@ public class GetTaskById implements CatalogRetry<SapsImage> {
 	}
 
 	@Override
-	public SapsImage run(){
+	public SapsImage run() {
 		return imageStore.getTaskById(taskId);
 	}
 

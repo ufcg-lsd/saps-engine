@@ -361,7 +361,7 @@ public class JDBCCatalog implements Catalog {
     private static final String INSERT_NEW_USER_SQL = "INSERT INTO " + USERS_TABLE_NAME + " VALUES(?, ?, ?, ?, ?, ?)";
 
     @Override
-    public void addUser(String userEmail, String userName, String userPass, boolean userState, boolean userNotify,
+    public void addUser(String userEmail, String userName, String userPass, boolean isEnable, boolean userNotify,
                         boolean adminRole) throws CatalogException {
 
         LOGGER.info("Adding user " + userName + " into DB");
@@ -379,7 +379,7 @@ public class JDBCCatalog implements Catalog {
             insertStatement.setString(1, userEmail);
             insertStatement.setString(2, userName);
             insertStatement.setString(3, userPass);
-            insertStatement.setBoolean(4, userState);
+            insertStatement.setBoolean(4, isEnable);
             insertStatement.setBoolean(5, userNotify);
             insertStatement.setBoolean(6, adminRole);
             insertStatement.setQueryTimeout(300);
@@ -485,11 +485,8 @@ public class JDBCCatalog implements Catalog {
     private static final String SELECT_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE ? ORDER BY "
             + PRIORITY_COL + " ASC";
 
-    private static final String SELECT_LIMITED_IMAGES_IN_STATE_SQL = "SELECT * FROM " + IMAGE_TABLE_NAME + " WHERE ? ORDER BY "
-            + PRIORITY_COL + " ASC LIMIT ?";
-
     @Override
-    public List<SapsImage> getTasksByState(int limit, ImageTaskState... tasksStates) throws CatalogException {
+    public List<SapsImage> getTasksByState(ImageTaskState... tasksStates) throws CatalogException {
         if (tasksStates == null) {
             LOGGER.error("A state must be given");
             throw new IllegalArgumentException("Can't recover tasks. State was null.");
@@ -499,14 +496,8 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            if (limit == CatalogConstants.UNLIMITED) {
-                selectStatement = connection.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
-                selectStatement.setQueryTimeout(300);
-            } else {
-                selectStatement = connection.prepareStatement(SELECT_LIMITED_IMAGES_IN_STATE_SQL);
-                selectStatement.setInt(2, limit);
-                selectStatement.setQueryTimeout(300);
-            }
+            selectStatement = connection.prepareStatement(SELECT_IMAGES_IN_STATE_SQL);
+            selectStatement.setQueryTimeout(300);
 
             String whereCondition = "";
             for(int i = 0; i < tasksStates.length; i++){
@@ -635,8 +626,8 @@ public class JDBCCatalog implements Catalog {
             + " = ? AND " + INPUTDOWNLOADING_TAG + " = ? AND " + PROCESSING_TAG + " = ?";
 
     @Override
-    public List<SapsImage> getTasksByFilters(ImageTaskState state, String region, Date initDate, Date endDate, String inputGathering,
-                                                         String inputPreprocessing, String algorithmExecution) throws CatalogException {
+    public List<SapsImage> filterTasks(ImageTaskState state, String region, Date initDate, Date endDate, String inputGathering,
+                                       String preprocessingTag, String processingTag) throws CatalogException {
         PreparedStatement queryStatement = null;
         Connection connection = null;
 
@@ -648,9 +639,9 @@ public class JDBCCatalog implements Catalog {
             queryStatement.setString(2, region);
             queryStatement.setDate(3, javaDateToSqlDate(initDate));
             queryStatement.setDate(4, javaDateToSqlDate(endDate));
-            queryStatement.setString(5, inputPreprocessing);
+            queryStatement.setString(5, preprocessingTag);
             queryStatement.setString(6, inputGathering);
-            queryStatement.setString(7, algorithmExecution);
+            queryStatement.setString(7, processingTag);
             queryStatement.setQueryTimeout(300);
 
             ResultSet result = queryStatement.executeQuery();

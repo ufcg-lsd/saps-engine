@@ -30,7 +30,7 @@ public class GetProcessedTasks implements CatalogRetry<List<SapsImage>> {
 
 	@Override
 	public List<SapsImage> run(){
-		return imageStore.getTasksByFilters(ImageTaskState.ARCHIVED, region, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
+		return imageStore.filterTasks(ImageTaskState.ARCHIVED, region, initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag,
 				processingPhaseTag);
 	}
 
