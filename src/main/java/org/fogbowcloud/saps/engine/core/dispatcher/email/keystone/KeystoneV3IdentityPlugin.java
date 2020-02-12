@@ -34,7 +34,7 @@ public class KeystoneV3IdentityPlugin {
     private static final String ID_PROP = "id";
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    public String createAccessId(Map<String, String> credentials) throws IOException {
+    public String createAccessId(Map<String, String> credentials) throws KeystoneException {
 
         LOGGER.debug("Creating new access id");
 
@@ -42,8 +42,7 @@ public class KeystoneV3IdentityPlugin {
         try {
             json = mountJson(credentials);
         } catch (JSONException e) {
-            LOGGER.error("Could not mount JSON while creating token.", e);
-            throw new RuntimeException(e);
+            throw new KeystoneException("Could not mount JSON while creating token.", e);
         }
 
         String keyStoneUrl = credentials.get(AUTH_URL) + V3_TOKENS_ENDPOINT_PATH;
@@ -52,7 +51,12 @@ public class KeystoneV3IdentityPlugin {
         request.addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE);
         request.addHeader(ACCEPT, JSON_CONTENT_TYPE);
         request.setEntity(body);
-        HttpResponse response = HttpClients.createMinimal().execute(request);
+        HttpResponse response;
+        try {
+            response = HttpClients.createMinimal().execute(request);
+        } catch (IOException e) {
+            throw new KeystoneException("Error while execute access id request", e);
+        }
         StatusLine status = response.getStatusLine();
         if (status.getStatusCode() != HttpStatus.CREATED_201) {
             throw new KeystoneException(
