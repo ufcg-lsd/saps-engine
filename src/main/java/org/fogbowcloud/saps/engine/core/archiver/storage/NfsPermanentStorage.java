@@ -1,7 +1,6 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_FOLDER;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PERMANENT_STORAGE_TASK_DIR_PATTERN;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_FOLDER;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_FOLDER;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.SAPS_TASK_STAGE_DIR_PATTERN;
@@ -20,6 +19,8 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 public class NfsPermanentStorage implements PermanentStorage {
 
     public static final Logger LOGGER = Logger.getLogger(NfsPermanentStorage.class);
+    static final String NFS_STORAGE_TASK_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
+
     private final String sapsExports;
     private final String nfsStoragePath;
     private final boolean debugMode;
@@ -79,7 +80,7 @@ public class NfsPermanentStorage implements PermanentStorage {
         String nfsTaskFolder = (task.getState() == ImageTaskState.FAILED && this.debugMode)
             ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
             : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
-        String taskDirPath = String.format(PERMANENT_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, nfsTaskFolder, task.getTaskId());
+        String taskDirPath = String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, nfsTaskFolder, task.getTaskId());
         File taskDir = new File(taskDirPath);
         if (!taskDir.exists()) {
             throw new PermanentStorageException(
@@ -109,7 +110,7 @@ public class NfsPermanentStorage implements PermanentStorage {
             throw new PermanentStorageException(
                 "The nfs storage directory [" + nfsStoragePath + "] was not found");
         }
-        File nfsTaskDir = new File(String.format(PERMANENT_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, tasksFolder, taskId));
+        File nfsTaskDir = new File(String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, tasksFolder, taskId));
         try {
             FileUtils.forceMkdir(nfsTaskDir);
         } catch (IOException e) {

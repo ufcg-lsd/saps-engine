@@ -1,8 +1,7 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
+import static org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage.NFS_STORAGE_TASK_DIR_PATTERN;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_FOLDER;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PERMANENT_STORAGE_TASK_DIR_PATTERN;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PERMANENT_STORAGE_TASK_STAGE_DIR_PATTERN;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_FOLDER;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_FOLDER;
 
@@ -25,6 +24,7 @@ public class NfsPermanentStorageTest {
     private static final String MOCK_NFS_STORAGE_PATH = "src/test/resources/nfs-storage-test";
     private static final String MOCK_NFS_TASKS_FOLDER = "archiver";
     private static final String NONEXISTENT_NFS_STORAGE_PATH = "src/test/resources/nfs-storage-test-2";
+    private static final String NFS_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s" + File.separator + "%s";
     private static class TestFile {
         private static final String INPUTDOWNLOADING = "file.ip";
         private static final String PREPROCESSING = "file.pp";
@@ -46,9 +46,9 @@ public class NfsPermanentStorageTest {
     }
 
     private boolean assertTaskDir(String taskId) {
-        File inputDir = new File(String.format(PERMANENT_STORAGE_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, MOCK_NFS_TASKS_FOLDER, taskId, INPUTDOWNLOADING_FOLDER));
-        File preprocessingDir = new File(String.format(PERMANENT_STORAGE_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, MOCK_NFS_TASKS_FOLDER, taskId, PREPROCESSING_FOLDER));
-        File processingDir = new File(String.format(PERMANENT_STORAGE_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, MOCK_NFS_TASKS_FOLDER, taskId, PROCESSING_FOLDER));
+        File inputDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, MOCK_NFS_TASKS_FOLDER, taskId, INPUTDOWNLOADING_FOLDER));
+        File preprocessingDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, MOCK_NFS_TASKS_FOLDER, taskId, PREPROCESSING_FOLDER));
+        File processingDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, MOCK_NFS_TASKS_FOLDER, taskId, PROCESSING_FOLDER));
         return inputDir.exists() && preprocessingDir.exists() && processingDir.exists()
              && containsFile(inputDir, TestFile.INPUTDOWNLOADING) && containsFile(preprocessingDir, TestFile.PREPROCESSING)
             && containsFile(processingDir, TestFile.PROCESSING);
@@ -79,7 +79,7 @@ public class NfsPermanentStorageTest {
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
             SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",
             "", "", new Timestamp(1), new Timestamp(1), "", "");
-        File taskDir = new File(String.format(PERMANENT_STORAGE_TASK_DIR_PATTERN, MOCK_NFS_STORAGE_PATH,
+        File taskDir = new File(String.format(NFS_STORAGE_TASK_DIR_PATTERN, MOCK_NFS_STORAGE_PATH,
             MOCK_NFS_TASKS_FOLDER, task.getTaskId()));
 //        FileUtils.forceMkdir(taskDir);
 

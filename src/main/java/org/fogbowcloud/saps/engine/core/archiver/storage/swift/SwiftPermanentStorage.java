@@ -16,16 +16,17 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class SwiftPermanentStorage implements PermanentStorage {
 
+
+    public static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
+    private static final String SWIFT_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
+    private static int MAX_ARCHIVE_TRIES = 1;
+    private static int MAX_SWIFT_UPLOAD_TRIES = 2;
+
     private final SwiftAPIClient swiftAPIClient;
     private final Properties properties;
     private final String nfsTempStoragePath;
     private final String containerName;
     private final boolean executionMode;
-
-    private static int MAX_ARCHIVE_TRIES = 1;
-    private static int MAX_SWIFT_UPLOAD_TRIES = 2;
-
-    public static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
 
     public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws SapsException {
         if (!checkProperties(properties))
