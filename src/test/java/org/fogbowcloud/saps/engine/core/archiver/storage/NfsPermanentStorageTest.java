@@ -40,7 +40,7 @@ public class NfsPermanentStorageTest {
     @Before
     public void setUp() {
         properties =  new Properties();
-        properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, MOCK_SAPS_EXPORT_PATH);
+        properties.setProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH, MOCK_SAPS_EXPORT_PATH);
         properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER, MOCK_NFS_TASKS_FOLDER);
     }
 

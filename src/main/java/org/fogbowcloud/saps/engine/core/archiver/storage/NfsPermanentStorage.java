@@ -29,7 +29,7 @@ public class NfsPermanentStorage implements PermanentStorage {
 
 
     public NfsPermanentStorage(Properties properties) throws SapsException {
-        this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+        this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.nfsPermanentStoragePath = properties
             .getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties

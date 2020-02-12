@@ -34,7 +34,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
         this.swiftAPIClient = swiftAPIClient;
         this.properties = properties;
-        this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+        this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
         this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME));
         this.executionMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties

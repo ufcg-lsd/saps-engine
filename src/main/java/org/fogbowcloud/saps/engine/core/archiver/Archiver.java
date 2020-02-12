@@ -72,7 +72,7 @@ public class Archiver {
 				SapsPropertiesConstants.IMAGE_DATASTORE_PORT,
 				SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR,
 				SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER,
-				SapsPropertiesConstants.SAPS_EXPORT_PATH,
+				SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH,
 				SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE
 		};
 
@@ -253,7 +253,7 @@ public class Archiver {
     private void deleteAllTaskFilesFromDisk(SapsImage task) {
         LOGGER.info("Deleting all task [" + task.getTaskId() + "] files from disk");
 
-        String sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+        String sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         String taskDirPath = sapsExports + File.separator + task.getTaskId();
 
         File taskDir = new File(taskDirPath);
