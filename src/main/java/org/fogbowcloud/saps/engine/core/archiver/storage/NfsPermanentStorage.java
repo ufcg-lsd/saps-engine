@@ -6,6 +6,7 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.SAPS_TASK_STAGE_DIR_PATTERN;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 import org.apache.commons.io.FileUtils;
@@ -62,15 +63,20 @@ public class NfsPermanentStorage implements PermanentStorage {
         String nfsTaskFolder = (task.getState() == ImageTaskState.FAILED && this.debugMode)
             ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
             : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
-        String nfsTaskDirPath = createTaskDir(nfsTaskFolder, task.getTaskId());
+        String nfsTaskDirPath;
+
+        try {
+            nfsTaskDirPath = createTaskDir(nfsTaskFolder, task.getTaskId());
+        } catch (IOException e) {
+            throw new PermanentStorageException("Could not create task dir [" + nfsTaskFolder + "] on nfs storage [" + nfsStoragePath + "]", e);
+        }
+
         try {
             copyDirToDir(inputdownloadingLocalDir, nfsTaskDirPath);
             copyDirToDir(preprocessingLocalDir, nfsTaskDirPath);
             copyDirToDir(processingLocalDir, nfsTaskDirPath);
         } catch (IOException e) {
-            throw new PermanentStorageException(
-                "Error while copying local directories to nfs task dir [" + nfsTaskDirPath + "]",
-                e);
+            throw new PermanentStorageException("Error while copying local directories to nfs task dir [" + nfsTaskDirPath + "]", e);
         }
         return true;
     }
@@ -104,21 +110,13 @@ public class NfsPermanentStorage implements PermanentStorage {
         FileUtils.copyDirectoryToDirectory(srcDir, destDir);
     }
 
-    private String createTaskDir(String tasksFolder, String taskId)
-        throws PermanentStorageException {
+    private String createTaskDir(String tasksFolder, String taskId) throws IOException {
         File storage_dir = new File(nfsStoragePath);
         if (!storage_dir.exists()) {
-            throw new PermanentStorageException(
-                "The nfs storage directory [" + nfsStoragePath + "] was not found");
+            throw new FileNotFoundException("The nfs storage directory [" + nfsStoragePath + "] was not found");
         }
         File nfsTaskDir = new File(String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, tasksFolder, taskId));
-        try {
-            FileUtils.forceMkdir(nfsTaskDir);
-        } catch (IOException e) {
-            throw new PermanentStorageException(
-                "Could not create task dir [" + nfsTaskDir.getAbsolutePath() + "] on nfs storage",
-                e);
-        }
+        FileUtils.forceMkdir(nfsTaskDir);
         return nfsTaskDir.getAbsolutePath();
 
     }
