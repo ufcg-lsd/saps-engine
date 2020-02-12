@@ -234,7 +234,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 			String objectStoreContainer, String swiftPrefixFolder, String taskFolder, SapsImage task)
 			throws URISyntaxException, IOException {
 
-		String accessId = getKeystoneToken();
+		String accessId = getKeystoneAccessId();
 
 		HttpClient client = HttpClients.createDefault();
 		HttpGet httpget = prepObjectStoreRequest(objectStoreHost, objectStorePath, objectStoreContainer,
@@ -244,7 +244,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
 	}
 
-	private String getKeystoneToken() throws IOException {
+	private String getKeystoneAccessId() throws IOException {
 		KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin();
 
 		Map<String, String> credentials = new HashMap<>();
