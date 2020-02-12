@@ -22,14 +22,14 @@ public class NfsPermanentStorage implements PermanentStorage {
     public static final Logger LOGGER = Logger.getLogger(NfsPermanentStorage.class);
     static final String NFS_STORAGE_TASK_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
 
-    private final String sapsExports;
+    private final String nfsTempStoragePath;
     private final String nfsStoragePath;
     private final boolean debugMode;
     private Properties properties;
 
 
     public NfsPermanentStorage(Properties properties) throws SapsException {
-        this.sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
+        this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
         this.nfsStoragePath = properties
             .getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
@@ -56,9 +56,11 @@ public class NfsPermanentStorage implements PermanentStorage {
 
         LOGGER.info("Archiving task [" + task.getTaskId() + "] to permanent storage.");
 
-        String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, sapsExports, taskId, INPUTDOWNLOADING_FOLDER);
-        String preprocessingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, sapsExports, taskId, PREPROCESSING_FOLDER);
-        String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, sapsExports, taskId, PROCESSING_FOLDER);
+        String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN,
+            nfsTempStoragePath, taskId, INPUTDOWNLOADING_FOLDER);
+        String preprocessingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN,
+            nfsTempStoragePath, taskId, PREPROCESSING_FOLDER);
+        String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PROCESSING_FOLDER);
 
         String nfsTaskFolder = (task.getState() == ImageTaskState.FAILED && this.debugMode)
             ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
