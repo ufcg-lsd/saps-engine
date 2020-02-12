@@ -23,14 +23,14 @@ public class NfsPermanentStorage implements PermanentStorage {
     static final String NFS_STORAGE_TASK_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
 
     private final String nfsTempStoragePath;
-    private final String nfsStoragePath;
+    private final String nfsPermanentStoragePath;
     private final boolean debugMode;
     private Properties properties;
 
 
     public NfsPermanentStorage(Properties properties) throws SapsException {
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH);
-        this.nfsStoragePath = properties
+        this.nfsPermanentStoragePath = properties
             .getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
             .getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
@@ -70,7 +70,8 @@ public class NfsPermanentStorage implements PermanentStorage {
         try {
             nfsTaskDirPath = createTaskDir(nfsTaskFolder, task.getTaskId());
         } catch (IOException e) {
-            throw new PermanentStorageException("Could not create task dir [" + nfsTaskFolder + "] on nfs storage [" + nfsStoragePath + "]", e);
+            throw new PermanentStorageException("Could not create task dir [" + nfsTaskFolder + "] on nfs storage [" + nfsPermanentStoragePath
+                + "]", e);
         }
 
         try {
@@ -88,12 +89,12 @@ public class NfsPermanentStorage implements PermanentStorage {
         String nfsTaskFolder = (task.getState() == ImageTaskState.FAILED && this.debugMode)
             ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
             : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
-        String taskDirPath = String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, nfsTaskFolder, task.getTaskId());
+        String taskDirPath = String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsPermanentStoragePath, nfsTaskFolder, task.getTaskId());
         File taskDir = new File(taskDirPath);
         if (!taskDir.exists()) {
             throw new PermanentStorageException(
                 "The task dir [" + taskDirPath + "] was not found on nfs storage directory ["
-                    + nfsStoragePath + "]");
+                    + nfsPermanentStoragePath + "]");
         }
         try {
             FileUtils.deleteDirectory(taskDir);
@@ -113,11 +114,13 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     private String createTaskDir(String tasksFolder, String taskId) throws IOException {
-        File storageDir = new File(nfsStoragePath);
+        File storageDir = new File(nfsPermanentStoragePath);
         if (!storageDir.exists()) {
-            throw new FileNotFoundException("The nfs storage directory [" + nfsStoragePath + "] was not found");
+            throw new FileNotFoundException("The nfs storage directory [" + nfsPermanentStoragePath
+                + "] was not found");
         }
-        File nfsTaskDir = new File(String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, tasksFolder, taskId));
+        File nfsTaskDir = new File(String.format(NFS_STORAGE_TASK_DIR_PATTERN,
+            nfsPermanentStoragePath, tasksFolder, taskId));
         FileUtils.forceMkdir(nfsTaskDir);
         return nfsTaskDir.getAbsolutePath();
 
