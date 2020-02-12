@@ -57,7 +57,7 @@ public class NfsPermanentStorageTest {
 
     @Test
     public void testArchiveOnDebugMode() throws SapsException {
-        properties.setProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE, DEBUG_MODE_TRUE);
+        properties.setProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE, DEBUG_MODE_TRUE);
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER, MOCK_NFS_DEBUG_TASKS_FOLDER);
 
@@ -96,7 +96,7 @@ public class NfsPermanentStorageTest {
 
     @Test
     public void testDeleteOnDebugMode() throws Exception {
-        properties.setProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE, DEBUG_MODE_TRUE);
+        properties.setProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE, DEBUG_MODE_TRUE);
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER, MOCK_NFS_DEBUG_TASKS_FOLDER);
 

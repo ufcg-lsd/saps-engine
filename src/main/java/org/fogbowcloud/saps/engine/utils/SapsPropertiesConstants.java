@@ -107,7 +107,7 @@ public class SapsPropertiesConstants {
 	public static final String SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR = "saps_execution_period_garbage_collector";
 
 	// Execution mode constants
-	public static final String SAPS_EXECUTION_DEBUG_MODE = "saps_execution_debug_mode";
+	public static final String SAPS_DEBUG_MODE = "saps_debug_mode";
 	public static final String SAPS_PERMANENT_STORAGE_TYPE = "saps_permanent_storage_type";
 	
 	public static final String DEFAULT_ARCHIVER_PERIOD = "default_archiver_period";

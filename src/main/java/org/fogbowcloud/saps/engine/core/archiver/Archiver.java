@@ -45,8 +45,8 @@ public class Archiver {
         this.catalog = catalog;
         this.sapsExecutor = Executors.newScheduledThreadPool(1);
         this.permanentStorage = createStorageInstance(properties.getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE));
-        this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
-                .getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
+        this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
+                .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
     }
 
     /**

@@ -30,10 +30,9 @@ public class NfsPermanentStorage implements PermanentStorage {
 
     public NfsPermanentStorage(Properties properties) throws SapsException {
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
-        this.nfsPermanentStoragePath = properties
-            .getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
-        this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
-            .getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
+        this.nfsPermanentStoragePath = properties.getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
+        this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
+            .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
         if (this.debugMode && !checkPropertiesDebugMode(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
         this.properties = properties;
