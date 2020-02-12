@@ -8,6 +8,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneException;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityPlugin;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -103,6 +104,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 				} catch (JSONException e1) {
 					LOGGER.error("Failed to create UNAVAILABLE task json.", e);
 				}
+			} catch (KeystoneException e) {
+				LOGGER.error(e);
 			}
 		}
 		return tasklist;
@@ -170,7 +173,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return res;
 	}
 
-	private JSONObject generateTaskEmailJson(String taskId) throws URISyntaxException, IOException, JSONException {
+	private JSONObject generateTaskEmailJson(String taskId)
+		throws URISyntaxException, IOException, JSONException, KeystoneException {
 		SapsImage task = application.getTask(taskId);
 		LOGGER.info("Task [" + taskId + "] : " + task);
 
@@ -191,7 +195,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private void prepareTaskFolder(JSONObject result, SapsImage task, String folder)
-			throws URISyntaxException, IOException, JSONException {
+		throws URISyntaxException, IOException, JSONException, KeystoneException {
 
 		String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
 		String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
@@ -232,7 +236,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
 	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
 			String objectStoreContainer, String swiftPrefixFolder, String taskFolder, SapsImage task)
-			throws URISyntaxException, IOException {
+		throws URISyntaxException, IOException, KeystoneException {
 
 		String accessId = getKeystoneAccessId();
 
@@ -244,7 +248,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
 	}
 
-	private String getKeystoneAccessId() throws IOException {
+	private String getKeystoneAccessId() throws KeystoneException {
 		KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin();
 
 		Map<String, String> credentials = new HashMap<>();
