@@ -50,7 +50,7 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public boolean archive(SapsImage task) {
+    public boolean archive(SapsImage task) throws PermanentStorageException {
         String taskId = task.getTaskId();
 
         LOGGER.info("Archiving task [" + task.getTaskId() + "] to permanent storage.");
@@ -104,7 +104,8 @@ public class NfsPermanentStorage implements PermanentStorage {
         FileUtils.copyDirectoryToDirectory(srcDir, destDir);
     }
 
-    private String createTaskDir(String tasksFolder, String taskId) {
+    private String createTaskDir(String tasksFolder, String taskId)
+        throws PermanentStorageException {
         File storage_dir = new File(nfsStoragePath);
         if (!storage_dir.exists()) {
             throw new PermanentStorageException(
