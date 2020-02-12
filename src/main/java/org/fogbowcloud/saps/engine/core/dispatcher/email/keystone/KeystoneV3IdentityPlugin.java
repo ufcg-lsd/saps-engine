@@ -2,6 +2,7 @@ package org.fogbowcloud.saps.engine.core.dispatcher.email.keystone;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -10,6 +11,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.http.HttpStatus;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,8 +37,8 @@ public class KeystoneV3IdentityPlugin {
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
     public static String createAccessId(Map<String, String> credentials) throws KeystoneException {
-
         LOGGER.debug("Creating new access id");
+        checkKeyStoneCredentials(credentials);
 
         JSONObject json;
         try {
@@ -90,5 +92,21 @@ public class KeystoneV3IdentityPlugin {
         JSONObject root = new JSONObject();
         root.put(AUTH_PROP, auth);
         return root;
+    }
+
+    private static void checkKeyStoneCredentials(Map<String, String> credentials)
+        throws KeystoneException {
+        String[] credentialsSet = {
+            AUTH_URL,
+            PROJECT_ID,
+            PASSWORD,
+            USER_ID
+        };
+        for (String credential : credentialsSet) {
+            String value = credentials.get(credential);
+            if(Objects.isNull(value)) {
+                throw new KeystoneException("Not found value to Keystone credential [" + credential + "]");
+            }
+        }
     }
 }
