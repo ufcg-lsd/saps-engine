@@ -7,7 +7,10 @@ pending-task-archive.db.t
 .settings/
 .project
 .idea/
-config/
 *.log*
 nohup.out
+<<<<<<< HEAD
 saps-engine.iml
+=======
+saps-engine.iml
+>>>>>>> 17fde90a51a179812a4c46c8786a6478a0c9ef17

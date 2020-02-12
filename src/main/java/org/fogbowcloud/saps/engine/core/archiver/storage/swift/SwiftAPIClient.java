@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.archiver.swift;
+package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 
 import java.io.File;
 import java.io.IOException;
