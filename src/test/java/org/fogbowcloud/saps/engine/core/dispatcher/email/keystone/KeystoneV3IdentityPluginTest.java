@@ -22,7 +22,6 @@ public class KeystoneV3IdentityPluginTest {
         Properties properties = new Properties();
         FileInputStream input = new FileInputStream(CONFIG_FILE_PATH);
         properties.load(input);
-        KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin();
 
         Map<String, String> credentials = new HashMap<>();
         credentials.put(KeystoneV3IdentityPlugin.AUTH_URL,
@@ -34,7 +33,7 @@ public class KeystoneV3IdentityPluginTest {
         credentials.put(KeystoneV3IdentityPlugin.PASSWORD,
             properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
 
-        String accessId = keystone.createAccessId(credentials);
+        String accessId = KeystoneV3IdentityPlugin.createAccessId(credentials);
         assertNotNull(accessId);
         assertFalse(accessId.isEmpty());
     }

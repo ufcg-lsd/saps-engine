@@ -249,15 +249,13 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private String getKeystoneAccessId() throws KeystoneException {
-		KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin();
 
 		Map<String, String> credentials = new HashMap<>();
 		credentials.put(KeystoneV3IdentityPlugin.AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
 		credentials.put(KeystoneV3IdentityPlugin.PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
 		credentials.put(KeystoneV3IdentityPlugin.USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
 		credentials.put(KeystoneV3IdentityPlugin.PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
-
-		return keystone.createAccessId(credentials);
+		return KeystoneV3IdentityPlugin.createAccessId(credentials);
 	}
 
 	private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer,

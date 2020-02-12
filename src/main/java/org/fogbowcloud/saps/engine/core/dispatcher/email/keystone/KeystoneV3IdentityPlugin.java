@@ -34,7 +34,7 @@ public class KeystoneV3IdentityPlugin {
     private static final String ID_PROP = "id";
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    public String createAccessId(Map<String, String> credentials) throws KeystoneException {
+    public static String createAccessId(Map<String, String> credentials) throws KeystoneException {
 
         LOGGER.debug("Creating new access id");
 
@@ -67,7 +67,7 @@ public class KeystoneV3IdentityPlugin {
         return accessId;
     }
 
-    private JSONObject mountJson(Map<String, String> credentials) throws JSONException {
+    private static JSONObject mountJson(Map<String, String> credentials) throws JSONException {
         JSONObject projectId = new JSONObject();
         projectId.put(ID_PROP, credentials.get(PROJECT_ID));
         JSONObject project = new JSONObject();
