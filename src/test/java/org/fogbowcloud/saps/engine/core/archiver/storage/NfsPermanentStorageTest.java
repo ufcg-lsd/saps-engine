@@ -16,6 +16,7 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class NfsPermanentStorageTest {
@@ -34,12 +35,18 @@ public class NfsPermanentStorageTest {
         private static final String PROCESSING = "file.p";
     }
 
+    private Properties properties;
+
+    @Before
+    public void setUp() throws Exception {
+        properties =  new Properties();
+        properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, MOCK_SAPS_EXPORT_PATH);
+        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER, MOCK_NFS_TASKS_FOLDER);
+    }
+
     @Test
     public void testArchive() throws SapsException {
-        Properties properties = new Properties();
-        properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, MOCK_SAPS_EXPORT_PATH);
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
-        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER, MOCK_NFS_TASKS_FOLDER);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
             SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",
@@ -50,10 +57,7 @@ public class NfsPermanentStorageTest {
 
     @Test(expected = PermanentStorageException.class)
     public void testArchiveNonExistentNfsStoragePath() throws SapsException {
-        Properties properties = new Properties();
-        properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, MOCK_SAPS_EXPORT_PATH);
-        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH,
-            NONEXISTENT_NFS_STORAGE_PATH);
+        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, NONEXISTENT_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
             SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",
@@ -63,11 +67,8 @@ public class NfsPermanentStorageTest {
 
     @Test
     public void testArchiveOnDebugMode() throws SapsException {
-        Properties properties = new Properties();
         properties.setProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE, DEBUG_MODE_TRUE);
-        properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, MOCK_SAPS_EXPORT_PATH);
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
-        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER, MOCK_NFS_TASKS_FOLDER);
         properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER, MOCK_NFS_DEBUG_TASKS_FOLDER);
 
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
@@ -87,12 +88,7 @@ public class NfsPermanentStorageTest {
             MOCK_NFS_TASKS_FOLDER, task.getTaskId()));
 //        FileUtils.forceMkdir(taskDir);
 
-        Properties properties = new Properties();
-        properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, MOCK_SAPS_EXPORT_PATH);
-        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH,
-            MOCK_NFS_STORAGE_PATH);
-        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER,
-            MOCK_NFS_TASKS_FOLDER);
+        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         permanentStorage.delete(task);
         Assert.assertFalse(taskDir.exists());
@@ -104,12 +100,7 @@ public class NfsPermanentStorageTest {
         SapsImage task = new SapsImage(fakeTaskId, "", "", new Date(), ImageTaskState.FINISHED,
             SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",
             "", "", new Timestamp(1), new Timestamp(1), "", "");
-        Properties properties = new Properties();
-        properties.setProperty(SapsPropertiesConstants.SAPS_EXPORT_PATH, MOCK_SAPS_EXPORT_PATH);
-        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH,
-            MOCK_NFS_STORAGE_PATH);
-        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER,
-            MOCK_NFS_TASKS_FOLDER);
+        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         permanentStorage.delete(task);
     }
