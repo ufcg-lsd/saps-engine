@@ -111,8 +111,8 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     private String createTaskDir(String tasksFolder, String taskId) throws IOException {
-        File storage_dir = new File(nfsStoragePath);
-        if (!storage_dir.exists()) {
+        File storageDir = new File(nfsStoragePath);
+        if (!storageDir.exists()) {
             throw new FileNotFoundException("The nfs storage directory [" + nfsStoragePath + "] was not found");
         }
         File nfsTaskDir = new File(String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsStoragePath, tasksFolder, taskId));
