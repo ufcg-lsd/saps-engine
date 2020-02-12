@@ -16,6 +16,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class NfsPermanentStorage implements PermanentStorage {
 
@@ -29,6 +30,8 @@ public class NfsPermanentStorage implements PermanentStorage {
 
 
     public NfsPermanentStorage(Properties properties) throws SapsException {
+        if (!checkProperties(properties))
+            throw new SapsException("Error on validate the file. Missing properties for start Nfs Permanent Storage.");
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.nfsPermanentStoragePath = properties.getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
@@ -36,6 +39,15 @@ public class NfsPermanentStorage implements PermanentStorage {
         if (this.debugMode && !checkPropertiesDebugMode(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
         this.properties = properties;
+    }
+
+    private boolean checkProperties(Properties properties) {
+        String[] propertiesSet = {
+            SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER,
+            SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH
+        };
+
+        return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
     private boolean checkPropertiesDebugMode(Properties properties) {
