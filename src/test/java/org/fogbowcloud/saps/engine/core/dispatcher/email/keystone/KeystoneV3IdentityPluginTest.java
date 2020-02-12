@@ -5,12 +5,11 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.KeyStoreException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityPlugin;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class KeystoneV3IdentityPluginTest {
@@ -18,7 +17,8 @@ public class KeystoneV3IdentityPluginTest {
     private static final String CONFIG_FILE_PATH = "src/test/resources/dispatcher-test.conf";
 
     @Test
-    public void createAccessId() throws IOException, KeyStoreException {
+    @Ignore
+    public void createAccessId() throws IOException, KeystoneException {
         Properties properties = new Properties();
         FileInputStream input = new FileInputStream(CONFIG_FILE_PATH);
         properties.load(input);
