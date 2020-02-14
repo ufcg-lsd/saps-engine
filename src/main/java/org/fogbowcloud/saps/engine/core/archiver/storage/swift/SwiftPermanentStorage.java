@@ -37,8 +37,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
         this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME));
-        this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE) && properties
-                .getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
+        this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
+                .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
 
         if (this.executionDebugMode && !checkPropertiesDebugMode(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
@@ -91,8 +91,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 + " archiving attempts for each folder (inputdownloading, preprocessing, processing)");
 
         String swiftExports = (task.getState() == ImageTaskState.FAILED && this.executionDebugMode)
-                ? properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS)
-                : properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX);
+                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER)
+                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER);
 
         String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, INPUTDOWNLOADING_FOLDER);
         String inputdownloadingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, INPUTDOWNLOADING_FOLDER);
@@ -211,8 +211,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
 
         String swiftExports = (task.getState() == ImageTaskState.FAILED && this.executionDebugMode)
-                ? properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS)
-                : properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX);
+                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
+                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
 
         String prefix = swiftExports + File.separator + taskId;
 
