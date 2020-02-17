@@ -4,18 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.exceptions.ArchiverException;
-import org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
-import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
-import org.fogbowcloud.saps.engine.core.catalog.jdbc.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
@@ -35,39 +31,18 @@ public class Archiver {
 
     private static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
-    public Archiver(Properties properties) throws SapsException {
-        this(properties, new JDBCCatalog(properties));
-    }
-
-    protected Archiver(Properties properties, Catalog catalog) throws SapsException {
+    public Archiver(Properties properties, Catalog catalog, PermanentStorage permanentStorage, ScheduledExecutorService executor)
+        throws SapsException {
         if (!checkProperties(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
-
         this.catalog = catalog;
-        this.sapsExecutor = Executors.newScheduledThreadPool(1);
+        this.permanentStorage = permanentStorage;
+        this.sapsExecutor = executor;
         this.tempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
-        this.permanentStorage = createStorageInstance(properties.getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE), properties);
         this.gcDelayPeriod = Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR));
         this.archiverDelayPeriod = Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER));
         this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
-                .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
-    }
-
-    /**
-     * It creates an instance from declared {@code PermanentStorage} type.
-     *
-     * @param type permanent storage type to be created
-     * @return {@code PermanentStorage} instance
-     * @throws SapsException
-     */
-    private PermanentStorage createStorageInstance(String type, Properties properties) throws SapsException {
-        String lType = type.toLowerCase();
-        if (lType.equals("swift"))
-            return new SwiftPermanentStorage(properties);
-        if (lType.equals("nfs"))
-            return new NfsPermanentStorage(properties);
-
-        throw new SapsException("Failed to recognize type of permanent storage");
+            .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
     }
 
     private boolean checkProperties(Properties properties) {
