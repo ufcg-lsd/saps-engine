@@ -25,13 +25,15 @@ import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class Archiver {
 
-    private final Properties properties;
     private final Catalog catalog;
     private final PermanentStorage permanentStorage;
     private final ScheduledExecutorService sapsExecutor;
     private final boolean executionDebugMode;
+    private final String tempStoragePath;
+    private final long gcDelayPeriod;
+    private final long archiverDelayPeriod;
 
-    public static final Logger LOGGER = Logger.getLogger(Archiver.class);
+    private static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
     public Archiver(Properties properties) throws SapsException {
         this(properties, new JDBCCatalog(properties));
@@ -41,10 +43,12 @@ public class Archiver {
         if (!checkProperties(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
 
-        this.properties = properties;
         this.catalog = catalog;
         this.sapsExecutor = Executors.newScheduledThreadPool(1);
-        this.permanentStorage = createStorageInstance(properties.getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE));
+        this.tempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
+        this.permanentStorage = createStorageInstance(properties.getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE), properties);
+        this.gcDelayPeriod = Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR));
+        this.archiverDelayPeriod = Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER));
         this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
     }
@@ -56,7 +60,7 @@ public class Archiver {
      * @return {@code PermanentStorage} instance
      * @throws SapsException
      */
-    private PermanentStorage createStorageInstance(String type) throws SapsException {
+    private PermanentStorage createStorageInstance(String type, Properties properties) throws SapsException {
         String lType = type.toLowerCase();
         if (lType.equals("swift"))
             return new SwiftPermanentStorage(properties);
@@ -82,10 +86,10 @@ public class Archiver {
     public void start() throws ArchiverException {
         cleanUnfinishedArchivedData();
 
-        sapsExecutor.scheduleWithFixedDelay(() -> garbageCollector(), 0, Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR)),
+        sapsExecutor.scheduleWithFixedDelay(() -> garbageCollector(), 0, gcDelayPeriod,
                 TimeUnit.SECONDS);
 
-        sapsExecutor.scheduleWithFixedDelay(() -> archiver(), 0, Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER)),
+        sapsExecutor.scheduleWithFixedDelay(() -> archiver(), 0, archiverDelayPeriod,
                 TimeUnit.SECONDS);
     }
 
@@ -252,9 +256,7 @@ public class Archiver {
      */
     private void deleteAllTaskFilesFromDisk(SapsImage task) {
         LOGGER.info("Deleting all task [" + task.getTaskId() + "] files from disk");
-
-        String sapsExports = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
-        String taskDirPath = sapsExports + File.separator + task.getTaskId();
+        String taskDirPath = tempStoragePath + File.separator + task.getTaskId();
 
         File taskDir = new File(taskDirPath);
         if (taskDir.exists() && taskDir.isDirectory()) {
