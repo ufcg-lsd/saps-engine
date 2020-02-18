@@ -20,7 +20,7 @@ public class JDBCCatalogUtil {
                     rs.getString(JDBCCatalogConstants.Tables.User.PASSWORD), rs.getBoolean(JDBCCatalogConstants.Tables.User.ENABLE), rs.getBoolean(JDBCCatalogConstants.Tables.User.NOTIFY),
                     rs.getBoolean(JDBCCatalogConstants.Tables.User.ADMIN_ROLE));
         } catch (SQLException e) {
-            throw new JDBCCatalogException("Error while extract user");
+            throw new JDBCCatalogException("Error while extract user", e);
         }
 
         return sebalUser;
@@ -40,7 +40,7 @@ public class JDBCCatalogUtil {
                         rs.getTimestamp(JDBCCatalogConstants.Tables.Task.CREATION_TIME), rs.getTimestamp(JDBCCatalogConstants.Tables.Task.UPDATED_TIME),
                         rs.getString(JDBCCatalogConstants.Tables.Task.STATUS), rs.getString(JDBCCatalogConstants.Tables.Task.ERROR_MSG)));
             } catch (SQLException e) {
-                throw new JDBCCatalogException("Error while extract task");
+                throw new JDBCCatalogException("Error while extract task", e);
             }
         }
         return imageTasks;
