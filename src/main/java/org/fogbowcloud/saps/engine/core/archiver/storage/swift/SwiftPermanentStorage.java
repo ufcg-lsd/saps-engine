@@ -11,9 +11,9 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
@@ -31,9 +31,9 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     public static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
 
-    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws SapsException {
+    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws PermanentStorageException {
         if (!checkProperties(properties))
-            throw new SapsException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
+            throw new PermanentStorageException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
 
         this.swiftAPIClient = swiftAPIClient;
         this.properties = properties;
@@ -44,10 +44,10 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 .getProperty(SapsPropertiesConstants.SAPS_EXECUTION_DEBUG_MODE).toLowerCase().equals("true");
 
         if (this.debugMode && !checkPropertiesDebugMode(properties))
-            throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
+            throw new PermanentStorageException("Error on validate the file. Missing properties for start Saps Controller.");
     }
 
-    public SwiftPermanentStorage(Properties properties) throws SapsException {
+    public SwiftPermanentStorage(Properties properties) throws PermanentStorageException {
         this(properties, new SwiftAPIClient(properties));
     }
 

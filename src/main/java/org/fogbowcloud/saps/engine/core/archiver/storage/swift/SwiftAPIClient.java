@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
-import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
@@ -30,9 +29,9 @@ public class SwiftAPIClient {
 
     public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
 
-    public SwiftAPIClient(Properties properties) throws SapsException {
+    public SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
         if (!checkProperties(properties))
-            throw new SapsException("Error on validate the file. Missing properties for start Swift API Client.");
+            throw new SwiftPermanentStorageException("Error on validate the file. Missing properties for start Swift API Client.");
 
         this.properties = properties;
 

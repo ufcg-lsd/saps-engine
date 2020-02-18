@@ -11,11 +11,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -104,21 +104,21 @@ public class SwiftPermanentStorageTest {
         return properties;
     }
 
-    @Test(expected = SapsException.class)
-    public void failureTestToBuildArchiveBecausePropertiesIsNull() throws SapsException {
+    @Test(expected = PermanentStorageException.class)
+    public void failureTestToBuildArchiveBecausePropertiesIsNull() throws PermanentStorageException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         new SwiftPermanentStorage(null, swiftAPIClient);
     }
 
-    @Test(expected = SapsException.class)
-    public void failureTestToBuildArchiveWithoutDebugMode() throws SapsException, IOException {
+    @Test(expected = PermanentStorageException.class)
+    public void failureTestToBuildArchiveWithoutDebugMode() throws PermanentStorageException, IOException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createFailurePropertiesWithoutArchiverInDebugMode();
         new SwiftPermanentStorage(properties, swiftAPIClient);
     }
 
-    @Test(expected = SapsException.class)
-    public void failureTestToBuildArchiveInDebugMode() throws SapsException, IOException {
+    @Test(expected = PermanentStorageException.class)
+    public void failureTestToBuildArchiveInDebugMode() throws PermanentStorageException, IOException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createFailurePropertiesWithArchiverInDebugMode();
         new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -269,7 +269,7 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteSuccessfulTaskWithoutArchiverInDebugMode() throws IOException, SapsException {
+    public void testToDeleteSuccessfulTaskWithoutArchiverInDebugMode() throws IOException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -289,7 +289,7 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteFailureTaskWithoutArchiverInDebugMode() throws IOException, SapsException {
+    public void testToDeleteFailureTaskWithoutArchiverInDebugMode() throws IOException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -307,7 +307,7 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteSuccessfulTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode() throws IOException, SapsException {
+    public void testToDeleteSuccessfulTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode() throws IOException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -325,7 +325,7 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteFailureTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode() throws IOException, SapsException {
+    public void testToDeleteFailureTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode() throws IOException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);

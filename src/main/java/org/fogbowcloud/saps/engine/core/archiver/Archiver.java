@@ -13,12 +13,12 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.exceptions.ArchiverException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.jdbc.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
@@ -33,13 +33,13 @@ public class Archiver {
 
     public static final Logger LOGGER = Logger.getLogger(Archiver.class);
 
-    public Archiver(Properties properties) throws SapsException {
+    public Archiver(Properties properties) throws ArchiverException, PermanentStorageException {
         this(properties, new JDBCCatalog(properties));
     }
 
-    protected Archiver(Properties properties, Catalog catalog) throws SapsException {
+    protected Archiver(Properties properties, Catalog catalog) throws ArchiverException, PermanentStorageException {
         if (!checkProperties(properties))
-            throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
+            throw new ArchiverException("Error on validate the file. Missing properties for start Saps Controller.");
 
         this.properties = properties;
         this.catalog = catalog;
@@ -54,29 +54,29 @@ public class Archiver {
      *
      * @param type permanent storage type to be created
      * @return {@code PermanentStorage} instance
-     * @throws SapsException
+     * @throws PermanentStorageException
      */
-    private PermanentStorage createStorageInstance(String type) throws SapsException {
+    private PermanentStorage createStorageInstance(String type) throws PermanentStorageException {
         String lType = type.toLowerCase();
         if (lType.equals("swift"))
             return new SwiftPermanentStorage(properties);
         if (lType.equals("nfs"))
             return new NfsPermanentStorage();
 
-        throw new SapsException("Failed to recognize type of permanent storage");
+        throw new PermanentStorageException("Failed to recognize type of permanent storage");
     }
 
     private boolean checkProperties(Properties properties) {
-		String[] propertiesSet = {
-				SapsPropertiesConstants.IMAGE_DATASTORE_IP,
-				SapsPropertiesConstants.IMAGE_DATASTORE_PORT,
-				SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR,
-				SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER,
-				SapsPropertiesConstants.SAPS_EXPORT_PATH,
-				SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE
-		};
+        String[] propertiesSet = {
+                SapsPropertiesConstants.IMAGE_DATASTORE_IP,
+                SapsPropertiesConstants.IMAGE_DATASTORE_PORT,
+                SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR,
+                SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER,
+                SapsPropertiesConstants.SAPS_EXPORT_PATH,
+                SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE
+        };
 
-		return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
+        return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
     public void start() throws ArchiverException {
