@@ -63,10 +63,10 @@ public class Archiver {
     public void start() throws ArchiverException {
         resetArchivingTasks();
 
-        sapsExecutor.scheduleWithFixedDelay(() -> runGarbageCollector(), 0, gcDelayPeriod,
+        sapsExecutor.scheduleWithFixedDelay(this::runGarbageCollector, 0, gcDelayPeriod,
                 TimeUnit.SECONDS);
 
-        sapsExecutor.scheduleWithFixedDelay(() -> runArchiver(), 0, archiverDelayPeriod,
+        sapsExecutor.scheduleWithFixedDelay(this::runArchiver, 0, archiverDelayPeriod,
                 TimeUnit.SECONDS);
     }
 
