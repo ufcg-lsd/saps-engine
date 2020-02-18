@@ -45,7 +45,7 @@ public class NfsPermanentStorageTest {
     }
 
     @Test
-    public void testArchive() throws SapsException {
+    public void testArchive() throws PermanentStorageException {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
@@ -56,7 +56,7 @@ public class NfsPermanentStorageTest {
     }
 
     @Test
-    public void testArchiveOnDebugMode() throws SapsException {
+    public void testArchiveOnDebugMode() throws PermanentStorageException {
         properties.setProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE, DEBUG_MODE_TRUE);
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER, MOCK_NFS_DEBUG_TASKS_FOLDER);
@@ -70,7 +70,8 @@ public class NfsPermanentStorageTest {
     }
 
     @Test(expected = PermanentStorageException.class)
-    public void testArchiveNonExistentNfsStoragePath() throws SapsException {
+    public void testArchiveNonExistentNfsStoragePath()
+        throws PermanentStorageException {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, NONEXISTENT_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
@@ -112,7 +113,7 @@ public class NfsPermanentStorageTest {
     }
 
     @Test(expected = PermanentStorageException.class)
-    public void testDeleteNonExistentTaskDir() throws SapsException {
+    public void testDeleteNonExistentTaskDir() throws PermanentStorageException {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         String fakeTaskId = "fake";
         SapsImage task = new SapsImage(fakeTaskId, "", "", new Date(), ImageTaskState.FINISHED,
