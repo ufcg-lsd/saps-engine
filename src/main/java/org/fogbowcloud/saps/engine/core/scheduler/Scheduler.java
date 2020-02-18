@@ -35,6 +35,7 @@ public class Scheduler {
     private ScheduledExecutorService sapsExecutor;
     private Selector selector;
 
+    //FIXME Remove properties field and add new variables
     private Properties properties;
     private Catalog catalog;
     private Arrebol arrebol;

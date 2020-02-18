@@ -25,6 +25,7 @@ public class NfsPermanentStorage implements PermanentStorage {
     private final String nfsTempStoragePath;
     private final String nfsPermanentStoragePath;
     private final boolean debugMode;
+    //FIXME Remove properties field and add new variables
     private Properties properties;
 
 

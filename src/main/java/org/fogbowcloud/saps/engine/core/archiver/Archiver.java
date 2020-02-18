@@ -34,6 +34,7 @@ public class Archiver {
     public Archiver(Properties properties, Catalog catalog, PermanentStorage permanentStorage, ScheduledExecutorService executor)
         throws ArchiverException {
         if (!checkProperties(properties))
+            //FIXME Change exception to WrongConfigurationException and move it to inside check properties
             throw new ArchiverException("Error on validate the file. Missing properties for start Saps Controller.");
         this.catalog = catalog;
         this.permanentStorage = permanentStorage;
@@ -206,6 +207,7 @@ public class Archiver {
      *
      * @param task {@code SapsImage} that contains information to delete your folder
      */
+    //FIXME Rename to deleteTempData
     private void deleteTaskTempData(SapsImage task) {
         LOGGER.info("Deleting all task [" + task.getTaskId() + "] files from disk");
         String taskDirPath = tempStoragePath + File.separator + task.getTaskId();

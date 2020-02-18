@@ -30,6 +30,7 @@ import org.restlet.routing.Router;
 import org.restlet.service.ConnectorService;
 import org.restlet.service.CorsService;
 
+//FIXME Delete any obvious java-doc
 public class DatabaseApplication extends Application {
     private static final String DB_WEB_STATIC_ROOT = "./dbWebHtml/static";
 

@@ -26,6 +26,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
     private static final int MAX_SWIFT_UPLOAD_TRIES = 2;
 
     private final SwiftAPIClient swiftAPIClient;
+    //FIXME Remove properties field and add new variables
     private final Properties properties;
     private final String nfsTempStoragePath;
     private final String containerName;
