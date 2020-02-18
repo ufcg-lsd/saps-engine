@@ -1,9 +1,9 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
 import static org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage.NFS_STORAGE_TASK_DIR_PATTERN;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_FOLDER;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_FOLDER;
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_FOLDER;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_DIR;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_DIR;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_DIR;
 
 import java.io.File;
 import java.sql.Timestamp;
@@ -123,9 +123,9 @@ public class NfsPermanentStorageTest {
     }
 
     private boolean assertTaskDir(String taskFolder, String taskId) {
-        File inputDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, taskFolder, taskId, INPUTDOWNLOADING_FOLDER));
-        File preprocessingDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, taskFolder, taskId, PREPROCESSING_FOLDER));
-        File processingDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, taskFolder, taskId, PROCESSING_FOLDER));
+        File inputDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, taskFolder, taskId, INPUTDOWNLOADING_DIR));
+        File preprocessingDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, taskFolder, taskId, PREPROCESSING_DIR));
+        File processingDir = new File(String.format(NFS_TASK_STAGE_DIR_PATTERN, MOCK_NFS_STORAGE_PATH, taskFolder, taskId, PROCESSING_DIR));
         return inputDir.exists() && preprocessingDir.exists() && processingDir.exists()
             && containsFile(inputDir, TestFile.INPUTDOWNLOADING) && containsFile(preprocessingDir, TestFile.PREPROCESSING)
             && containsFile(processingDir, TestFile.PROCESSING);
