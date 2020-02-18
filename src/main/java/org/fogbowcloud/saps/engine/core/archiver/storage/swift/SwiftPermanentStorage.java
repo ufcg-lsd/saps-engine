@@ -159,7 +159,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
             if (!uploadFile(actualFile, swiftDir)) {
                 LOGGER.info("Failure in archiving file [" + actualFile.getAbsolutePath() + "]");
                 //TODO What should really be done when one or more files fail to upload?
-                //return false;
+                return false;
             }
         }
 
