@@ -41,8 +41,8 @@ public class Archiver {
         this.permanentStorage = permanentStorage;
         this.sapsExecutor = executor;
         this.tempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
-        this.gcDelayPeriod = Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR));
-        this.archiverDelayPeriod = Long.valueOf(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER));
+        this.gcDelayPeriod = Long.parseLong(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR));
+        this.archiverDelayPeriod = Long.parseLong(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER));
         this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
             .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
     }
