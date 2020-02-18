@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.exceptions.ArchiverException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -59,25 +60,25 @@ public class Archiver {
     }
 
     public void start() throws ArchiverException {
-        cleanUnfinishedArchivedData();
+        resetUnfinishedTasks();
 
-        sapsExecutor.scheduleWithFixedDelay(() -> garbageCollector(), 0, gcDelayPeriod,
+        sapsExecutor.scheduleWithFixedDelay(() -> runGarbageCollector(), 0, gcDelayPeriod,
                 TimeUnit.SECONDS);
 
-        sapsExecutor.scheduleWithFixedDelay(() -> archiver(), 0, archiverDelayPeriod,
+        sapsExecutor.scheduleWithFixedDelay(() -> runArchiver(), 0, archiverDelayPeriod,
                 TimeUnit.SECONDS);
     }
 
     /**
      * Its an garbage collector deleting data directory from {@code ImageTaskState.FAILED} tasks.
      */
-    private void garbageCollector() {
-        List<SapsImage> failedTasks = tasksInFailedState();
+    private void runGarbageCollector() {
+        List<SapsImage> failedTasks = getFailedTasks();
 
         LOGGER.info("Deleting data directory from " + failedTasks.size() + " failed tasks");
 
         for (SapsImage task : failedTasks)
-            deleteAllTaskFilesFromDisk(task);
+            deleteTaskTempData(task);
     }
 
     /**
@@ -85,7 +86,7 @@ public class Archiver {
      *
      * @return {@code SapsImage} list in {@code ImageTaskState.FAILED} state
      */
-    private List<SapsImage> tasksInFailedState() {
+    private List<SapsImage> getFailedTasks() {
         return CatalogUtils.getTasks(catalog, ImageTaskState.FAILED,
                 "gets tasks with " + ImageTaskState.FAILED.getValue() + " state");
     }
@@ -95,15 +96,19 @@ public class Archiver {
      *
      * @throws ArchiverException
      */
-    private void cleanUnfinishedArchivedData() throws ArchiverException {
-        List<SapsImage> archivingTasks = tasksInArchivingState();
+    private void resetUnfinishedTasks() throws ArchiverException {
+        List<SapsImage> archivingTasks = getArchivingTasks();
 
         LOGGER.info("Rollback in " + archivingTasks.size() + " tasks in archiving state");
 
         for (SapsImage task : archivingTasks) {
             LOGGER.info("Applying task [" + task.getTaskId() + "] rollback");
             rollBackArchive(task);
-            permanentStorage.delete(task);
+            try {
+                permanentStorage.delete(task);
+            } catch (PermanentStorageException e) {
+                LOGGER.error("Error while delete task [" + task.getTaskId() + "] from Permanent Storage");
+            }
         }
     }
 
@@ -112,7 +117,7 @@ public class Archiver {
      *
      * @return {@code SapsImage} list in {@code ImageTaskState.ARCHIVING} state
      */
-    private List<SapsImage> tasksInArchivingState() {
+    private List<SapsImage> getArchivingTasks() {
         return CatalogUtils.getTasks(catalog, ImageTaskState.ARCHIVING,
                 "gets tasks with " + ImageTaskState.ARCHIVING.getValue() + " state");
     }
@@ -122,32 +127,36 @@ public class Archiver {
      *
      * @param task {@code SapsImage} to be rollbacked
      */
+    //TODO Update method doc
     private void rollBackArchive(SapsImage task) {
         String taskId = task.getTaskId();
         LOGGER.info("Reversing the archiving done in task [" + taskId + "] and returning to state ["
                 + ImageTaskState.FINISHED.getValue() + "]");
 
-        removeTimestampTaskInCatalog(task, "removes task [" + taskId + "] timestamp");
+        removeLastStateChangeTimeFromTask(task, "removes task [" + taskId + "] timestamp");
 
-        updateStateInCatalog(task, ImageTaskState.FINISHED, SapsImage.AVAILABLE,
-                "Max archive tries reached", SapsImage.NONE_ARREBOL_JOB_ID,
-                "updates task [" + taskId + "] to failed state");
-
-        addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+        updateTaskState(task, ImageTaskState.FINISHED, SapsImage.AVAILABLE,
+                "Max archive tries reached", SapsImage.NONE_ARREBOL_JOB_ID,);
+        addTaskStateChangeTime(task, "updates task [" + taskId + "] timestamp");
     }
 
     /**
      * It archives {@code ImageTaskState.FINISHED} {@code SapsImage} in {@code PermanentStorage}.
      */
-    private void archiver() {
-        List<SapsImage> tasksToArchive = tasksToArchive();
+    private void runArchiver() {
+        List<SapsImage> tasksToArchive = getFinishedTasks();
 
-        LOGGER.info("Trying to archive " + tasksToArchive.size() + " finished tasks: " + tasksToArchive);
+        LOGGER.info("Trying to archive " + tasksToArchive.size() + " finished tasks");
 
         for (SapsImage task : tasksToArchive) {
             LOGGER.info("Try to archive task [" + task.getTaskId() + "]");
-            tryTaskArchive(task);
-            deleteAllTaskFilesFromDisk(task);
+            try {
+                archiveTask(task);
+            } catch (PermanentStorageException e) {
+                LOGGER.info("FAILURE in archiving task [" + task.getTaskId() + "]");
+                setTaskToFailedState(task);
+            }
+            deleteTaskTempData(task);
         }
     }
 
@@ -156,7 +165,7 @@ public class Archiver {
      *
      * @return {@code SapsImage} list in {@code ImageTaskState.FINISHED} state
      */
-    private List<SapsImage> tasksToArchive() {
+    private List<SapsImage> getFinishedTasks() {
         return CatalogUtils.getTasks(catalog, ImageTaskState.FINISHED,
                 "gets tasks with " + ImageTaskState.FINISHED.getValue() + " state");
     }
@@ -166,48 +175,18 @@ public class Archiver {
      *
      * @param task {@code SapsImage} to be archived
      */
-    private void tryTaskArchive(SapsImage task) {
-        if (prepareArchive(task) && permanentStorage.archive(task)) {
-            LOGGER.info("SUCCESS in archiving task [" + task.getTaskId() + "]");
-            finishArchive(task);
-        } else {
-            LOGGER.info("FAILURE in archiving task [" + task.getTaskId() + "]");
-            failedArchive(task);
-        }
-    }
-
-    /**
-     * It prepares a {@code SapsImage} for archive.
-     *
-     * @param task {@code SapsImage} to be prepared for archive
-     * @return success (true) or failure (false) in preparing the {@code SapsImage}.
-     */
-    private boolean prepareArchive(SapsImage task) {
+    private void archiveTask(SapsImage task) throws PermanentStorageException {
         LOGGER.info("Preparing task [" + task.getTaskId() + "] to archive");
+        updateTaskState(task, ImageTaskState.ARCHIVING, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+            SapsImage.NONE_ARREBOL_JOB_ID);
+        addTaskStateChangeTime(task, "updates task [" + task.getTaskId() + "] timestamp");
 
-        String taskId = task.getTaskId();
+        permanentStorage.archive(task);
 
-        updateStateInCatalog(task, ImageTaskState.ARCHIVING, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
-                SapsImage.NONE_ARREBOL_JOB_ID, "updates task [" + taskId + "] with state [" + ImageTaskState.ARCHIVING.getValue() + "]");
-
-        addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
-
-        LOGGER.info("Task [" + taskId + "] ready to archive");
-        return true;
-    }
-
-    /**
-     * It finishes a success {@code SapsImage}.
-     *
-     * @param task {@code SapsImage} to be finished
-     */
-    private void finishArchive(SapsImage task) {
-        LOGGER.debug("Finishing archive for task [" + task + "]");
-
-        String taskId = task.getTaskId();
-        updateStateInCatalog(task, ImageTaskState.ARCHIVED, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
-                SapsImage.NONE_ARREBOL_JOB_ID, "updates task [" + taskId + "] with state [" + ImageTaskState.ARCHIVED.getValue() + "]");
-        addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+        LOGGER.info("SUCCESS in archiving task [" + task.getTaskId() + "]");
+        updateTaskState(task, ImageTaskState.ARCHIVED, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+            SapsImage.NONE_ARREBOL_JOB_ID);
+        addTaskStateChangeTime(task, "updates task [" + task.getTaskId() + "] timestamp");
     }
 
     /**
@@ -215,13 +194,12 @@ public class Archiver {
      *
      * @param task {@code SapsImage} to be finished
      */
-    private void failedArchive(SapsImage task) {
+    private void setTaskToFailedState(SapsImage task) {
         String taskId = task.getTaskId();
 
-        updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
-                "Max archive tries reached", SapsImage.NONE_ARREBOL_JOB_ID,
-                "updates task [" + taskId + "] to failed state");
-        addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+        updateTaskState(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
+                "Max archive tries reached", SapsImage.NONE_ARREBOL_JOB_ID);
+        addTaskStateChangeTime(task, "updates task [" + taskId + "] timestamp");
     }
 
     /**
@@ -229,18 +207,21 @@ public class Archiver {
      *
      * @param task {@code SapsImage} that contains information to delete your folder
      */
-    private void deleteAllTaskFilesFromDisk(SapsImage task) {
+    private void deleteTaskTempData(SapsImage task) {
         LOGGER.info("Deleting all task [" + task.getTaskId() + "] files from disk");
         String taskDirPath = tempStoragePath + File.separator + task.getTaskId();
 
         File taskDir = new File(taskDirPath);
         if (taskDir.exists() && taskDir.isDirectory()) {
-            if (this.executionDebugMode && task.getState().equals(ImageTaskState.FAILED))
-                permanentStorage.archive(task);
             try {
+                //TODO Remove archive task from here
+                if (this.executionDebugMode && task.getState().equals(ImageTaskState.FAILED))
+                    permanentStorage.archive(task);
                 FileUtils.deleteDirectory(taskDir);
             } catch (IOException e) {
-                LOGGER.error("Error while delete all task files from disk: ", e);
+                LOGGER.error("Error while delete task [" + task.getTaskId() +"] files from disk: ", e);
+            } catch (PermanentStorageException e) {
+                LOGGER.error("Error while archive task [" + task.getTaskId() + "] to debug permanent storage dir");
             }
         } else
             LOGGER.info("Path " + taskDirPath + " does not exist or is not a directory!");
@@ -254,18 +235,17 @@ public class Archiver {
      * @param status       new task status
      * @param error        new error message
      * @param arrebolJobId new Arrebol job id
-     * @param message      information message
      * @return boolean representation reporting success (true) or failure (false) in update {@code SapsImage} state
      * in {@code Cataloh}
      */
-    private boolean updateStateInCatalog(SapsImage task, ImageTaskState state, String status, String error,
-                                         String arrebolJobId, String message) {
+    private boolean updateTaskState(SapsImage task, ImageTaskState state, String status, String error,
+                                         String arrebolJobId) {
         task.setState(state);
         task.setStatus(status);
         task.setError(error);
         task.setArrebolJobId(arrebolJobId);
         return CatalogUtils.updateState(catalog, task,
-                "updates task[" + task.getTaskId() + "] state for " + state.getValue());
+                "updates task [" + task.getTaskId() + "] state for " + state.getValue());
     }
 
     /**
@@ -274,7 +254,7 @@ public class Archiver {
      * @param task    task to be update
      * @param message information message
      */
-    private void addTimestampTaskInCatalog(SapsImage task, String message) {
+    private void addTaskStateChangeTime(SapsImage task, String message) {
         CatalogUtils.addTimestampTask(catalog, task, message);
     }
 
@@ -284,7 +264,8 @@ public class Archiver {
      * @param task    task to be remove
      * @param message information message
      */
-    private void removeTimestampTaskInCatalog(SapsImage task, String message) {
+    //TODO Review it's param and name
+    private void removeLastStateChangeTimeFromTask(SapsImage task, String message) {
         CatalogUtils.removeTimestampTask(catalog, task, message);
     }
 }
