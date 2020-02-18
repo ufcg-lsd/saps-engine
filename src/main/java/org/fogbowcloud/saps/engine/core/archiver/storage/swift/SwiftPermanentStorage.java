@@ -1,5 +1,10 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_FOLDER;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_FOLDER;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_FOLDER;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.SAPS_TASK_STAGE_DIR_PATTERN;
+
 import java.io.File;
 import java.util.List;
 import java.util.Properties;
@@ -22,6 +27,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     private static int MAX_ARCHIVE_TRIES = 1;
     private static int MAX_SWIFT_UPLOAD_TRIES = 2;
+    private static final String SWIFT_STORAGE_TASK_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
 
     public static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
 
@@ -91,14 +97,14 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 ? properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS)
                 : properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX);
 
-        String inputdownloadingLocalDir = nfsTempStoragePath + File.separator + taskId + File.separator + "inputdownloading";
-        String inputdownloadingSwiftDir = swiftExports + File.separator + taskId + File.separator + "inputdownloading";
+        String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, INPUTDOWNLOADING_FOLDER);
+        String inputdownloadingSwiftDir = String.format(SWIFT_STORAGE_TASK_DIR_PATTERN, swiftExports, taskId, INPUTDOWNLOADING_FOLDER);
 
-        String preprocessingLocalDir = nfsTempStoragePath + File.separator + taskId + File.separator + "preprocessing";
-        String preprocessingSwiftDir = swiftExports + File.separator + taskId + File.separator + "preprocessing";
+        String preprocessingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PREPROCESSING_FOLDER);
+        String preprocessingSwiftDir = String.format(SWIFT_STORAGE_TASK_DIR_PATTERN, swiftExports, taskId, PREPROCESSING_FOLDER);
 
-        String processingLocalDir = nfsTempStoragePath + File.separator + taskId + File.separator + "processing";
-        String processingSwiftDir = swiftExports + File.separator + taskId + File.separator + "processing";
+        String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PROCESSING_FOLDER);
+        String processingSwiftDir = String.format(SWIFT_STORAGE_TASK_DIR_PATTERN, swiftExports, taskId, PROCESSING_FOLDER);
 
         LOGGER.info("Inputdownloading local folder: " + inputdownloadingLocalDir);
         LOGGER.info("Inputdownloading swift folder: " + inputdownloadingSwiftDir);
