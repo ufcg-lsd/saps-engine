@@ -106,9 +106,9 @@ public class SwiftPermanentStorage implements PermanentStorage {
         String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PROCESSING_FOLDER);
         String processingSwiftDir = String.format(SWIFT_STORAGE_TASK_DIR_PATTERN, swiftExports, taskId, PROCESSING_FOLDER);
 
-        boolean inputdownloadingSentSuccess = archive(task, inputdownloadingLocalDir, inputdownloadingSwiftDir);
-        boolean preprocessingSentSuccess = inputdownloadingSentSuccess && archive(task, preprocessingLocalDir, preprocessingSwiftDir);
-        boolean processingSentSuccess = preprocessingSentSuccess && archive(task, processingLocalDir, processingSwiftDir);
+        boolean inputdownloadingSentSuccess = archive(taskId, inputdownloadingLocalDir, inputdownloadingSwiftDir);
+        boolean preprocessingSentSuccess = inputdownloadingSentSuccess && archive(taskId, preprocessingLocalDir, preprocessingSwiftDir);
+        boolean processingSentSuccess = preprocessingSentSuccess && archive(taskId, processingLocalDir, processingSwiftDir);
 
         LOGGER.info("Archive process result of task [" + task.getTaskId() + ":\nInputdownloading phase: "
                 + (inputdownloadingSentSuccess ? "Success" : "Failure") + "\n" + "Preprocessing phase: "
@@ -121,25 +121,26 @@ public class SwiftPermanentStorage implements PermanentStorage {
     /**
      * This function tries to archive a task folder in Swift.
      *
-     * @param task     task in archive process
+     * @param taskId     task id in archive process
      * @param localDir task folder to be archived
      * @param swiftDir directory swift to archive new data
      * @return boolean representation, success (true) or failure (false) to archive
      */
-    private boolean archive(SapsImage task, String localDir, String swiftDir) {
-        LOGGER.info("Trying to archive task [" + task.getTaskId() + "] " + localDir + " folder to " + swiftDir +
+    private boolean archive(String taskId, String localDir, String swiftDir) {
+        LOGGER.info("Trying to archive task [" + taskId + "] " + localDir + " folder to " + swiftDir +
                 " folder with a maximum of " + MAX_ARCHIVE_TRIES + " archiving attempts");
 
         File localFileDir = new File(localDir);
 
         if (!localFileDir.exists() || !localFileDir.isDirectory()) {
-            LOGGER.error("Failed to archive task [" + task.getTaskId() + "]. " + localDir
+            LOGGER.error("Failed to archive task [" + taskId + "]. " + localDir
                     + " folder isn't directory or not exists");
             return false;
         }
 
         for (int itry = 0; itry < MAX_ARCHIVE_TRIES; itry++) {
-            if (uploadFiles(task, localFileDir, swiftDir))
+            LOGGER.info("Trying to archive task [" + taskId + "] " + localDir + " folder for swift");
+            if (uploadFiles(localFileDir, swiftDir))
                 return true;
         }
 
@@ -149,13 +150,11 @@ public class SwiftPermanentStorage implements PermanentStorage {
     /**
      * This function tries upload task folder files to Swift.
      *
-     * @param task     task in archive process
      * @param localDir task folder to be archived
      * @param swiftDir directory swift to archive new data
      * @return boolean representation, success (true) or failure (false) to archive
      */
-    private boolean uploadFiles(SapsImage task, File localDir, String swiftDir) {
-        LOGGER.info("Trying to archive task [" + task.getTaskId() + "] " + localDir + " folder for swift");
+    private boolean uploadFiles(File localDir, String swiftDir) {
         for (File actualFile : localDir.listFiles()) {
             if (!uploadFile(actualFile, swiftDir)) {
                 LOGGER.info("Failure in archiving file [" + actualFile.getAbsolutePath() + "]");
