@@ -38,12 +38,12 @@ public class SchedulerTest {
     private Scheduler createDefaultScheduler(Selector selector, Arrebol arrebol, Catalog imageStore)
             throws SapsException {
         Properties properties = new Properties();
-        properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_IP, "");
-        properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_PORT, "");
-        properties.put(SapsPropertiesConstants.IMAGE_WORKER, "");
-        properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR, "");
-        properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER, "");
-        properties.put(SapsPropertiesConstants.ARREBOL_BASE_URL, "");
+        properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_IP, "db_ip");
+        properties.put(SapsPropertiesConstants.IMAGE_DATASTORE_PORT, "db_port");
+        properties.put(SapsPropertiesConstants.IMAGE_WORKER, "image_worker");
+        properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR, "period_sub");
+        properties.put(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER, "period_check");
+        properties.put(SapsPropertiesConstants.ARREBOL_BASE_URL, "arrebol_base_url");
 
         return new Scheduler(properties, imageStore, null, arrebol, selector);
     }
