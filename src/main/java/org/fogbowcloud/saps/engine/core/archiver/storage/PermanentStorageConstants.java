@@ -9,5 +9,5 @@ public class PermanentStorageConstants {
     public static final String PROCESSING_FOLDER = "processing";
 
     public static final String SAPS_TASK_STAGE_DIR_PATTERN =
-            "%s" + File.separator + "%s" + File.separator + "%s";
+        "%s" + File.separator + "%s" + File.separator + "%s";
 }
