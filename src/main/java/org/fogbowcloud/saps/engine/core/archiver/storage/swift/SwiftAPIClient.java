@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class SwiftAPIClient {
 
@@ -62,20 +63,7 @@ public class SwiftAPIClient {
                 SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL
         };
 
-        if (properties == null) {
-            LOGGER.error("Properties arg must not be null.");
-            return false;
-        }
-
-        for (String property : propertiesSet) {
-            if (!properties.containsKey(property)) {
-                LOGGER.error("Required property " + property + " was not set");
-                return false;
-            }
-        }
-
-        LOGGER.debug("All properties are set");
-        return true;
+        return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
     public void createContainer(String containerName) {
