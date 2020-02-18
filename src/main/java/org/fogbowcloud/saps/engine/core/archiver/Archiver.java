@@ -19,6 +19,7 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
+//FIXME Update all java-doc
 public class Archiver {
 
     private final Catalog catalog;
@@ -60,7 +61,7 @@ public class Archiver {
     }
 
     public void start() throws ArchiverException {
-        resetUnfinishedTasks();
+        resetArchivingTasks();
 
         sapsExecutor.scheduleWithFixedDelay(() -> runGarbageCollector(), 0, gcDelayPeriod,
                 TimeUnit.SECONDS);
@@ -82,9 +83,9 @@ public class Archiver {
     }
 
     /**
-     * It gets tasks in failed state in {@code Catalog}.
+     * It gets tasks from {@code Catalog} on {@link ImageTaskState#FAILED}.
      *
-     * @return {@code SapsImage} list in {@code ImageTaskState.FAILED} state
+     * @return {@code SapsImage} list. When not exists failed tasks it will return an empty list.
      */
     private List<SapsImage> getFailedTasks() {
         return CatalogUtils.getTasks(catalog, ImageTaskState.FAILED,
@@ -92,11 +93,12 @@ public class Archiver {
     }
 
     /**
-     * It cleans unfinished data from incomplete {@code ImageTaskState.ARCHIVING}.
+     * It removes data from tasks in {@link ImageTaskState#ARCHIVING} from Permanent Storage
+     *  and set the state of tasks to {@link ImageTaskState#FINISHED}.
      *
      * @throws ArchiverException
      */
-    private void resetUnfinishedTasks() throws ArchiverException {
+    private void resetArchivingTasks() throws ArchiverException {
         List<SapsImage> archivingTasks = getArchivingTasks();
 
         LOGGER.info("Rollback in " + archivingTasks.size() + " tasks in archiving state");
@@ -113,9 +115,9 @@ public class Archiver {
     }
 
     /**
-     * It gets tasks in archiving state in {@code Catalog}.
+     * It gets tasks from {@code Catalog} on {@link ImageTaskState#ARCHIVING}.
      *
-     * @return {@code SapsImage} list in {@code ImageTaskState.ARCHIVING} state
+     * @return {@code SapsImage} list. When not exists tasks on {@link ImageTaskState#ARCHIVING} it will return an empty list.
      */
     private List<SapsImage> getArchivingTasks() {
         return CatalogUtils.getTasks(catalog, ImageTaskState.ARCHIVING,
@@ -161,8 +163,6 @@ public class Archiver {
     }
 
     /**
-     * It gets {@code SapsImage} list in {@code ImageTaskState.FINISHED} state in {@code Catalog}.
-     *
      * @return {@code SapsImage} list in {@code ImageTaskState.FINISHED} state
      */
     private List<SapsImage> getFinishedTasks() {
