@@ -269,7 +269,8 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteSuccessfulTaskWithoutArchiverInDebugMode() throws IOException {
+    public void testToDeleteSuccessfulTaskWithoutArchiverInDebugMode()
+        throws IOException, PermanentStorageException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -289,7 +290,8 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteFailureTaskWithoutArchiverInDebugMode() throws IOException {
+    public void testToDeleteFailureTaskWithoutArchiverInDebugMode()
+        throws IOException, PermanentStorageException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -307,7 +309,8 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteSuccessfulTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode() throws IOException {
+    public void testToDeleteSuccessfulTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode()
+        throws IOException, PermanentStorageException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
@@ -325,7 +328,8 @@ public class SwiftPermanentStorageTest {
     }
 
     @Test
-    public void testToDeleteFailureTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode() throws IOException {
+    public void testToDeleteFailureTaskButListFilesWithPrefixMethodReturnsEmptyListWithoutArchiverInDebugMode()
+        throws IOException, PermanentStorageException {
         SwiftAPIClient swiftAPIClient = mock(SwiftAPIClient.class);
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
