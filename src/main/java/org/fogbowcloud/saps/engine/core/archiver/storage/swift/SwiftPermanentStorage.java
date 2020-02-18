@@ -106,19 +106,9 @@ public class SwiftPermanentStorage implements PermanentStorage {
         String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PROCESSING_FOLDER);
         String processingSwiftDir = String.format(SWIFT_STORAGE_TASK_DIR_PATTERN, swiftExports, taskId, PROCESSING_FOLDER);
 
-        LOGGER.info("Inputdownloading local folder: " + inputdownloadingLocalDir);
-        LOGGER.info("Inputdownloading swift folder: " + inputdownloadingSwiftDir);
         boolean inputdownloadingSentSuccess = archive(task, inputdownloadingLocalDir, inputdownloadingSwiftDir);
-
-        LOGGER.info("Preprocessing local folder: " + preprocessingLocalDir);
-        LOGGER.info("Preprocessing swift folder: " + preprocessingSwiftDir);
-        boolean preprocessingSentSuccess = inputdownloadingSentSuccess
-                && archive(task, preprocessingLocalDir, preprocessingSwiftDir);
-
-        LOGGER.info("Processing local folder: " + processingLocalDir);
-        LOGGER.info("Processing swift folder: " + processingSwiftDir);
-        boolean processingSentSuccess = preprocessingSentSuccess
-                && archive(task, processingLocalDir, processingSwiftDir);
+        boolean preprocessingSentSuccess = inputdownloadingSentSuccess && archive(task, preprocessingLocalDir, preprocessingSwiftDir);
+        boolean processingSentSuccess = preprocessingSentSuccess && archive(task, processingLocalDir, processingSwiftDir);
 
         LOGGER.info("Archive process result of task [" + task.getTaskId() + ":\nInputdownloading phase: "
                 + (inputdownloadingSentSuccess ? "Success" : "Failure") + "\n" + "Preprocessing phase: "
@@ -137,8 +127,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
      * @return boolean representation, success (true) or failure (false) to archive
      */
     private boolean archive(SapsImage task, String localDir, String swiftDir) {
-        LOGGER.info("Trying to archive task [" + task.getTaskId() + "] " + localDir + " folder with a maximum of "
-                + MAX_ARCHIVE_TRIES + " archiving attempts");
+        LOGGER.info("Trying to archive task [" + task.getTaskId() + "] " + localDir + " folder to " + swiftDir +
+                " folder with a maximum of " + MAX_ARCHIVE_TRIES + " archiving attempts");
 
         File localFileDir = new File(localDir);
 
