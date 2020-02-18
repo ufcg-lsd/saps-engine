@@ -16,6 +16,7 @@ import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.UserNotFoundException;
+import org.fogbowcloud.saps.engine.core.catalog.jdbc.exceptions.JDBCCatalogException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -312,6 +313,8 @@ public class JDBCCatalog implements Catalog {
             return JDBCCatalogUtil.extractSapsTasks(rs);
         } catch (SQLException e) {
             throw new CatalogException("Error while select all tasks");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract all tasks");
         } finally {
             close(statement, conn);
         }
@@ -345,6 +348,8 @@ public class JDBCCatalog implements Catalog {
             throw new UserNotFoundException("There is no user with email");
         } catch (SQLException e) {
             throw new CatalogException("Error while getting user by email");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract user");
         } finally {
             close(selectStatement, connection);
         }
@@ -380,6 +385,8 @@ public class JDBCCatalog implements Catalog {
             return imageDatas;
         } catch (SQLException e) {
             throw new CatalogException("Error while getting task by state");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract all tasks");
         } finally {
             close(selectStatement, connection);
         }
@@ -413,6 +420,8 @@ public class JDBCCatalog implements Catalog {
             return imageDatas.get(0);
         } catch (SQLException e) {
             throw new CatalogException("Error while getting task by id");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract all tasks");
         } finally {
             close(selectStatement, connection);
         }
@@ -470,6 +479,8 @@ public class JDBCCatalog implements Catalog {
             return JDBCCatalogUtil.extractSapsTasks(result);
         } catch (SQLException e) {
             throw new CatalogException("Error while getting tasks by filters");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract all tasks");
         } finally {
             close(queryStatement, connection);
         }
