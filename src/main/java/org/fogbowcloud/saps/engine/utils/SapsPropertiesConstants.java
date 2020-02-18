@@ -68,8 +68,6 @@ public class SapsPropertiesConstants {
 	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
 	public static final String PERMANENT_STORAGE_TASKS_DIR = "permanent_storage_tasks_dir";
 	public static final String PERMANENT_STORAGE_DEBUG_TASKS_DIR = "permanent_storage_debug_tasks_dir";
-	public static final String SWIFT_INPUT_PSEUDO_FOLDER_PREFIX = "swift_input_pseud_folder_prefix";
-	public static final String SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX = "swift_output_pseud_folder_prefix";
 	public static final String SWIFT_USERNAME = "swift_username";
 	public static final String SWIFT_USER_ID = "swift_user_id";
 	public static final String SWIFT_PASSWORD = "swift_password";
@@ -78,8 +76,6 @@ public class SapsPropertiesConstants {
 	public static final String SWIFT_TENANT_NAME = "swift_tenant_name";
 	public static final String SWIFT_AUTH_URL = "swift_auth_url";
 	public static final String SWIFT_IMAGE_EXTENSION = "swift_image_extension";
-	public static final String SWIFT_PSEUDO_FOLDER_PREFIX = "swift_pseudo_folder_prefix";
-	public static final String SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX = "swift_stations_pseudo_folder_prefix";
 	public static final String SWIFT_OBJECT_STORE_HOST = "swift_object_store_host";
 	public static final String SWIFT_OBJECT_STORE_PATH = "swift_object_store_path";
 	public static final String SWIFT_OBJECT_STORE_CONTAINER = "swift_object_store_container";

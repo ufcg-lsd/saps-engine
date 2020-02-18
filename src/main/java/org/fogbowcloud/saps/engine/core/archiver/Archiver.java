@@ -205,7 +205,7 @@ public class Archiver {
     /**
      * It deletes directory from {@code SapsImage}.
      *
-     * @param task {@code SapsImage} that contains information to delete your folder
+     * @param task {@code SapsImage} that contains information to delete your directory
      */
     //FIXME Rename to deleteTempData
     private void deleteTaskTempData(SapsImage task) {
