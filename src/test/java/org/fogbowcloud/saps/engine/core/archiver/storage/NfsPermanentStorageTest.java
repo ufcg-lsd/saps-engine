@@ -13,7 +13,6 @@ import java.util.Properties;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,7 +40,7 @@ public class NfsPermanentStorageTest {
     public void setUp() {
         properties =  new Properties();
         properties.setProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH, MOCK_SAPS_EXPORT_PATH);
-        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER, MOCK_NFS_TASKS_FOLDER);
+        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR, MOCK_NFS_TASKS_FOLDER);
     }
 
     @Test
@@ -59,7 +58,7 @@ public class NfsPermanentStorageTest {
     public void testArchiveOnDebugMode() throws PermanentStorageException {
         properties.setProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE, DEBUG_MODE_TRUE);
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
-        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER, MOCK_NFS_DEBUG_TASKS_FOLDER);
+        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR, MOCK_NFS_DEBUG_TASKS_FOLDER);
 
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FAILED,
@@ -99,7 +98,7 @@ public class NfsPermanentStorageTest {
     public void testDeleteOnDebugMode() throws Exception {
         properties.setProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE, DEBUG_MODE_TRUE);
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
-        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER, MOCK_NFS_DEBUG_TASKS_FOLDER);
+        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR, MOCK_NFS_DEBUG_TASKS_FOLDER);
 
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FAILED,
             SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",

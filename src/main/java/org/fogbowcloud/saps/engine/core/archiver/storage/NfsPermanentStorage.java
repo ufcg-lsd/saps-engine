@@ -43,7 +43,7 @@ public class NfsPermanentStorage implements PermanentStorage {
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-            SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER,
+            SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
             SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH
         };
 
@@ -51,8 +51,8 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     private boolean checkPropertiesDebugMode(Properties properties) {
-        if (!properties.containsKey(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER
+        if (!properties.containsKey(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)) {
+            LOGGER.error("Required property " + SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR
                 + " was not set (it's necessary when debug mode)");
             return false;
         }
@@ -74,8 +74,8 @@ public class NfsPermanentStorage implements PermanentStorage {
         String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PROCESSING_FOLDER);
 
         String nfsTaskFolder = (task.getState() == ImageTaskState.FAILED && this.debugMode)
-            ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
-            : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
+            ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
+            : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
         String nfsTaskDirPath;
 
         try {
@@ -98,8 +98,8 @@ public class NfsPermanentStorage implements PermanentStorage {
     @Override
     public boolean delete(SapsImage task) throws PermanentStorageException {
         String nfsTaskFolder = (task.getState() == ImageTaskState.FAILED && this.debugMode)
-            ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
-            : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
+            ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
+            : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
         String taskDirPath = String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsPermanentStoragePath, nfsTaskFolder, task.getTaskId());
         File taskDir = new File(taskDirPath);
         if (!taskDir.exists()) {
