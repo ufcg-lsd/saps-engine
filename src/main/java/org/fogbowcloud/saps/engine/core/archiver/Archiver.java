@@ -43,8 +43,7 @@ public class Archiver {
         this.tempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.gcDelayPeriod = Long.parseLong(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR));
         this.archiverDelayPeriod = Long.parseLong(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_ARCHIVER));
-        this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
-            .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
+        this.executionDebugMode = Boolean.parseBoolean(properties.getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE, "false"));
     }
 
     private boolean checkProperties(Properties properties) {
