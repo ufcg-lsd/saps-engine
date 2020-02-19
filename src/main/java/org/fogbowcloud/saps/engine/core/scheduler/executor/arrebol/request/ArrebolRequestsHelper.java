@@ -3,6 +3,7 @@ package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.request;
 import java.io.UnsupportedEncodingException;
 
 import com.google.gson.JsonObject;
+import java.net.ConnectException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -11,6 +12,7 @@ import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobReque
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.ArrebolConnectException;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.models.ArrebolQueue;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.http.HttpWrapper;
 
@@ -65,7 +67,8 @@ public class ArrebolRequestsHelper {
 			jobId = jobResponse.get(JsonKey.JOB_ID).getAsString();
 
 			LOGGER.info("Job was submitted with success to Arrebol.");
-
+		} catch (ConnectException e) {
+			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
 		} catch (Exception e) {
 			throw new SubmitJobException("Submit Job to Arrebol has FAILED: " + e.getMessage(), e);
 		}
@@ -104,6 +107,8 @@ public class ArrebolRequestsHelper {
 		try {
 			final String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint, null);
 			queue = this.gson.fromJson(jsonResponse, ArrebolQueue.class);
+		} catch (ConnectException e) {
+			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
 		} catch (Exception e) {
 			throw new Exception("Get waiting jobs from Arrebol queue id [" + queueId + "] has FAILED: " + e.getMessage(), e);
 		}
