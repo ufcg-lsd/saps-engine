@@ -15,7 +15,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.http.HttpWrapper;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.http.HttpWrapper;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 import java.util.LinkedList;
