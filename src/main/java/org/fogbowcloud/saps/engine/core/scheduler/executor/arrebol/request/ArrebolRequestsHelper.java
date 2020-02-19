@@ -9,7 +9,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRequestDTO;
-import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.ArrebolConnectException;
@@ -83,6 +83,8 @@ public class ArrebolRequestsHelper {
 		try {
 			String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint);
 			jobResponse = gson.fromJson(jsonResponse, JobResponseDTO.class);
+		} catch (ConnectException e) {
+			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
 		} catch (Exception e) {
 			throw new GetJobException("Get Job from Arrebol has FAILED: " + e.getMessage(), e);
 		}
