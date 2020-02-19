@@ -1,8 +1,9 @@
-package org.fogbowcloud.saps.engine.core.dto;
+package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos;
 
 import java.io.Serializable;
 
 import com.google.gson.annotations.SerializedName;
+import org.fogbowcloud.saps.engine.core.dto.TaskSpecResponseDTO;
 
 public class TaskResponseDTO implements Serializable {
     /**

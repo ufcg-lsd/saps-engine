@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.dto;
+package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos;
 
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
@@ -20,7 +20,7 @@ public class JobRequestDTO implements Serializable {
     private List<TaskRequestDTO> tasksSpecs;
 
     public JobRequestDTO(SapsJob job) {
-        this.tasksSpecs = new ArrayList<TaskRequestDTO>();
+        this.tasksSpecs = new ArrayList<>();
         this.label = job.getName();
         populateTaskSpec(job);
     }

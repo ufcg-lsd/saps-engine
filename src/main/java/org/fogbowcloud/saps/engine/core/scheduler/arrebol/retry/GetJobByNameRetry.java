@@ -2,7 +2,7 @@ package org.fogbowcloud.saps.engine.core.scheduler.arrebol.retry;
 
 import java.util.List;
 
-import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 

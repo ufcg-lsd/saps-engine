@@ -3,7 +3,7 @@ package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
