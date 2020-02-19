@@ -1,9 +1,0 @@
-{
-  "input_downloader":[
-    {
-      "name":"test_name",
-      "docker_tag":"test_tag",
-      "docker_repository":"test_repository"
-    }
-  ]
-}

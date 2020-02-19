@@ -66,10 +66,8 @@ public class SapsPropertiesConstants {
 
 	// Swift constants
 	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
-	public static final String SWIFT_FOLDER_PREFIX = "swift_folder_prefix";
-	public static final String SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS = "swift_folder_prefix_debug_failed_tasks";
-	public static final String SWIFT_INPUT_PSEUDO_FOLDER_PREFIX = "swift_input_pseud_folder_prefix";
-	public static final String SWIFT_OUTPUT_PSEUDO_FOLDER_PREFIX = "swift_output_pseud_folder_prefix";
+	public static final String PERMANENT_STORAGE_TASKS_DIR = "permanent_storage_tasks_dir";
+	public static final String PERMANENT_STORAGE_DEBUG_TASKS_DIR = "permanent_storage_debug_tasks_dir";
 	public static final String SWIFT_USERNAME = "swift_username";
 	public static final String SWIFT_USER_ID = "swift_user_id";
 	public static final String SWIFT_PASSWORD = "swift_password";
@@ -78,8 +76,6 @@ public class SapsPropertiesConstants {
 	public static final String SWIFT_TENANT_NAME = "swift_tenant_name";
 	public static final String SWIFT_AUTH_URL = "swift_auth_url";
 	public static final String SWIFT_IMAGE_EXTENSION = "swift_image_extension";
-	public static final String SWIFT_PSEUDO_FOLDER_PREFIX = "swift_pseudo_folder_prefix";
-	public static final String SWIFT_STATIONS_PSEUDO_FOLDER_PREFIX = "swift_stations_pseudo_folder_prefix";
 	public static final String SWIFT_OBJECT_STORE_HOST = "swift_object_store_host";
 	public static final String SWIFT_OBJECT_STORE_PATH = "swift_object_store_path";
 	public static final String SWIFT_OBJECT_STORE_CONTAINER = "swift_object_store_container";
@@ -106,9 +102,10 @@ public class SapsPropertiesConstants {
 	public static final String SAPS_EXECUTION_PERIOD_ARCHIVER = "saps_execution_period_archiver";
 	public static final String SAPS_EXECUTION_PERIOD_GARBAGE_COLLECTOR = "saps_execution_period_garbage_collector";
 
-	// EXecution mode constants
-	public static final String SAPS_EXECUTION_DEBUG_MODE = "saps_execution_debug_mode";
-
+	// Execution mode constants
+	public static final String SAPS_DEBUG_MODE = "saps_debug_mode";
+	public static final String SAPS_PERMANENT_STORAGE_TYPE = "saps_permanent_storage_type";
+	
 	public static final String DEFAULT_ARCHIVER_PERIOD = "default_archiver_period";
 	public static final String DEFAULT_DOWNLOADER_PERIOD = "default_downloader_period";
 	public static final String DEFAULT_CRAWLER_PERIOD = "default_crawler_period";
@@ -143,7 +140,7 @@ public class SapsPropertiesConstants {
 
 	// Properties file constants
 	public static final String LOCAL_INPUT_OUTPUT_PATH = "local_input_output_path";
-	public static final String SAPS_EXPORT_PATH = "saps_export_path";
+	public static final String SAPS_TEMP_STORAGE_PATH = "saps_temp_storage_path";
 	public static final String SAPS_CONTAINER_INPUT_LINKED_PATH = "saps_container_input_linked_path";
 	public static final String SAPS_CONTAINER_METADATA_LINKED_PATH = "saps_container_metadata_linked_path";
 	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
@@ -161,4 +158,6 @@ public class SapsPropertiesConstants {
 	 *  Arrebol batch jobs execution system configs
 	 */
 	public static final String ARREBOL_BASE_URL = "arrebol_base_url";
+
+	public static final String NFS_PERMANENT_STORAGE_PATH = "nfs_permanent_storage_path";
 }

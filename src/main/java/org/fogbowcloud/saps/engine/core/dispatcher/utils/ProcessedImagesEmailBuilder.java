@@ -190,24 +190,24 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		result.put(COLLECTION_TIER_NAME, task.getCollectionTierName());
 		result.put(IMAGE_DATE, task.getImageDate());
 
-		prepareTaskFolder(result, task, INPUTDOWNLOADING);
-		prepareTaskFolder(result, task, PREPROCESSING);
-		prepareTaskFolder(result, task, PROCESSING);
+		prepareTaskDir(result, task, INPUTDOWNLOADING);
+		prepareTaskDir(result, task, PREPROCESSING);
+		prepareTaskDir(result, task, PROCESSING);
 
 		return result;
 	}
 
-	private void prepareTaskFolder(JSONObject result, SapsImage task, String folder)
+	private void prepareTaskDir(JSONObject result, SapsImage task, String folder)
 			throws URISyntaxException, IOException, JSONException {
 
 		String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
 		String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
 		String objectStoreContainer = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER);
 		String objectStoreKey = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY);
-		String swiftPrefixFolder = properties.getProperty(SapsPropertiesConstants.SWIFT_FOLDER_PREFIX);
+		String swiftPrefixDir = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
 
 		List<String> files = getTaskFilesFromObjectStore(objectStoreHost, objectStorePath, objectStoreContainer,
-				swiftPrefixFolder, folder, task);
+				swiftPrefixDir, folder, task);
 
 		JSONArray folderFileList = new JSONArray();
 		for (String str : files) {
@@ -238,13 +238,13 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
-			String objectStoreContainer, String swiftPrefixFolder, String taskFolder, SapsImage task)
+			String objectStoreContainer, String swiftPrefixDir, String taskFolder, SapsImage task)
 			throws URISyntaxException, IOException {
 		Token token = getKeystoneToken();
 
 		HttpClient client = HttpClients.createDefault();
 		HttpGet httpget = prepObjectStoreRequest(objectStoreHost, objectStorePath, objectStoreContainer,
-				swiftPrefixFolder, taskFolder, task, token);
+				swiftPrefixDir, taskFolder, task, token);
 		HttpResponse response = client.execute(httpget);
 
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));

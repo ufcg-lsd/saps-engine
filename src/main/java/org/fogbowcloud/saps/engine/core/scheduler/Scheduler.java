@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.core.scheduler;
 
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -8,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
-import org.fogbowcloud.saps.engine.core.catalog.JDBCCatalog;
+import org.fogbowcloud.saps.engine.core.catalog.jdbc.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.dto.*;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
@@ -24,6 +23,7 @@ import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTag;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
 public class Scheduler {
@@ -35,31 +35,18 @@ public class Scheduler {
     private ScheduledExecutorService sapsExecutor;
     private Selector selector;
 
+    //FIXME Remove properties field and add new variables
     private Properties properties;
     private Catalog catalog;
     private Arrebol arrebol;
 
-    public Scheduler(Properties properties) throws SapsException, SQLException {
-        try {
-            LOGGER.debug("Imagestore " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + ":"
-                    + SapsPropertiesConstants.IMAGE_DATASTORE_IP);
-            this.catalog = new JDBCCatalog(properties);
-
-            if (!checkProperties(properties))
-                throw new SapsException(
-                        "Error on validate the file. Missing properties for start Scheduler Component.");
-        } catch (Exception e) {
-            throw new SapsException("Error while initializing Scheduler component.", e);
-        }
-
-        this.properties = properties;
-        this.sapsExecutor = Executors.newScheduledThreadPool(1);
-        this.arrebol = new DefaultArrebol(properties);
-        this.selector = new DefaultRoundRobin();
+    public Scheduler(Properties properties) throws SapsException {
+    	this(properties, new JDBCCatalog(properties), Executors.newScheduledThreadPool(1),
+                new DefaultArrebol(properties), new DefaultRoundRobin());
     }
 
     public Scheduler(Properties properties, Catalog catalog, ScheduledExecutorService sapsExecutor,
-                     Arrebol arrebol, Selector selector) throws SapsException, SQLException {
+                     Arrebol arrebol, Selector selector) throws SapsException {
         if (!checkProperties(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Scheduler Component.");
 
@@ -70,126 +57,27 @@ public class Scheduler {
         this.selector = selector;
     }
 
-    /**
-     * This function gets image store
-     *
-     * @return image store
-     */
-    public Catalog getCatalog() {
-        return catalog;
-    }
-
-    /**
-     * This function sets image store
-     *
-     * @param catalog new image store
-     */
-    public void setCatalog(Catalog catalog) {
-        this.catalog = catalog;
-    }
-
-    /**
-     * This function gets Arrebol
-     *
-     * @return arrebol arrebol
-     */
-    public Arrebol getArrebol() {
-        return arrebol;
-    }
-
-    /**
-     * This function sets Arrebol
-     *
-     * @param arrebol new Arrebol
-     */
-    public void setArrebol(Arrebol arrebol) {
-        this.arrebol = arrebol;
-    }
-
-    /**
-     * This function gets Scheduler properties
-     *
-     * @return properties
-     */
-    public Properties getProperties() {
-        return properties;
-    }
-
-    /**
-     * This function sets Scheduler properties
-     *
-     * @param properties new properties
-     */
-    public void setProperties(Properties properties) {
-        this.properties = properties;
-    }
-
-    /**
-     * This function checks if the essential properties have been set.
-     *
-     * @param properties saps properties to be check
-     * @return boolean representation, true (case all properties been set) or false
-     * (otherwise)
-     */
     private static boolean checkProperties(Properties properties) {
-        if (properties == null) {
-            LOGGER.error("Properties arg must not be null.");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_IP)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_IP + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.IMAGE_DATASTORE_PORT)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.IMAGE_DATASTORE_PORT + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)) {
-            LOGGER.error(
-                    "Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER + " was not set");
-            return false;
-        }
-        if (!properties.containsKey(SapsPropertiesConstants.ARREBOL_BASE_URL)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.ARREBOL_BASE_URL + " was not set");
-            return false;
-        }
+        String[] propertiesSet = {
+                SapsPropertiesConstants.IMAGE_DATASTORE_IP,
+                SapsPropertiesConstants.IMAGE_DATASTORE_PORT,
+                SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR,
+                SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER,
+                SapsPropertiesConstants.ARREBOL_BASE_URL
 
-        LOGGER.debug("All properties are set");
-        return true;
+        };
+
+        return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
-    /**
-     * Start Scheduler component
-     *
-     * @throws Exception
-     */
-    public void start() throws Exception {
+    public void start() {
         recovery();
 
-        try {
-            sapsExecutor.scheduleWithFixedDelay(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        schedule();
-                                                    }
-                                                }, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)),
-                    TimeUnit.SECONDS);
+        sapsExecutor.scheduleWithFixedDelay(() -> schedule(), 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)),
+                TimeUnit.SECONDS);
 
-            sapsExecutor.scheduleWithFixedDelay(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        checker();
-                                                    }
-                                                }, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)),
-                    TimeUnit.SECONDS);
-
-        } catch (Exception e) {
-            LOGGER.error("Error while starting Scheduler component", e);
-        }
+        sapsExecutor.scheduleWithFixedDelay(() -> checker(), 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)),
+                TimeUnit.SECONDS);
     }
 
     /**
@@ -459,20 +347,15 @@ public class Scheduler {
      * @return task information (tag, repository, type and name)
      */
     private ExecutionScriptTag getExecutionScriptTag(SapsImage task, String repository) {
-        try {
-            String tag = null;
-            if (repository == ExecutionScriptTagUtil.PROCESSING)
-                tag = task.getProcessingTag();
-            else if (repository == ExecutionScriptTagUtil.PRE_PROCESSING)
-                tag = task.getPreprocessingTag();
-            else
-                tag = task.getInputdownloadingTag();
+        String tag = null;
+        if (repository == ExecutionScriptTagUtil.PROCESSING)
+            tag = task.getProcessingTag();
+        else if (repository == ExecutionScriptTagUtil.PRE_PROCESSING)
+            tag = task.getPreprocessingTag();
+        else
+            tag = task.getInputdownloadingTag();
 
-            return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
-        } catch (SapsException e) {
-            LOGGER.error("Error while trying get tag and repository Docker.", e);
-            return null;
-        }
+        return ExecutionScriptTagUtil.getExecutionScriptTag(tag, repository);
     }
 
     private String getFormatImageWithDigest(ExecutionScriptTag imageDockerInfo, ImageTaskState state, SapsImage task) {
@@ -659,7 +542,7 @@ public class Scheduler {
      * @return tasks in specific state
      */
     private List<SapsImage> getTasksInCatalog(ImageTaskState state, String message) {
-        return CatalogUtils.getTasks(catalog, state, message);
+        return CatalogUtils.getTasks(catalog, state);
     }
 
     /**
@@ -689,8 +572,8 @@ public class Scheduler {
         task.setStatus(status);
         task.setError(error);
         task.setArrebolJobId(arrebolJobId);
-        return CatalogUtils.updateState(catalog, task,
-                "updates task [" + task.getTaskId() + "] state for " + state.getValue());
+        return CatalogUtils.updateState(catalog, task
+        );
     }
 
     /**
@@ -700,7 +583,7 @@ public class Scheduler {
      * @param message information message
      */
     private void addTimestampTaskInCatalog(SapsImage task, String message) {
-        CatalogUtils.addTimestampTask(catalog, task, message);
+        CatalogUtils.addTimestampTask(catalog, task);
     }
 
 }

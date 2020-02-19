@@ -42,22 +42,22 @@ public class SapsTask {
 	}
 
 	public static List<String> buildCommandList(SapsImage task, String phase) {
-		// info shared folder beetweeen host (with NFS) and container
+		// info shared dir between host (with NFS) and container
 		// ...
 
 		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
-		String imageFolder = task.getTaskId();
-		String rootPath = "/nfs/" + imageFolder;
-		String folderPath = "/nfs/" + imageFolder + File.separator + phase;
+		String taskDir = task.getTaskId();
+		String rootPath = "/nfs/" + taskDir;
+		String phaseDirPath = "/nfs/" + taskDir + File.separator + phase;
 		List<String> commands = new LinkedList<String>();
 
-		// Remove folders
-		String removeThings = String.format("rm -rf %s", folderPath);
+		// Remove dirs
+		String removeThings = String.format("rm -rf %s", phaseDirPath);
 		commands.add(removeThings);
 
-		// Create folders
-		String createFolders = String.format("mkdir -p %s", folderPath);
-		commands.add(createFolders);
+		// Create dirs
+		String createDirectory = String.format("mkdir -p %s", phaseDirPath);
+		commands.add(createDirectory);
 
 		// Run command
 		String runCommand = String.format("bash /home/saps/run.sh %s %s %s %s", rootPath, task.getDataset(),
