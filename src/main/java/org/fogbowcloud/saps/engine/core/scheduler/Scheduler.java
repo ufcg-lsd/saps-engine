@@ -542,7 +542,7 @@ public class Scheduler {
      * @return tasks in specific state
      */
     private List<SapsImage> getTasksInCatalog(ImageTaskState state, String message) {
-        return CatalogUtils.getTasks(catalog, state, message);
+        return CatalogUtils.getTasks(catalog, state);
     }
 
     /**
@@ -572,8 +572,8 @@ public class Scheduler {
         task.setStatus(status);
         task.setError(error);
         task.setArrebolJobId(arrebolJobId);
-        return CatalogUtils.updateState(catalog, task,
-                "updates task [" + task.getTaskId() + "] state for " + state.getValue());
+        return CatalogUtils.updateState(catalog, task
+        );
     }
 
     /**
@@ -583,7 +583,7 @@ public class Scheduler {
      * @param message information message
      */
     private void addTimestampTaskInCatalog(SapsImage task, String message) {
-        CatalogUtils.addTimestampTask(catalog, task, message);
+        CatalogUtils.addTimestampTask(catalog, task);
     }
 
 }
