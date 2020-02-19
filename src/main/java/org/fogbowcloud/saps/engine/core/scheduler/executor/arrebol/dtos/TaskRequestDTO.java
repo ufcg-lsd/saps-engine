@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.dto;
+package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos;
 
 import java.io.Serializable;
 import java.util.List;
