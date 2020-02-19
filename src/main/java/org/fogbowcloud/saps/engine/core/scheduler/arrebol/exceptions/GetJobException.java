@@ -1,6 +1,6 @@
 package org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions;
 
-public class GetJobException extends Throwable {
+public class GetJobException extends Exception {
     /**
 	 * 
 	 */

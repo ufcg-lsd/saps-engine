@@ -1,0 +1,34 @@
+package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol;
+
+import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.model.SapsJob;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.JobExecutionService;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRequestDTO;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.request.ArrebolRequestsHelper;
+
+public class ArrebolJobExecutionService implements JobExecutionService {
+    private static final Logger LOGGER = Logger.getLogger(ArrebolJobExecutionService.class);
+
+    private final ArrebolRequestsHelper requestsHelper;
+
+    public ArrebolJobExecutionService(ArrebolRequestsHelper requestsHelper) {
+        this.requestsHelper = requestsHelper;
+    }
+
+    @Override
+    public String submit(SapsJob job) throws Exception {
+        LOGGER.info("Submitting Saps Job [" + job.getName() + "] to Arrebol");
+        JobRequestDTO jobRequestDTO = new JobRequestDTO(job);
+        String id = requestsHelper.submitJobToExecution(jobRequestDTO);
+        return id;
+    }
+
+    @Override
+    public JobResponseDTO getStatus(String jobId) throws GetJobException {
+        LOGGER.info("Getting Job [" + jobId + "] from Arrebol");
+        return requestsHelper.getJob(jobId);
+    }
+
+}
