@@ -1,21 +1,18 @@
 package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.request;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Properties;
 
 import com.google.gson.JsonObject;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dto.JobRequestDTO;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
-import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.models.ArrebolQueue;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.http.HttpWrapper;
-import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 
 import java.util.LinkedList;
 
@@ -29,6 +26,7 @@ public class ArrebolRequestsHelper {
 	private final String arrebolBaseUrl;
 	private final Gson gson;
 	private static final String DEFAULT_QUEUE = "default";
+
 	private static class Endpoint {
 		static final String QUEUES = "%s/queues";
 		static final String QUEUE = QUEUES + "/%s";
@@ -40,18 +38,18 @@ public class ArrebolRequestsHelper {
 	}
 
 
-	public ArrebolRequestsHelper(Properties properties) {
-		this.arrebolBaseUrl = properties.getProperty(SapsPropertiesConstants.ARREBOL_BASE_URL);
+	public ArrebolRequestsHelper(String arrebolBaseUrl) {
+		this.arrebolBaseUrl = arrebolBaseUrl;
 		this.gson = new GsonBuilder().create();
 	}
 
-	public String submitJobToExecution(SapsJob job) throws Exception, SubmitJobException {
+	public String submitJobToExecution(JobRequestDTO job) throws Exception, SubmitJobException {
 		StringEntity requestBody;
 
 		try {
 			requestBody = makeJSONBody(job);
 		} catch (UnsupportedEncodingException e) {
-			throw new UnsupportedEncodingException("Job [" + job.getName() + "] is not well formed to built JSON.");
+			throw new UnsupportedEncodingException("Job [" + job.getLabel() + "] is not well formed to built JSON.");
 		}
 
 		final String endpoint = String.format(Endpoint.JOBS, this.arrebolBaseUrl, DEFAULT_QUEUE);
@@ -75,29 +73,24 @@ public class ArrebolRequestsHelper {
 		return jobId;
 	}
 
-	public JobResponseDTO getJob(String jobArrebolId) throws GetJobException {
-		return this.gson.fromJson(getJobJSON(jobArrebolId), JobResponseDTO.class);
-	}
-
-	public String getJobJSON(String jobId) throws GetJobException {
+	public JobResponseDTO getJob(String jobId) throws GetJobException {
 		final String endpoint = String.format(Endpoint.JOB, this.arrebolBaseUrl, DEFAULT_QUEUE, jobId);
 
-		String jsonResponse;
+		JobResponseDTO jobResponse;
 		try {
-			jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint);
+			String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint);
+			jobResponse = gson.fromJson(jsonResponse, JobResponseDTO.class);
 		} catch (Exception e) {
 			throw new GetJobException("Get Job from Arrebol has FAILED: " + e.getMessage(), e);
 		}
-
-		return jsonResponse;
+		return jobResponse;
 	}
 
-	public StringEntity makeJSONBody(SapsJob job) throws UnsupportedEncodingException {
+	private StringEntity makeJSONBody(JobRequestDTO job) throws UnsupportedEncodingException {
 		LOGGER.info("Building JSON body of Job ...");
 
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		JobRequestDTO jobDTO = new JobRequestDTO(job);
-		String json = gson.toJson(jobDTO);
+		String json = gson.toJson(job);
 
 		LOGGER.debug("JSON body: " + json);
 
