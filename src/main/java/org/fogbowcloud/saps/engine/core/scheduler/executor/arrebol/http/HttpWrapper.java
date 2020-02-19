@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.scheduler.arrebol.http;
+package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.http;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -24,6 +24,10 @@ public class HttpWrapper {
 
     private static final String APPLICATION_JSON = "application/json";
     private static final String CONTENT_TYPE = "Content-Type";
+
+    public static String doRequest(String method, String endpoint) throws Exception {
+        return doRequest(method, endpoint, null, null);
+    }
 
     public static String doRequest(String method, String endpoint, List<Header> additionalHeaders) throws Exception {
         return doRequest(method, endpoint, additionalHeaders, null);
