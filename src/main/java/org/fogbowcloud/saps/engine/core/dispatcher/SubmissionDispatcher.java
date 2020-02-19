@@ -93,7 +93,7 @@ public class SubmissionDispatcher {
     }
 
     private void addTimestampTaskInCatalog(SapsImage task, String message) {
-        CatalogUtils.addTimestampTask(catalog, task, message);
+        CatalogUtils.addTimestampTask(catalog, task);
     }
 
     /**
@@ -189,8 +189,8 @@ public class SubmissionDispatcher {
     }
 
     public List<SapsImage> getTasksByState(ImageTaskState state) throws SQLException {
-        return CatalogUtils.getTasks(catalog, state,
-                "gets tasks with " + state.getValue() + " state");
+        return CatalogUtils.getTasks(catalog, state
+        );
     }
 
     /**
