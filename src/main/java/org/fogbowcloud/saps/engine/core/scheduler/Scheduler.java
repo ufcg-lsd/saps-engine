@@ -14,7 +14,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.ArrebolUtils;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.JobSubmitted;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.JobExecutionService;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.ArrebolJobExecutionService;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.CommandResponseDTO;
