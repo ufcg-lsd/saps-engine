@@ -2,7 +2,7 @@ package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.JobExecutionService;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;

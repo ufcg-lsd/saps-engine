@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions;
+package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions;
 
 public class SubmitJobException extends Exception {
     /**
