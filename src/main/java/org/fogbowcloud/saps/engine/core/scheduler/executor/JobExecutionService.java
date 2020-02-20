@@ -2,7 +2,6 @@ package org.fogbowcloud.saps.engine.core.scheduler.executor;
 
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 
 public interface JobExecutionService {
 
