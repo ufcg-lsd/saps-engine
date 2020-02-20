@@ -8,6 +8,8 @@ public interface JobExecutionService {
 
     public String submit(SapsJob job) throws Exception;
 
+    public long getWaitingJobs() throws Exception;
+
     public JobResponseDTO getStatus(String jobId) throws Exception;
 
 }

@@ -27,7 +27,6 @@ public class ArrebolRequestsHelper {
 	private static final Logger LOGGER = Logger.getLogger(ArrebolRequestsHelper.class);
 	private final String arrebolBaseUrl;
 	private final Gson gson;
-	private static final String DEFAULT_QUEUE = "default";
 
 	private static class Endpoint {
 		static final String QUEUES = "%s/queues";
@@ -45,7 +44,7 @@ public class ArrebolRequestsHelper {
 		this.gson = new GsonBuilder().create();
 	}
 
-	public String submitJobToExecution(JobRequestDTO job) throws Exception, SubmitJobException {
+	public String submitJobToExecution(String queueId, JobRequestDTO job) throws Exception, SubmitJobException {
 		StringEntity requestBody;
 
 		try {
@@ -54,7 +53,7 @@ public class ArrebolRequestsHelper {
 			throw new UnsupportedEncodingException("Job [" + job.getLabel() + "] is not well formed to built JSON.");
 		}
 
-		final String endpoint = String.format(Endpoint.JOBS, this.arrebolBaseUrl, DEFAULT_QUEUE);
+		final String endpoint = String.format(Endpoint.JOBS, this.arrebolBaseUrl, queueId);
 		
 		String jobId;
 
@@ -76,8 +75,8 @@ public class ArrebolRequestsHelper {
 		return jobId;
 	}
 
-	public JobResponseDTO getJob(String jobId) throws GetJobException {
-		final String endpoint = String.format(Endpoint.JOB, this.arrebolBaseUrl, DEFAULT_QUEUE, jobId);
+	public JobResponseDTO getJob(String queueId, String jobId) throws GetJobException {
+		final String endpoint = String.format(Endpoint.JOB, this.arrebolBaseUrl, queueId, jobId);
 
 		JobResponseDTO jobResponse;
 		try {

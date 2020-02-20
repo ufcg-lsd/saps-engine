@@ -9,8 +9,9 @@ import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRespo
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.request.ArrebolRequestsHelper;
 
 public class ArrebolJobExecutionService implements JobExecutionService {
-    private static final Logger LOGGER = Logger.getLogger(ArrebolJobExecutionService.class);
 
+    private static final Logger LOGGER = Logger.getLogger(ArrebolJobExecutionService.class);
+    private static final String DEFAULT_QUEUE = "default";
     private final ArrebolRequestsHelper requestsHelper;
 
     public ArrebolJobExecutionService(ArrebolRequestsHelper requestsHelper) {
@@ -21,14 +22,19 @@ public class ArrebolJobExecutionService implements JobExecutionService {
     public String submit(SapsJob job) throws Exception {
         LOGGER.info("Submitting Saps Job [" + job.getName() + "] to Arrebol");
         JobRequestDTO jobRequestDTO = new JobRequestDTO(job);
-        String id = requestsHelper.submitJobToExecution(jobRequestDTO);
+        String id = requestsHelper.submitJobToExecution(DEFAULT_QUEUE, jobRequestDTO);
         return id;
+    }
+
+    @Override
+    public long getWaitingJobs() throws Exception {
+        return requestsHelper.getQueue(DEFAULT_QUEUE).getWaitingJobs();
     }
 
     @Override
     public JobResponseDTO getStatus(String jobId) throws GetJobException {
         LOGGER.info("Getting Job [" + jobId + "] from Arrebol");
-        return requestsHelper.getJob(jobId);
+        return requestsHelper.getJob(DEFAULT_QUEUE, jobId);
     }
 
 }

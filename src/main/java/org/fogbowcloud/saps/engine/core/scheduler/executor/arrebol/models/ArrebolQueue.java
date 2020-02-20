@@ -36,4 +36,8 @@ public class ArrebolQueue {
     public String getName() {
         return name;
     }
+
+    public long getWaitingJobs() {
+        return waitingJobs;
+    }
 }
