@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.core.scheduler;
 
+import java.net.ConnectException;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,14 +13,15 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.ArrebolUtils;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.DefaultArrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.JobExecutionService;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.ArrebolJobExecutionService;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.CommandResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.TaskResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.TaskSpecResponseDTO;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.request.ArrebolRequestsHelper;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
@@ -32,7 +34,8 @@ import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 public class Scheduler {
 
     // Constants
-    public static final Logger LOGGER = Logger.getLogger(Scheduler.class);
+    private static final Logger LOGGER = Logger.getLogger(Scheduler.class);
+    private static final int MAX_WAITING_JOBS = 20;
 
     // Saps Controller Variables
     private ScheduledExecutorService sapsExecutor;
@@ -41,23 +44,26 @@ public class Scheduler {
     //FIXME Remove properties field and add new variables
     private Properties properties;
     private Catalog catalog;
-    private Arrebol arrebol;
+    private JobExecutionService jobExecutionService;
+    //FIXME Instance as Thread-Safe object
+    private List<JobSubmitted> submittedJobsID;
 
     public Scheduler(Properties properties) throws SapsException {
     	this(properties, new JDBCCatalog(properties), Executors.newScheduledThreadPool(1),
-                new DefaultArrebol(properties), new DefaultRoundRobin());
+                new ArrebolJobExecutionService(new ArrebolRequestsHelper(properties.getProperty(SapsPropertiesConstants.ARREBOL_BASE_URL))), new DefaultRoundRobin());
     }
 
     public Scheduler(Properties properties, Catalog catalog, ScheduledExecutorService sapsExecutor,
-                     Arrebol arrebol, Selector selector) throws SapsException {
+                     JobExecutionService jobExecutionService, Selector selector) throws SapsException {
         if (!checkProperties(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Scheduler Component.");
 
         this.properties = properties;
         this.catalog = catalog;
         this.sapsExecutor = sapsExecutor;
-        this.arrebol = arrebol;
+        this.jobExecutionService = jobExecutionService;
         this.selector = selector;
+        this.submittedJobsID = new LinkedList<>();
     }
 
     private static boolean checkProperties(Properties properties) {
@@ -110,11 +116,12 @@ public class Scheduler {
                 }
             } else {
                 String arrebolJobId = task.getArrebolJobId();
-                arrebol.addJobInList(new JobSubmitted(arrebolJobId, task));
+                this.submittedJobsID.add(new JobSubmitted(arrebolJobId, task));
             }
         }
-
-        arrebol.populateJobList(tasksForPopulateSubmittedJobList);
+        for (SapsImage task : tasksForPopulateSubmittedJobList) {
+            this.submittedJobsID.add(new JobSubmitted(task.getArrebolJobId(), task));
+        }
     }
 
     /**
@@ -133,8 +140,12 @@ public class Scheduler {
      * This function schedules up to tasks.
      */
     private void schedule() {
-        List<SapsImage> selectedTasks = selectTasks();
-        submitTasks(selectedTasks);
+        try {
+            List<SapsImage> selectedTasks = selectTasks();
+            submitTasks(selectedTasks);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -142,11 +153,11 @@ public class Scheduler {
      *
      * @return selected tasks list
      */
-    protected List<SapsImage> selectTasks() {
+    protected List<SapsImage> selectTasks() throws Exception {
         List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
         ImageTaskState[] states = {ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED};
 
-        int countUpToTasks = getCountSlotsInArrebol("default");
+        int countUpToTasks = getCountSlotsInArrebol();
 
         for (ImageTaskState state : states) {
             List<SapsImage> selectedTasksInCurrentState = selectTasks(countUpToTasks, state);
@@ -194,7 +205,7 @@ public class Scheduler {
      *
      * @param selectedTasks selected task list for submit to Arrebol
      */
-    protected void submitTasks(List<SapsImage> selectedTasks) {
+    protected void submitTasks(List<SapsImage> selectedTasks) throws Exception {
         for (SapsImage task : selectedTasks) {
             ImageTaskState nextState = getNextState(task.getState());
 
@@ -289,7 +300,7 @@ public class Scheduler {
      * @return Arrebol job id
      * @throws Exception
      */
-    private String submitTaskToArrebol(SapsImage task, ImageTaskState state) {
+    private String submitTaskToArrebol(SapsImage task, ImageTaskState state) throws Exception {
         LOGGER.info("Trying submit task id [" + task.getTaskId() + "] in state " + task.getState().getValue()
                 + " to arrebol");
 
@@ -317,10 +328,10 @@ public class Scheduler {
         SapsJob imageJob = new SapsJob(task.getTaskId(), tasks);
         LOGGER.info("SAPS job: " + imageJob.toJSON().toString());
 
-        String jobId = submitJobInArrebol(imageJob, "add new job");
+        String jobId = this.jobExecutionService.submit(imageJob);
         LOGGER.debug("Result submited job: " + jobId);
 
-        arrebol.addJobInList(new JobSubmitted(jobId, task));
+        this.submittedJobsID.add(new JobSubmitted(jobId, task));
         LOGGER.info("Adding job in list");
 
         return jobId;
@@ -376,7 +387,7 @@ public class Scheduler {
      * submitted jobs to Arrebol.
      */
     private void checker() {
-        List<JobSubmitted> submittedJobs = arrebol.returnAllJobsSubmitted();
+        List<JobSubmitted> submittedJobs = this.submittedJobsID;
         List<JobSubmitted> finishedJobs = new LinkedList<JobSubmitted>();
 
         LOGGER.info("Checking " + submittedJobs.size() + " submitted jobs for Arrebol service");
@@ -386,48 +397,50 @@ public class Scheduler {
             String jobId = job.getJobId();
             SapsImage task = job.getImageTask();
 
-            JobResponseDTO jobResponse = getJobByIdInArrebol(jobId, "gets job by ID [" + jobId + "]");
-            LOGGER.debug("Job [" + jobId + "] information returned from Arrebol: " + jobResponse);
-            if (!wasJobFound(jobResponse)) {
+            JobResponseDTO jobResponse;
+            try {
+                jobResponse = this.jobExecutionService.getStatus(jobId);
+                LOGGER.debug("Job [" + jobId + "] information returned from Arrebol: " + jobResponse);
+                boolean checkFinish = checkJobWasFinish(jobResponse);
+                if (checkFinish) {
+                    LOGGER.info("Job [" + jobId + "] has been finished");
+
+                    boolean checkOK = checkJobFinishedWithSucess(jobResponse);
+
+                    if (checkOK) {
+                        LOGGER.info("Job [" + jobId + "] has been finished with success");
+
+                        ImageTaskState nextState = getNextState(task.getState());
+                        updateStateInCatalog(task, nextState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+                            SapsImage.NONE_ARREBOL_JOB_ID,
+                            "updates task [" + task.getTaskId() + "] with next state [" + nextState.getValue() + "]");
+                    } else {
+                        LOGGER.info("Job [" + jobId + "] has been finished with failure");
+
+                        updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
+                            "error while execute " + task.getState().getValue() + " phase",
+                            SapsImage.NONE_ARREBOL_JOB_ID, "updates task [" + task.getTaskId() + "] with failed state");
+                    }
+
+                    addTimestampTaskInCatalog(task, "updates task [" + task.getTaskId() + "] timestamp");
+
+                    finishedJobs.add(job);
+                } else {
+                    LOGGER.info("Job [" + jobId + "] has NOT been finished");
+                }
+            } catch (ConnectException e) {
+
+            } catch (Exception e) {
                 LOGGER.info("Job [" + jobId + "] not found in Arrebol service, applying status rollback to task ["
-                        + task.getTaskId() + "]");
+                    + task.getTaskId() + "]");
 
                 rollBackTaskState(task);
                 finishedJobs.add(job);
-                continue;
             }
-
-            boolean checkFinish = checkJobWasFinish(jobResponse);
-            if (checkFinish) {
-                LOGGER.info("Job [" + jobId + "] has been finished");
-
-                boolean checkOK = checkJobFinishedWithSucess(jobResponse);
-
-                if (checkOK) {
-                    LOGGER.info("Job [" + jobId + "] has been finished with success");
-
-                    ImageTaskState nextState = getNextState(task.getState());
-                    updateStateInCatalog(task, nextState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
-                            SapsImage.NONE_ARREBOL_JOB_ID,
-                            "updates task [" + task.getTaskId() + "] with next state [" + nextState.getValue() + "]");
-                } else {
-                    LOGGER.info("Job [" + jobId + "] has been finished with failure");
-
-                    updateStateInCatalog(task, ImageTaskState.FAILED, SapsImage.AVAILABLE,
-                            "error while execute " + task.getState().getValue() + " phase",
-                            SapsImage.NONE_ARREBOL_JOB_ID, "updates task [" + task.getTaskId() + "] with failed state");
-                }
-
-                addTimestampTaskInCatalog(task, "updates task [" + task.getTaskId() + "] timestamp");
-
-                finishedJobs.add(job);
-            } else
-                LOGGER.info("Job [" + jobId + "] has NOT been finished");
         }
-
         for (JobSubmitted jobFinished : finishedJobs) {
             LOGGER.info("Removing job [" + jobFinished.getJobId() + "] from the submitted job list");
-            arrebol.removeJob(jobFinished);
+            this.submittedJobsID.remove(jobFinished);
         }
 
     }
@@ -497,22 +510,11 @@ public class Scheduler {
     /**
      * This function gets Arrebol capacity for add new jobs.
      *
-     * @param queueId queue identifier in Arrebol
      * @return Arrebol queue capacity in queue with identifier
      */
-    private int getCountSlotsInArrebol(String queueId) {
-        return ArrebolUtils.getCountSlots(arrebol, queueId);
-    }
-
-    /**
-     * This function gets job in Arrebol that matching with id.
-     *
-     * @param jobId   job id to be used for matching
-     * @param message information message
-     * @return job response that matching with id
-     */
-    private JobResponseDTO getJobByIdInArrebol(String jobId, String message) {
-        return ArrebolUtils.getJobById(arrebol, jobId, message);
+    private int getCountSlotsInArrebol() throws Exception {
+        long waitingJobs = this.jobExecutionService.getWaitingJobs();
+        return MAX_WAITING_JOBS - (int) waitingJobs;
     }
 
     /**
@@ -524,17 +526,6 @@ public class Scheduler {
      */
     private List<JobResponseDTO> getJobByNameInArrebol(String jobName, String message) {
         return ArrebolUtils.getJobByName(arrebol, jobName, message);
-    }
-
-    /**
-     * This function submit job in Arrebol service.
-     *
-     * @param imageJob SAPS job to be submitted
-     * @param message  information message
-     * @return job id returned from Arrebol
-     */
-    private String submitJobInArrebol(SapsJob imageJob, String message) {
-        return ArrebolUtils.submitJob(arrebol, imageJob, message);
     }
 
     /**
