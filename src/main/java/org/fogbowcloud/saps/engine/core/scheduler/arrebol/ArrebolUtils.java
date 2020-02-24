@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 
+import java.net.ConnectException;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -30,21 +31,22 @@ public class ArrebolUtils {
 	 * @return Function return
 	 */
 	@SuppressWarnings("unchecked")
-	private static <T> T retry(ArrebolRetry<?> function, int sleepInSeconds, String message) {
+	private static <T> T retry(ArrebolRetry<T> function, int sleepInSeconds, String message)
+        throws Exception {
 		LOGGER.info(
 				"[Retry Arrebol function] Trying " + message + " using " + sleepInSeconds + " seconds with time sleep");
 
 		while (true) {
 			try {
-				return (T) function.run();
-			} catch (Exception | SubmitJobException | GetJobException | GetCountsSlotsException e) {
+				return function.run();
+			} catch (ConnectException e) {
 				LOGGER.error("Failed while " + message);
 				e.printStackTrace();
 			}
 
 			try {
 				LOGGER.info("Sleeping for " + sleepInSeconds + " seconds");
-				Thread.sleep(Long.valueOf(sleepInSeconds) * 1000);
+				Thread.sleep((long) sleepInSeconds * 1000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -58,7 +60,7 @@ public class ArrebolUtils {
 	 * @param queueId queue identifier in Arrebol
 	 * @return Arrebol queue capacity in queue with identifier
 	 */
-	public static int getCountSlots(Arrebol arrebol, String queueId) {
+	public static int getCountSlots(Arrebol arrebol, String queueId) throws Exception {
 		return retry(new LenQueueRetry(arrebol, queueId), ARREBOL_DEFAULT_SLEEP_SECONDS,
 				"gets Arrebol capacity len for add news jobs in queue id [" + queueId + "]");
 	}
@@ -66,36 +68,39 @@ public class ArrebolUtils {
 	/**
 	 * This function gets job list in Arrebol that matching with name.
 	 * 
-	 * @param Arrebol service
+	 * @param arrebol service
 	 * @param jobName job label to be used for matching
 	 * @param message information message
 	 * @return job response list that matching with label
 	 */
-	public static List<JobResponseDTO> getJobByName(Arrebol arrebol, String jobName, String message) {
+	public static List<JobResponseDTO> getJobByName(Arrebol arrebol, String jobName, String message)
+        throws Exception {
 		return retry(new GetJobByNameRetry(arrebol, jobName), ARREBOL_DEFAULT_SLEEP_SECONDS, message);
 	}
 
 	/**
 	 * This function gets job in Arrebol that matching with id.
 	 * 
-	 * @param Arrebol service
+	 * @param arrebol service
 	 * @param jobId job id to be used for matching
 	 * @param message information message
 	 * @return job response that matching with id
 	 */
-	public static JobResponseDTO getJobById(Arrebol arrebol, String jobId, String message) {
+	public static JobResponseDTO getJobById(Arrebol arrebol, String jobId, String message)
+        throws Exception {
 		return retry(new GetJobByIdRetry(arrebol, jobId), ARREBOL_DEFAULT_SLEEP_SECONDS, message);
 	}
 
 	/**
 	 * This function submit job in Arrebol service.
 	 * 
-	 * @param Arrebol service
+	 * @param arrebol service
 	 * @param imageJob SAPS job to be submitted
 	 * @param message  information message
 	 * @return job id returned from Arrebol
 	 */
-	public static String submitJob(Arrebol arrebol, SapsJob imageJob, String message) {
+	public static String submitJob(Arrebol arrebol, SapsJob imageJob, String message)
+        throws Exception {
 		return retry(new SubmitJobRetry(arrebol, imageJob), ARREBOL_DEFAULT_SLEEP_SECONDS, message);
 	}
 }
