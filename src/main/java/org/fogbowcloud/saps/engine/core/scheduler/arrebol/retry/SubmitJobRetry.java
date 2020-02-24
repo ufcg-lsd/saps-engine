@@ -15,7 +15,7 @@ public class SubmitJobRetry implements ArrebolRetry<String>{
 	}
 	
 	@Override
-	public String run() throws Exception, SubmitJobException {
+	public String run() throws Exception {
 		return arrebol.addJob(job);
 	}
 

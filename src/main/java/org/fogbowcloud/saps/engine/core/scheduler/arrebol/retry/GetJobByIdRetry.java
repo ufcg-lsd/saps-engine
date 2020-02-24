@@ -2,6 +2,7 @@ package org.fogbowcloud.saps.engine.core.scheduler.arrebol.retry;
 
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.ArrebolConnectException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 
 public class GetJobByIdRetry implements ArrebolRetry<JobResponseDTO> {
@@ -15,7 +16,7 @@ public class GetJobByIdRetry implements ArrebolRetry<JobResponseDTO> {
 	}
 
 	@Override
-	public JobResponseDTO run() throws GetJobException {
+	public JobResponseDTO run() throws GetJobException, ArrebolConnectException {
 		return arrebol.checkStatusJobById(jobId);
 	}
 }
