@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.core.scheduler.arrebol;
 
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.util.Properties;
 import org.apache.http.Header;
 
@@ -12,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dto.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.ArrebolConnectException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
@@ -39,13 +41,14 @@ public class ArrebolRequestsHelper {
 		this.gson = new GsonBuilder().create();
 	}
 
-	public String submitJobToExecution(SapsJob job) throws Exception, SubmitJobException {
+	public String submitJobToExecution(SapsJob job)
+		throws SubmitJobException, UnsupportedEncodingException, ArrebolConnectException {
 		StringEntity requestBody;
 
 		try {
 			requestBody = makeJSONBody(job);
 		} catch (UnsupportedEncodingException e) {
-			throw new Exception("Job is not well formed to built JSON.");
+			throw new UnsupportedEncodingException("Job is not well formed to built JSON.");
 		}
 
 		final String jobEndpoint = this.arrebolBaseUrl + "/queues/default/jobs";
@@ -54,15 +57,16 @@ public class ArrebolRequestsHelper {
 		final String JSON_KEY_JOB_ID_ARREBOL = "id";
 
 		try {
-			final String jsonResponse = HttpWrapper.doRequest(HttpPost.METHOD_NAME, jobEndpoint,
-					new LinkedList<Header>(), requestBody);
+			final String jsonResponse = HttpWrapper
+				.doRequest(HttpPost.METHOD_NAME, jobEndpoint, new LinkedList<Header>(), requestBody);
 
 			JsonObject jobResponse = this.gson.fromJson(jsonResponse, JsonObject.class);
 
 			jobIdArrebol = jobResponse.get(JSON_KEY_JOB_ID_ARREBOL).getAsString();
 
 			LOGGER.info("Job was submitted with success to Arrebol.");
-
+		} catch (ConnectException e) {
+			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
 		} catch (Exception e) {
 			throw new SubmitJobException("Submit Job to Arrebol has FAILED: " + e.getMessage(), e);
 		}
@@ -70,16 +74,19 @@ public class ArrebolRequestsHelper {
 		return jobIdArrebol;
 	}
 
-	public JobResponseDTO getJob(String jobArrebolId) throws GetJobException {
+	public JobResponseDTO getJob(String jobArrebolId)
+		throws GetJobException, ArrebolConnectException {
 		return this.gson.fromJson(getJobJSON(jobArrebolId), JobResponseDTO.class);
 	}
 
-	public String getJobJSON(String jobArrebolId) throws GetJobException {
+	public String getJobJSON(String jobArrebolId) throws GetJobException, ArrebolConnectException {
 		final String endpoint = this.arrebolBaseUrl + "/queues/default/jobs/" + jobArrebolId;
 
 		String jsonResponse;
 		try {
 			jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint, null);
+		} catch (ConnectException e) {
+			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
 		} catch (Exception e) {
 			throw new GetJobException("Get Job from Arrebol has FAILED: " + e.getMessage(), e);
 		}
@@ -99,7 +106,8 @@ public class ArrebolRequestsHelper {
 		return new StringEntity(json);
 	}
 
-	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException {
+	public int getCountSlotsInQueue(String queueId)
+		throws GetCountsSlotsException, ArrebolConnectException {
 		final String endpoint = this.arrebolBaseUrl + "/queues/" + queueId;
 		final String JSON_KEY_WAITING_JOBS_ARREBOL = "waiting_jobs";
 		
@@ -111,6 +119,8 @@ public class ArrebolRequestsHelper {
 			waitingJobs = jobResponse.get(JSON_KEY_WAITING_JOBS_ARREBOL).getAsInt();
 
 			LOGGER.info("Arrebol in queue id [" + queueId + "] was " + waitingJobs + " waiting jobs");
+		} catch (ConnectException e) {
+			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
 		} catch (Exception e) {
 			throw new GetCountsSlotsException("Get waiting jobs from Arrebol queue id [" + queueId + "] has FAILED: " + e.getMessage(), e);
 		}
