@@ -4,6 +4,7 @@ import java.util.List;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.ArrebolConnectException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
@@ -20,11 +21,13 @@ public interface Arrebol {
 
 	public List<JobSubmitted> returnAllJobsSubmitted();
 
-	public JobResponseDTO checkStatusJobById(String jobId) throws GetJobException;
+	public JobResponseDTO checkStatusJobById(String jobId)
+        throws GetJobException, ArrebolConnectException;
 	
 	public List<JobResponseDTO> checkStatusJobByName(String JobName) throws GetJobException;
 
-	public String checkStatusJobString(String jobId) throws GetJobException;
+	public String checkStatusJobString(String jobId) throws GetJobException, ArrebolConnectException;
 	
-	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException;
+	public int getCountSlotsInQueue(String queueId)
+		throws GetCountsSlotsException, ArrebolConnectException;
 }

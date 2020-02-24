@@ -7,6 +7,7 @@ import java.util.Properties;
 import org.fogbowcloud.saps.engine.core.dto.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.ArrebolConnectException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetCountsSlotsException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.SubmitJobException;
@@ -52,7 +53,8 @@ public class DefaultArrebol implements Arrebol {
 	}
 
 	@Override
-	public JobResponseDTO checkStatusJobById(String jobId) throws GetJobException {
+	public JobResponseDTO checkStatusJobById(String jobId)
+        throws GetJobException, ArrebolConnectException {
 		return arrebolRequestHelper.getJob(jobId);
 	}
 
@@ -63,12 +65,13 @@ public class DefaultArrebol implements Arrebol {
 	}
 
 	@Override
-	public String checkStatusJobString(String jobId) throws GetJobException {
+	public String checkStatusJobString(String jobId) throws GetJobException, ArrebolConnectException {
 		return arrebolRequestHelper.getJobJSON(jobId);
 	}
 
 	@Override
-	public int getCountSlotsInQueue(String queueId) throws GetCountsSlotsException {
+	public int getCountSlotsInQueue(String queueId)
+        throws GetCountsSlotsException, ArrebolConnectException {
 		return ARREBOL_MAX_WAITING_JOBS - arrebolRequestHelper.getCountSlotsInQueue(queueId);
 	}
 }
