@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage.exceptions;
 
-public class PermanentStorageException extends RuntimeException {
+//FIXME Replace this exception with other, more specific exceptions
+public class PermanentStorageException extends Exception {
 
     private static final long serialVersionUID = -2520888793776997437L;
 

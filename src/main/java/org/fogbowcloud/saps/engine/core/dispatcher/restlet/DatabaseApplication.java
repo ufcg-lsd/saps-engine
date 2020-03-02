@@ -30,6 +30,7 @@ import org.restlet.routing.Router;
 import org.restlet.service.ConnectorService;
 import org.restlet.service.CorsService;
 
+//FIXME Delete any obvious java-doc
 public class DatabaseApplication extends Application {
     private static final String DB_WEB_STATIC_ROOT = "./dbWebHtml/static";
 
@@ -63,7 +64,7 @@ public class DatabaseApplication extends Application {
                 SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH,
                 SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER,
                 SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY,
-                SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER,
+                SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
                 SapsPropertiesConstants.SWIFT_AUTH_URL,
                 SapsPropertiesConstants.SWIFT_PROJECT_ID,
                 SapsPropertiesConstants.SWIFT_USER_ID,

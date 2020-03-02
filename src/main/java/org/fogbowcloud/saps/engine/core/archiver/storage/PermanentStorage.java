@@ -6,12 +6,12 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 public interface PermanentStorage {
 
 	/**
-	 * This function tries to archive a task trying each folder in order
+	 * This function tries to archive a task trying each dirs in order
 	 * (inputdownloading -> preprocessing -> processing).
 	 * 
 	 * @param task task to be archived
 	 * @return boolean representation, success (true) or failure (false) in to
-	 *         archive the three folders.
+	 *         archive the three dirs.
 	 */
 	boolean archive(SapsImage task) throws PermanentStorageException;
 

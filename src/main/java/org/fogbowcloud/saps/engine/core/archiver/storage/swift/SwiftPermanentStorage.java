@@ -1,6 +1,9 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 
-import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.*;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_DIR;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_DIR;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_DIR;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.SAPS_TASK_STAGE_DIR_PATTERN;
 
 import java.io.File;
 import java.util.List;
@@ -8,49 +11,50 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class SwiftPermanentStorage implements PermanentStorage {
 
 
-    public static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
+    private static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
     private static final String SWIFT_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
-    private static int MAX_ARCHIVE_TRIES = 1;
-    private static int MAX_SWIFT_UPLOAD_TRIES = 2;
+    private static final int MAX_ARCHIVE_TRIES = 1;
+    private static final int MAX_SWIFT_UPLOAD_TRIES = 2;
 
     private final SwiftAPIClient swiftAPIClient;
+    //FIXME Remove properties field and add new variables
     private final Properties properties;
     private final String nfsTempStoragePath;
     private final String containerName;
-    private final boolean executionDebugMode;
+    private final boolean debugMode;
 
-    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws SapsException {
+    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws PermanentStorageException {
         if (!checkProperties(properties))
-            throw new SapsException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
+            throw new PermanentStorageException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
 
         this.swiftAPIClient = swiftAPIClient;
         this.properties = properties;
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
         this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME));
-        this.executionDebugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
+        this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
 
-        if (this.executionDebugMode && !checkPropertiesDebugMode(properties))
-            throw new SapsException("Error on validate the file. Missing properties for start Saps Controller.");
+        if (this.debugMode && !checkPropertiesDebugMode(properties))
+            throw new PermanentStorageException("Error on validate the file. Missing properties for start Saps Controller.");
     }
 
-    public SwiftPermanentStorage(Properties properties) throws SapsException {
+    public SwiftPermanentStorage(Properties properties) throws PermanentStorageException {
         this(properties, new SwiftAPIClient(properties));
     }
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-                SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER,
+                SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
                 SapsPropertiesConstants.SWIFT_CONTAINER_NAME
         };
 
@@ -65,8 +69,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
      * (otherwise)
      */
     private boolean checkPropertiesDebugMode(Properties properties) {
-        if (!properties.containsKey(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)) {
-            LOGGER.error("Required property " + SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER
+        if (!properties.containsKey(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)) {
+            LOGGER.error("Required property " + SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR
                     + " was not set (it's necessary when debug mode)");
             return false;
         }
@@ -90,32 +94,22 @@ public class SwiftPermanentStorage implements PermanentStorage {
         LOGGER.info("Attempting to archive task [" + taskId + "] with a maximum of " + MAX_ARCHIVE_TRIES
                 + " archiving attempts for each folder (inputdownloading, preprocessing, processing)");
 
-        String swiftExports = (task.getState() == ImageTaskState.FAILED && this.executionDebugMode)
-                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
-                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
+        String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
+                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
+                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
 
-        String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, INPUTDOWNLOADING_FOLDER);
-        String inputdownloadingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, INPUTDOWNLOADING_FOLDER);
+        String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, INPUTDOWNLOADING_DIR);
+        String inputdownloadingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, INPUTDOWNLOADING_DIR);
 
-        String preprocessingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PREPROCESSING_FOLDER);
-        String preprocessingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, PREPROCESSING_FOLDER);
+        String preprocessingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PREPROCESSING_DIR);
+        String preprocessingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, PREPROCESSING_DIR);
 
-        String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PROCESSING_FOLDER);
-        String processingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, PROCESSING_FOLDER);
+        String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PROCESSING_DIR);
+        String processingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, PROCESSING_DIR);
 
-        LOGGER.info("Inputdownloading local folder: " + inputdownloadingLocalDir);
-        LOGGER.info("Inputdownloading swift folder: " + inputdownloadingSwiftDir);
-        boolean inputdownloadingSentSuccess = archive(task, inputdownloadingLocalDir, inputdownloadingSwiftDir);
-
-        LOGGER.info("Preprocessing local folder: " + preprocessingLocalDir);
-        LOGGER.info("Preprocessing swift folder: " + preprocessingSwiftDir);
-        boolean preprocessingSentSuccess = inputdownloadingSentSuccess
-                && archive(task, preprocessingLocalDir, preprocessingSwiftDir);
-
-        LOGGER.info("Processing local folder: " + processingLocalDir);
-        LOGGER.info("Processing swift folder: " + processingSwiftDir);
-        boolean processingSentSuccess = preprocessingSentSuccess
-                && archive(task, processingLocalDir, processingSwiftDir);
+        boolean inputdownloadingSentSuccess = archive(taskId, inputdownloadingLocalDir, inputdownloadingSwiftDir);
+        boolean preprocessingSentSuccess = inputdownloadingSentSuccess && archive(taskId, preprocessingLocalDir, preprocessingSwiftDir);
+        boolean processingSentSuccess = preprocessingSentSuccess && archive(taskId, processingLocalDir, processingSwiftDir);
 
         LOGGER.info("Archive process result of task [" + task.getTaskId() + ":\nInputdownloading phase: "
                 + (inputdownloadingSentSuccess ? "Success" : "Failure") + "\n" + "Preprocessing phase: "
@@ -128,25 +122,26 @@ public class SwiftPermanentStorage implements PermanentStorage {
     /**
      * This function tries to archive a task folder in Swift.
      *
-     * @param task     task in archive process
+     * @param taskId     task id in archive process
      * @param localDir task folder to be archived
      * @param swiftDir directory swift to archive new data
      * @return boolean representation, success (true) or failure (false) to archive
      */
-    private boolean archive(SapsImage task, String localDir, String swiftDir) {
-        LOGGER.info("Trying to archive task [" + task.getTaskId() + "] " + localDir + " folder with a maximum of "
-                + MAX_ARCHIVE_TRIES + " archiving attempts");
+    private boolean archive(String taskId, String localDir, String swiftDir) {
+        LOGGER.info("Trying to archive task [" + taskId + "] " + localDir + " folder to " + swiftDir +
+                " folder with a maximum of " + MAX_ARCHIVE_TRIES + " archiving attempts");
 
         File localFileDir = new File(localDir);
 
         if (!localFileDir.exists() || !localFileDir.isDirectory()) {
-            LOGGER.error("Failed to archive task [" + task.getTaskId() + "]. " + localDir
+            LOGGER.error("Failed to archive task [" + taskId + "]. " + localDir
                     + " folder isn't directory or not exists");
             return false;
         }
 
         for (int itry = 0; itry < MAX_ARCHIVE_TRIES; itry++) {
-            if (uploadFiles(task, localFileDir, swiftDir))
+            LOGGER.info("Trying to archive task [" + taskId + "] " + localDir + " folder for swift");
+            if (uploadFiles(localFileDir, swiftDir))
                 return true;
         }
 
@@ -156,21 +151,20 @@ public class SwiftPermanentStorage implements PermanentStorage {
     /**
      * This function tries upload task folder files to Swift.
      *
-     * @param task     task in archive process
      * @param localDir task folder to be archived
      * @param swiftDir directory swift to archive new data
      * @return boolean representation, success (true) or failure (false) to archive
      */
-    private boolean uploadFiles(SapsImage task, File localDir, String swiftDir) {
-        LOGGER.info("Trying to archive task [" + task.getTaskId() + "] " + localDir + " folder for swift");
+    private boolean uploadFiles(File localDir, String swiftDir) {
         for (File actualFile : localDir.listFiles()) {
             if (!uploadFile(actualFile, swiftDir)) {
                 LOGGER.info("Failure in archiving file [" + actualFile.getAbsolutePath() + "]");
+                //TODO What should really be done when one or more files fail to upload?
                 return false;
             }
         }
 
-        LOGGER.info("Upload to swift succsessfully done");
+        LOGGER.info("Upload to swift successfully done");
         return true;
     }
 
@@ -210,9 +204,9 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
 
-        String swiftExports = (task.getState() == ImageTaskState.FAILED && this.executionDebugMode)
-                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_FOLDER)
-                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_FOLDER);
+        String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
+                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
+                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
 
         String prefix = swiftExports + File.separator + taskId;
 

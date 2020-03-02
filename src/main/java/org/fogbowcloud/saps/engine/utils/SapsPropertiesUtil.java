@@ -15,7 +15,7 @@ public class SapsPropertiesUtil {
         }
 
         for(String property : propertiesSet){
-            if (!properties.containsKey(property)) {
+            if (!properties.containsKey(property) || properties.getProperty(property).isEmpty()) {
                 LOGGER.error("Required property " + property + " was not set");
                 return false;
             }

@@ -9,12 +9,12 @@ datastore_password=
 
 saps_execution_period_archiver=
 saps_execution_period_garbage_collector=
-saps_execution_debug_mode=
+saps_debug_mode=
 
 saps_permanent_storage_type=swift
 
 # NFS
-saps_export_path=src/test/resources/archiver-test
+saps_temp_storage_path=src/test/resources/archiver-test
 
 # Configuração do sft
 swift_input_pseud_folder_prefix=

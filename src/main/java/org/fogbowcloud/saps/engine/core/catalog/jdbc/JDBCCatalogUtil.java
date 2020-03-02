@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.core.catalog.jdbc;
 
 import org.fogbowcloud.saps.engine.core.catalog.exceptions.CatalogException;
+import org.fogbowcloud.saps.engine.core.catalog.jdbc.exceptions.JDBCCatalogException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsUser;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -12,20 +13,20 @@ import java.util.List;
 
 public class JDBCCatalogUtil {
 
-    public static SapsUser extractSapsUser(ResultSet rs) throws CatalogException {
+    public static SapsUser extractSapsUser(ResultSet rs) throws JDBCCatalogException {
         SapsUser sebalUser = null;
         try {
             sebalUser = new SapsUser(rs.getString(JDBCCatalogConstants.Tables.User.EMAIL), rs.getString(JDBCCatalogConstants.Tables.User.NAME),
                     rs.getString(JDBCCatalogConstants.Tables.User.PASSWORD), rs.getBoolean(JDBCCatalogConstants.Tables.User.ENABLE), rs.getBoolean(JDBCCatalogConstants.Tables.User.NOTIFY),
                     rs.getBoolean(JDBCCatalogConstants.Tables.User.ADMIN_ROLE));
         } catch (SQLException e) {
-            throw new CatalogException("Error while extract user");
+            throw new JDBCCatalogException("Error while extract user", e);
         }
 
         return sebalUser;
     }
 
-    public static List<SapsImage> extractSapsTasks(ResultSet rs) throws CatalogException {
+    public static List<SapsImage> extractSapsTasks(ResultSet rs) throws JDBCCatalogException {
         List<SapsImage> imageTasks = new ArrayList<>();
         while (true) {
             try {
@@ -39,7 +40,7 @@ public class JDBCCatalogUtil {
                         rs.getTimestamp(JDBCCatalogConstants.Tables.Task.CREATION_TIME), rs.getTimestamp(JDBCCatalogConstants.Tables.Task.UPDATED_TIME),
                         rs.getString(JDBCCatalogConstants.Tables.Task.STATUS), rs.getString(JDBCCatalogConstants.Tables.Task.ERROR_MSG)));
             } catch (SQLException e) {
-                throw new CatalogException("Error while extract task");
+                throw new JDBCCatalogException("Error while extract task", e);
             }
         }
         return imageTasks;

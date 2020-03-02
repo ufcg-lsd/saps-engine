@@ -17,14 +17,13 @@ import org.fogbowcloud.saps.engine.utils.retry.catalog.GetProcessingTasksRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.GetTaskById;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.GetTasksRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.GetUser;
-import org.fogbowcloud.saps.engine.utils.retry.catalog.RemoveTimestampRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.UpdateTaskRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.AddTimestampRetry;
 import org.fogbowcloud.saps.engine.utils.retry.catalog.exceptions.CatalogRetryException;
 
 public class CatalogUtils {
 
-	public static final Logger LOGGER = Logger.getLogger(CatalogUtils.class);
+	private static final Logger LOGGER = Logger.getLogger(CatalogUtils.class);
 	private static final int CATALOG_DEFAULT_SLEEP_SECONDS = 5;
 
 	/**
@@ -46,15 +45,14 @@ public class CatalogUtils {
 			try {
 				return (T) function.run();
 			} catch (CatalogRetryException e) {
-				LOGGER.error("Failed while " + message);
-				e.printStackTrace();
+				LOGGER.error("Failed while " + message, e);
 			}
 
 			try {
 				LOGGER.info("Sleeping for " + sleepInSeconds + " seconds");
 				Thread.sleep(Long.valueOf(sleepInSeconds) * 1000);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				LOGGER.error("Failed while " + message, e);
 			}
 		}
 	}
@@ -64,11 +62,11 @@ public class CatalogUtils {
 	 * 
 	 * @param imageStore catalog component
 	 * @param state      specific state for get tasks
-	 * @param message    information message
 	 * @return tasks in specific state
 	 */
-	public static List<SapsImage> getTasks(Catalog imageStore, ImageTaskState state, String message) {
-		return retry(new GetTasksRetry(imageStore, state), CATALOG_DEFAULT_SLEEP_SECONDS, message);
+	public static List<SapsImage> getTasks(Catalog imageStore, ImageTaskState state) {
+		return retry(new GetTasksRetry(imageStore, state), CATALOG_DEFAULT_SLEEP_SECONDS,
+				"gets tasks with " + state.getValue() + " state");
 	}
 
 	/**
@@ -76,12 +74,12 @@ public class CatalogUtils {
 	 *
 	 * @param imageStore catalog component
 	 * @param task       task to be updated
-	 * @param message    information message
 	 * @return boolean representation reporting success (true) or failure (false) in
 	 *         update state task in catalog
 	 */
-	public static boolean updateState(Catalog imageStore, SapsImage task, String message) {
-		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
+	public static boolean updateState(Catalog imageStore, SapsImage task) {
+		return retry(new UpdateTaskRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS,
+				"update task [" + task.getTaskId() + " state]");
 	}
 
 	/**
@@ -97,24 +95,12 @@ public class CatalogUtils {
 
 	/**
 	 * This function add new tuple in time stamp table and updates task time stamp.
-	 * 
-	 * @param imageStore catalog component
+	 *  @param imageStore catalog component
 	 * @param task       task to be update
-	 * @param message    information message
 	 */
-	public static void addTimestampTask(Catalog imageStore, SapsImage task, String message) {
-		retry(new AddTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
-	}
-
-	/**
-	 * This function remove task time stamp.
-	 * 
-	 * @param imageStore catalog component
-	 * @param task       task to be update
-	 * @param message    information message
-	 */
-	public static void removeTimestampTask(Catalog imageStore, SapsImage task, String message) {
-		retry(new RemoveTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS, message);
+	public static void addTimestampTask(Catalog imageStore, SapsImage task) {
+		retry(new AddTimestampRetry(imageStore, task), CATALOG_DEFAULT_SLEEP_SECONDS,
+				"add timestamp to task [" + task.getTaskId() + "]");
 	}
 
 	/**

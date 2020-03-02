@@ -11,199 +11,185 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
-import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
+import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class SwiftAPIClient {
 
-	// Properties
-	private Properties properties;
+    // Properties
+    private Properties properties;
 
-	// Core Attributes
-	private String projectId;
-	private String userId;
-	private String userPassword;
-	private String tokenAuthUrl;
-	private String swiftUrl;
-	private String token;
+    // Core Attributes
+    private String projectId;
+    private String userId;
+    private String userPassword;
+    private String tokenAuthUrl;
+    private String swiftUrl;
+    private String token;
 
-	public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
+    public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
 
-	public SwiftAPIClient(Properties properties) throws SapsException {
-		if (!checkProperties(properties))
-			throw new SapsException("Error on validate the file. Missing properties for start Swift API Client.");
+    public SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
+        if (!checkProperties(properties))
+            throw new SwiftPermanentStorageException("Error on validate the file. Missing properties for start Swift API Client.");
 
-		this.properties = properties;
+        this.properties = properties;
 
-		projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
-		userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
-		userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
-		tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
-		swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
+        projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
+        userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
+        userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
+        tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
+        swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
 
-		handleTokenUpdate(Executors.newScheduledThreadPool(1));
+        handleTokenUpdate(Executors.newScheduledThreadPool(1));
 
-		LOGGER.info("Waiting to get token...");
-		while (token == null) {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        LOGGER.info("Waiting to get token...");
+        while (token == null) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	private boolean checkProperties(Properties properties) {
-		String[] propertiesSet = {
-				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID,
-				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID,
-				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD,
-				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL,
-				SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL
-		};
+    private boolean checkProperties(Properties properties) {
+        String[] propertiesSet = {
+                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID,
+                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID,
+                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD,
+                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL,
+                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL
+        };
 
-		if (properties == null) {
-			LOGGER.error("Properties arg must not be null.");
-			return false;
-		}
+        return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
+    }
 
-		for(String property : propertiesSet){
-			if (!properties.containsKey(property)) {
-				LOGGER.error("Required property " + property + " was not set");
-				return false;
-			}
-		}
+    public void createContainer(String containerName) {
+        // TODO: test JUnit
+        LOGGER.debug("Creating container " + containerName);
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
+                "post", containerName);
 
-		LOGGER.debug("All properties are set");
-		return true;
-	}
+        LOGGER.debug("Executing command " + builder.command());
 
-	public void createContainer(String containerName) {
-		// TODO: test JUnit
-		LOGGER.debug("Creating container " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
-				"post", containerName);
+        try {
+            Process p = builder.start();
+            p.waitFor();
+        } catch (IOException e) {
+            LOGGER.error("Error while creating container " + containerName, e);
+        } catch (InterruptedException e) {
+            LOGGER.error("Error while creating container " + containerName, e);
+        }
+    }
 
-		LOGGER.debug("Executing command " + builder.command());
+    public void uploadFile(String containerName, File file, String pseudFolder) throws Exception {
+        String completeFileName = pseudFolder + File.separator + file.getName();
 
-		try {
-			Process p = builder.start();
-			p.waitFor();
-		} catch (IOException e) {
-			LOGGER.error("Error while creating container " + containerName, e);
-		} catch (InterruptedException e) {
-			LOGGER.error("Error while creating container " + containerName, e);
-		}
-	}
+        LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
+                "upload", containerName, file.getAbsolutePath(), "--object-name", completeFileName);
+        try {
+            Process p = builder.start();
+            p.waitFor();
 
-	public void uploadFile(String containerName, File file, String pseudFolder) throws Exception {
-		String completeFileName = pseudFolder + File.separator + file.getName();
+            if (p.exitValue() != 0) {
+                throw new Exception("process_output=" + p.exitValue());
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error while uploading file " + completeFileName + " to container " + containerName, e);
+        } catch (InterruptedException e) {
+            LOGGER.error("Error while uploading file " + completeFileName + " to container " + containerName, e);
+        }
+    }
 
-		LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
-				"upload", containerName, file.getAbsolutePath(), "--object-name", completeFileName);
-		try {
-			Process p = builder.start();
-			p.waitFor();
+    public void deleteFile(String containerName, String filePath) {
+        LOGGER.debug("Deleting " + filePath + " from " + containerName);
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
+                "delete", containerName, filePath);
 
-			if (p.exitValue() != 0) {
-				throw new Exception("process_output=" + p.exitValue());
-			}
-		} catch (IOException e) {
-			LOGGER.error("Error while uploading file " + completeFileName + " to container " + containerName, e);
-		} catch (InterruptedException e) {
-			LOGGER.error("Error while uploading file " + completeFileName + " to container " + containerName, e);
-		}
-	}
+        try {
+            Process p = builder.start();
+            p.waitFor();
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("Error while deleting " + filePath + " from container " + containerName, e);
+        }
 
-	public void deleteFile(String containerName, String filePath) {
-		LOGGER.debug("Deleting " + filePath + " from " + containerName);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
-				"delete", containerName, filePath);
+        LOGGER.debug(filePath + " file deleted successfully from " + containerName);
+    }
 
-		try {
-			Process p = builder.start();
-			p.waitFor();
-		} catch (IOException | InterruptedException e) {
-			LOGGER.error("Error while deleting " + filePath + " from container " + containerName, e);
-		}
+    public List<String> listFilesWithPrefix(String containerName, String prefix) {
+        LOGGER.info("Listing files in container " + containerName + " with prefix " + prefix);
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url",
+                swiftUrl, "list", "-p", prefix, containerName);
+        LOGGER.debug("Executing command " + builder.command());
 
-		LOGGER.debug(filePath + " file deleted successfully from " + containerName);
-	}
+        Process p;
+        String output;
 
-	public List<String> listFilesWithPrefix(String containerName, String prefix) {
-		LOGGER.info("Listing files in container " + containerName + " with prefix " + prefix);
-		ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url",
-				properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL), "list", "-p", prefix,
-				containerName);
-		LOGGER.debug("Executing command " + builder.command());
+        try {
+            p = builder.start();
+            p.waitFor();
 
-		Process p;
-		String output;
+            output = ProcessUtil.getOutput(p);
 
-		try {
-			p = builder.start();
-			p.waitFor();
+            return getOutputLinesIntoList(output);
+        } catch (IOException e) {
+            LOGGER.error("Error while listing files from " + containerName);
+            return new ArrayList<String>();
+        } catch (InterruptedException e) {
+            LOGGER.error("Error while listing files from " + containerName);
+            return new ArrayList<String>();
+        }
+    }
 
-			output = ProcessUtil.getOutput(p);
+    private List<String> getOutputLinesIntoList(String fileNames) throws IOException {
+        List<String> fileNamesList = new ArrayList<String>();
 
-			return getOutputLinesIntoList(output);
-		} catch (IOException e) {
-			LOGGER.error("Error while listing files from " + containerName);
-			return new ArrayList<String>();
-		} catch (InterruptedException e) {
-			LOGGER.error("Error while listing files from " + containerName);
-			return new ArrayList<String>();
-		}
-	}
+        String[] lines = fileNames.split(System.getProperty("line.separator"));
 
-	private List<String> getOutputLinesIntoList(String fileNames) throws IOException {
-		List<String> fileNamesList = new ArrayList<String>();
+        for (int i = 0; i < lines.length; i++) {
+            fileNamesList.add(lines[i]);
+        }
 
-		String[] lines = fileNames.split(System.getProperty("line.separator"));
+        return fileNamesList;
+    }
 
-		for (int i = 0; i < lines.length; i++) {
-			fileNamesList.add(lines[i]);
-		}
+    protected String generateToken() {
 
-		return fileNamesList;
-	}
+        try {
+            ProcessBuilder builder = new ProcessBuilder("bash",
+                    properties.get(SapsPropertiesConstants.FOGBOW_CLI_PATH) + File.separator + "bin/fogbow-cli",
+                    "token", "--create", "-DprojectId=" + projectId, "-DuserId=" + userId, "-Dpassword=" + userPassword,
+                    "-DauthUrl=" + tokenAuthUrl, "--type", "openstack");
 
-	protected String generateToken() {
+            LOGGER.debug("Executing command " + builder.command());
 
-		try {
-			ProcessBuilder builder = new ProcessBuilder("bash",
-					properties.get(SapsPropertiesConstants.FOGBOW_CLI_PATH) + File.separator + "bin/fogbow-cli",
-					"token", "--create", "-DprojectId=" + projectId, "-DuserId=" + userId, "-Dpassword=" + userPassword,
-					"-DauthUrl=" + tokenAuthUrl, "--type", "openstack");
+            Process p = builder.start();
+            p.waitFor();
 
-			LOGGER.debug("Executing command " + builder.command());
+            return ProcessUtil.getOutput(p);
+        } catch (Throwable e) {
+            LOGGER.error("Error while generating keystone token", e);
+        }
 
-			Process p = builder.start();
-			p.waitFor();
+        return null;
+    }
 
-			return ProcessUtil.getOutput(p);
-		} catch (Throwable e) {
-			LOGGER.error("Error while generating keystone token", e);
-		}
+    protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
+        LOGGER.debug("Turning on handle token update.");
 
-		return null;
-	}
+        handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
+                                                             @Override
+                                                             public void run() {
+                                                                 setToken(generateToken());
+                                                             }
+                                                         }, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
+                TimeUnit.MILLISECONDS);
+    }
 
-	protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
-		LOGGER.debug("Turning on handle token update.");
-
-		handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
-			@Override
-			public void run() {
-				setToken(generateToken());
-			}
-		}, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
-				TimeUnit.MILLISECONDS);
-	}
-
-	protected void setToken(String token) {
-		LOGGER.debug("Setting token to " + token);
-		this.token = token;
-	}
+    protected void setToken(String token) {
+        LOGGER.debug("Setting token to " + token);
+        this.token = token;
+    }
 }

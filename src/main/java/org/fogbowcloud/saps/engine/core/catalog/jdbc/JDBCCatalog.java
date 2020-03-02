@@ -28,9 +28,9 @@ public class JDBCCatalog implements Catalog {
 
     private final BasicDataSource connectionPool;
 
-    public JDBCCatalog(Properties properties) throws JDBCCatalogException {
+    public JDBCCatalog(Properties properties) throws CatalogException {
         if (!checkProperties(properties))
-            throw new JDBCCatalogException("Error on validate the file. Missing properties for start JDBC Catalog.");
+            throw new CatalogException("Error on validate the file. Missing properties for start JDBC Catalog.");
 
         String dbIP = properties.getProperty(JDBCCatalogConstants.Database.IP);
         String dbPort = properties.getProperty(JDBCCatalogConstants.Database.PORT);
@@ -62,7 +62,7 @@ public class JDBCCatalog implements Catalog {
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
-    private void createTable() throws JDBCCatalogException {
+    private void createTable() throws CatalogException {
 
         Connection connection = null;
         Statement statement = null;
@@ -81,7 +81,7 @@ public class JDBCCatalog implements Catalog {
             statement.close();
         } catch (SQLException e) {
             LOGGER.error("Error while initializing DataStore", e);
-            throw new JDBCCatalogException("Error while initializing DataStore");
+            throw new CatalogException("Error while initializing DataStore");
         } finally {
             close(statement, connection);
         }
@@ -313,6 +313,8 @@ public class JDBCCatalog implements Catalog {
             return JDBCCatalogUtil.extractSapsTasks(rs);
         } catch (SQLException e) {
             throw new CatalogException("Error while select all tasks");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract all tasks");
         } finally {
             close(statement, conn);
         }
@@ -346,6 +348,8 @@ public class JDBCCatalog implements Catalog {
             throw new UserNotFoundException("There is no user with email");
         } catch (SQLException e) {
             throw new CatalogException("Error while getting user by email");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract user");
         } finally {
             close(selectStatement, connection);
         }
@@ -381,6 +385,8 @@ public class JDBCCatalog implements Catalog {
             return imageDatas;
         } catch (SQLException e) {
             throw new CatalogException("Error while getting task by state");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract all tasks");
         } finally {
             close(selectStatement, connection);
         }
@@ -414,6 +420,8 @@ public class JDBCCatalog implements Catalog {
             return imageDatas.get(0);
         } catch (SQLException e) {
             throw new CatalogException("Error while getting task by id");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract all tasks");
         } finally {
             close(selectStatement, connection);
         }
@@ -471,6 +479,8 @@ public class JDBCCatalog implements Catalog {
             return JDBCCatalogUtil.extractSapsTasks(result);
         } catch (SQLException e) {
             throw new CatalogException("Error while getting tasks by filters");
+        } catch (JDBCCatalogException e ) {
+            throw new CatalogException("Error while extract all tasks");
         } finally {
             close(queryStatement, connection);
         }
