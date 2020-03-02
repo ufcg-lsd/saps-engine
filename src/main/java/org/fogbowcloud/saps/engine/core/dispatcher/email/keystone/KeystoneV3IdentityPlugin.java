@@ -11,7 +11,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.http.HttpStatus;
-import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -104,7 +103,7 @@ public class KeystoneV3IdentityPlugin {
         };
         for (String credential : credentialsSet) {
             String value = credentials.get(credential);
-            if(Objects.isNull(value)) {
+            if(Objects.isNull(value) || value.trim().isEmpty()) {
                 throw new KeystoneException("Not found value to Keystone credential [" + credential + "]");
             }
         }
