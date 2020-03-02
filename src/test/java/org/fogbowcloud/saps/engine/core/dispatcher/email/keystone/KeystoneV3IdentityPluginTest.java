@@ -18,7 +18,7 @@ public class KeystoneV3IdentityPluginTest {
 
     @Test
     @Ignore
-    public void createAccessId() throws IOException, KeystoneException {
+    public void createAccessId() throws Exception {
         Properties properties = new Properties();
         FileInputStream input = new FileInputStream(CONFIG_FILE_PATH);
         properties.load(input);

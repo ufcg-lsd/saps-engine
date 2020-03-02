@@ -35,7 +35,7 @@ public class KeystoneV3IdentityPlugin {
     private static final String ID_PROP = "id";
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    public static String createAccessId(Map<String, String> credentials) throws KeystoneException {
+    public static String createAccessId(Map<String, String> credentials) throws Exception {
         LOGGER.debug("Creating new access id");
         checkKeyStoneCredentials(credentials);
 
@@ -43,7 +43,7 @@ public class KeystoneV3IdentityPlugin {
         try {
             json = mountJson(credentials);
         } catch (JSONException e) {
-            throw new KeystoneException("Could not mount JSON while creating token.", e);
+            throw new Exception("Could not mount JSON while creating token.", e);
         }
 
         String keyStoneUrl = credentials.get(AUTH_URL) + V3_TOKENS_ENDPOINT_PATH;
@@ -56,11 +56,11 @@ public class KeystoneV3IdentityPlugin {
         try {
             response = HttpClients.createMinimal().execute(request);
         } catch (IOException e) {
-            throw new KeystoneException("Error while execute access id request", e);
+            throw new IOException("Error while execute access id request", e);
         }
         StatusLine status = response.getStatusLine();
         if (status.getStatusCode() != HttpStatus.CREATED_201) {
-            throw new KeystoneException(
+            throw new IOException(
                 "Access id request failed; " + "Status [" + status.getStatusCode() + " - " + status
                     .getReasonPhrase() + "]");
         }
@@ -93,8 +93,7 @@ public class KeystoneV3IdentityPlugin {
         return root;
     }
 
-    private static void checkKeyStoneCredentials(Map<String, String> credentials)
-        throws KeystoneException {
+    private static void checkKeyStoneCredentials(Map<String, String> credentials) {
         String[] credentialsSet = {
             AUTH_URL,
             PROJECT_ID,
@@ -104,7 +103,7 @@ public class KeystoneV3IdentityPlugin {
         for (String credential : credentialsSet) {
             String value = credentials.get(credential);
             if(Objects.isNull(value) || value.trim().isEmpty()) {
-                throw new KeystoneException("Not found value to Keystone credential [" + credential + "]");
+                throw new IllegalArgumentException("Not found value to Keystone credential [" + credential + "]");
             }
         }
     }

@@ -8,7 +8,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneException;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityPlugin;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -104,8 +103,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 				} catch (JSONException e1) {
 					LOGGER.error("Failed to create UNAVAILABLE task json.", e);
 				}
-			} catch (KeystoneException e) {
-				LOGGER.error(e);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 		return tasklist;
@@ -173,8 +172,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return res;
 	}
 
-	private JSONObject generateTaskEmailJson(String taskId)
-		throws URISyntaxException, IOException, JSONException, KeystoneException {
+	private JSONObject generateTaskEmailJson(String taskId) throws Exception {
 		SapsImage task = application.getTask(taskId);
 		LOGGER.info("Task [" + taskId + "] : " + task);
 
@@ -194,8 +192,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return result;
 	}
 
-	private void prepareTaskDir(JSONObject result, SapsImage task, String folder)
-		throws URISyntaxException, IOException, JSONException, KeystoneException {
+	private void prepareTaskDir(JSONObject result, SapsImage task, String folder) throws Exception {
 
 		String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
 		String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
@@ -236,7 +233,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
 	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
 			String objectStoreContainer, String swiftPrefixFolder, String taskFolder, SapsImage task)
-		throws URISyntaxException, IOException, KeystoneException {
+		throws Exception {
 
 		String accessId = getKeystoneAccessId();
 
@@ -248,7 +245,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
 	}
 
-	private String getKeystoneAccessId() throws KeystoneException {
+	private String getKeystoneAccessId() throws Exception {
 
 		Map<String, String> credentials = new HashMap<>();
 		credentials.put(KeystoneV3IdentityPlugin.AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
