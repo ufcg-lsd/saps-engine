@@ -15,13 +15,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class KeystoneV3IdentityPlugin {
+public class KeystoneV3IdentityRequestHelper {
 
     public static final String PROJECT_ID = "projectId";
     public static final String PASSWORD = "password";
     public static final String USER_ID = "userId";
     public static final String AUTH_URL = "authUrl";
-    private static final Logger LOGGER = Logger.getLogger(KeystoneV3IdentityPlugin.class);
+    private static final Logger LOGGER = Logger.getLogger(KeystoneV3IdentityRequestHelper.class);
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String ACCEPT = "Accept";
     private static final String JSON_CONTENT_TYPE = "application/json";
