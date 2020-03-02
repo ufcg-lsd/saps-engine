@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol;
 
+import java.util.List;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.GetJobException;
@@ -32,9 +33,15 @@ public class ArrebolJobExecutionService implements JobExecutionService {
     }
 
     @Override
-    public JobResponseDTO getStatus(String jobId) throws GetJobException {
+    public JobResponseDTO getJob(String jobId) throws GetJobException {
         LOGGER.info("Getting Job [" + jobId + "] from Arrebol");
         return requestsHelper.getJob(DEFAULT_QUEUE, jobId);
+    }
+
+    @Override
+    public List<JobResponseDTO> getJobByLabel(String label) throws Exception {
+        //FIXME Not yet available in the Arrebol Api
+        return null;
     }
 
 }
