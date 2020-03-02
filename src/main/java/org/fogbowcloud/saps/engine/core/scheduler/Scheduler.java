@@ -13,7 +13,6 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
-import org.fogbowcloud.saps.engine.core.scheduler.arrebol.ArrebolUtils;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.JobSubmitted;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.JobExecutionService;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.ArrebolJobExecutionService;
@@ -94,33 +93,51 @@ public class Scheduler {
      * Catalog and Arrebol, and starts the list of submitted jobs.
      */
     private void recovery() {
+        long retryPeriodSec = 10;
         List<SapsImage> tasksInProcessingState = getProcessingTasksInCatalog();
-        List<SapsImage> tasksForPopulateSubmittedJobList = new LinkedList<SapsImage>();
 
         for (SapsImage task : tasksInProcessingState) {
-            if (task.getArrebolJobId().equals(SapsImage.NONE_ARREBOL_JOB_ID)) {
-                String jobName = task.getState().getValue() + "-" + task.getTaskId();
-                List<JobResponseDTO> jobsWithEqualJobName = getJobByNameInArrebol(jobName,
-                        "gets job by name [" + jobName + "]");
-                if (jobsWithEqualJobName.size() == 0)
+            while(true) {
+                try {
+                    LOGGER.info("Recovering Task [" + task.getTaskId() + "]");
+                    recovery(task);
+                    break;
+                } catch (ConnectException e) {
+                    LOGGER.error(e);
+                    try {
+                        LOGGER.info("Sleeping for " + retryPeriodSec + " seconds");
+                        Thread.sleep(retryPeriodSec * 1000);
+                    } catch (InterruptedException ie) {
+                        LOGGER.error(ie);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error while recovering task [" + task.getTaskId() + "]");
                     rollBackTaskState(task);
-                else if (jobsWithEqualJobName.size() == 1) { // TODO add check jobName ==
-                    // jobsWithEqualJobName.get(0).get...
-                    String arrebolJobId = jobsWithEqualJobName.get(0).getId();
-                    updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
-                            arrebolJobId,
-                            "updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
-                    tasksForPopulateSubmittedJobList.add(task);
-                } else {
-                    // TODO ????
                 }
-            } else {
-                String arrebolJobId = task.getArrebolJobId();
-                this.submittedJobsID.add(new JobSubmitted(arrebolJobId, task));
             }
         }
-        for (SapsImage task : tasksForPopulateSubmittedJobList) {
-            this.submittedJobsID.add(new JobSubmitted(task.getArrebolJobId(), task));
+    }
+
+    private void recovery(SapsImage task) throws Exception {
+        if (task.getArrebolJobId().equals(SapsImage.NONE_ARREBOL_JOB_ID)) {
+            String jobName = task.getState().getValue() + "-" + task.getTaskId();
+            List<JobResponseDTO> jobsWithEqualJobName;
+            jobsWithEqualJobName = jobExecutionService.getJobByLabel(jobName);
+            if (jobsWithEqualJobName.size() == 0)
+                rollBackTaskState(task);
+            else if (jobsWithEqualJobName.size() == 1) { // TODO add check jobName ==
+                // jobsWithEqualJobName.get(0).get...
+                String arrebolJobId = jobsWithEqualJobName.get(0).getId();
+                updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+                    arrebolJobId,
+                    "updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
+                this.submittedJobsID.add(new JobSubmitted(task.getArrebolJobId(), task));
+            } else {
+                // TODO ????
+            }
+        } else {
+            String arrebolJobId = task.getArrebolJobId();
+            this.submittedJobsID.add(new JobSubmitted(arrebolJobId, task));
         }
     }
 
@@ -153,7 +170,7 @@ public class Scheduler {
      *
      * @return selected tasks list
      */
-    protected List<SapsImage> selectTasks() throws Exception {
+    List<SapsImage> selectTasks() throws Exception {
         List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
         ImageTaskState[] states = {ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED};
 
@@ -205,7 +222,7 @@ public class Scheduler {
      *
      * @param selectedTasks selected task list for submit to Arrebol
      */
-    protected void submitTasks(List<SapsImage> selectedTasks) throws Exception {
+    private void submitTasks(List<SapsImage> selectedTasks) throws Exception {
         for (SapsImage task : selectedTasks) {
             ImageTaskState nextState = getNextState(task.getState());
 
@@ -266,7 +283,7 @@ public class Scheduler {
      * @param tasks list with tasks
      * @return user map by tasks
      */
-    protected Map<String, List<SapsImage>> mapUsers2Tasks(List<SapsImage> tasks) {
+    private Map<String, List<SapsImage>> mapUsers2Tasks(List<SapsImage> tasks) {
         Map<String, List<SapsImage>> mapUsersToTasks = new TreeMap<String, List<SapsImage>>();
 
         for (SapsImage task : tasks) {
@@ -399,7 +416,7 @@ public class Scheduler {
 
             JobResponseDTO jobResponse;
             try {
-                jobResponse = this.jobExecutionService.getStatus(jobId);
+                jobResponse = this.jobExecutionService.getJob(jobId);
                 LOGGER.debug("Job [" + jobId + "] information returned from Arrebol: " + jobResponse);
                 boolean checkFinish = checkJobWasFinish(jobResponse);
                 if (checkFinish) {
@@ -515,17 +532,6 @@ public class Scheduler {
     private int getCountSlotsInArrebol() throws Exception {
         long waitingJobs = this.jobExecutionService.getWaitingJobs();
         return MAX_WAITING_JOBS - (int) waitingJobs;
-    }
-
-    /**
-     * This function gets job list in Arrebol that matching with name.
-     *
-     * @param jobName job label to be used for matching
-     * @param message information message
-     * @return job response list that matching with label
-     */
-    private List<JobResponseDTO> getJobByNameInArrebol(String jobName, String message) {
-        return ArrebolUtils.getJobByName(arrebol, jobName, message);
     }
 
     /**
