@@ -192,7 +192,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return result;
 	}
 
-	private void prepareTaskDir(JSONObject result, SapsImage task, String folder) throws Exception {
+	private void prepareTaskDir(JSONObject result, SapsImage task, String directory) throws Exception {
 
 		String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
 		String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
@@ -201,9 +201,9 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		String swiftPrefixDir = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
 
 		List<String> files = getTaskFilesFromObjectStore(objectStoreHost, objectStorePath, objectStoreContainer,
-				swiftPrefixDir, folder, task);
+				swiftPrefixDir, directory, task);
 
-		JSONArray folderFileList = new JSONArray();
+		JSONArray dirFileList = new JSONArray();
 		for (String str : files) {
 			File f = new File(str);
 			String fileName = f.getName();
@@ -214,32 +214,32 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 						"https://" + objectStoreHost
 								+ generateTempURL(objectStorePath, objectStoreContainer, str, objectStoreKey)
 								+ "&filename=" + fileName);
-				folderFileList.put(fileObject);
+				dirFileList.put(fileObject);
 			} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
 				LOGGER.error("Failed to generate download link for file " + str, e);
 				try {
 					JSONObject fileObject = new JSONObject();
 					fileObject.put(NAME, fileName);
 					fileObject.put(URL, UNAVAILABLE);
-					folderFileList.put(fileObject);
+					dirFileList.put(fileObject);
 				} catch (JSONException e1) {
 					LOGGER.error("Failed to create UNAVAILABLE temp url json.", e);
 				}
 			}
 		}
-		result.put(folder, folderFileList);
+		result.put(directory, dirFileList);
 
 	}
 
 	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
-			String objectStoreContainer, String swiftPrefixFolder, String taskFolder, SapsImage task)
+			String objectStoreContainer, String swiftPrefixDir, String taskDir, SapsImage task)
 		throws Exception {
 
 		String accessId = getKeystoneAccessId();
 
 		HttpClient client = HttpClients.createDefault();
 		HttpGet httpget = prepObjectStoreRequest(objectStoreHost, objectStorePath, objectStoreContainer,
-				swiftPrefixFolder, taskFolder, task, accessId);
+				swiftPrefixDir, taskDir, task, accessId);
 		HttpResponse response = client.execute(httpget);
 
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
@@ -256,8 +256,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer,
-			String swiftPrefixFolder, String taskFolder, SapsImage task, String accessId) throws URISyntaxException {
-		String uriParameter = swiftPrefixFolder + File.separator + task.getTaskId() + File.separator + taskFolder
+			String swiftPrefixDir, String taskDir, SapsImage task, String accessId) throws URISyntaxException {
+		String uriParameter = swiftPrefixDir + File.separator + task.getTaskId() + File.separator + taskDir
 				+ File.separator;
 
 		LOGGER.info("Build URI: objectStorehost [" + objectStoreHost + "], objectStorePath [" + objectStorePath
