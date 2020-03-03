@@ -123,6 +123,12 @@ public class NfsPermanentStorage implements PermanentStorage {
         return true;
     }
 
+    @Override
+    //TODO implement this method
+    public List<String> generateLink(SapsImage task) throws PermanentStorageException {
+        return null;
+    }
+
     private void copyDirToDir(String src, String dest) throws IOException {
         File srcDir = new File(src);
         File destDir = new File(dest);

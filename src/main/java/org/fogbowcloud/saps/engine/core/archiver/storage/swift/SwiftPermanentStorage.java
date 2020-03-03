@@ -221,4 +221,10 @@ public class SwiftPermanentStorage implements PermanentStorage {
         return true;
     }
 
+    @Override
+    //TODO implement this method
+    public List<String> generateLink(SapsImage task) throws PermanentStorageException {
+        return null;
+    }
+
 }
