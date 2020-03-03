@@ -6,8 +6,13 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.SAPS_TASK_STAGE_DIR_PATTERN;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Properties;
@@ -233,8 +238,35 @@ public class SwiftPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException {
-        return null;
+    public List<AccessLink> generateAccessLinks(String taskId) {
+        List<AccessLink> filesLinks = new ArrayList<>();
+        List<String> files = new ArrayList<>();
+
+        String tasksDir = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
+        String[] dirs = {INPUTDOWNLOADING_DIR, PREPROCESSING_DIR, PROCESSING_DIR};
+
+        for (String dir : dirs) {
+            String dirPath = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, tasksDir, taskId, dir);
+            try {
+                files.addAll(this.swiftAPIClient.listFiles(this.containerName, dirPath));
+            } catch (IOException | URISyntaxException e) {
+                LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
+            }
+        }
+
+        for(String filePath : files) {
+            String link;
+            try {
+                link = generateTempURL(filePath);
+                Path p = Paths.get(filePath);
+                String name = p.getParent().getFileName().toString() + "/" + p.getFileName().toString();
+                filesLinks.add(new AccessLink(name, link));
+            } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+                LOGGER.error("Error while generate temp url to File Path [" + filePath + "]", e);
+            }
+
+        }
+        return filesLinks;
     }
 
     private String generateTempURL(String filePath)
