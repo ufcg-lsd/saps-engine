@@ -19,6 +19,7 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class NfsPermanentStorageTest {
@@ -26,6 +27,7 @@ public class NfsPermanentStorageTest {
     private static final String MOCK_TEMP_STORAGE_PATH = "src/test/resources/archiver-test";
     private static final String MOCK_NFS_STORAGE_PATH = "src/test/resources/nfs-storage-test";
     private static final String MOCK_NFS_TASKS_DIR_NAME = "archiver";
+    private static final String MOCK_NFS_BASE_URL = "http://permanent-storage-access-ip";
     private static final String NONEXISTENT_NFS_STORAGE_PATH = "src/test/resources/nfs-storage-test-2";
     private static final String NFS_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s" + File.separator + "%s";
     private static final String DEBUG_MODE_TRUE = "true";
@@ -48,6 +50,8 @@ public class NfsPermanentStorageTest {
             MOCK_TEMP_STORAGE_PATH);
         properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
             MOCK_NFS_TASKS_DIR_NAME);
+        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_BASE_URL,
+                MOCK_NFS_BASE_URL);
     }
 
     @Test
@@ -133,6 +137,18 @@ public class NfsPermanentStorageTest {
             "", "", new Timestamp(1), new Timestamp(1), "", "");
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         permanentStorage.delete(task);
+    }
+
+    @Test @Ignore
+    public void testGenerateAccessLinksTaskDir() throws PermanentStorageException {
+        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
+        PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
+
+        // Set this var
+        String taskId = "task-id";
+
+        // Print it and result check
+        permanentStorage.generateAccessLinks(taskId);
     }
 
     private boolean assertTaskDir(String taskDirName, String taskId) {
