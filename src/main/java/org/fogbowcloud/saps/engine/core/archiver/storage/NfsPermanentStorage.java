@@ -8,6 +8,7 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -113,6 +114,11 @@ public class NfsPermanentStorage implements PermanentStorage {
             throw new PermanentStorageException(e.getMessage(), e);
         }
         return true;
+    }
+
+    @Override
+    public List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException {
+        return null;
     }
 
     private void copyDirToDir(String src, String dest) throws IOException {
