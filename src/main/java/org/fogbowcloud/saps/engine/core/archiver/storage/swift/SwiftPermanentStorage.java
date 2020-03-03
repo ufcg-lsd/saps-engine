@@ -6,9 +6,14 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.SAPS_TASK_STAGE_DIR_PATTERN;
 
 import java.io.File;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Formatter;
 import java.util.List;
 import java.util.Properties;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
@@ -25,6 +30,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
     private static final String SWIFT_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
     private static final int MAX_ARCHIVE_TRIES = 1;
     private static final int MAX_SWIFT_UPLOAD_TRIES = 2;
+    private static final String TEMP_DIR_URL = "%s?temp_url_sig=%s&temp_url_expires=%s";
+    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
     private final SwiftAPIClient swiftAPIClient;
     //FIXME Remove properties field and add new variables
@@ -32,6 +39,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
     private final String nfsTempStoragePath;
     private final String containerName;
     private final boolean debugMode;
+    private final String swiftKey;
 
     public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws PermanentStorageException {
         if (!checkProperties(properties))
@@ -42,6 +50,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
         this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME));
+        this.swiftKey = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY);
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
 
@@ -55,8 +64,9 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-                SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
-                SapsPropertiesConstants.SWIFT_CONTAINER_NAME
+            SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
+            SapsPropertiesConstants.SWIFT_CONTAINER_NAME,
+            SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
@@ -225,6 +235,43 @@ public class SwiftPermanentStorage implements PermanentStorage {
     @Override
     public List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException {
         return null;
+    }
+
+    private String generateTempURL(String filePath)
+        throws NoSuchAlgorithmException, InvalidKeyException {
+
+        Formatter objectStoreFormatter = new Formatter();
+        objectStoreFormatter.format("%s\n%s\n%s", "GET", Long.MAX_VALUE, filePath);
+        String signature = calculateRFC2104HMAC(objectStoreFormatter.toString(), this.swiftKey);
+        objectStoreFormatter.close();
+
+        objectStoreFormatter = new Formatter();
+        objectStoreFormatter.format(TEMP_DIR_URL, filePath, signature, Long.MAX_VALUE);
+        String res = objectStoreFormatter.toString();
+        objectStoreFormatter.close();
+
+        return res;
+    }
+
+    private String calculateRFC2104HMAC(String data, String key)
+        throws NoSuchAlgorithmException, InvalidKeyException {
+        SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
+        Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+        mac.init(signingKey);
+        return toHexString(mac.doFinal(data.getBytes()));
+    }
+
+    private String toHexString(byte[] bytes) {
+        Formatter formatter = new Formatter();
+
+        for (byte b : bytes) {
+            formatter.format("%02x", b);
+        }
+
+        String hexString = formatter.toString();
+        formatter.close();
+
+        return hexString;
     }
 
 }
