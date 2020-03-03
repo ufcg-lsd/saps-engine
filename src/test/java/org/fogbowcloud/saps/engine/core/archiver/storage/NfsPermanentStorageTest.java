@@ -1,6 +1,6 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
-import static org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage.NFS_STORAGE_TASK_DIR_PATTERN;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage.NFS_STORAGE_TASK_DIR_PATTERN;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_DIR;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_DIR;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_DIR;
@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
