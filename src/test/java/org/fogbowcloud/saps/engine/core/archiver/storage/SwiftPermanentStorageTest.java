@@ -275,7 +275,7 @@ public class SwiftPermanentStorageTest {
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        Mockito.when(swiftAPIClient.listFilesWithPrefix(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.eq(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01))).thenReturn(filesTask01);
+        Mockito.when(swiftAPIClient.listFiles(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.eq(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01))).thenReturn(filesTask01);
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.argThat(new StartsWith(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01)));
@@ -283,7 +283,7 @@ public class SwiftPermanentStorageTest {
         boolean deleteTask01 = permanentStorage.delete(task01);
 
         Assert.assertEquals(deleteTask01, true);
-        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01);
+        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFiles(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).deleteFile(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Files.Task01.INPUTDOWNLOADING_FILE);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).deleteFile(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Files.Task01.PREPROCESSING_FILE);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).deleteFile(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Files.Task01.PROCESSING_FILE);
@@ -296,7 +296,7 @@ public class SwiftPermanentStorageTest {
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        Mockito.when(swiftAPIClient.listFilesWithPrefix(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.eq(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02))).thenReturn(filesTask02);
+        Mockito.when(swiftAPIClient.listFiles(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.eq(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02))).thenReturn(filesTask02);
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.argThat(new StartsWith(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02)));
@@ -304,7 +304,7 @@ public class SwiftPermanentStorageTest {
         boolean deleteTask02 = permanentStorage.delete(task02);
 
         Assert.assertEquals(deleteTask02, true);
-        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02);
+        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFiles(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).deleteFile(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX_DEBUG_FAILED_TASKS + "/" + Files.Task02.INPUTDOWNLOADING_FILE);
     }
 
@@ -315,7 +315,7 @@ public class SwiftPermanentStorageTest {
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        Mockito.when(swiftAPIClient.listFilesWithPrefix(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.eq(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01))).thenReturn(new ArrayList<String>());
+        Mockito.when(swiftAPIClient.listFiles(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.eq(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01))).thenReturn(new ArrayList<String>());
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.anyString(), Mockito.anyString());
@@ -323,7 +323,7 @@ public class SwiftPermanentStorageTest {
         boolean deleteTask01 = permanentStorage.delete(task01);
 
         Assert.assertEquals(deleteTask01, true);
-        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01);
+        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFiles(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01);
         Mockito.verify(swiftAPIClient, Mockito.times(0)).deleteFile(Mockito.anyString(), Mockito.anyString());
     }
 
@@ -334,7 +334,7 @@ public class SwiftPermanentStorageTest {
         Properties properties = createDefaultPropertiesWithoutArchiverInDebugMode();
         PermanentStorage permanentStorage = new SwiftPermanentStorage(properties, swiftAPIClient);
 
-        Mockito.when(swiftAPIClient.listFilesWithPrefix(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.eq(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02))).thenReturn(new ArrayList<String>());
+        Mockito.when(swiftAPIClient.listFiles(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.eq(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02))).thenReturn(new ArrayList<String>());
         Mockito.doAnswer((i) -> {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.anyString(), Mockito.anyString());
@@ -342,7 +342,7 @@ public class SwiftPermanentStorageTest {
         boolean deleteTask02 = permanentStorage.delete(task02);
 
         Assert.assertEquals(deleteTask02, true);
-        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFilesWithPrefix(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02);
+        Mockito.verify(swiftAPIClient, Mockito.times(1)).listFiles(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02);
         Mockito.verify(swiftAPIClient, Mockito.times(0)).deleteFile(Mockito.anyString(), Mockito.anyString());
     }
 }

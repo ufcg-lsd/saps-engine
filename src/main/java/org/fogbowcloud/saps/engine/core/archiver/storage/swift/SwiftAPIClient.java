@@ -2,7 +2,6 @@ package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -121,30 +120,6 @@ public class SwiftAPIClient {
         LOGGER.debug(filePath + " file deleted successfully from " + containerName);
     }
 
-    public List<String> listFilesWithPrefix(String containerName, String prefix) {
-        LOGGER.info("Listing files in container " + containerName + " with prefix " + prefix);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url",
-                swiftUrl, "list", "-p", prefix, containerName);
-        LOGGER.debug("Executing command " + builder.command());
-
-        Process p;
-        String output;
-
-        try {
-            p = builder.start();
-            p.waitFor();
-
-            output = ProcessUtil.getOutput(p);
-            String[] lines = output.split(System.getProperty("line.separator"));
-
-            List<String> fileNamesList = new ArrayList<>(Arrays.asList(lines));
-            return fileNamesList;
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("Error while listing files from " + containerName);
-            return new ArrayList<>();
-        }
-    }
-
     protected String generateToken() {
 
         try {
@@ -178,7 +153,7 @@ public class SwiftAPIClient {
         this.token = token;
     }
 
-    List<String> listFiles(String containerName, String dirPath) throws IOException {
+    public List<String> listFiles(String containerName, String dirPath) throws IOException {
         String url = this.swiftUrl + "/" + containerName + "?path=" + dirPath;
         HttpClient client = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(url);

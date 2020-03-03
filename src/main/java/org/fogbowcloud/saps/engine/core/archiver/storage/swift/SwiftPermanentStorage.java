@@ -223,15 +223,19 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
                 : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
 
-        String prefix = swiftExports + File.separator + taskId;
+        String dir = swiftExports + File.separator + taskId;
 
-        List<String> fileNames = swiftAPIClient.listFilesWithPrefix(containerName, prefix);
+        try {
+            List<String> fileNames = swiftAPIClient.listFiles(containerName, dir);
+            LOGGER.info("Files List: " + fileNames);
 
-        LOGGER.info("Files List: " + fileNames);
-
-        for (String file : fileNames) {
-            LOGGER.debug("Trying to delete file " + file + " from " + containerName);
-            swiftAPIClient.deleteFile(containerName, file);
+            for (String file : fileNames) {
+                LOGGER.debug("Trying to delete file " + file + " from " + containerName);
+                swiftAPIClient.deleteFile(containerName, file);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
+            return false;
         }
 
         return true;
