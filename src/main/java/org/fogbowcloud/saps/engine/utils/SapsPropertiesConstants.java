@@ -47,6 +47,7 @@ public class SapsPropertiesConstants {
 	// Execution mode constants
 	public static final String SAPS_DEBUG_MODE = "saps_debug_mode";
 	public static final String SAPS_PERMANENT_STORAGE_TYPE = "saps_permanent_storage_type";
+	public static final String PERMANENT_STORAGE_BASE_URL = "permanent_storage_base_url";
 
 	// Properties file constants
 	public static final String SAPS_TEMP_STORAGE_PATH = "saps_temp_storage_path";
