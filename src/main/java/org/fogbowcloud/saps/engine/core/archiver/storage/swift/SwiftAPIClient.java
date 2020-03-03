@@ -2,13 +2,22 @@ package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
@@ -191,5 +200,15 @@ public class SwiftAPIClient {
     protected void setToken(String token) {
         LOGGER.debug("Setting token to " + token);
         this.token = token;
+    }
+
+    List<String> listFiles(String containerName, String dirPath)  throws IOException, URISyntaxException {
+        URI uri = new URIBuilder().setScheme("https").setHost(this.swiftUrl)
+            .setPath(containerName).addParameter("path", dirPath).build();
+        HttpClient client = HttpClients.createDefault();
+        HttpGet httpget = new HttpGet(uri);
+        httpget.addHeader("X-Auth-Token", this.generateToken());
+        HttpResponse response = client.execute(httpget);
+        return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
     }
 }
