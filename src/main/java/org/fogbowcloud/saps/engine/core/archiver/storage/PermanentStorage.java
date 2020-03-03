@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
+import java.util.List;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
@@ -24,5 +25,7 @@ public interface PermanentStorage {
 	 * @throws Exception
 	 */
 	boolean delete(SapsImage task) throws PermanentStorageException;
+
+	List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException;
 
 }

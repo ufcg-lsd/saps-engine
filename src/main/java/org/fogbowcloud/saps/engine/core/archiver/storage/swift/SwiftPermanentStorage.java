@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -219,6 +220,11 @@ public class SwiftPermanentStorage implements PermanentStorage {
         }
 
         return true;
+    }
+
+    @Override
+    public List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException {
+        return null;
     }
 
 }
