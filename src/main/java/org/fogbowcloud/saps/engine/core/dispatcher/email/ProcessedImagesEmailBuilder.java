@@ -192,7 +192,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return result;
 	}
 
-	private void prepareTaskDir(JSONObject result, SapsImage task, String directory) throws Exception {
+	private void prepareTaskDir(JSONObject result, SapsImage task, String directory)
+		throws JSONException, IOException, URISyntaxException {
 
 		String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
 		String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
@@ -233,7 +234,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
 	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
 			String objectStoreContainer, String swiftPrefixDir, String taskDir, SapsImage task)
-		throws Exception {
+		throws IOException, JSONException, URISyntaxException {
 
 		String accessId = getKeystoneAccessId();
 
@@ -245,7 +246,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
 	}
 
-	private String getKeystoneAccessId() throws Exception {
+	private String getKeystoneAccessId() throws IOException, JSONException {
 
 		Map<String, String> credentials = new HashMap<>();
 		credentials.put(KeystoneV3IdentityRequestHelper.AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));

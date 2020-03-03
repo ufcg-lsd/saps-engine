@@ -35,16 +35,12 @@ public class KeystoneV3IdentityRequestHelper {
     private static final String ID_PROP = "id";
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    public static String createAccessId(Map<String, String> credentials) throws Exception {
+    public static String createAccessId(Map<String, String> credentials) throws JSONException, IOException {
         LOGGER.debug("Creating new access id");
         checkKeyStoneCredentials(credentials);
 
         JSONObject json;
-        try {
-            json = mountJson(credentials);
-        } catch (JSONException e) {
-            throw new Exception("Could not mount JSON while creating token.", e);
-        }
+        json = mountJson(credentials);
 
         String keyStoneUrl = credentials.get(AUTH_URL) + V3_TOKENS_ENDPOINT_PATH;
         StringEntity body = new StringEntity(json.toString(), Charsets.UTF_8);
