@@ -27,5 +27,5 @@ public interface PermanentStorage {
 	 */
 	boolean delete(SapsImage task) throws PermanentStorageException;
 
-	List<String> generateLink(SapsImage task) throws PermanentStorageException;
+	List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException;
 }
