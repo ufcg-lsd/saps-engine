@@ -135,24 +135,14 @@ public class SwiftAPIClient {
             p.waitFor();
 
             output = ProcessUtil.getOutput(p);
+            String[] lines = output.split(System.getProperty("line.separator"));
 
-            return getOutputLinesIntoList(output);
+            List<String> fileNamesList = new ArrayList<>(Arrays.asList(lines));
+            return fileNamesList;
         } catch (IOException | InterruptedException e) {
             LOGGER.error("Error while listing files from " + containerName);
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
-    }
-
-    private List<String> getOutputLinesIntoList(String fileNames) throws IOException {
-        List<String> fileNamesList = new ArrayList<String>();
-
-        String[] lines = fileNames.split(System.getProperty("line.separator"));
-
-        for (int i = 0; i < lines.length; i++) {
-            fileNamesList.add(lines[i]);
-        }
-
-        return fileNamesList;
     }
 
     protected String generateToken() {
