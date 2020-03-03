@@ -35,7 +35,7 @@ public class SwiftAPIClient {
 
     public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
 
-    public SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
+    SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
         if (!checkProperties(properties))
             throw new SwiftPermanentStorageException("Error on validate the file. Missing properties for start Swift API Client.");
 
@@ -71,7 +71,7 @@ public class SwiftAPIClient {
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
-    public void createContainer(String containerName) {
+    void createContainer(String containerName) {
         // TODO: test JUnit
         LOGGER.debug("Creating container " + containerName);
         ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
@@ -120,7 +120,7 @@ public class SwiftAPIClient {
         LOGGER.debug(filePath + " file deleted successfully from " + containerName);
     }
 
-    protected String generateToken() {
+    private String generateToken() {
 
         try {
             ProcessBuilder builder = new ProcessBuilder("bash",
@@ -141,7 +141,7 @@ public class SwiftAPIClient {
         return null;
     }
 
-    protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
+    private void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
         LOGGER.debug("Turning on handle token update.");
 
         handleTokenUpdateExecutor.scheduleWithFixedDelay(() -> setToken(generateToken()), 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
