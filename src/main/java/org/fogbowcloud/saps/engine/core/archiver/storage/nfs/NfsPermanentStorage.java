@@ -8,12 +8,15 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -24,19 +27,23 @@ public class NfsPermanentStorage implements PermanentStorage {
 
     public static final Logger LOGGER = Logger.getLogger(NfsPermanentStorage.class);
     public static final String NFS_STORAGE_TASK_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
+    public static final String NFS_STORAGE_TASK_DATA_URL_PATTERN = "%s" + File.separator + "%s";
 
     private final String nfsTempStoragePath;
     private final String nfsPermanentStoragePath;
     private final String nfsPermanentStorageTasksDir;
     private final String nfsPermanentStorageDebugTasksDir;
+    private final String baseUrl;
     private final boolean debugMode;
 
     public NfsPermanentStorage(Properties properties) throws PermanentStorageException {
         if (!checkProperties(properties))
             throw new PermanentStorageException("Error on validate the file. Missing properties for start Nfs Permanent Storage.");
+
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.nfsPermanentStoragePath = properties.getProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH);
         this.nfsPermanentStorageTasksDir = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
+        this.baseUrl = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_BASE_URL);
 
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
@@ -52,7 +59,8 @@ public class NfsPermanentStorage implements PermanentStorage {
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
                 SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
-                SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH
+                SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH,
+                SapsPropertiesConstants.PERMANENT_STORAGE_BASE_URL
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
@@ -124,9 +132,20 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    //TODO implement this method
-    public List<String> generateLink(SapsImage task) throws PermanentStorageException {
-        return null;
+    public List<AccessLink> generateAccessLinks(String taskId) {
+        List<AccessLink> taskDataLinks = new LinkedList<>();
+
+        String dirAccessLink = String.format(NFS_STORAGE_TASK_DATA_URL_PATTERN, this.baseUrl, taskId);
+
+        AccessLink inputDownloadingDirAccessLink = new AccessLink(INPUTDOWNLOADING_DIR, dirAccessLink + File.separator + INPUTDOWNLOADING_DIR);
+        AccessLink preprocessingDirAccessLink = new AccessLink(PREPROCESSING_DIR, dirAccessLink + File.separator + PREPROCESSING_DIR);
+        AccessLink processingDirAccessLink = new AccessLink(PROCESSING_DIR, dirAccessLink + File.separator + PROCESSING_DIR);
+
+        taskDataLinks.add(inputDownloadingDirAccessLink);
+        taskDataLinks.add(preprocessingDirAccessLink);
+        taskDataLinks.add(processingDirAccessLink);
+
+        return taskDataLinks;
     }
 
     private void copyDirToDir(String src, String dest) throws IOException {
