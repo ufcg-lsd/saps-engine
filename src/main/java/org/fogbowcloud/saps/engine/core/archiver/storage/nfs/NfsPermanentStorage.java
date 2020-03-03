@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.archiver.storage;
+package org.fogbowcloud.saps.engine.core.archiver.storage.nfs;
 
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_DIR;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_DIR;
@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -20,7 +21,7 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 public class NfsPermanentStorage implements PermanentStorage {
 
     public static final Logger LOGGER = Logger.getLogger(NfsPermanentStorage.class);
-    static final String NFS_STORAGE_TASK_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
+    public static final String NFS_STORAGE_TASK_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
 
     private final String nfsTempStoragePath;
     private final String nfsPermanentStoragePath;
