@@ -249,7 +249,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
             String dirPath = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, tasksDir, taskId, dir);
             try {
                 files.addAll(this.swiftAPIClient.listFiles(this.containerName, dirPath));
-            } catch (IOException | URISyntaxException e) {
+            } catch (IOException e) {
                 LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
             }
         }

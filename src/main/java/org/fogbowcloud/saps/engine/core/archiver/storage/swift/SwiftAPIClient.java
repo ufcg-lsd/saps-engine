@@ -2,8 +2,6 @@ package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,9 +11,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
@@ -188,12 +186,7 @@ public class SwiftAPIClient {
     protected void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
         LOGGER.debug("Turning on handle token update.");
 
-        handleTokenUpdateExecutor.scheduleWithFixedDelay(new Runnable() {
-                                                             @Override
-                                                             public void run() {
-                                                                 setToken(generateToken());
-                                                             }
-                                                         }, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
+        handleTokenUpdateExecutor.scheduleWithFixedDelay(() -> setToken(generateToken()), 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
                 TimeUnit.MILLISECONDS);
     }
 
@@ -202,13 +195,15 @@ public class SwiftAPIClient {
         this.token = token;
     }
 
-    List<String> listFiles(String containerName, String dirPath)  throws IOException, URISyntaxException {
-        URI uri = new URIBuilder().setScheme("https").setHost(this.swiftUrl)
-            .setPath(containerName).addParameter("path", dirPath).build();
+    List<String> listFiles(String containerName, String dirPath) throws IOException {
+        String url = this.swiftUrl + "/" + containerName + "?path=" + dirPath;
         HttpClient client = HttpClients.createDefault();
-        HttpGet httpget = new HttpGet(uri);
-        httpget.addHeader("X-Auth-Token", this.generateToken());
+        HttpGet httpget = new HttpGet(url);
+        httpget.addHeader("X-Auth-Token", token);
         HttpResponse response = client.execute(httpget);
+        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+            throw new IOException("The request to list files on object storage was failed: " + EntityUtils.toString(response.getEntity()));
+        }
         return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
     }
 }
