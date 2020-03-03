@@ -83,9 +83,7 @@ public class SwiftAPIClient {
         try {
             Process p = builder.start();
             p.waitFor();
-        } catch (IOException e) {
-            LOGGER.error("Error while creating container " + containerName, e);
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error("Error while creating container " + containerName, e);
         }
     }
@@ -103,9 +101,7 @@ public class SwiftAPIClient {
             if (p.exitValue() != 0) {
                 throw new Exception("process_output=" + p.exitValue());
             }
-        } catch (IOException e) {
-            LOGGER.error("Error while uploading file " + completeFileName + " to container " + containerName, e);
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error("Error while uploading file " + completeFileName + " to container " + containerName, e);
         }
     }
@@ -141,10 +137,7 @@ public class SwiftAPIClient {
             output = ProcessUtil.getOutput(p);
 
             return getOutputLinesIntoList(output);
-        } catch (IOException e) {
-            LOGGER.error("Error while listing files from " + containerName);
-            return new ArrayList<String>();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error("Error while listing files from " + containerName);
             return new ArrayList<String>();
         }
