@@ -34,6 +34,7 @@ public class SwiftAPIClient {
     private String token;
 
     public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
+    private static final String CONTAINER_URL_PATTERN = "%s/%s?path=%s";
 
     SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
         if (!checkProperties(properties))
@@ -154,7 +155,7 @@ public class SwiftAPIClient {
     }
 
     public List<String> listFiles(String containerName, String dirPath) throws IOException {
-        String url = this.swiftUrl + "/" + containerName + "?path=" + dirPath;
+        String url = String.format(CONTAINER_URL_PATTERN, swiftUrl, containerName, dirPath);
         HttpClient client = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(url);
         httpget.addHeader("X-Auth-Token", token);
