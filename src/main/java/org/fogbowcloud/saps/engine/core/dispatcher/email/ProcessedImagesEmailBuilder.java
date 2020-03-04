@@ -25,7 +25,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SignatureException;
 import java.util.*;
 
 public class ProcessedImagesEmailBuilder implements Runnable {
@@ -76,35 +75,21 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
 	private JSONArray generateAllTasksJsons(StringBuilder errorBuilder) {
 		JSONArray tasklist = new JSONArray();
-		for (String str : images) {
+		for (String taskId : images) {
 			try {
-				tasklist.put(generateTaskEmailJson(str));
-			} catch (IOException | URISyntaxException | IllegalArgumentException e) {
-				LOGGER.error("Failed to fetch image from object store.", e);
-				errorBuilder.append("Failed to fetch image from object store.").append("\n")
+				tasklist.put(generateTaskEmailJson(taskId));
+			} catch (IOException | URISyntaxException | JSONException e) {
+				LOGGER.error("Failed to generate task email json from task [" + taskId + "]", e);
+				errorBuilder.append("Failed to generate task email json from task [" + taskId + "]").append("\n")
 						.append(ExceptionUtils.getStackTrace(e)).append("\n");
 				try {
 					JSONObject task = new JSONObject();
-					task.put(TASK_ID, str);
+					task.put(TASK_ID, taskId);
 					task.put(STATUS, UNAVAILABLE);
 					tasklist.put(task);
-				} catch (JSONException e1) {
-					LOGGER.error("Failed to create UNAVAILABLE task json.", e);
+				} catch (JSONException je) {
+					LOGGER.error("Failed to create UNAVAILABLE task json.", je);
 				}
-			} catch (JSONException e) {
-				LOGGER.error("Failed to create task json.", e);
-				errorBuilder.append("Failed to create task json.").append("\n").append(ExceptionUtils.getStackTrace(e))
-						.append("\n");
-				try {
-					JSONObject task = new JSONObject();
-					task.put(TASK_ID, str);
-					task.put(STATUS, UNAVAILABLE);
-					tasklist.put(task);
-				} catch (JSONException e1) {
-					LOGGER.error("Failed to create UNAVAILABLE task json.", e);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 		}
 		return tasklist;
@@ -148,7 +133,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private String calculateRFC2104HMAC(String data, String key)
-			throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
+			throws NoSuchAlgorithmException, InvalidKeyException {
 		SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
 		Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
 		mac.init(signingKey);
@@ -156,7 +141,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private String generateTempURL(String swiftPath, String container, String filePath, String key)
-			throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+			throws NoSuchAlgorithmException, InvalidKeyException {
 		String path = swiftPath + File.separator + container + File.separator + filePath;
 
 		Formatter objectStoreFormatter = new Formatter();
@@ -172,7 +157,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return res;
 	}
 
-	private JSONObject generateTaskEmailJson(String taskId) throws Exception {
+	private JSONObject generateTaskEmailJson(String taskId)
+		throws JSONException, IOException, URISyntaxException {
 		SapsImage task = application.getTask(taskId);
 		LOGGER.info("Task [" + taskId + "] : " + task);
 
@@ -216,7 +202,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 								+ generateTempURL(objectStorePath, objectStoreContainer, str, objectStoreKey)
 								+ "&filename=" + fileName);
 				dirFileList.put(fileObject);
-			} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+			} catch (NoSuchAlgorithmException | InvalidKeyException e) {
 				LOGGER.error("Failed to generate download link for file " + str, e);
 				try {
 					JSONObject fileObject = new JSONObject();
