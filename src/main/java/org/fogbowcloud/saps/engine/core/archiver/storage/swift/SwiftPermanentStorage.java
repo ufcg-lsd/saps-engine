@@ -203,6 +203,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
         String taskId = task.getTaskId();
 
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
+
         String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
                 ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
                 : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
