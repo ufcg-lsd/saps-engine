@@ -146,14 +146,14 @@ public class SwiftAPIClient {
 
     private void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
         LOGGER.debug("Turning on handle token update.");
-
-        handleTokenUpdateExecutor.scheduleWithFixedDelay(() -> setToken(generateToken()), 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
+        handleTokenUpdateExecutor.scheduleWithFixedDelay(this::updateToken, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
                 TimeUnit.MILLISECONDS);
     }
 
-    protected void setToken(String token) {
+    private void updateToken() {
+        String newToken = generateToken();
         LOGGER.debug("Setting token to " + token);
-        this.token = token;
+        this.token = newToken;
     }
 
     public List<String> listFiles(String containerName, String dirPath) throws IOException {
