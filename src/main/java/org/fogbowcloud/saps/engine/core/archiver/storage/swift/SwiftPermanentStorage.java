@@ -7,7 +7,6 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
