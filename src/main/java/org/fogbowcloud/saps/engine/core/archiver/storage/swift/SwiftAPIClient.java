@@ -73,6 +73,7 @@ public class SwiftAPIClient {
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
+    //TODO Throws exception when container creation was not success
     void createContainer(String containerName) {
         // TODO: test JUnit
         LOGGER.debug("Creating container " + containerName);
