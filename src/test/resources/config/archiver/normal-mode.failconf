@@ -24,6 +24,7 @@ swift_password=
 swift_tenant_id=
 swift_tenant_name=
 swift_auth_url=
+swift_object_store_key=key-test
 
 # Configuração do fogbow keystone
 fogbow.keystonev3.project.id=
