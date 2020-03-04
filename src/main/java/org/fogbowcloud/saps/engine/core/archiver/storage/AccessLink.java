@@ -1,8 +1,8 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
 public class AccessLink {
-    private String name;
-    private String url;
+    private final String name;
+    private final String url;
 
     public AccessLink(String name, String url) {
         this.name = name;
