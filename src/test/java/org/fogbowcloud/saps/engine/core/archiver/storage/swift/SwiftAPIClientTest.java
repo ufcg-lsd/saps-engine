@@ -1,13 +1,12 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 
-import static org.testng.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Properties;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
-import org.testng.annotations.Test;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class SwiftAPIClientTest {
 
@@ -21,6 +20,7 @@ public class SwiftAPIClientTest {
     }
 
     @Test
+    @Ignore
     public void testListFiles()
         throws IOException, SwiftPermanentStorageException {
         Properties properties = loadConfigFile(CONFIG_FILE);
