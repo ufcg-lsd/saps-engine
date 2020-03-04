@@ -23,6 +23,7 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 public class SwiftAPIClient {
 
     // Properties
+    //FIXME Remove properties field and add new variables
     private Properties properties;
 
     // Core Attributes
