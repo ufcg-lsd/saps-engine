@@ -242,7 +242,12 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     @Override
     public List<AccessLink> generateAccessLinks(String taskId) {
-        List<AccessLink> filesLinks = new ArrayList<>();
+        List<String> files = this.listFiles(taskId);
+        List<AccessLink> filesLinks = this.generateLinks(files);
+        return filesLinks;
+    }
+
+    private List<String> listFiles(String taskId) {
         List<String> files = new ArrayList<>();
 
         String tasksDir = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
@@ -256,8 +261,12 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
             }
         }
+        return files;
+    }
 
-        for(String filePath : files) {
+    private List<AccessLink> generateLinks(List<String> filesPaths) {
+        List<AccessLink> filesLinks = new ArrayList<>();
+        for(String filePath : filesPaths) {
             String link;
             try {
                 link = generateTempURL(filePath);
@@ -267,7 +276,6 @@ public class SwiftPermanentStorage implements PermanentStorage {
             } catch (NoSuchAlgorithmException | InvalidKeyException e) {
                 LOGGER.error("Error while generate temp url to File Path [" + filePath + "]", e);
             }
-
         }
         return filesLinks;
     }
