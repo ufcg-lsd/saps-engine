@@ -285,7 +285,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
         Formatter objectStoreFormatter = new Formatter();
         objectStoreFormatter.format("%s\n%s\n%s", "GET", Long.MAX_VALUE, filePath);
-        String signature = calculateRFC2104HMAC(objectStoreFormatter.toString(), this.swiftKey);
+        String signature = runHMACAlgorithm(objectStoreFormatter.toString(), this.swiftKey);
         objectStoreFormatter.close();
 
         objectStoreFormatter = new Formatter();
@@ -296,7 +296,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
         return res;
     }
 
-    private String calculateRFC2104HMAC(String data, String key)
+    private String runHMACAlgorithm(String data, String key)
         throws NoSuchAlgorithmException, InvalidKeyException {
         SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
         Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
