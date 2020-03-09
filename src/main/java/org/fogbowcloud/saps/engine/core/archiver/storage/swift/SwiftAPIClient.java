@@ -2,6 +2,7 @@ package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -169,12 +170,12 @@ public class SwiftAPIClient {
     }
 
     boolean existsTask(String containerName, String basePath, String taskId) throws IOException {
-        String url = String.format(CONTAINER_URL_PATTERN, swiftUrl, containerName, basePath);
-        HttpClient client = HttpClients.createDefault();
-        HttpGet httpget = new HttpGet(url);
-        httpget.addHeader("X-Auth-Token", token);
-        HttpResponse response = client.execute(httpget);
-        List<String> tasks = Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
-        return tasks.contains(taskId);
+        List<String> files = this.listFiles(containerName, basePath);
+        for(String filePath : files) {
+            if(Paths.get(filePath).getFileName().toString().equals(taskId)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
