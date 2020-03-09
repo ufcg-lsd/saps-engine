@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
+import java.io.IOException;
 import java.util.List;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
@@ -31,10 +32,10 @@ public interface PermanentStorage {
 	 *
 	 * @param taskId The Task's unique identifier
 	 * @return Empty list if the task not contains files
-	 * @throws PermanentStorageException
+	 * @throws IOException If a request error occurs with a service or system
 	 * @throws TaskNotFoundException If task was not found
 	 */
 	List<AccessLink> generateAccessLinks(String taskId)
-        throws PermanentStorageException, TaskNotFoundException;
+		throws TaskNotFoundException, IOException;
 
 }

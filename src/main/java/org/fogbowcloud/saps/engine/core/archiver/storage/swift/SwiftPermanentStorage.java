@@ -243,14 +243,10 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     @Override
     public List<AccessLink> generateAccessLinks(String taskId)
-        throws TaskNotFoundException, PermanentStorageException {
-        try {
-            List<String> files = this.listFiles(taskId);
-            List<AccessLink> filesLinks = this.generateLinks(files);
-            return filesLinks;
-        } catch (IOException e) {
-            throw new PermanentStorageException("Error while list file from Swift container", e);
-        }
+        throws TaskNotFoundException, IOException {
+        List<String> files = this.listFiles(taskId);
+        List<AccessLink> filesLinks = this.generateLinks(files);
+        return filesLinks;
     }
 
     private List<String> listFiles(String taskId) throws IOException, TaskNotFoundException {

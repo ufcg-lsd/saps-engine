@@ -117,7 +117,7 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException {
+    public List<AccessLink> generateAccessLinks(String taskId) {
         return null;
     }
 
