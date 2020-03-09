@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
@@ -241,17 +242,26 @@ public class SwiftPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public List<AccessLink> generateAccessLinks(String taskId) {
-        List<String> files = this.listFiles(taskId);
-        List<AccessLink> filesLinks = this.generateLinks(files);
-        return filesLinks;
+    public List<AccessLink> generateAccessLinks(String taskId)
+        throws TaskNotFoundException, PermanentStorageException {
+        try {
+            List<String> files = this.listFiles(taskId);
+            List<AccessLink> filesLinks = this.generateLinks(files);
+            return filesLinks;
+        } catch (IOException e) {
+            throw new PermanentStorageException("Error while list file from Swift container", e);
+        }
     }
 
-    private List<String> listFiles(String taskId) {
+    private List<String> listFiles(String taskId) throws IOException, TaskNotFoundException {
         List<String> files = new ArrayList<>();
 
         String tasksDir = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
         String[] dirs = {INPUTDOWNLOADING_DIR, PREPROCESSING_DIR, PROCESSING_DIR};
+
+        if(!this.swiftAPIClient.existsTask(this.containerName, tasksDir, taskId)) {
+            throw new TaskNotFoundException("Task [" + taskId + "] was not found in directory [" + tasksDir + "] of container [" + this.containerName + "]");
+        }
 
         for (String dir : dirs) {
             String dirPath = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, tasksDir, taskId, dir);

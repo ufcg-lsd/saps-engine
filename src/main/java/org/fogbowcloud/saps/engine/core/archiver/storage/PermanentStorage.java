@@ -2,6 +2,7 @@ package org.fogbowcloud.saps.engine.core.archiver.storage;
 
 import java.util.List;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public interface PermanentStorage {
@@ -26,6 +27,14 @@ public interface PermanentStorage {
 	 */
 	boolean delete(SapsImage task) throws PermanentStorageException;
 
-	List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException;
+	/**
+	 *
+	 * @param taskId The Task's unique identifier
+	 * @return Empty list if the task not contains files
+	 * @throws PermanentStorageException
+	 * @throws TaskNotFoundException If task was not found
+	 */
+	List<AccessLink> generateAccessLinks(String taskId)
+        throws PermanentStorageException, TaskNotFoundException;
 
 }

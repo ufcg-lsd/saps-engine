@@ -167,4 +167,14 @@ public class SwiftAPIClient {
         }
         return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
     }
+
+    boolean existsTask(String containerName, String basePath, String taskId) throws IOException {
+        String url = String.format(CONTAINER_URL_PATTERN, swiftUrl, containerName, basePath);
+        HttpClient client = HttpClients.createDefault();
+        HttpGet httpget = new HttpGet(url);
+        httpget.addHeader("X-Auth-Token", token);
+        HttpResponse response = client.execute(httpget);
+        List<String> tasks = Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
+        return tasks.contains(taskId);
+    }
 }
