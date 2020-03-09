@@ -95,6 +95,11 @@ public class SwiftPermanentStorage implements PermanentStorage {
         return true;
     }
 
+    @Override
+    public void run() {
+        this.swiftAPIClient.startTokenUpdateRoutine();
+    }
+
     /**
      * This function tries to archive a task trying each folder in order
      * (inputdownloading -> preprocessing -> processing).

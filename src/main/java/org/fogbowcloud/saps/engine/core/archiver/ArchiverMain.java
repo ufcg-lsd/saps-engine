@@ -28,6 +28,7 @@ public class ArchiverMain {
     private static Archiver createArchiver(Properties properties)
         throws PermanentStorageException, SapsException {
         PermanentStorage permanentStorage = createPermanentStorage(properties);
+        permanentStorage.run();
         Catalog catalog = new JDBCCatalog(properties);
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         Archiver archiver = new Archiver(properties, catalog, permanentStorage, executor);
