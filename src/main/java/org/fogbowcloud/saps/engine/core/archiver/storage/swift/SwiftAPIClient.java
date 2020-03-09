@@ -35,6 +35,8 @@ public class SwiftAPIClient {
     private String swiftUrl;
     private String token;
 
+    private ScheduledExecutorService executorService;
+
     public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
     private static final String CONTAINER_URL_PATTERN = "%s/%s?path=%s";
 
@@ -49,17 +51,7 @@ public class SwiftAPIClient {
         userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
         tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
         swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
-
-        handleTokenUpdate(Executors.newScheduledThreadPool(1));
-
-        LOGGER.info("Waiting to get token...");
-        while (token == null) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        executorService = Executors.newScheduledThreadPool(1);
     }
 
     private boolean checkProperties(Properties properties) {
@@ -72,6 +64,27 @@ public class SwiftAPIClient {
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
+    }
+
+    void startTokenUpdateRoutine() {
+        LOGGER.debug("Turning on handle token update.");
+        executorService.scheduleWithFixedDelay(this::updateToken, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
+            TimeUnit.MILLISECONDS);
+
+        LOGGER.info("Waiting to get token...");
+        while (token == null) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void updateToken() {
+        String newToken = generateToken();
+        LOGGER.debug("Setting token to " + token);
+        this.token = newToken;
     }
 
     //TODO Throws exception when container creation was not success
@@ -143,18 +156,6 @@ public class SwiftAPIClient {
         }
 
         return null;
-    }
-
-    private void handleTokenUpdate(ScheduledExecutorService handleTokenUpdateExecutor) {
-        LOGGER.debug("Turning on handle token update.");
-        handleTokenUpdateExecutor.scheduleWithFixedDelay(this::updateToken, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
-                TimeUnit.MILLISECONDS);
-    }
-
-    private void updateToken() {
-        String newToken = generateToken();
-        LOGGER.debug("Setting token to " + token);
-        this.token = newToken;
     }
 
     public List<String> listFiles(String containerName, String dirPath) throws IOException {
