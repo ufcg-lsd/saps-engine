@@ -16,7 +16,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
-import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -27,7 +26,7 @@ public class NfsPermanentStorage implements PermanentStorage {
 
     public static final Logger LOGGER = Logger.getLogger(NfsPermanentStorage.class);
     public static final String NFS_STORAGE_TASK_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
-    public static final String NFS_STORAGE_TASK_DATA_URL_PATTERN = "%s" + File.separator + "%s";
+    public static final String NFS_STORAGE_TASK_URL_PATTERN = "%s" + File.separator + "%s";
 
     private final String nfsTempStoragePath;
     private final String nfsPermanentStoragePath;
@@ -135,7 +134,7 @@ public class NfsPermanentStorage implements PermanentStorage {
     public List<AccessLink> generateAccessLinks(String taskId) {
         List<AccessLink> taskDataLinks = new LinkedList<>();
 
-        String dirAccessLink = String.format(NFS_STORAGE_TASK_DATA_URL_PATTERN, this.baseUrl, taskId);
+        String dirAccessLink = String.format(NFS_STORAGE_TASK_URL_PATTERN, this.baseUrl, taskId);
 
         AccessLink inputDownloadingDirAccessLink = new AccessLink(INPUTDOWNLOADING_DIR, dirAccessLink + File.separator + INPUTDOWNLOADING_DIR);
         AccessLink preprocessingDirAccessLink = new AccessLink(PREPROCESSING_DIR, dirAccessLink + File.separator + PREPROCESSING_DIR);
