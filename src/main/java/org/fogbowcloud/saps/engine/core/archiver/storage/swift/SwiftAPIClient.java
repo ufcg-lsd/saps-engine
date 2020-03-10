@@ -23,6 +23,9 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class SwiftAPIClient {
 
+    private static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
+    private static final String CONTAINER_URL_PATTERN = "%s/%s?path=%s";
+
     // Properties
     //FIXME Remove properties field and add new variables
     private Properties properties;
@@ -34,11 +37,7 @@ public class SwiftAPIClient {
     private String tokenAuthUrl;
     private String swiftUrl;
     private String token;
-
     private ScheduledExecutorService executorService;
-
-    public static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
-    private static final String CONTAINER_URL_PATTERN = "%s/%s?path=%s";
 
     SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
         if (!checkProperties(properties))
