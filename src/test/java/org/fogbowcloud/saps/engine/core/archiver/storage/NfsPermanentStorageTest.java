@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
 import static org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage.NFS_STORAGE_TASK_DIR_PATTERN;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage.NFS_STORAGE_TASK_URL_PATTERN;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_DIR;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_DIR;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_DIR;
@@ -8,9 +9,8 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
+
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
@@ -31,11 +31,30 @@ public class NfsPermanentStorageTest {
     private static final String NFS_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s" + File.separator + "%s";
     private static final String DEBUG_MODE_TRUE = "true";
     private static final String MOCK_NFS_DEBUG_TASKS_DIR_NAME = "debug";
+    private static final String MOCK_TASK_ID = "task-id";
 
     private static class TestFile {
         private static final String INPUTDOWNLOADING = "file.ip";
         private static final String PREPROCESSING = "file.pp";
         private static final String PROCESSING = "file.p";
+    }
+
+    private static class TestGenerateAccessLink {
+        private static class Inputdownloading {
+            private static final String NAME = INPUTDOWNLOADING_DIR;
+            private static final String URL = String.format(NFS_STORAGE_TASK_URL_PATTERN, MOCK_NFS_BASE_URL, MOCK_TASK_ID) +
+                    File.separator + INPUTDOWNLOADING_DIR;
+        }
+        private static class Preprocessing {
+            private static final String NAME = PREPROCESSING_DIR;
+            private static final String URL = String.format(NFS_STORAGE_TASK_URL_PATTERN, MOCK_NFS_BASE_URL, MOCK_TASK_ID) +
+                    File.separator + PREPROCESSING_DIR;
+        }
+        private static class Processing {
+            private static final String NAME = PROCESSING_DIR;
+            private static final String URL = String.format(NFS_STORAGE_TASK_URL_PATTERN, MOCK_NFS_BASE_URL, MOCK_TASK_ID) +
+                    File.separator + PROCESSING_DIR;
+        }
     }
 
     private Properties properties;
@@ -143,11 +162,12 @@ public class NfsPermanentStorageTest {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
 
-        // Set this var
-        String taskId = "task-id";
+        List<AccessLink> exceptedAccessLinksList = new LinkedList<>();
+        exceptedAccessLinksList.add(new AccessLink(TestGenerateAccessLink.Inputdownloading.NAME, TestGenerateAccessLink.Inputdownloading.URL));
+        exceptedAccessLinksList.add(new AccessLink(TestGenerateAccessLink.Preprocessing.NAME, TestGenerateAccessLink.Preprocessing.URL));
+        exceptedAccessLinksList.add(new AccessLink(TestGenerateAccessLink.Processing.NAME, TestGenerateAccessLink.Processing.URL));
 
-        // Print it and result check
-        Assert.assertTrue(permanentStorage.generateAccessLinks(taskId) != null);
+        Assert.assertEquals(exceptedAccessLinksList, permanentStorage.generateAccessLinks(MOCK_TASK_ID));
     }
 
     private boolean assertTaskDir(String taskDirName, String taskId) {
