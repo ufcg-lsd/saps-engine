@@ -19,7 +19,6 @@ import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class NfsPermanentStorageTest {
@@ -139,7 +138,7 @@ public class NfsPermanentStorageTest {
         permanentStorage.delete(task);
     }
 
-    @Test @Ignore
+    @Test
     public void testGenerateAccessLinksTaskDir() throws PermanentStorageException {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
@@ -148,7 +147,7 @@ public class NfsPermanentStorageTest {
         String taskId = "task-id";
 
         // Print it and result check
-        permanentStorage.generateAccessLinks(taskId);
+        Assert.assertTrue(permanentStorage.generateAccessLinks(taskId) != null);
     }
 
     private boolean assertTaskDir(String taskDirName, String taskId) {
