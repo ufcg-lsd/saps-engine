@@ -39,27 +39,32 @@ public class SwiftPermanentStorage implements PermanentStorage {
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
     private final SwiftAPIClient swiftAPIClient;
-    //FIXME Remove properties field and add new variables
-    private final Properties properties;
     private final String nfsTempStoragePath;
     private final String containerName;
-    private final boolean debugMode;
     private final String swiftKey;
+    private final String tasksDirName;
+    private final String debugTasksDirName;
+    private final boolean debugMode;
+
 
     public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws PermanentStorageException {
         if (!checkProperties(properties))
             throw new PermanentStorageException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
 
         this.swiftAPIClient = swiftAPIClient;
-        this.properties = properties;
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
         this.swiftKey = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY);
+        this.tasksDirName = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
 
         if (this.debugMode && !checkPropertiesDebugMode(properties))
             throw new PermanentStorageException("Error on validate the file. Missing properties for start Saps Controller.");
+
+        this.debugTasksDirName = (this.debugMode)
+            ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
+            : "";
     }
 
     public SwiftPermanentStorage(Properties properties) throws PermanentStorageException {
@@ -117,8 +122,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 + " archiving attempts for each folder (inputdownloading, preprocessing, processing)");
 
         String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
-                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
-                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
+                ? debugTasksDirName
+                : tasksDirName;
 
         String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, INPUTDOWNLOADING_DIR);
         String inputdownloadingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, INPUTDOWNLOADING_DIR);
@@ -226,8 +231,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
         String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
-                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
-                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
+                ? debugTasksDirName
+                : tasksDirName;
 
         String dir = swiftExports + File.separator + taskId;
 
@@ -258,15 +263,14 @@ public class SwiftPermanentStorage implements PermanentStorage {
     private List<String> listFiles(String taskId) throws IOException, TaskNotFoundException {
         List<String> files = new ArrayList<>();
 
-        String tasksDir = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
         String[] dirs = {INPUTDOWNLOADING_DIR, PREPROCESSING_DIR, PROCESSING_DIR};
 
-        if(!this.swiftAPIClient.existsTask(this.containerName, tasksDir, taskId)) {
-            throw new TaskNotFoundException("Task [" + taskId + "] was not found in directory [" + tasksDir + "] of container [" + this.containerName + "]");
+        if(!this.swiftAPIClient.existsTask(this.containerName, this.tasksDirName, taskId)) {
+            throw new TaskNotFoundException("Task [" + taskId + "] was not found in directory [" + this.tasksDirName + "] of container [" + this.containerName + "]");
         }
 
         for (String dir : dirs) {
-            String dirPath = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, tasksDir, taskId, dir);
+            String dirPath = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, this.tasksDirName, taskId, dir);
             try {
                 files.addAll(this.swiftAPIClient.listFiles(this.containerName, dirPath));
             } catch (IOException e) {
