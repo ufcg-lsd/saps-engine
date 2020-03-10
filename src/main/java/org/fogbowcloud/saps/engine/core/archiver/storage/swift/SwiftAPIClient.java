@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,41 +26,42 @@ public class SwiftAPIClient {
 
     private static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
     private static final String CONTAINER_URL_PATTERN = "%s/%s?path=%s";
+    // 30 Min
+    private static final int DEFAULT_TOKEN_UPDATE_PERIOD = 1800000;
 
-    // Properties
-    //FIXME Remove properties field and add new variables
-    private Properties properties;
+    private final String swiftUrl;
+    private final String tokenAuthUrl;
+    private final String projectId;
+    private final String userId;
+    private final String userPassword;
+    private final String fogbowCliPath;
+    private final int tokenUpdatePeriod;
+    private final ScheduledExecutorService executorService;
 
-    // Core Attributes
-    private String projectId;
-    private String userId;
-    private String userPassword;
-    private String tokenAuthUrl;
-    private String swiftUrl;
     private String token;
-    private ScheduledExecutorService executorService;
 
     SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
         if (!checkProperties(properties))
             throw new SwiftPermanentStorageException("Error on validate the file. Missing properties for start Swift API Client.");
-
-        this.properties = properties;
-
+        swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
+        tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
         projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
         userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
         userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
-        tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
-        swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
+        fogbowCliPath = properties.getProperty(SapsPropertiesConstants.FOGBOW_CLI_PATH);
+        String tokenUpdatePeriodStr = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD);
+        tokenUpdatePeriod = Objects.isNull(tokenUpdatePeriodStr) || tokenUpdatePeriodStr.trim().isEmpty() ? DEFAULT_TOKEN_UPDATE_PERIOD : Integer.parseInt(tokenUpdatePeriodStr);
         executorService = Executors.newScheduledThreadPool(1);
     }
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID,
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID,
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD,
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL,
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL
+            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL,
+            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL,
+            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID,
+            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID,
+            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD,
+            SapsPropertiesConstants.FOGBOW_CLI_PATH
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
@@ -67,7 +69,7 @@ public class SwiftAPIClient {
 
     void startTokenUpdateRoutine() {
         LOGGER.debug("Turning on handle token update.");
-        executorService.scheduleWithFixedDelay(this::updateToken, 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD)),
+        executorService.scheduleWithFixedDelay(this::updateToken, 0, this.tokenUpdatePeriod,
             TimeUnit.MILLISECONDS);
 
         LOGGER.info("Waiting to get token...");
@@ -140,7 +142,7 @@ public class SwiftAPIClient {
 
         try {
             ProcessBuilder builder = new ProcessBuilder("bash",
-                    properties.get(SapsPropertiesConstants.FOGBOW_CLI_PATH) + File.separator + "bin/fogbow-cli",
+                    this.fogbowCliPath + File.separator + "bin/fogbow-cli",
                     "token", "--create", "-DprojectId=" + projectId, "-DuserId=" + userId, "-Dpassword=" + userPassword,
                     "-DauthUrl=" + tokenAuthUrl, "--type", "openstack");
 
