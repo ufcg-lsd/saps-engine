@@ -78,7 +78,7 @@ public class NfsPermanentStorage implements PermanentStorage {
 
     @Override
     public void run() {
-        return;
+
     }
 
     @Override
