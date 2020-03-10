@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.dispatcher.utils;
+package org.fogbowcloud.saps.engine.core.dispatcher.email;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpResponse;
@@ -8,9 +8,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.manager.core.plugins.identity.openstack.KeystoneV3IdentityPlugin;
-import org.fogbowcloud.manager.occi.model.Token;
-import org.fogbowcloud.saps.engine.core.dispatcher.notifier.GoogleMail;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityRequestHelper;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
@@ -27,7 +25,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SignatureException;
 import java.util.*;
 
 public class ProcessedImagesEmailBuilder implements Runnable {
@@ -37,11 +34,6 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 	private static final String UNAVAILABLE = "UNAVAILABLE";
 	private static final String TEMP_DIR_URL = "%s?temp_url_sig=%s&temp_url_expires=%s";
-
-	private static final String PROJECT_ID = "projectId";
-	private static final String PASSWORD = "password";
-	private static final String USER_ID = "userId";
-	private static final String AUTH_URL = "authUrl";
 	private static final String TASK_ID = "taskId";
 	private static final String REGION = "region";
 	private static final String COLLECTION_TIER_NAME = "collectionTierName";
@@ -83,32 +75,20 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
 	private JSONArray generateAllTasksJsons(StringBuilder errorBuilder) {
 		JSONArray tasklist = new JSONArray();
-		for (String str : images) {
+		for (String taskId : images) {
 			try {
-				tasklist.put(generateTaskEmailJson(str));
-			} catch (IOException | URISyntaxException | IllegalArgumentException e) {
-				LOGGER.error("Failed to fetch image from object store.", e);
-				errorBuilder.append("Failed to fetch image from object store.").append("\n")
+				tasklist.put(generateTaskEmailJson(taskId));
+			} catch (IOException | URISyntaxException | JSONException e) {
+				LOGGER.error("Failed to generate task email json from task [" + taskId + "]", e);
+				errorBuilder.append("Failed to generate task email json from task [" + taskId + "]").append("\n")
 						.append(ExceptionUtils.getStackTrace(e)).append("\n");
 				try {
 					JSONObject task = new JSONObject();
-					task.put(TASK_ID, str);
+					task.put(TASK_ID, taskId);
 					task.put(STATUS, UNAVAILABLE);
 					tasklist.put(task);
-				} catch (JSONException e1) {
-					LOGGER.error("Failed to create UNAVAILABLE task json.", e);
-				}
-			} catch (JSONException e) {
-				LOGGER.error("Failed to create task json.", e);
-				errorBuilder.append("Failed to create task json.").append("\n").append(ExceptionUtils.getStackTrace(e))
-						.append("\n");
-				try {
-					JSONObject task = new JSONObject();
-					task.put(TASK_ID, str);
-					task.put(STATUS, UNAVAILABLE);
-					tasklist.put(task);
-				} catch (JSONException e1) {
-					LOGGER.error("Failed to create UNAVAILABLE task json.", e);
+				} catch (JSONException je) {
+					LOGGER.error("Failed to create UNAVAILABLE task json.", je);
 				}
 			}
 		}
@@ -153,7 +133,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private String calculateRFC2104HMAC(String data, String key)
-			throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
+			throws NoSuchAlgorithmException, InvalidKeyException {
 		SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
 		Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
 		mac.init(signingKey);
@@ -161,7 +141,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private String generateTempURL(String swiftPath, String container, String filePath, String key)
-			throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+			throws NoSuchAlgorithmException, InvalidKeyException {
 		String path = swiftPath + File.separator + container + File.separator + filePath;
 
 		Formatter objectStoreFormatter = new Formatter();
@@ -177,7 +157,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return res;
 	}
 
-	private JSONObject generateTaskEmailJson(String taskId) throws URISyntaxException, IOException, JSONException {
+	private JSONObject generateTaskEmailJson(String taskId)
+		throws JSONException, IOException, URISyntaxException {
 		SapsImage task = application.getTask(taskId);
 		LOGGER.info("Task [" + taskId + "] : " + task);
 
@@ -197,8 +178,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		return result;
 	}
 
-	private void prepareTaskDir(JSONObject result, SapsImage task, String folder)
-			throws URISyntaxException, IOException, JSONException {
+	private void prepareTaskDir(JSONObject result, SapsImage task, String directory)
+		throws JSONException, IOException, URISyntaxException {
 
 		String objectStoreHost = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST);
 		String objectStorePath = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH);
@@ -207,9 +188,9 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		String swiftPrefixDir = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
 
 		List<String> files = getTaskFilesFromObjectStore(objectStoreHost, objectStorePath, objectStoreContainer,
-				swiftPrefixDir, folder, task);
+				swiftPrefixDir, directory, task);
 
-		JSONArray folderFileList = new JSONArray();
+		JSONArray dirFileList = new JSONArray();
 		for (String str : files) {
 			File f = new File(str);
 			String fileName = f.getName();
@@ -220,56 +201,55 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 						"https://" + objectStoreHost
 								+ generateTempURL(objectStorePath, objectStoreContainer, str, objectStoreKey)
 								+ "&filename=" + fileName);
-				folderFileList.put(fileObject);
-			} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+				dirFileList.put(fileObject);
+			} catch (NoSuchAlgorithmException | InvalidKeyException e) {
 				LOGGER.error("Failed to generate download link for file " + str, e);
 				try {
 					JSONObject fileObject = new JSONObject();
 					fileObject.put(NAME, fileName);
 					fileObject.put(URL, UNAVAILABLE);
-					folderFileList.put(fileObject);
+					dirFileList.put(fileObject);
 				} catch (JSONException e1) {
 					LOGGER.error("Failed to create UNAVAILABLE temp url json.", e);
 				}
 			}
 		}
-		result.put(folder, folderFileList);
+		result.put(directory, dirFileList);
 
 	}
 
 	private List<String> getTaskFilesFromObjectStore(String objectStoreHost, String objectStorePath,
-			String objectStoreContainer, String swiftPrefixDir, String taskFolder, SapsImage task)
-			throws URISyntaxException, IOException {
-		Token token = getKeystoneToken();
+			String objectStoreContainer, String swiftPrefixDir, String taskDir, SapsImage task)
+		throws IOException, JSONException, URISyntaxException {
+
+		String accessId = getKeystoneAccessId();
 
 		HttpClient client = HttpClients.createDefault();
 		HttpGet httpget = prepObjectStoreRequest(objectStoreHost, objectStorePath, objectStoreContainer,
-				swiftPrefixDir, taskFolder, task, token);
+				swiftPrefixDir, taskDir, task, accessId);
 		HttpResponse response = client.execute(httpget);
 
 		return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
 	}
 
-	private Token getKeystoneToken() {
-		KeystoneV3IdentityPlugin keystone = new KeystoneV3IdentityPlugin(properties);
+	private String getKeystoneAccessId() throws IOException, JSONException {
 
 		Map<String, String> credentials = new HashMap<>();
-		credentials.put(AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
-		credentials.put(PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
-		credentials.put(USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
-		credentials.put(PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
-
-		return keystone.createToken(credentials);
+		credentials.put(KeystoneV3IdentityRequestHelper.AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
+		credentials.put(KeystoneV3IdentityRequestHelper.PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
+		credentials.put(KeystoneV3IdentityRequestHelper.USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
+		credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
+		return KeystoneV3IdentityRequestHelper.createAccessId(credentials);
 	}
 
 	private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer,
-			String swiftPrefixFolder, String taskFolder, SapsImage task, Token token) throws URISyntaxException {
-		String uriParameter = swiftPrefixFolder + File.separator + task.getTaskId() + File.separator + taskFolder
+			String swiftPrefixDir, String taskDir, SapsImage task, String accessId) throws URISyntaxException {
+		String uriParameter = swiftPrefixDir + File.separator + task.getTaskId() + File.separator + taskDir
 				+ File.separator;
 
 		LOGGER.info("Build URI: objectStorehost [" + objectStoreHost + "], objectStorePath [" + objectStorePath
 				+ "], objectStoreContainer [" + objectStoreContainer + "], parameter [" + uriParameter + "] token ["
-				+ token + "] and task [" + task + "]");
+				+ accessId + "] and task [" + task + "]");
 
 		URI uri = new URIBuilder().setScheme("https").setHost(objectStoreHost)
 				.setPath(objectStorePath + "/" + objectStoreContainer).addParameter("path", uriParameter).build();
@@ -277,7 +257,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		LOGGER.info("Getting list of files for task [" + task.getTaskId() + "] from " + uri);
 
 		HttpGet httpget = new HttpGet(uri);
-		httpget.addHeader("X-Auth-Token", token.getAccessId());
+		httpget.addHeader("X-Auth-Token", accessId);
 
 		return httpget;
 	}
