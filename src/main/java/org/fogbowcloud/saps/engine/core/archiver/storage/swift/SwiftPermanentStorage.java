@@ -6,6 +6,7 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.SAPS_TASK_STAGE_DIR_PATTERN;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
@@ -13,6 +14,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
@@ -82,7 +84,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     @Override
     public void run() {
-        
+
     }
 
     /**
@@ -228,7 +230,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public List<AccessLink> generateAccessLinks(String taskId) throws PermanentStorageException {
+    public List<AccessLink> generateAccessLinks(String taskId) throws TaskNotFoundException, IOException {
         return null;
     }
 
