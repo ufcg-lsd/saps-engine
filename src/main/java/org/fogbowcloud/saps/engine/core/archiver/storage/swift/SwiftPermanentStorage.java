@@ -80,6 +80,11 @@ public class SwiftPermanentStorage implements PermanentStorage {
         return true;
     }
 
+    @Override
+    public void run() {
+        
+    }
+
     /**
      * This function tries to archive a task trying each folder in order
      * (inputdownloading -> preprocessing -> processing).
