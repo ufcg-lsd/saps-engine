@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -18,9 +20,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.IdentityToken;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityRequestHelper;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
+import org.json.JSONException;
 
 public class SwiftAPIClient {
 
@@ -34,11 +39,10 @@ public class SwiftAPIClient {
     private final String projectId;
     private final String userId;
     private final String userPassword;
-    private final String fogbowCliPath;
     private final int tokenUpdatePeriod;
     private final ScheduledExecutorService executorService;
 
-    private String token;
+    private IdentityToken token;
 
     SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
         if (!checkProperties(properties))
@@ -48,7 +52,6 @@ public class SwiftAPIClient {
         projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
         userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
         userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
-        fogbowCliPath = properties.getProperty(SapsPropertiesConstants.FOGBOW_CLI_PATH);
         String tokenUpdatePeriodStr = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_UPDATE_PERIOD);
         tokenUpdatePeriod = Objects.isNull(tokenUpdatePeriodStr) || tokenUpdatePeriodStr.trim().isEmpty() ? DEFAULT_TOKEN_UPDATE_PERIOD : Integer.parseInt(tokenUpdatePeriodStr);
         executorService = Executors.newScheduledThreadPool(1);
@@ -83,16 +86,21 @@ public class SwiftAPIClient {
     }
 
     private void updateToken() {
-        String newToken = generateToken();
-        LOGGER.debug("Setting token to " + token);
-        this.token = newToken;
+        try {
+            IdentityToken newToken = generateToken();
+            LOGGER.debug("Setting token to " + token);
+            this.token = newToken;
+        } catch (Exception e) {
+            LOGGER.error("Error while generate new identity token", e);
+        }
+
     }
 
     //TODO Throws exception when container creation was not success
     void createContainer(String containerName) {
         // TODO: test JUnit
         LOGGER.debug("Creating container " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
                 "post", containerName);
 
         LOGGER.debug("Executing command " + builder.command());
@@ -109,7 +117,7 @@ public class SwiftAPIClient {
         String completeFileName = pseudFolder + File.separator + file.getName();
 
         LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
                 "upload", containerName, file.getAbsolutePath(), "--object-name", completeFileName);
         try {
             Process p = builder.start();
@@ -125,7 +133,7 @@ public class SwiftAPIClient {
 
     public void deleteFile(String containerName, String filePath) {
         LOGGER.debug("Deleting " + filePath + " from " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token, "--os-storage-url", swiftUrl,
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
                 "delete", containerName, filePath);
 
         try {
@@ -138,32 +146,21 @@ public class SwiftAPIClient {
         LOGGER.debug(filePath + " file deleted successfully from " + containerName);
     }
 
-    private String generateToken() {
-
-        try {
-            ProcessBuilder builder = new ProcessBuilder("bash",
-                    this.fogbowCliPath + File.separator + "bin/fogbow-cli",
-                    "token", "--create", "-DprojectId=" + projectId, "-DuserId=" + userId, "-Dpassword=" + userPassword,
-                    "-DauthUrl=" + tokenAuthUrl, "--type", "openstack");
-
-            LOGGER.debug("Executing command " + builder.command());
-
-            Process p = builder.start();
-            p.waitFor();
-
-            return ProcessUtil.getOutput(p);
-        } catch (Throwable e) {
-            LOGGER.error("Error while generating keystone token", e);
-        }
-
-        return null;
+    private IdentityToken generateToken() throws IOException, JSONException {
+        Map<String, String> credentials = new HashMap<>();
+        credentials.put(KeystoneV3IdentityRequestHelper.AUTH_URL, tokenAuthUrl);
+        credentials.put(KeystoneV3IdentityRequestHelper.PROJECT_ID, projectId);
+        credentials.put(KeystoneV3IdentityRequestHelper.USER_ID, userId);
+        credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD, userPassword);
+        IdentityToken token = KeystoneV3IdentityRequestHelper.createAccessId(credentials);
+        return token;
     }
 
     public List<String> listFiles(String containerName, String dirPath) throws IOException {
         String url = String.format(CONTAINER_URL_PATTERN, swiftUrl, containerName, dirPath);
         HttpClient client = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(url);
-        httpget.addHeader("X-Auth-Token", token);
+        httpget.addHeader("X-Auth-Token", token.getAccessId());
         HttpResponse response = client.execute(httpget);
         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
             throw new IOException("The request to list files on object storage was failed: " + EntityUtils.toString(response.getEntity()));
