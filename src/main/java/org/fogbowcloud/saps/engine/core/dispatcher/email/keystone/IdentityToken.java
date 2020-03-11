@@ -11,6 +11,7 @@ public class IdentityToken {
     public IdentityToken(String accessId, String issuedAt, String expiresAt) {
         this.accessId = accessId;
         this.createdAt = Instant.now();
+        //TODO Handler null values
         this.duration = Instant.parse(expiresAt).getEpochSecond() - Instant.parse(issuedAt).getEpochSecond();
     }
 
