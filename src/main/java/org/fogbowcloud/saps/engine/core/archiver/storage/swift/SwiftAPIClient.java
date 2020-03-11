@@ -3,6 +3,7 @@ package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +55,6 @@ public class SwiftAPIClient {
             SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID,
             SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID,
             SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD,
-            SapsPropertiesConstants.FOGBOW_CLI_PATH
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
@@ -134,16 +134,19 @@ public class SwiftAPIClient {
     }
 
     public List<String> listFiles(String containerName, String dirPath) throws IOException {
-
+        List<String> files = new ArrayList<>();
         String url = String.format(CONTAINER_URL_PATTERN, swiftUrl, containerName, dirPath);
         HttpClient client = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(url);
         httpget.addHeader("X-Auth-Token", this.getValidToken().getAccessId());
         HttpResponse response = client.execute(httpget);
-        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK && response.getStatusLine().getStatusCode() != HttpStatus.SC_NO_CONTENT) {
             throw new IOException("The request to list files on object storage was failed: " + EntityUtils.toString(response.getEntity()));
         }
-        return Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
+        if(Objects.nonNull(response.getEntity())) {
+            files = Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
+        }
+        return files;
     }
 
     boolean existsTask(String containerName, String basePath, String taskId) throws IOException {
