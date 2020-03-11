@@ -109,8 +109,9 @@ public class KeystoneV3IdentityRequestHelper {
         throws JSONException, IOException {
         String accessId = response.getFirstHeader(X_SUBJECT_TOKEN).getValue();
         JSONObject jsonResponse = new JSONObject(EntityUtils.toString(response.getEntity()));
-        String expiresAt = jsonResponse.getString("expires_at");
-        String issuedAt = jsonResponse.getString("issued_at");
+        JSONObject jsonToken = jsonResponse.getJSONObject("token");
+        String expiresAt = jsonToken.getString("expires_at");
+        String issuedAt = jsonToken.getString("issued_at");
         IdentityToken token = new IdentityToken(accessId, issuedAt, expiresAt);
         return token;
     }
