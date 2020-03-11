@@ -30,7 +30,6 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class SwiftPermanentStorage implements PermanentStorage {
 
-
     private static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
     private static final String SWIFT_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
     private static final int MAX_ARCHIVE_TRIES = 1;
@@ -65,6 +64,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
         this.debugTasksDirName = (this.debugMode)
             ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
             : "";
+
+        this.swiftAPIClient.createContainer(containerName);
     }
 
     public SwiftPermanentStorage(Properties properties) throws PermanentStorageException {
@@ -97,13 +98,6 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
         LOGGER.debug("All properties for debug mode are set");
         return true;
-    }
-
-    @Override
-    public void run() {
-        LOGGER.info("Running Swift Permanent Storage...");
-        this.swiftAPIClient.startTokenUpdateRoutine();
-        this.swiftAPIClient.createContainer(containerName);
     }
 
     /**
