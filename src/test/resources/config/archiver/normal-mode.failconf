@@ -32,5 +32,3 @@ fogbow.keystonev3.user.id=
 fogbow.keystonev3.password=
 fogbow.keystonev3.auth.url=
 fogbow.keystonev3.swift.url=
-fogbow_cli_path=
-fogbow.keystonev3.swift.token.update.period=
