@@ -63,11 +63,6 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public void run() {
-
-    }
-
-    @Override
     public boolean archive(SapsImage task) throws PermanentStorageException {
         String taskId = task.getTaskId();
 

@@ -7,6 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageType;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
@@ -26,9 +27,8 @@ public class ArchiverMain {
     }
 
     private static Archiver createArchiver(Properties properties)
-        throws PermanentStorageException, SapsException {
+        throws PermanentStorageException, SapsException, InvalidPropertyException {
         PermanentStorage permanentStorage = createPermanentStorage(properties);
-        permanentStorage.run();
         Catalog catalog = new JDBCCatalog(properties);
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         Archiver archiver = new Archiver(properties, catalog, permanentStorage, executor);
@@ -36,7 +36,7 @@ public class ArchiverMain {
     }
 
     private static PermanentStorage createPermanentStorage(Properties properties)
-        throws PermanentStorageException, SapsException {
+        throws PermanentStorageException, SapsException, InvalidPropertyException {
         String permanentStorageType = properties
             .getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE);
         if (PermanentStorageType.SWIFT.toString().equalsIgnoreCase(permanentStorageType)) {
