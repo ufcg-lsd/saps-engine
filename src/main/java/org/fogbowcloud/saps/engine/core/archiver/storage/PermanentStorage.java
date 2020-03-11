@@ -7,10 +7,6 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFound
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public interface PermanentStorage {
-	/**
-	 * Starts storage routines and prepares for execution.
-	 */
-	void run();
 
 	/**
 	 * This function tries to archive a task trying each dirs in order
