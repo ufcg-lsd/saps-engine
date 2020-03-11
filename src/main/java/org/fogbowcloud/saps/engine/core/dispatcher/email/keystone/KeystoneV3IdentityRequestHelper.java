@@ -9,6 +9,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -35,7 +36,7 @@ public class KeystoneV3IdentityRequestHelper {
     private static final String ID_PROP = "id";
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    public static String createAccessId(Map<String, String> credentials) throws JSONException, IOException {
+    public static IdentityToken createAccessId(Map<String, String> credentials) throws JSONException, IOException {
         LOGGER.debug("Creating new access id");
         checkKeyStoneCredentials(credentials);
 
@@ -60,8 +61,8 @@ public class KeystoneV3IdentityRequestHelper {
                 "Access id request failed; " + "Status [" + status.getStatusCode() + " - " + status
                     .getReasonPhrase() + "]");
         }
-        String accessId = response.getFirstHeader(X_SUBJECT_TOKEN).getValue();
-        return accessId;
+        IdentityToken token = getTokenFromResponse(response);
+        return token;
     }
 
     private static JSONObject mountJson(Map<String, String> credentials) throws JSONException {
@@ -102,5 +103,15 @@ public class KeystoneV3IdentityRequestHelper {
                 throw new IllegalArgumentException("Not found value to Keystone credential [" + credential + "]");
             }
         }
+    }
+
+    private static IdentityToken getTokenFromResponse(HttpResponse response)
+        throws JSONException, IOException {
+        String accessId = response.getFirstHeader(X_SUBJECT_TOKEN).getValue();
+        JSONObject jsonResponse = new JSONObject(EntityUtils.toString(response.getEntity()));
+        String expiresAt = jsonResponse.getString("expires_at");
+        String issuedAt = jsonResponse.getString("issued_at");
+        IdentityToken token = new IdentityToken(accessId, issuedAt, expiresAt);
+        return token;
     }
 }
