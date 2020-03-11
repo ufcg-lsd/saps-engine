@@ -4,7 +4,7 @@ import java.io.FileInputStream;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageType;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
