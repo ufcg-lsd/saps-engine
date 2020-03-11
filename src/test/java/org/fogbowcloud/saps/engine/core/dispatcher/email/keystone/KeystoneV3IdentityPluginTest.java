@@ -17,7 +17,7 @@ public class KeystoneV3IdentityPluginTest {
 
     @Test
     @Ignore
-    public void createAccessId() throws Exception {
+    public void createToken() throws Exception {
         Properties properties = new Properties();
         FileInputStream input = new FileInputStream(CONFIG_FILE_PATH);
         properties.load(input);
@@ -32,8 +32,13 @@ public class KeystoneV3IdentityPluginTest {
         credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD,
             properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
 
-        String accessId = KeystoneV3IdentityRequestHelper.createAccessId(credentials);
-        assertNotNull(accessId);
-        assertFalse(accessId.isEmpty());
+        IdentityToken token = KeystoneV3IdentityRequestHelper.createAccessId(credentials);
+        assertToken(token);
+    }
+
+    private void assertToken(IdentityToken token) {
+        assertNotNull(token.getAccessId());
+        assertFalse(token.getAccessId().isEmpty());
+        assertFalse(token.isExpired());
     }
 }
