@@ -17,6 +17,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.IdentityToken;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityRequestHelper;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
@@ -36,9 +37,9 @@ public class SwiftAPIClient {
 
     private IdentityToken token;
 
-    SwiftAPIClient(Properties properties) throws SwiftPermanentStorageException {
+    SwiftAPIClient(Properties properties) throws InvalidPropertyException {
         if (!checkProperties(properties))
-            throw new SwiftPermanentStorageException("Error on validate the file. Missing properties for start Swift API Client.");
+            throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift API Client.");
         this.swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
         this.tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
         this.projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);

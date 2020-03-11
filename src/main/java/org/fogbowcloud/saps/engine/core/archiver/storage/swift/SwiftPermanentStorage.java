@@ -21,6 +21,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -68,7 +69,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
         this.swiftAPIClient.createContainer(containerName);
     }
 
-    public SwiftPermanentStorage(Properties properties) throws PermanentStorageException {
+    public SwiftPermanentStorage(Properties properties)
+        throws PermanentStorageException, InvalidPropertyException {
         this(properties, new SwiftAPIClient(properties));
     }
 
