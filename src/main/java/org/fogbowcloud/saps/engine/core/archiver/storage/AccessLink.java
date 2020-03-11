@@ -25,4 +25,14 @@ public class AccessLink {
     public String getUrl() {
         return url;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AccessLink that = (AccessLink) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(url, that.url);
+    }
+
 }
