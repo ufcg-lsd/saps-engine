@@ -239,7 +239,7 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 		credentials.put(KeystoneV3IdentityRequestHelper.PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
 		credentials.put(KeystoneV3IdentityRequestHelper.USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
 		credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
-		return KeystoneV3IdentityRequestHelper.createAccessId(credentials);
+		return KeystoneV3IdentityRequestHelper.createAccessId(credentials).getAccessId();
 	}
 
 	private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer,
