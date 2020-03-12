@@ -36,7 +36,7 @@ public class KeystoneV3IdentityRequestHelper {
     private static final String ID_PROP = "id";
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    public static IdentityToken createAccessId(Map<String, String> credentials) throws JSONException, IOException {
+    public static IdentityToken createIdentityToken(Map<String, String> credentials) throws JSONException, IOException {
         LOGGER.debug("Creating new access id");
         checkKeyStoneCredentials(credentials);
 
@@ -105,8 +105,7 @@ public class KeystoneV3IdentityRequestHelper {
         }
     }
 
-    private static IdentityToken getTokenFromResponse(HttpResponse response)
-        throws JSONException, IOException {
+    private static IdentityToken getTokenFromResponse(HttpResponse response) throws JSONException, IOException {
         String accessId = response.getFirstHeader(X_SUBJECT_TOKEN).getValue();
         JSONObject jsonResponse = new JSONObject(EntityUtils.toString(response.getEntity()));
         JSONObject jsonToken = jsonResponse.getJSONObject("token");

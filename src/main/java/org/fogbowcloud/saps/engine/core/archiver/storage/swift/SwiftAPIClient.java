@@ -79,7 +79,7 @@ public class SwiftAPIClient {
         credentials.put(KeystoneV3IdentityRequestHelper.PROJECT_ID, projectId);
         credentials.put(KeystoneV3IdentityRequestHelper.USER_ID, userId);
         credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD, userPassword);
-        IdentityToken token = KeystoneV3IdentityRequestHelper.createAccessId(credentials);
+        IdentityToken token = KeystoneV3IdentityRequestHelper.createIdentityToken(credentials);
         return token;
     }
 

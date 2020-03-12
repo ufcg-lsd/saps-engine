@@ -32,7 +32,7 @@ public class KeystoneV3IdentityPluginTest {
         credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD,
             properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
 
-        IdentityToken token = KeystoneV3IdentityRequestHelper.createAccessId(credentials);
+        IdentityToken token = KeystoneV3IdentityRequestHelper.createIdentityToken(credentials);
         assertToken(token);
     }
 
