@@ -4,8 +4,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.FileInputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.junit.Ignore;
@@ -22,17 +20,12 @@ public class KeystoneV3IdentityPluginTest {
         FileInputStream input = new FileInputStream(CONFIG_FILE_PATH);
         properties.load(input);
 
-        Map<String, String> credentials = new HashMap<>();
-        credentials.put(KeystoneV3IdentityRequestHelper.AUTH_URL,
-            properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
-        credentials.put(KeystoneV3IdentityRequestHelper.PROJECT_ID,
-            properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
-        credentials.put(KeystoneV3IdentityRequestHelper.USER_ID,
-            properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
-        credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD,
-            properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
+        String url = properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL);
+        String projectId = properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID);
+        String userId = properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID);
+        String password = properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD);
 
-        IdentityToken token = KeystoneV3IdentityRequestHelper.createIdentityToken(credentials);
+        IdentityToken token = KeystoneV3IdentityRequestHelper.createIdentityToken(url, projectId, userId, password);
         assertToken(token);
     }
 
