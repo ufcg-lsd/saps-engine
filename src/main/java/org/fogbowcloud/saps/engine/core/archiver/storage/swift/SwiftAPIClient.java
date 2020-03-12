@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -73,7 +74,7 @@ public class SwiftAPIClient {
         p.waitFor();
 
         if (p.exitValue() != 0) {
-            throw new Exception("process_output=" + p.exitValue());
+            throw new Exception("Error while creating swift container [" + containerName + "]: " + IOUtils.toString(p.getErrorStream()));
         }
     }
 
@@ -87,7 +88,7 @@ public class SwiftAPIClient {
         p.waitFor();
 
         if (p.exitValue() != 0) {
-            throw new Exception("process_output=" + p.exitValue());
+            throw new Exception("Error while upload file [" + completeFileName + "] to swift container [" + containerName + "]: " + IOUtils.toString(p.getErrorStream()));
         }
     }
 
@@ -100,7 +101,7 @@ public class SwiftAPIClient {
         p.waitFor();
 
         if (p.exitValue() != 0) {
-            throw new Exception("process_output=" + p.exitValue());
+            throw new Exception("Error while delete file [" + filePath + "] to swift container [" + containerName + "]: " + IOUtils.toString(p.getErrorStream()));
         }
 
         LOGGER.debug(filePath + " file deleted successfully from " + containerName);
