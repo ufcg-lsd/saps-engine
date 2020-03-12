@@ -24,7 +24,8 @@ public class ProcessedImagesResource extends BaseResource {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessedImagesResource.class);
 
-    private static final String REQUEST_ATTR_PROCESSED_IMAGES = "images_id[]";
+    //TODO update value this to "tasks_id[]" (requires a change to the Dashboard component)
+    private static final String REQUEST_ATTR_PROCESSED_TASKS = "images_id[]";
 
     @Post
     public Representation sendProcessedImagesToEmail(Representation representation) {
@@ -32,17 +33,18 @@ public class ProcessedImagesResource extends BaseResource {
 
         String userEmail = form.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
         String userPass = form.getFirstValue(UserResource.REQUEST_ATTR_USERPASS, true);
+
         if (!authenticateUser(userEmail, userPass) || userEmail.equals("anonymous"))
             throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 
-        String[] imageIds = form.getValuesArray(REQUEST_ATTR_PROCESSED_IMAGES, true);
+        String[] taskIds = form.getValuesArray(REQUEST_ATTR_PROCESSED_TASKS, true);
         Properties properties = application.getProperties();
 
         try {
             PermanentStorage permanentStorage = createPermanentStorage(properties);
 
             ProcessedImagesEmailBuilder emailBuilder = new ProcessedImagesEmailBuilder(application, permanentStorage,
-					properties, userEmail, Arrays.asList(imageIds));
+					properties, userEmail, Arrays.asList(taskIds));
 
             Thread thread = new Thread(emailBuilder);
             thread.start();
