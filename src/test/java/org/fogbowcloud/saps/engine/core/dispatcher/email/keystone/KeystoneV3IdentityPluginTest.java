@@ -32,6 +32,5 @@ public class KeystoneV3IdentityPluginTest {
     private void assertToken(IdentityToken token) {
         assertNotNull(token.getAccessId());
         assertFalse(token.getAccessId().isEmpty());
-        assertFalse(token.isExpired());
     }
 }
