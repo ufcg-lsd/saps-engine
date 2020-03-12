@@ -8,6 +8,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.IdentityToken;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityRequestHelper;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.DatabaseApplication;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -233,13 +234,12 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 	}
 
 	private String getKeystoneAccessId() throws IOException, JSONException {
-
-		Map<String, String> credentials = new HashMap<>();
-		credentials.put(KeystoneV3IdentityRequestHelper.AUTH_URL, properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
-		credentials.put(KeystoneV3IdentityRequestHelper.PROJECT_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
-		credentials.put(KeystoneV3IdentityRequestHelper.USER_ID, properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
-		credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD, properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
-		return KeystoneV3IdentityRequestHelper.createIdentityToken(credentials).getAccessId();
+		String url = properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL);
+		String projectId = properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID);
+		String userId = properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID);
+		String password = properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD);
+		IdentityToken token = KeystoneV3IdentityRequestHelper.createIdentityToken(url, projectId, userId, password);
+		return token.getAccessId();
 	}
 
 	private HttpGet prepObjectStoreRequest(String objectStoreHost, String objectStorePath, String objectStoreContainer,
