@@ -13,6 +13,7 @@ import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -158,7 +159,8 @@ public class NfsPermanentStorageTest {
     }
 
     @Test
-    public void testGenerateAccessLinksTaskDir() throws PermanentStorageException {
+    public void testGenerateAccessLinksTaskDir()
+        throws PermanentStorageException, IOException, TaskNotFoundException {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
 

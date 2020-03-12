@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -47,9 +46,10 @@ public class SwiftPermanentStorage implements PermanentStorage {
     private final boolean debugMode;
 
 
-    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws PermanentStorageException {
+    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient)
+        throws InvalidPropertyException {
         if (!checkProperties(properties))
-            throw new PermanentStorageException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
+            throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
 
         this.swiftAPIClient = swiftAPIClient;
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
@@ -60,7 +60,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
 
         if (this.debugMode && !checkPropertiesDebugMode(properties))
-            throw new PermanentStorageException("Error on validate the file. Missing properties for start Saps Controller.");
+            throw new InvalidPropertyException("Error on validate the file. Missing properties for start Saps Controller.");
 
         this.debugTasksDirName = (this.debugMode)
             ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
@@ -69,8 +69,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
         this.swiftAPIClient.createContainer(containerName);
     }
 
-    public SwiftPermanentStorage(Properties properties)
-        throws PermanentStorageException, InvalidPropertyException {
+    public SwiftPermanentStorage(Properties properties) throws InvalidPropertyException {
         this(properties, new SwiftAPIClient(properties));
     }
 
