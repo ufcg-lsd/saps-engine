@@ -6,7 +6,4 @@ public class InvalidPropertyException extends Exception {
         super(message);
     }
 
-    public InvalidPropertyException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }
