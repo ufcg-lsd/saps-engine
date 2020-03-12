@@ -27,6 +27,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
+import org.json.JSONException;
 
 public class SwiftPermanentStorage implements PermanentStorage {
 
@@ -47,7 +48,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
 
     public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient)
-        throws InvalidPropertyException {
+        throws Exception {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
 
@@ -69,7 +70,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
         this.swiftAPIClient.createContainer(containerName);
     }
 
-    public SwiftPermanentStorage(Properties properties) throws InvalidPropertyException {
+    public SwiftPermanentStorage(Properties properties) throws Exception {
         this(properties, new SwiftAPIClient(properties));
     }
 
@@ -240,7 +241,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 LOGGER.debug("Trying to delete file " + file + " from " + containerName);
                 swiftAPIClient.deleteFile(containerName, file);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
             return false;
         }

@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -38,7 +36,8 @@ public class SwiftAPIClient {
 
     private IdentityToken token;
 
-    SwiftAPIClient(Properties properties) throws InvalidPropertyException {
+    SwiftAPIClient(Properties properties)
+        throws InvalidPropertyException, IOException, JSONException {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift API Client.");
         this.swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
@@ -46,6 +45,7 @@ public class SwiftAPIClient {
         this.projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
         this.userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
         this.userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
+        this.token = KeystoneV3IdentityRequestHelper.createIdentityToken(tokenAuthUrl, projectId, userId, userPassword);
     }
 
     private boolean checkProperties(Properties properties) {
@@ -60,43 +60,20 @@ public class SwiftAPIClient {
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
-    private IdentityToken getValidToken() {
-        if(Objects.isNull(this.token) || this.token.isExpired()) {
-            try {
-                IdentityToken newToken = generateToken();
-                LOGGER.debug("Setting token to " + token);
-                this.token = newToken;
-            } catch (Exception e) {
-                LOGGER.error("Error while generate new identity token", e);
-            }
-        }
-        return token;
-    }
-
-    private IdentityToken generateToken() throws IOException, JSONException {
-        Map<String, String> credentials = new HashMap<>();
-        credentials.put(KeystoneV3IdentityRequestHelper.AUTH_URL, tokenAuthUrl);
-        credentials.put(KeystoneV3IdentityRequestHelper.PROJECT_ID, projectId);
-        credentials.put(KeystoneV3IdentityRequestHelper.USER_ID, userId);
-        credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD, userPassword);
-        IdentityToken token = KeystoneV3IdentityRequestHelper.createIdentityToken(credentials);
-        return token;
-    }
-
     //TODO Throws exception when container creation was not success
-    void createContainer(String containerName) {
+    public void createContainer(String containerName) throws Exception {
         // TODO: test JUnit
         LOGGER.debug("Creating container " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", this.getValidToken().getAccessId(), "--os-storage-url", swiftUrl,
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
                 "post", containerName);
 
         LOGGER.debug("Executing command " + builder.command());
 
-        try {
-            Process p = builder.start();
-            p.waitFor();
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("Error while creating container " + containerName, e);
+        Process p = builder.start();
+        p.waitFor();
+
+        if (p.exitValue() != 0) {
+            throw new Exception("process_output=" + p.exitValue());
         }
     }
 
@@ -104,30 +81,26 @@ public class SwiftAPIClient {
         String completeFileName = pseudFolder + File.separator + file.getName();
 
         LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", this.getValidToken().getAccessId(), "--os-storage-url", swiftUrl,
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
                 "upload", containerName, file.getAbsolutePath(), "--object-name", completeFileName);
-        try {
-            Process p = builder.start();
-            p.waitFor();
+        Process p = builder.start();
+        p.waitFor();
 
-            if (p.exitValue() != 0) {
-                throw new Exception("process_output=" + p.exitValue());
-            }
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("Error while uploading file " + completeFileName + " to container " + containerName, e);
+        if (p.exitValue() != 0) {
+            throw new Exception("process_output=" + p.exitValue());
         }
     }
 
-    public void deleteFile(String containerName, String filePath) {
+    public void deleteFile(String containerName, String filePath) throws Exception {
         LOGGER.debug("Deleting " + filePath + " from " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", this.getValidToken().getAccessId(), "--os-storage-url", swiftUrl,
+        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
                 "delete", containerName, filePath);
 
-        try {
-            Process p = builder.start();
-            p.waitFor();
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("Error while deleting " + filePath + " from container " + containerName, e);
+        Process p = builder.start();
+        p.waitFor();
+
+        if (p.exitValue() != 0) {
+            throw new Exception("process_output=" + p.exitValue());
         }
 
         LOGGER.debug(filePath + " file deleted successfully from " + containerName);
@@ -138,7 +111,7 @@ public class SwiftAPIClient {
         String url = String.format(CONTAINER_URL_PATTERN, swiftUrl, containerName, dirPath);
         HttpClient client = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(url);
-        httpget.addHeader("X-Auth-Token", this.getValidToken().getAccessId());
+        httpget.addHeader("X-Auth-Token", token.getAccessId());
         HttpResponse response = client.execute(httpget);
         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK && response.getStatusLine().getStatusCode() != HttpStatus.SC_NO_CONTENT) {
             throw new IOException("The request to list files on object storage was failed: " + EntityUtils.toString(response.getEntity()));
