@@ -27,7 +27,6 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
-import org.json.JSONException;
 
 public class SwiftPermanentStorage implements PermanentStorage {
 
@@ -269,7 +268,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
         for (String dir : dirs) {
             String dirPath = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, this.tasksDirName, taskId, dir);
             try {
-                files.addAll(this.swiftAPIClient.listFiles(this.containerName, dirPath));
+                List<String> filesPath = this.swiftAPIClient.listFiles(this.containerName, dirPath);
+                files.addAll(filesPath);
             } catch (IOException e) {
                 LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
             }
