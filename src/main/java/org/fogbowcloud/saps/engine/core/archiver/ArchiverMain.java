@@ -26,8 +26,7 @@ public class ArchiverMain {
         Fetcher.start();
     }
 
-    private static Archiver createArchiver(Properties properties)
-        throws PermanentStorageException, SapsException, InvalidPropertyException {
+    private static Archiver createArchiver(Properties properties) throws Exception {
         PermanentStorage permanentStorage = createPermanentStorage(properties);
         Catalog catalog = new JDBCCatalog(properties);
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -35,8 +34,7 @@ public class ArchiverMain {
         return archiver;
     }
 
-    private static PermanentStorage createPermanentStorage(Properties properties)
-        throws PermanentStorageException, SapsException, InvalidPropertyException {
+    private static PermanentStorage createPermanentStorage(Properties properties) throws Exception {
         String permanentStorageType = properties
             .getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE);
         if (PermanentStorageType.SWIFT.toString().equalsIgnoreCase(permanentStorageType)) {
