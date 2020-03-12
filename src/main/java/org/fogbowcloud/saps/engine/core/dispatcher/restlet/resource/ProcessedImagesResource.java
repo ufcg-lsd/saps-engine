@@ -37,14 +37,14 @@ public class ProcessedImagesResource extends BaseResource {
         if (!authenticateUser(userEmail, userPass) || userEmail.equals("anonymous"))
             throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 
-        String[] taskIds = form.getValuesArray(REQUEST_ATTR_PROCESSED_TASKS, true);
+        String[] tasksId = form.getValuesArray(REQUEST_ATTR_PROCESSED_TASKS, true);
         Properties properties = application.getProperties();
 
         try {
             PermanentStorage permanentStorage = createPermanentStorage(properties);
 
             ProcessedImagesEmailBuilder emailBuilder = new ProcessedImagesEmailBuilder(application, permanentStorage,
-					properties, userEmail, Arrays.asList(taskIds));
+					properties, userEmail, Arrays.asList(tasksId));
 
             Thread thread = new Thread(emailBuilder);
             thread.start();
