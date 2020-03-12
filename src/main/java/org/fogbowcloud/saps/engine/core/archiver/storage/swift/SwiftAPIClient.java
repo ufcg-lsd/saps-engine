@@ -123,7 +123,7 @@ public class SwiftAPIClient {
         return files;
     }
 
-    boolean existsTask(String containerName, String basePath, String taskId) throws IOException {
+    public boolean existsTask(String containerName, String basePath, String taskId) throws IOException {
         List<String> files = this.listFiles(containerName, basePath);
         for(String filePath : files) {
             if(Paths.get(filePath).getFileName().toString().equals(taskId)) {

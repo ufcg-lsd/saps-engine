@@ -279,17 +279,18 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     private List<AccessLink> generateLinks(List<String> filesPaths) {
         List<AccessLink> filesLinks = new ArrayList<>();
-        for(String filePath : filesPaths) {
-            String link;
-            try {
+        try {
+            for(String filePath : filesPaths) {
+                String link;
                 link = generateTempURL(filePath);
                 Path p = Paths.get(filePath);
                 String name = p.getParent().getFileName().toString() + "/" + p.getFileName().toString();
                 filesLinks.add(new AccessLink(name, link));
-            } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-                LOGGER.error("Error while generate temp url to File Path [" + filePath + "]", e);
             }
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new RuntimeException("Error while run hmac algorithm: " + e.getMessage());
         }
+
         return filesLinks;
     }
 
