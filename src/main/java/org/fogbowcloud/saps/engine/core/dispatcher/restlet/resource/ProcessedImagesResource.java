@@ -4,6 +4,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageType;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
@@ -44,7 +45,7 @@ public class ProcessedImagesResource extends BaseResource {
             PermanentStorage permanentStorage = createPermanentStorage(properties);
 
             ProcessedImagesEmailBuilder emailBuilder = new ProcessedImagesEmailBuilder(application, permanentStorage,
-					properties, userEmail, Arrays.asList(tasksId));
+                    properties, userEmail, Arrays.asList(tasksId));
 
             Thread thread = new Thread(emailBuilder);
             thread.start();
@@ -52,9 +53,10 @@ public class ProcessedImagesResource extends BaseResource {
             return new StringRepresentation("Email will be sent soon.", MediaType.TEXT_PLAIN);
         } catch (PermanentStorageException | IOException e) {
             LOGGER.error("Error while create permanent storage", e);
-            return new StringRepresentation("An error occurred while sending the email, please try again later.", MediaType.TEXT_PLAIN);
+        } catch (InvalidPropertyException e) {
+            LOGGER.error("Error while execute send email feature", e);
         }
-
+        return new StringRepresentation("An error occurred while sending the email, please try again later.", MediaType.TEXT_PLAIN);
     }
 
     private PermanentStorage createPermanentStorage(Properties properties)
