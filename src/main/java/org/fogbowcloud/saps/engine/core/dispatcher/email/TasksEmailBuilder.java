@@ -20,13 +20,14 @@ import java.util.*;
 public class TasksEmailBuilder implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(TasksEmailBuilder.class);
+    private static final String EMAIL_TITLE = "[SAPS] Results of selected tasks";
 
     private final class Task {
         private static final String ID = "taskId";
         private static final String IMAGE_REGION = "task_image_region";
         private static final String IMAGE_COLLECTION_NAME = "task_image_collection_name";
         private static final String IMAGE_DATE = "image_date";
-        private static final String TASK_ACCESS_LINKS = "access_links";
+        private static final String ACCESS_LINKS = "access_links";
 
         private final class AccessLink {
             private static final String NAME = "name";
@@ -34,10 +35,10 @@ public class TasksEmailBuilder implements Runnable {
         }
     }
 
-    private final DatabaseApplication application;
-    private final String userEmail;
-    private final List<String> tasksId;
     private final PermanentStorage permanentStorage;
+    private final DatabaseApplication application;
+    private final List<String> tasksId;
+    private final String userEmail;
     private final String noReplyEmail;
     private final String noReplyPass;
 
@@ -65,26 +66,38 @@ public class TasksEmailBuilder implements Runnable {
 
     @Override
     public void run() {
-        LOGGER.info("Creating email for user [" + userEmail + " with tasks: " + tasksId);
+        try {
+            JSONArray tasks = generateAllTasksJsonArray();
 
-        JSONArray tasks = generateAllTasksJsons();
-        sendEmail(tasks);
+            LOGGER.debug("Tasks JSON array: " + tasks.toString());
+
+            GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, EMAIL_TITLE, tasks.toString(2));
+        } catch (JSONException e) {
+            LOGGER.error("Error while working with an object of the JSON type", e);
+        } catch (MessagingException e) {
+            LOGGER.error("Error while send email", e);
+        }
     }
 
-    private JSONArray generateAllTasksJsons() {
+    private JSONArray generateAllTasksJsonArray() throws JSONException {
+        LOGGER.info("Creating representation (JSON) of tasks list: " + tasksId);
+
         JSONArray tasks = new JSONArray();
+
         for (String taskId : tasksId) {
             JSONObject task = generateTaskEmailJson(taskId);
             tasks.put(task);
         }
+
         return tasks;
     }
 
-    private JSONObject generateTaskEmailJson(String taskId) {
-        SapsImage task = application.getTask(taskId);
+    private JSONObject generateTaskEmailJson(String taskId) throws JSONException {
         LOGGER.info("Creating JSON representation for task [" + taskId + "]");
 
+        SapsImage task = application.getTask(taskId);
         JSONArray accessLinksJson = new JSONArray();
+
         try {
             List<AccessLink> accessLinks = permanentStorage.generateAccessLinks(taskId);
             accessLinksJson = generateTaskLinksJson(accessLinks);
@@ -96,16 +109,11 @@ public class TasksEmailBuilder implements Runnable {
 
         JSONObject result = new JSONObject();
 
-        try {
-            result.put(Task.ID, task.getTaskId());
-            result.put(Task.IMAGE_REGION, task.getRegion());
-            result.put(Task.IMAGE_COLLECTION_NAME, task.getCollectionTierName());
-            result.put(Task.IMAGE_DATE, task.getImageDate());
-            result.put(Task.TASK_ACCESS_LINKS, accessLinksJson);
-        } catch (JSONException e) {
-            //TODO update error mensage
-            LOGGER.error("", e);
-        }
+        result.put(Task.ID, task.getTaskId());
+        result.put(Task.IMAGE_REGION, task.getRegion());
+        result.put(Task.IMAGE_COLLECTION_NAME, task.getCollectionTierName());
+        result.put(Task.IMAGE_DATE, task.getImageDate());
+        result.put(Task.ACCESS_LINKS, accessLinksJson);
 
         return result;
     }
@@ -123,15 +131,6 @@ public class TasksEmailBuilder implements Runnable {
         }
 
         return accessLinksJson;
-    }
-
-    private void sendEmail(JSONArray tasks) {
-        try {
-            GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, "[SAPS] Filter results",
-                    tasks.toString(2));
-        } catch (MessagingException | JSONException e) {
-            LOGGER.error("Failed to send email with images download links.", e);
-        }
     }
 
 }
