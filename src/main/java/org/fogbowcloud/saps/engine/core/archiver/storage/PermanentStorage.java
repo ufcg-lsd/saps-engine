@@ -2,7 +2,6 @@ package org.fogbowcloud.saps.engine.core.archiver.storage;
 
 import java.io.IOException;
 import java.util.List;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
