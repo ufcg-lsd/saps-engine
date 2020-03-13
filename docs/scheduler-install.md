@@ -48,3 +48,16 @@ bash bin/start-scheduler
 # Stop command
 bash bin/stop-scheduler
 ```
+
+## Test
+To test whether the Scheduler component is running, follow the step below:
+
+```bash
+ps xau | grep java | grep Scheduler
+```
+
+Expected result:
+
+```bash
+root      [PID]  0.0  0.0  51416  3852 ?        S    Jan24   0:00 [sudo] java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n -Dlog4j.configuration=file:$saps_engine_dir_path/config/log4j.properties -Djava.library.path=/usr/local/lib -cp $saps_engine_dir_path/target/saps-engine-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.saps.engine.core.scheduler.SchedulerMain $saps_engine_dir_path/config/scheduler.conf
+```
