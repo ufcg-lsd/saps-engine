@@ -221,7 +221,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
      * files
      */
     @Override
-    public boolean delete(SapsImage task) {
+    public boolean delete(SapsImage task) throws IOException {
         String taskId = task.getTaskId();
 
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
@@ -232,18 +232,18 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
         String dir = swiftExports + File.separator + taskId;
 
-        try {
-            List<String> fileNames = swiftAPIClient.listFiles(containerName, dir);
-            LOGGER.info("Files List: " + fileNames);
+        List<String> fileNames = swiftAPIClient.listFiles(containerName, dir);
+        LOGGER.info("Files List: " + fileNames);
 
+        try {
             for (String file : fileNames) {
                 LOGGER.debug("Trying to delete file " + file + " from " + containerName);
                 swiftAPIClient.deleteFile(containerName, file);
             }
         } catch (Exception e) {
-            LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
-            return false;
+            throw new IOException("Error while delete file from task [" + task.getTaskId() + "]", e);
         }
+
 
         return true;
     }
