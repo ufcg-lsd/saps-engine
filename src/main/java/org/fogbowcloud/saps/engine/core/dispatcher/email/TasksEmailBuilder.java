@@ -46,6 +46,8 @@ public class TasksEmailBuilder implements Runnable {
                              Properties properties, String userEmail, List<String> tasksId) throws InvalidPropertyException {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Missing properties to use the send email feature");
+        if (checkFields(userEmail, tasksId, permanentStorage))
+            throw new IllegalArgumentException("Illegals arguments to use the send email feature");
 
         this.application = databaseApplication;
         this.noReplyEmail = properties.getProperty(SapsPropertiesConstants.NO_REPLY_EMAIL);
@@ -62,6 +64,11 @@ public class TasksEmailBuilder implements Runnable {
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
+    }
+
+    private boolean checkFields(String userEmail, List<String> tasksId, PermanentStorage permanentStorage) {
+        return userEmail.trim().isEmpty() || Objects.isNull(userEmail) ||
+                tasksId.isEmpty() || Objects.isNull(tasksId) || Objects.isNull(permanentStorage);
     }
 
     @Override
