@@ -89,17 +89,6 @@ public class TasksEmailBuilder implements Runnable {
         }
     }
 
-    private void sendErrorEmail(StringBuilder errorBuilder) {
-        if (!errorBuilder.toString().isEmpty()) {
-            try {
-                GoogleMail.Send(noReplyEmail, noReplyPass, noReplyEmail,
-                        "[SAPS] Errors during image temporary link creation", errorBuilder.toString());
-            } catch (MessagingException e) {
-                LOGGER.error("Failed to send email with errors to admins.", e);
-            }
-        }
-    }
-
     private JSONObject generateTaskEmailJson(String taskId) {
         SapsImage task = application.getTask(taskId);
         LOGGER.info("Creating JSON representation for task [" + taskId + "]");
