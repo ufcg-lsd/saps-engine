@@ -29,7 +29,7 @@ public class EmailResource extends BaseResource {
     private static final String REQUEST_ATTR_PROCESSED_TASKS = "images_id[]";
 
     @Post
-    public Representation sendProcessedImagesToEmail(Representation representation) {
+    public Representation sendTaskToEmail(Representation representation) {
         Form form = new Form(representation);
 
         String userEmail = form.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
