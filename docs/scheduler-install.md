@@ -25,7 +25,40 @@ mvn install -Dmaven.test.skip=true
 
 ## Configure
 
-Edit the [Scheduler configuration file](/config/scheduler.conf) file to allow its comunication with the SAPS Catalog and Arrebol Service. This configuration file also customizes the behaviour of the Scheduler, including the frequency that the Scheduler tries to select new task to be submitted.
+Edit the files:
+- [Scheduler configuration file](/config/scheduler.conf) to allow its comunication with the SAPS Catalog and Arrebol Service. This configuration file also customizes the behaviour of the Scheduler, including the frequency that the Scheduler tries to select new task to be submitted.
+- [SAPS Scripts](/resources/execution_script_tags.json) to allow mapping the versions of the scripts with their respective Docker information (tag and repository) to be used in processing. For example:
+    
+```json
+{
+  "processing":[
+    {
+      "name": "$name_of_version_1_of_the_processing_step",
+      "docker_tag": "$docker_tag_of_version_1_of_the_processing_step",
+      "docker_repository": "$docker_repository_of_version_1_of_the_processing_step"
+    },
+    {
+      "name": "$name_of_version_2_of_the_processing_step",
+      "docker_tag": "$docker_tag_of_version_2_of_the_processing_step",
+      "docker_repository": "$docker_tag_of_version_2_of_the_processing_step"
+    }
+  ],
+  "preprocessing":[
+    {
+      "name": "$name_of_version_1_of_the_preprocessing_step",
+      "docker_tag": "$docker_tag_of_version_1_of_the_preprocessing_step",
+      "docker_repository": "$docker_repository_of_version_1_of_the_preprocessing_step"
+    }
+  ],
+  "inputdownloading":[
+    {
+      "name": "$name_of_version_1_of_the_inputdownloading_step",
+      "docker_tag": "$docker_tag_of_version_1_of_the_inputdownloading_step",
+      "docker_repository": "$docker_repository_of_version_1_of_the_inputdownloading_step"
+    }
+  ]
+}
+```
 
 ## Run
 
