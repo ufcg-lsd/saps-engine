@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Properties;
 
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftAPIClient;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
