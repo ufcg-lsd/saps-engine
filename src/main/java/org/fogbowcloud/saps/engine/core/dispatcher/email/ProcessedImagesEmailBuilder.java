@@ -57,11 +57,6 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY,
-                SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
                 SapsPropertiesConstants.NO_REPLY_EMAIL,
                 SapsPropertiesConstants.NO_REPLY_PASS
         };
