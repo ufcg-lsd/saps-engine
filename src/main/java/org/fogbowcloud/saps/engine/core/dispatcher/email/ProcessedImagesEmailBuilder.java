@@ -1,6 +1,5 @@
 package org.fogbowcloud.saps.engine.core.dispatcher.email;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
@@ -66,20 +65,13 @@ public class ProcessedImagesEmailBuilder implements Runnable {
 
     @Override
     public void run() {
-        StringBuilder builder = new StringBuilder();
-        StringBuilder errorBuilder = new StringBuilder();
+        LOGGER.info("Creating email for user [" + userEmail + " with tasks: " + tasksId);
 
-        builder.append("Creating email for user [" + userEmail + " with images:\n");
-        for (String str : tasksId)
-            builder.append(str).append("\n");
-        LOGGER.info(builder.toString());
-
-        JSONArray tasklist = generateAllTasksJsons(errorBuilder);
-        sendTaskEmail(errorBuilder, tasklist);
-        sendErrorEmail(errorBuilder);
+        JSONArray tasks = generateAllTasksJsons();
+        sendEmail(tasks);
     }
 
-    private JSONArray generateAllTasksJsons(StringBuilder errorBuilder) {
+    private JSONArray generateAllTasksJsons() {
         JSONArray tasks = new JSONArray();
         for (String taskId : tasksId) {
 			JSONObject task = generateTaskEmailJson(taskId);
@@ -88,14 +80,12 @@ public class ProcessedImagesEmailBuilder implements Runnable {
         return tasks;
     }
 
-    private void sendTaskEmail(StringBuilder errorBuilder, JSONArray tasklist) {
+    private void sendEmail(JSONArray tasklist) {
         try {
             GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, "[SAPS] Filter results",
                     tasklist.toString(2));
         } catch (MessagingException | JSONException e) {
             LOGGER.error("Failed to send email with images download links.", e);
-            errorBuilder.append("Failed to send email with images download links.").append("\n")
-                    .append(ExceptionUtils.getStackTrace(e)).append("\n");
         }
     }
 
