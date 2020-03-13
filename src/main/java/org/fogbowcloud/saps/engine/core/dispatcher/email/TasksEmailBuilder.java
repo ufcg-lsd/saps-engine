@@ -80,7 +80,7 @@ public class TasksEmailBuilder implements Runnable {
     }
 
     private JSONArray generateAllTasksJsonArray() throws JSONException {
-        LOGGER.info("Creating representation (JSON) of tasks list: " + tasksId);
+        LOGGER.info("Creating JSON representation for tasks list: " + tasksId);
 
         JSONArray tasks = new JSONArray();
 
