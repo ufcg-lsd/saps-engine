@@ -25,7 +25,7 @@ mvn install -Dmaven.test.skip=true
 
 ## Configure
 
-Edit the [Scheduler configuration file](/config/scheduler.conf) file) to allow its comunication with the SAPS Catalog and Arrebol Service. This configuration file also customizes the behaviour of the Scheduler, including the frequency that the Scheduler tries to select new task to be submitted.
+Edit the [Scheduler configuration file](/config/scheduler.conf) file to allow its comunication with the SAPS Catalog and Arrebol Service. This configuration file also customizes the behaviour of the Scheduler, including the frequency that the Scheduler tries to select new task to be submitted.
 
 ## Run
 
