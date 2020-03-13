@@ -17,9 +17,9 @@ import javax.mail.MessagingException;
 import java.io.IOException;
 import java.util.*;
 
-public class ProcessedImagesEmailBuilder implements Runnable {
+public class TasksEmailBuilder implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(ProcessedImagesEmailBuilder.class);
+    private static final Logger LOGGER = Logger.getLogger(TasksEmailBuilder.class);
 
     private final class Task {
         private static final String ID = "taskId";
@@ -41,8 +41,8 @@ public class ProcessedImagesEmailBuilder implements Runnable {
     private final String noReplyEmail;
     private final String noReplyPass;
 
-    public ProcessedImagesEmailBuilder(DatabaseApplication databaseApplication, PermanentStorage permanentStorage,
-                                       Properties properties, String userEmail, List<String> tasksId) throws InvalidPropertyException {
+    public TasksEmailBuilder(DatabaseApplication databaseApplication, PermanentStorage permanentStorage,
+                             Properties properties, String userEmail, List<String> tasksId) throws InvalidPropertyException {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Missing properties to use the send email feature");
 

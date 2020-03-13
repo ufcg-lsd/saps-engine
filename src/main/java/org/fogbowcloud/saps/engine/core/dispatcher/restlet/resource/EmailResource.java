@@ -8,7 +8,7 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPrope
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
-import org.fogbowcloud.saps.engine.core.dispatcher.email.ProcessedImagesEmailBuilder;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.TasksEmailBuilder;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
@@ -21,9 +21,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class ProcessedImagesResource extends BaseResource {
+public class EmailResource extends BaseResource {
 
-    private static final Logger LOGGER = Logger.getLogger(ProcessedImagesResource.class);
+    private static final Logger LOGGER = Logger.getLogger(EmailResource.class);
 
     //TODO update value this to "tasks_id[]" (requires a change to the Dashboard component)
     private static final String REQUEST_ATTR_PROCESSED_TASKS = "images_id[]";
@@ -44,7 +44,7 @@ public class ProcessedImagesResource extends BaseResource {
         try {
             PermanentStorage permanentStorage = createPermanentStorage(properties);
 
-            ProcessedImagesEmailBuilder emailBuilder = new ProcessedImagesEmailBuilder(application, permanentStorage,
+            TasksEmailBuilder emailBuilder = new TasksEmailBuilder(application, permanentStorage,
                     properties, userEmail, Arrays.asList(tasksId));
 
             Thread thread = new Thread(emailBuilder);
