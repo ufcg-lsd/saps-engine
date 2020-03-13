@@ -74,19 +74,10 @@ public class TasksEmailBuilder implements Runnable {
     private JSONArray generateAllTasksJsons() {
         JSONArray tasks = new JSONArray();
         for (String taskId : tasksId) {
-			JSONObject task = generateTaskEmailJson(taskId);
-			tasks.put(task);
+            JSONObject task = generateTaskEmailJson(taskId);
+            tasks.put(task);
         }
         return tasks;
-    }
-
-    private void sendEmail(JSONArray tasklist) {
-        try {
-            GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, "[SAPS] Filter results",
-                    tasklist.toString(2));
-        } catch (MessagingException | JSONException e) {
-            LOGGER.error("Failed to send email with images download links.", e);
-        }
     }
 
     private JSONObject generateTaskEmailJson(String taskId) {
@@ -112,8 +103,8 @@ public class TasksEmailBuilder implements Runnable {
             result.put(Task.IMAGE_DATE, task.getImageDate());
             result.put(Task.TASK_ACCESS_LINKS, accessLinksJson);
         } catch (JSONException e) {
-        	//TODO update error mensage
-			LOGGER.error("", e);
+            //TODO update error mensage
+            LOGGER.error("", e);
         }
 
         return result;
@@ -132,6 +123,15 @@ public class TasksEmailBuilder implements Runnable {
         }
 
         return accessLinksJson;
+    }
+
+    private void sendEmail(JSONArray tasks) {
+        try {
+            GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, "[SAPS] Filter results",
+                    tasks.toString(2));
+        } catch (MessagingException | JSONException e) {
+            LOGGER.error("Failed to send email with images download links.", e);
+        }
     }
 
 }
