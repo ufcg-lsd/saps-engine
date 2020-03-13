@@ -3,7 +3,6 @@ package org.fogbowcloud.saps.engine.core.archiver.storage;
 import java.io.IOException;
 import java.util.List;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
-import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 public interface PermanentStorage {
 
@@ -11,21 +10,21 @@ public interface PermanentStorage {
 	 * This function tries to archive a task trying each dirs in order
 	 * (inputdownloading -> preprocessing -> processing).
 	 *
-	 * @param task task to be archived
+	 * @param taskId The Task's unique identifier
 	 * @return boolean representation, success (true) or failure (false) in to
 	 *         archive the three dirs.
 	 */
-	boolean archive(SapsImage task) throws IOException;
+	boolean archive(String taskId, boolean isFailedTask) throws IOException;
 
 	/**
 	 * This function delete all files from task in Permanent Storage.
 	 *
-	 * @param task task with files information to be deleted
+	 * @param taskId The Task's unique identifier
 	 * @return boolean representation, success (true) or failure (false) to delete
 	 *         files
 	 * @throws Exception
 	 */
-	boolean delete(SapsImage task) throws IOException;
+	boolean delete(String taskId, boolean isFailedTask) throws IOException;
 
 	/**
 	 *

@@ -23,8 +23,6 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
-import org.fogbowcloud.saps.engine.core.model.SapsImage;
-import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
@@ -105,18 +103,16 @@ public class SwiftPermanentStorage implements PermanentStorage {
      * This function tries to archive a task trying each folder in order
      * (inputdownloading -> preprocessing -> processing).
      *
-     * @param task task to be archived
+     * @param taskId The Task's unique identifier
      * @return boolean representation, success (true) or failure (false) in to
      * archive the three folders.
      */
     @Override
-    public boolean archive(SapsImage task) {
-        String taskId = task.getTaskId();
-
+    public boolean archive(String taskId, boolean isFailed) {
         LOGGER.info("Attempting to archive task [" + taskId + "] with a maximum of " + MAX_ARCHIVE_TRIES
                 + " archiving attempts for each folder (inputdownloading, preprocessing, processing)");
 
-        String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
+        String swiftExports = (isFailed && this.debugMode)
                 ? debugTasksDirName
                 : tasksDirName;
 
@@ -133,7 +129,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
         boolean preprocessingSentSuccess = inputdownloadingSentSuccess && archive(taskId, preprocessingLocalDir, preprocessingSwiftDir);
         boolean processingSentSuccess = preprocessingSentSuccess && archive(taskId, processingLocalDir, processingSwiftDir);
 
-        LOGGER.info("Archive process result of task [" + task.getTaskId() + ":\nInputdownloading phase: "
+        LOGGER.info("Archive process result of task [" + taskId + ":\nInputdownloading phase: "
                 + (inputdownloadingSentSuccess ? "Success" : "Failure") + "\n" + "Preprocessing phase: "
                 + (preprocessingSentSuccess ? "Success" : "Failure") + "\n" + "Processing phase: "
                 + (processingSentSuccess ? "Success" : "Failure"));
@@ -216,17 +212,16 @@ public class SwiftPermanentStorage implements PermanentStorage {
     /**
      * This function delete all files from task in Permanent Storage.
      *
-     * @param task task with files information to be deleted
+     * @param taskId The Task's unique identifier
      * @return boolean representation, success (true) or failure (false) to delete
      * files
      */
     @Override
-    public boolean delete(SapsImage task) throws IOException {
-        String taskId = task.getTaskId();
+    public boolean delete(String taskId, boolean isFailed) throws IOException {
 
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
 
-        String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
+        String swiftExports = (isFailed && this.debugMode)
                 ? debugTasksDirName
                 : tasksDirName;
 
@@ -241,9 +236,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
                 swiftAPIClient.deleteFile(containerName, file);
             }
         } catch (Exception e) {
-            throw new IOException("Error while delete file from task [" + task.getTaskId() + "]", e);
+            throw new IOException("Error while delete file from task [" + taskId + "]", e);
         }
-
 
         return true;
     }

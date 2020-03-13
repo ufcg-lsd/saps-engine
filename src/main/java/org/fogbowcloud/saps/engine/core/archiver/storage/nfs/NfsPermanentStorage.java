@@ -17,8 +17,6 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
-import org.fogbowcloud.saps.engine.core.model.SapsImage;
-import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
@@ -77,23 +75,20 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public boolean archive(SapsImage task) throws IOException {
-        String taskId = task.getTaskId();
-
-        LOGGER.info("Archiving task [" + task.getTaskId() + "] to permanent storage.");
-
+    public boolean archive(String taskId, boolean isFailedTask) throws IOException {
+        LOGGER.info("Archiving task [" + taskId + "] to permanent storage.");
         String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN,
                 nfsTempStoragePath, taskId, INPUTDOWNLOADING_DIR);
         String preprocessingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN,
                 nfsTempStoragePath, taskId, PREPROCESSING_DIR);
         String processingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, PROCESSING_DIR);
 
-        String nfsTaskDir = (task.getState() == ImageTaskState.FAILED && this.debugMode)
+        String nfsTaskDir = (isFailedTask && this.debugMode)
                 ? this.debugTasksDirName
                 : this.tasksDirName;
         String nfsTaskDirPath;
 
-        nfsTaskDirPath = createTaskDir(nfsTaskDir, task.getTaskId());
+        nfsTaskDirPath = createTaskDir(nfsTaskDir, taskId);
 
         copyDirToDir(inputdownloadingLocalDir, nfsTaskDirPath);
         copyDirToDir(preprocessingLocalDir, nfsTaskDirPath);
@@ -102,11 +97,11 @@ public class NfsPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public boolean delete(SapsImage task) throws IOException {
-        String nfsTaskDir = (task.getState() == ImageTaskState.FAILED && this.debugMode)
+    public boolean delete(String taskId, boolean isFailedTask) throws IOException {
+        String nfsTaskDir = (isFailedTask && this.debugMode)
                 ? this.debugTasksDirName
                 : this.tasksDirName;
-        String taskDirPath = String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsPermanentStoragePath, nfsTaskDir, task.getTaskId());
+        String taskDirPath = String.format(NFS_STORAGE_TASK_DIR_PATTERN, nfsPermanentStoragePath, nfsTaskDir, taskId);
         File taskDir = new File(taskDirPath);
         if (!taskDir.exists()) {
             throw new FileNotFoundException(
