@@ -42,8 +42,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
         this.swiftAPIClient = swiftAPIClient;
         this.properties = properties;
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
-        this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
-        this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME));
+        this.containerName = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.CONTAINER_NAME);
+        this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.CONTAINER_NAME));
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
 
@@ -58,7 +58,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
                 SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
-                SapsPropertiesConstants.SWIFT_CONTAINER_NAME
+                SapsPropertiesConstants.Openstack.ObjectStoreService.CONTAINER_NAME
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);

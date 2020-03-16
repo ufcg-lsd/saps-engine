@@ -35,11 +35,11 @@ public class SwiftAPIClient {
 
         this.properties = properties;
 
-        projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
-        userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
-        userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
-        tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
-        swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
+        projectId = properties.getProperty(SapsPropertiesConstants.Openstack.PROJECT_ID);
+        userId = properties.getProperty(SapsPropertiesConstants.Openstack.USER_ID);
+        userPassword = properties.getProperty(SapsPropertiesConstants.Openstack.USER_PASSWORD);
+        tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL);
+        swiftUrl = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL);
 
         handleTokenUpdate(Executors.newScheduledThreadPool(1));
 
@@ -55,11 +55,11 @@ public class SwiftAPIClient {
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID,
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID,
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD,
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL,
-                SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL
+                SapsPropertiesConstants.Openstack.PROJECT_ID,
+                SapsPropertiesConstants.Openstack.USER_ID,
+                SapsPropertiesConstants.Openstack.USER_PASSWORD,
+                SapsPropertiesConstants.Openstack.IdentityService.API_URL,
+                SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);

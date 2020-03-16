@@ -24,13 +24,13 @@ public class KeystoneV3IdentityPluginTest {
 
         Map<String, String> credentials = new HashMap<>();
         credentials.put(KeystoneV3IdentityRequestHelper.AUTH_URL,
-            properties.getProperty(SapsPropertiesConstants.SWIFT_AUTH_URL));
+            properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL));
         credentials.put(KeystoneV3IdentityRequestHelper.PROJECT_ID,
-            properties.getProperty(SapsPropertiesConstants.SWIFT_PROJECT_ID));
+            properties.getProperty(SapsPropertiesConstants.Openstack.PROJECT_ID));
         credentials.put(KeystoneV3IdentityRequestHelper.USER_ID,
-            properties.getProperty(SapsPropertiesConstants.SWIFT_USER_ID));
+            properties.getProperty(SapsPropertiesConstants.Openstack.USER_ID));
         credentials.put(KeystoneV3IdentityRequestHelper.PASSWORD,
-            properties.getProperty(SapsPropertiesConstants.SWIFT_PASSWORD));
+            properties.getProperty(SapsPropertiesConstants.Openstack.USER_PASSWORD));
 
         String accessId = KeystoneV3IdentityRequestHelper.createAccessId(credentials);
         assertNotNull(accessId);

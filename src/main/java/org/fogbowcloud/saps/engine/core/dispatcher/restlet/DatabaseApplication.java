@@ -61,12 +61,12 @@ public class DatabaseApplication extends Application {
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
                 SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY,
+                SapsPropertiesConstants.Openstack.ObjectStoreService.KEY,
                 SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
-                SapsPropertiesConstants.SWIFT_AUTH_URL,
-                SapsPropertiesConstants.SWIFT_PROJECT_ID,
-                SapsPropertiesConstants.SWIFT_USER_ID,
-                SapsPropertiesConstants.SWIFT_PASSWORD
+                SapsPropertiesConstants.Openstack.IdentityService.API_URL,
+                SapsPropertiesConstants.Openstack.PROJECT_ID,
+                SapsPropertiesConstants.Openstack.USER_ID,
+                SapsPropertiesConstants.Openstack.USER_PASSWORD
 
         };
 
