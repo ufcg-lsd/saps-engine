@@ -60,8 +60,6 @@ public class DatabaseApplication extends Application {
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
                 SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH,
                 SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER,
                 SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY,
                 SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
