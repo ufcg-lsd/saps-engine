@@ -1,6 +1,6 @@
 # Install and Configure Dispatcher
 
-The SAPS Dispatcher component is responsible for dispatching new tasks to the Catalog Service. It has other functions in its API such as: sending email with access links to data on selected successful tasks, sign up new users, and others.
+The SAPS Dispatcher component is responsible for registering new tasks to the Catalog Service. In addition to this feature, the Dispatcher is also responsible for the sign up of new user and the notification of the users about finished tasks.
   
 ## Dependencies
 
