@@ -19,17 +19,12 @@ saps_temp_storage_path=src/test/resources/archiver-test
 # Configuração do sft
 swift_input_pseud_folder_prefix=
 swift_output_pseud_folder_prefix=
-swift_username=
-swift_password=
-swift_tenant_id=
-swift_tenant_name=
-swift_auth_url=
 
 # Configuração do fogbow keystone
-fogbow.keystonev3.project.id=
-fogbow.keystonev3.user.id=
-fogbow.keystonev3.password=
-fogbow.keystonev3.auth.url=
-fogbow.keystonev3.swift.url=
+openstack_project_id=
+openstack_user_id=
+openstack_user_password=
+openstack_identity_service_api_url=
+openstack_object_store_service_api_url=
 fogbow_cli_path=
 fogbow.keystonev3.swift.token.update.period=
