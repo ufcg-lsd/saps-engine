@@ -1,159 +1,78 @@
-# Install and Configure Submission Dispatcher
+# Install and Configure Dispatcher
 
-The SAPS Submission dispatcher is responsible for receiving and validating user requests before sending them to the SAPS Service Catalog.
-
+The SAPS Dispatcher component is responsible for registering new tasks to the Catalog Service. In addition to this feature, the Dispatcher is also responsible for the sign up of new user and the notification of the users about finished tasks.
+  
 ## Dependencies
 
-## Configure
+In an apt-based Linux distro, type the below commands to install the Dispatcher dependencies.
 
-In an apt-based Linux distro, type the below commands to install the Submission Dispatcer dependencies.
-
-```
+```bash
+sudo apt-get update
 sudo apt-get -y install openjdk-8-jdk
 sudo apt-get -y install maven
 sudo apt-get -y install git
-sudo apt install -y python-swiftclient
-sudo apt-get install -y python-gdal
-sudo apt-get install -y python-shapely
-sudo apt-get install nfs-common
+sudo apt-get -y install python-swiftclient
+sudo apt-get -y install python-gdal
+sudo apt-get -y install python-shapely
 ```
 
-In addition to above Linux packages, the Dispatcher also depends on three codebases: 1) ```fogbow-mono-manager```; and 2) the own saps-engine repository (which holds the Dispatcher code). To fetch and compile the source code of these repositories, follow the below steps:
+In addition to the installation of the above Linux packages, the Dispatcher source code should be fetched from its repository and compiled. This could be done following the below steps:
 
-```
-# fogbow-mono-manager repository
-git clone https://github.com/fogbow/fogbow-mono-manager.git
-cd fogbow-mono-manager
+```bash
+# saps-engine repository
+git clone https://github.com/ufcg-lsd/saps-engine
+cd saps-engine
 git checkout develop
 mvn install -Dmaven.test.skip=true
-
-# saps-engine repository
-sudo apt-get update
-git clone https://github.com/ufcg-lsd/saps-engine.git
-git checkout develop
-mvn install
 ```
 
-# Below info is outdated
+## Configure
 
-#### Dashboard and Submission Dispatcher
-Once raised, the VM must contain all the necessary dependencies. In order to do that, follow the steps below:
-
-    # add-apt-repository -y ppa:openjdk-r/ppa
-    # apt-get update
-    # curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-    # apt-get install -y nodejs
-    # apt-get -y install git
-    # apt-get install openjdk-7-jdk -y
-    # apt-get -y install maven
-
-Once the needed dependencies are installed, download and build saps-dashboard, fogbow-manager, blowout and saps-engine:
-
-    # git clone -b backend-integration https://github.com/fogbow/saps-dashboard.git
-    # cd saps-dashboard
-    # npm install
-    # mv node_modules public/
-    # cd ..
-
-    # git clone -b develop https://github.com/fogbow/fogbow-manager.git
-    # cd fogbow-manager/
-    # mvn install -Dmaven.test.skip=true
-    # cd ..
-
-    # git clone -b sebal-experiment-resources-fix https://github.com/fogbow/blowout.git
-    # cd blowout
-    # mvn install -Dmaven.test.skip=true
-    # cd ..
-
-    # git clone -b frontend-integration https://github.com/fogbow/saps-engine.git
-    # cd saps-engine
-    # mvn install -Dmaven.test.skip=true
-    # cd ..
-
-Before starting the dispatcher service, the dashboard configuration file (example available [here](../examples/dispatcher.conf.example)) needs to be edited to customize the behavior of the scheduler component. We show some of the most important properties below:
-
-The value of the property **submission_rest_server_port** in *dispatcher.conf* should be the same as the port specified on **urlSapsService** in the file *dashboardApp.js*, e.g.:
-
-dispatcher.conf:
-
-    # submission_rest_server_port = 8080
-
-dashboardApp.js:
-
-    # "urlSapsService": "http://localhost:8080/"
-
-
-To run saps-dispatcher, execute the following commands:
-
-    # cd saps-engine
-    # bash scripts/start-dispatcher.sh
-
-To run the saps-dashboard, change the
-
-    # cd saps-dashboard
-    # node app.js
-
-#### Additional details on how to configure the Dispatcher
-
-##### Image Datastore Configuration
-```
-# Catalogue database URL prefix (ex.: jdbc:postgresql://)
-datastore_url_prefix=
-
-# Catalogue database ip
-datastore_ip=
-
-# Catalogue database port
-datastore_port=
-
-# Catalogue database name
-datastore_name=
-
-# Catalogue database driver
-datastore_driver=
-
-# Catalogue database user name
-datastore_username=
-
-# Catalogue database user password
-datastore_password=
+Edit the files:
+- [Dispatcher configuration file](/config/dispatcher.conf) to allow its communication with the SAPS Catalog and Permanent Storage.
+- [SAPS Scripts](/resources/execution_script_tags.json) to make available new versions of the algorithms, for the three steps of the SAPS workflow (input downloading, preprocessing and processing). Any new algorithm should be packed as a docker image. See below example on how to specify the algorithms:
+    
+```json
+{
+"inputdownloading":[
+    {
+      "name": "$name_inputdownloading_option1",
+      "docker_tag": "$docker_tag_inputdownloading_option1",
+      "docker_repository": "$docker_repository_inputdownloading_option1"
+    }
+  ],
+  "preprocessing":[
+    {
+      "name": "$name_preprocessing_option1",
+      "docker_tag": "$docker_tag_preprocessing_option1",
+      "docker_repository": "$docker_repository_preprocessing_option1"
+    }
+  ],
+  "processing":[
+    {
+      "name": "$name_processing_option1",
+      "docker_tag": "$docker_tag_processing_option1",
+      "docker_repository": "$docker_repository_processing_option1"
+    },
+    {
+      "name": "$name_processing_option2",
+      "docker_tag": "$docker_tag_processing_option2",
+      "docker_repository": "$docker_repository_processing_option2"
+    }
+  ]
+}
 ```
 
-##### Restlet Configuration
-```
-# Admin email
-admin_email=
+## Run
 
-# Admin username
-admin_user=
+Once the configuration file is edited, the below commands are used to start and stop the Dispatcher component.
 
-# Admin password
-admin_password=
-
-# Submission Restlet port
-submission_rest_server_port=
+```bash
+# Start command
+bash bin/start-dispatcher
 ```
 
-##### Container Configuration
-```
-# Path NFS directory <nfs_directory>
-saps_export_path=
-```
-
-##### USGS Configuration
-```
-# USGS login URL
-usgs_login_url=
-
-# USGS API URL
-usgs_json_url=
-
-# USGS username
-usgs_username=
-
-# USGS password
-usgs_password=
-
-# Period to refresh USGS’ API key
-usgs_api_key_period=
+```bash
+# Stop command
+bash bin/stop-dispatcher
 ```
