@@ -11,18 +11,39 @@ public class SapsPropertiesConstants {
 	public static final String DATASET_LE7_TYPE = "landsat_7";
 	public static final String DATASET_LC8_TYPE = "landsat_8";
 
+
+	public final class Openstack {
+
+        public static final String PROJECT_ID = "openstack_project_id";
+        public static final String USER_ID = "openstack_user_id";
+        public static final String USER_PASSWORD = "openstack_user_password";
+
+	    public final class IdentityService {
+            public static final String API_URL = "openstack_identity_service_api_url";
+        }
+
+	    public final class ObjectStoreService {
+            public static final String API_URL = "openstack_object_store_service_api_url";
+            public static final String CONTAINER_NAME = "openstack_object_store_service_container_name";
+            public static final String KEY = "openstack_object_store_service_key";
+        }
+    }
+
 	// Swift constants
-	public static final String SWIFT_CONTAINER_NAME = "swift_container_name";
+    //FIXME remove it and change the fields that use it to Openstack.ObjectStoreService.CONTAINER_NAME
+	public static final String SWIFT_CONTAINER_NAME = "openstack_object_store_service_container_name";
 	public static final String PERMANENT_STORAGE_TASKS_DIR = "permanent_storage_tasks_dir";
 	public static final String PERMANENT_STORAGE_DEBUG_TASKS_DIR = "permanent_storage_debug_tasks_dir";
-	public static final String SWIFT_USER_ID = "swift_user_id";
-	public static final String SWIFT_PASSWORD = "swift_password";
-	public static final String SWIFT_PROJECT_ID = "swift_project_id";
-	public static final String SWIFT_AUTH_URL = "swift_auth_url";
-	public static final String SWIFT_OBJECT_STORE_HOST = "swift_object_store_host";
-	public static final String SWIFT_OBJECT_STORE_PATH = "swift_object_store_path";
-	public static final String SWIFT_OBJECT_STORE_CONTAINER = "swift_object_store_container";
-	public static final String SWIFT_OBJECT_STORE_KEY = "swift_object_store_key";
+    //FIXME remove it and change the fields that use it to Openstack.USER_ID
+	public static final String SWIFT_USER_ID = "openstack_user_id";
+    //FIXME remove it and change the fields that use it to Openstack.USER_PASSWORD
+	public static final String SWIFT_PASSWORD = "openstack_user_password";
+    //FIXME remove it and change the fields that use it to Openstack.PROJECT_ID
+	public static final String SWIFT_PROJECT_ID = "openstack_project_id";
+	//FIXME remove it and change the fields that use it to Openstack.IdentityService.API_URL
+	public static final String SWIFT_AUTH_URL = "openstack_identity_service_api_url";
+    //FIXME remove it and change the fields that use it to Openstack.ObjectStoreService.KEY
+	public static final String SWIFT_OBJECT_STORE_KEY = "openstack_object_store_service_key";
 
 	// Restlet constants
 	public static final String SUBMISSION_REST_SERVER_PORT = "submission_rest_server_port";
@@ -32,11 +53,16 @@ public class SapsPropertiesConstants {
 
 	// KeystoneV3 constants
 	public static final String FOGBOW_KEYSTONEV3_UPDATE_PERIOD = "fogbow.keystonev3.swift.token.update.period";
-	public static final String FOGBOW_KEYSTONEV3_PROJECT_ID = "fogbow.keystonev3.project.id";
-	public static final String FOGBOW_KEYSTONEV3_USER_ID = "fogbow.keystonev3.user.id";
+    //FIXME remove it and change the fields that use it to Openstack.PROJECT_ID
+	public static final String FOGBOW_KEYSTONEV3_PROJECT_ID = "openstack_project_id";
+    //FIXME remove it and change the fields that use it to Openstack.USER_ID
+	public static final String FOGBOW_KEYSTONEV3_USER_ID = "openstack_user_id";
+    //FIXME remove it and change the fields that use it to Openstack.USER_PASSWORD
 	public static final String FOGBOW_KEYSTONEV3_PASSWORD = "fogbow.keystonev3.password";
-	public static final String FOGBOW_KEYSTONEV3_AUTH_URL = "fogbow.keystonev3.auth.url";
-	public static final String FOGBOW_KEYSTONEV3_SWIFT_URL = "fogbow.keystonev3.swift.url";
+    //FIXME remove it and change the fields that use it to Openstack.IdentityService.API_URL
+	public static final String FOGBOW_KEYSTONEV3_AUTH_URL = "openstack_identity_service_api_url";
+    //FIXME remove it and change the fields that use it to Openstack.ObjectStoreService.API_URL
+	public static final String FOGBOW_KEYSTONEV3_SWIFT_URL = "openstack_object_store_service_api_url";
 
 	// Monitors constants
 	public static final String SAPS_EXECUTION_PERIOD_SUBMISSOR = "saps_execution_period_submissor";
