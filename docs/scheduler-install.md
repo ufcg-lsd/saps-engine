@@ -25,7 +25,40 @@ mvn install -Dmaven.test.skip=true
 
 ## Configure
 
-Edit the [Scheduler configuration file](/config/scheduler.conf) file to allow its comunication with the SAPS Catalog and Arrebol Service. This configuration file also customizes the behaviour of the Scheduler, including the frequency that the Scheduler tries to select new task to be submitted.
+Edit the files:
+- [Scheduler configuration file](/config/scheduler.conf) to allow its comunication with the SAPS Catalog and Arrebol Service. This configuration file also customizes the behaviour of the Scheduler, including the frequency that the Scheduler tries to select new task to be submitted.
+- [SAPS Scripts](/resources/execution_script_tags.json) to make available new versions of the algorithms, for the three steps of the SAPS workflow (input downloading, preprocessing and processing). Any new algorithm should be packed as a docker image. See below example on how to specify the algorithms:
+    
+```json
+{
+"inputdownloading":[
+    {
+      "name": "$name_inputdownloading_option1",
+      "docker_tag": "$docker_tag_inputdownloading_option1",
+      "docker_repository": "$docker_repository_inputdownloading_option1"
+    }
+  ],
+  "preprocessing":[
+    {
+      "name": "$name_preprocessing_option1",
+      "docker_tag": "$docker_tag_preprocessing_option1",
+      "docker_repository": "$docker_repository_preprocessing_option1"
+    }
+  ],
+  "processing":[
+    {
+      "name": "$name_processing_option1",
+      "docker_tag": "$docker_tag_processing_option1",
+      "docker_repository": "$docker_repository_processing_option1"
+    },
+    {
+      "name": "$name_processing_option2",
+      "docker_tag": "$docker_tag_processing_option2",
+      "docker_repository": "$docker_repository_processing_option2"
+    }
+  ]
+}
+```
 
 ## Run
 
