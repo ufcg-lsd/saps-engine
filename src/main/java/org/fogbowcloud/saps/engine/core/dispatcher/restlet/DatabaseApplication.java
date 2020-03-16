@@ -36,6 +36,7 @@ public class DatabaseApplication extends Application {
 
     public static final Logger LOGGER = Logger.getLogger(DatabaseApplication.class);
 
+    //FIXME Remove properties field and add new variables
     private Properties properties;
     private SubmissionDispatcher submissionDispatcher;
     private Component restletComponent;
