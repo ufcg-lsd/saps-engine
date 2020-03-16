@@ -30,34 +30,34 @@ mvn install -Dmaven.test.skip=true
 
 Edit the files:
 - [Dispatcher configuration file](/config/dispatcher.conf) to allow its communication with the SAPS Catalog and Permanent Storage.
-- [SAPS Scripts](/resources/execution_script_tags.json) to allow mapping the versions of the scripts with their respective Docker information (tag and repository) to be used in processing. For example:
+- [SAPS Scripts](/resources/execution_script_tags.json) to make available new versions of the algorithms, for the three steps of the SAPS workflow (input downloading, preprocessing and processing). Any new algorithm should be packed as a docker image. See below example on how to specify the algorithms:
     
 ```json
 {
-  "processing":[
+"inputdownloading":[
     {
-      "name": "$name_of_version_1_of_the_processing_step",
-      "docker_tag": "$docker_tag_of_version_1_of_the_processing_step",
-      "docker_repository": "$docker_repository_of_version_1_of_the_processing_step"
-    },
-    {
-      "name": "$name_of_version_2_of_the_processing_step",
-      "docker_tag": "$docker_tag_of_version_2_of_the_processing_step",
-      "docker_repository": "$docker_tag_of_version_2_of_the_processing_step"
+      "name": "$name_inputdownloading_option1",
+      "docker_tag": "$docker_tag_inputdownloading_option1",
+      "docker_repository": "$docker_repository_inputdownloading_option1"
     }
   ],
   "preprocessing":[
     {
-      "name": "$name_of_version_1_of_the_preprocessing_step",
-      "docker_tag": "$docker_tag_of_version_1_of_the_preprocessing_step",
-      "docker_repository": "$docker_repository_of_version_1_of_the_preprocessing_step"
+      "name": "$name_preprocessing_option1",
+      "docker_tag": "$docker_tag_preprocessing_option1",
+      "docker_repository": "$docker_repository_preprocessing_option1"
     }
   ],
-  "inputdownloading":[
+  "processing":[
     {
-      "name": "$name_of_version_1_of_the_inputdownloading_step",
-      "docker_tag": "$docker_tag_of_version_1_of_the_inputdownloading_step",
-      "docker_repository": "$docker_repository_of_version_1_of_the_inputdownloading_step"
+      "name": "$name_processing_option1",
+      "docker_tag": "$docker_tag_processing_option1",
+      "docker_repository": "$docker_repository_processing_option1"
+    },
+    {
+      "name": "$name_processing_option2",
+      "docker_tag": "$docker_tag_processing_option2",
+      "docker_repository": "$docker_repository_processing_option2"
     }
   ]
 }
