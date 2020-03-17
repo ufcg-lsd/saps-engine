@@ -116,6 +116,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
         LOGGER.info("Attempting to archive task [" + taskId + "] with a maximum of " + MAX_ARCHIVE_TRIES
                 + " archiving attempts for each folder (inputdownloading, preprocessing, processing)");
 
+        //FIXME Create a private method to return the swift directory
         String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
                 ? debugTasksDirName
                 : tasksDirName;
