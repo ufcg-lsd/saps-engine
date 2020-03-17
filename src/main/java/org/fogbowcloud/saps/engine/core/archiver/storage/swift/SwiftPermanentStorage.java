@@ -23,6 +23,9 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.SapsTask;
+import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
@@ -103,16 +106,17 @@ public class SwiftPermanentStorage implements PermanentStorage {
      * This function tries to archive a task trying each folder in order
      * (inputdownloading -> preprocessing -> processing).
      *
-     * @param taskId The Task's unique identifier
+     * @param task task to be archived
      * @return boolean representation, success (true) or failure (false) in to
      * archive the three folders.
      */
     @Override
-    public boolean archive(String taskId, boolean isFailed) {
+    public boolean archive(SapsImage task) {
+        String taskId = task.getTaskId();
         LOGGER.info("Attempting to archive task [" + taskId + "] with a maximum of " + MAX_ARCHIVE_TRIES
                 + " archiving attempts for each folder (inputdownloading, preprocessing, processing)");
 
-        String swiftExports = (isFailed && this.debugMode)
+        String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
                 ? debugTasksDirName
                 : tasksDirName;
 
@@ -212,16 +216,16 @@ public class SwiftPermanentStorage implements PermanentStorage {
     /**
      * This function delete all files from task in Permanent Storage.
      *
-     * @param taskId The Task's unique identifier
+     * @param task task with files information to be deleted
      * @return boolean representation, success (true) or failure (false) to delete
      * files
      */
     @Override
-    public boolean delete(String taskId, boolean isFailed) throws IOException {
-
+    public boolean delete(SapsImage task) throws IOException {
+        String taskId = task.getTaskId();
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
 
-        String swiftExports = (isFailed && this.debugMode)
+        String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
                 ? debugTasksDirName
                 : tasksDirName;
 
@@ -243,8 +247,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
     }
 
     @Override
-    public List<AccessLink> generateAccessLinks(String taskId)
-        throws TaskNotFoundException, IOException {
+    public List<AccessLink> generateAccessLinks(SapsImage task) throws TaskNotFoundException, IOException {
+        String taskId = task.getTaskId();
         List<String> files = this.listFiles(taskId);
         List<AccessLink> filesLinks = this.generateLinks(files);
         return filesLinks;

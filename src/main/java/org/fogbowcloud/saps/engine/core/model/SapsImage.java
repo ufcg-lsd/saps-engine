@@ -342,8 +342,4 @@ public class SapsImage implements Serializable {
 		result = 31 * result + (error != null ? error.hashCode() : 0);
 		return result;
 	}
-
-	public boolean isFailed() {
-		return this.state == ImageTaskState.FAILED;
-	}
 }

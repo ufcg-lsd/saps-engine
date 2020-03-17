@@ -94,7 +94,7 @@ public class Archiver {
     private void deletePermData(SapsImage task) {
 
         try {
-            permanentStorage.delete(task.getTaskId(), task.isFailed());
+            permanentStorage.delete(task);
         } catch (IOException e) {
             LOGGER.error("Error while deleting task [" + task.getTaskId() + "] from Permanent Storage", e);
         }
@@ -124,7 +124,7 @@ public class Archiver {
 
     private boolean archive(SapsImage task) {
         try {
-            permanentStorage.archive(task.getTaskId(), task.isFailed());
+            permanentStorage.archive(task);
             return true;
         } catch (IOException e) {
             LOGGER.error("Error archiving task [" + task.getTaskId() + "]", e);
@@ -155,7 +155,7 @@ public class Archiver {
             try {
                 //TODO Remove archive task from here
                 if (this.executionDebugMode && task.getState().equals(ImageTaskState.FAILED)) {
-                    permanentStorage.archive(task.getTaskId(), task.isFailed());
+                    permanentStorage.archive(task);
                 }
                 FileUtils.deleteDirectory(taskDir);
             } catch (IOException e) {
