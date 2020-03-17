@@ -2,13 +2,17 @@ package org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.log4j.Logger;
+import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageType;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.TaskEmail;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.TasksEmailBuilder;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
@@ -19,6 +23,8 @@ import org.restlet.resource.ResourceException;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 
 public class EmailResource extends BaseResource {
@@ -45,9 +51,16 @@ public class EmailResource extends BaseResource {
             //TODO check if it is possible to reuse permanent storage instead of always creating another one
             PermanentStorage permanentStorage = createPermanentStorage(properties);
 
-            TasksEmailBuilder emailBuilder = new TasksEmailBuilder(application, permanentStorage,
-                    properties, userEmail, Arrays.asList(tasksId));
+            List<TaskEmail> tasksEmail = new LinkedList<>();
+            for(String taskId : Arrays.asList(tasksId)){
+                SapsImage currentTask = application.getTask(taskId);
+                List<AccessLink> currentTaskAccessLinks = permanentStorage.generateAccessLinks(currentTask.getTaskId());
+                TaskEmail taskEmail = new TaskEmail(currentTask.getTaskId(), currentTask.getRegion(),
+                        currentTask.getCollectionTierName(), currentTask.getImageDate(), currentTaskAccessLinks);
+                tasksEmail.add(taskEmail);
+            }
 
+            TasksEmailBuilder emailBuilder = new TasksEmailBuilder(properties, userEmail, tasksEmail);
             Thread thread = new Thread(emailBuilder);
             thread.start();
 
@@ -56,6 +69,8 @@ public class EmailResource extends BaseResource {
             LOGGER.error("Error while create permanent storage", e);
         } catch (InvalidPropertyException e) {
             LOGGER.error("Error while execute send email feature", e);
+        } catch (TaskNotFoundException e) {
+            LOGGER.error("Error while getting task by id", e);
         }
         return new StringRepresentation("An error occurred while sending the email, please try again later.", MediaType.TEXT_PLAIN);
     }
