@@ -16,11 +16,11 @@ public class IdentityToken {
         return accessId;
     }
 
-    public String getIssuedAt() {
+    public String issuedAt() {
         return issuedAt;
     }
 
-    public String getExpiresAt() {
+    public String expiresAt() {
         return expiresAt;
     }
 }
