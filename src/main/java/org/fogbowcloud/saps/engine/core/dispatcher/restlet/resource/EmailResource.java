@@ -42,6 +42,7 @@ public class EmailResource extends BaseResource {
         Properties properties = application.getProperties();
 
         try {
+            //TODO check if it is possible to reuse permanent storage instead of always creating another one
             PermanentStorage permanentStorage = createPermanentStorage(properties);
 
             TasksEmailBuilder emailBuilder = new TasksEmailBuilder(application, permanentStorage,
