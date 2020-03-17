@@ -18,6 +18,7 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
+//FIXME Improve error handling during data removal. today, we are logging, only.
 public class Archiver {
 
     private final long gcDelayPeriod;
