@@ -30,10 +30,6 @@ public class SwiftAPIClient {
     private static final String CONTAINER_URL_PATTERN = "%s/%s?path=%s";
 
     private final String swiftUrl;
-    private final String tokenAuthUrl;
-    private final String projectId;
-    private final String userId;
-    private final String userPassword;
 
     private IdentityToken token;
 
@@ -42,11 +38,15 @@ public class SwiftAPIClient {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift API Client.");
         this.swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
-        this.tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
-        this.projectId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
-        this.userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
-        this.userPassword = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
-        this.token = KeystoneV3IdentityRequestHelper.createIdentityToken(tokenAuthUrl, projectId, userId, userPassword);
+        String tokenAuthUrl = properties
+            .getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
+        String projectId = properties
+            .getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
+        String userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
+        String userPassword = properties
+            .getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
+        this.token = KeystoneV3IdentityRequestHelper.createIdentityToken(tokenAuthUrl, projectId,
+            userId, userPassword);
     }
 
     private boolean checkProperties(Properties properties) {
