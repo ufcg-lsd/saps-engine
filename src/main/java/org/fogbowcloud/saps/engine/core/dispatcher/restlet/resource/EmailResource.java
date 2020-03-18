@@ -11,7 +11,7 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFound
 import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.swift.SwiftPermanentStorage;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.TaskEmail;
-import org.fogbowcloud.saps.engine.core.dispatcher.email.TasksEmailBuilder;
+import org.fogbowcloud.saps.engine.core.dispatcher.email.TasksEmailSender;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.restlet.data.Form;
@@ -59,7 +59,7 @@ public class EmailResource extends BaseResource {
                 tasksEmail.add(taskEmail);
             }
 
-            TasksEmailBuilder emailBuilder = new TasksEmailBuilder(properties, userEmail, tasksEmail);
+            TasksEmailSender emailBuilder = new TasksEmailSender(properties, userEmail, tasksEmail);
             Thread thread = new Thread(emailBuilder);
             thread.start();
 

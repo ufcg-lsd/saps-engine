@@ -2,16 +2,13 @@ package org.fogbowcloud.saps.engine.core.dispatcher.email;
 
 import com.google.gson.Gson;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
-import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
-import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 import javax.mail.MessagingException;
 import java.util.*;
 
-public class TasksEmailBuilder implements Runnable {
+public class TasksEmailSender implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(TasksEmailBuilder.class);
+    private static final Logger LOGGER = Logger.getLogger(TasksEmailSender.class);
     private static final String EMAIL_TITLE = "[SAPS] Results of selected tasks";
 
     private final List<TaskEmail> tasksEmail;
@@ -20,8 +17,8 @@ public class TasksEmailBuilder implements Runnable {
     private final String noReplyEmail;
     private final String noReplyPass;
 
-    public TasksEmailBuilder(String noReplyEmail, String noReplyPass, String userEmail,
-                             List<TaskEmail> tasksEmail) {
+    public TasksEmailSender(String noReplyEmail, String noReplyPass, String userEmail,
+                            List<TaskEmail> tasksEmail) {
         if (checkFields(noReplyEmail, noReplyPass, userEmail, tasksEmail))
             throw new IllegalArgumentException("Illegals arguments to use the send email feature");
 
