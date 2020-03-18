@@ -7,58 +7,78 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Formatter;
 import java.util.List;
 import java.util.Properties;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
+import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 
 public class SwiftPermanentStorage implements PermanentStorage {
 
-
     private static final Logger LOGGER = Logger.getLogger(SwiftPermanentStorage.class);
     private static final String SWIFT_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s";
     private static final int MAX_ARCHIVE_TRIES = 1;
     private static final int MAX_SWIFT_UPLOAD_TRIES = 2;
+    private static final String TEMP_DIR_URL = "%s?temp_url_sig=%s&temp_url_expires=%s";
+    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
     private final SwiftAPIClient swiftAPIClient;
-    //FIXME Remove properties field and add new variables
-    private final Properties properties;
     private final String nfsTempStoragePath;
     private final String containerName;
+    private final String swiftKey;
+    private final String tasksDirName;
+    private final String debugTasksDirName;
     private final boolean debugMode;
 
-    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient) throws PermanentStorageException {
+
+    public SwiftPermanentStorage(Properties properties, SwiftAPIClient swiftAPIClient)
+        throws Exception {
         if (!checkProperties(properties))
-            throw new PermanentStorageException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
+            throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift Permanent Storage.");
 
         this.swiftAPIClient = swiftAPIClient;
-        this.properties = properties;
         this.nfsTempStoragePath = properties.getProperty(SapsPropertiesConstants.SAPS_TEMP_STORAGE_PATH);
         this.containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
-        this.swiftAPIClient.createContainer(properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME));
+        this.swiftKey = properties.getProperty(SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY);
+        this.tasksDirName = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
 
         if (this.debugMode && !checkPropertiesDebugMode(properties))
-            throw new PermanentStorageException("Error on validate the file. Missing properties for start Saps Controller.");
+            throw new InvalidPropertyException("Error on validate the file. Missing properties for start Saps Controller.");
+
+        this.debugTasksDirName = (this.debugMode)
+            ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
+            : "";
+
+        this.swiftAPIClient.createContainer(containerName);
     }
 
-    public SwiftPermanentStorage(Properties properties) throws PermanentStorageException {
+    public SwiftPermanentStorage(Properties properties) throws Exception {
         this(properties, new SwiftAPIClient(properties));
     }
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-                SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
-                SapsPropertiesConstants.SWIFT_CONTAINER_NAME
+            SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
+            SapsPropertiesConstants.SWIFT_CONTAINER_NAME,
+            SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
@@ -93,13 +113,13 @@ public class SwiftPermanentStorage implements PermanentStorage {
     @Override
     public boolean archive(SapsImage task) {
         String taskId = task.getTaskId();
-
         LOGGER.info("Attempting to archive task [" + taskId + "] with a maximum of " + MAX_ARCHIVE_TRIES
                 + " archiving attempts for each folder (inputdownloading, preprocessing, processing)");
 
+        //FIXME Create a private method to return the swift directory
         String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
-                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
-                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
+                ? debugTasksDirName
+                : tasksDirName;
 
         String inputdownloadingLocalDir = String.format(SAPS_TASK_STAGE_DIR_PATTERN, nfsTempStoragePath, taskId, INPUTDOWNLOADING_DIR);
         String inputdownloadingSwiftDir = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, swiftExports, taskId, INPUTDOWNLOADING_DIR);
@@ -114,7 +134,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
         boolean preprocessingSentSuccess = inputdownloadingSentSuccess && archive(taskId, preprocessingLocalDir, preprocessingSwiftDir);
         boolean processingSentSuccess = preprocessingSentSuccess && archive(taskId, processingLocalDir, processingSwiftDir);
 
-        LOGGER.info("Archive process result of task [" + task.getTaskId() + ":\nInputdownloading phase: "
+        LOGGER.info("Archive process result of task [" + taskId + ":\nInputdownloading phase: "
                 + (inputdownloadingSentSuccess ? "Success" : "Failure") + "\n" + "Preprocessing phase: "
                 + (preprocessingSentSuccess ? "Success" : "Failure") + "\n" + "Processing phase: "
                 + (processingSentSuccess ? "Success" : "Failure"));
@@ -202,32 +222,112 @@ public class SwiftPermanentStorage implements PermanentStorage {
      * files
      */
     @Override
-    public boolean delete(SapsImage task) {
+    public boolean delete(SapsImage task) throws IOException {
         String taskId = task.getTaskId();
-
         LOGGER.debug("Deleting files from task [" + taskId + "] in Swift [" + containerName + "]");
 
         String swiftExports = (task.getState() == ImageTaskState.FAILED && this.debugMode)
-                ? properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR)
-                : properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
+                ? debugTasksDirName
+                : tasksDirName;
 
-        String prefix = swiftExports + File.separator + taskId;
+        String dir = swiftExports + File.separator + taskId;
 
-        List<String> fileNames = swiftAPIClient.listFilesWithPrefix(containerName, prefix);
-
+        List<String> fileNames = swiftAPIClient.listFiles(containerName, dir);
         LOGGER.info("Files List: " + fileNames);
 
-        for (String file : fileNames) {
-            LOGGER.debug("Trying to delete file " + file + " from " + containerName);
-            swiftAPIClient.deleteFile(containerName, file);
+        try {
+            for (String file : fileNames) {
+                LOGGER.debug("Trying to delete file " + file + " from " + containerName);
+                swiftAPIClient.deleteFile(containerName, file);
+            }
+        } catch (Exception e) {
+            throw new IOException("Error while delete file from task [" + taskId + "]", e);
         }
 
         return true;
     }
 
     @Override
-    public List<AccessLink> generateAccessLinks(String taskId) throws TaskNotFoundException, IOException {
-        return null;
+    public List<AccessLink> generateAccessLinks(SapsImage task) throws TaskNotFoundException, IOException {
+        String taskId = task.getTaskId();
+        List<String> files = this.listFiles(taskId);
+        List<AccessLink> filesLinks = this.generateLinks(files);
+        return filesLinks;
+    }
+
+    private List<String> listFiles(String taskId) throws IOException, TaskNotFoundException {
+        List<String> files = new ArrayList<>();
+
+        String[] dirs = {INPUTDOWNLOADING_DIR, PREPROCESSING_DIR, PROCESSING_DIR};
+
+        if(!this.swiftAPIClient.existsTask(this.containerName, this.tasksDirName, taskId)) {
+            throw new TaskNotFoundException("Task [" + taskId + "] was not found in directory [" + this.tasksDirName + "] of container [" + this.containerName + "]");
+        }
+
+        for (String dir : dirs) {
+            String dirPath = String.format(SWIFT_TASK_STAGE_DIR_PATTERN, this.tasksDirName, taskId, dir);
+            try {
+                List<String> filesPath = this.swiftAPIClient.listFiles(this.containerName, dirPath);
+                files.addAll(filesPath);
+            } catch (IOException e) {
+                LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
+            }
+        }
+        return files;
+    }
+
+    private List<AccessLink> generateLinks(List<String> filesPaths) {
+        List<AccessLink> filesLinks = new ArrayList<>();
+        try {
+            for(String filePath : filesPaths) {
+                String link;
+                link = generateTempURL(filePath);
+                Path p = Paths.get(filePath);
+                String name = p.getParent().getFileName().toString() + "/" + p.getFileName().toString();
+                filesLinks.add(new AccessLink(name, link));
+            }
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new RuntimeException("Error while run hmac algorithm: " + e.getMessage());
+        }
+
+        return filesLinks;
+    }
+
+    private String generateTempURL(String filePath)
+        throws NoSuchAlgorithmException, InvalidKeyException {
+
+        Formatter objectStoreFormatter = new Formatter();
+        objectStoreFormatter.format("%s\n%s\n%s", "GET", Long.MAX_VALUE, filePath);
+        String signature = runHMACAlgorithm(objectStoreFormatter.toString(), this.swiftKey);
+        objectStoreFormatter.close();
+
+        objectStoreFormatter = new Formatter();
+        objectStoreFormatter.format(TEMP_DIR_URL, filePath, signature, Long.MAX_VALUE);
+        String res = objectStoreFormatter.toString();
+        objectStoreFormatter.close();
+
+        return res;
+    }
+
+    private String runHMACAlgorithm(String data, String key)
+        throws NoSuchAlgorithmException, InvalidKeyException {
+        SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
+        Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+        mac.init(signingKey);
+        return toHexString(mac.doFinal(data.getBytes()));
+    }
+
+    private String toHexString(byte[] bytes) {
+        Formatter formatter = new Formatter();
+
+        for (byte b : bytes) {
+            formatter.format("%02x", b);
+        }
+
+        String hexString = formatter.toString();
+        formatter.close();
+
+        return hexString;
     }
 
 }

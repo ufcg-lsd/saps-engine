@@ -31,7 +31,6 @@ public class SapsPropertiesConstants {
 	public static final String IMAGE_WORKER = "image_worker";
 
 	// KeystoneV3 constants
-	public static final String FOGBOW_KEYSTONEV3_UPDATE_PERIOD = "fogbow.keystonev3.swift.token.update.period";
 	public static final String FOGBOW_KEYSTONEV3_PROJECT_ID = "fogbow.keystonev3.project.id";
 	public static final String FOGBOW_KEYSTONEV3_USER_ID = "fogbow.keystonev3.user.id";
 	public static final String FOGBOW_KEYSTONEV3_PASSWORD = "fogbow.keystonev3.password";
@@ -51,7 +50,6 @@ public class SapsPropertiesConstants {
 
 	// Properties file constants
 	public static final String SAPS_TEMP_STORAGE_PATH = "saps_temp_storage_path";
-	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 
 	public static final String NO_REPLY_EMAIL = "noreply_email";
 	public static final String NO_REPLY_PASS = "noreply_password";

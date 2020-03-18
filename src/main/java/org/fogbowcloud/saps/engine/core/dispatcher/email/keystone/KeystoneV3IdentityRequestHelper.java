@@ -9,6 +9,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -35,14 +36,13 @@ public class KeystoneV3IdentityRequestHelper {
     private static final String ID_PROP = "id";
     private static final String V3_TOKENS_ENDPOINT_PATH = "/v3/auth/tokens";
 
-    public static String createAccessId(Map<String, String> credentials) throws JSONException, IOException {
+    public static IdentityToken createIdentityToken(String url, String projectId, String userId, String userPassword) throws JSONException, IOException {
         LOGGER.debug("Creating new access id");
-        checkKeyStoneCredentials(credentials);
-
+        checkValues(new String[]{url, projectId, userId, userPassword});
         JSONObject json;
-        json = mountJson(credentials);
+        json = mountJson(projectId, userId, userPassword);
 
-        String keyStoneUrl = credentials.get(AUTH_URL) + V3_TOKENS_ENDPOINT_PATH;
+        String keyStoneUrl = url + V3_TOKENS_ENDPOINT_PATH;
         StringEntity body = new StringEntity(json.toString(), Charsets.UTF_8);
         HttpPost request = new HttpPost(keyStoneUrl);
         request.addHeader(CONTENT_TYPE, JSON_CONTENT_TYPE);
@@ -60,33 +60,42 @@ public class KeystoneV3IdentityRequestHelper {
                 "Access id request failed; " + "Status [" + status.getStatusCode() + " - " + status
                     .getReasonPhrase() + "]");
         }
-        String accessId = response.getFirstHeader(X_SUBJECT_TOKEN).getValue();
-        return accessId;
+        IdentityToken token = getTokenFromResponse(response);
+        return token;
     }
 
-    private static JSONObject mountJson(Map<String, String> credentials) throws JSONException {
-        JSONObject projectId = new JSONObject();
-        projectId.put(ID_PROP, credentials.get(PROJECT_ID));
-        JSONObject project = new JSONObject();
-        project.put(PROJECT_PROP, projectId);
+    private static JSONObject mountJson(String projectId, String userId, String password) throws JSONException {
+        JSONObject userJson = new JSONObject();
+        userJson.put(PASSWORD, password);
+        userJson.put(ID_PROP, userId);
 
-        JSONObject userProperties = new JSONObject();
-        userProperties.put(PASSWORD, credentials.get(PASSWORD));
-        userProperties.put(ID_PROP, credentials.get(USER_ID));
-        JSONObject password = new JSONObject();
-        password.put(USER_PROP, userProperties);
+        JSONObject passwordJson = new JSONObject();
+        passwordJson.put(USER_PROP, userJson);
 
         JSONObject identity = new JSONObject();
         identity.put(METHODS_PROP, new JSONArray(new String[]{PASSWORD}));
-        identity.put(PASSWORD, password);
+        identity.put(PASSWORD, passwordJson);
+
+        JSONObject projectIdJson = new JSONObject();
+        projectIdJson.put(ID_PROP, projectId);
+        JSONObject projectJson = new JSONObject();
+        projectJson.put(PROJECT_PROP, projectIdJson);
 
         JSONObject auth = new JSONObject();
-        auth.put(SCOPE_PROP, project);
         auth.put(IDENTITY_PROP, identity);
+        auth.put(SCOPE_PROP, projectJson);
 
         JSONObject root = new JSONObject();
         root.put(AUTH_PROP, auth);
         return root;
+    }
+
+    private static void checkValues(String[] values) {
+        for (String value : values) {
+            if(Objects.isNull(value) || value.trim().isEmpty()) {
+                throw new IllegalArgumentException("Some field is empty or null");
+            }
+        }
     }
 
     private static void checkKeyStoneCredentials(Map<String, String> credentials) {
@@ -102,5 +111,15 @@ public class KeystoneV3IdentityRequestHelper {
                 throw new IllegalArgumentException("Not found value to Keystone credential [" + credential + "]");
             }
         }
+    }
+
+    private static IdentityToken getTokenFromResponse(HttpResponse response) throws JSONException, IOException {
+        String accessId = response.getFirstHeader(X_SUBJECT_TOKEN).getValue();
+        JSONObject jsonResponse = new JSONObject(EntityUtils.toString(response.getEntity()));
+        JSONObject jsonToken = jsonResponse.getJSONObject("token");
+        String expiresAt = jsonToken.getString("expires_at");
+        String issuedAt = jsonToken.getString("issued_at");
+        IdentityToken token = new IdentityToken(accessId, issuedAt, expiresAt);
+        return token;
     }
 }
