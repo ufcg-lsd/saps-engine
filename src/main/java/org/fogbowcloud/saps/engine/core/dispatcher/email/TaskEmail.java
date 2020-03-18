@@ -2,6 +2,7 @@ package org.fogbowcloud.saps.engine.core.dispatcher.email;
 
 import com.google.gson.annotations.SerializedName;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
+import org.fogbowcloud.saps.engine.core.model.SapsImage;
 
 import java.util.Date;
 import java.util.List;
@@ -29,6 +30,11 @@ public class TaskEmail {
         this.imageCollectionName = imageCollectionName;
         this.imageDate = imageDate;
         this.accessLinks = accesslinks;
+    }
+
+    public TaskEmail(SapsImage sapsTask, List<AccessLink> accessLinks) {
+        this(sapsTask.getTaskId(), sapsTask.getRegion(), sapsTask.getCollectionTierName(), sapsTask.getImageDate(),
+                accessLinks);
     }
 
 }
