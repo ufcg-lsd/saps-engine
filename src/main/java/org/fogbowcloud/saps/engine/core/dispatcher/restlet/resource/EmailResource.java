@@ -5,7 +5,6 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageType;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
@@ -51,23 +50,18 @@ public class EmailResource extends BaseResource {
             //TODO check if it is possible to reuse permanent storage instead of always creating another one
             PermanentStorage permanentStorage = createPermanentStorage(properties);
 
-            List<TaskEmail> tasksEmail = new LinkedList<>();
-            for(String taskId : Arrays.asList(tasksId)){
-                SapsImage currentTask = application.getTask(taskId);
-                List<AccessLink> currentTaskAccessLinks = permanentStorage.generateAccessLinks(currentTask.getTaskId());
-                TaskEmail taskEmail = new TaskEmail(currentTask, currentTaskAccessLinks);
-                tasksEmail.add(taskEmail);
-            }
+            String noReplyEmail = properties.getProperty(SapsPropertiesConstants.NO_REPLY_EMAIL);
+            String noReplyPass = properties.getProperty(SapsPropertiesConstants.NO_REPLY_PASS);
 
-            TasksEmailSender emailBuilder = new TasksEmailSender(properties, userEmail, tasksEmail);
+            List<TaskEmail> tasks = buildTasksListByTaskIdsList(permanentStorage, Arrays.asList(tasksId));
+
+            TasksEmailSender emailBuilder = new TasksEmailSender(noReplyEmail, noReplyPass, userEmail, tasks);
             Thread thread = new Thread(emailBuilder);
             thread.start();
 
             return new StringRepresentation("Email will be sent soon.", MediaType.TEXT_PLAIN);
         } catch (PermanentStorageException | IOException e) {
             LOGGER.error("Error while create permanent storage", e);
-        } catch (InvalidPropertyException e) {
-            LOGGER.error("Error while execute send email feature", e);
         } catch (TaskNotFoundException e) {
             LOGGER.error("Error while getting task by id", e);
         }
@@ -84,5 +78,17 @@ public class EmailResource extends BaseResource {
             return new NfsPermanentStorage(properties);
         }
         throw new IOException("Failed to recognize type of permanent storage");
+    }
+
+    private List<TaskEmail> buildTasksListByTaskIdsList(PermanentStorage permanentStorage, List<String> tasksId)
+            throws IOException, TaskNotFoundException {
+        List<TaskEmail> tasksEmail = new LinkedList<>();
+        for(String taskId : tasksId){
+            SapsImage currentTask = application.getTask(taskId);
+            List<AccessLink> currentTaskAccessLinks = permanentStorage.generateAccessLinks(currentTask.getTaskId());
+            TaskEmail taskEmail = new TaskEmail(currentTask, currentTaskAccessLinks);
+            tasksEmail.add(taskEmail);
+        }
+        return tasksEmail;
     }
 }
