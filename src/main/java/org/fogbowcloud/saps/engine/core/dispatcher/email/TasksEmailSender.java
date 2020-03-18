@@ -44,7 +44,7 @@ public class TasksEmailSender implements Runnable {
 
             LOGGER.debug("Tasks JSON array: " + tasksEmail);
 
-            sendEmail(tasksEmail);
+            GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, EMAIL_TITLE, tasksEmail);
         } catch (MessagingException e) {
             LOGGER.error("Error while send email", e);
         }
@@ -54,12 +54,6 @@ public class TasksEmailSender implements Runnable {
         LOGGER.info("Creating representation for tasks list: " + tasksEmail);
 
         return gson.toJson(tasksEmail);
-    }
-
-    private void sendEmail(String body) throws MessagingException {
-        LOGGER.info("Sending email: " + body);
-
-        GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, EMAIL_TITLE, body);
     }
 
 }
