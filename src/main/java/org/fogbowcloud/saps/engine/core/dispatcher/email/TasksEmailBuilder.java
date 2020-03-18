@@ -20,31 +20,24 @@ public class TasksEmailBuilder implements Runnable {
     private final String noReplyEmail;
     private final String noReplyPass;
 
-    public TasksEmailBuilder(Properties properties, String userEmail, List<TaskEmail> tasksEmail)
-            throws InvalidPropertyException {
-        if (!checkProperties(properties))
-            throw new InvalidPropertyException("Missing properties to use the send email feature");
-        if (checkFields(userEmail, tasksEmail))
+    public TasksEmailBuilder(String noReplyEmail, String noReplyPass, String userEmail,
+                             List<TaskEmail> tasksEmail) {
+        if (checkFields(noReplyEmail, noReplyPass, userEmail, tasksEmail))
             throw new IllegalArgumentException("Illegals arguments to use the send email feature");
 
         this.gson = new Gson();
-        this.noReplyEmail = properties.getProperty(SapsPropertiesConstants.NO_REPLY_EMAIL);
-        this.noReplyPass = properties.getProperty(SapsPropertiesConstants.NO_REPLY_PASS);
+        this.noReplyEmail = noReplyEmail;
+        this.noReplyPass = noReplyPass;
         this.userEmail = userEmail;
         this.tasksEmail = tasksEmail;
     }
 
-    private boolean checkProperties(Properties properties) {
-        String[] propertiesSet = {
-                SapsPropertiesConstants.NO_REPLY_EMAIL,
-                SapsPropertiesConstants.NO_REPLY_PASS
-        };
-
-        return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
-    }
-
-    private boolean checkFields(String userEmail, List<TaskEmail> tasksEmail) {
-        return userEmail.trim().isEmpty() || Objects.isNull(userEmail) || Objects.isNull(tasksEmail);
+    private boolean checkFields(String noReplyEmail, String noReplyPass, String userEmail,
+                                List<TaskEmail> tasksEmail) {
+        return noReplyEmail.trim().isEmpty() || Objects.isNull(noReplyEmail) ||
+                noReplyPass.trim().isEmpty() || Objects.isNull(noReplyPass) ||
+                userEmail.trim().isEmpty() || Objects.isNull(userEmail) ||
+                Objects.isNull(tasksEmail);
     }
 
     @Override
