@@ -34,4 +34,5 @@ public class AccessLink {
         return Objects.equals(name, that.name) &&
                 Objects.equals(url, that.url);
     }
+
 }

@@ -11,7 +11,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.exceptions.ArchiverException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
@@ -19,6 +18,7 @@ import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.fogbowcloud.saps.engine.utils.retry.CatalogUtils;
 
+//FIXME Improve error handling during data removal. today, we are logging, only.
 public class Archiver {
 
     private final long gcDelayPeriod;
@@ -95,7 +95,7 @@ public class Archiver {
 
         try {
             permanentStorage.delete(task);
-        } catch (PermanentStorageException e) {
+        } catch (IOException e) {
             LOGGER.error("Error while deleting task [" + task.getTaskId() + "] from Permanent Storage", e);
         }
     }
@@ -123,11 +123,10 @@ public class Archiver {
     }
 
     private boolean archive(SapsImage task) {
-
         try {
             permanentStorage.archive(task);
             return true;
-        } catch (PermanentStorageException e) {
+        } catch (IOException e) {
             LOGGER.error("Error archiving task [" + task.getTaskId() + "]", e);
             return false;
         }
@@ -161,8 +160,6 @@ public class Archiver {
                 FileUtils.deleteDirectory(taskDir);
             } catch (IOException e) {
                 LOGGER.error("Error while delete task [" + task.getTaskId() +"] files from disk: ", e);
-            } catch (PermanentStorageException e) {
-                LOGGER.error("Error while archive task [" + task.getTaskId() + "] to debug permanent storage dir", e);
             }
         } else {
             LOGGER.error("Path " + taskDirPath + " does not exist or is not a directory!");

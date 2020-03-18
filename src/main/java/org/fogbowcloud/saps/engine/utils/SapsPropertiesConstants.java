@@ -39,9 +39,6 @@ public class SapsPropertiesConstants {
 	// Specification constants
 	public static final String IMAGE_WORKER = "image_worker";
 
-	// KeystoneV3 constants
-	public static final String FOGBOW_KEYSTONEV3_UPDATE_PERIOD = "fogbow.keystonev3.swift.token.update.period";
-
 	// Monitors constants
 	public static final String SAPS_EXECUTION_PERIOD_SUBMISSOR = "saps_execution_period_submissor";
 	public static final String SAPS_EXECUTION_PERIOD_CHECKER = "saps_execution_period_checker";
@@ -55,7 +52,6 @@ public class SapsPropertiesConstants {
 
 	// Properties file constants
 	public static final String SAPS_TEMP_STORAGE_PATH = "saps_temp_storage_path";
-	public static final String FOGBOW_CLI_PATH = "fogbow_cli_path";
 
 	public static final String NO_REPLY_EMAIL = "noreply_email";
 	public static final String NO_REPLY_PASS = "noreply_password";
