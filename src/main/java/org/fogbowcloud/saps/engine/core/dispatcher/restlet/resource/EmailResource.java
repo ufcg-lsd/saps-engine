@@ -55,8 +55,7 @@ public class EmailResource extends BaseResource {
             for(String taskId : Arrays.asList(tasksId)){
                 SapsImage currentTask = application.getTask(taskId);
                 List<AccessLink> currentTaskAccessLinks = permanentStorage.generateAccessLinks(currentTask.getTaskId());
-                TaskEmail taskEmail = new TaskEmail(currentTask.getTaskId(), currentTask.getRegion(),
-                        currentTask.getCollectionTierName(), currentTask.getImageDate(), currentTaskAccessLinks);
+                TaskEmail taskEmail = new TaskEmail(currentTask, currentTaskAccessLinks);
                 tasksEmail.add(taskEmail);
             }
 
