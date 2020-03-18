@@ -2,19 +2,11 @@ package org.fogbowcloud.saps.engine.core.dispatcher.email;
 
 import com.google.gson.Gson;
 import org.apache.log4j.Logger;
-import org.fogbowcloud.saps.engine.core.archiver.storage.AccessLink;
-import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
-import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import javax.mail.MessagingException;
-import java.io.IOException;
 import java.util.*;
 
 public class TasksEmailBuilder implements Runnable {
@@ -23,7 +15,7 @@ public class TasksEmailBuilder implements Runnable {
     private static final String EMAIL_TITLE = "[SAPS] Results of selected tasks";
 
     private final List<TaskEmail> tasksEmail;
-    private final Gson jsonUtil;
+    private final Gson gson;
     private final String userEmail;
     private final String noReplyEmail;
     private final String noReplyPass;
@@ -35,7 +27,7 @@ public class TasksEmailBuilder implements Runnable {
         if (checkFields(userEmail, tasksEmail))
             throw new IllegalArgumentException("Illegals arguments to use the send email feature");
 
-        this.jsonUtil = new Gson();
+        this.gson = new Gson();
         this.noReplyEmail = properties.getProperty(SapsPropertiesConstants.NO_REPLY_EMAIL);
         this.noReplyPass = properties.getProperty(SapsPropertiesConstants.NO_REPLY_PASS);
         this.userEmail = userEmail;
@@ -71,7 +63,7 @@ public class TasksEmailBuilder implements Runnable {
     private String generateTasksEmail() {
         LOGGER.info("Creating representation for tasks list: " + tasksEmail);
 
-        return jsonUtil.toJson(tasksEmail);
+        return gson.toJson(tasksEmail);
     }
 
     private void sendEmail(String body) throws MessagingException {
