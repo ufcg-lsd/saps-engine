@@ -30,7 +30,10 @@ public class TaskEmailTest {
     public void testToJson(){
         TaskEmail taskEmail = new TaskEmail(MOCK_ID, MOCK_IMAGE_REGION,
                 MOCK_IMAGE_COLLECTION_NAME, MOCK_IMAGE_DATE, MOCK_ACCESS_LINKS);
-        Assert.assertNotNull(jsonUtil.toJson(taskEmail));
+
+        String taskEmailInString = jsonUtil.toJson(taskEmail);
+        Assert.assertNotNull(taskEmailInString);
+        jsonUtil.fromJson(taskEmailInString, Object.class);
     }
 
 }
