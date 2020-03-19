@@ -5,37 +5,47 @@ The Service Catalog component mantains the state of the tasks submitted to the S
 ## Dependencies
 In an apt-based Linux distro, type the below commands to install PostgreSQL packages.
 
-  ```
-  1. sudo apt-get update
-  2. sudo apt-get install -y postgresql
+  ```bash
+  sudo apt-get update
+  sudo apt-get install -y postgresql
   ```
 
 ## Configure
 
-To configure SAPS catalog, first create an user and a database (```$catalog_user``` and ```$catalog_db_name```). You also need to define a password (```$catalog_passwd```) to access the database. See below commands:
+To configure SAPS catalog, first create an user, defined by a name (```catalog_user```) and password (```catalog_passwd```). In addition, create a database (```catalog_db_name```). Fill the variables and run below commands:
 
   ```
-  1. sudo su
-  2. su postgres
-  3. psql -c "CREATE USER $catalog_user WITH PASSWORD '$catalog_passwd';"
-  4. psql -c "CREATE DATABASE $catalog_db_name OWNER $catalog_user;"
-  5. psql -c "GRANT ALL PRIVILEGES ON DATABASE $catalog_db_name TO $catalog_user;"
+  sudo su
+  su postgres
+  catalog_user=<user_name>
+  catalog_db_name=<db_name>
+  catalog_passwd=<password>
+  psql -c "CREATE USER $catalog_user WITH PASSWORD '$catalog_passwd';"
+  psql -c "CREATE DATABASE $catalog_db_name OWNER $catalog_user;"
+  psql -c "GRANT ALL PRIVILEGES ON DATABASE $catalog_db_name TO $catalog_user;"
+  exit
   ```
 
-Once the database was created, you need to grant access to external clients:
+Once the database was created, you need to grant access to external clients. For that, we need to know which version of Postgres is installed.
+Run command below to check the posgresql version: 
+  ```
+  ls /etc/postgresql
+  ```
+Run commands below to grant access to external clients:
 
   ```
-  1. sed -i 's/peer/md5/g' /etc/postgresql/<installed_version>/main/pg_hba.conf
-  2. bash -c 'echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/<installed_version>/main/pg_hba.conf'
-  3. sudo sed -i "$ a\listen_addresses = '*'" /etc/postgresql/<installed_version>/main/postgresql.conf
-  4. sudo service postgresql restart
+  installed_version=<postgres_version>
+  sed -i 's/peer/md5/g' /etc/postgresql/$installed_version/main/pg_hba.conf
+  bash -c 'echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$installed_version/main/pg_hba.conf'
+  sudo sed -i "$ a\listen_addresses = '*'" /etc/postgresql/$installed_version/main/postgresql.conf
+  sudo service postgresql restart
   ```
 
 ## Test
-To test the deploy and configuration of the SAPS catalog (assuming it is accessible via the ```$catalog_ip_address``` IP address), one can try opening a conection to it from another machine (it is necessary to have PostgreSQL installed), using the below command:
+To verify whether the deploy was successful, one can try opening a connection (assuming it is accessible via the ```$catalog_ip_address``` IP address) to it from another machine (it is necessary to have PostgreSQL installed), using the below command:
 
 ```
 psql -h $catalog_ip_address -p 5432 $catalog_db_name $catalog_user
 ```
 
-Note that, we are using the default PostgreSQL database port, 5432, and the Ingress traffic had to allowed previously. Also, note that the PostgreSQL dependencies are required to run the above command.
+Note that, we are using the default PostgreSQL database port, 5432, and the **Ingress traffic had to allowed** previously. Also, note that the PostgreSQL dependencies are required to run the above command.
