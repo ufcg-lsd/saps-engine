@@ -48,4 +48,4 @@ To verify whether the deploy was successful, one can try opening a conection (as
 psql -h $catalog_ip_address -p 5432 $catalog_db_name $catalog_user
 ```
 
-Note that, we are using the default PostgreSQL database port, 5432, and the Ingress traffic had to allowed previously. Also, note that the PostgreSQL dependencies are required to run the above command.
+Note that, we are using the default PostgreSQL database port, 5432, and the **Ingress traffic had to allowed** previously. Also, note that the PostgreSQL dependencies are required to run the above command.
