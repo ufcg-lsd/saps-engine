@@ -19,7 +19,7 @@ public class TasksEmailSender implements Runnable {
 
     public TasksEmailSender(String noReplyEmail, String noReplyPass, String userEmail,
                             List<TaskCompleteInfo> tasksEmail) {
-        if (checkFields(noReplyEmail, noReplyPass, userEmail, tasksEmail))
+        if (isInvalidFields(noReplyEmail, noReplyPass, userEmail, tasksEmail))
             throw new IllegalArgumentException("Illegals arguments to use the send email feature");
 
         this.gson = new Gson();
@@ -29,8 +29,8 @@ public class TasksEmailSender implements Runnable {
         this.tasksEmail = tasksEmail;
     }
 
-    private boolean checkFields(String noReplyEmail, String noReplyPass, String userEmail,
-                                List<TaskCompleteInfo> tasksEmail) {
+    private boolean isInvalidFields(String noReplyEmail, String noReplyPass, String userEmail,
+                                    List<TaskCompleteInfo> tasksEmail) {
         return noReplyEmail.trim().isEmpty() || Objects.isNull(noReplyEmail) ||
                 noReplyPass.trim().isEmpty() || Objects.isNull(noReplyPass) ||
                 userEmail.trim().isEmpty() || Objects.isNull(userEmail) ||
