@@ -12,7 +12,7 @@ In an apt-based Linux distro, type the below commands to install PostgreSQL pack
 
 ## Configure
 
-To configure SAPS catalog, first create an user, defined by a name (```catalog_db_name```) and password (```catalog_passwd```). In addition, create a database (```catalog_db_name```). Fill the variables and run below commands:
+To configure SAPS catalog, first create an user, defined by a name (```catalog_user```) and password (```catalog_passwd```). In addition, create a database (```catalog_db_name```). Fill the variables and run below commands:
 
   ```
   sudo su
