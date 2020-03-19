@@ -24,17 +24,12 @@ public class TaskEmail {
     @SerializedName("access_links")
     private final List<AccessLink> accessLinks;
 
-    public TaskEmail(String id, String imageRegion, String imageCollectionName, Date imageDate, List<AccessLink> accesslinks) {
-        this.id = id;
-        this.imageRegion = imageRegion;
-        this.imageCollectionName = imageCollectionName;
-        this.imageDate = imageDate;
-        this.accessLinks = accesslinks;
-    }
-
     public TaskEmail(SapsImage sapsTask, List<AccessLink> accessLinks) {
-        this(sapsTask.getTaskId(), sapsTask.getRegion(), sapsTask.getCollectionTierName(), sapsTask.getImageDate(),
-                accessLinks);
+        this.id = sapsTask.getTaskId();
+        this.imageRegion = sapsTask.getRegion();
+        this.imageCollectionName = sapsTask.getCollectionTierName();
+        this.imageDate = sapsTask.getImageDate();
+        this.accessLinks = accessLinks;
     }
 
 }
