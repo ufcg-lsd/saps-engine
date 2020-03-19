@@ -42,7 +42,7 @@ Run commands below to grant access to external clients:
   ```
 
 ## Test
-To verify whether the deploy was successful, one can try opening a conection (assuming it is accessible via the ```$catalog_ip_address``` IP address) to it from another machine (it is necessary to have PostgreSQL installed), using the below command:
+To verify whether the deploy was successful, one can try opening a connection (assuming it is accessible via the ```$catalog_ip_address``` IP address) to it from another machine (it is necessary to have PostgreSQL installed), using the below command:
 
 ```
 psql -h $catalog_ip_address -p 5432 $catalog_db_name $catalog_user
