@@ -11,14 +11,14 @@ public class TasksEmailSender implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(TasksEmailSender.class);
     private static final String EMAIL_TITLE = "[SAPS] Results of selected tasks";
 
-    private final List<TaskEmail> tasksEmail;
+    private final List<TaskCompleteInfo> tasksEmail;
     private final Gson gson;
     private final String userEmail;
     private final String noReplyEmail;
     private final String noReplyPass;
 
     public TasksEmailSender(String noReplyEmail, String noReplyPass, String userEmail,
-                            List<TaskEmail> tasksEmail) {
+                            List<TaskCompleteInfo> tasksEmail) {
         if (checkFields(noReplyEmail, noReplyPass, userEmail, tasksEmail))
             throw new IllegalArgumentException("Illegals arguments to use the send email feature");
 
@@ -30,7 +30,7 @@ public class TasksEmailSender implements Runnable {
     }
 
     private boolean checkFields(String noReplyEmail, String noReplyPass, String userEmail,
-                                List<TaskEmail> tasksEmail) {
+                                List<TaskCompleteInfo> tasksEmail) {
         return noReplyEmail.trim().isEmpty() || Objects.isNull(noReplyEmail) ||
                 noReplyPass.trim().isEmpty() || Objects.isNull(noReplyPass) ||
                 userEmail.trim().isEmpty() || Objects.isNull(userEmail) ||

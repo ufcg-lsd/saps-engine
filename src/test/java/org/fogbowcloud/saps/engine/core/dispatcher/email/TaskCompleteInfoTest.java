@@ -9,18 +9,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.Timestamp;
-import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TaskEmailTest {
+public class TaskCompleteInfoTest {
 
     private Gson jsonUtil;
     private SapsImage task;
     private static final String MOCK_ID = "task-email-id";
     private static final String MOCK_IMAGE_REGION = "task-image-region";
-    private static final String MOCK_IMAGE_COLLECTION_NAME = "image-collection-name";
     private static final Date MOCK_IMAGE_DATE = new Date();
     private static final List<AccessLink> MOCK_ACCESS_LINKS = new LinkedList<>();
 
@@ -35,11 +33,11 @@ public class TaskEmailTest {
     @Test
     //TODO upgrade this test
     public void testToJson() {
-        TaskEmail taskEmail = new TaskEmail(task, MOCK_ACCESS_LINKS);
+        TaskCompleteInfo taskCompleteInfo = new TaskCompleteInfo(task, MOCK_ACCESS_LINKS);
 
-        String taskEmailInString = jsonUtil.toJson(taskEmail);
-        Assert.assertNotNull(taskEmailInString);
-        jsonUtil.fromJson(taskEmailInString, Object.class);
+        String taskCompleteInfoInString = jsonUtil.toJson(taskCompleteInfo);
+        Assert.assertNotNull(taskCompleteInfoInString);
+        jsonUtil.fromJson(taskCompleteInfoInString, Object.class);
     }
 
 }

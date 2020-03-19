@@ -7,7 +7,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import java.util.Date;
 import java.util.List;
 
-public class TaskEmail {
+public class TaskCompleteInfo {
 
     @SerializedName("id")
     private final String id;
@@ -24,7 +24,7 @@ public class TaskEmail {
     @SerializedName("access_links")
     private final List<AccessLink> accessLinks;
 
-    public TaskEmail(SapsImage sapsTask, List<AccessLink> accessLinks) {
+    public TaskCompleteInfo(SapsImage sapsTask, List<AccessLink> accessLinks) {
         this.id = sapsTask.getTaskId();
         this.imageRegion = sapsTask.getRegion();
         this.imageCollectionName = sapsTask.getCollectionTierName();
