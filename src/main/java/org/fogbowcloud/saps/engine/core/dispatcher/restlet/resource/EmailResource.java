@@ -74,6 +74,8 @@ public class EmailResource extends BaseResource {
             throws Exception {
         String permanentStorageType = properties
                 .getProperty(SapsPropertiesConstants.SAPS_PERMANENT_STORAGE_TYPE);
+        //FIXME replace this to a more flexible approach to avoid if/switchs. something
+        // akin the RAS approach to load the plugins - by @thiagomanel and @raonismaneoto
         if (PermanentStorageType.SWIFT.toString().equalsIgnoreCase(permanentStorageType)) {
             return new SwiftPermanentStorage(properties);
         } else if (PermanentStorageType.NFS.toString().equalsIgnoreCase(permanentStorageType)) {
