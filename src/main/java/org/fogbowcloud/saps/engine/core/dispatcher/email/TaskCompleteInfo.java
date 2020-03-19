@@ -32,4 +32,14 @@ public class TaskCompleteInfo {
         this.accessLinks = accessLinks;
     }
 
+    @Override
+    public String toString() {
+        return "TaskCompleteInfo{" +
+                "id='" + id + '\'' +
+                ", imageRegion='" + imageRegion + '\'' +
+                ", imageCollectionName='" + imageCollectionName + '\'' +
+                ", imageDate=" + imageDate +
+                ", accessLinks=" + accessLinks +
+                '}';
+    }
 }
