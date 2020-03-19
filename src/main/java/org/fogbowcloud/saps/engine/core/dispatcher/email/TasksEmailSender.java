@@ -40,20 +40,16 @@ public class TasksEmailSender implements Runnable {
     @Override
     public void run() {
         try {
-            String tasksEmail = generateTasksEmail();
+            LOGGER.info("Creating representation for tasks list: " + tasksEmail);
 
-            LOGGER.debug("Tasks JSON array: " + tasksEmail);
+            String tasksEmailInString = gson.toJson(tasksEmail);
 
-            GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, EMAIL_TITLE, tasksEmail);
+            LOGGER.debug("Tasks JSON array in String representation: " + tasksEmailInString);
+
+            GoogleMail.Send(noReplyEmail, noReplyPass, userEmail, EMAIL_TITLE, tasksEmailInString);
         } catch (MessagingException e) {
             LOGGER.error("Error while send email", e);
         }
-    }
-
-    private String generateTasksEmail() {
-        LOGGER.info("Creating representation for tasks list: " + tasksEmail);
-
-        return gson.toJson(tasksEmail);
     }
 
 }
