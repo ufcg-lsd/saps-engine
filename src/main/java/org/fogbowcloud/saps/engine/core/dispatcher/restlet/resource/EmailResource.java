@@ -65,9 +65,8 @@ public class EmailResource extends BaseResource {
             LOGGER.error("Error while getting task by id", e);
         } catch (Exception e) {
             LOGGER.error("Error while create permanent storage", e);
-        } finally {
-            return new StringRepresentation("An error occurred while sending the email, please try again later.", MediaType.TEXT_PLAIN);
         }
+        return new StringRepresentation("An error occurred while sending the email, please try again later.", MediaType.TEXT_PLAIN);
     }
 
     private PermanentStorage createPermanentStorage(Properties properties)
