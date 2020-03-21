@@ -279,7 +279,7 @@ public class SwiftPermanentStorageTest {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.argThat(new StartsWith(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01)));
 
-        boolean deleteTask01 = permanentStorage.archive(task01);
+        boolean deleteTask01 = permanentStorage.delete(task01);
 
         Assert.assertEquals(deleteTask01, true);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).listFiles(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01);
@@ -299,7 +299,7 @@ public class SwiftPermanentStorageTest {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.eq(MOCK_CONTAINER_NAME), Mockito.argThat(new StartsWith(MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02)));
 
-        boolean deleteTask02 = permanentStorage.archive(task02);
+        boolean deleteTask02 = permanentStorage.delete(task02);
 
         Assert.assertEquals(deleteTask02, true);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).listFiles(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02);
@@ -318,7 +318,7 @@ public class SwiftPermanentStorageTest {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.anyString(), Mockito.anyString());
 
-        boolean deleteTask01 = permanentStorage.archive(task01);
+        boolean deleteTask01 = permanentStorage.delete(task01);
 
         Assert.assertEquals(deleteTask01, true);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).listFiles(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task01);
@@ -337,7 +337,7 @@ public class SwiftPermanentStorageTest {
             return null;
         }).when(swiftAPIClient).deleteFile(Mockito.anyString(), Mockito.anyString());
 
-        boolean deleteTask02 = permanentStorage.archive(task02);
+        boolean deleteTask02 = permanentStorage.delete(task02);
 
         Assert.assertEquals(deleteTask02, true);
         Mockito.verify(swiftAPIClient, Mockito.times(1)).listFiles(MOCK_CONTAINER_NAME, MOCK_SWIFT_FOLDER_PREFIX + "/" + Dirs.Task02);

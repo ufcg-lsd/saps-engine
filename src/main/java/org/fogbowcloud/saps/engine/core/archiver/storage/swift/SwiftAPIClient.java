@@ -37,25 +37,24 @@ public class SwiftAPIClient {
         throws InvalidPropertyException, IOException, JSONException {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift API Client.");
-        this.swiftUrl = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL);
-        String tokenAuthUrl = properties
-            .getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL);
-        String projectId = properties
-            .getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID);
-        String userId = properties.getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID);
-        String userPassword = properties
-            .getProperty(SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD);
+
+        String projectId = properties.getProperty(SapsPropertiesConstants.Openstack.PROJECT_ID);
+        String userId = properties.getProperty(SapsPropertiesConstants.Openstack.USER_ID);
+        String userPassword = properties.getProperty(SapsPropertiesConstants.Openstack.USER_PASSWORD);
+        String tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL);
+        swiftUrl = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL);
+
         this.token = KeystoneV3IdentityRequestHelper.createIdentityToken(tokenAuthUrl, projectId,
-            userId, userPassword);
-    }
+                userId, userPassword);
+        }
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_SWIFT_URL,
-            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_AUTH_URL,
-            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PROJECT_ID,
-            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_USER_ID,
-            SapsPropertiesConstants.FOGBOW_KEYSTONEV3_PASSWORD,
+                SapsPropertiesConstants.Openstack.PROJECT_ID,
+                SapsPropertiesConstants.Openstack.USER_ID,
+                SapsPropertiesConstants.Openstack.USER_PASSWORD,
+                SapsPropertiesConstants.Openstack.IdentityService.API_URL,
+                SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
