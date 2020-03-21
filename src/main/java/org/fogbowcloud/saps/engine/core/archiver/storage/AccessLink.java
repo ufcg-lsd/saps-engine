@@ -28,7 +28,7 @@ public class AccessLink {
 
     @Override
     public String toString() {
-        return "AccessLink{" +
+        return "AccessLink {" +
                 "name='" + name + '\'' +
                 ", url='" + url + '\'' +
                 '}';
