@@ -34,7 +34,7 @@ public class TaskCompleteInfo {
 
     @Override
     public String toString() {
-        return "TaskCompleteInfo{" +
+        return "TaskCompleteInfo {" +
                 "id='" + id + '\'' +
                 ", imageRegion='" + imageRegion + '\'' +
                 ", imageCollectionName='" + imageCollectionName + '\'' +
