@@ -29,11 +29,11 @@ mvn install -Dmaven.test.skip=true
 ### Temporary Storage
 
 
-The first part of SAPS Archiver configuration deals with the setup of the ```NFS server temporary storage```. Before starting the NFS daemon, please choose an directory, ```$nfs_server_folder_path```, in your machine local file system. The NFS daemon will hold the exported files within this directory. Below commands setup the NFS server:
+The first part of SAPS Archiver configuration deals with the setup of the ```NFS server temporary storage```. Before starting the NFS daemon, please choose an directory, ```$nfs_server_dir_path```, in your machine local file system. The NFS daemon will hold the exported files within this directory. Below commands setup the NFS server:
 
 ```
-mkdir -p $nfs_server_folder_path
-echo "$nfs_server_folder_path *(rw,insecure,no_subtree_check,async,no_root_squash)" >> /etc/exports
+mkdir -p $nfs_server_dir_path
+echo "$nfs_server_dir_path *(rw,insecure,no_subtree_check,async,no_root_squash)" >> /etc/exports
 sudo service nfs-kernel-server restart
 ```
 
@@ -71,13 +71,13 @@ datastore_password=$catalog_passwd
 
 ##### Temporary Storage (NFS) #####
 # Path mounted by the client
-saps_temp_storage_path=$nfs_server_folder_path
+saps_temp_storage_path=$nfs_server_dir_path
 
 ##### Permanent storage (Swift) #####
 saps_permanent_storage_type=swift
-# Folder prefix for to archive failed tasks case debug mode is true (default = trash)
+# Directory prefix for to archive failed tasks case debug mode is true (default = trash)
 permanent_storage_debug_tasks_dir=trash
-# Folder prefix for to archive success tasks (default = archiver)
+# Directory prefix for to archive success tasks (default = archiver)
 permanent_storage_tasks_dir=archiver
 # Container name
 swift_container_name=$swift_container_name
