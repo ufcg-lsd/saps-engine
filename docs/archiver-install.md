@@ -8,10 +8,10 @@ In an apt-based Linux distro, type the below commands to install the Archiver de
 
 ```bash
 sudo apt-get update
-sudo apt-get install openjdk-8-jdk
+sudo apt-get -y install openjdk-8-jdk
 sudo apt-get -y install maven
 sudo apt-get -y install git
-sudo apt install python-swiftclient
+sudo apt -y install python-swiftclient
 sudo apt-get install -y nfs-kernel-server
 ```
 
