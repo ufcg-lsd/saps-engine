@@ -60,38 +60,35 @@ saps_execution_debug_mode=true
 ##### Catalog #####
 # URL prefix (default = jdbc:postgresql://)
 datastore_url_prefix=jdbc:postgresql://
-# IP address
 datastore_ip=$catalog_ip_address
 # Port (default = 5432)
 datastore_port=5432
-# DB name
 datastore_name=$catalog_db_name
 # Driver (default = org.postgresql.Driver)
 datastore_driver=org.postgresql.Driver
-# Username
 datastore_username=$catalog_user
-#Password
 datastore_password=$catalog_passwd
 
 ##### Temporary Storage (NFS) #####
 # Path mounted by the client
-saps_export_path=$nfs_server_folder_path
+saps_temp_storage_path=$nfs_server_folder_path
 
 ##### Permanent storage (Swift) #####
+saps_permanent_storage_type=swift
 # Folder prefix for to archive failed tasks case debug mode is true (default = trash)
-swift_folder_prefix_debug_failed_tasks=trash
+permanent_storage_debug_tasks_dir=trash
 # Folder prefix for to archive success tasks (default = archiver)
-swift_folder_prefix=$swift_folder_prefix=archiver
+permanent_storage_tasks_dir=archiver
 # Container name
 swift_container_name=$swift_container_name
 # Username
 swift_username=$openstack_username
 # Password
 swift_password=$openstack_password
-# Tenant or project name
-swift_tenant_name=$openstack_project_name
 # Identity URL + version (e.g. https://<domain>:5000/v1)
 swift_auth_url=$openstack_identity_url
+
+swift_object_store_key=
 
 ##### Fogbow Keystone #####
 # Project ID
@@ -104,12 +101,6 @@ fogbow.keystonev3.password=$openstack_password
 fogbow.keystonev3.auth.url=$openstack_identity_url
 # Object Store URL (e.g. https://<domain>:8080/swift/v1)
 fogbow.keystonev3.swift.url=$openstack_object_store_url
-# Token update period (default = 1800000)
-fogbow.keystonev3.swift.token.update.period=1800000
-
-##### Fogbow CLI #####
-# Fogbow CLI folder path
-fogbow_cli_path=$fogbow_mono_cli_folder_path
 ```
 
 ## Run
