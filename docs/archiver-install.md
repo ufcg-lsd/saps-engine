@@ -45,7 +45,7 @@ showmount -e localhost
 ### Configuration File
 
 
-The second part of the Archiver configuration (made via the ```archiver.conf``` file) customize this component to interact with other componenents, including the SAPS Catalog, the temporary and permanent storage pools.
+The second part of the Archiver configuration (made via the [archiver.conf](/config/archiver.conf) file) customize this component to interact with other componenents, including the SAPS Catalog, the temporary and permanent storage pools.
 
 ```
 ##### Archiver properties #####
