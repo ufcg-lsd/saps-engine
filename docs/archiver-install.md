@@ -15,22 +15,9 @@ sudo apt install python-swiftclient
 sudo apt-get install -y nfs-kernel-server
 ```
 
-In addition to above Linux packages, the Archiver also depends on three codebases: 1) ```fogbow-mono-manager```; 2) ```fogbow-mono-cli```; and 3) the own ```saps-engine``` repository (which holds the Archive code). To fetch and compile the source code of these repositories, follow the below steps:
+In addition to above Linux packages, downloadthe own ```saps-engine``` repository (which holds the Archive code). To fetch and compile the source code of it, follow the below steps:
 
 ```
-# fogbow-mono-manager repository
-git clone https://github.com/fogbow/fogbow-mono-manager.git
-cd fogbow-mono-manager
-git checkout develop
-mvn install -Dmaven.test.skip=true
-
-# fogbow-mono-cli repository
-git clone https://github.com/fogbow/fogbow-mono-cli.git
-cd fogbow-mono-cli
-git checkout develop
-mvn install -Dmaven.test.skip=true
-
-# saps-engine repository
 git clone https://github.com/ufcg-lsd/saps-engine
 cd saps-engine
 git checkout develop
