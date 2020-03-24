@@ -15,7 +15,7 @@ sudo apt install python-swiftclient
 sudo apt-get install -y nfs-kernel-server
 ```
 
-In addition to above Linux packages, downloadthe own ```saps-engine``` repository (which holds the Archive code). To fetch and compile the source code of it, follow the below steps:
+In addition to above Linux packages, download the own ```saps-engine``` repository (which holds the Archive code). To fetch and compile the source code of it, follow the below steps:
 
 ```
 git clone https://github.com/ufcg-lsd/saps-engine
@@ -26,13 +26,24 @@ mvn install -Dmaven.test.skip=true
 
 ## Configure
 
-The first part of SAPS Archiver configuration deals with the setup of the NFS server temporary storage. Before starting the NFS daemon, please choose an directory, ```$nfs_server_folder_path```, in your machine local file system. The NFS daemon will hold the exported files within this directory. Below commands setup the NFS server:
+### Temporary Storage
+
+
+The first part of SAPS Archiver configuration deals with the setup of the ```NFS server temporary storage```. Before starting the NFS daemon, please choose an directory, ```$nfs_server_folder_path```, in your machine local file system. The NFS daemon will hold the exported files within this directory. Below commands setup the NFS server:
 
 ```
 mkdir -p $nfs_server_folder_path
 echo "$nfs_server_folder_path *(rw,insecure,no_subtree_check,async,no_root_squash)" >> /etc/exports
 sudo service nfs-kernel-server restart
 ```
+
+To check, list the directories mounted with nfs using the command below and check if the directory you just created appears.
+```
+showmount -e localhost
+```
+
+### Configuration File
+
 
 The second part of the Archiver configuration (made via the ```archiver.conf``` file) customize this component to interact with other componenents, including the SAPS Catalog, the temporary and permanent storage pools.
 
