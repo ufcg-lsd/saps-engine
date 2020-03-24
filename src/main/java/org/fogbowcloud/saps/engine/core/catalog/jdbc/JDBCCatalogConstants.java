@@ -112,7 +112,7 @@ public class JDBCCatalogConstants {
             public static final String USER = "SELECT * FROM " + JDBCCatalogConstants.TablesName.USERS + " WHERE " + JDBCCatalogConstants.Tables.User.EMAIL
                     + " = ?";
 
-            public static final String TASKS_BY_STATE_ORDER_BY_PRIORITY_ASC = "SELECT * FROM " + JDBCCatalogConstants.TablesName.TASKS + " WHERE ? ORDER BY "
+            public static final String TASKS_BY_STATE_ORDER_BY_PRIORITY_ASC = "SELECT * FROM " + JDBCCatalogConstants.TablesName.TASKS + " WHERE " + Tables.Task.STATE + " = ? ORDER BY "
                     + JDBCCatalogConstants.Tables.Task.PRIORITY + " ASC";
 
             public static final String TASK = "SELECT * FROM " + JDBCCatalogConstants.TablesName.TASKS + " WHERE " + JDBCCatalogConstants.Tables.Task.ID
