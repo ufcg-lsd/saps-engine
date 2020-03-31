@@ -2,26 +2,21 @@ package org.fogbowcloud.saps.engine.core.scheduler;
 
 import java.net.ConnectException;
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.catalog.Catalog;
-import org.fogbowcloud.saps.engine.core.catalog.jdbc.JDBCCatalog;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
 import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.JobSubmitted;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.JobExecutionService;
-import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.ArrebolJobExecutionService;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.CommandResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.TaskResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.TaskSpecResponseDTO;
-import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.request.ArrebolRequestsHelper;
-import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
 import org.fogbowcloud.saps.engine.utils.ExecutionScriptTag;
@@ -62,11 +57,8 @@ public class Scheduler {
 
     private static boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
-                SapsPropertiesConstants.IMAGE_DATASTORE_IP,
-                SapsPropertiesConstants.IMAGE_DATASTORE_PORT,
                 SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR,
-                SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER,
-                SapsPropertiesConstants.ARREBOL_BASE_URL
+                SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
