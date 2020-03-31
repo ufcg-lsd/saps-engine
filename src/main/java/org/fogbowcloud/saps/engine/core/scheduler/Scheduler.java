@@ -157,7 +157,7 @@ public class Scheduler {
      *
      * @return selected tasks list
      */
-    List<SapsImage> selectTasks() throws Exception {
+    public List<SapsImage> selectTasks() throws Exception {
         List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
         ImageTaskState[] states = {ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED};
 
