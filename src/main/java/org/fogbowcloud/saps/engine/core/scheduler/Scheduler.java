@@ -31,12 +31,11 @@ public class Scheduler {
     private static final Logger LOGGER = Logger.getLogger(Scheduler.class);
     private static final int MAX_WAITING_JOBS = 20;
 
-    // Saps Controller Variables
-    private ScheduledExecutorService sapsExecutor;
-    private Selector selector;
+    private final long submissorDelayPeriod;
+    private final long checkerDelayPeriod;
 
-    //FIXME Remove properties field and add new variables
-    private final Properties properties;
+    private final ScheduledExecutorService sapsExecutor;
+    private final Selector selector;
     private final Catalog catalog;
     private final JobExecutionService jobExecutionService;
     //FIXME Instance as Thread-Safe object
@@ -46,8 +45,8 @@ public class Scheduler {
                      JobExecutionService jobExecutionService, Selector selector) throws SapsException {
         if (!checkProperties(properties))
             throw new SapsException("Error on validate the file. Missing properties for start Scheduler Component.");
-
-        this.properties = properties;
+        this.submissorDelayPeriod = Long.parseLong(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR));
+        this.checkerDelayPeriod = Long.parseLong(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER));
         this.catalog = catalog;
         this.sapsExecutor = sapsExecutor;
         this.jobExecutionService = jobExecutionService;
@@ -67,10 +66,10 @@ public class Scheduler {
     public void start() {
         recovery();
 
-        sapsExecutor.scheduleWithFixedDelay(() -> schedule(), 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR)),
+        sapsExecutor.scheduleWithFixedDelay(() -> schedule(), 0, this.submissorDelayPeriod,
                 TimeUnit.SECONDS);
 
-        sapsExecutor.scheduleWithFixedDelay(() -> checker(), 0, Integer.parseInt(properties.getProperty(SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER)),
+        sapsExecutor.scheduleWithFixedDelay(() -> checker(), 0, this.checkerDelayPeriod,
                 TimeUnit.SECONDS);
     }
 
