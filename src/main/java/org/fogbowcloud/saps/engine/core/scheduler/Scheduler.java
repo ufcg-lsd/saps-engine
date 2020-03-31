@@ -432,7 +432,7 @@ public class Scheduler {
                     LOGGER.info("Job [" + jobId + "] has NOT been finished");
                 }
             } catch (ConnectException e) {
-
+                LOGGER.error(e);
             } catch (Exception e) {
                 LOGGER.info("Job [" + jobId + "] not found in Arrebol service, applying status rollback to task ["
                     + task.getTaskId() + "]");
