@@ -45,7 +45,7 @@ public class Scheduler {
     private Catalog catalog;
     private JobExecutionService jobExecutionService;
     //FIXME Instance as Thread-Safe object
-    private List<JobSubmitted> submittedJobsID;
+    private List<JobSubmitted> submittedJobs;
 
     public Scheduler(Properties properties) throws SapsException {
     	this(properties, new JDBCCatalog(properties), Executors.newScheduledThreadPool(1),
@@ -62,7 +62,7 @@ public class Scheduler {
         this.sapsExecutor = sapsExecutor;
         this.jobExecutionService = jobExecutionService;
         this.selector = selector;
-        this.submittedJobsID = new LinkedList<>();
+        this.submittedJobs = new LinkedList<>();
     }
 
     private static boolean checkProperties(Properties properties) {
@@ -131,13 +131,13 @@ public class Scheduler {
                 updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
                     arrebolJobId,
                     "updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
-                this.submittedJobsID.add(new JobSubmitted(task.getArrebolJobId(), task));
+                this.submittedJobs.add(new JobSubmitted(task.getArrebolJobId(), task));
             } else {
                 // TODO ????
             }
         } else {
             String arrebolJobId = task.getArrebolJobId();
-            this.submittedJobsID.add(new JobSubmitted(arrebolJobId, task));
+            this.submittedJobs.add(new JobSubmitted(arrebolJobId, task));
         }
     }
 
@@ -348,7 +348,7 @@ public class Scheduler {
         String jobId = this.jobExecutionService.submit(imageJob);
         LOGGER.debug("Result submited job: " + jobId);
 
-        this.submittedJobsID.add(new JobSubmitted(jobId, task));
+        this.submittedJobs.add(new JobSubmitted(jobId, task));
         LOGGER.info("Adding job in list");
 
         return jobId;
@@ -404,7 +404,7 @@ public class Scheduler {
      * submitted jobs to Arrebol.
      */
     private void checker() {
-        List<JobSubmitted> submittedJobs = this.submittedJobsID;
+        List<JobSubmitted> submittedJobs = this.submittedJobs;
         List<JobSubmitted> finishedJobs = new LinkedList<JobSubmitted>();
 
         LOGGER.info("Checking " + submittedJobs.size() + " submitted jobs for Arrebol service");
@@ -457,7 +457,7 @@ public class Scheduler {
         }
         for (JobSubmitted jobFinished : finishedJobs) {
             LOGGER.info("Removing job [" + jobFinished.getJobId() + "] from the submitted job list");
-            this.submittedJobsID.remove(jobFinished);
+            this.submittedJobs.remove(jobFinished);
         }
 
     }
