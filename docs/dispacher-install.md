@@ -30,6 +30,14 @@ mvn install -Dmaven.test.skip=true
 
 Edit the files:
 - [Dispatcher configuration file](/config/dispatcher.conf) to allow its communication with the SAPS Catalog and Permanent Storage.
+- The `$openstack_object_store_service_key` property in [Dispatcher configuration file](/config/dispatcher.conf) is used to access Object Store. After creating a new key, it must be configured using the command:
+
+```bash
+swift post -m "Temp-URL-Key:$openstack_object_store_service_key" --os-auth-url $openstack_identity_service_api_url --auth-version 3 --os-user-id $openstack_user_id --os-password $openstack_user_password --os-project-id $openstack_project_id
+```
+
+Note: ```-auth-version``` is the version of the deployed Openstack Identity Service API
+
 - [SAPS Scripts](/resources/execution_script_tags.json) to make available new versions of the algorithms, for the three steps of the SAPS workflow (input downloading, preprocessing and processing). Any new algorithm should be packed as a docker image. See below example on how to specify the algorithms:
     
 ```json
