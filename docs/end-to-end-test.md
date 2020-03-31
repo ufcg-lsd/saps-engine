@@ -75,7 +75,12 @@ In the [SAPS script file](/resources/execution_scripts_tags.json) replace it wit
 
 # Run
 
-Here how to perform the test ...
+### 1. Login to the Dashboard
+
+![Login Dashboard](img/end-to-end-test-run-img1.png)
+
+Access the GUI through the url ```$dashboard_access_ip:$dashboard_access_port``` and connect using valid credentials.
+
 
 # Check results
 
