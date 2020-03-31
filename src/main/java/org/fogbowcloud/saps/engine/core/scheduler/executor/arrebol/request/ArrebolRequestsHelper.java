@@ -17,6 +17,7 @@ import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.models.Arrebo
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.http.HttpWrapper;
 
 import java.util.LinkedList;
+import java.util.Objects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -40,6 +41,9 @@ public class ArrebolRequestsHelper {
 
 
 	public ArrebolRequestsHelper(String arrebolBaseUrl) {
+		if(Objects.isNull(arrebolBaseUrl) || arrebolBaseUrl.isEmpty()) {
+			throw new IllegalArgumentException("Arrebol Base Url cannot be null or empty");
+		}
 		this.arrebolBaseUrl = arrebolBaseUrl;
 		this.gson = new GsonBuilder().create();
 	}
