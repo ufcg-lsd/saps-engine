@@ -41,9 +41,9 @@ public class Scheduler {
     private Selector selector;
 
     //FIXME Remove properties field and add new variables
-    private Properties properties;
-    private Catalog catalog;
-    private JobExecutionService jobExecutionService;
+    private final Properties properties;
+    private final Catalog catalog;
+    private final JobExecutionService jobExecutionService;
     //FIXME Instance as Thread-Safe object
     private List<JobSubmitted> submittedJobs;
 
