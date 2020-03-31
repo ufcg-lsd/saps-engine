@@ -1,4 +1,4 @@
-package org.fogbowcloud.saps.engine.core.dispatcher.notifier;
+package org.fogbowcloud.saps.engine.core.dispatcher.email;
 
 import java.security.Security;
 import java.util.Date;

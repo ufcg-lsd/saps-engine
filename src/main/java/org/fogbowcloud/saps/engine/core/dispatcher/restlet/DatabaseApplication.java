@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcher;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.ImageResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.MainResource;
-import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.ProcessedImagesResource;
+import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.EmailResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.RegionResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.UserResource;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
@@ -36,6 +36,7 @@ public class DatabaseApplication extends Application {
 
     public static final Logger LOGGER = Logger.getLogger(DatabaseApplication.class);
 
+    //FIXME Remove properties field and add new variables
     private Properties properties;
     private SubmissionDispatcher submissionDispatcher;
     private Component restletComponent;
@@ -60,15 +61,12 @@ public class DatabaseApplication extends Application {
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
                 SapsPropertiesConstants.SUBMISSION_REST_SERVER_PORT,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_HOST,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_PATH,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_CONTAINER,
-                SapsPropertiesConstants.SWIFT_OBJECT_STORE_KEY,
+                SapsPropertiesConstants.Openstack.ObjectStoreService.KEY,
                 SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
-                SapsPropertiesConstants.SWIFT_AUTH_URL,
-                SapsPropertiesConstants.SWIFT_PROJECT_ID,
-                SapsPropertiesConstants.SWIFT_USER_ID,
-                SapsPropertiesConstants.SWIFT_PASSWORD
+                SapsPropertiesConstants.Openstack.IdentityService.API_URL,
+                SapsPropertiesConstants.Openstack.PROJECT_ID,
+                SapsPropertiesConstants.Openstack.USER_ID,
+                SapsPropertiesConstants.Openstack.USER_PASSWORD
 
         };
 
@@ -110,7 +108,7 @@ public class DatabaseApplication extends Application {
         router.attach("/images/{imgName}", ImageResource.class);
         router.attach("/regions/details", RegionResource.class);
         router.attach("/regions/search", RegionResource.class);
-        router.attach("/email", ProcessedImagesResource.class);
+        router.attach("/email", EmailResource.class);
 
         return router;
     }

@@ -1,6 +1,7 @@
 package org.fogbowcloud.saps.engine.core.archiver.storage;
 
-import static org.fogbowcloud.saps.engine.core.archiver.storage.NfsPermanentStorage.NFS_STORAGE_TASK_DIR_PATTERN;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage.NFS_STORAGE_TASK_DIR_PATTERN;
+import static org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage.NFS_STORAGE_TASK_URL_PATTERN;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.INPUTDOWNLOADING_DIR;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PREPROCESSING_DIR;
 import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorageConstants.PROCESSING_DIR;
@@ -8,11 +9,12 @@ import static org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
+
 import org.apache.commons.io.FileUtils;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.PermanentStorageException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
+import org.fogbowcloud.saps.engine.core.archiver.storage.nfs.NfsPermanentStorage;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
@@ -25,15 +27,35 @@ public class NfsPermanentStorageTest {
     private static final String MOCK_TEMP_STORAGE_PATH = "src/test/resources/archiver-test";
     private static final String MOCK_NFS_STORAGE_PATH = "src/test/resources/nfs-storage-test";
     private static final String MOCK_NFS_TASKS_DIR_NAME = "archiver";
+    private static final String MOCK_NFS_BASE_URL = "http://permanent-storage-access-ip";
     private static final String NONEXISTENT_NFS_STORAGE_PATH = "src/test/resources/nfs-storage-test-2";
     private static final String NFS_TASK_STAGE_DIR_PATTERN = "%s" + File.separator + "%s" + File.separator + "%s" + File.separator + "%s";
     private static final String DEBUG_MODE_TRUE = "true";
     private static final String MOCK_NFS_DEBUG_TASKS_DIR_NAME = "debug";
+    private static final String MOCK_TASK_ID = "task-id";
 
     private static class TestFile {
         private static final String INPUTDOWNLOADING = "file.ip";
         private static final String PREPROCESSING = "file.pp";
         private static final String PROCESSING = "file.p";
+    }
+
+    private static class TestGenerateAccessLink {
+        private static class Inputdownloading {
+            private static final String NAME = INPUTDOWNLOADING_DIR;
+            private static final String URL = String.format(NFS_STORAGE_TASK_URL_PATTERN, MOCK_NFS_BASE_URL, MOCK_TASK_ID) +
+                    File.separator + INPUTDOWNLOADING_DIR;
+        }
+        private static class Preprocessing {
+            private static final String NAME = PREPROCESSING_DIR;
+            private static final String URL = String.format(NFS_STORAGE_TASK_URL_PATTERN, MOCK_NFS_BASE_URL, MOCK_TASK_ID) +
+                    File.separator + PREPROCESSING_DIR;
+        }
+        private static class Processing {
+            private static final String NAME = PROCESSING_DIR;
+            private static final String URL = String.format(NFS_STORAGE_TASK_URL_PATTERN, MOCK_NFS_BASE_URL, MOCK_TASK_ID) +
+                    File.separator + PROCESSING_DIR;
+        }
     }
 
     private Properties properties;
@@ -47,10 +69,12 @@ public class NfsPermanentStorageTest {
             MOCK_TEMP_STORAGE_PATH);
         properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR,
             MOCK_NFS_TASKS_DIR_NAME);
+        properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_BASE_URL,
+                MOCK_NFS_BASE_URL);
     }
 
     @Test
-    public void testArchive() throws PermanentStorageException {
+    public void testArchive() throws InvalidPropertyException, IOException {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
@@ -61,7 +85,7 @@ public class NfsPermanentStorageTest {
     }
 
     @Test
-    public void testArchiveOnDebugMode() throws PermanentStorageException {
+    public void testArchiveOnDebugMode() throws InvalidPropertyException, IOException {
         properties.setProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE, DEBUG_MODE_TRUE);
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         properties.setProperty(SapsPropertiesConstants.PERMANENT_STORAGE_DEBUG_TASKS_DIR,
@@ -75,9 +99,8 @@ public class NfsPermanentStorageTest {
         Assert.assertTrue(assertTaskDir(MOCK_NFS_DEBUG_TASKS_DIR_NAME, task.getTaskId()));
     }
 
-    @Test(expected = PermanentStorageException.class)
-    public void testArchiveNonExistentNfsStoragePath()
-        throws PermanentStorageException {
+    @Test(expected = IOException.class)
+    public void testArchiveNonExistentNfsStoragePath() throws IOException, InvalidPropertyException {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, NONEXISTENT_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
@@ -98,7 +121,7 @@ public class NfsPermanentStorageTest {
 
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
-        permanentStorage.delete(task);
+        permanentStorage.archive(task);
         Assert.assertFalse(taskDir.exists());
     }
 
@@ -119,19 +142,36 @@ public class NfsPermanentStorageTest {
         FileUtils.forceMkdir(taskDir);
 
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
-        permanentStorage.delete(task);
+        permanentStorage.archive(task);
         Assert.assertFalse(taskDir.exists());
     }
 
-    @Test(expected = PermanentStorageException.class)
-    public void testDeleteNonExistentTaskDir() throws PermanentStorageException {
+    @Test(expected = IOException.class)
+    public void testDeleteNonExistentTaskDir() throws InvalidPropertyException, IOException {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         String fakeTaskId = "fake";
         SapsImage task = new SapsImage(fakeTaskId, "", "", new Date(), ImageTaskState.FINISHED,
             SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",
             "", "", new Timestamp(1), new Timestamp(1), "", "");
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
-        permanentStorage.delete(task);
+        permanentStorage.archive(task);
+    }
+
+    @Test
+    public void testGenerateAccessLinksTaskDir() throws IOException, TaskNotFoundException, InvalidPropertyException {
+        SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
+            SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",
+            "", "", new Timestamp(1), new Timestamp(1), "", "");
+
+        properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
+        PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
+
+        List<AccessLink> exceptedAccessLinksList = new LinkedList<>();
+        exceptedAccessLinksList.add(new AccessLink(TestGenerateAccessLink.Inputdownloading.NAME, TestGenerateAccessLink.Inputdownloading.URL));
+        exceptedAccessLinksList.add(new AccessLink(TestGenerateAccessLink.Preprocessing.NAME, TestGenerateAccessLink.Preprocessing.URL));
+        exceptedAccessLinksList.add(new AccessLink(TestGenerateAccessLink.Processing.NAME, TestGenerateAccessLink.Processing.URL));
+
+        Assert.assertEquals(exceptedAccessLinksList, permanentStorage.generateAccessLinks(task));
     }
 
     private boolean assertTaskDir(String taskDirName, String taskId) {

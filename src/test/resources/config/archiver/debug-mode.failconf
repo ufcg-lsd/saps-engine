@@ -1,4 +1,4 @@
-##### Image Datastore Configuration #####
+##### Catalog Configuration #####
 datastore_url_prefix=
 datastore_ip=
 datastore_port=
@@ -7,31 +7,23 @@ datastore_driver=
 datastore_username=
 datastore_password=
 
+# Archiver Component Configuration
 saps_execution_period_archiver=
 saps_execution_period_garbage_collector=
 saps_debug_mode=true
 
-saps_permanent_storage_type=swift
-
-# NFS
+# Temporary Storage Configuration
 saps_temp_storage_path=src/test/resources/archiver-test
 
-# Configuração do sft
+# Permanent Storage Configuration
+saps_permanent_storage_type=swift
 permanent_storage_tasks_dir=archiver
-swift_container_name=saps-test
-swift_input_pseud_folder_prefix=
-swift_output_pseud_folder_prefix=
-swift_username=
-swift_password=
-swift_tenant_id=
-swift_tenant_name=
-swift_auth_url=
 
-# Configuração do fogbow keystone
-fogbow.keystonev3.project.id=
-fogbow.keystonev3.user.id=
-fogbow.keystonev3.password=
-fogbow.keystonev3.auth.url=
-fogbow.keystonev3.swift.url=
-fogbow_cli_path=
-fogbow.keystonev3.swift.token.update.period=
+# Openstack Service Configuration
+openstack_project_id=
+openstack_user_id=
+openstack_user_password=
+openstack_identity_service_api_url=
+openstack_object_store_service_api_url=
+openstack_object_store_service_container_name=saps-test
+
