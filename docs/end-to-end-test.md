@@ -81,6 +81,12 @@ In the [SAPS script file](/resources/execution_scripts_tags.json) replace it wit
 
 Access the GUI through the url ```$dashboard_access_ip:$dashboard_access_port``` and connect using valid credentials.
 
+### 2. Create new processing
+
+![New processing](img/end-to-end-test-run-img2.png)
+
+When connecting successfully, click on `New Processing`, fill in the fields as in the image above and click on` Process`
+
 
 # Check results
 
