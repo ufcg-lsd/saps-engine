@@ -391,7 +391,6 @@ public class Scheduler {
      * submitted jobs to Arrebol.
      */
     private void checker() {
-        List<JobSubmitted> submittedJobs = this.submittedJobs;
         List<JobSubmitted> finishedJobs = new LinkedList<JobSubmitted>();
 
         LOGGER.info("Checking " + submittedJobs.size() + " submitted jobs for Arrebol service");
