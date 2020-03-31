@@ -366,17 +366,14 @@ public class JDBCCatalog implements Catalog {
         try {
             connection = getConnection();
 
-            selectStatement = connection.prepareStatement(JDBCCatalogConstants.Queries.Select.TASKS_BY_STATE_ORDER_BY_PRIORITY_ASC);
+            String query = buildTaskByStateQuery(tasksStates.length);
+            selectStatement = connection.prepareStatement(query);
             selectStatement.setQueryTimeout(300);
 
-            String whereCondition = "";
             for (int i = 0; i < tasksStates.length; i++) {
-                whereCondition += JDBCCatalogConstants.Tables.Task.STATE + " = " + tasksStates[i].getValue();
-                if (i < tasksStates.length - 1)
-                    whereCondition += " OR ";
+                selectStatement.setString(i + 1, tasksStates[i].getValue());
             }
 
-            selectStatement.setString(1, whereCondition);
             selectStatement.execute();
 
             ResultSet rs = selectStatement.getResultSet();
@@ -390,6 +387,20 @@ public class JDBCCatalog implements Catalog {
         } finally {
             close(selectStatement, connection);
         }
+    }
+
+    private String buildTaskByStateQuery(int states) {
+        StringBuilder query = new StringBuilder(JDBCCatalogConstants.Queries.Select.TASKS + " WHERE state in (");
+        for(int i = 0; i < states; i++) {
+            if(i == states - 1) {
+                query.append("?) ");
+            }
+            else {
+                query.append("?,");
+            }
+        }
+        query.append("ORDER BY priority asc");
+        return query.toString();
     }
 
     @Override
