@@ -118,7 +118,9 @@ public class Scheduler {
                     "updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
                 this.submittedJobs.add(new JobSubmitted(task.getArrebolJobId(), task));
             } else {
-                // TODO ????
+                // TODO discuss what action to take in this situation.
+                //  Should I remove all jobs found from the execution service and do a rollback in task?
+                //  Or should I take advantage of any of them?
             }
         } else {
             String arrebolJobId = task.getArrebolJobId();
