@@ -33,7 +33,7 @@ public class ArrebolJobExecutionService implements JobExecutionService {
     }
 
     @Override
-    public JobResponseDTO getJob(String jobId) throws GetJobException {
+    public JobResponseDTO getJobById(String jobId) throws GetJobException {
         LOGGER.info("Getting Job [" + jobId + "] from Arrebol");
         return requestsHelper.getJob(DEFAULT_QUEUE, jobId);
     }

@@ -416,7 +416,7 @@ public class Scheduler {
 
             JobResponseDTO jobResponse;
             try {
-                jobResponse = this.jobExecutionService.getJob(jobId);
+                jobResponse = this.jobExecutionService.getJobById(jobId);
                 LOGGER.debug("Job [" + jobId + "] information returned from Arrebol: " + jobResponse);
                 boolean checkFinish = checkJobWasFinish(jobResponse);
                 if (checkFinish) {

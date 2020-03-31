@@ -10,7 +10,7 @@ public interface JobExecutionService {
 
     long getWaitingJobs() throws Exception;
 
-    JobResponseDTO getJob(String jobId) throws Exception;
+    JobResponseDTO getJobById(String jobId) throws Exception;
 
     List<JobResponseDTO> getJobByLabel(String label) throws Exception;
 
