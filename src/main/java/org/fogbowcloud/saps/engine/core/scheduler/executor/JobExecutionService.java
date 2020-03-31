@@ -6,12 +6,12 @@ import org.fogbowcloud.saps.engine.core.model.SapsJob;
 
 public interface JobExecutionService {
 
-    public String submit(SapsJob job) throws Exception;
+    String submit(SapsJob job) throws Exception;
 
-    public long getWaitingJobs() throws Exception;
+    long getWaitingJobs() throws Exception;
 
-    public JobResponseDTO getJob(String jobId) throws Exception;
+    JobResponseDTO getJob(String jobId) throws Exception;
 
-    public List<JobResponseDTO> getJobByLabel(String label) throws Exception;
+    List<JobResponseDTO> getJobByLabel(String label) throws Exception;
 
 }
