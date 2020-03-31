@@ -47,11 +47,6 @@ public class Scheduler {
     //FIXME Instance as Thread-Safe object
     private List<JobSubmitted> submittedJobs;
 
-    public Scheduler(Properties properties) throws SapsException {
-    	this(properties, new JDBCCatalog(properties), Executors.newScheduledThreadPool(1),
-                new ArrebolJobExecutionService(new ArrebolRequestsHelper(properties.getProperty(SapsPropertiesConstants.ARREBOL_BASE_URL))), new DefaultRoundRobin());
-    }
-
     public Scheduler(Properties properties, Catalog catalog, ScheduledExecutorService sapsExecutor,
                      JobExecutionService jobExecutionService, Selector selector) throws SapsException {
         if (!checkProperties(properties))
@@ -72,7 +67,6 @@ public class Scheduler {
                 SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_SUBMISSOR,
                 SapsPropertiesConstants.SAPS_EXECUTION_PERIOD_CHECKER,
                 SapsPropertiesConstants.ARREBOL_BASE_URL
-
         };
 
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
