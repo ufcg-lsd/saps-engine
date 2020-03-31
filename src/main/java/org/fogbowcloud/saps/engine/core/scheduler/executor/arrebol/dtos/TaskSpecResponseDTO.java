@@ -3,7 +3,6 @@ package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.CommandResponseDTO;
 
 public class TaskSpecResponseDTO implements Serializable {
 	/**
