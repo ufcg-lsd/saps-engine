@@ -101,4 +101,9 @@ After the two processes are completed, the GUI will be similar to the image abov
 
 # Check results
 
-Here how to check the test results with the expected ones will be described ...
+### 1. Data tab
+
+![Data tab](img/end-to-end-test-check-results-img1.png)
+
+In the data tab, fill in the fields as shown in the image above and click on `Search`.
+
