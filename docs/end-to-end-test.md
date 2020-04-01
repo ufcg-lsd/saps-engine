@@ -12,6 +12,8 @@ Here an description of the test flow steps ...
 
 It is necessary to configure the scripts that will be used by the SAPS pipeline to be able to produce the same result expected by the test, for that, we must configure three components to recognize these test scripts.
 
+**Note: After the changes, it is necessary to restart the components**
+
 ### Configuring Dashboard
 
 In the [SAPS script file](/public/dashboardApp.js) replace the value of the variable `scriptsTags` by:
