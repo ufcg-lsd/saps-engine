@@ -85,7 +85,7 @@ Access the GUI through the url ```$dashboard_access_ip:$dashboard_access_port```
 
 ![New processing](img/end-to-end-test-run-img2.png)
 
-When connecting successfully, click on `New Processing`, fill in the fields as in the image above and click on` Process`
+When connecting successfully, click on `New Processing`, fill in the fields as in the image above and click on `Process`
 
 
 # Check results
