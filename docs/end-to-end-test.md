@@ -115,5 +115,11 @@ In the data tab, fill in the fields as shown in the image above and click on `Se
 
 After completing the search, the result shown in the image above will be displayed, check the option with the information of the processing done and click on `Send email`.
 
+### 3. Download datas
 
+Here it will be described how the body of the email will arrive and how to download the data of the selected processing.
+
+### 4. Comparing results
+
+Here is a table with the expected checksum for each file and how to calculate the checksum for each file for comparison.
 
