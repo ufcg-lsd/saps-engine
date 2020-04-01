@@ -44,10 +44,10 @@ showmount -e localhost
 ### Archiver Configuration file
 
 
-The second part is the customization of the [archiver.conf](/config/archiver.conf) file allowing to interact with other components, including the SAPS Catalog, temporary and permanent storage pools.
+In the second part of the configuation, the[archiver.conf](/config/archiver.conf) file should be customized to indicate how the Archiver should interact with other components, including the SAPS Catalog, temporary and permanent storage pools.
 
 ## Run
-Once the configuration file is customized, below command are used to start and stop the Archiver component.
+Once the configuration file is customized, the below commands are used to start and stop the Archiver component.
 
 ```
 # Start command
