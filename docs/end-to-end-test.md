@@ -93,6 +93,12 @@ When connecting successfully, click on `New Processing`, fill in the fields as i
 
 After a few seconds, it will be possible to observe the image above, that is, two new processes have been created and are in the initial state (`Created`), wait for at least half an hour until they are completed.
 
+### 4. Processing completed
+
+![Processing completed](img/end-to-end-test-run-img4.png)
+
+After the two processes are completed, the GUI will be similar to the image above, one with LANDSAT 8 with a successful end state (`Success`) and the other with LANDSAT 7 with a failed end state (`Failure`).
+
 # Check results
 
 Here how to check the test results with the expected ones will be described ...
