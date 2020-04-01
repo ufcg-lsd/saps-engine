@@ -1,9 +1,9 @@
 package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol;
 
+import java.io.IOException;
 import java.util.List;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.model.SapsJob;
-import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.JobExecutionService;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
@@ -20,7 +20,7 @@ public class ArrebolJobExecutionService implements JobExecutionService {
     }
 
     @Override
-    public String submit(SapsJob job) throws Exception {
+    public String submit(SapsJob job) throws IOException {
         LOGGER.info("Submitting Saps Job [" + job.getName() + "] to Arrebol");
         JobRequestDTO jobRequestDTO = new JobRequestDTO(job);
         String id = requestsHelper.submitJobToExecution(DEFAULT_QUEUE, jobRequestDTO);
@@ -28,18 +28,18 @@ public class ArrebolJobExecutionService implements JobExecutionService {
     }
 
     @Override
-    public long getWaitingJobs() throws Exception {
+    public long getWaitingJobs() throws IOException {
         return requestsHelper.getQueue(DEFAULT_QUEUE).getWaitingJobs();
     }
 
     @Override
-    public JobResponseDTO getJobById(String jobId) throws GetJobException {
+    public JobResponseDTO getJobById(String jobId) throws IOException {
         LOGGER.info("Getting Job [" + jobId + "] from Arrebol");
         return requestsHelper.getJob(DEFAULT_QUEUE, jobId);
     }
 
     @Override
-    public List<JobResponseDTO> getJobByLabel(String label) throws Exception {
+    public List<JobResponseDTO> getJobByLabel(String label) throws IOException {
         //FIXME Not yet available in the Arrebol Api
         return null;
     }

@@ -1,5 +1,6 @@
 package org.fogbowcloud.saps.engine.core.scheduler;
 
+import java.io.IOException;
 import java.net.ConnectException;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
@@ -157,7 +158,7 @@ public class Scheduler {
      *
      * @return selected tasks list
      */
-    public List<SapsImage> selectTasks() throws Exception {
+    public List<SapsImage> selectTasks() throws IOException {
         List<SapsImage> selectedTasks = new LinkedList<SapsImage>();
         ImageTaskState[] states = {ImageTaskState.READY, ImageTaskState.DOWNLOADED, ImageTaskState.CREATED};
 
@@ -515,7 +516,7 @@ public class Scheduler {
      *
      * @return Arrebol queue capacity in queue with identifier
      */
-    private int getCountSlotsInArrebol() throws Exception {
+    private int getCountSlotsInArrebol() throws IOException {
         long waitingJobs = this.jobExecutionService.getWaitingJobs();
         return MAX_WAITING_JOBS - (int) waitingJobs;
     }

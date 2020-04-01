@@ -13,6 +13,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import org.apache.log4j.Logger;
+
+import java.io.IOException;
 import java.util.List;
 
 public class HttpWrapper {
@@ -25,15 +27,15 @@ public class HttpWrapper {
     private static final String APPLICATION_JSON = "application/json";
     private static final String CONTENT_TYPE = "Content-Type";
 
-    public static String doRequest(String method, String endpoint) throws Exception {
+    public static String doRequest(String method, String endpoint) throws IOException {
         return doRequest(method, endpoint, null, null);
     }
 
-    public static String doRequest(String method, String endpoint, List<Header> additionalHeaders) throws Exception {
+    public static String doRequest(String method, String endpoint, List<Header> additionalHeaders) throws IOException {
         return doRequest(method, endpoint, additionalHeaders, null);
     }
 
-    public static String doRequest(String method, String endpoint, List<Header> additionalHeaders, StringEntity body) throws Exception {
+    public static String doRequest(String method, String endpoint, List<Header> additionalHeaders, StringEntity body) throws IOException {
         HttpUriRequest request = instantiateRequest(method, endpoint, body);
 
         if (request != null) {
@@ -64,7 +66,7 @@ public class HttpWrapper {
             } else if(statusCode >= BAD_REQUEST && statusCode <= VERSION_NOT_SUPPORTED) {
                 final String errMsg = "Request to " + request.getURI() + " failed with status code " + statusCode;
                 LOGGER.error(errMsg);
-                throw new Exception(errMsg);
+                throw new IOException(errMsg);
             } else {
                 return response.getStatusLine().toString();
             }

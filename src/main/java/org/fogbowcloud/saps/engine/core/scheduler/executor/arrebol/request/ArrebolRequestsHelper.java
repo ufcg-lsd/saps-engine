@@ -1,17 +1,15 @@
 package org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.request;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import com.google.gson.JsonObject;
-import java.net.ConnectException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
-import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.GetJobException;
-import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.SubmitJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.ArrebolConnectException;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.models.ArrebolQueue;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.http.HttpWrapper;
@@ -48,7 +46,7 @@ public class ArrebolRequestsHelper {
 		this.gson = new GsonBuilder().create();
 	}
 
-	public String submitJobToExecution(String queueId, JobRequestDTO job) throws Exception, SubmitJobException {
+	public String submitJobToExecution(String queueId, JobRequestDTO job) throws IOException {
 		StringEntity requestBody;
 
 		try {
@@ -70,26 +68,22 @@ public class ArrebolRequestsHelper {
 			jobId = jobResponse.get(JsonKey.JOB_ID).getAsString();
 
 			LOGGER.info("Job was submitted with success to Arrebol.");
-		} catch (ConnectException e) {
-			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
-		} catch (Exception e) {
-			throw new SubmitJobException("Submit Job to Arrebol has FAILED: " + e.getMessage(), e);
+		} catch (IOException e) {
+			throw new IOException("Submit Job to Arrebol has FAILED: " + e.getMessage(), e);
 		}
 
 		return jobId;
 	}
 
-	public JobResponseDTO getJob(String queueId, String jobId) throws GetJobException {
+	public JobResponseDTO getJob(String queueId, String jobId) throws IOException {
 		final String endpoint = String.format(Endpoint.JOB, this.arrebolBaseUrl, queueId, jobId);
 
 		JobResponseDTO jobResponse;
 		try {
 			String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint);
 			jobResponse = gson.fromJson(jsonResponse, JobResponseDTO.class);
-		} catch (ConnectException e) {
-			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
 		} catch (Exception e) {
-			throw new GetJobException("Get Job from Arrebol has FAILED: " + e.getMessage(), e);
+			throw new IOException("Get Job from Arrebol has FAILED: " + e.getMessage(), e);
 		}
 		return jobResponse;
 	}
@@ -105,17 +99,15 @@ public class ArrebolRequestsHelper {
 		return new StringEntity(json);
 	}
 
-	public ArrebolQueue getQueue(String queueId) throws Exception {
+	public ArrebolQueue getQueue(String queueId) throws IOException {
 		final String endpoint = String.format(Endpoint.QUEUE, arrebolBaseUrl, queueId);
 
 		ArrebolQueue queue;
 		try {
 			final String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint, null);
 			queue = this.gson.fromJson(jsonResponse, ArrebolQueue.class);
-		} catch (ConnectException e) {
-			throw new ArrebolConnectException("Failed connect to Arrebol [" + arrebolBaseUrl + "]", e);
-		} catch (Exception e) {
-			throw new Exception("Get waiting jobs from Arrebol queue id [" + queueId + "] has FAILED: " + e.getMessage(), e);
+		} catch (IOException e) {
+			throw new IOException("Get waiting jobs from Arrebol Queue [" + queueId + "] has FAILED: " + e.getMessage(), e);
 		}
 
 		return queue;
