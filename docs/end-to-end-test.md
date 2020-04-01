@@ -107,3 +107,11 @@ After the two processes are completed, the GUI will be similar to the image abov
 
 In the data tab, fill in the fields as shown in the image above and click on `Search`.
 
+### 2. Send email
+
+![Send email](img/end-to-end-test-check-results-img2.png)
+
+After completing the search, the result shown in the image above will be displayed, check the option with the information of the processing done and click on `Send email`.
+
+
+
