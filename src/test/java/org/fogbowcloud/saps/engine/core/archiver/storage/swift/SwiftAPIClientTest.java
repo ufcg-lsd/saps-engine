@@ -26,7 +26,7 @@ public class SwiftAPIClientTest {
     public void testListFiles() throws IOException, InvalidPropertyException, JSONException {
         Properties properties = loadConfigFile(CONFIG_FILE);
         SwiftAPIClient client = new SwiftAPIClient(properties);
-        String containerName = properties.getProperty(SapsPropertiesConstants.SWIFT_CONTAINER_NAME);
+        String containerName = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.CONTAINER_NAME);
         String path = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
         client.listFiles(containerName, path);
     }
