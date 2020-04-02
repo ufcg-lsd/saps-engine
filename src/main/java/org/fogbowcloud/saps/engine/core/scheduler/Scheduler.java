@@ -311,7 +311,7 @@ public class Scheduler {
         List<SapsTask> tasks = new LinkedList<SapsTask>();
         tasks.add(sapsTask);
 
-        SapsJob imageJob = new SapsJob(task.getTaskId(), tasks);
+        SapsJob imageJob = new SapsJob(task.getTaskId() + "-" + task.getState().getValue(), tasks);
         LOGGER.info("SAPS job: " + imageJob.toJSON().toString());
 
         String jobId = submitJobInArrebol(imageJob, "add new job");
