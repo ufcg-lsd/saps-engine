@@ -65,8 +65,10 @@ public class UserResource extends BaseResource {
 		String pass = form.getFirstValue(REQUEST_ATTR_USERPASS, true);
 
 		if (authenticateUser(user, pass)) {
+			LOGGER.debug("User [" + user + "] successfully authenticated");
 			return new StringRepresentation("Success");
 		} else {
+			LOGGER.debug("User [" + user + "] authentication failure");
 			throw new ResourceException(Status.CLIENT_ERROR_NOT_FOUND, "Incorrect user/password.");
 		}
 	}
