@@ -17,6 +17,7 @@ import org.fogbowcloud.saps.engine.core.scheduler.arrebol.Arrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.ArrebolUtils;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.DefaultArrebol;
 import org.fogbowcloud.saps.engine.core.scheduler.arrebol.JobSubmitted;
+import org.fogbowcloud.saps.engine.core.scheduler.arrebol.exceptions.GetJobException;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.DefaultRoundRobin;
 import org.fogbowcloud.saps.engine.core.scheduler.selector.Selector;
 import org.fogbowcloud.saps.engine.exceptions.SapsException;
@@ -85,33 +86,69 @@ public class Scheduler {
      * Catalog and Arrebol, and starts the list of submitted jobs.
      */
     private void recovery() {
-        List<SapsImage> tasksInProcessingState = getProcessingTasksInCatalog();
-        List<SapsImage> tasksForPopulateSubmittedJobList = new LinkedList<SapsImage>();
+        submitValidProcessingTask();
+        List<SapsImage> tasks = pickTasksToRecovery();
 
-        for (SapsImage task : tasksInProcessingState) {
-            if (task.getArrebolJobId().equals(SapsImage.NONE_ARREBOL_JOB_ID)) {
-                String jobName = task.getState().getValue() + "-" + task.getTaskId();
-                List<JobResponseDTO> jobsWithEqualJobName = getJobByNameInArrebol(jobName,
-                        "gets job by name [" + jobName + "]");
-                if (jobsWithEqualJobName.size() == 0)
-                    rollBackTaskState(task);
-                else if (jobsWithEqualJobName.size() == 1) { // TODO add check jobName ==
-                    // jobsWithEqualJobName.get(0).get...
-                    String arrebolJobId = jobsWithEqualJobName.get(0).getId();
-                    updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
-                            arrebolJobId,
-                            "updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
-                    tasksForPopulateSubmittedJobList.add(task);
-                } else {
-                    // TODO ????
-                }
+        for (SapsImage task : tasks) {
+            String jobName = task.getTaskId() + "-" + task.getState().getValue();
+            List<JobResponseDTO> jobs = getJobByNameInArrebol(jobName,
+                    "gets job by name [" + jobName + "]");
+            if (jobs.size() == 0)
+                rollBackTaskState(task);
+            else if (jobs.size() == 1) {
+                String arrebolJobId = jobs.get(0).getId();
+                updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+                        arrebolJobId,
+                        "updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
+                arrebol.addJobInList(new JobSubmitted(task.getArrebolJobId(), task));
             } else {
-                String arrebolJobId = task.getArrebolJobId();
-                arrebol.addJobInList(new JobSubmitted(arrebolJobId, task));
+                Map<String, Integer> statesValues = new HashMap<>();
+                statesValues.put("SUBMITTED", 1);
+                statesValues.put("QUEUED", 2);
+                statesValues.put("RUNNING", 3);
+                statesValues.put("FAILED", 4);
+                statesValues.put("FINISHED", 5);
+                int max = jobs.stream().mapToInt(x -> statesValues.get(x.getJobState())).max().getAsInt();
+                for(JobResponseDTO j : jobs) {
+                    if(j.getJobState().equals(statesValues.get(max))) {
+                        task.setArrebolJobId(j.getId());
+                        break;
+                    }
+                }
             }
         }
+    }
 
-        arrebol.populateJobList(tasksForPopulateSubmittedJobList);
+    private void submitValidProcessingTask() {
+        List<SapsImage> processingTasks = getProcessingTasksInCatalog();
+        for(SapsImage s : processingTasks) {
+            if(isValidExecId(s.getArrebolJobId())) {
+                arrebol.addJobInList(new JobSubmitted(s.getArrebolJobId(), s));
+            }
+        }
+    }
+
+    private List<SapsImage> pickTasksToRecovery() {
+        List<SapsImage> tasks = new LinkedList<>();
+        List<SapsImage> processingTasks = getProcessingTasksInCatalog();
+        for(SapsImage s : processingTasks) {
+            if(!isValidExecId(s.getArrebolJobId())) {
+                tasks.add(s);
+            }
+        }
+        return tasks;
+    }
+
+    private boolean isValidExecId(String execId) {
+        if(Objects.isNull(execId) || execId.isEmpty() || execId.equals(SapsImage.NONE_ARREBOL_JOB_ID)) {
+            return false;
+        }
+        try {
+            arrebol.checkStatusJobById(execId);
+        } catch (GetJobException e) {
+            return false;
+        }
+        return true;
     }
 
     /**
