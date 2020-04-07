@@ -23,22 +23,22 @@ let scriptsTags =
 {
 "inputdownloading":[
     {
-      "name": "test",
-      "docker_tag": "test",
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
       "docker_repository": "fogbow/inputdownloading"
     }
   ],
   "preprocessing":[
     {
-      "name": "test",
-      "docker_tag": "test",
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
       "docker_repository": "fogbow/preprocessor"
     }
   ],
   "processing":[
     {
-      "name": "test",
-      "docker_tag": "test",
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
       "docker_repository": "fogbow/worker"
     }
   ]
@@ -53,22 +53,22 @@ In the [SAPS script file](/resources/execution_scripts_tags.json) replace it wit
 {
 "inputdownloading":[
     {
-      "name": "test",
-      "docker_tag": "test",
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
       "docker_repository": "fogbow/inputdownloading"
     }
   ],
   "preprocessing":[
     {
-      "name": "test",
-      "docker_tag": "test",
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
       "docker_repository": "fogbow/preprocessor"
     }
   ],
   "processing":[
     {
-      "name": "test",
-      "docker_tag": "test",
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
       "docker_repository": "fogbow/worker"
     }
   ]
