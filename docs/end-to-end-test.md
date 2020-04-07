@@ -1,6 +1,6 @@
 # Overview
 
-Here an overview of the test will be described ...
+This test aims to simulate the SAPS processing pipeline using test scripts.
 
 # Test flow
 
