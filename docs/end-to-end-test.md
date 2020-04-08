@@ -127,7 +127,7 @@ After completing the search, the result shown in the image above will be display
 
 ### 3. Download datas
 
-Here it will be described how the body of the email will arrive and how to download the data of the selected processing.
+Check your inbox, SAPS will prepare several links to download data for the completed task.
 
 ### 4. Comparing results
 
