@@ -131,5 +131,26 @@ Check your inbox, SAPS will prepare several links to download data for the compl
 
 ### 4. Comparing results
 
-Here is a table with the expected checksum for each file and how to calculate the checksum for each file for comparison.
+Filename | md5sum
+-|-
+LC82150652015174LGN00_alb.nc  | c19e32ccb08080a11fbf4ff0a961a891
+LC82150652015174LGN00_EF.nc | 7fc97b93fd5f00e73cd82edc4e291818
+LC82150652015174LGN00_ET24h.nc | 3de5943c4c9e5047ff2318829ad65f4d
+LC82150652015174LGN00_EVI.nc | b3d1592d0302edc8e115f14650f7e029
+LC82150652015174LGN00_G.nc | 9be610cf8e8b9a7ca2382a3c6c492b20
+LC82150652015174LGN00_LAI.nc | 1dac46d96353c901aa3fae7f2e831cc6
+LC82150652015174LGN00_NDVI.nc | aa1636bb24b03f43012b5940648d2de2
+LC82150652015174LGN00_Rn.nc | b75f223bcc956aee781e7e993f5fafcb
+LC82150652015174LGN00_SAVI.nc | 364b20834ca8640b098669ef0aa726e8
+LC82150652015174LGN00_TS.nc | 9b0d727c42d05f267c226eab1f1b1e0e
+
+
+After downloading all files, run the following command below for each file in the table above and compare the result with the md5sum column
+
+```bash
+md5sum $file_path
+```
+
+
+
 
