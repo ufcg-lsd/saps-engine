@@ -1,5 +1,16 @@
 #!/bin/bash
 
+## This script submits new tasks for SAPS interacting with Dispatcher backend.
+
+## Checking args
+if [ $# -ne 12 ]
+then
+  echo "Usage: $0 USER_EMAIL USER_PASSWORD LOWER_LEFT_LATITUDE UPPER_RIGHT_LATITUDE LOWER_LEFT_LONGITUDE UPPER_RIGHT_LONGITUDE PROCESSING_INIT_DATE PROCESSING_FINAL_DATE INPUTDOWNLOADING_TAG PREPROCESSING_TAG PROCESSING_TAG DISPATCHER_ACCESS_IP"
+  echo "e.g. $0 <user-email> <user-paswword> -7.913 -6.547 -37.814 -35.757 2015-06-23 2015-06-23 googleapis default ufcg-sebal <dispatcher-access-ip>"
+  exit 1
+fi
+
+## args
 USER_EMAIL=$1
 USER_PASSWORD=$2
 LOWER_LEFT_LATITUDE=$3
@@ -9,11 +20,12 @@ UPPER_RIGHT_LONGITUDE=$6
 PROCESSING_INIT_DATE=$7
 PROCESSING_FINAL_DATE=$8
 INPUTDOWNLOADING_TAG=$9
-PREPROCESSING_TAG=$10
-PROCESSING_TAG=$11
-DISPATCHER_IP_ADDRESS=$12
+PREPROCESSING_TAG=${10}
+PROCESSING_TAG=${11}
+DISPATCHER_ACCESS_IP=${12}
 
-PORT=8091
+## constants
+DISPATCHER_ACCESS_PORT=8091
 TASK_PRIORITY=0
 
-curl --request POST 'http://<$dispatcher_address>:8091/processings' --header 'Content-Type: text/plain'  --data-raw 'userEmail=$USER_EMAIL&userPass=$USER_PASSWORD&lowerLeft=[$LOWER_LEFT_LATITUDE, $LOWER_LEFT_LONGITUDE]&upperRight=[$UPPER_RIGHT_LATITUDE, $UPPER_RIGHT_LONGITUDE]&initialDate=$PROCESSING_INIT_DATE&finalDate=$PROCESSING_FINAL_DATE&inputGatheringTag=$INPUTDOWNLOADING_TAG&inputPreprocessingTag=$PROCESSING_TAG&algorithmExecutionTag=$PROCESSING_TAG&email=USER_EMAIL&priority=$TASK_PRIORITY'
+curl --request POST "http://$DISPATCHER_ACCESS_IP:$DISPATCHER_ACCESS_PORT/processings" --header "Content-Type: text/plain"  --data-raw "userEmail=$USER_EMAIL&userPass=$USER_PASSWORD&lowerLeft[]=$LOWER_LEFT_LATITUDE&lowerLeft[]=$LOWER_LEFT_LONGITUDE&upperRight[]=$UPPER_RIGHT_LATITUDE&upperRight[]=$UPPER_RIGHT_LONGITUDE&initialDate=$PROCESSING_INIT_DATE&finalDate=$PROCESSING_FINAL_DATE&inputGatheringTag=$INPUTDOWNLOADING_TAG&inputPreprocessingTag=$PREPROCESSING_TAG&algorithmExecutionTag=$PROCESSING_TAG&email=$USER_EMAIL&priority=$TASK_PRIORITY"
