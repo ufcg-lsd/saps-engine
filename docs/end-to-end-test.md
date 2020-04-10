@@ -87,6 +87,8 @@ In the [SAPS script file](/resources/execution_scripts_tags.json) replace it wit
 
 # Run
 
+## Using Dashboard
+
 ### 1. Login to the Dashboard
 
 ![Login Dashboard](img/end-to-end-test-run-img1.png)
@@ -110,6 +112,10 @@ After a few seconds, it will be possible to observe the image above, that is, tw
 ![Processing completed](img/end-to-end-test-run-img4.png)
 
 After the two processes are completed, the GUI will be similar to the image above, one with LANDSAT 8 with a successful end state (`Success`) and the other with LANDSAT 7 with a failed end state (`Failure`).
+
+## Using CLI
+
+Here is a text explaining how to do the above process through the CLI
 
 # Check results
 
