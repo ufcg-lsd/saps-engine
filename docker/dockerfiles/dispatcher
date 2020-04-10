@@ -1,0 +1,21 @@
+FROM openjdk:8
+
+LABEL maintainer="wesley.monte@ccc.ufcg.edu.br"
+
+ENV MAIN_CLASS="org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherMain"
+
+# Create bind mounts for these three entries
+ENV CONFIG_PATH="/dispatcher/dispatcher.conf"
+ENV LOG_PROPERTIES_PATH="/dispatcher/log4j.properties"
+
+RUN apt-get update && apt-get install -y \
+    python-swiftclient \
+    python-gdal \
+    python-shapely
+
+WORKDIR /dispatcher
+
+COPY ./target/saps-engine-0.0.1-SNAPSHOT.jar dispatcher.jar
+COPY ./target/lib  lib/
+
+ENTRYPOINT java -Dlog4j.configuration=file:"${LOG_PROPERTIES_PATH}" -cp dispatcher.jar:lib/* "${MAIN_CLASS}" "${CONFIG_PATH}"
