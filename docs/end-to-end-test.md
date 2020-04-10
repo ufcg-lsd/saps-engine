@@ -115,7 +115,11 @@ After the two processes are completed, the GUI will be similar to the image abov
 
 ## Using CLI
 
-Here is a text explaining how to do the above process through the CLI
+Run the following code inside the saps-engine project folder:
+
+```
+bash bin/submit-task <user-email> <user-paswword> -7.913 -6.547 -37.814 -35.757 2015-06-23 2015-06-23 googleapis default ufcg-sebal <dispatcher-access-ip>:<dispatcher-access-port>
+```
 
 # Check results
 
