@@ -24,7 +24,7 @@ public class DigestUtil {
 		String result = null;
 
 		try {
-			Process builder = new ProcessBuilder("bash", "./scripts/get_digest.sh", dockerRepository, dockerTag)
+			Process builder = new ProcessBuilder("bash", "./scripts/get_digest", dockerRepository, dockerTag)
 					.start();
 
 			LOGGER.debug("Waiting for the process for execute command: " + builder.toString());
