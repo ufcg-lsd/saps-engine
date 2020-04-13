@@ -10,8 +10,8 @@ This test aims to simulate the SAPS processing pipeline using test scripts.
 2. Dashboard forwards the processing request to the Dispatcher
 3. Dispatcher adds new processing information to the Catalog
 4. Scheduler retrieves the new information entered for processing
-5. Scheduler submits the task to a Job Scheduler Service that will process the scripts
-6. Archiver retrieves job information already processed for archiving the resulting data
+5. Scheduler submits the task to a Job Execution Service that will process the scripts
+6. Archiver retrieves information already processed for archiving the resulting data
 7. Archiver sends data to Permanent Storage
 8. User requests the completed task data
 9. Dashboard forwards the order to the Dispatcher
@@ -26,7 +26,7 @@ It is necessary to configure the scripts that will be used by the SAPS pipeline 
 
 ### Configuring Dashboard
 
-In the [SAPS script file](/public/dashboardApp.js) replace the value of the variable `scriptsTags` by:
+In the [SAPS script file](https://github.com/ufcg-lsd/saps-dashboard/tree/master/public/dashboardApp.js) replace the value of the variable `scriptsTags` by:
 
 ```javascript
 let scriptsTags = 
@@ -57,7 +57,7 @@ let scriptsTags =
 
 ### Configuring Dispatcher and Scheduler
 
-In the [SAPS script file](/resources/execution_scripts_tags.json) replace it with the following json:
+In the [SAPS script file](https://github.com/ufcg-lsd/saps-engine/tree/develop/resources/execution_script_tags.json) replace it with the following json:
 
 ```json
 {
@@ -118,7 +118,7 @@ After the two processes are completed, the GUI will be similar to the image abov
 Run the following code inside the saps-engine project folder:
 
 ```
-bash bin/submit-task <user-email> <user-paswword> -7.913 -6.547 -37.814 -35.757 2015-06-23 2015-06-23 googleapis default ufcg-sebal <dispatcher-access-ip>:<dispatcher-access-port>
+bash bin/submit-task <user-email> <user-paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 googleapis default ufcg-sebal <dispatcher-access-ip>:<dispatcher-access-port>
 ```
 
 # Check results
@@ -160,6 +160,8 @@ After downloading all files, run the following command below for each file in th
 ```bash
 md5sum $file_path
 ```
+
+`md5sum` is a program that allows you to check the integrity of files transmitted over a network, such as the Internet, request that data has not been damaged during transport. However, we will also use it to compare our results to those expected.
 
 
 
