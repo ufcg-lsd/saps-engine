@@ -10,8 +10,8 @@ This test aims to simulate the SAPS processing pipeline using test scripts.
 2. Dashboard forwards the processing request to the Dispatcher
 3. Dispatcher adds new processing information to the Catalog
 4. Scheduler retrieves the new information entered for processing
-5. Scheduler submits the task to a Job Scheduler Service that will process the scripts
-6. Archiver retrieves job information already processed for archiving the resulting data
+5. Scheduler submits the task to a Job Execution Service that will process the scripts
+6. Archiver retrieves information already processed for archiving the resulting data
 7. Archiver sends data to Permanent Storage
 8. User requests the completed task data
 9. Dashboard forwards the order to the Dispatcher
