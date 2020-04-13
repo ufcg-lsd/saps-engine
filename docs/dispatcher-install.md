@@ -11,6 +11,9 @@ sudo apt-get update
 sudo apt-get -y install openjdk-8-jdk
 sudo apt-get -y install maven
 sudo apt-get -y install git
+sudo apt-get -y install curl
+sudo apt-get -y install jq
+sudo apt-get -y install sed
 sudo apt-get -y install python-swiftclient
 sudo apt-get -y install python-gdal
 sudo apt-get -y install python-shapely
