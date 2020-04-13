@@ -24,7 +24,7 @@ PROCESSING_TAG=${11}
 DISPATCHER_ADDRESS=${12}
 
 ## constants
-TASK_PRIORITY=0
+readonly TASK_PRIORITY=0
 
 curl --request POST "http://$DISPATCHER_ADDRESS/processings" \
   --header "Content-Type: text/plain"  \
