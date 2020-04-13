@@ -26,6 +26,6 @@ DISPATCHER_ADDRESS=${12}
 ## constants
 readonly TASK_PRIORITY=0
 
-curl --request POST "http://$DISPATCHER_ADDRESS/processings" \
+curl --request POST "http://${DISPATCHER_ADDRESS}/processings" \
   --header "Content-Type: text/plain"  \
   --data-raw "userEmail=$USER_EMAIL&userPass=$USER_PASSWORD&lowerLeft[]=$LOWER_LEFT_LATITUDE&lowerLeft[]=$LOWER_LEFT_LONGITUDE&upperRight[]=$UPPER_RIGHT_LATITUDE&upperRight[]=$UPPER_RIGHT_LONGITUDE&initialDate=$PROCESSING_INIT_DATE&finalDate=$PROCESSING_FINAL_DATE&inputGatheringTag=$INPUTDOWNLOADING_TAG&inputPreprocessingTag=$PREPROCESSING_TAG&algorithmExecutionTag=$PROCESSING_TAG&email=$USER_EMAIL&priority=$TASK_PRIORITY"
