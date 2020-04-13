@@ -161,6 +161,8 @@ After downloading all files, run the following command below for each file in th
 md5sum $file_path
 ```
 
+`md5sum` is a program that allows you to check the integrity of files transmitted over a network, such as the Internet, request that data has not been damaged during transport. However, we will also use it to compare our results to those expected.
+
 
 
 
