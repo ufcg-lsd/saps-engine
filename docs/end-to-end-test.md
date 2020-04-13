@@ -26,7 +26,7 @@ It is necessary to configure the scripts that will be used by the SAPS pipeline 
 
 ### Configuring Dashboard
 
-In the [SAPS script file](/public/dashboardApp.js) replace the value of the variable `scriptsTags` by:
+In the [SAPS script file](https://github.com/ufcg-lsd/saps-dashboard/tree/master/public/dashboardApp.js) replace the value of the variable `scriptsTags` by:
 
 ```javascript
 let scriptsTags = 
@@ -57,7 +57,7 @@ let scriptsTags =
 
 ### Configuring Dispatcher and Scheduler
 
-In the [SAPS script file](/resources/execution_scripts_tags.json) replace it with the following json:
+In the [SAPS script file](https://github.com/ufcg-lsd/saps-engine/tree/develop/resources/execution_script_tags.json) replace it with the following json:
 
 ```json
 {
