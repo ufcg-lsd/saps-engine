@@ -16,7 +16,7 @@ public class DigestUtil {
 	 * @param imageDockerInfo image docker information
 	 * @return immutable identifier that match with repository and tag passed
 	 */
-	public static String getDigest(ExecutionScriptTag imageDockerInfo) {
+	public static String getDigest(ExecutionScriptTag imageDockerInfo) throws Exception {
 
 		String dockerRepository = imageDockerInfo.getDockerRepository();
 		String dockerTag = imageDockerInfo.getDockerTag();
@@ -39,6 +39,7 @@ public class DigestUtil {
 		} catch (Exception e) {
 			LOGGER.error("Error while trying get digest from Docker image [" + dockerRepository + "] with tag ["
 					+ dockerTag + "].", e);
+			throw new Exception(e);
 		}
 
 		return result;
