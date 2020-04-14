@@ -8,12 +8,13 @@ In an apt-based Linux distro, type the below commands to install the Dispatcher 
 
 ```bash
 sudo apt-get update
-sudo apt-get -y install openjdk-8-jdk
-sudo apt-get -y install maven
-sudo apt-get -y install git
-sudo apt-get -y install python-swiftclient
-sudo apt-get -y install python-gdal
-sudo apt-get -y install python-shapely
+sudo apt-get -y install openjdk-8-jdk \
+                        maven \
+                        git
+sudo apt-get -y install curl jq sed
+sudo apt-get -y install python-swiftclient \
+                        python-gdal \
+                        python-shapely
 ```
 
 In addition to the installation of the above Linux packages, the Dispatcher source code should be fetched from its repository and compiled. This could be done following the below steps:
