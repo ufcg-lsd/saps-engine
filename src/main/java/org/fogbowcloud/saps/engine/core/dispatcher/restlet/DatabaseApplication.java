@@ -161,7 +161,7 @@ public class DatabaseApplication extends Application {
      */
     public void addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
                             String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
-                            String preprocessingPhaseTag, String processingPhaseTag, String priority, String email) {
+                            String preprocessingPhaseTag, String processingPhaseTag, String priority, String email) throws Exception {
         submissionDispatcher.addTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude,
                 initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag,
                 Integer.parseInt(priority), email);
