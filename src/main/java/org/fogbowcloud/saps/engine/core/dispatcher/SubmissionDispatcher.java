@@ -138,7 +138,7 @@ public class SubmissionDispatcher {
      */
     public void addTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
                          String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
-                         String preprocessingPhaseTag, String processingPhaseTag, int priority, String userEmail) {
+                         String preprocessingPhaseTag, String processingPhaseTag, int priority, String userEmail) throws Exception {
 
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTime(initDate);
