@@ -84,6 +84,23 @@ run_scheduler() {
     "${SCHEDULER_REPO}":"${TAG}"
 }
 
+access_catalog() {
+  local container_name=saps-catalog
+  local catalog_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $container_name)
+  local db=saps
+  local user=admin
+  psql -h "${catalog_ip}" -p 5432 $db $user
+}
+
+access() {
+  local service="${1}"
+  case $service in
+    catalog)
+      access_catalog
+      ;;
+  esac
+}
+
 build() {
   local service="${1}"
   local tag="${2-latest}"
@@ -142,6 +159,9 @@ publish()
 
 define_params() {
   case $1 in 
+    access)
+      access $2
+      ;;
     build)
       build $2 $3
       ;;
