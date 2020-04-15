@@ -16,7 +16,7 @@ public class DigestUtil {
 	 * @param imageDockerInfo image docker information
 	 * @return immutable identifier that match with repository and tag passed
 	 */
-	public static String getDigest(ExecutionScriptTag imageDockerInfo) {
+	public static String getDigest(ExecutionScriptTag imageDockerInfo) throws Exception {
 
 		String dockerRepository = imageDockerInfo.getDockerRepository();
 		String dockerTag = imageDockerInfo.getDockerTag();
@@ -24,7 +24,7 @@ public class DigestUtil {
 		String result = null;
 
 		try {
-			Process builder = new ProcessBuilder("bash", "./scripts/get_digest.sh", dockerRepository, dockerTag)
+			Process builder = new ProcessBuilder("bash", "./scripts/get_digest", dockerRepository, dockerTag)
 					.start();
 
 			LOGGER.debug("Waiting for the process for execute command: " + builder.toString());
@@ -39,6 +39,7 @@ public class DigestUtil {
 		} catch (Exception e) {
 			LOGGER.error("Error while trying get digest from Docker image [" + dockerRepository + "] with tag ["
 					+ dockerTag + "].", e);
+			throw new Exception(e);
 		}
 
 		return result;

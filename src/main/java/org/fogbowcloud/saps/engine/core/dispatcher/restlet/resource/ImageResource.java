@@ -35,6 +35,7 @@ public class ImageResource extends BaseResource {
 	private static final String EMAIL = "email";
 
 	private static final String ADD_IMAGES_MESSAGE_OK = "Tasks successfully added";
+	private static final String ADD_IMAGES_MESSAGE_FAILURE = "Failed to add new tasks";
 
 	public ImageResource() {
 		super();
@@ -138,8 +139,13 @@ public class ImageResource extends BaseResource {
 				+ email;
 		LOGGER.info(builder);
 
-		application.addNewTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude, initDate,
-				endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag, priority, email);
+		try{
+			application.addNewTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude, initDate,
+					endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag, priority, email);
+		} catch (Exception e) {
+			LOGGER.error("Error while add news tasks.", e);
+			return new StringRepresentation(ADD_IMAGES_MESSAGE_FAILURE, MediaType.TEXT_PLAIN);
+		}
 
 		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK, MediaType.TEXT_PLAIN);
 	}
