@@ -9,6 +9,7 @@ ENV CONFIG_PATH="/dispatcher/dispatcher.conf"
 ENV LOG_PROPERTIES_PATH="/dispatcher/log4j.properties"
 
 RUN apt-get update && apt-get install -y \
+    curl jq sed \
     python \
     python-swiftclient \
     python-gdal \
