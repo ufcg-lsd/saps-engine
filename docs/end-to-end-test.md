@@ -118,7 +118,7 @@ After the two processes are completed, the GUI will be similar to the image abov
 Run the following code inside the saps-engine project folder:
 
 ```
-bash bin/submit-task <user-email> <user-paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 googleapis default ufcg-sebal <dispatcher-access-ip>:<dispatcher-access-port>
+bash bin/submit-task <user-email> <user-paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 endtoend-test endtoend-test endtoend-test <dispatcher-access-ip>:<dispatcher-access-port>
 ```
 
 # Check results
