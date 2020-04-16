@@ -42,10 +42,12 @@ build_scheduler() {
 run_archiver() {
   local TAG="${1}"
   local CONTAINER_NAME="saps-archiver"
+  local TEMP_STORAGE_DIR="/nfs"
   docker run -dit \
     --name "${CONTAINER_NAME}" \
     -v "$(pwd)"/config/archiver.conf:/archiver/archiver.conf \
     -v "$(pwd)"/config/log4j.properties:/archiver/log4j.properties \
+    -v "${TEMP_STORAGE_DIR}":/archiver/nfs \
     "${ARCHIVER_REPO}":"${TAG}"
 }
 
@@ -65,11 +67,13 @@ run_dispatcher() {
   local CONTAINER_NAME="saps-dispatcher"
   local CONF_FILE="dispatcher.conf"
   local PORT="8091"
+  local TEMP_STORAGE_DIR="/nfs"
   docker run -dit \
     --name "${CONTAINER_NAME}" \
     -p "${PORT}":"${PORT}" \
     -v "$(pwd)"/config/"${CONF_FILE}":/dispatcher/"${CONF_FILE}" \
     -v "$(pwd)"/config/log4j.properties:/dispatcher/log4j.properties \
+    -v "${TEMP_STORAGE_DIR}":/dispatcher/nfs \
     "${DISPATCHER_REPO}":"${TAG}"
 }
 
