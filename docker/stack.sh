@@ -18,6 +18,8 @@ readonly SCHEDULER_CONTAINER=saps-scheduler
 readonly CATALOG_PORT=5432
 readonly DISPATCHER_PORT=8081
 
+readonly TEMP_STORAGE_DIR=/nfs
+
 build_archiver() {
   local DOCKERFILE_DIR=docker/dockerfiles/archiver
   local TAG="${1}"
@@ -51,7 +53,6 @@ build_scheduler() {
 
 run_archiver() {
   local TAG="${1}"
-  local TEMP_STORAGE_DIR="/nfs"
   docker run -dit \
     --name "${ARCHIVER_CONTAINER}" \
     -v "$(pwd)"/config/archiver.conf:/archiver/archiver.conf \
@@ -72,7 +73,6 @@ run_catalog() {
 run_dispatcher() {
   local TAG="${1}"
   local CONF_FILE="dispatcher.conf"
-  local TEMP_STORAGE_DIR="/nfs"
   docker run -dit \
     --name "${DISPATCHER_CONTAINER}" \
     -p "${DISPATCHER_PORT}":8091 \
