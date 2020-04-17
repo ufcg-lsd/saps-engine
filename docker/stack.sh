@@ -15,6 +15,10 @@ readonly CATALOG_CONTAINER=saps-catalog
 readonly DISPATCHER_CONTAINER=saps-dispatcher
 readonly SCHEDULER_CONTAINER=saps-scheduler
 
+readonly CATALOG_USER=admin
+readonly CATALOG_PASSWORD=admin
+readonly CATALOG_DB=saps
+
 readonly CATALOG_PORT=5432
 readonly DISPATCHER_PORT=8081
 
@@ -66,7 +70,9 @@ run_catalog() {
   docker run -dit \
     --name "${CATALOG_CONTAINER}" \
     -p "${CATALOG_PORT}":5432 \
-    -e POSTGRES_USER="admin" \
+    -e POSTGRES_USER="${CATALOG_USER}" \
+    -e POSTGRES_PASSWORD="${CATALOG_PASSWORD}" \
+    -e POSTGRES_DB="${CATALOG_DB}" \
     "${CATALOG_REPO}":"${TAG}"
 }
 
