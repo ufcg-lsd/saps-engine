@@ -10,6 +10,11 @@ readonly CATALOG_REPO=wesleymonte/catalog
 readonly DISPATCHER_REPO=wesleymonte/dispatcher
 readonly SCHEDULER_REPO=wesleymonte/scheduler
 
+readonly ARCHIVER_CONTAINER=saps-archiver
+readonly CATALOG_CONTAINER=saps-catalog
+readonly DISPATCHER_CONTAINER=saps-dispatcher
+readonly SCHEDULER_CONTAINER=saps-scheduler
+
 readonly DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 build_archiver() {
@@ -45,10 +50,9 @@ build_scheduler() {
 
 run_archiver() {
   local TAG="${1}"
-  local CONTAINER_NAME="saps-archiver"
   local TEMP_STORAGE_DIR="/nfs"
   docker run -dit \
-    --name "${CONTAINER_NAME}" \
+    --name "${ARCHIVER_CONTAINER}" \
     -v "$(pwd)"/config/archiver.conf:/archiver/archiver.conf \
     -v "$(pwd)"/config/log4j.properties:/archiver/log4j.properties \
     -v "${TEMP_STORAGE_DIR}":/archiver/nfs \
@@ -58,9 +62,8 @@ run_archiver() {
 run_catalog() {
   local TAG="${1}"
   local PORT="5432"
-  local CONTAINER_NAME="saps-catalog"
   docker run -dit \
-    --name "${CONTAINER_NAME}" \
+    --name "${CATALOG_CONTAINER}" \
     -p "${PORT}":"${PORT}" \
     -e POSTGRES_USER="admin" \
     "${CATALOG_REPO}":"${TAG}"
@@ -68,12 +71,11 @@ run_catalog() {
 
 run_dispatcher() {
   local TAG="${1}"
-  local CONTAINER_NAME="saps-dispatcher"
   local CONF_FILE="dispatcher.conf"
   local PORT="8091"
   local TEMP_STORAGE_DIR="/nfs"
   docker run -dit \
-    --name "${CONTAINER_NAME}" \
+    --name "${DISPATCHER_CONTAINER}" \
     -p "${PORT}":"${PORT}" \
     -v "$(pwd)"/config/"${CONF_FILE}":/dispatcher/"${CONF_FILE}" \
     -v "$(pwd)"/config/log4j.properties:/dispatcher/log4j.properties \
@@ -84,10 +86,9 @@ run_dispatcher() {
 
 run_scheduler() {
   local TAG="${1}"
-  local CONTAINER_NAME="saps-scheduler"
   local CONF_FILE="scheduler.conf"
   docker run -dit \
-    --name "${CONTAINER_NAME}" \
+    --name "${SCHEDULER_CONTAINER}" \
     -v "$(pwd)"/config/"${CONF_FILE}":/scheduler/"${CONF_FILE}" \
     -v "$(pwd)"/config/log4j.properties:/scheduler/log4j.properties \
     -v "$(pwd)"/resources/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json \
@@ -95,8 +96,7 @@ run_scheduler() {
 }
 
 access_catalog() {
-  local container_name=saps-catalog
-  local catalog_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $container_name)
+  local catalog_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CATALOG_CONTAINER})
   local db=saps
   local user=admin
   psql -h "${catalog_ip}" -p 5432 $db $user
@@ -152,31 +152,27 @@ restart() {
   do
     case $1 in
       archiver) shift
-        local container_name="saps-archiver"
-        tag=$(docker inspect -f '{{.Config.Image}}' ${container_name} | cut -d':' -f2)
-        docker stop ${container_name}
-        docker rm ${container_name}
+        tag=$(docker inspect -f '{{.Config.Image}}' ${ARCHIVER_CONTAINER} | cut -d':' -f2)
+        docker stop ${ARCHIVER_CONTAINER}
+        docker rm ${ARCHIVER_CONTAINER}
         run archiver ${tag}
         ;;
       catalog) shift
-        local container_name="saps-catalog"
-        tag=$(docker inspect -f '{{.Config.Image}}' ${container_name} | cut -d':' -f2)
-        docker stop ${container_name}
-        docker rm ${container_name}
+        tag=$(docker inspect -f '{{.Config.Image}}' ${CATALOG_CONTAINER} | cut -d':' -f2)
+        docker stop ${CATALOG_CONTAINER}
+        docker rm ${CATALOG_CONTAINER}
         run catalog ${tag}
         ;;
       dispatcher) shift
-        local container_name="saps-dispatcher"
-        tag=$(docker inspect -f '{{.Config.Image}}' ${container_name} | cut -d':' -f2)
-        docker stop ${container_name}
-        docker rm ${container_name}
+        tag=$(docker inspect -f '{{.Config.Image}}' ${DISPATCHER_CONTAINER} | cut -d':' -f2)
+        docker stop ${DISPATCHER_CONTAINER}
+        docker rm ${DISPATCHER_CONTAINER}
         run dispatcher ${tag}
         ;;
       scheduler) shift
-        local container_name="saps-scheduler"
-        tag=$(docker inspect -f '{{.Config.Image}}' ${container_name} | cut -d':' -f2)
-        docker stop ${container_name}
-        docker rm ${container_name}
+        tag=$(docker inspect -f '{{.Config.Image}}' ${SCHEDULER_CONTAINER} | cut -d':' -f2)
+        docker stop ${SCHEDULER_CONTAINER}
+        docker rm ${SCHEDULER_CONTAINER}
         run scheduler ${tag}
         ;;
       *) shift
