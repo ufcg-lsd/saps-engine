@@ -1,0 +1,21 @@
+#!/bin/bash
+
+readonly USER_EMAIL=$1
+readonly USER_PASSWORD=$2
+readonly DISPATCHER_ADDRESS=$3
+
+ALL_TASKS=`curl --silent --request GET "${DISPATCHER_ADDRESS}/processings" --header "Content-Type: text/plain"  --header "userEmail: $USER_EMAIL"  --header "userPass: $USER_PASSWORD"`
+JSON_LENGTH=$((`echo $ALL_TASKS | jq 'length' $JSON_PATH` - 1))
+
+declare -a FILTERS_ARRAY=("taskId" "dataset" "region" "inputGatheringTag" "inputPreprocessingTag" "algorithmExecutionTag" "state" "creationTime" "updateTime")
+FILTERS_ARRAY_LENGTH=$((${#FILTERS_ARRAY[@]} - 1))
+
+echo "${FILTERS_ARRAY[@]}"
+
+for json_index in `seq 0 $JSON_LENGTH`; do
+  declare -a iJSON_DATA
+  for filter_index in `seq 0 $FILTERS_ARRAY_LENGTH`; do
+    iJSON_DATA[$filter_index]=`echo $ALL_TASKS | jq -r ".[$json_index].${FILTERS_ARRAY[$filter_index]}" $JSON_PATH`
+  done
+  echo "${iJSON_DATA[@]}"
+done
