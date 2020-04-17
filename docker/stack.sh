@@ -101,10 +101,8 @@ run_scheduler() {
 }
 
 access_catalog() {
-  local catalog_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CATALOG_CONTAINER})
-  local db=saps
-  local user=admin
-  psql -h "${catalog_ip}" -p ${CATALOG_PORT} $db $user
+  local CATALOG_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CATALOG_CONTAINER})
+  psql -h "${CATALOG_IP}" -p ${CATALOG_PORT} ${CATALOG_DB} ${CATALOG_USER}
 }
 
 access() {
