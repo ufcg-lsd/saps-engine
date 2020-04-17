@@ -18,8 +18,6 @@ readonly SCHEDULER_CONTAINER=saps-scheduler
 readonly CATALOG_PORT=5432
 readonly DISPATCHER_PORT=8081
 
-readonly DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
 build_archiver() {
   local DOCKERFILE_DIR=docker/dockerfiles/archiver
   local TAG="${1}"
