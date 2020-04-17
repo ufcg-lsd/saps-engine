@@ -3,6 +3,8 @@
 # Script useful for manage stack saps services life-cycle.
 # See usage for commands & options.
 
+set -o errexit;
+
 readonly ARCHIVER_REPO=wesleymonte/archiver
 readonly CATALOG_REPO=wesleymonte/catalog
 readonly DISPATCHER_REPO=wesleymonte/dispatcher
@@ -143,6 +145,44 @@ run() {
   esac
 }
 
+restart() {
+  while [[ $# -ne 0 ]]
+  do
+    case $1 in
+      archiver) shift
+        local container_name="saps-archiver"
+        tag=$(docker inspect -f '{{.Config.Image}}' ${container_name} | cut -d':' -f2)
+        docker stop ${container_name}
+        docker rm ${container_name}
+        run archiver ${tag}
+        ;;
+      catalog) shift
+        local container_name="saps-catalog"
+        tag=$(docker inspect -f '{{.Config.Image}}' ${container_name} | cut -d':' -f2)
+        docker stop ${container_name}
+        docker rm ${container_name}
+        run catalog ${tag}
+        ;;
+      dispatcher) shift
+        local container_name="saps-dispatcher"
+        tag=$(docker inspect -f '{{.Config.Image}}' ${container_name} | cut -d':' -f2)
+        docker stop ${container_name}
+        docker rm ${container_name}
+        run dispatcher ${tag}
+        ;;
+      scheduler) shift
+        local container_name="saps-scheduler"
+        tag=$(docker inspect -f '{{.Config.Image}}' ${container_name} | cut -d':' -f2)
+        docker stop ${container_name}
+        docker rm ${container_name}
+        run scheduler ${tag}
+        ;;
+      *) shift
+        ;;
+    esac
+  done
+}
+
 publish()
 {
   local service="${1}"
@@ -173,6 +213,9 @@ define_params() {
       ;;
     run)
       run $2 $3
+      ;;
+    restart) shift
+      restart "$@"
       ;;
     publish)
       publish $2 $3
