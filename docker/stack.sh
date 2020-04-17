@@ -77,6 +77,7 @@ run_dispatcher() {
     -p "${PORT}":"${PORT}" \
     -v "$(pwd)"/config/"${CONF_FILE}":/dispatcher/"${CONF_FILE}" \
     -v "$(pwd)"/config/log4j.properties:/dispatcher/log4j.properties \
+    -v "$(pwd)"/resources/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json \
     -v "${TEMP_STORAGE_DIR}":/dispatcher/nfs \
     "${DISPATCHER_REPO}":"${TAG}"
 }
@@ -89,6 +90,7 @@ run_scheduler() {
     --name "${CONTAINER_NAME}" \
     -v "$(pwd)"/config/"${CONF_FILE}":/scheduler/"${CONF_FILE}" \
     -v "$(pwd)"/config/log4j.properties:/scheduler/log4j.properties \
+    -v "$(pwd)"/resources/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json \
     "${SCHEDULER_REPO}":"${TAG}"
 }
 
