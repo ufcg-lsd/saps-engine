@@ -208,20 +208,20 @@ publish()
 
 define_params() {
   case $1 in 
-    access)
-      access $2
+    access) shift
+      access "$@"
       ;;
-    build)
-      build $2 $3
+    build) shift
+      build "$@"
       ;;
-    run)
-      run $2 $3
+    run) shift
+      run "$@"
       ;;
     restart) shift
       restart "$@"
       ;;
-    publish)
-      publish $2 $3
+    publish) shift
+      publish "$@"
       ;;
   esac
 }
