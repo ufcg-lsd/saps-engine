@@ -15,6 +15,9 @@ readonly CATALOG_CONTAINER=saps-catalog
 readonly DISPATCHER_CONTAINER=saps-dispatcher
 readonly SCHEDULER_CONTAINER=saps-scheduler
 
+readonly CATALOG_PORT=5432
+readonly DISPATCHER_PORT=8081
+
 readonly DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 build_archiver() {
@@ -61,10 +64,9 @@ run_archiver() {
 
 run_catalog() {
   local TAG="${1}"
-  local PORT="5432"
   docker run -dit \
     --name "${CATALOG_CONTAINER}" \
-    -p "${PORT}":"${PORT}" \
+    -p "${CATALOG_PORT}":5432 \
     -e POSTGRES_USER="admin" \
     "${CATALOG_REPO}":"${TAG}"
 }
@@ -72,11 +74,10 @@ run_catalog() {
 run_dispatcher() {
   local TAG="${1}"
   local CONF_FILE="dispatcher.conf"
-  local PORT="8091"
   local TEMP_STORAGE_DIR="/nfs"
   docker run -dit \
     --name "${DISPATCHER_CONTAINER}" \
-    -p "${PORT}":"${PORT}" \
+    -p "${DISPATCHER_PORT}":8091 \
     -v "$(pwd)"/config/"${CONF_FILE}":/dispatcher/"${CONF_FILE}" \
     -v "$(pwd)"/config/log4j.properties:/dispatcher/log4j.properties \
     -v "$(pwd)"/resources/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json \
@@ -99,7 +100,7 @@ access_catalog() {
   local catalog_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CATALOG_CONTAINER})
   local db=saps
   local user=admin
-  psql -h "${catalog_ip}" -p 5432 $db $user
+  psql -h "${catalog_ip}" -p ${CATALOG_PORT} $db $user
 }
 
 access() {
