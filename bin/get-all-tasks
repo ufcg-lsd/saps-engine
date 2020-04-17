@@ -1,5 +1,15 @@
 #!/bin/bash
 
+## This script get all tasks for SAPS interacting with Dispatcher backend.
+
+## checking args
+if [ $# -ne 3 ]
+then
+  echo "Usage: $0 USER_EMAIL USER_PASSWORD DISPATCHER_ADDRESS"
+  exit 1
+fi
+
+# args
 readonly USER_EMAIL=$1
 readonly USER_PASSWORD=$2
 readonly DISPATCHER_ADDRESS=$3
