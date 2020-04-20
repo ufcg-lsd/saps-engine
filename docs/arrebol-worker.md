@@ -1,23 +1,14 @@
 # Install and Configure Arrebol worker
 
 The Arrebol worker is a job processing resource that is given one or more tasks to perform making Arrebol manage each of its steps and update important information for its users such as the state of the job, which command is being executed and the exitcode of the commands. The Scheduler component uses Arrebol to send the same task 3 times, each time in the respective phases of the SAPS pipeline (inputdownloading, preprocessing and processing).
+
+## About the Docker dependency
+
+This configuration is important, as workers are used as Arrebol's labor to perform the work and return information about the execution for use by the service user, for this [access this link to know about the documentation of this step](https://github.com/wesleymonte/worker-deployment).
   
 ## Dependencies
 
-In an apt-based Linux distribution, enter the commands below to install the Docker software.
-
-```bash
-sudo apt-get update
-sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo apt-key fingerprint 0EBFCD88
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-```
-
-
-In addition to Docker, you will need to install the NFS client with the following command:
+In an apt-based Linux distribution, enter the commands below to install NFS client with the following command:
 
 ```bash
 sudo apt-get update
@@ -25,30 +16,6 @@ sudo apt-get install nfs-common
 ```
 
 ## Configure
-
-### Docker
-
-First, need to configure Docker to make Arrebol communicate with the worker’s VM as follows:
-
-```
-sudo vim /lib/systemd/system/docker.service
-```
-
-Change the value of the `ExecStart` variable to `/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:5555 --containerd=/run/containerd/containerd.sock`, 
-getting something like:
-
-```
-...
-ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:5555 --containerd=/run/containerd/containerd.sock
-...
-```
-
-Restart the Docker service to update to the new configuration
-
-```
-sudo systemctl daemon-reload
-sudo service docker restart
-```
 
 ### NFS Client
 
