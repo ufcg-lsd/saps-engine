@@ -14,6 +14,7 @@ readonly ARCHIVER_CONTAINER=saps-archiver
 readonly CATALOG_CONTAINER=saps-catalog
 readonly DISPATCHER_CONTAINER=saps-dispatcher
 readonly SCHEDULER_CONTAINER=saps-scheduler
+readonly SAPS_NETWORK=saps-network
 
 readonly CATALOG_USER=admin
 readonly CATALOG_PASSWORD=admin
@@ -55,10 +56,19 @@ build_scheduler() {
             --file "${DOCKERFILE_DIR}" .
 }
 
+check_network() {
+  local exists="$(docker network ls --format "{{.Name}}" --filter name=${SAPS_NETWORK})"
+  if [ ! "${exists}" ]; then
+    echo "Creating saps network..."
+    docker network create "${SAPS_NETWORK}"
+  fi
+}
+
 run_archiver() {
   local TAG="${1}"
   docker run -dit \
     --name "${ARCHIVER_CONTAINER}" \
+    --net="${SAPS_NETWORK}" --net-alias=archiver \
     -v "$(pwd)"/config/archiver.conf:/archiver/archiver.conf \
     -v "$(pwd)"/config/log4j.properties:/archiver/log4j.properties \
     -v "${TEMP_STORAGE_DIR}":/archiver/nfs \
@@ -70,6 +80,7 @@ run_catalog() {
   docker run -dit \
     --name "${CATALOG_CONTAINER}" \
     -p "${CATALOG_PORT}":5432 \
+    --net="${SAPS_NETWORK}" --net-alias=catalog \
     -e POSTGRES_USER="${CATALOG_USER}" \
     -e POSTGRES_PASSWORD="${CATALOG_PASSWORD}" \
     -e POSTGRES_DB="${CATALOG_DB}" \
@@ -82,6 +93,7 @@ run_dispatcher() {
   docker run -dit \
     --name "${DISPATCHER_CONTAINER}" \
     -p "${DISPATCHER_PORT}":8091 \
+    --net="${SAPS_NETWORK}" --net-alias=dispatcher \
     -v "$(pwd)"/config/"${CONF_FILE}":/dispatcher/"${CONF_FILE}" \
     -v "$(pwd)"/config/log4j.properties:/dispatcher/log4j.properties \
     -v "$(pwd)"/resources/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json \
@@ -94,6 +106,7 @@ run_scheduler() {
   local CONF_FILE="scheduler.conf"
   docker run -dit \
     --name "${SCHEDULER_CONTAINER}" \
+    --net="${SAPS_NETWORK}" --net-alias=scheduler \
     -v "$(pwd)"/config/"${CONF_FILE}":/scheduler/"${CONF_FILE}" \
     -v "$(pwd)"/config/log4j.properties:/scheduler/log4j.properties \
     -v "$(pwd)"/resources/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json \
@@ -135,6 +148,7 @@ build() {
 run() {
   local service="${1}"
   local tag="${2:-latest}"
+  check_network
   case $service in
     archiver)
       run_archiver ${tag}
