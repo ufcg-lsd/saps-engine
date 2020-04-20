@@ -28,6 +28,9 @@ FILTERS_ARRAY_LENGTH=$((${#FILTERS_ARRAY[@]} - 1))
 
 echo "${FILTERS_ARRAY[@]}" | awk '{print tolower($0)}'
 
+## for each index of the array of the response of the curl request
+## with the task information the information from the filter array
+## is captured and added to the iJSON_DATA then printed on the screen
 for json_index in $(seq 0 $JSON_LENGTH); do
   declare -a iJSON_DATA
   for filter_index in $(seq 0 $FILTERS_ARRAY_LENGTH); do
