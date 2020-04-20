@@ -21,7 +21,7 @@ readonly CATALOG_PASSWORD=admin
 readonly CATALOG_DB=saps
 
 readonly CATALOG_PORT=5432
-readonly DISPATCHER_PORT=8081
+readonly DISPATCHER_PORT=8091
 
 readonly TEMP_STORAGE_DIR=/nfs
 
