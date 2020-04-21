@@ -164,33 +164,30 @@ run() {
   esac
 }
 
+restart_template() {
+  local CONTAINER_NAME="$1"
+  local SERVICE="$2"
+  local TAG=$(docker inspect -f '{{.Config.Image}}' ${CONTAINER_NAME} | cut -d':' -f2)
+  docker stop "${CONTAINER_NAME}"
+  docker rm "${CONTAINER_NAME}"
+  run ${SERVICE} ${TAG}
+}
+
 restart() {
   while [[ $# -ne 0 ]]
   do
     case $1 in
       archiver) shift
-        tag=$(docker inspect -f '{{.Config.Image}}' ${ARCHIVER_CONTAINER} | cut -d':' -f2)
-        docker stop ${ARCHIVER_CONTAINER}
-        docker rm ${ARCHIVER_CONTAINER}
-        run archiver ${tag}
+        restart_template ${ARCHIVER_CONTAINER} archiver
         ;;
       catalog) shift
-        tag=$(docker inspect -f '{{.Config.Image}}' ${CATALOG_CONTAINER} | cut -d':' -f2)
-        docker stop ${CATALOG_CONTAINER}
-        docker rm ${CATALOG_CONTAINER}
-        run catalog ${tag}
+        restart_template ${CATALOG_CONTAINER} catalog
         ;;
       dispatcher) shift
-        tag=$(docker inspect -f '{{.Config.Image}}' ${DISPATCHER_CONTAINER} | cut -d':' -f2)
-        docker stop ${DISPATCHER_CONTAINER}
-        docker rm ${DISPATCHER_CONTAINER}
-        run dispatcher ${tag}
+        restart_template ${DISPATCHER_CONTAINER} dispatcher
         ;;
       scheduler) shift
-        tag=$(docker inspect -f '{{.Config.Image}}' ${SCHEDULER_CONTAINER} | cut -d':' -f2)
-        docker stop ${SCHEDULER_CONTAINER}
-        docker rm ${SCHEDULER_CONTAINER}
-        run scheduler ${tag}
+        restart_template ${SCHEDULER_CONTAINER} scheduler
         ;;
       *) shift
         ;;
