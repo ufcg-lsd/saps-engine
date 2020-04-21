@@ -195,6 +195,15 @@ restart() {
   done
 }
 
+# Stop and remove all containers
+stop() {
+  for service in ${ARCHIVER_CONTAINER} ${CATALOG_CONTAINER} ${DISPATCHER_CONTAINER} ${SCHEDULER_CONTAINER};
+  do
+    docker stop "${service}"
+    docker rm "${service}"
+  done
+}
+
 publish()
 {
   local service="${1}"
@@ -229,6 +238,8 @@ define_params() {
     restart) shift
       restart "$@"
       ;;
+    stop) shift
+      stop "$@"
     publish) shift
       publish "$@"
       ;;
