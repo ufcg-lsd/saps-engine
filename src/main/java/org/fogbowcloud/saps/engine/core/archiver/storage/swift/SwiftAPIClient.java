@@ -8,12 +8,9 @@ import java.util.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
-import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.IdentityToken;
-import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityRequestHelper;
 import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
-import org.json.JSONException;
 
 public class SwiftAPIClient {
 
@@ -25,10 +22,8 @@ public class SwiftAPIClient {
     private final String userId;
     private final String userPassword;
 
-    private IdentityToken token;
-
     SwiftAPIClient(Properties properties)
-        throws InvalidPropertyException, IOException, JSONException {
+        throws InvalidPropertyException {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift API Client.");
 
@@ -37,9 +32,6 @@ public class SwiftAPIClient {
         this.userPassword = properties.getProperty(SapsPropertiesConstants.Openstack.USER_PASSWORD);
         this.authUrl = properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL);
         swiftUrl = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL);
-
-        this.token = KeystoneV3IdentityRequestHelper.createIdentityToken(this.authUrl, projectId,
-                userId, userPassword);
         }
 
     private boolean checkProperties(Properties properties) {
