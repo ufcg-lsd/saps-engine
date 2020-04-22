@@ -30,6 +30,10 @@ public class SwiftAPIClient {
     private static final String CONTAINER_URL_PATTERN = "%s/%s?path=%s";
 
     private final String swiftUrl;
+    private final String authUrl;
+    private final String projectId;
+    private final String userId;
+    private final String userPassword;
 
     private IdentityToken token;
 
@@ -38,9 +42,10 @@ public class SwiftAPIClient {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift API Client.");
 
-        String projectId = properties.getProperty(SapsPropertiesConstants.Openstack.PROJECT_ID);
-        String userId = properties.getProperty(SapsPropertiesConstants.Openstack.USER_ID);
-        String userPassword = properties.getProperty(SapsPropertiesConstants.Openstack.USER_PASSWORD);
+        this.projectId = properties.getProperty(SapsPropertiesConstants.Openstack.PROJECT_ID);
+        this.userId = properties.getProperty(SapsPropertiesConstants.Openstack.USER_ID);
+        this.userPassword = properties.getProperty(SapsPropertiesConstants.Openstack.USER_PASSWORD);
+        this.authUrl = properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL);
         String tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL);
         swiftUrl = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL);
 
