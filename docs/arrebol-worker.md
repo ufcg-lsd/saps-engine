@@ -1,14 +1,12 @@
-# Install and Configure Arrebol worker
+# Setting up Arrebol worker
 
-The Arrebol worker is a job processing resource that is given one or more tasks to perform making Arrebol manage each of its steps and update important information for its users such as the state of the job, which command is being executed and the exitcode of the commands. The Scheduler component uses Arrebol to send the same task 3 times, each time in the respective phases of the SAPS pipeline (inputdownloading, preprocessing and processing).
+## Docker
 
-## Setting up
+To configure Docker, follow the steps outlined [here](https://github.com/wesleymonte/worker-deployment). When they are successfully completed, proceed to the instructions below).
 
-To configure your Worker, follow the steps outlined [here](https://github.com/wesleymonte/worker-deployment). When they are successfully completed, proceed to the instructions below).
+## NFS Client
 
-### NFS Client
-
-## Dependencies
+### Dependencies
 
 In an apt-based Linux distribution, enter the commands below to install NFS client with the following command:
 
@@ -17,7 +15,7 @@ sudo apt-get update
 sudo apt-get install nfs-common
 ```
 
-## Configure
+### Configure
 
 It is necessary to mount the NFS temp storage on the host for the purpose of SAPS operation, to do this, use the name of the root folder `/nfs` **(there should not be another name for this folder)** for the mapping occurring, being done as follows:
 
