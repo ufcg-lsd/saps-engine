@@ -3,11 +3,7 @@ package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -135,5 +131,19 @@ public class SwiftAPIClient {
             }
         }
         return false;
+    }
+
+    private String[] buildCliCommand(String... args) {
+        List<String> defaultArgs = new ArrayList<>(Arrays.asList("swift",
+                "--os-auth-url", this.authUrl,
+                "--auth-version", "3",
+                "--os-project-id", this.projectId,
+                "--os-user-id", this.userId,
+                "--os-password", this.userPassword,
+                "--os-storage-url", this.swiftUrl));
+        Collections.addAll(defaultArgs, args);
+        String[] cmd = new String[defaultArgs.size()];
+        defaultArgs.toArray(cmd);
+        return cmd;
     }
 }
