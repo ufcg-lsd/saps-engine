@@ -65,8 +65,8 @@ public class SwiftAPIClient {
     public void createContainer(String containerName) throws Exception {
         // TODO: test JUnit
         LOGGER.debug("Creating container " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
-                "post", containerName);
+        String cmd[] = buildCliCommand("post", containerName);
+        ProcessBuilder builder = new ProcessBuilder(cmd);
 
         LOGGER.debug("Executing command " + builder.command());
 
@@ -82,8 +82,8 @@ public class SwiftAPIClient {
         String completeFileName = pseudFolder + File.separator + file.getName();
 
         LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
-                "upload", containerName, file.getAbsolutePath(), "--object-name", completeFileName);
+        String cmd[] = buildCliCommand("upload", containerName, file.getAbsolutePath(), "--object-name", completeFileName);
+        ProcessBuilder builder = new ProcessBuilder(cmd);
         Process p = builder.start();
         p.waitFor();
 
@@ -94,8 +94,8 @@ public class SwiftAPIClient {
 
     public void deleteFile(String containerName, String filePath) throws Exception {
         LOGGER.debug("Deleting " + filePath + " from " + containerName);
-        ProcessBuilder builder = new ProcessBuilder("swift", "--os-auth-token", token.getAccessId(), "--os-storage-url", swiftUrl,
-                "delete", containerName, filePath);
+        String cmd[] = buildCliCommand("delete", containerName, filePath);
+        ProcessBuilder builder = new ProcessBuilder(cmd);
 
         Process p = builder.start();
         p.waitFor();
