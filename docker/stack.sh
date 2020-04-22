@@ -5,10 +5,10 @@
 
 set -o errexit;
 
-readonly ARCHIVER_REPO=wesleymonte/archiver
-readonly CATALOG_REPO=wesleymonte/catalog
-readonly DISPATCHER_REPO=wesleymonte/dispatcher
-readonly SCHEDULER_REPO=wesleymonte/scheduler
+readonly ARCHIVER_REPO=ufcgsaps/archiver
+readonly CATALOG_REPO=ufcgsaps/catalog
+readonly DISPATCHER_REPO=ufcgsaps/dispatcher
+readonly SCHEDULER_REPO=ufcgsaps/scheduler
 
 readonly ARCHIVER_CONTAINER=saps-archiver
 readonly CATALOG_CONTAINER=saps-catalog
