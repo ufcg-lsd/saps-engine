@@ -4,9 +4,7 @@ package org.fogbowcloud.saps.engine.core.archiver.storage.swift;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
-import org.json.JSONException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -23,7 +21,7 @@ public class SwiftAPIClientTest {
 
     @Test
     @Ignore
-    public void testListFiles() throws IOException, InvalidPropertyException, JSONException {
+    public void testListFiles() throws Exception {
         Properties properties = loadConfigFile(CONFIG_FILE);
         SwiftAPIClient client = new SwiftAPIClient(properties);
         String containerName = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.CONTAINER_NAME);
