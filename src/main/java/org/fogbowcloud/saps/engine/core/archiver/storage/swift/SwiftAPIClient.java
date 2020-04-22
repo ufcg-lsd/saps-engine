@@ -42,10 +42,9 @@ public class SwiftAPIClient {
         this.userId = properties.getProperty(SapsPropertiesConstants.Openstack.USER_ID);
         this.userPassword = properties.getProperty(SapsPropertiesConstants.Openstack.USER_PASSWORD);
         this.authUrl = properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL);
-        String tokenAuthUrl = properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL);
         swiftUrl = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL);
 
-        this.token = KeystoneV3IdentityRequestHelper.createIdentityToken(tokenAuthUrl, projectId,
+        this.token = KeystoneV3IdentityRequestHelper.createIdentityToken(this.authUrl, projectId,
                 userId, userPassword);
         }
 
