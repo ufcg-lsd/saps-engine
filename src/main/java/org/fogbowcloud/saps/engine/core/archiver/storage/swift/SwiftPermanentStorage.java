@@ -24,7 +24,6 @@ import org.fogbowcloud.saps.engine.core.archiver.storage.PermanentStorage;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.TaskNotFoundException;
 import org.fogbowcloud.saps.engine.core.model.SapsImage;
-import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
@@ -232,10 +231,9 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
         String dir = swiftExports + File.separator + taskId;
 
-        List<String> fileNames = swiftAPIClient.listFiles(containerName, dir);
-        LOGGER.info("Files List: " + fileNames);
-
         try {
+            List<String> fileNames = swiftAPIClient.listFiles(containerName, dir);
+            LOGGER.info("Files List: " + fileNames);
             for (String file : fileNames) {
                 LOGGER.debug("Trying to delete file " + file + " from " + containerName);
                 swiftAPIClient.deleteFile(containerName, file);
@@ -269,7 +267,7 @@ public class SwiftPermanentStorage implements PermanentStorage {
             try {
                 List<String> filesPath = this.swiftAPIClient.listFiles(this.containerName, dirPath);
                 files.addAll(filesPath);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.error("Error while list files of path [" + dir + "] from Object Storage", e);
             }
         }

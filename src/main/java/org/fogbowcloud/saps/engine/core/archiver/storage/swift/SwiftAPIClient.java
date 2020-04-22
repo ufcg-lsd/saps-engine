@@ -6,16 +6,11 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.archiver.storage.exceptions.InvalidPropertyException;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.IdentityToken;
 import org.fogbowcloud.saps.engine.core.dispatcher.email.keystone.KeystoneV3IdentityRequestHelper;
+import org.fogbowcloud.saps.engine.core.util.ProcessUtil;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesConstants;
 import org.fogbowcloud.saps.engine.utils.SapsPropertiesUtil;
 import org.json.JSONException;
@@ -23,7 +18,6 @@ import org.json.JSONException;
 public class SwiftAPIClient {
 
     private static final Logger LOGGER = Logger.getLogger(SwiftAPIClient.class);
-    private static final String CONTAINER_URL_PATTERN = "%s/%s?path=%s";
 
     private final String swiftUrl;
     private final String authUrl;
@@ -106,30 +100,34 @@ public class SwiftAPIClient {
         LOGGER.debug(filePath + " file deleted successfully from " + containerName);
     }
 
-    public List<String> listFiles(String containerName, String dirPath) throws IOException {
-        List<String> files = new ArrayList<>();
-        String url = String.format(CONTAINER_URL_PATTERN, swiftUrl, containerName, dirPath);
-        HttpClient client = HttpClients.createDefault();
-        HttpGet httpget = new HttpGet(url);
-        httpget.addHeader("X-Auth-Token", token.getAccessId());
-        HttpResponse response = client.execute(httpget);
-        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK && response.getStatusLine().getStatusCode() != HttpStatus.SC_NO_CONTENT) {
-            throw new IOException("The request to list files on object storage was failed: " + EntityUtils.toString(response.getEntity()));
+    public List<String> listFiles(String containerName, String dirPath) throws Exception {
+        LOGGER.info("Listing files in path [" + dirPath + "] from container [" + containerName + "]");
+        String cmd[] = buildCliCommand("list", "-p", dirPath, containerName);
+        ProcessBuilder builder = new ProcessBuilder(cmd);
+
+        Process p = builder.start();
+        p.waitFor();
+
+        if (p.exitValue() != 0) {
+            throw new IOException("Error while listing files in path [" + dirPath + "] from container [" + containerName + "]" + IOUtils.toString(p.getErrorStream()));
         }
-        if(Objects.nonNull(response.getEntity())) {
-            files = Arrays.asList(EntityUtils.toString(response.getEntity()).split("\n"));
-        }
-        return files;
+
+        String output = ProcessUtil.getOutput(p);
+        return Arrays.asList(output.split(System.lineSeparator()));
     }
 
     public boolean existsTask(String containerName, String basePath, String taskId) throws IOException {
-        List<String> files = this.listFiles(containerName, basePath);
-        for(String filePath : files) {
-            if(Paths.get(filePath).getFileName().toString().equals(taskId)) {
-                return true;
+        try {
+            List<String> files = this.listFiles(containerName, basePath);
+            for(String filePath : files) {
+                if(Paths.get(filePath).getFileName().toString().equals(taskId)) {
+                    return true;
+                }
             }
+            return false;
+        } catch (Exception e) {
+            throw new IOException("Error while check if task [" + taskId + "] exists on container [" + containerName + "]", e);
         }
-        return false;
     }
 
     private String[] buildCliCommand(String... args) {
