@@ -4,7 +4,7 @@ The Arrebol worker is a job processing resource that is given one or more tasks 
 
 ## Setting up
 
-This configuration is important, as workers are used as Arrebol's labor to perform the work and return information about the execution for use by the service user, for this [access this link to know about the documentation of this step](https://github.com/wesleymonte/worker-deployment).
+To configure your Worker, follow the steps outlined [here](https://github.com/wesleymonte/worker-deployment). When they are successfully completed, proceed to the instructions below).
   
 ## Dependencies
 
