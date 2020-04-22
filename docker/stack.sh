@@ -81,6 +81,7 @@ run_catalog() {
     --name "${CATALOG_CONTAINER}" \
     -p "${CATALOG_PORT}":5432 \
     --net="${SAPS_NETWORK}" --net-alias=catalog \
+    -v catalogdata:/var/lib/postgresql/data \
     -e POSTGRES_USER="${CATALOG_USER}" \
     -e POSTGRES_PASSWORD="${CATALOG_PASSWORD}" \
     -e POSTGRES_DB="${CATALOG_DB}" \
@@ -240,6 +241,7 @@ define_params() {
       ;;
     stop) shift
       stop "$@"
+      ;;
     publish) shift
       publish "$@"
       ;;
