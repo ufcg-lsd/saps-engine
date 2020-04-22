@@ -2,7 +2,7 @@
 
 The Arrebol worker is a job processing resource that is given one or more tasks to perform making Arrebol manage each of its steps and update important information for its users such as the state of the job, which command is being executed and the exitcode of the commands. The Scheduler component uses Arrebol to send the same task 3 times, each time in the respective phases of the SAPS pipeline (inputdownloading, preprocessing and processing).
 
-## About the Docker dependency
+## Setting up
 
 This configuration is important, as workers are used as Arrebol's labor to perform the work and return information about the execution for use by the service user, for this [access this link to know about the documentation of this step](https://github.com/wesleymonte/worker-deployment).
   
@@ -45,4 +45,3 @@ ls /nfs
 ```
 
 If the empty file `test` was viewed by the worker, the sharing was successful.
-
