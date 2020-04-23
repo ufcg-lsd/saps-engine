@@ -28,9 +28,7 @@ Where:
 - **nfs-temp-storage-ip** is the IP of the VM that contains the NFS temp storage
 - **nfs-temp-storage-path** is the same path used by SAPS for NFS temp storage as mentioned [here](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/archiver-install.md#temporary-storage)
 
-## Test
-
-### NFS Client
+### Test
 
 Go to the VM that is NFS temp storage and run the following command:
 ```bash
