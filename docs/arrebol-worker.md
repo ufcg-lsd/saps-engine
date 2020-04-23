@@ -1,5 +1,7 @@
 # Setting up Arrebol worker
 
+The Worker is a primary resource for the operation of the job execution service, Arrebol. To configure it, follow the steps below in the Worker VM over NFS Client and Docker.
+
 ## Docker
 
 To configure Docker, follow the steps outlined [here](https://github.com/wesleymonte/worker-deployment). When they are successfully completed, proceed to the instructions below).
