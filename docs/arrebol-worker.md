@@ -8,6 +8,8 @@ To configure Docker, follow the steps outlined [here](https://github.com/wesleym
 
 ## NFS Client
 
+To configure this client, access the worker VM and follow the steps below.
+
 ### Dependencies
 
 In an apt-based Linux distribution, enter the commands below to install NFS client with the following command:
