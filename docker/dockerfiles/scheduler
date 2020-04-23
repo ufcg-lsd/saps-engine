@@ -1,0 +1,25 @@
+FROM maven:3.6.3-jdk-8 AS builder
+
+WORKDIR /app
+
+COPY pom.xml .
+COPY src  ./src
+RUN mvn -e -B clean install
+
+FROM openjdk:8
+
+LABEL maintainer="wesley.monte@ccc.ufcg.edu.br"
+
+ENV MAIN_CLASS="org.fogbowcloud.saps.engine.core.scheduler.SchedulerMain"
+
+# Create bind mounts for these entries
+ENV CONFIG_PATH="/scheduler/scheduler.conf"
+ENV LOG_PROPERTIES_PATH="/scheduler/log4j.properties"
+
+WORKDIR /scheduler
+
+COPY --from=builder /app/target/saps-engine-0.0.1-SNAPSHOT.jar scheduler.jar
+COPY --from=builder /app/target/lib lib/
+COPY ./resources resources/
+
+ENTRYPOINT java -Dlog4j.configuration=file:"${LOG_PROPERTIES_PATH}" -cp scheduler.jar:lib/* "${MAIN_CLASS}" "${CONFIG_PATH}"

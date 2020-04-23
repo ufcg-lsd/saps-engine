@@ -1,0 +1,29 @@
+FROM maven:3.6.3-jdk-8 AS builder
+
+WORKDIR /app
+
+COPY pom.xml .
+COPY src  ./src
+RUN mvn -e -B clean install
+
+FROM openjdk:8
+
+LABEL maintainer="wesley.monte@ccc.ufcg.edu.br"
+
+ENV MAIN_CLASS="org.fogbowcloud.saps.engine.core.archiver.ArchiverMain"
+
+# Create bind mounts for these three entries
+ENV CONFIG_PATH="/archiver/archiver.conf"
+ENV LOG_PROPERTIES_PATH="/archiver/log4j.properties"
+ENV TEMP_STORAGE_DIR="/archiver/nfs" 
+
+RUN mkdir -p ${TEMP_STORAGE_DIR}
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python-swiftclient 
+
+WORKDIR /archiver
+
+COPY --from=builder /app/target/saps-engine-0.0.1-SNAPSHOT.jar archiver.jar
+COPY --from=builder /app/target/lib lib/
+
+ENTRYPOINT java -Dlog4j.configuration=file:"${LOG_PROPERTIES_PATH}" -cp archiver.jar:lib/* "${MAIN_CLASS}" "${CONFIG_PATH}"
