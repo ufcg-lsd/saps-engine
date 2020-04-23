@@ -28,7 +28,6 @@ readonly TEMP_STORAGE_DIR=/nfs
 build_archiver() {
   local DOCKERFILE_DIR=docker/dockerfiles/archiver
   local TAG="${1}"
-  mvn clean install -DskipTests
   docker build --tag "${ARCHIVER_REPO}":"${TAG}" \
             --file "${DOCKERFILE_DIR}" .
 }
@@ -43,7 +42,6 @@ build_catalog() {
 build_dispatcher() {
   local DOCKERFILE_DIR=docker/dockerfiles/dispatcher
   local TAG="${1}"
-  mvn clean install -DskipTests
   docker build --tag "${DISPATCHER_REPO}":"${TAG}" \
             --file "${DOCKERFILE_DIR}" .
 }
@@ -51,7 +49,6 @@ build_dispatcher() {
 build_scheduler() {
   local DOCKERFILE_DIR=docker/dockerfiles/scheduler
   local TAG="${1}"
-  mvn clean install -DskipTests
   docker build --tag "${SCHEDULER_REPO}":"${TAG}" \
             --file "${DOCKERFILE_DIR}" .
 }
