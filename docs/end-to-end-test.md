@@ -1,8 +1,98 @@
-# Overview
+# End to end test using NOP algorithms
+
+## Overview
+
+The NOP endtoend tests are used to make the SAPS components and their processing pipeline available in a decoupled manner from the other versions of the more complex inputdownloading, preprocessing and processing algorithms that result in errors involving their softness. Therefore, the NOPs algorithms will perform minimally simple and error-prone processing, being fundamental for a first test of a new SAPS deploy.
+
+## Configure
+
+NOP tests are done from the [CLI task submission script](/bin/submit-task), but first you need to set the [execution script tags file](/recourses/execution_script_tags.json) to the following value:
+
+```json
+{
+  "inputdownloading":[
+    {
+      "name":"nop",
+      "docker_tag":"nop",
+      "docker_repository":"fogbow/inputdownloader"
+    },{
+      "name":"nop-fake-files",
+      "docker_tag":"nop-fake-files",
+      "docker_repository":"fogbow/inputdownloader"
+    },{
+      "name":"nop-download-files",
+      "docker_tag":"nop-download-files",
+      "docker_repository":"fogbow/inputdownloader"
+    }
+  ],
+  "preprocessing":[
+    {
+      "name":"nop",
+      "docker_tag":"nop",
+      "docker_repository":"fogbow/preprocessor"
+    },{
+      "name":"nop-fake-files",
+      "docker_tag":"nop-fake-files",
+      "docker_repository":"fogbow/preprocessor"
+    },{
+      "name":"nop-download-files",
+      "docker_tag":"nop-download-files",
+      "docker_repository":"fogbow/preprocessor"
+    }
+  ],
+  "processing":[
+    {
+      "name":"nop",
+      "docker_tag":"nop",
+      "docker_repository":"fogbow/worker"
+    },{
+      "name":"nop-fake-files",
+      "docker_tag":"nop-fake-files",
+      "docker_repository":"fogbow/worker"
+    },{
+      "name":"nop-download-files",
+      "docker_tag":"nop-download-files",
+      "docker_repository":"fogbow/worker"
+    }
+  ]
+}
+```
+
+## NOP tests
+
+There are three types of NOP algorithms for each phase of the SAPS pipeline, they are: `nop`, `nop-fake-files`, `nop-download-files`, below are the instructions for performing the tests via CLI.
+
+### 1. Simple NOP
+
+Run the following command inside the `saps-engine` dir:
+
+```bash
+bash bin/submit-task <user-email> <user-paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 nop nop nop <dispatcher-access-ip>:<dispatcher-access-port>
+```
+
+### 2. NOP with fake files
+
+Run the following command inside the `saps-engine` dir:
+
+```bash
+bash bin/submit-task <user-email> <user-paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 nop-fake-files nop-fake-files nop-fake-files <dispatcher-access-ip>:<dispatcher-access-port>
+```
+
+### 3. NOP with download files
+
+Run the following command inside the `saps-engine` dir:
+
+```bash
+bash bin/submit-task <user-email> <user-paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 nop-download-files nop-download-files nop-download-files <dispatcher-access-ip>:<dispatcher-access-port>
+```
+
+# End to end test using complex algorithms
+
+## Overview
 
 This test aims to simulate the SAPS processing pipeline using test scripts.
 
-# Test flow
+## Test flow
 
 ![Test flow](img/end-to-end-test-flow.png)
 
@@ -18,7 +108,7 @@ This test aims to simulate the SAPS processing pipeline using test scripts.
 10. Dispatcher generates links to access Permanent Storage of job data
 11. Dispatcher sends an email to the User with access links
 
-# Configure
+## Configure
 
 It is necessary to configure the scripts that will be used by the SAPS pipeline to be able to produce the same result expected by the test, for that, we must configure three components to recognize these test scripts.
 
@@ -85,23 +175,23 @@ In the [SAPS script file](https://github.com/ufcg-lsd/saps-engine/tree/develop/r
 }
 ```
 
-# Run
+## Run
 
-## Using Dashboard
+### Via Dashboard
 
-### 1. Login to the Dashboard
+#### 1. Login to the Dashboard
 
 ![Login Dashboard](img/end-to-end-test-run-img1.png)
 
 Access the GUI through the url ```$dashboard_access_ip:$dashboard_access_port``` and connect using valid credentials.
 
-### 2. Create new processing
+#### 2. Create new processing
 
 ![New processing](img/end-to-end-test-run-img2.png)
 
 When connecting successfully, click on `New Processing`, fill in the fields as in the image above and click on `Process`
 
-### 3. New processing created
+#### 3. New processing created
 
 ![New processing created](img/end-to-end-test-run-img3.png)
 
@@ -113,7 +203,7 @@ After a few seconds, it will be possible to observe the image above, that is, tw
 
 After the two processes are completed, the GUI will be similar to the image above, one with LANDSAT 8 with a successful end state (`Success`) and the other with LANDSAT 7 with a failed end state (`Failure`).
 
-## Using CLI
+### Via CLI
 
 Run the following code inside the saps-engine project folder:
 
@@ -121,7 +211,7 @@ Run the following code inside the saps-engine project folder:
 bash bin/submit-task <user-email> <user-paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 endtoend-test endtoend-test endtoend-test <dispatcher-access-ip>:<dispatcher-access-port>
 ```
 
-# Check results
+## Check results
 
 ### 1. Data tab
 
