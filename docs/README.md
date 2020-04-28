@@ -1,6 +1,6 @@
 # Roadmap
 
-The SAPS is currently composed of four main services: `Archiver`, `Catalog`, `Dispatcher` and `Scheduler`. In addition, saps uses a job execution service called `Arrebol`. Given the context, below we have the correct deployment sequence for Saps components.
+SAPS is currently composed of four main services: `Archiver`, `Catalog`, `Dispatcher` and `Scheduler`. In addition, saps uses a job execution service called `Arrebol`. Given the context, below we have the correct deployment sequence for Saps components.
 1. [Catalog](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/catalog-install.md)
 2. [Archiver](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/archiver-install.md)
 3. [Dispatcher](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/dispatcher-install.md)
