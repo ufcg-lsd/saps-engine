@@ -1,0 +1,48 @@
+version: '3.7'
+services:
+  catalog:
+    image: ufcgsaps/catalog
+    env_file: ./config/catalog.env
+    ports: 
+      - 5432:5432
+    networks: 
+      - saps-network
+    volumes: 
+      - catalogdata:/var/lib/postgresql/data
+      
+  dispatcher:
+    image: ufcgsaps/dispatcher
+    ports:
+      - 8091:8091
+    networks: 
+      - saps-network
+    volumes:
+      - ./config/dispatcher.conf:/dispatcher/dispatcher.conf
+      - ./config/log4j.properties:/dispatcher/log4j.properties
+      - ./config/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json
+      - /nfs:/dispatcher/nfs
+  
+  scheduler:
+    image: ufcgsaps/scheduler
+    networks: 
+      - saps-network
+    volumes:
+      - ./config/scheduler.conf:/scheduler/scheduler.conf
+      - ./config/log4j.properties:/scheduler/log4j.properties
+      - ./config/execution_script_tags.json:/scheduler/resources/execution_script_tags.json
+    
+  archiver:
+    image: ufcgsaps/archiver
+    networks:
+      - saps-network
+    volumes:
+      - ./config/archiver.conf:/archiver/archiver.conf
+      - ./config/log4j.properties:/archiver/log4j.properties
+      - /nfs:/archiver/nfs
+
+volumes:
+  catalogdata: {}
+
+networks:
+  saps-network:
+    driver: overlay
