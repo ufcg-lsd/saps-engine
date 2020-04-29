@@ -110,13 +110,12 @@ public class SwiftAPIClient {
 
     public boolean existsTask(String containerName, String basePath, String taskId) throws IOException {
         try {
-            List<String> files = this.listFiles(containerName, basePath);
-            for(String filePath : files) {
-                if(Paths.get(filePath).getFileName().toString().equals(taskId)) {
-                    return true;
-                }
+            String taskDir = basePath + "/" + taskId;
+            List<String> files = this.listFiles(containerName, taskDir);
+            if(files.isEmpty()) {
+                return false;
             }
-            return false;
+            return true;
         } catch (Exception e) {
             throw new IOException("Error while check if task [" + taskId + "] exists on container [" + containerName + "]", e);
         }
