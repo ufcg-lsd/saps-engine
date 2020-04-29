@@ -1,0 +1,40 @@
+#!/bin/bash
+
+## This script get all tasks for SAPS interacting with Dispatcher backend.
+## Expected output:
+## taskid dataset region inputgatheringtag inputpreprocessing tag algorithmexecutiontag state creationtime updatetime
+## 77094f72-2291-11ea-80dd-fa163e1143c1 landsat_5 215065 googleapis default ufcg-sebal archived 2017-12-04 17:10:02.534 2020-01-24 23:29:42.939371
+## 7a8f85c6-2291-11ea-80dd-fa163e1143c1 landsat_8 217066 googleapis default ufcg-sebal archived 2017-12-04 17:10:02.534 2020-01-24 23:37:24.104086
+## ...
+
+
+## checking args
+if [ $# -ne 3 ]
+then
+  echo "Usage: $0 USER_EMAIL USER_PASSWORD DISPATCHER_ADDRESS"
+  exit 1
+fi
+
+# args
+readonly USER_EMAIL=$1
+readonly USER_PASSWORD=$2
+readonly DISPATCHER_ADDRESS=$3
+
+ALL_TASKS=$(curl --silent --request GET "${DISPATCHER_ADDRESS}/processings" --header "Content-Type: text/plain"  --header "userEmail: $USER_EMAIL"  --header "userPass: $USER_PASSWORD")
+JSON_LENGTH=$(($(echo $ALL_TASKS | jq 'length') - 1))
+
+declare -a FILTERS_ARRAY=("taskId" "dataset" "region" "inputGatheringTag" "inputPreprocessingTag" "algorithmExecutionTag" "state" "creationTime" "updateTime")
+FILTERS_ARRAY_LENGTH=$((${#FILTERS_ARRAY[@]} - 1))
+
+echo "${FILTERS_ARRAY[@]}" | awk '{print tolower($0)}'
+
+## for each index of the array of the response of the curl request
+## with the task information the information from the filter array
+## is captured and added to the iJSON_DATA then printed on the screen
+for json_index in $(seq 0 $JSON_LENGTH); do
+  declare -a iJSON_DATA
+  for filter_index in $(seq 0 $FILTERS_ARRAY_LENGTH); do
+    iJSON_DATA[$filter_index]=$(echo $ALL_TASKS | jq -r ".[$json_index].${FILTERS_ARRAY[$filter_index]}")
+  done
+  echo "${iJSON_DATA[@]}"
+done
