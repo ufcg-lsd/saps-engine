@@ -23,7 +23,7 @@ public class SwiftAPIClient {
     private final String userPassword;
 
     SwiftAPIClient(Properties properties)
-        throws InvalidPropertyException {
+            throws InvalidPropertyException {
         if (!checkProperties(properties))
             throw new InvalidPropertyException("Error on validate the file. Missing properties for start Swift API Client.");
 
@@ -31,8 +31,8 @@ public class SwiftAPIClient {
         this.userId = properties.getProperty(SapsPropertiesConstants.Openstack.USER_ID);
         this.userPassword = properties.getProperty(SapsPropertiesConstants.Openstack.USER_PASSWORD);
         this.authUrl = properties.getProperty(SapsPropertiesConstants.Openstack.IdentityService.API_URL);
-        swiftUrl = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL);
-        }
+        this.swiftUrl = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL);
+    }
 
     private boolean checkProperties(Properties properties) {
         String[] propertiesSet = {
@@ -46,11 +46,9 @@ public class SwiftAPIClient {
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
-    //TODO Throws exception when container creation was not success
     public void createContainer(String containerName) throws Exception {
-        // TODO: test JUnit
         LOGGER.debug("Creating container " + containerName);
-        String cmd[] = buildCliCommand("post", containerName);
+        String[] cmd = buildCliCommand("post", containerName);
         ProcessBuilder builder = new ProcessBuilder(cmd);
 
         LOGGER.debug("Executing command " + builder.command());
@@ -67,7 +65,7 @@ public class SwiftAPIClient {
         String completeFileName = pseudFolder + File.separator + file.getName();
 
         LOGGER.debug("Uploading " + completeFileName + " to " + containerName);
-        String cmd[] = buildCliCommand("upload", containerName, file.getAbsolutePath(), "--object-name", completeFileName);
+        String[] cmd = buildCliCommand("upload", containerName, file.getAbsolutePath(), "--object-name", completeFileName);
         ProcessBuilder builder = new ProcessBuilder(cmd);
         Process p = builder.start();
         p.waitFor();
@@ -79,7 +77,7 @@ public class SwiftAPIClient {
 
     public void deleteFile(String containerName, String filePath) throws Exception {
         LOGGER.debug("Deleting " + filePath + " from " + containerName);
-        String cmd[] = buildCliCommand("delete", containerName, filePath);
+        String[] cmd = buildCliCommand("delete", containerName, filePath);
         ProcessBuilder builder = new ProcessBuilder(cmd);
 
         Process p = builder.start();
@@ -94,7 +92,7 @@ public class SwiftAPIClient {
 
     public List<String> listFiles(String containerName, String dirPath) throws Exception {
         LOGGER.info("Listing files in path [" + dirPath + "] from container [" + containerName + "]");
-        String cmd[] = buildCliCommand("list", "-p", dirPath, containerName);
+        String[] cmd = buildCliCommand("list", "-p", dirPath, containerName);
         ProcessBuilder builder = new ProcessBuilder(cmd);
 
         Process p = builder.start();
@@ -112,10 +110,7 @@ public class SwiftAPIClient {
         try {
             String taskDir = basePath + "/" + taskId;
             List<String> files = this.listFiles(containerName, taskDir);
-            if(files.isEmpty()) {
-                return false;
-            }
-            return true;
+            return !files.isEmpty();
         } catch (Exception e) {
             throw new IOException("Error while check if task [" + taskId + "] exists on container [" + containerName + "]", e);
         }
