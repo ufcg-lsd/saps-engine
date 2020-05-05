@@ -5,6 +5,6 @@ SAPS is currently composed of four main services: `Archiver`, `Catalog`, `Dispat
 2. [Archiver](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/archiver-install.md)
 3. [Dispatcher](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/dispatcher-install.md)
 4. Job Execution Service
-   * [Arrebol Worker](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/arrebol-worker.md) and [Arrebol](https://github.com/ufcg-lsd/arrebol/tree/feature/remote-worker-saps/deploy)
+   * [Arrebol](https://github.com/ufcg-lsd/arrebol/tree/feature/remote-worker-saps/deploy)
 5. [Scheduler](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/scheduler-install.md)
 6. [Dashboard](https://github.com/ufcg-lsd/saps-dashboard) (Optional)
