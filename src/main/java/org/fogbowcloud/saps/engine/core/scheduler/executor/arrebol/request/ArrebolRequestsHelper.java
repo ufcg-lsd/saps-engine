@@ -69,7 +69,7 @@ public class ArrebolRequestsHelper {
 
 			LOGGER.info("Job was submitted with success to Arrebol.");
 		} catch (IOException e) {
-			throw new IOException("Submit Job to Arrebol has FAILED: " + e.getMessage(), e);
+			throw new IOException("Submit Job [" + job.getLabel() + "] to Arrebol has FAILED: " + e.getMessage(), e);
 		}
 
 		return jobId;
@@ -83,7 +83,7 @@ public class ArrebolRequestsHelper {
 			String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint);
 			jobResponse = gson.fromJson(jsonResponse, JobResponseDTO.class);
 		} catch (Exception e) {
-			throw new IOException("Get Job from Arrebol has FAILED: " + e.getMessage(), e);
+			throw new IOException("Get Job [" + jobId + "] from Arrebol has FAILED: " + e.getMessage(), e);
 		}
 		return jobResponse;
 	}
