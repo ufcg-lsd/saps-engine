@@ -40,8 +40,8 @@ public class ArrebolJobExecutionService implements JobExecutionService {
 
     @Override
     public List<JobResponseDTO> getJobByLabel(String label) throws IOException {
-        //FIXME Not yet available in the Arrebol Api
-        return null;
+        LOGGER.info("Getting Job by label [" + label + "] from Arrebol");
+        return requestsHelper.getJobsByLabel(DEFAULT_QUEUE, label);
     }
 
 }

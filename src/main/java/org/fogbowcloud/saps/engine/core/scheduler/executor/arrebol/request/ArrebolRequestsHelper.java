@@ -4,17 +4,20 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
-import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.exceptions.ArrebolConnectException;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.models.ArrebolQueue;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.http.HttpWrapper;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 import com.google.gson.Gson;
@@ -31,6 +34,7 @@ public class ArrebolRequestsHelper {
 		static final String QUEUES = "%s/queues";
 		static final String QUEUE = QUEUES + "/%s";
 		static final String JOBS = QUEUE + "/jobs";
+		static final String JOBS_BY_LABEL = JOBS + "?label=%s";
 		static final String JOB = JOBS + "/%s";
 	}
 	private static class JsonKey {
@@ -86,6 +90,20 @@ public class ArrebolRequestsHelper {
 			throw new IOException("Get Job [" + jobId + "] from Arrebol has FAILED: " + e.getMessage(), e);
 		}
 		return jobResponse;
+	}
+
+	public List<JobResponseDTO> getJobsByLabel(String queueId, String label) throws IOException {
+		final String endpoint = String.format(Endpoint.JOBS_BY_LABEL, this.arrebolBaseUrl, queueId, label);
+
+		List<JobResponseDTO> jobsResponses;
+		try {
+			String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint);
+			Type listOfJobResponseDTO = new TypeToken<ArrayList<JobResponseDTO>>() {}.getType();
+			jobsResponses = gson.fromJson(jsonResponse, listOfJobResponseDTO);
+		} catch (Exception e) {
+			throw new IOException("Get Jobs by label [" + label + "] from Arrebol has FAILED: " + e.getMessage(), e);
+		}
+		return jobsResponses;
 	}
 
 	private StringEntity makeJSONBody(JobRequestDTO job) throws UnsupportedEncodingException {
