@@ -42,14 +42,14 @@ public class ExecutionScriptTagUtil {
 		}
 	}
 	
-	public static ExecutionScriptTag getExecutionScriptTag(String name, String type)  {
-		LOGGER.debug("Getting Execution Script Tag by name [" + name + "] and type [" + type + "]");
+	public static ExecutionScriptTag getExecutionScriptTag(String name, String phase)  {
+		LOGGER.debug("Getting Execution Script Tag by name [" + name + "] and type [" + phase + "]");
 		JSONObject jsonScriptTagFile = null;
 		ExecutionScriptTag executionScriptTag = null;
 		try {
 			jsonScriptTagFile = ExecutionScriptTagUtil.getJsonExecutionScriptTag();
 			
-			executionScriptTag = findExecutionScriptTag(name, type, jsonScriptTagFile);
+			executionScriptTag = findExecutionScriptTag(jsonScriptTagFile, phase, name);
 			LOGGER.debug("Execution Script Tag Found: " + executionScriptTag.toString());
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
@@ -58,9 +58,9 @@ public class ExecutionScriptTagUtil {
 		return executionScriptTag;
 	}
 	
-	protected static ExecutionScriptTag findExecutionScriptTag(String name, String type, JSONObject jsonExecScriptTagFile) throws SapsException {
+	protected static ExecutionScriptTag findExecutionScriptTag(JSONObject jsonExecScriptTagFile, String phase, String name) throws SapsException {
 		try {
-			JSONArray jArrayScriptTags = jsonExecScriptTagFile.optJSONArray(type);
+			JSONArray jArrayScriptTags = jsonExecScriptTagFile.optJSONArray(phase);
 			if (jArrayScriptTags == null) {
 				throw new Exception(ERROR_MSG__TYPE_NOT_FOUND);
 			}
@@ -72,7 +72,7 @@ public class ExecutionScriptTagUtil {
 					String dockerTag = jsonScriptTag.optString(DOCKER_TAG_KEY_JSON);
 					String dockerRepository = jsonScriptTag.optString(DOCKER_REPOSITORY_KEY_JSON);
 					
-					return new ExecutionScriptTag(name, dockerRepository, dockerTag, type);
+					return new ExecutionScriptTag(name, dockerRepository, dockerTag, phase);
 				}
 			}
 			throw new Exception("Execution Script Tag by name (" + name + ") not found.");
