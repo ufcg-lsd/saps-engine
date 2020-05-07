@@ -214,6 +214,9 @@ public class Scheduler {
         for (SapsImage task : selectedTasks) {
             ImageTaskState nextState = getNextState(task.getState());
 
+            updateStateInCatalog(task, nextState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+                    SapsImage.NONE_ARREBOL_JOB_ID,
+                    "updates task [" + task.getTaskId() + "] state for " + nextState.getValue());
             String arrebolJobId = submitTaskToArrebol(task);
             updateStateInCatalog(task, nextState, SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
                     arrebolJobId,
@@ -330,14 +333,11 @@ public class Scheduler {
         Map<String, String> requirements = new HashMap<>();
         requirements.put("image", dockerImage);
 
-        String phase = getNextPhase(task.getState());
-
-        List<String> commands = task.buildCommandsList(phase);
+        List<String> commands = task.buildCommandsList();
         Map<String, String> metadata = new HashMap<>();
 
         LOGGER.info("Creating SAPS task ...");
-        ImageTaskState nextState = getNextState(task.getState());
-        SapsTask sapsTask = new SapsTask(task.getTaskId() + "-" + nextState, requirements, commands,
+        SapsTask sapsTask = new SapsTask(task.getTaskId() + "#" + dockerImage, requirements, commands,
                 metadata);
         LOGGER.info("SAPS task: " + sapsTask.toJSON().toString());
 
@@ -345,7 +345,7 @@ public class Scheduler {
         List<SapsTask> tasks = new LinkedList<>();
         tasks.add(sapsTask);
 
-        SapsJob imageJob = new SapsJob(task.getTaskId() + "-" + nextState.getValue(), tasks);
+        SapsJob imageJob = new SapsJob(task.getTaskId() + "-" + task.getState(), tasks);
         return imageJob;
     }
 
@@ -387,9 +387,9 @@ public class Scheduler {
     }
 
     private String buildDockerImageId(SapsImage task, ExecutionScriptTag imageDockerInfo) {
-        if (task.getState() == ImageTaskState.READY)
+        if (task.getState() == ImageTaskState.RUNNING)
             return imageDockerInfo.getDockerRepository() + "@" + task.getDigestProcessing();
-        else if (task.getState() == ImageTaskState.DOWNLOADED)
+        else if (task.getState() == ImageTaskState.PREPROCESSING)
             return imageDockerInfo.getDockerRepository() + "@" + task.getDigestPreprocessing();
         else
             return imageDockerInfo.getDockerRepository() + "@" + task.getDigestInputdownloading();
