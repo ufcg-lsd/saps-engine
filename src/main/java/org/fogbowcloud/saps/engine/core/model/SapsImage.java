@@ -1,11 +1,14 @@
 package org.fogbowcloud.saps.engine.core.model;
 
+import java.io.File;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.json.JSONException;
@@ -232,6 +235,30 @@ public class SapsImage implements Serializable {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(imageDate);
 		return dataset + "_" + cal.get(Calendar.DAY_OF_YEAR) + "_" + cal.get(Calendar.YEAR);
+	}
+
+	public List<String> buildCommandsList(String phase) {
+		// info shared dir between host (with NFS) and container
+		// ...
+		String taskDir = this.getTaskId();
+		String rootPath = "/nfs/" + taskDir;
+		String phaseDirPath = "/nfs/" + taskDir + File.separator + phase;
+		List<String> commands = new LinkedList<String>();
+
+		// Remove dirs
+		String removeThings = String.format("rm -rf %s", phaseDirPath);
+		commands.add(removeThings);
+
+		// Create dirs
+		String createDirectory = String.format("mkdir -p %s", phaseDirPath);
+		commands.add(createDirectory);
+
+		// Run command
+		String runCommand = String.format("bash /home/saps/run.sh %s %s %s %s", rootPath, this.getDataset(),
+				this.getRegion(), DATE_FORMATER.format(this.getImageDate()));
+		commands.add(runCommand);
+
+		return commands;
 	}
 
 	public JSONObject toJSON() throws JSONException {
