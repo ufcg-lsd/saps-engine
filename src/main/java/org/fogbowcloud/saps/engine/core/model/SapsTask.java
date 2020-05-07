@@ -1,8 +1,5 @@
 package org.fogbowcloud.saps.engine.core.model;
 
-import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -17,8 +14,6 @@ import org.json.JSONObject;
 public class SapsTask {
 
 	private static final Logger LOGGER = Logger.getLogger(SapsTask.class);
-	
-	private static final String DATE_FORMAT = "yyyy-MM-dd";
 
 	private static final String JSON_HEADER_ID = "id";
 	private static final String JSON_HEADER_REQUIREMENTS = "requirements";
@@ -39,32 +34,6 @@ public class SapsTask {
 
 	public SapsTask(String id) {
 		this(id, new HashMap<String, String>(), new LinkedList<String>(), new HashMap<String, String>());
-	}
-
-	public static List<String> buildCommandList(SapsImage task, String phase) {
-		// info shared dir between host (with NFS) and container
-		// ...
-
-		DateFormat dateFormater = new SimpleDateFormat(DATE_FORMAT);
-		String taskDir = task.getTaskId();
-		String rootPath = "/nfs/" + taskDir;
-		String phaseDirPath = "/nfs/" + taskDir + File.separator + phase;
-		List<String> commands = new LinkedList<String>();
-
-		// Remove dirs
-		String removeThings = String.format("rm -rf %s", phaseDirPath);
-		commands.add(removeThings);
-
-		// Create dirs
-		String createDirectory = String.format("mkdir -p %s", phaseDirPath);
-		commands.add(createDirectory);
-
-		// Run command
-		String runCommand = String.format("bash /home/saps/run.sh %s %s %s %s", rootPath, task.getDataset(),
-				task.getRegion(), dateFormater.format(task.getImageDate()));
-		commands.add(runCommand);
-		
-		return commands;
 	}
 
 	public String getId() {
