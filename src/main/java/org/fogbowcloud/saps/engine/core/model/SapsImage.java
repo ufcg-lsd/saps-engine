@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
+import org.fogbowcloud.saps.engine.utils.ExecutionScriptTagUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -237,12 +238,12 @@ public class SapsImage implements Serializable {
 		return dataset + "_" + cal.get(Calendar.DAY_OF_YEAR) + "_" + cal.get(Calendar.YEAR);
 	}
 
-	public List<String> buildCommandsList(String phase) {
+	public List<String> buildCommandsList() {
 		// info shared dir between host (with NFS) and container
 		// ...
 		String taskDir = this.getTaskId();
 		String rootPath = "/nfs/" + taskDir;
-		String phaseDirPath = "/nfs/" + taskDir + File.separator + phase;
+		String phaseDirPath = "/nfs/" + taskDir + File.separator + getPhase();
 		List<String> commands = new LinkedList<String>();
 
 		// Remove dirs
@@ -259,6 +260,15 @@ public class SapsImage implements Serializable {
 		commands.add(runCommand);
 
 		return commands;
+	}
+
+	private String getPhase() {
+		if (state == ImageTaskState.RUNNING)
+			return ExecutionScriptTagUtil.PROCESSING;
+		else if (state == ImageTaskState.PREPROCESSING)
+			return ExecutionScriptTagUtil.PRE_PROCESSING;
+		else
+			return ExecutionScriptTagUtil.INPUT_DOWNLOADER;
 	}
 
 	public JSONObject toJSON() throws JSONException {
