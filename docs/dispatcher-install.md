@@ -31,13 +31,6 @@ mvn install -Dmaven.test.skip=true
 
 Edit the files:
 - [Dispatcher configuration file](/config/dispatcher.conf) to allow its communication with the SAPS Catalog and Permanent Storage.
-- The `$openstack_object_store_service_key` property in [Dispatcher configuration file](/config/dispatcher.conf) is used to access Object Store. After creating a new key, it must be configured using the command:
-
-```bash
-swift post -m "Temp-URL-Key:$openstack_object_store_service_key" --os-auth-url $openstack_identity_service_api_url --auth-version 3 --os-user-id $openstack_user_id --os-password $openstack_user_password --os-project-id $openstack_project_id
-```
-
-Note: ```-auth-version``` is the version of the deployed Openstack Identity Service API
 
 - [SAPS Scripts](/resources/execution_script_tags.json) to make available new versions of the algorithms, for the three steps of the SAPS workflow (input downloading, preprocessing and processing). Any new algorithm should be packed as a docker image. See below example on how to specify the algorithms:
     
@@ -71,6 +64,52 @@ Note: ```-auth-version``` is the version of the deployed Openstack Identity Serv
   ]
 }
 ```
+- The `$openstack_object_store_service_key` property in [Dispatcher configuration file](/config/dispatcher.conf) is used to access Object Store. After creating a new key, it must be configured using the command:
+
+```bash
+swift post -m "Temp-URL-Key:$openstack_object_store_service_key" --os-auth-url $openstack_identity_service_api_url --auth-version 3 --os-user-id $openstack_user_id --os-password $openstack_user_password --os-project-id $openstack_project_id
+```
+
+Note: ```-auth-version``` is the version of the deployed Openstack Identity Service API
+
+## Test
+
+### Openstack Object Store Service Key
+
+Run the following command to check the current configuration of your Openstack Project Object Store:
+
+```bash
+swift stat --os-auth-url $openstack_identity_service_api_url --auth-version 3 --os-user-id $openstack_user_id --os-password $openstack_user_password --os-project-id $openstack_project_id
+```
+
+Expected output:
+```bash
+                    Account: # ignore
+                 Containers: # any value other than "0"
+                    Objects: # any value other than "0"
+                      Bytes: # any value other than "0"
+          Meta Temp-Url-Key: # $openstack_object_store_service_key also the one configured in /config/dispatcher
+X-Account-Bytes-Used-Actual: # any value other than "0"
+                X-Timestamp: # ignore
+                 X-Trans-Id: # ignore
+               Content-Type: text/plain; charset=utf-8
+              Accept-Ranges: bytes
+```
+
+Unexpected output:
+```bash
+                    Account: # ignore
+                 Containers: 0
+                    Objects: 0
+                      Bytes: 0
+                X-Timestamp: # ignore
+X-Account-Bytes-Used-Actual: 0
+                 X-Trans-Id: # ignore
+               Content-Type: text/plain; charset=utf-8
+              Accept-Ranges: bytes
+```
+
+If your result is equal to the unexpected, return to the [configure section](https://github.com/ufcg-lsd/saps-engine/blob/develop/docs/dispatcher-install.md#configure) where we mentioned about openstack object store service key property.
 
 ## Run
 
@@ -85,3 +124,4 @@ bash bin/start-dispatcher
 # Stop command
 bash bin/stop-dispatcher
 ```
+
