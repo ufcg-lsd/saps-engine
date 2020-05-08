@@ -5,9 +5,13 @@ import java.io.UnsupportedEncodingException;
 
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobRequestDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
@@ -82,10 +86,14 @@ public class ArrebolRequestsHelper {
 	public JobResponseDTO getJob(String queueId, String jobId) throws IOException {
 		final String endpoint = String.format(Endpoint.JOB, this.arrebolBaseUrl, queueId, jobId);
 
-		JobResponseDTO jobResponse;
+		JobResponseDTO jobResponse = null;
 		try {
-			String jsonResponse = HttpWrapper.doRequest(HttpGet.METHOD_NAME, endpoint);
-			jobResponse = gson.fromJson(jsonResponse, JobResponseDTO.class);
+			HttpUriRequest request = new HttpGet(endpoint);
+			HttpResponse response = HttpClients.createMinimal().execute(request);
+			if(response.getStatusLine().equals(HttpStatus.SC_OK)) {
+				String jsonResponse = response.getEntity().toString();
+				jobResponse = gson.fromJson(jsonResponse, JobResponseDTO.class);
+			}
 		} catch (Exception e) {
 			throw new IOException("Get Job [" + jobId + "] from Arrebol has FAILED: " + e.getMessage(), e);
 		}
