@@ -65,14 +65,14 @@ Edit the files:
 }
 ```
 
-- The `$noreply_email` and `$noreply_password` will be used by the SAPS deploy to send email notifications, however, in the current version, it is necessary to enable a setting that allows access to the less secure app, so do the following steps:
+- The `$noreply_email` and `$noreply_password` will be used by the SAPS deploy to send email notifications. However, in the current version, it is necessary to enable a setting that allows access to the less secure app, so do the following steps:
 
 ### Gmail
 
 Sign in to your Gmail account and go to **Manage your Google account**
 ![Manage your Google account](img/dispatcher-install-configure-noreply-email-img1.png)
 
-After, access **Security** settings
+Then, navigate to **Security** settings
 ![Security settings](img/dispatcher-install-configure-noreply-email-img2.png)
 
 Look for **Less secure app access** and enable it
