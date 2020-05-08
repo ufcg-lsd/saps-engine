@@ -64,6 +64,20 @@ Edit the files:
   ]
 }
 ```
+
+- The `$noreply_email` and `$noreply_password` will be used by the SAPS deploy to send email notifications, however, in the current version, it is necessary to enable a setting that allows access to the less secure app, so do the following steps:
+
+### Gmail
+
+Sign in to your Gmail account and go to **Manage your Google account**
+![Manage your Google account](img/dispatcher-install-configure-noreply-email-img1.png)
+
+After, access **Security** settings
+![Security settings](img/dispatcher-install-configure-noreply-email-img2.png)
+
+Look for **Less secure app access** and enable it
+![Less secure app access](img/dispatcher-install-configure-noreply-email-img3.png)
+
 - The `$openstack_object_store_service_key` property in [Dispatcher configuration file](/config/dispatcher.conf) is used to access Object Store. After creating a new key, it must be configured using the command:
 
 ```bash
