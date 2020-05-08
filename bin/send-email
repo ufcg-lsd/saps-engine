@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# This script sends an email for a task successfully processed by SAPS
+
+## Checking args
+if [ $# -ne 4 ]
+then
+  echo "Usage: $0 USER_EMAIL USER_PASSWORD TASK_ID DISPATCHER_ADDRESS"
+  exit 1
+fi
+
+## args
+readonly USER_EMAIL=$1
+readonly USER_PASSWORD=$2
+readonly TASK_ID=$3
+readonly DISPATCHER_ADDRESS=$4
+
+## constants
+readonly TASK_PRIORITY=0
+
+curl --request POST "http://${DISPATCHER_ADDRESS}/email" \
+  --header "Content-Type: text/plain"  \
+  --data-raw "userEmail=$USER_EMAIL&userPass=$USER_PASSWORD&images_id[]=$TASK_ID"
