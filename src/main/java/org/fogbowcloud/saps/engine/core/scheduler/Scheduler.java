@@ -14,6 +14,7 @@ import org.fogbowcloud.saps.engine.core.model.SapsTask;
 import org.fogbowcloud.saps.engine.core.model.enums.ImageTaskState;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.JobSubmitted;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.JobExecutionService;
+import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.comparators.JobStateComparator;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.CommandResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.JobResponseDTO;
 import org.fogbowcloud.saps.engine.core.scheduler.executor.arrebol.dtos.TaskResponseDTO;
@@ -64,7 +65,7 @@ public class Scheduler {
         return SapsPropertiesUtil.checkProperties(properties, propertiesSet);
     }
 
-    public void start() {
+    public void start() throws IOException, InterruptedException {
         recovery();
 
         sapsExecutor.scheduleWithFixedDelay(() -> schedule(), 0, this.submissorDelayPeriod,
@@ -78,55 +79,101 @@ public class Scheduler {
      * This function retrieves consistency between the information present in
      * Catalog and Arrebol, and starts the list of submitted jobs.
      */
-    private void recovery() {
-        long retryPeriodSec = 10;
-        List<SapsImage> tasksInProcessingState = getProcessingTasksInCatalog();
+    private void recovery() throws IOException, InterruptedException {
+        LOGGER.info("Starting recovery process...");
+        recoverySubmittedImages();
+        recoveryInconsistentImages();
+        LOGGER.info("Finished recovery process...");
+    }
 
-        for (SapsImage task : tasksInProcessingState) {
-            while(true) {
-                try {
-                    LOGGER.info("Recovering Task [" + task.getTaskId() + "]");
-                    recovery(task);
-                    break;
-                } catch (ConnectException e) {
-                    LOGGER.error(e);
-                    try {
-                        LOGGER.info("Sleeping for " + retryPeriodSec + " seconds");
-                        Thread.sleep(retryPeriodSec * 1000);
-                    } catch (InterruptedException ie) {
-                        LOGGER.error(ie);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error while recovering task [" + task.getTaskId() + "]");
-                    rollBackTaskState(task);
-                }
+    private void recoverySubmittedImages() throws InterruptedException, IOException {
+        LOGGER.info("Recovering submitted images...");
+        List<SapsImage> processingTasks = getProcessingTasksInCatalog();
+        for(SapsImage s : processingTasks) {
+            if(isValidExecId(s.getArrebolJobId())) {
+                LOGGER.info("Recovering submitted image [" + s.getTaskId() + "] in the " + s.getState().getValue().toUpperCase() + " state");
+                submittedJobs.add(new JobSubmitted(s.getArrebolJobId(), s));
             }
         }
     }
 
-    private void recovery(SapsImage task) throws Exception {
-        if (task.getArrebolJobId().equals(SapsImage.NONE_ARREBOL_JOB_ID)) {
-            String jobName = task.getState().getValue() + "-" + task.getTaskId();
-            List<JobResponseDTO> jobsWithEqualJobName;
-            jobsWithEqualJobName = jobExecutionService.getJobByLabel(jobName);
-            if (jobsWithEqualJobName.size() == 0)
-                rollBackTaskState(task);
-            else if (jobsWithEqualJobName.size() == 1) { // TODO add check jobName ==
-                // jobsWithEqualJobName.get(0).get...
-                String arrebolJobId = jobsWithEqualJobName.get(0).getId();
-                updateStateInCatalog(task, task.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
-                    arrebolJobId,
-                    "updates task [" + task.getTaskId() + "] with Arrebol job ID [" + arrebolJobId + "]");
-                this.submittedJobs.add(new JobSubmitted(task.getArrebolJobId(), task));
+    private void recoveryInconsistentImages() throws IOException, InterruptedException {
+        LOGGER.info("Recovering inconsistent images...");
+        List<SapsImage> processingTasks = getProcessingTasksInCatalog();
+        List<SapsImage> images = findInconsistentImages(processingTasks);
+        for(SapsImage image : images) {
+            String execId = findExecIdByLabelImage(image);
+            if(Objects.nonNull(execId)) {
+                LOGGER.info("Recovered the execution id of image [" + image.getTaskId() + "] in the " + image.getState().getValue().toUpperCase() + " state");
+                updateStateInCatalog(image, image.getState(), SapsImage.AVAILABLE, SapsImage.NON_EXISTENT_DATA,
+                        execId,
+                        "updates task [" + image.getTaskId() + "] with Arrebol job ID [" + execId + "]");
+                this.submittedJobs.add(new JobSubmitted(execId, image));
             } else {
-                // TODO discuss what action to take in this situation.
-                //  Should I remove all jobs found from the execution service and do a rollback in task?
-                //  Or should I take advantage of any of them?
+                LOGGER.info("Rolling back state of image [" + image.getTaskId() + "]");
+                rollBackTaskState(image);
             }
-        } else {
-            String arrebolJobId = task.getArrebolJobId();
-            this.submittedJobs.add(new JobSubmitted(arrebolJobId, task));
         }
+    }
+
+    private List<SapsImage> findInconsistentImages(List<SapsImage> images) throws IOException, InterruptedException {
+        List<SapsImage> found = new LinkedList<>();
+        for(SapsImage image : images) {
+            if(!isValidExecId(image.getArrebolJobId())) {
+                found.add(image);
+            }
+        }
+        return found;
+    }
+
+    private String findExecIdByLabelImage(SapsImage image) throws InterruptedException, IOException {
+        long retryPeriodSec = 10;
+        String execId = null;
+        String label = image.getTaskId() + "-" + image.getState();
+        LOGGER.info("Finding execution by the image label [" + label + "]");
+        while(true) {
+            try {
+                List<JobResponseDTO> found = this.jobExecutionService.getJobByLabel(label);
+                JobResponseDTO job = selectJobClosestToFinish(found);
+                if (Objects.nonNull(job)) {
+                    LOGGER.info("An execution [" + execId + "] with the label [" + label + "] was found");
+                    execId = job.getId();
+                } else {
+                    LOGGER.info("Not found execution by label [" + label + "]");
+                }
+                break;
+            } catch (ConnectException e) {
+                LOGGER.error("Error while trying to connect to Job Execution Service", e);
+                LOGGER.info("Sleeping for [" + retryPeriodSec + "] seconds");
+                Thread.sleep(retryPeriodSec * 1000);
+            }
+        }
+        return execId;
+    }
+
+    private JobResponseDTO selectJobClosestToFinish(List<JobResponseDTO> jobs) {
+        JobStateComparator comparator = new JobStateComparator();
+        JobResponseDTO job = Collections.max(jobs, comparator);
+        return job;
+    }
+
+    private boolean isValidExecId(String execId) throws IOException, InterruptedException {
+        long retryPeriodSec = 10;
+        JobResponseDTO job = null;
+        if(Objects.isNull(execId) || execId.isEmpty() || execId.equals(SapsImage.NONE_ARREBOL_JOB_ID)) {
+            return false;
+        }
+        while(true) {
+            try {
+                job = jobExecutionService.getJobById(execId);
+                break;
+            } catch (ConnectException e) {
+                LOGGER.error("Error while trying to connect to Job Execution Service", e);
+                LOGGER.info("Sleeping for [" + retryPeriodSec + "] seconds");
+                Thread.sleep(retryPeriodSec * 1000);
+            }
+        }
+        return Objects.nonNull(job);
     }
 
     /**
