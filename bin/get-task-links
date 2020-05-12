@@ -1,0 +1,26 @@
+#!/bin/bash
+
+## This script get all tasks for SAPS interacting with Dispatcher backend.
+## Expected output:
+## taskid dataset region inputgatheringtag inputpreprocessing tag algorithmexecutiontag state creationtime updatetime
+## 77094f72-2291-11ea-80dd-fa163e1143c1 landsat_5 215065 googleapis default ufcg-sebal archived 2017-12-04 17:10:02.534 2020-01-24 23:29:42.939371
+## 7a8f85c6-2291-11ea-80dd-fa163e1143c1 landsat_8 217066 googleapis default ufcg-sebal archived 2017-12-04 17:10:02.534 2020-01-24 23:37:24.104086
+## ...
+
+
+## checking args
+if [ $# -ne 4 ]
+then
+  echo "Usage: $0 USER_EMAIL USER_PASSWORD TASK_ID DISPATCHER_ADDRESS"
+  exit 1
+fi
+
+# args
+readonly USER_EMAIL=$1
+readonly USER_PASSWORD=$2
+readonly TASK_ID=$3
+readonly DISPATCHER_ADDRESS=$4
+
+curl --request GET "http://${DISPATCHER_ADDRESS}/links" \
+  --header "Content-Type: text/plain"  \
+  --data-raw "userEmail=$USER_EMAIL&userPass=$USER_PASSWORD&taskId=$TASK_ID"
