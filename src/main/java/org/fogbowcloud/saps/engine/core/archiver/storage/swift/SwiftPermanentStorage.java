@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Properties;
+import java.net.URL;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -40,6 +41,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
 
     private final SwiftAPIClient swiftAPIClient;
     private final String nfsTempStoragePath;
+    private final String objectStoreServiceApiUrlHost;
+    private final String objectStoreServiceApiUrlPath;
     private final String containerName;
     private final String swiftKey;
     private final String tasksDirName;
@@ -59,6 +62,17 @@ public class SwiftPermanentStorage implements PermanentStorage {
         this.tasksDirName = properties.getProperty(SapsPropertiesConstants.PERMANENT_STORAGE_TASKS_DIR);
         this.debugMode = properties.containsKey(SapsPropertiesConstants.SAPS_DEBUG_MODE) && properties
                 .getProperty(SapsPropertiesConstants.SAPS_DEBUG_MODE).toLowerCase().equals("true");
+
+        String objectStoreServiceApiUrl = properties.getProperty(SapsPropertiesConstants.Openstack.ObjectStoreService.API_URL);
+
+        URL url = new URL(objectStoreServiceApiUrl);
+
+        if(url.getPort() != -1)
+	        this.objectStoreServiceApiUrlHost = url.getProtocol() + "://" + url.getHost() + ":" + url.getPort();
+	else
+                this.objectStoreServiceApiUrlHost = url.getProtocol() + "://" + url.getHost();
+        
+        this.objectStoreServiceApiUrlPath = url.getPath();
 
         if (this.debugMode && !checkPropertiesDebugMode(properties))
             throw new InvalidPropertyException("Error on validate the file. Missing properties for start Saps Controller.");
@@ -280,9 +294,8 @@ public class SwiftPermanentStorage implements PermanentStorage {
         List<AccessLink> filesLinks = new ArrayList<>();
         try {
             for(String filePath : filesPaths) {
-                String link;
-                link = generateTempURL(filePath);
-                Path p = Paths.get(filePath);
+		Path p = Paths.get(filePath);
+                String link = this.objectStoreServiceApiUrlHost + generateTempURL(filePath) + "&filename=" + p.getFileName();
                 String name = p.getParent().getFileName().toString() + "/" + p.getFileName().toString();
                 filesLinks.add(new AccessLink(name, link));
             }
@@ -296,13 +309,16 @@ public class SwiftPermanentStorage implements PermanentStorage {
     private String generateTempURL(String filePath)
         throws NoSuchAlgorithmException, InvalidKeyException {
 
+	String path = this.objectStoreServiceApiUrlPath + File.separator +
+                      this.containerName + File.separator + filePath;
+
         Formatter objectStoreFormatter = new Formatter();
-        objectStoreFormatter.format("%s\n%s\n%s", "GET", Long.MAX_VALUE, filePath);
+        objectStoreFormatter.format("%s\n%s\n%s", "GET", Long.MAX_VALUE, path);
         String signature = runHMACAlgorithm(objectStoreFormatter.toString(), this.swiftKey);
         objectStoreFormatter.close();
 
         objectStoreFormatter = new Formatter();
-        objectStoreFormatter.format(TEMP_DIR_URL, filePath, signature, Long.MAX_VALUE);
+        objectStoreFormatter.format(TEMP_DIR_URL, path, signature, Long.MAX_VALUE);
         String res = objectStoreFormatter.toString();
         objectStoreFormatter.close();
 
