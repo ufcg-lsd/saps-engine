@@ -32,7 +32,7 @@ public class LinkResource extends BaseResource {
     private final Gson gson = new Gson();;
     
     @Get
-    public Representation sendTaskToEmail(Representation representation) {
+    public Representation getTaskLinks(Representation representation) {
         Form form = new Form(representation);
 
         String userEmail = form.getFirstValue(UserResource.REQUEST_ATTR_USER_EMAIL, true);
