@@ -23,4 +23,4 @@ readonly DISPATCHER_ADDRESS=$4
 
 curl --request GET "http://${DISPATCHER_ADDRESS}/links" \
   --header "Content-Type: text/plain"  \
-  --data-raw "userEmail=$USER_EMAIL&userPass=$USER_PASSWORD&taskId=$TASK_ID"
+  --data-raw "userEmail=$USER_EMAIL&userPass=$USER_PASSWORD&taskId=$TASK_ID" | jq '.'
