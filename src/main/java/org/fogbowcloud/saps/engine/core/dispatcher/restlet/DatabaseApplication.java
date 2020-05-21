@@ -11,6 +11,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcher;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.ImageResource;
+import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.LinkResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.MainResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.EmailResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.RegionResource;
@@ -109,7 +110,7 @@ public class DatabaseApplication extends Application {
         router.attach("/regions/details", RegionResource.class);
         router.attach("/regions/search", RegionResource.class);
         router.attach("/email", EmailResource.class);
-
+        router.attach("/links", LinkResource.class);
         return router;
     }
 

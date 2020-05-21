@@ -197,7 +197,7 @@ When connecting successfully, click on `New Processing`, fill in the fields as i
 
 After a few seconds, it will be possible to observe the image above, that is, two new processes have been created and are in the initial state (`Created`), wait for at least half an hour until they are completed.
 
-### 4. Processing completed
+#### 4. Processing completed
 
 ![Processing completed](img/end-to-end-test-run-img4.png)
 
@@ -208,28 +208,48 @@ After the two processes are completed, the GUI will be similar to the image abov
 Run the following code inside the saps-engine project folder:
 
 ```
-bash bin/submit-task <user-email> <user-paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 endtoend-test endtoend-test endtoend-test <dispatcher-access-ip>:<dispatcher-access-port>
+bash bin/submit-task <user email> <user paswword> -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 endtoend-test endtoend-test endtoend-test <dispatcher address>
 ```
 
-## Verification of results
+**Note: `<dispatcher address>` includes both the VM IP together with the access port, for example, `localhost:9000`.**
 
-### 1. Dashboard data tab
+## Download files for verification of results
+
+### Via Dashboard
+
+#### 1. Dashboard data tab
 
 ![Data tab](img/end-to-end-test-check-results-img1.png)
 
 In the data tab, fill in the fields as shown in the image above and click on `Search`.
 
-### 2. email notification
+#### 2. Email notification
 
 ![Send email](img/end-to-end-test-check-results-img2.png)
 
 After completing the search, the result shown in the image above will be displayed, check the option with the information of the processing done and click on `Send email`.
 
-### 3. Download URLs
+#### 3. Download URLs
 
 Check your inbox, SAPS will prepare several links to download data for the completed task.
 
-### 4. Comparing results
+### Via CLI
+
+Run the following command within your `saps-engine` directory:
+
+```bash
+bash bin/get-task-links <user email> <user password> <task id> <dispatcher address>
+```
+
+**Note: `<task id>` can be found by running the `get-all-tasks` CLI as follows:**
+
+```bash
+bash bin/get-all-tasks <user email> <user password> <dispatcher address>
+```
+
+**Note: <dispatcher address> follows the same format as IP:PORT**
+
+## Comparing results
 
 Filename | md5sum
 -|-
