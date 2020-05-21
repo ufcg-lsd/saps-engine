@@ -24,6 +24,7 @@ openstack_project_id=
 openstack_user_id=
 openstack_user_password=
 openstack_identity_service_api_url=
-openstack_object_store_service_api_url=
+openstack_object_store_service_api_url=https://localhost:8000/swift
 openstack_object_store_service_container_name=saps-test
+openstack_object_store_service_key=key
 
