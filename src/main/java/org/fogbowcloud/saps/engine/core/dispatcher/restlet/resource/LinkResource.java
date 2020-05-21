@@ -40,7 +40,7 @@ public class LinkResource extends BaseResource {
 
         //FIXME I think that authenticateUser should throw an exception itself once
         // the authentication process hasn't worked... - by @raonismaneoto
-        if (!authenticateUser(userEmail, userPass) || userEmail.equals("anonymous"))
+        if (!authenticateUser(userEmail, userPass))
             throw new ResourceException(HttpStatus.SC_UNAUTHORIZED);
 
         String taskId = form.getFirstValue(REQUEST_ATTR_TASK_ID, true);
