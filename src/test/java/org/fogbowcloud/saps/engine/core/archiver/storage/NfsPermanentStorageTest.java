@@ -122,7 +122,7 @@ public class NfsPermanentStorageTest {
         properties.setProperty(SapsPropertiesConstants.NFS_PERMANENT_STORAGE_PATH, MOCK_NFS_STORAGE_PATH);
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         permanentStorage.archive(task);
-        Assert.assertFalse(taskDir.exists());
+        Assert.assertTrue(taskDir.exists());
     }
 
     @Test
@@ -143,7 +143,7 @@ public class NfsPermanentStorageTest {
 
         PermanentStorage permanentStorage = new NfsPermanentStorage(properties);
         permanentStorage.archive(task);
-        Assert.assertFalse(taskDir.exists());
+        Assert.assertTrue(taskDir.exists());
     }
 
     @Test(expected = IOException.class)
@@ -159,7 +159,7 @@ public class NfsPermanentStorageTest {
 
     @Test
     public void testGenerateAccessLinksTaskDir() throws IOException, TaskNotFoundException, InvalidPropertyException {
-        SapsImage task = new SapsImage("1", "", "", new Date(), ImageTaskState.FINISHED,
+        SapsImage task = new SapsImage("task-id", "", "", new Date(), ImageTaskState.FINISHED,
             SapsImage.NONE_ARREBOL_JOB_ID, SapsImage.NONE_FEDERATION_MEMBER, 0, "", "", "", "", "",
             "", "", new Timestamp(1), new Timestamp(1), "", "");
 
