@@ -15,6 +15,7 @@ public class ExecutionScriptTagUtil {
 	
 	protected static final String ERROR_MSG__TYPE_NOT_FOUND = "Execution Script Tag type not found.";
 	protected static String DEFAULT_SCRIPT_TAG_JSON_PATH = "resources/execution_script_tags.json";
+	protected static String DEFAULT_ENDTOEND_SCRIPT_TAG_JSON_PATH = "resources/execution_endtoend_script_tags.json";
 	
 	public static String INPUT_DOWNLOADER = ExecutionScriptTag.INPUT_DOWNLOADER;
 	public static String PROCESSING = ExecutionScriptTag.PROCESSING;
@@ -26,10 +27,10 @@ public class ExecutionScriptTagUtil {
 	
 	private static String scriptTagJsonPath;
 	
-	public static void isValidJsonScriptTag() throws Exception {
+	public static void isValidJsonScriptTag(String scriptTagPath) throws Exception {
 		Boolean isValid = true;
 		try {
-			JSONObject jsonExecutionScriptTags = getJsonExecutionScriptTag();
+			JSONObject jsonExecutionScriptTags = getJsonExecutionScriptTag(scriptTagPath);
 			if (jsonExecutionScriptTags == null) {
 				isValid = false;
 			}
@@ -47,12 +48,20 @@ public class ExecutionScriptTagUtil {
 		JSONObject jsonScriptTagFile = null;
 		ExecutionScriptTag executionScriptTag = null;
 		try {
-			jsonScriptTagFile = ExecutionScriptTagUtil.getJsonExecutionScriptTag();
-			
+			jsonScriptTagFile = ExecutionScriptTagUtil.getJsonExecutionScriptTag(DEFAULT_SCRIPT_TAG_JSON_PATH);
+
 			executionScriptTag = findExecutionScriptTag(name, type, jsonScriptTagFile);
 			LOGGER.debug("Execution Script Tag Found: " + executionScriptTag.toString());
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+		} catch (Exception e1) {
+			LOGGER.error("Script tag by name [" + name + "] and type [" + type + "] not found in " + DEFAULT_SCRIPT_TAG_JSON_PATH + ". " + e1.getMessage(), e1);
+			try {
+				LOGGER.info("Searching in endtoend script tag JSON [" + DEFAULT_ENDTOEND_SCRIPT_TAG_JSON_PATH);
+				jsonScriptTagFile = ExecutionScriptTagUtil.getJsonExecutionScriptTag(DEFAULT_ENDTOEND_SCRIPT_TAG_JSON_PATH);
+				executionScriptTag = findExecutionScriptTag(name, type, jsonScriptTagFile);
+                       		LOGGER.debug("Execution Script Tag Found: " + executionScriptTag.toString());
+			} catch (Exception e2) {
+				LOGGER.error("Script not found." + e2.getMessage(), e2);
+			}
 		}	
 		
 		return executionScriptTag;
@@ -81,9 +90,9 @@ public class ExecutionScriptTagUtil {
 		}
 	}
 	
-	protected static JSONObject getJsonExecutionScriptTag() throws Exception {
+	protected static JSONObject getJsonExecutionScriptTag(String scriptTagPath) throws Exception {
 		try {
-			String scriptTagJsonPath = getExecScriptTagJsonPath();
+			String scriptTagJsonPath = scriptTagPath;
 			InputStream is = new FileInputStream(scriptTagJsonPath);
 			String jsonTxt = IOUtils.toString(is, "UTF-8");
 			return new JSONObject(jsonTxt);
@@ -92,13 +101,6 @@ public class ExecutionScriptTagUtil {
 			LOGGER.error(errorMsg, e);
 			throw new Exception(errorMsg);
 		}
-	}
-	
-	protected static String getExecScriptTagJsonPath() {
-		if (scriptTagJsonPath == null) {
-			scriptTagJsonPath = DEFAULT_SCRIPT_TAG_JSON_PATH;
-		}
-		return scriptTagJsonPath;
 	}
 	
 	protected static void setExecScriptTagJsonPath(String scriptTagJsonPath) {
