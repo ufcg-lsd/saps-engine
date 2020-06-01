@@ -1,0 +1,59 @@
+{
+  "inputdownloading":[
+    {
+      "name":"nop",
+      "docker_tag":"nop",
+      "docker_repository":"fogbow/inputdownloader"
+    },{
+      "name":"nop-fake-files",
+      "docker_tag":"nop-fake-files",
+      "docker_repository":"fogbow/inputdownloader"
+    },{
+      "name":"nop-download-files",
+      "docker_tag":"nop-download-files",
+      "docker_repository":"fogbow/inputdownloader"
+    },{
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
+      "docker_repository": "fogbow/inputdownloader"
+    }
+  ],
+  "preprocessing":[
+    {
+      "name":"nop",
+      "docker_tag":"nop",
+      "docker_repository":"fogbow/preprocessor"
+    },{
+      "name":"nop-fake-files",
+      "docker_tag":"nop-fake-files",
+      "docker_repository":"fogbow/preprocessor"
+    },{
+      "name":"nop-download-files",
+      "docker_tag":"nop-download-files",
+      "docker_repository":"fogbow/preprocessor"
+    },{
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
+      "docker_repository": "fogbow/preprocessor"
+    }
+  ],
+  "processing":[
+    {
+      "name":"nop",
+      "docker_tag":"nop",
+      "docker_repository":"fogbow/worker"
+    },{
+      "name":"nop-fake-files",
+      "docker_tag":"nop-fake-files",
+      "docker_repository":"fogbow/worker"
+    },{
+      "name":"nop-download-files",
+      "docker_tag":"nop-download-files",
+      "docker_repository":"fogbow/worker"
+    },{
+      "name": "endtoend-test",
+      "docker_tag": "endtoend-test",
+      "docker_repository": "fogbow/worker"
+    }
+  ]
+}
