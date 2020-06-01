@@ -55,7 +55,7 @@ public class ExecutionScriptTagUtil {
 		} catch (Exception e1) {
 			LOGGER.error("Script tag by name [" + name + "] and type [" + type + "] not found in " + DEFAULT_SCRIPT_TAG_JSON_PATH + ". " + e1.getMessage(), e1);
 			try {
-				LOGGER.info("Searching in endtoend script tag JSON [" + DEFAULT_ENDTOEND_SCRIPT_TAG_JSON_PATH);
+				LOGGER.info("Searching in endtoend script tag JSON [" + DEFAULT_ENDTOEND_SCRIPT_TAG_JSON_PATH + "]");
 				jsonScriptTagFile = ExecutionScriptTagUtil.getJsonExecutionScriptTag(DEFAULT_ENDTOEND_SCRIPT_TAG_JSON_PATH);
 				executionScriptTag = findExecutionScriptTag(name, type, jsonScriptTagFile);
                        		LOGGER.debug("Execution Script Tag Found: " + executionScriptTag.toString());
