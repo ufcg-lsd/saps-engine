@@ -162,10 +162,10 @@ public class DatabaseApplication extends Application {
      * @param priority                 priority of new tasks
      * @param email                    user email
      */
-    public void addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
+    public List<String> addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
                             String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
                             String preprocessingPhaseTag, String processingPhaseTag, String priority, String email) throws Exception {
-        submissionDispatcher.addTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude,
+        return submissionDispatcher.addTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude,
                 initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag,
                 Integer.parseInt(priority), email);
     }

@@ -136,9 +136,11 @@ public class SubmissionDispatcher {
      * @param userEmail                it is the email of the task owner (this information is obtained
      *                                 automatically by the authenticated user on the platform).
      */
-    public void addTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
+    public List<String> addTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
                          String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
                          String preprocessingPhaseTag, String processingPhaseTag, int priority, String userEmail) throws Exception {
+
+	List<String> taskIds = new LinkedList<String>();
 
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTime(initDate);
@@ -174,10 +176,12 @@ public class SubmissionDispatcher {
                             inputdownloadingPhaseTag, digestInputdownloading, preprocessingPhaseTag,
                             digestPreprocessing, processingPhaseTag, digestProcessing);
                     addTimestampTaskInCatalog(task, "updates task [" + taskId + "] timestamp");
+                    taskIds.add(taskId);
                 }
             }
             cal.add(Calendar.DAY_OF_YEAR, 1);
         }
+        return taskIds;
     }
 
     public List<SapsImage> getAllTasks() {
