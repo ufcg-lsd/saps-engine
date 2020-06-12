@@ -70,11 +70,12 @@ check_situation(){
   echo "($(get_timestamp)) [${TEST_VERSION}] Checking task situation [${ID}]..."
 
   if [[ ${TEST_VERSION} == 'endtoend-test' && ${DATASET} == 'landsat_7' ]]; then
-    echo "($(get_timestamp)) [${TEST_VERSION}] test failure, but this is expected."
+    echo "($(get_timestamp)) [${TEST_VERSION}] Test failure, but this is expected."
   elif [[ ${STATE} == 'archived' ]]; then
-    echo "($(get_timestamp)) [${TEST_VERSION}] successful test."
+    echo "($(get_timestamp)) [${TEST_VERSION}] Successful test."
+    check_files ${ID} ${TEST_VERSION}
   else
-    echo "($(get_timestamp)) [${TEST_VERSION}] test failure."
+    echo "($(get_timestamp)) [${TEST_VERSION}] Test failure."
     exit 1
   fi
 }
@@ -83,10 +84,10 @@ check_files(){
   local ID=${1}
   local TEST_VERSION=${2}
 
-  if [[ ${TEST_VERSION} == 'endtoend-text' ]]; then
+  if [[ ${TEST_VERSION} == 'endtoend-test' ]]; then
     check_md5sum_files ${ID} ${TEST_VERSION}
   else
-    echo "The ${TEST_VERSION} version does not need to check the files."
+    echo "($(get_timestamp)) [${TEST_VERSION}] The ${TEST_VERSION} version does not need to check the files."
   fi
 }
 
@@ -198,7 +199,8 @@ run_test nop
 run_test nop-fake-files
 run_test nop-download-files
 
-echo "($(get_timestanp)) Run end to end test..."
+echo "($(get_timestamp)) Run end to end test..."
 run_test endtoend-test
 
+echo "($(get_timestamp)) Systemtest completed successfully !"
 exit 0
