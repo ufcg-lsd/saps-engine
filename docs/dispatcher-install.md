@@ -65,9 +65,9 @@ Edit the files:
 }
 ```
 
-- The `$noreply_email` and `$noreply_password` will be used by the SAPS deploy to send email notifications. However, in the current version, it is necessary to enable a setting that allows access to the less secure app, so do the following steps:
+### Email Notifications
 
-### Gmail
+The `$noreply_email` and `$noreply_password` properties are used by SAPS to notify users about job completion. In the current SAPS version, if one uses a gmail account, it is necessary to enable the following gmail configuration:
 
 Sign in to your Gmail account and go to **Manage your Google account**
 ![Manage your Google account](img/dispatcher-install-configure-noreply-email-img1.png)
