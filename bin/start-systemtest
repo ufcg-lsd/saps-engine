@@ -60,7 +60,7 @@ get_state(){
   echo "${STATE}"
 }
 
-check_situation(){
+assert(){
   local ID=${1}
   local TEST_CASE=${2}
   local TASK=$(get_task_by_id ${ID})
@@ -107,7 +107,7 @@ check_tasks(){
        echo "($(get_timestamp)) [${TEST_CASE}] Current task state [${ID}]: ${STATE}"       
        if [ ${STATE} == 'archived' -o ${STATE} == 'failed' ]; then
          echo "($(get_timestamp)) [${TEST_CASE}] Task [${ID}] has finished processing."
-         check_situation ${ID} ${TEST_CASE}
+         assert ${ID} ${TEST_CASE}
          break
        fi
        echo "($(get_timestamp)) [${TEST_CASE}] Waiting ${TIMESLEEP} seconds to check again..."
