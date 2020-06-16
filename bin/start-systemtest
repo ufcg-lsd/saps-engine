@@ -139,7 +139,7 @@ get_links(){
 get_name(){
   # This function receives a string composed of <name>*<url> from a file processed from any SAPS task and returns only its name.
   # Input example:
-  #   get_name <url>*out.log
+  #   get_name out.log*<url>
   # Output example:
   #   out.log
   local LINK=${1}
