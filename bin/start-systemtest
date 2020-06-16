@@ -49,6 +49,7 @@ get_task_by_id(){
 get_dataset(){
   # This function is responsible for receiving information from a SAPS task and getting its dataset.
   # Dataset says what type of satellite that image belongs to.
+  # The output of this function is formatted for lower case and the initial and final quotation marks are removed.
   local TASK=${1}
   local DATASET=$(echo ${TASK} | jq '.dataset' | tr -d \" | tr '[:upper:]' '[:lower:]')
 
