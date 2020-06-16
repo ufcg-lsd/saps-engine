@@ -164,6 +164,11 @@ check_md5sum_files(){
   echo "($(get_timestamp)) [${TEST_CASE}] Checking md5sum of task files [${ID}]..."
   LINKS=$(get_links ${ID})
 
+  # This loop creates an iteration on top of a list created with '[<filename1>*<file_url1>, <filename2>*<file_url2>, ...]' (without quotes)
+  #   Looks for the filename is one of the files to be checked with md5sum analyzing the file ${SYSTEMTEST_MD5SUM_RESULTS_FILE}
+  #   If the current filename needs to be checked, then
+  #     Assert that the file md5sum of the processing done is the same as the expected md5sum
+  #     Otherwise, fail the script with exit 2
   for NAME_URL in $(echo $LINKS | jq '[ .[] | (.name + "*" + .url) ]' | jq '.[]' | tr -d \"); do
     NAME=$(get_name $NAME_URL)
     URL=$(get_url $NAME_URL)
