@@ -26,13 +26,13 @@ get_timestamp(){
 }
 
 get_timesleep(){
-  local TEST_VERSION=${1}
+  local TEST_CASE=${1}
 
-  if [ ${TEST_VERSION} == 'nop' ]; then
+  if [ ${TEST_CASE} == 'nop' ]; then
     echo "30"
-  elif [ ${TEST_VERSION} == 'nop-fake-files' ]; then
+  elif [ ${TEST_CASE} == 'nop-fake-files' ]; then
     echo "60"
-  elif [ ${TEST_VERSION} == 'nop-download-files' ]; then
+  elif [ ${TEST_CASE} == 'nop-download-files' ]; then
     echo "120"
   else
     echo "300"
@@ -62,41 +62,41 @@ get_state(){
 
 check_situation(){
   local ID=${1}
-  local TEST_VERSION=${2}
+  local TEST_CASE=${2}
   local TASK=$(get_task_by_id ${ID})
   local STATE=$(get_state "${TASK}")
   local DATASET=$(get_dataset "${TASK}")
 
-  echo "($(get_timestamp)) [${TEST_VERSION}] Checking task situation [${ID}]..."
+  echo "($(get_timestamp)) [${TEST_CASE}] Checking task situation [${ID}]..."
 
-  if [[ ${TEST_VERSION} == 'endtoend-test' && ${DATASET} == 'landsat_7' ]]; then
-    echo "($(get_timestamp)) [${TEST_VERSION}] Test failure, but this is expected."
+  if [[ ${TEST_CASE} == 'endtoend-test' && ${DATASET} == 'landsat_7' ]]; then
+    echo "($(get_timestamp)) [${TEST_CASE}] Test failure, but this is expected."
   elif [[ ${STATE} == 'archived' ]]; then
-    echo "($(get_timestamp)) [${TEST_VERSION}] Successful test."
-    check_files ${ID} ${TEST_VERSION}
+    echo "($(get_timestamp)) [${TEST_CASE}] Successful test."
+    check_files ${ID} ${TEST_CASE}
   else
-    echo "($(get_timestamp)) [${TEST_VERSION}] Test failure."
+    echo "($(get_timestamp)) [${TEST_CASE}] Test failure."
     exit 1
   fi
 }
 
 check_files(){
   local ID=${1}
-  local TEST_VERSION=${2}
+  local TEST_CASE=${2}
 
-  if [[ ${TEST_VERSION} == 'endtoend-test' ]]; then
-    check_md5sum_files ${ID} ${TEST_VERSION}
+  if [[ ${TEST_CASE} == 'endtoend-test' ]]; then
+    check_md5sum_files ${ID} ${TEST_CASE}
   else
-    echo "($(get_timestamp)) [${TEST_VERSION}] The ${TEST_VERSION} version does not need to check the files."
+    echo "($(get_timestamp)) [${TEST_CASE}] The ${TEST_CASE} version does not need to check the files."
   fi
 }
 
 check_tasks(){
   local TASK_IDS=${1}
-  local TEST_VERSION=${2}
-  local TIMESLEEP=$(get_timesleep ${TEST_VERSION})
+  local TEST_CASE=${2}
+  local TIMESLEEP=$(get_timesleep ${TEST_CASE})
 
-  echo "($(get_timestamp)) [${TEST_VERSION}] Checking submitted tasks..."
+  echo "($(get_timestamp)) [${TEST_CASE}] Checking submitted tasks..."
 
   for ID in $(echo "${TASK_IDS}" | jq ".[]" | tr -d \")
   do
@@ -104,22 +104,22 @@ check_tasks(){
        local TASK=$(get_task_by_id ${ID})
        local STATE=$(get_state "${TASK}")
 
-       echo "($(get_timestamp)) [${TEST_VERSION}] Current task state [${ID}]: ${STATE}"       
+       echo "($(get_timestamp)) [${TEST_CASE}] Current task state [${ID}]: ${STATE}"       
        if [ ${STATE} == 'archived' -o ${STATE} == 'failed' ]; then
-         echo "($(get_timestamp)) [${TEST_VERSION}] Task [${ID}] has finished processing."
-         check_situation ${ID} ${TEST_VERSION}
+         echo "($(get_timestamp)) [${TEST_CASE}] Task [${ID}] has finished processing."
+         check_situation ${ID} ${TEST_CASE}
          break
        fi
-       echo "($(get_timestamp)) [${TEST_VERSION}] Waiting ${TIMESLEEP} seconds to check again..."
+       echo "($(get_timestamp)) [${TEST_CASE}] Waiting ${TIMESLEEP} seconds to check again..."
        sleep ${TIMESLEEP}
     done
   done
 }
 
 submit_task(){
-  local TEST_VERSION=${1}
+  local TEST_CASE=${1}
   
-  bash ${SUBMIT_TASK_SCRIPT} ${USER_EMAIL} ${USER_PASSWORD} -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 ${TEST_VERSION} ${TEST_VERSION} ${TEST_VERSION} ${DISPATCHER_ADDRESS}
+  bash ${SUBMIT_TASK_SCRIPT} ${USER_EMAIL} ${USER_PASSWORD} -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 ${TEST_CASE} ${TEST_CASE} ${TEST_CASE} ${DISPATCHER_ADDRESS}
 }
 
 get_links(){
@@ -151,9 +151,9 @@ get_md5sum(){
 
 check_md5sum_files(){
   local ID=${1}
-  local TEST_VERSION=${2}
+  local TEST_CASE=${2}
 
-  echo "($(get_timestamp)) [${TEST_VERSION}] Checking md5sum of task files [${ID}]..."
+  echo "($(get_timestamp)) [${TEST_CASE}] Checking md5sum of task files [${ID}]..."
   LINKS=$(get_links ${ID})
 
   for NAME_URL in $(echo $LINKS | jq '[ .[] | (.name + "*" + .url) ]' | jq '.[]' | tr -d \"); do
@@ -172,9 +172,9 @@ check_md5sum_files(){
       EXCEPTED_MD5SUM=${EXCEPTED_MD5SUM##*()}
       EXCEPTED_MD5SUM=${EXCEPTED_MD5SUM%%*()}
       if [[ "Z$MD5SUM" -eq "Z$EXPECTED_MD5SUM" ]] ; then
-        echo "($(get_timestamp)) [${TEST_VERSION}] ${FILENAME} file a has expected md5sum."
+        echo "($(get_timestamp)) [${TEST_CASE}] ${FILENAME} file a has expected md5sum."
       else
-        echo "($(get_timestamp)) [${TEST_VERSION}] ${FILENAME} file wrong md5sum. $EXCEPTED_MD5SUM was excepted, $MD5SUM was presented."
+        echo "($(get_timestamp)) [${TEST_CASE}] ${FILENAME} file wrong md5sum. $EXCEPTED_MD5SUM was excepted, $MD5SUM was presented."
         exit 2
       fi
     fi
@@ -183,15 +183,15 @@ check_md5sum_files(){
 }
 
 run_test(){
-  local TEST_VERSION=${1}
+  local TEST_CASE=${1}
 
-  echo "($(get_timestamp)) Run ${TEST_VERSION} version"
+  echo "($(get_timestamp)) Run ${TEST_CASE} version"
 
-  echo "($(get_timestamp)) [${TEST_VERSION}] Submitting tasks...";
-  local TASK_IDS=$(submit_task ${TEST_VERSION})
-  echo "($(get_timestamp)) [${TEST_VERSION}] Task ID list: $TASK_IDS"
+  echo "($(get_timestamp)) [${TEST_CASE}] Submitting tasks...";
+  local TASK_IDS=$(submit_task ${TEST_CASE})
+  echo "($(get_timestamp)) [${TEST_CASE}] Task ID list: $TASK_IDS"
 
-  check_tasks "${TASK_IDS}" ${TEST_VERSION}
+  check_tasks "${TASK_IDS}" ${TEST_CASE}
 }
 
 echo "($(get_timestamp)) Run NOP tests..."
