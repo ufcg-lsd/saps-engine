@@ -106,6 +106,13 @@ check_tasks(){
 
   echo "($(get_timestamp)) [${TEST_CASE}] Checking submitted tasks..."
 
+  # For each id of submitted tasks in this ${TEST_CASE}
+  #   While the task is processing
+  #     Get new task information by id and obtain the state
+  #     If the state is terminal ('archived' or 'failed'), then
+  #       Assert that the terminal state for the case of this task is as expected and skip to the next iteration
+  #     Else,
+  #       Sleep for X seconds (X is based on ${TEST_CASE}, to decrease access to the dispatcher's backend because some tests take longer than others)
   for ID in $(echo "${TASK_IDS}" | jq ".[]" | tr -d \")
   do
     while true; do
