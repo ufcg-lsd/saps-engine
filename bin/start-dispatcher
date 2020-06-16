@@ -5,6 +5,6 @@ saps_engine_conf_path=$saps_engine_dir_path/config/dispatcher.conf
 saps_engine_log_properties_path=$saps_engine_dir_path/config/log4j.properties
 saps_engine_target_path=$saps_engine_dir_path/target/saps-engine-0.0.1-SNAPSHOT.jar:target/lib
 library_path=/usr/local/lib
-debug_port=4000
+debug_port=4001
 
 nohup sudo java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=$debug_port,suspend=n -Dlog4j.configuration=file:$saps_engine_log_properties_path -Djava.library.path=$library_path -cp $saps_engine_target_path/* org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcherMain $saps_engine_conf_path &

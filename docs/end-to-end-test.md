@@ -4,60 +4,6 @@
 
 The NOP end-to-end tests are used to test the full execution of the SAPS workflow regardless the complexity of the Inputdownload, preprocesssing and processing scripts. With this in mind, the NOPs algorithms, for each one of the three SAPS workflow steps, execute minimaly simple implementations. See below how to configure them and also an overview of their internals.
 
-## Configure
-
-NOP submissions are done via the [CLI task submission script](/bin/submit-task), but first you need to configure the [execution script tags file](/recourses/execution_script_tags.json):
-
-```json
-{
-  "inputdownloading":[
-    {
-      "name":"nop",
-      "docker_tag":"nop",
-      "docker_repository":"fogbow/inputdownloader"
-    },{
-      "name":"nop-fake-files",
-      "docker_tag":"nop-fake-files",
-      "docker_repository":"fogbow/inputdownloader"
-    },{
-      "name":"nop-download-files",
-      "docker_tag":"nop-download-files",
-      "docker_repository":"fogbow/inputdownloader"
-    }
-  ],
-  "preprocessing":[
-    {
-      "name":"nop",
-      "docker_tag":"nop",
-      "docker_repository":"fogbow/preprocessor"
-    },{
-      "name":"nop-fake-files",
-      "docker_tag":"nop-fake-files",
-      "docker_repository":"fogbow/preprocessor"
-    },{
-      "name":"nop-download-files",
-      "docker_tag":"nop-download-files",
-      "docker_repository":"fogbow/preprocessor"
-    }
-  ],
-  "processing":[
-    {
-      "name":"nop",
-      "docker_tag":"nop",
-      "docker_repository":"fogbow/worker"
-    },{
-      "name":"nop-fake-files",
-      "docker_tag":"nop-fake-files",
-      "docker_repository":"fogbow/worker"
-    },{
-      "name":"nop-download-files",
-      "docker_tag":"nop-download-files",
-      "docker_repository":"fogbow/worker"
-    }
-  ]
-}
-```
-
 ## NOP tests
 
 There are three sets of implementations of NOP algorithms for the SAPS workload: `nop`, `nop-fake-files`, `nop-download-files`. The `nop` implementation executes nothing, it simply returns an exit code indicating success. The `nop` set is a good choice for a very fast end-to-end test. The `nop-fake-files` set also returns success but generates fake output data. This set helps testing the data SAPS data transfer features. Finally, the `nop-download-files` generates a output dataset, but differenlty from the previously set, the dataset are downloaded from an external repository (it could be useful to check SAPS access to external networks). See below the instructions for performing the tests, using these algorithms, via CLI.
@@ -120,36 +66,6 @@ In the [SAPS script file](https://github.com/ufcg-lsd/saps-dashboard/tree/master
 
 ```javascript
 let scriptsTags = 
-{
-"inputdownloading":[
-    {
-      "name": "endtoend-test",
-      "docker_tag": "endtoend-test",
-      "docker_repository": "fogbow/inputdownloading"
-    }
-  ],
-  "preprocessing":[
-    {
-      "name": "endtoend-test",
-      "docker_tag": "endtoend-test",
-      "docker_repository": "fogbow/preprocessor"
-    }
-  ],
-  "processing":[
-    {
-      "name": "endtoend-test",
-      "docker_tag": "endtoend-test",
-      "docker_repository": "fogbow/worker"
-    }
-  ]
-}
-```
-
-### Configuring Dispatcher and Scheduler
-
-In the [SAPS script file](https://github.com/ufcg-lsd/saps-engine/tree/develop/resources/execution_script_tags.json) replace it with the following json:
-
-```json
 {
 "inputdownloading":[
     {
