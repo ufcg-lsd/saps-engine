@@ -57,6 +57,11 @@ get_dataset(){
 }
 
 get_state(){
+  # This function receives information from a SAPS task and obtains the processing status it is in.
+  # There is a flow in which a task follows, which is:
+  # created -> downloading -> downloaded -> preprocessing -> ready -> running -> finished -> archiving -> archived
+  # In any of the transitions errors can occur and go to the 'failed' state
+  # The output of this function is formatted for lower case and the initial and final quotation marks are removed.
   local	TASK=${1}
   local STATE=$(echo ${TASK} | jq '.state' | tr -d \" | tr '[:upper:]' '[:lower:]')
 
