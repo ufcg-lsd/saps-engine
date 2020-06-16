@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## This script getting SAPS task info by ID interacting with the Dispatcher backend.
+## This script gets SAPS task info by ID interacting with the Dispatcher backend.
 
 ## checking args
 if [ $# -ne 4 ]
