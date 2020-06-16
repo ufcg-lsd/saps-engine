@@ -32,6 +32,14 @@ mvn install -Dmaven.test.skip=true
 Edit the files:
 - [Dispatcher configuration file](/config/dispatcher.conf) to allow its communication with the SAPS Catalog and Permanent Storage.
 
+- The `$openstack_object_store_service_key` property in [Dispatcher configuration file](/config/dispatcher.conf) is used to access Object Store. After creating a new key, it must be configured using the command:
+
+```bash
+swift post -m "Temp-URL-Key:$openstack_object_store_service_key" --os-auth-url $openstack_identity_service_api_url --auth-version 3 --os-user-id $openstack_user_id --os-password $openstack_user_password --os-project-id $openstack_project_id
+```
+
+Note: ```-auth-version``` is the version of the deployed Openstack Identity Service API
+
 - [SAPS Scripts](/resources/execution_script_tags.json) to make available new versions of the algorithms, for the three steps of the SAPS workflow (input downloading, preprocessing and processing). Any new algorithm should be packed as a docker image. See below example on how to specify the algorithms:
     
 ```json
@@ -65,9 +73,7 @@ Edit the files:
 }
 ```
 
-### Email Notifications
-
-The `$noreply_email` and `$noreply_password` properties are used by SAPS to notify users about job completion. In the current SAPS version, if one uses a gmail account, it is necessary to enable the following gmail configuration:
+- The `$noreply_email` and `$noreply_password` properties are used by SAPS to notify users about job completion. In the current SAPS version, if one uses a gmail account, it is necessary to enable the following gmail configuration:
 
 Sign in to your Gmail account and go to **Manage your Google account**
 ![Manage your Google account](img/dispatcher-install-configure-noreply-email-img1.png)
@@ -77,14 +83,6 @@ Then, navigate to **Security** settings
 
 Look for **Less secure app access** and enable it
 ![Less secure app access](img/dispatcher-install-configure-noreply-email-img3.png)
-
-- The `$openstack_object_store_service_key` property in [Dispatcher configuration file](/config/dispatcher.conf) is used to access Object Store. After creating a new key, it must be configured using the command:
-
-```bash
-swift post -m "Temp-URL-Key:$openstack_object_store_service_key" --os-auth-url $openstack_identity_service_api_url --auth-version 3 --os-user-id $openstack_user_id --os-password $openstack_user_password --os-project-id $openstack_project_id
-```
-
-Note: ```-auth-version``` is the version of the deployed Openstack Identity Service API
 
 ## Test
 
