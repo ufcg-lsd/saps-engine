@@ -1,6 +1,8 @@
 #!/bin/bash
 
-##
+## This script performs a test pipeline involving NOP "NO Problems" versions that will ensure the flow performed by the
+## SAPS components and also versions with real algorithms that will test the attached Job Exec Service for processing the tasks,
+## in addition to performing checking the final files using md5sum.
 
 ## checking args
 if [ $# -ne 3 ]
