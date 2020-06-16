@@ -149,6 +149,11 @@ get_name(){
 }
 
 get_url(){
+  # This function receives a string composed of <name>*<url> from a file processed from any SAPS task and returns only its name.
+  # Input example:
+  #   get_name <name>*http://github.com/<anything>
+  # Output example:
+  #   http://github.com/<anything>
   local LINK=${1}
   local URL=$(echo ${LINK} | cut -d "*" -f2)
 
