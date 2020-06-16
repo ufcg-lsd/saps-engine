@@ -80,7 +80,7 @@ assert(){
   echo "($(get_timestamp)) [${TEST_CASE}] Checking task situation [${ID}]..."
 
   if [[ ${TEST_CASE} == 'endtoend-test' && ${DATASET} == 'landsat_7' ]]; then
-    echo "($(get_timestamp)) [${TEST_CASE}] Test failure, but this is expected."
+    echo "($(get_timestamp)) [${TEST_CASE}] Test failed as expected."
   elif [[ ${STATE} == 'archived' ]]; then
     echo "($(get_timestamp)) [${TEST_CASE}] Successful test."
     check_files ${ID} ${TEST_CASE}
@@ -97,7 +97,7 @@ check_files(){
   if [[ ${TEST_CASE} == 'endtoend-test' ]]; then
     check_md5sum_files ${ID} ${TEST_CASE}
   else
-    echo "($(get_timestamp)) [${TEST_CASE}] The ${TEST_CASE} version does not need to check the files."
+    echo "($(get_timestamp)) [${TEST_CASE}] No need to check files in ${TEST_VERSION}."
   fi
 }
 
