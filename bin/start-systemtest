@@ -151,6 +151,12 @@ get_url(){
 }
 
 get_md5sum(){
+  # This function receives a URL of a file processed from a SAPS task and calculates md5sum,
+  # without downloading the file, using the curl aligned with the md5sum command.
+  # Input example:
+  #   get_md5sum <url_file>
+  # Output example:
+  #   3de5943c4c9e5047ff2318829ad65f4d
   local ULR=${1}
   MD5SUM=$(curl --silent "${URL}" | md5sum | awk '{print $1}')
 
