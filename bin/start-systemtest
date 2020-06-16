@@ -209,6 +209,9 @@ check_md5sum_files(){
       EXCEPTED_MD5SUM=$(echo $RESULT | awk '{print $1}')
       EXCEPTED_MD5SUM=${EXCEPTED_MD5SUM##*()}
       EXCEPTED_MD5SUM=${EXCEPTED_MD5SUM%%*()}
+      # When analyzing the results of md5sum, it is necessary to put some common character at the beginning of the sequence of both,
+      # since some start with numbers [0 - 9] and others with letters [a - z],
+      # making the test confusing in bash and generate some odd errors.
       if [[ "Z$MD5SUM" -eq "Z$EXPECTED_MD5SUM" ]] ; then
         echo "($(get_timestamp)) [${TEST_CASE}] ${FILENAME} file a has expected md5sum."
       else
