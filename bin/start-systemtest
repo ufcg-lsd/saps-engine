@@ -52,6 +52,16 @@ get_dataset(){
   # This function is responsible for receiving information from a SAPS task and getting its dataset.
   # Dataset says what type of satellite that image belongs to.
   # The output of this function is formatted for lower case and the initial and final quotation marks are removed.
+  # Input example:
+  #   {
+  #     "id": "<task_id_1>",
+  #     "dataset": "landsat_8",
+  #     "state": "CREATED",
+  #     ...
+  #   }
+  # Output example:
+  #   landsat_8
+  # Note: The expected values of the dataset are "landsat_8", "landsat_7" and "landsat_5"
   local TASK=${1}
   local DATASET=$(echo ${TASK} | jq '.dataset' | tr -d \" | tr '[:upper:]' '[:lower:]')
 
@@ -64,6 +74,15 @@ get_state(){
   # created -> downloading -> downloaded -> preprocessing -> ready -> running -> finished -> archiving -> archived
   # In any of the transitions errors can occur and go to the 'failed' state
   # The output of this function is formatted for lower case and the initial and final quotation marks are removed.
+  # Input example:
+  #   {
+  #     "id": "<task_id_1>",
+  #     "dataset": "landsat_8",
+  #     "state": "CREATED",
+  #     ...
+  #   }
+  # Output example:
+  #   created
   local	TASK=${1}
   local STATE=$(echo ${TASK} | jq '.state' | tr -d \" | tr '[:upper:]' '[:lower:]')
 
