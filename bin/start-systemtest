@@ -100,6 +100,7 @@ get_state(){
 }
 
 assert(){
+  # This function checks whether the result of processing a task is OK or not, based on the test case, dataset and state.
   local ID=${1}
   local TEST_CASE=${2}
   local TASK=$(get_task_by_id ${ID})
