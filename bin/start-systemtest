@@ -222,6 +222,17 @@ check_md5sum_files(){
   local TEST_CASE=${2}
 
   echo "($(get_timestamp)) [${TEST_CASE}] Checking md5sum of task files [${ID}]..."
+  # LINKS example:
+  #   [
+  #     {
+  #       "name": "inputdownloading/out.log",
+  #       "url": "http://www2.lsd.ufcg.edu.br/~thiagoyes/saps/nop-download-files/inputdownloading/out.log"
+  #     },{
+  #       "name": "inputdownloading/LC08_L1TP_215065_20150623_20170407_01_T1_station.csv",
+  #       "url": "http://www2.lsd.ufcg.edu.br/~thiagoyes/saps/nop-download-files/inputdownloading/LC08_L1TP_215065_20150623_20170407_01_T1_station.csv"
+  #     },
+  #     ...
+  #   ]
   LINKS=$(get_links ${ID})
 
   # This loop creates an iteration on top of a list created with '[<filename1>*<file_url1>, <filename2>*<file_url2>, ...]' (without quotes)
@@ -230,8 +241,14 @@ check_md5sum_files(){
   #     Assert that the file md5sum of the processing done is the same as the expected md5sum
   #     Otherwise, fail the script with exit 2
   for NAME_URL in $(echo $LINKS | jq '[ .[] | (.name + "*" + .url) ]' | jq '.[]' | tr -d \"); do
+    # NAME example:
+    #   inputdownloading/out.log
     NAME=$(get_name $NAME_URL)
+    # URL example:
+    #   http://www2.lsd.ufcg.edu.br/~thiagoyes/saps/nop-download-files/inputdownloading/out.log
     URL=$(get_url $NAME_URL)
+    # FILENAME example:
+    #   out.log
     FILENAME=$(basename $NAME)
 
     RESULT=$(grep ${FILENAME} ${SYSTEMTEST_MD5SUM_RESULTS_FILE})
