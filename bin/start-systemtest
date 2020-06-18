@@ -164,6 +164,11 @@ check_tasks(){
 }
 
 submit_task(){
+  # This function submits a new processing using the CLI and returns a list of created task ids.
+  # Input example:
+  #   submit_task nop
+  # Output example:
+  #   ["c5b78213-2e1c-4ff0-ba4d-c2f001ca972f","4ef8ee9c-599f-41bc-99fc-6a80078cb11a"]
   local TEST_CASE=${1}
   
   bash ${SUBMIT_TASK_SCRIPT} ${USER_EMAIL} ${USER_PASSWORD} -7.413 -7.047 -37.314 -36.257 2015-06-23 2015-06-23 ${TEST_CASE} ${TEST_CASE} ${TEST_CASE} ${DISPATCHER_ADDRESS}
