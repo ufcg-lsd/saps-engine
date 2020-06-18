@@ -42,6 +42,16 @@ get_timesleep(){
 }
 
 get_task_by_id(){
+  # This function receives an SAPS task ID and retrieves current task data from it.
+  # Input example:
+  #   get_task_by_id 1
+  # Output example:
+  #   {
+  #     "id": "1",
+  #     "dataset": "landsat_8",
+  #     "state": "PREPROCESSING",
+  #     ...
+  #   }
   local ID=${1}
   local TASK=$(bash ${GET_TASK_BY_ID_SCRIPT} ${USER_EMAIL} ${USER_PASSWORD} ${ID} ${DISPATCHER_ADDRESS})
 
