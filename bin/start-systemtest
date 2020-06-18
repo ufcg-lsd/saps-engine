@@ -132,7 +132,11 @@ check_files(){
 }
 
 check_tasks(){
+  # TASK_IDS example:
+  #   ["c5b78213-2e1c-4ff0-ba4d-c2f001ca972f","4ef8ee9c-599f-41bc-99fc-6a80078cb11a"]
   local TASK_IDS=${1}
+  # TEST_CASE example:
+  #   nop
   local TEST_CASE=${2}
   local TIMESLEEP=$(get_timesleep ${TEST_CASE})
 
@@ -146,6 +150,8 @@ check_tasks(){
   #     Else,
   #       Sleep for X seconds (X is based on ${TEST_CASE}, to decrease access to the dispatcher's backend because some tests take longer than others)
   for ID in $(echo "${TASK_IDS}" | jq ".[]" | tr -d \")
+  # ID example:
+  #   c5b78213-2e1c-4ff0-ba4d-c2f001ca972f
   do
     while true; do
        local TASK=$(get_task_by_id ${ID})
