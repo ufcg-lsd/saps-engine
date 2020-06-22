@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.saps.engine.core.dispatcher.SubmissionDispatcher;
+import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.TaskResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.ImageResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.LinkResource;
 import org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource.MainResource;
@@ -111,6 +112,7 @@ public class DatabaseApplication extends Application {
         router.attach("/regions/search", RegionResource.class);
         router.attach("/email", EmailResource.class);
         router.attach("/links", LinkResource.class);
+        router.attach("/tasks/{id}", TaskResource.class);
         return router;
     }
 
@@ -160,10 +162,10 @@ public class DatabaseApplication extends Application {
      * @param priority                 priority of new tasks
      * @param email                    user email
      */
-    public void addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
+    public List<String> addNewTasks(String lowerLeftLatitude, String lowerLeftLongitude, String upperRightLatitude,
                             String upperRightLongitude, Date initDate, Date endDate, String inputdownloadingPhaseTag,
                             String preprocessingPhaseTag, String processingPhaseTag, String priority, String email) throws Exception {
-        submissionDispatcher.addTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude,
+        return submissionDispatcher.addTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude,
                 initDate, endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag,
                 Integer.parseInt(priority), email);
     }

@@ -2,6 +2,7 @@ package org.fogbowcloud.saps.engine.core.dispatcher.restlet.resource;
 
 import java.util.Date;
 import java.util.List;
+import java.util.LinkedList;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.log4j.Logger;
@@ -19,6 +20,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.util.Series;
+import com.google.gson.Gson;
 
 public class ImageResource extends BaseResource {
 
@@ -36,6 +38,8 @@ public class ImageResource extends BaseResource {
 
 	private static final String ADD_IMAGES_MESSAGE_OK = "Tasks successfully added";
 	private static final String ADD_IMAGES_MESSAGE_FAILURE = "Failed to add new tasks";
+
+	private final Gson gson = new Gson();
 
 	public ImageResource() {
 		super();
@@ -139,14 +143,15 @@ public class ImageResource extends BaseResource {
 				+ email;
 		LOGGER.info(builder);
 
+		List<String> taskIds = new LinkedList<String>();
 		try{
-			application.addNewTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude, initDate,
+			taskIds = application.addNewTasks(lowerLeftLatitude, lowerLeftLongitude, upperRightLatitude, upperRightLongitude, initDate,
 					endDate, inputdownloadingPhaseTag, preprocessingPhaseTag, processingPhaseTag, priority, email);
 		} catch (Exception e) {
 			LOGGER.error("Error while add news tasks.", e);
 			return new StringRepresentation(ADD_IMAGES_MESSAGE_FAILURE, MediaType.TEXT_PLAIN);
 		}
 
-		return new StringRepresentation(ADD_IMAGES_MESSAGE_OK, MediaType.TEXT_PLAIN);
+		return new StringRepresentation(gson.toJson(taskIds), MediaType.APPLICATION_JSON);
 	}
 }

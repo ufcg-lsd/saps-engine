@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## This script obtains links from a SAPS task interacting with the Dispatcher backend.
+## This script gets SAPS task info by ID interacting with the Dispatcher backend.
 
 ## checking args
 if [ $# -ne 4 ]
@@ -15,6 +15,6 @@ readonly USER_PASSWORD=$2
 readonly TASK_ID=$3
 readonly DISPATCHER_ADDRESS=$4
 
-curl --silent --request GET "http://${DISPATCHER_ADDRESS}/links" \
+curl --silent --request GET "http://${DISPATCHER_ADDRESS}/tasks/${TASK_ID}" \
   --header "Content-Type: text/plain"  \
-  --data-raw "userEmail=$USER_EMAIL&userPass=$USER_PASSWORD&taskId=$TASK_ID" | jq '.'
+  --data-raw "userEmail=$USER_EMAIL&userPass=$USER_PASSWORD" | jq '.'
