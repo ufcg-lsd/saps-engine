@@ -13,8 +13,8 @@ LABEL maintainer="wesley.monte@ccc.ufcg.edu.br"
 ENV MAIN_CLASS="org.fogbowcloud.saps.engine.core.scheduler.SchedulerMain"
 
 # Create bind mounts for these entries
-ENV CONFIG_PATH="/scheduler/scheduler.conf"
-ENV LOG_PROPERTIES_PATH="/scheduler/log4j.properties"
+ENV SERVICE_CONF_PATH="/etc/saps/scheduler.conf"
+ENV LOG_PROPERTIES_PATH="/etc/saps/log4j.properties"
 
 WORKDIR /scheduler
 
@@ -22,4 +22,4 @@ COPY --from=builder /app/target/saps-engine-0.0.1-SNAPSHOT.jar scheduler.jar
 COPY --from=builder /app/target/lib lib/
 COPY ./resources resources/
 
-ENTRYPOINT java -Dlog4j.configuration=file:"${LOG_PROPERTIES_PATH}" -cp scheduler.jar:lib/* "${MAIN_CLASS}" "${CONFIG_PATH}"
+ENTRYPOINT java -Dlog4j.configuration=file:"${LOG_PROPERTIES_PATH}" -cp scheduler.jar:lib/* "${MAIN_CLASS}" "${SERVICE_CONF_PATH}"

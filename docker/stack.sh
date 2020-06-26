@@ -63,11 +63,12 @@ check_network() {
 
 run_archiver() {
   local TAG="${1}"
+  local CONF_FILE="archiver.conf"
   docker run -dit \
     --name "${ARCHIVER_CONTAINER}" \
     --net="${SAPS_NETWORK}" --net-alias=archiver \
-    -v "$(pwd)"/config/archiver.conf:/archiver/archiver.conf \
-    -v "$(pwd)"/config/log4j.properties:/archiver/log4j.properties \
+    -v "$(pwd)"/config/"${CONF_FILE}":/etc/saps/"${CONF_FILE}" \
+    -v "$(pwd)"/config/log4j.properties:/etc/saps/log4j.properties \
     -v "${TEMP_STORAGE_DIR}":/archiver/nfs \
     "${ARCHIVER_REPO}":"${TAG}"
 }
@@ -92,8 +93,8 @@ run_dispatcher() {
     --name "${DISPATCHER_CONTAINER}" \
     -p "${DISPATCHER_PORT}":8091 \
     --net="${SAPS_NETWORK}" --net-alias=dispatcher \
-    -v "$(pwd)"/config/"${CONF_FILE}":/dispatcher/"${CONF_FILE}" \
-    -v "$(pwd)"/config/log4j.properties:/dispatcher/log4j.properties \
+    -v "$(pwd)"/config/"${CONF_FILE}":/etc/saps/"${CONF_FILE}" \
+    -v "$(pwd)"/config/log4j.properties:/etc/saps/log4j.properties \
     -v "$(pwd)"/resources/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json \
     -v "${TEMP_STORAGE_DIR}":/dispatcher/nfs \
     "${DISPATCHER_REPO}":"${TAG}"
@@ -105,8 +106,8 @@ run_scheduler() {
   docker run -dit \
     --name "${SCHEDULER_CONTAINER}" \
     --net="${SAPS_NETWORK}" --net-alias=scheduler \
-    -v "$(pwd)"/config/"${CONF_FILE}":/scheduler/"${CONF_FILE}" \
-    -v "$(pwd)"/config/log4j.properties:/scheduler/log4j.properties \
+    -v "$(pwd)"/config/"${CONF_FILE}":/etc/saps/"${CONF_FILE}" \
+    -v "$(pwd)"/config/log4j.properties:/etc/saps/log4j.properties \
     -v "$(pwd)"/resources/execution_script_tags.json:/dispatcher/resources/execution_script_tags.json \
     "${SCHEDULER_REPO}":"${TAG}"
 }
