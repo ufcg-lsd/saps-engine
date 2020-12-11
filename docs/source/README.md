@@ -1,6 +1,6 @@
 # SAPS
 
-<img src="./imgs/logo.png" style="width: 50%; display: flex; margin: 0 auto;"/>
+<img src="https://raw.githubusercontent.com/ufcg-lsd/saps-engine/develop/imgs/logo.png" style="width: 50%; display: flex; margin: 0 auto;"/>
 
 SAPS project for the construction of an automated platform that performs the calculation of the SEBAL method using satellite images.
 
@@ -43,7 +43,7 @@ Have a comprehensive platform that can process images from different types of sa
 
 ## Context
 
-![context](imgs/context.svg)
+![context](https://raw.githubusercontent.com/ufcg-lsd/saps-engine/develop/imgs/context.svg)
 
 In the context diagram it is presented as if the interaction of the other elements with the SAPS platform occurs. Firstly we have customers, who request satellite image processing (in a time and place interval), then they access to monitor the execution of their processing and finally after they finish, retrieve the data calculated by SAPS from the images provided at the entrance.
 
@@ -55,7 +55,7 @@ There is a complicated thing associated between the datasets and the job executi
 
 ## Containers
 
-![containers](imgs/containers.svg)
+![containers](https://raw.githubusercontent.com/ufcg-lsd/saps-engine/develop/imgs/containers.svg)
 
 In the container diagram, the SAPS system is expanded into three new blocks:
 - [Dashboard](https://github.com/ufcg-lsd/saps-dashboard): Responsible for interacting with the user in an easy way and generating workload
@@ -84,7 +84,7 @@ The database is responsible for maintaining user data and processing.
 
 ## Components
 
-![componentes](imgs/components.svg)
+![componentes](https://raw.githubusercontent.com/ufcg-lsd/saps-engine/develop/imgs/components.svg)
 
 The component diagram shows three main components pertaining to the application:
 - [Dispatcher](https://github.com/ufcg-lsd/saps-dispatcher): Responsible for registering new processes or users, and obtaining them, in addition to sending an email to the user to obtain the results of the processing
@@ -102,7 +102,7 @@ It is important to note that this section is useful to fill the introduction see
 ## Information flow
 
 
-<img src="./imgs/information-flow.svg" style="width: 50%; display: flex; margin: 0 auto;"/>
+<img src="https://raw.githubusercontent.com/ufcg-lsd/saps-engine/develop/imgs/information-flow.svg" style="width: 50%; display: flex; margin: 0 auto;"/>
 
 The information flow diagram describes the states that the processing can reach, starting in the **created** state and ending (if successful) in **archived**. There are some points of failure in the states of downloading, preprocessing, running and archiving, which are originated by:
 - downloading: the files related to the processing were not found in the datasets of satellite images, weather or elevation data, or are corroborated. It can also happen due to an unexpected situation that occurred at this stage.
