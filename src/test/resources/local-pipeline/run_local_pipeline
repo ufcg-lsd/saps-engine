@@ -19,21 +19,23 @@ IMAGE_DATE=$5
 #Global variables
 #Declare folders shared
 
-HOST_FOLDER="/home/saps/workspace/saps-engine/src/test/resources/local-pipeline"
+# HOST_FOLDER is your local folder that will hold the files created by the containers, so edit properly
+#HOST_FOLDER="/home/saps/workspace/saps-engine/src/test/resources/local-pipeline"
+HOST_FOLDER="/home/luis/saps/saps-engine/src/test/resources/local-pipeline"
 
 #Declare folders name using in process
 IMAGE_DATA_FOLDER="image_data"
-PREPROCESS_FOLDER="preprocess"
-METADATA_FOLDER="metadata"
-RESULTS_FOLDER="output"
+INPUT_DOWNLOADER_FOLDER="inputdownloading"
+PREPROCESSING_FOLDER="preprocessing"
+PROCESSING_FOLDER="processing"
 
 #Declare shared folders name using in docker containers
 SHARED_FOLDER="/local"
 
 #Declare name images
-IMAGE_NAME_INPUTDOWNLOADER="" #fogbow/inputdownloader:googleapis"
+IMAGE_NAME_INPUTDOWNLOADER="fogbow/inputdownloader:googleapis"
 IMAGE_NAME_PREPROCESSOR="fogbow/preprocessor:default"
-IMAGE_NAME_WORKER="" #fogbow/worker:sebkc-sebal"
+IMAGE_NAME_WORKER="fogbow/worker:ufcg-sebal"
 
 #Declare name containers (use container name to manage container lifecycle)
 CONTAINER_NAME_INPUTDOWNLOADER="inputdownloader_container"
@@ -124,9 +126,9 @@ function run_input_download {
   if [ $IMAGE_NAME_INPUTDOWNLOADER ]
   then
     #Create directory of input, results and metadata before execute inputdownloader container
-    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p $SHARED_FOLDER/$IMAGE_DATA_FOLDER $SHARED_FOLDER/$METADATA_FOLDER $SHARED_FOLDER/$METADATA_FOLDER/$IMAGE_DATA_FOLDER
+    docker exec $CONTAINER_NAME_INPUTDOWNLOADER mkdir -p $SHARED_FOLDER/$IMAGE_DATA_FOLDER/$INPUT_DOWNLOADER_FOLDER
     #Execute run script in inputdownloader container for the download and preprocess of the landsat image
-    docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER bash /home/ubuntu/run.sh $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE $SHARED_FOLDER/$IMAGE_DATA_FOLDER $SHARED_FOLDER/$METADATA_FOLDER/$IMAGE_DATA_FOLDER
+    docker exec -e USGS_USERNAME=$USGS_USERNAME -e USGS_PASSWORD=$USGS_PASSWORD $CONTAINER_NAME_INPUTDOWNLOADER bash /home/saps/run.sh $SHARED_FOLDER/$IMAGE_DATA_FOLDER $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE
   fi
 }
 
@@ -134,9 +136,9 @@ function run_preprocessor {
   if [ $IMAGE_NAME_PREPROCESSOR ]
   then
     #Create directory before execute preprocessor container
-    docker exec $CONTAINER_NAME_PREPROCESSOR mkdir -p $SHARED_FOLDER/$PREPROCESS_FOLDER $SHARED_FOLDER/$METADATA_FOLDER/$PREPROCESS_FOLDER
+    docker exec $CONTAINER_NAME_PREPROCESSOR mkdir -p $SHARED_FOLDER/$IMAGE_DATA_FOLDER/$PREPROCESSING_FOLDER
     #Execute run script in preprocessor container
-    docker exec $CONTAINER_NAME_PREPROCESSOR bash /home/saps/run.sh $SHARED_FOLDER/$IMAGE_DATA_FOLDER $SHARED_FOLDER/$PREPROCESS_FOLDER $SHARED_FOLDER/$METADATA_FOLDER/$PREPROCESS_FOLDER
+    docker exec $CONTAINER_NAME_PREPROCESSOR bash /home/saps/run.sh $SHARED_FOLDER/$IMAGE_DATA_FOLDER $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE
   fi
 }
 
@@ -144,9 +146,9 @@ function run_worker {
   if [ $IMAGE_NAME_WORKER ]
   then
     #Create process directory
-    docker exec $CONTAINER_NAME_WORKER mkdir -p $SHARED_FOLDER/$RESULTS_FOLDER $SHARED_FOLDER/$METADATA_FOLDER/$RESULTS_FOLDER
+    docker exec $CONTAINER_NAME_WORKER mkdir -p $SHARED_FOLDER/$IMAGE_DATA_FOLDER/$PROCESSING_FOLDER
     #Execute run script in the worker container to generate results of the landsat image
-    docker exec $CONTAINER_NAME_WORKER bash /home/saps/run.sh $SHARED_FOLDER/$IMAGE_DATA_FOLDER $SHARED_FOLDER/$RESULTS_FOLDER $SHARED_FOLDER/$PREPROCESS_FOLDER $SHARED_FOLDER/$METADATA_FOLDER/$RESULTS_FOLDER
+    docker exec $CONTAINER_NAME_WORKER bash /home/saps/run.sh $SHARED_FOLDER/$IMAGE_DATA_FOLDER $IMAGE_DATASET $IMAGE_REGION $IMAGE_DATE
   fi
 }
 
