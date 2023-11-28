@@ -1,175 +1,201 @@
 # SAPS
-
--   Requirements: Ubuntu 16.04 or 18.04
+* Requirements: Ubuntu 16.04 or 18.04
 
 # SAPS components
 
-1.  [Common](#common)
-2.  [Catalog](#catalog)
-3.  [Archive](#archiver)
-4.  [Dispatcher](#dispatcher)
-5.  [Scheduler](#scheduler)
-6.  [Dashboard](#dashboard)
-7.  [Arbol](#arrebol)
-    1.  [Clean Option](#clean-option)
-    2.  [Container Option](#container-option)
-8.  [Workers](#workers)
-    1.  [Raw Option](#raw-option)
-    2.  [Ansible Option](#ansible-option)
-9.  [NOP tests](#testes-nop)
-10. [Attaching volume to nfs](#atachando-volume)
-11. [Crontab](#crontab)
-12. [Logrotate](#logrotate)
+1. [Common](#common)
+1. [Catalog](#catalog)
+1. [Archiver](#archiver)
+1. [Dispatcher](#dispatcher)
+1. [Scheduler](#scheduler)
+1. [Dashboard](#dashboard)
+1. [Arrebol](#arrebol)
+    1. [Clean Option](#clean-option)
+    2. [Container Option](#container-option)
+1. [Workers](#workers)
+    1. [Raw Option](#raw-option)
+    2. [Ansible Option](#ansible-option)
+1. [NOP tests](#testes-nop)
+1. [Attaching volume to nfs](#atachando-volume)
+1. [Crontab](#crontab)
+1. [Logrotate](#logrotate)
 
-* * *
-
+-------------------------------------------------------------------
 ## [Common](https://github.com/ufcg-lsd/saps-common)
 
--   This repository is needed to:
-    1.  [Catalog](#catalog)
-    2.  [Archive](#archiver)
-    3.  [Dispatcher](#dispatcher)
-    4.  [Scheduler](#scheduler)
+* This repository is needed to:
+    1. [Catalog](#catalog)
+    2. [Archiver](#archiver)
+    3. [Dispatcher](#dispatcher)
+    4. [Scheduler](#scheduler)
 
 ### Installation:
 
-1.  Install a JDK, Maven, Git
-        sudo apt-get update
-        sudo apt-get -y install openjdk-8-jdk
-        sudo apt-get -y install maven
-        sudo apt-get -y install git
-2.  Clone and install dependencies
-        git clone https://github.com/ufcg-lsd/saps-common ~/saps-common
-        cd ~/saps-common
-        sudo mvn install 
+1. Install a JDK, Maven, Git
+   ```
+   sudo apt-get update
+   sudo apt-get -y install openjdk-8-jdk
+   sudo apt-get -y install maven
+   sudo apt-get -y install git
+   ```
+2. Clone and install dependencies
+   ```
+   git clone https://github.com/ufcg-lsd/saps-common ~/saps-common
+   cd ~/saps-common
+   sudo mvn install
+   ``` 
 
-* * *
-
+-------------------------------------------------------------------
 ## [Catalog](https://github.com/ufcg-lsd/saps-catalog)
-
 ### Variables to be defined:
-
--   $catalog_user=catalog_user
--   $catalog passwd=catalog passwd
--   $catalog_db_name=catalog_db_name
--   $installed_version= Check your PostgreSQL version
+*   $catalog_user=catalog_user
+*   $catalog passwd=catalog passwd
+*   $catalog_db_name=catalog_db_name
+*   $installed_version= Check your PostgreSQL version
 
 ### Installation:
 
-1.  Configure o[saps-common](#common)
+1. Configure the [saps-common](#common)
 
-2.  Clone and install dependencies
-        git clone https://github.com/ufcg-lsd/saps-catalog ~/saps-catalog
-        cd ~/saps-catalog
-        sudo mvn install 
+1. Clone and install dependencies
+   ```
+   git clone https://github.com/ufcg-lsd/saps-catalog ~/saps-catalog
+   cd ~/saps-catalog
+   sudo mvn install
+   ``` 
+1. Install postgres
+   ```
+   sudo apt-get install -y postgresql
+   ```
+1. Install pip and pandas
+   ```
+   sudo apt install python3-pip
+   pip3 install pandas
+   pip3 install tqdm
+   ```
+1. Configure o Catalog
+   ```
+   sudo su postgres
+   export catalog_user=catalog_user
+   export catalog_passwd=catalog_passwd
+   export catalog_db_name=catalog_db_name
+   psql -c "CREATE USER $catalog_user WITH PASSWORD '$catalog_passwd';"
+   psql -c "CREATE DATABASE $catalog_db_name OWNER $catalog_user;"
+   psql -c "GRANT ALL PRIVILEGES ON DATABASE $catalog_db_name TO $catalog_user;"
+   exit
+   ```
+1. Add password as a requirement for access to PostgreSQL
+    * This step will make any user registered with postgresql need a password to access the database
+      ```
+      sudo su
+      export installed_version=`ls /etc/postgresql`
+      sed -i 's/peer/md5/g' /etc/postgresql/$installed_version/main/pg_hba.conf
+      echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$installed_version/main/pg_hba.conf
+      sed -i "$ a\listen_addresses = '*'" /etc/postgresql/$installed_version/main/postgresql.conf
+      service postgresql restart
+      exit
+      ```
 
-3.  Install postgres
-        sudo apt-get install -y postgresql
+1. Test Catalog access
+   ```
+   psql -h <catalog_ip_address> -p 5432 $catalog_db_name $catalog_user
+   ```
+    * Example:
+      ```
+      psql -h localhost -p 5432 catalog_db_name catalog_user
+      ```
 
-4.  Install pip and pandas
-        sudo apt install python3-pip
-        pip3 install pandas
-        pip3 install tqdm
-
-5.  Configure o Catalog
-        sudo su postgres
-        export catalog_user=catalog_user
-        export catalog_passwd=catalog_passwd
-        export catalog_db_name=catalog_db_name
-        psql -c "CREATE USER $catalog_user WITH PASSWORD '$catalog_passwd';"
-        psql -c "CREATE DATABASE $catalog_db_name OWNER $catalog_user;"
-        psql -c "GRANT ALL PRIVILEGES ON DATABASE $catalog_db_name TO $catalog_user;"
-        exit
-
-6.  Add password as a requirement for access to PostgreSQL
-    -   This step will make any user registered with postgresql need a password to access the database
-        sudo su
-        export installed_version=`ls /etc/postgresql`
-        sed -i 's/peer/md5/g' /etc/postgresql/$installed_version/main/pg_hba.conf
-        echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$installed_version/main/pg_hba.conf
-        sed -i "$ a\listen_addresses = '*'" /etc/postgresql/$installed_version/main/postgresql.conf
-        service postgresql restart
-        exit
-
-7.  Test Catalog access
-        psql -h <catalog_ip_address> -p 5432 $catalog_db_name $catalog_user
-    -   Example:
-            psql -h localhost -p 5432 catalog_db_name catalog_user
-
-8.  Configure o[Dispatcher](#dispatcher)
-
+1.  Configure the [Dispatcher](#dispatcher)
+    ```
     To run the landsat script, the dispatcher must be running.
+    ```
 
 ### Settings:
 
--   Execute o script**/scripts/fetch_landsat_data.sh**(it takes a while)
-
-
-    cd ~/saps-catalog/scripts
-    sudo bash fetch_landsat_data.sh
-
-* * *
-
+* Execute o script **/scripts/fetch_landsat_data.sh** (it takes a while)
+  ```
+  cd ~/saps-catalog/scripts
+  sudo bash fetch_landsat_data.sh
+  ```
+  
+-------------------------------------------------------------------
 ## [Archive](https://github.com/ufcg-lsd/saps-archiver)
 
 ### Variables to be defined:
-
--   $nfs_server_folder_path=/nfs
+* $nfs_server_folder_path=/nfs
 
 ### Installation:
+1. Configure the [saps-common](#common)
+1. Install dependencies from [saps-catalog](#catalog)
+   ```
+   git clone https://github.com/ufcg-lsd/saps-catalog ~/temp/saps-catalog
+   cd ~/temp/saps-catalog
+   sudo mvn install 
+   cd -
+   sudo rm -rf ~/temp/saps-catalog
+   sudo rm -d ~/temp/
+   ```
+1. Clone and install dependencies
+   ```
+   git clone https://github.com/ufcg-lsd/saps-archiver ~/saps-archiver
+   cd ~/saps-archiver
+   sudo mvn install
+   ```
+1. Create and configure a shared folder to store files from each processing step
 
-1.  Configure o[saps-common](#common)
-2.  Instale as dependencias do [saps-catalog](#catalog)
-        git clone https://github.com/ufcg-lsd/saps-catalog ~/temp/saps-catalog
-        cd ~/temp/saps-catalog
-        sudo mvn install 
-        cd -
-        sudo rm -rf ~/temp/saps-catalog
-        sudo rm -d ~/temp/
-3.  Clone and install dependencies
-        git clone https://github.com/ufcg-lsd/saps-archiver ~/saps-archiver
-        cd ~/saps-archiver
-        sudo mvn install 
-4.  Create and configure a shared folder to store files from each processing step
+* **OBS:** If you have limited storage space, you can[attach a volume to nfs](#atachando-volume)
 
--   **OBS:**If you have limited storage space, you can[attach a volume to nfs](#atachando-volume)
+* NFS (Option 1)
 
--   NFS (Option 1)
+    * Setting
+      ```
+      sudo su
+      apt-get install -y nfs-kernel-server
+      export nfs_server_folder_path=/nfs
+      mkdir -p $nfs_server_folder_path
+      echo $nfs_server_folder_path '*(rw,insecure,no_subtree_check,async,no_root_squash)' >> /etc/exports 
+      exportfs -arvf
+      service nfs-kernel-server enable
+      service nfs-kernel-server restart
+      exit
+      ```
+      
+    * Testing
+      ```
+      showmount -e localhost
+      ```
 
-    -   Setting
-            sudo su
-            apt-get install -y nfs-kernel-server
-            export nfs_server_folder_path=/nfs
-            mkdir -p $nfs_server_folder_path
-            echo $nfs_server_folder_path '*(rw,insecure,no_subtree_check,async,no_root_squash)' >> /etc/exports 
-            exportfs -arvf
-            service nfs-kernel-server enable
-            service nfs-kernel-server restart
-            exit
+* SWIFT (Option 2)
+  ```
+  TODO
+  ```
 
-    -   Testing
-            showmount -e localhost
+1. Configure Apache (necessary to access data via email)
 
--   SWIFT (Option 2)
-        TODO
+* (It would be cool to migrate this to nginx)
 
-5.  Configure Apache (necessary to access data via email)
+* Install Apache
+  ```
+  sudo apt-get install -y apache2
+  ```
 
--   (It would be cool to migrate this to nginx)
+* Modify the sites-available/default-ssl.conf file
+  ```
+  sudo vim /etc/apache2/sites-available/default-ssl.conf
+  ```
+    * Change the DocumentRoot to the nfs directory (default = /nfs)
+      ```
+      DocumentRoot $nfs_server_folder_path 
+      # Exemplo: DocumentRoot /nfs
+      ```
 
--   Install Apache
-        sudo apt-get install -y apache2
-
--   Modify the sites-available/default-ssl.conf file
-        sudo vim /etc/apache2/sites-available/default-ssl.conf
-    -   Change the DocumentRoot to the nfs directory (default = /nfs)
-            DocumentRoot $nfs_server_folder_path 
-            # Exemplo: DocumentRoot /nfs
-
--   Modify the sites-available/000-default.conf file
-        sudo vim /etc/apache2/sites-available/000-default.conf
-    -   Change the DocumentRoot and add the lines in sequence
-            DocumentRoot $nfs_server_folder_path 
+* Modify the sites-available/000-default.conf file
+  ```
+  sudo vim /etc/apache2/sites-available/000-default.conf
+  ```
+    * Change the DocumentRoot and add the lines in sequence
+      ```
+      DocumentRoot $nfs_server_folder_path 
             # Exemplo: DocumentRoot /nfs
                     Options +Indexes
                     <Directory $nfs_server_folder_path>
@@ -178,117 +204,141 @@
                             AllowOverride None
                             Require all granted
                     </Directory>
+        ```
 
--   Modify the sites-available/000-default.conf file
-        sudo vim /etc/apache2/apache2.conf
-    -   Change FilesMatch
+* Modify the sites-available/000-default.conf file
+  ```
+  sudo vim /etc/apache2/apache2.conf
+  ```
+    * Change FilesMatch
+      ```
             <FilesMatch ".+\.(txt|TXT|nc|NC|tif|TIF|tiff|TIFF|csv|CSV|log|LOG|metadata)$">
                     ForceType application/octet-stream
                     Header set Content-Disposition attachment
             </FilesMatch>
+      ```
 
--   After configuring the files, run:
-        sudo a2enmod headers
-        sudo service apache2 restart
+* After configuring the files, run:
+  ```
+  sudo a2enmod headers
+  sudo service apache2 restart
+  ```
 
 ### Settings:
 
 Configure the /config/archiver.conf file according to the other components
 
--   Example (nfs):[archiver.conf](./confs/archiver/clean/archiver.conf)
+* Example (nfs):[archiver.conf](./confs/archiver/clean/archiver.conf)
 
 ### Execution:
 
--   Running archiver
-        bash bin/start-service
+* Running archiver
+  ```
+  bash bin/start-service
+  ```
 
--   Stopping archiver
-        bash bin/stop-service
+* Stopping archiver
+  ```
+  bash bin/stop-service
+  ```
 
-* * *
-
+------------------------------------------------------------------
 ## [Dispatcher](https://github.com/ufcg-lsd/saps-dispatcher)
-
 ### Installation:
+1.  Configure the [saps-common](#common)
 
-1.  Configure o[saps-common](#common)
-
-2.  Install the dependencies[saps-archiver](#archiver)
-        git clone https://github.com/ufcg-lsd/saps-archiver ~/temp/saps-archiver
-        cd ~/temp/saps-archiver
-        sudo mvn install 
-        cd -
-        sudo rm -rf ~/temp/saps-archiver
-        sudo rm -d ~/temp/
-
-3.  Install the dependencies[saps-catalog](#catalog)
-        git clone https://github.com/ufcg-lsd/saps-catalog ~/temp/saps-catalog
-        cd ~/temp/saps-catalog
-        sudo mvn install 
-        cd -
-        sudo rm -rf ~/temp/saps-catalog
-        sudo rm -d ~/temp/
-
-4.  Clone and install dependencies
-        git clone https://github.com/ufcg-lsd/saps-dispatcher ~/saps-dispatcher
-        cd ~/saps-dispatcher
-        sudo mvn install 
-
-5.  Install python script dependencies (get_wrs.py)
-        sudo apt-get install -y python-gdal
-        sudo apt-get install -y python-shapely
-        sudo apt-get -y install curl jq sed
+2. Install the dependencies from [saps-archiver](#archiver)
+   ```
+   git clone https://github.com/ufcg-lsd/saps-archiver ~/temp/saps-archiver
+   cd ~/temp/saps-archiver
+   sudo mvn install 
+   cd -
+   sudo rm -rf ~/temp/saps-archiver
+   sudo rm -d ~/temp/
+   ```
+3. Install the dependencies[saps-catalog](#catalog)
+   ```
+   git clone https://github.com/ufcg-lsd/saps-catalog ~/temp/saps-catalog
+   cd ~/temp/saps-catalog
+   sudo mvn install 
+   cd -
+   sudo rm -rf ~/temp/saps-catalog
+   sudo rm -d ~/temp/
+   ```
+4. Clone and install dependencies
+   ```
+   git clone https://github.com/ufcg-lsd/saps-dispatcher ~/saps-dispatcher
+   cd ~/saps-dispatcher
+   sudo mvn install
+   ``` 
+5. Install python script dependencies (get_wrs.py)
+   ```
+   sudo apt-get install -y python-gdal
+   sudo apt-get install -y python-shapely
+   sudo apt-get -y install curl jq sed
+   ```
 
 ### Settings:
 
-Configure the file**/config/dispatcher.conf**according to the other components
+Configure the file **/config/dispatcher.conf** according to the other components
 
--   Example (nfs):[dispatcher.conf](./confs/dispatcher/clean/dispatcher.conf)
+* Example (nfs):[dispatcher.conf](./confs/dispatcher/clean/dispatcher.conf)
 
 ### Execution:
+* Running dispatcher
+  ```
+  bash bin/start-service
+  ```
 
--   Running dispatcher
-        bash bin/start-service
+* Stopping dispatcher
+  ```
+  bash bin/stop-service
+  ```
 
--   Stopping dispatcher
-        bash bin/stop-service
-
-* * *
+-------------------------------------------------------------------
 
 ## [Scheduler](https://github.com/ufcg-lsd/saps-scheduler)
 
 ### Installation:
 
-1.  Configure o[saps-common](#common)
+1.  Configure the [saps-common](#common)
 2.  Install the dependencies[saps-catalog](#catalog)
-        git clone https://github.com/ufcg-lsd/saps-catalog ~/temp/saps-catalog
-        cd ~/temp/saps-catalog
-        sudo mvn install 
-        cd -
-        sudo rm -rf ~/temp/saps-catalog
-        sudo rm -d ~/temp/
-3.  Clone and install dependencies
-        git clone https://github.com/ufcg-lsd/saps-scheduler ~/saps-scheduler
-        cd ~/saps-scheduler
-        sudo mvn install 
+    ```
+    git clone https://github.com/ufcg-lsd/saps-catalog ~/temp/saps-catalog
+    cd ~/temp/saps-catalog
+    sudo mvn install 
+    cd -
+    sudo rm -rf ~/temp/saps-catalog
+    sudo rm -d ~/temp/
+    ```
+4. Clone and install dependencies
+   ```
+   git clone https://github.com/ufcg-lsd/saps-scheduler ~/saps-scheduler
+   cd ~/saps-scheduler
+   sudo mvn install
+   ``` 
 
 ### Settings:
 
 Configure the file**/config/scheduler.conf**according to the other components
 
--   Example (nfs):[scheduler.conf](./confs/scheduler/clean/scheduler.conf)
+* Example (nfs):[scheduler.conf](./confs/scheduler/clean/scheduler.conf)
 
 ### Execution:
 
--   Before execution it is necessary to install and configure the[Arbol](#arrebol)
+* Before execution it is necessary to install and configure the[Arbol](#arrebol)
 
--   Running scheduler
-        bash bin/start-service
+* Running scheduler
+  ```
+  bash bin/start-service
+  ```
 
--   Stopping scheduler
-        bash bin/stop-service
+* Stopping scheduler
+  ```
+  bash bin/stop-service
+  ```
 
-* * *
+-------------------------------------------------------------------
 
 ## [Dashboard](https://github.com/ufcg-lsd/saps-dashboard)
 
@@ -318,14 +368,17 @@ If necessary, you can change the port on which the Dashboard will run (default =
 
 Create a file called`.env.local`in the project root and add the following lines:
 
-    NEXT_PUBLIC_API_URL=<IP:Porta do Dispatcher>
-    NEXT_PUBLIC_MAP_API_KEY=<Seu Token Aqui>
+```
+NEXT_PUBLIC_API_URL=<IP:Porta do Dispatcher>
+NEXT_PUBLIC_MAP_API_KEY=<Seu Token Aqui>
+```
 
 ### 4. Downloading required dependency
 
 install AXIOS so that requests can be made
-
-    npm install axios
+```
+npm install axios
+```
 
 ## Running the Project
 
@@ -337,96 +390,113 @@ After completing the configuration steps, you can run the project with the comma
 npm run dev
 ```
 
-* * *
-
-## [Arbol](https://github.com/ufcg-lsd/arrebol)
+-------------------------------------------------------------------
+## [Arrebol](https://github.com/ufcg-lsd/arrebol)
 
 ### **_Clean Option_**
 
 ### Variables to be defined:
 
--   $arrebol_db_passwd=@rrebol
--   $arrebol_db_name=arrebol
--   $arrebol_db_user=arrebol_db_user
+* $arrebol_db_passwd=@rrebol
+* $arrebol_db_name=arrebol
+* $arrebol_db_user=arrebol_db_user
 
 ### Observation:
 
-To avoid conflicts in the Arrebol configuration, it is important that the Arrebol database**_Arbol_**It's from**_Catalog_**are stored in different instances. If it is unfeasible to store them in separate instances, an alternative is to create a single database for both, ensuring that the data from each system is clearly separated. However, this option requires care to avoid conflicts in data access.
+To avoid conflicts in the Arrebol configuration, it is important that the **Arrebol** database and **Catalog** are stored in different instances. If it is unfeasible to store them in separate instances, an alternative is to create a single database for both, ensuring that the data from each system is clearly separated. However, this option requires care to avoid conflicts in data access.
 
 ### Installation:
 
-1.  Install the JDK, Maven and Git
-        sudo apt-get update
-        sudo apt-get -y install openjdk-8-jdk
-        sudo apt-get -y install maven
-        sudo apt-get -y install git
-        sudo apt-get install -y postgresql
+1. Install the JDK, Maven and Git
+   ```
+   sudo apt-get update
+   sudo apt-get -y install openjdk-8-jdk
+   sudo apt-get -y install maven
+   sudo apt-get -y install git
+   sudo apt-get install -y postgresql
+   ```
 
-2.  Clone and install dependencies
-        git clone -b develop https://github.com/cilasmarques/arrebol ~/arrebol
-        cd ~/arrebol
-        sudo mvn install
+1. Clone and install dependencies
+   ```
+   git clone -b develop https://github.com/cilasmarques/arrebol ~/arrebol
+   cd ~/arrebol
+   sudo mvn install
+   ```
 
-3.  Configure the afterglow DB
-        sudo su postgres
-        export arrebol_db_user=arrebol_db_user
-        export arrebol_db_passwd=@rrebol
-        export arrebol_db_name=arrebol
-        psql -c "CREATE USER $arrebol_db_user WITH PASSWORD '$arrebol_db_passwd';"
-        psql -c "CREATE DATABASE $arrebol_db_name OWNER $arrebol_db_user;"
-        psql -c "ALTER USER $arrebol_db_user PASSWORD '$arrebol_db_passwd';"
-        exit
+1. Configure the afterglow DB
+   ```
+   sudo su postgres
+   export arrebol_db_user=arrebol_db_user
+   export arrebol_db_passwd=@rrebol
+   export arrebol_db_name=arrebol
+   psql -c "CREATE USER $arrebol_db_user WITH PASSWORD '$arrebol_db_passwd';"
+   psql -c "CREATE DATABASE $arrebol_db_name OWNER $arrebol_db_user;"
+   psql -c "ALTER USER $arrebol_db_user PASSWORD '$arrebol_db_passwd';"
+   exit
+   ```
 
-4.  Test access to the arrebol bd
-        psql -h <arrebol_ip_address> -p 5432 $arrebol_db_name arrebol_db_user
-    -   Example:
-            psql -h localhost -p 5432 arrebol arrebol_db_user
+5. Test access to the arrebol database
+   ```
+   psql -h <arrebol_ip_address> -p 5432 $arrebol_db_name arrebol_db_user
+   ```
+    * Example:
+      ```
+      psql -h localhost -p 5432 arrebol arrebol_db_user
+      ```
 
 ### Settings:
 
-Configure the files**src/main/resources/application.properties**e**src/main/resources/arrebol.json**according to the other components
+Configure the files **src/main/resources/application.properties** e **src/main/resources/arrebol.json** according to the other components
 
--   Example:[application.properties](./confs/arrebol/clean/application.properties)
--   Example:[arrebol.json](./confs/arrebol/clean/arrebol.json)
+* Example:[application.properties](./confs/arrebol/clean/application.properties)
+* Example:[arrebol.json](./confs/arrebol/clean/arrebol.json)
 
 ### Before running, configure the afterglow workers
 
--   This configuration must be done in**same machine that will perform the afterglow**.
--   To configure the worker, follow these[steps](#workers)
+* This configuration must be done in**same machine that will perform the afterglow**.
+* To configure the worker, follow these[steps](#workers)
 
 ### Execution:
 
--   Performing afterglow
-        sudo bash bin/start-service.sh
+* Performing arrebol
+  ```
+  sudo bash bin/start-service.sh
+  ```
 
--   Stopping afterglow
-        sudo bash bin/stop-service.sh
+* Stopping arrebol
+  ```
+  sudo bash bin/stop-service.sh
+  ```
 
 ### Configuration of arrebol_db tables
 
-1.  After executing the afterglow, the tables are created in the database, so you need to add the following constraints
+1.  After executing the arrebol, the tables are created in the database, so you need to add the following constraints
+   ```
+   psql -h localhost -p 5432 arrebol arrebol_db_user
+   ALTER TABLE task_spec_commands DROP CONSTRAINT fk7j4vqu34tq49sh0hltl02wtlv;
+   ALTER TABLE task_spec_commands ADD CONSTRAINT commands_id_fk FOREIGN KEY (commands_id) REFERENCES command(id) ON DELETE CASCADE;
 
-        psql -h localhost -p 5432 arrebol arrebol_db_user
-        ALTER TABLE task_spec_commands DROP CONSTRAINT fk7j4vqu34tq49sh0hltl02wtlv;
-        ALTER TABLE task_spec_commands ADD CONSTRAINT commands_id_fk FOREIGN KEY (commands_id) REFERENCES command(id) ON DELETE CASCADE;
+   ALTER TABLE task_spec_commands DROP CONSTRAINT fk9y8pgyqjodor03p8983w1mwnq;
+   ALTER TABLE task_spec_commands ADD CONSTRAINT task_spec_id_fk FOREIGN KEY (task_spec_id) REFERENCES task_spec(id) ON DELETE CASCADE;
 
-        ALTER TABLE task_spec_commands DROP CONSTRAINT fk9y8pgyqjodor03p8983w1mwnq;
-        ALTER TABLE task_spec_commands ADD CONSTRAINT task_spec_id_fk FOREIGN KEY (task_spec_id) REFERENCES task_spec(id) ON DELETE CASCADE;
+   ALTER TABLE task_spec_requirements DROP CONSTRAINT fkrxke07njv364ypn1i8b2p6grm;
+   ALTER TABLE task_spec_requirements ADD CONSTRAINT task_spec_id_fk FOREIGN KEY (task_spec_id) REFERENCES task_spec(id) ON DELETE CASCADE;
 
-        ALTER TABLE task_spec_requirements DROP CONSTRAINT fkrxke07njv364ypn1i8b2p6grm;
-        ALTER TABLE task_spec_requirements ADD CONSTRAINT task_spec_id_fk FOREIGN KEY (task_spec_id) REFERENCES task_spec(id) ON DELETE CASCADE;
-
-        ALTER TABLE task DROP CONSTRAINT fk303yjlm5m2en8gknk80nkd27p; 
-        ALTER TABLE task ADD CONSTRAINT task_spec_id_fk FOREIGN KEY (task_spec_id) REFERENCES task_spec(id) ON DELETE CASCADE;
+   ALTER TABLE task DROP CONSTRAINT fk303yjlm5m2en8gknk80nkd27p; 
+   ALTER TABLE task ADD CONSTRAINT task_spec_id_fk FOREIGN KEY (task_spec_id) REFERENCES task_spec(id) ON DELETE CASCADE;
+   ```
 
 ### Check
 
--   Request
-        curl http://<arrebol_ip>:8080/queues/default
--   Expected response
-        {"id":"default","name":"Default Queue","waiting_jobs":0,"worker_pools":1,"pools_size":5}
-
-* * *
+* Request
+  ```
+  curl http://<arrebol_ip>:8080/queues/default
+  ```
+* Expected response
+  ```
+  {"id":"default","name":"Default Queue","waiting_jobs":0,"worker_pools":1,"pools_size":5}
+  ```
+-------------------------------------------------------------------
 
 ### **_Container Option_**
 
