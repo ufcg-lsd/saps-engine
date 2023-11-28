@@ -1,3 +1,0 @@
-#!/bin/bash
-
-ps xau | grep ArchiverMain | awk '{print $2}' | xargs sudo kill
