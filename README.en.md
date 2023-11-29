@@ -41,7 +41,7 @@
 2.  Clone and install dependencies
         git clone https://github.com/ufcg-lsd/saps-common ~/saps-common
         cd ~/saps-common
-        sudo mvn install 
+        sudo mvn install
 
 * * *
 
@@ -56,12 +56,12 @@
 
 ### Installation:
 
-1.  Configure o[saps-common](#common)
+1.  Configure the[saps-common](#common)
 
 2.  Clone and install dependencies
         git clone https://github.com/ufcg-lsd/saps-catalog ~/saps-catalog
         cd ~/saps-catalog
-        sudo mvn install 
+        sudo mvn install
 
 3.  Install postgres
         sudo apt-get install -y postgresql
@@ -81,32 +81,29 @@
         psql -c "GRANT ALL PRIVILEGES ON DATABASE $catalog_db_name TO $catalog_user;"
         exit
 
-6.  Add the password as a requirement for access to PostgreSQL
+6.  Add password as a requirement for access to PostgreSQL
     -   This step will make any user registered with postgresql need a password to access the database
-        sudo su
-        export installed_version=`ls /etc/postgresql`
-        sed -i 's/peer/md5/g' /etc/postgresql/$installed_version/main/pg_hba.conf
-        echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$installed_version/main/pg_hba.conf
-        sed -i "$ a\listen_addresses = '*'" /etc/postgresql/$installed_version/main/postgresql.conf
-        service postgresql restart
-        exit
+            sudo su
+            export installed_version=`ls /etc/postgresql`
+            sed -i 's/peer/md5/g' /etc/postgresql/$installed_version/main/pg_hba.conf
+            echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$installed_version/main/pg_hba.conf
+            sed -i "$ a\listen_addresses = '*'" /etc/postgresql/$installed_version/main/postgresql.conf
+            service postgresql restart
+            exit
 
 7.  Test Catalog access
         psql -h <catalog_ip_address> -p 5432 $catalog_db_name $catalog_user
     -   Example:
             psql -h localhost -p 5432 catalog_db_name catalog_user
 
-8.  Configure o[Dispatcher](#dispatcher)
-
-    To run the landsat script, the dispatcher must be running.
+8.  Configure the[Dispatcher](#dispatcher)
+        To run the landsat script, the dispatcher must be running.
 
 ### Settings:
 
 -   Execute o script**/scripts/fetch_landsat_data.sh**(it takes a while)
-
-
-    cd ~/saps-catalog/scripts
-    sudo bash fetch_landsat_data.sh
+        cd ~/saps-catalog/scripts
+        sudo bash fetch_landsat_data.sh
 
 * * *
 
@@ -118,8 +115,8 @@
 
 ### Installation:
 
-1.  Configure o[saps-common](#common)
-2.  Install the dependencies[saps-catalog](#catalog)
+1.  Configure the[saps-common](#common)
+2.  Install dependencies from[saps-catalog](#catalog)
         git clone https://github.com/ufcg-lsd/saps-catalog ~/temp/saps-catalog
         cd ~/temp/saps-catalog
         sudo mvn install 
@@ -129,7 +126,7 @@
 3.  Clone and install dependencies
         git clone https://github.com/ufcg-lsd/saps-archiver ~/saps-archiver
         cd ~/saps-archiver
-        sudo mvn install 
+        sudo mvn install
 4.  Create and configure a shared folder to store files from each processing step
 
 -   **OBS:**If you have limited storage space, you can[attach a volume to nfs](#atachando-volume)
@@ -146,14 +143,13 @@
             service nfs-kernel-server enable
             service nfs-kernel-server restart
             exit
-
     -   Testing
             showmount -e localhost
 
 -   SWIFT (Option 2)
         TODO
 
-5.  Configure Apache (necessary to access data via email)
+1.  Configure Apache (necessary to access data via email)
 
 -   (It would be cool to migrate this to nginx)
 
@@ -170,22 +166,22 @@
         sudo vim /etc/apache2/sites-available/000-default.conf
     -   Change the DocumentRoot and add the lines in sequence
             DocumentRoot $nfs_server_folder_path 
-            # Exemplo: DocumentRoot /nfs
-                    Options +Indexes
-                    <Directory $nfs_server_folder_path>
-                    # Exemplo: <Directory /nfs>
-                            Options Indexes FollowSymLinks
-                            AllowOverride None
-                            Require all granted
-                    </Directory>
+                  # Exemplo: DocumentRoot /nfs
+                          Options +Indexes
+                          <Directory $nfs_server_folder_path>
+                          # Exemplo: <Directory /nfs>
+                                  Options Indexes FollowSymLinks
+                                  AllowOverride None
+                                  Require all granted
+                          </Directory>
 
 -   Modify the sites-available/000-default.conf file
         sudo vim /etc/apache2/apache2.conf
     -   Change FilesMatch
-            <FilesMatch ".+\.(txt|TXT|nc|NC|tif|TIF|tiff|TIFF|csv|CSV|log|LOG|metadata)$">
-                    ForceType application/octet-stream
-                    Header set Content-Disposition attachment
-            </FilesMatch>
+                  <FilesMatch ".+\.(txt|TXT|nc|NC|tif|TIF|tiff|TIFF|csv|CSV|log|LOG|metadata)$">
+                          ForceType application/octet-stream
+                          Header set Content-Disposition attachment
+                  </FilesMatch>
 
 -   After configuring the files, run:
         sudo a2enmod headers
@@ -211,9 +207,9 @@ Configure the /config/archiver.conf file according to the other components
 
 ### Installation:
 
-1.  Configure o[saps-common](#common)
+1.  Configure the[saps-common](#common)
 
-2.  Install the dependencies[saps-archiver](#archiver)
+2.  Install the dependencies from[saps-archiver](#archiver)
         git clone https://github.com/ufcg-lsd/saps-archiver ~/temp/saps-archiver
         cd ~/temp/saps-archiver
         sudo mvn install 
@@ -232,7 +228,7 @@ Configure the /config/archiver.conf file according to the other components
 4.  Clone and install dependencies
         git clone https://github.com/ufcg-lsd/saps-dispatcher ~/saps-dispatcher
         cd ~/saps-dispatcher
-        sudo mvn install 
+        sudo mvn install
 
 5.  Install python script dependencies (get_wrs.py)
         sudo apt-get install -y python-gdal
@@ -259,7 +255,7 @@ Configure the file**/config/dispatcher.conf**according to the other components
 
 ### Installation:
 
-1.  Configure o[saps-common](#common)
+1.  Configure the[saps-common](#common)
 2.  Install the dependencies[saps-catalog](#catalog)
         git clone https://github.com/ufcg-lsd/saps-catalog ~/temp/saps-catalog
         cd ~/temp/saps-catalog
@@ -270,7 +266,7 @@ Configure the file**/config/dispatcher.conf**according to the other components
 3.  Clone and install dependencies
         git clone https://github.com/ufcg-lsd/saps-scheduler ~/saps-scheduler
         cd ~/saps-scheduler
-        sudo mvn install 
+        sudo mvn install
 
 ### Settings:
 
@@ -280,7 +276,7 @@ Configure the file**/config/scheduler.conf**according to the other components
 
 ### Execution:
 
--   Before execution it is necessary to install and configure the[Arbol](#arrebol)
+-   Before execution it is necessary to install and configure the[Tree](#arrebol)
 
 -   Running scheduler
         bash bin/start-service
@@ -351,7 +347,7 @@ npm run dev
 
 ### Observation:
 
-To avoid conflicts in the Arrebol configuration, it is important that the Arrebol database**_Arbol_**It's from**_Catalog_** sejam armazenados em instâncias diferentes. Caso seja inviável armazená-los em instâncias separadas, uma alternativa é criar um único banco de dados para ambos, garantindo que os dados de cada sistema estejam claramente separados. Entretanto, essa opção requer cuidado para evitar conflitos no acesso aos dados.
+To avoid conflicts in the Arrebol configuration, it is important that the**Arbol**database and**Catalog**are stored in different instances. If it is unfeasible to store them in separate instances, an alternative is to create a single database for both, ensuring that the data from each system is clearly separated. However, this option requires care to avoid conflicts in data access.
 
 ### Installation:
 
@@ -377,7 +373,7 @@ To avoid conflicts in the Arrebol configuration, it is important that the Arrebo
         psql -c "ALTER USER $arrebol_db_user PASSWORD '$arrebol_db_passwd';"
         exit
 
-4.  Test access to the arrebol bd
+4.  Test access to the arrebol database
         psql -h <arrebol_ip_address> -p 5432 $arrebol_db_name arrebol_db_user
     -   Example:
             psql -h localhost -p 5432 arrebol arrebol_db_user
@@ -396,15 +392,15 @@ Configure the files**src/main/resources/application.properties**e**src/main/reso
 
 ### Execution:
 
--   Performing afterglow
+-   Performing arrebol
         sudo bash bin/start-service.sh
 
--   Stopping afterglow
+-   Stopping arrebol
         sudo bash bin/stop-service.sh
 
 ### Configuration of arrebol_db tables
 
-1.  After executing the afterglow, the tables are created in the database, so you need to add the following constraints
+1.  After executing the arrebol, the tables are created in the database, so you need to add the following constraints
 
         psql -h localhost -p 5432 arrebol arrebol_db_user
         ALTER TABLE task_spec_commands DROP CONSTRAINT fk7j4vqu34tq49sh0hltl02wtlv;
@@ -450,12 +446,12 @@ Configure folder files**deploy/config/**according to the other components
 
 ### Before running, configure the afterglow workers
 
--   This configuration must be done in**same machine that will run**the afterglow\*\*.
+-   This configuration must be done in**same machine that will run**the arrebol\*\*.
 -   To configure the worker, follow these[steps](#workers)
 
 ### Execution:
 
--   Performing afterglow
+-   Performing aarrebol
         sudo bash deploy.sh start
 
 -   Stopping afterglow
@@ -465,6 +461,7 @@ Configure folder files**deploy/config/**according to the other components
 
 -   Request
         curl http://<arrebol_ip>:8080/queues/default
+
 -   Expected response
         {"id":"default","name":"Default Queue","waiting_jobs":0,"worker_pools":1,"pools_size":5}
 
@@ -472,7 +469,7 @@ Configure folder files**deploy/config/**according to the other components
 
 ## Workers
 
-### **_Raw Option_**
+### **Raw Option**
 
 ### Settings:
 
@@ -490,84 +487,84 @@ Configure folder files**deploy/config/**according to the other components
 -   Modify the /lib/systemd/system/docker.service file
         sudo vim /lib/systemd/system/docker.service
     -   Change the ExecStart and replace with the following lines
-              ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:5555 --containerd=/run/containerd/containerd.sock
+            ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:5555 --containerd=/run/containerd/containerd.sock
 
 -   Restart the docker daemon
-          sudo systemctl daemon-reload
-          sudo service docker restart
+        sudo systemctl daemon-reload
+        sudo service docker restart
 
 -   Face pull images docker
 
-          sudo docker pull fogbow/inputdownloader:googleapis
-          sudo docker pull fogbow/preprocessor:default
-          sudo docker pull fogbow/worker:ufcg-sebal
+        sudo docker pull fogbow/inputdownloader:googleapis
+        sudo docker pull fogbow/preprocessor:default
+        sudo docker pull fogbow/worker:ufcg-sebal
 
-          sudo docker pull fogbow/inputdownloader:usgsapis
-          sudo docker pull fogbow/preprocessor:legacy
-          sudo docker pull fogbow/worker:sebkc-sebal
-          sudo docker pull fogbow/worker:sebkc-tseb
+        sudo docker pull fogbow/inputdownloader:usgsapis
+        sudo docker pull fogbow/preprocessor:legacy
+        sudo docker pull fogbow/worker:sebkc-sebal
+        sudo docker pull fogbow/worker:sebkc-tseb
 
 ### Check
 
 -   Request
         curl http://<worker_ip>:5555/version
 -   Expected response
-        {
-          "Platform": {
-            "Name": "Docker Engine - Community"
-          },
-          "Components": [
-            {
-              "Name": "Engine",
-              "Version": "19.03.7",
-              "Details": {
+              {
+                "Platform": {
+                  "Name": "Docker Engine - Community"
+                },
+                "Components": [
+                  {
+                    "Name": "Engine",
+                    "Version": "19.03.7",
+                    "Details": {
+                      "ApiVersion": "1.40",
+                      "Arch": "amd64",
+                      "BuildTime": "2020-03-04T01:21:08.000000000+00:00",
+                      "Experimental": "false",
+                      "GitCommit": "7141c199a2",
+                      "GoVersion": "go1.12.17",
+                      "KernelVersion": "4.15.0-88-generic",
+                      "MinAPIVersion": "1.12",
+                      "Os": "linux"
+                    }
+                  },
+                  {
+                    "Name": "containerd",
+                    "Version": "1.2.13",
+                    "Details": {
+                      "GitCommit": "7ad184331fa3e55e52b890ea95e65ba581ae3429"
+                    }
+                  },
+                  {
+                    "Name": "runc",
+                    "Version": "1.0.0-rc10",
+                    "Details": {
+                      "GitCommit": "dc9208a3303feef5b3839f4323d9beb36df0a9dd"
+                    }
+                  },
+                  {
+                    "Name": "docker-init",
+                    "Version": "0.18.0",
+                    "Details": {
+                      "GitCommit": "fec3683"
+                    }
+                  }
+                ],
+                "Version": "19.03.7",
                 "ApiVersion": "1.40",
-                "Arch": "amd64",
-                "BuildTime": "2020-03-04T01:21:08.000000000+00:00",
-                "Experimental": "false",
+                "MinAPIVersion": "1.12",
                 "GitCommit": "7141c199a2",
                 "GoVersion": "go1.12.17",
+                "Os": "linux",
+                "Arch": "amd64",
                 "KernelVersion": "4.15.0-88-generic",
-                "MinAPIVersion": "1.12",
-                "Os": "linux"
+                "BuildTime": "2020-03-04T01:21:08.000000000+00:00"
               }
-            },
-            {
-              "Name": "containerd",
-              "Version": "1.2.13",
-              "Details": {
-                "GitCommit": "7ad184331fa3e55e52b890ea95e65ba581ae3429"
-              }
-            },
-            {
-              "Name": "runc",
-              "Version": "1.0.0-rc10",
-              "Details": {
-                "GitCommit": "dc9208a3303feef5b3839f4323d9beb36df0a9dd"
-              }
-            },
-            {
-              "Name": "docker-init",
-              "Version": "0.18.0",
-              "Details": {
-                "GitCommit": "fec3683"
-              }
-            }
-          ],
-          "Version": "19.03.7",
-          "ApiVersion": "1.40",
-          "MinAPIVersion": "1.12",
-          "GitCommit": "7141c199a2",
-          "GoVersion": "go1.12.17",
-          "Os": "linux",
-          "Arch": "amd64",
-          "KernelVersion": "4.15.0-88-generic",
-          "BuildTime": "2020-03-04T01:21:08.000000000+00:00"
-        }
 
 * * *
 
-### **_Ansible Option_**
+### **Ansible Option**
 
 ### Settings:
 
@@ -591,66 +588,68 @@ Configure folder files**/worker/deploy/hosts.conf**according to the other compon
 
 ### Installation:
 
+    ```
     cd ~/arrebol/worker/deploy/
     sudo bash install.sh
+    ```
 
 ### Check
 
 -   Request
         curl http://<worker_ip>:5555/version
 -   Expected response
-        {
-          "Platform": {
-            "Name": "Docker Engine - Community"
-          },
-          "Components": [
-            {
-              "Name": "Engine",
-              "Version": "19.03.7",
-              "Details": {
+              {
+                "Platform": {
+                  "Name": "Docker Engine - Community"
+                },
+                "Components": [
+                  {
+                    "Name": "Engine",
+                    "Version": "19.03.7",
+                    "Details": {
+                      "ApiVersion": "1.40",
+                      "Arch": "amd64",
+                      "BuildTime": "2020-03-04T01:21:08.000000000+00:00",
+                      "Experimental": "false",
+                      "GitCommit": "7141c199a2",
+                      "GoVersion": "go1.12.17",
+                      "KernelVersion": "4.15.0-88-generic",
+                      "MinAPIVersion": "1.12",
+                      "Os": "linux"
+                    }
+                  },
+                  {
+                    "Name": "containerd",
+                    "Version": "1.2.13",
+                    "Details": {
+                      "GitCommit": "7ad184331fa3e55e52b890ea95e65ba581ae3429"
+                    }
+                  },
+                  {
+                    "Name": "runc",
+                    "Version": "1.0.0-rc10",
+                    "Details": {
+                      "GitCommit": "dc9208a3303feef5b3839f4323d9beb36df0a9dd"
+                    }
+                  },
+                  {
+                    "Name": "docker-init",
+                    "Version": "0.18.0",
+                    "Details": {
+                      "GitCommit": "fec3683"
+                    }
+                  }
+                ],
+                "Version": "19.03.7",
                 "ApiVersion": "1.40",
-                "Arch": "amd64",
-                "BuildTime": "2020-03-04T01:21:08.000000000+00:00",
-                "Experimental": "false",
+                "MinAPIVersion": "1.12",
                 "GitCommit": "7141c199a2",
                 "GoVersion": "go1.12.17",
+                "Os": "linux",
+                "Arch": "amd64",
                 "KernelVersion": "4.15.0-88-generic",
-                "MinAPIVersion": "1.12",
-                "Os": "linux"
+                "BuildTime": "2020-03-04T01:21:08.000000000+00:00"
               }
-            },
-            {
-              "Name": "containerd",
-              "Version": "1.2.13",
-              "Details": {
-                "GitCommit": "7ad184331fa3e55e52b890ea95e65ba581ae3429"
-              }
-            },
-            {
-              "Name": "runc",
-              "Version": "1.0.0-rc10",
-              "Details": {
-                "GitCommit": "dc9208a3303feef5b3839f4323d9beb36df0a9dd"
-              }
-            },
-            {
-              "Name": "docker-init",
-              "Version": "0.18.0",
-              "Details": {
-                "GitCommit": "fec3683"
-              }
-            }
-          ],
-          "Version": "19.03.7",
-          "ApiVersion": "1.40",
-          "MinAPIVersion": "1.12",
-          "GitCommit": "7141c199a2",
-          "GoVersion": "go1.12.17",
-          "Os": "linux",
-          "Arch": "amd64",
-          "KernelVersion": "4.15.0-88-generic",
-          "BuildTime": "2020-03-04T01:21:08.000000000+00:00"
-        }
 
 * * *
 
@@ -672,7 +671,9 @@ Configure folder files**/worker/deploy/hosts.conf**according to the other compon
 
 Once added, run the build again in the Scheduler and Dispatcher.
 
+    ```
     sudo mvn install
+    ```
 
 ### Clone the saps-quality-assurance repository
 
@@ -733,22 +734,22 @@ Once added, run the build again in the Scheduler and Dispatcher.
 ## [Crontab]
 
 -   catalog -> summary script crontab
-        0 0 1,15 * * sudo bash /home/ubuntu/saps-catalog/scripts/fetch_landsat_data.sh
-        0 0 * * * bash /home/ubuntu/saps-catalog/scripts/build_tasks_overview.sh
+        0 0 1,15 \*_sudo bash /home/ubuntu/saps-catalog/scripts/fetch_landsat_data.sh
+        0 0_\* \* bash /home/ubuntu/saps-catalog/scripts/build_tasks_overview.sh
 
 -   archiver -> archived-dirs-count script crontab
         * * */1 * * bash /home/ubuntu/saps-archiver/scripts/build_archiver_overview.sh
 
 -   dispatcher -> access script crontab + manel summarization scripts
-        59 23 * * * sudo bash /home/ubuntu/saps-dispatcher/scripts/login_counter.sh
-        0 0 * * * sudo /bin/bash ~/saps-dispatcher/stats/stats_archived.sh > ~/saps-dispatcher/scripts/summary.csv 
-        0 0 * * * sudo /bin/bash ~/saps-dispatcher/stats/logins_accumulator.sh >> ~/saps-dispatcher/scripts/summary.csv
-        0 0 * * * sudo python3 ~/saps-dispatcher/stats/stats_tasks_raw_data.py
+        59 23 \* \*_sudo bash /home/ubuntu/saps-dispatcher/scripts/login_counter.sh
+        0 0_\*_sudo /bin/bash ~/saps-dispatcher/stats/stats_archived.sh > ~/saps-dispatcher/scripts/summary.csv 
+        0 0_\*_sudo /bin/bash ~/saps-dispatcher/stats/logins_accumulator.sh >> ~/saps-dispatcher/scripts/summary.csv
+        0 0_\* \* sudo python3 ~/saps-dispatcher/stats/stats_tasks_raw_data.py
 
 -   afterglow -> database cleanup script crontab
-        0 0 * * *   sudo bash /home/ubuntu/arrebol/bin/db_cleaner.sh
+        0 0 \* \* \*   sudo bash /home/ubuntu/arrebol/bin/db_cleaner.sh
 
 -   workers -> crontab of unfinished containers
-        0 0 * * *  sudo docker ps -aq | sudo xargs docker stop | sudo xargs docker rm
+        0 0 \* \* \*  sudo docker ps -aq | sudo xargs docker stop | sudo xargs docker rm
 
 test
