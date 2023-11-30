@@ -776,9 +776,10 @@ Once added, run the build again in the Scheduler and Dispatcher.
     ```
 
 ### Clone the saps-quality-assurance repository
-
-    git clone https://github.com/ufcg-lsd/saps-quality-assurance ~/saps-quality-assurance
-    cd ~/saps-quality-assurance
+  ```
+  git clone https://github.com/ufcg-lsd/saps-quality-assurance ~/saps-quality-assurance
+  cd ~/saps-quality-assurance
+  ```
 
 ### Run the tests
 
@@ -836,23 +837,31 @@ Once added, run the build again in the Scheduler and Dispatcher.
 -------------------------------------------------------------------
 ## [Crontab]
 
--   catalog -> summary script crontab
-        0 0 1,15 * * sudo bash /home/ubuntu/saps-catalog/scripts/fetch_landsat_data.sh
-        0 0 * * * bash /home/ubuntu/saps-catalog/scripts/build_tasks_overview.sh
+* catalog -> summary script crontab
+  ```
+  0 0 1,15 * * sudo bash /home/ubuntu/saps-catalog/scripts/fetch_landsat_data.sh
+  0 0 * * * bash /home/ubuntu/saps-catalog/scripts/build_tasks_overview.sh
+  ```
 
--   archiver -> crontab do script de contagem-dirs-arquivados
-        * * */1 * * bash /home/ubuntu/saps-archiver/scripts/build_archiver_overview.sh
+* archiver -> crontab do script de contagem-dirs-arquivados
+  ```
+  * * */1 * * bash /home/ubuntu/saps-archiver/scripts/build_archiver_overview.sh
+  ```
 
--   dispatcher -> access script crontab + manel summarization scripts
-        59 23 * * * sudo bash /home/ubuntu/saps-dispatcher/scripts/login_counter.sh
-        0 0 * * * sudo /bin/bash ~/saps-dispatcher/stats/stats_archived.sh > ~/saps-dispatcher/scripts/summary.csv 
-        0 0 * * * sudo /bin/bash ~/saps-dispatcher/stats/logins_accumulator.sh >> ~/saps-dispatcher/scripts/summary.csv
-        0 0 * * * sudo python3 ~/saps-dispatcher/stats/stats_tasks_raw_data.py
+* dispatcher -> access script crontab + manel summarization scripts
+  ```
+  59 23 * * * sudo bash /home/ubuntu/saps-dispatcher/scripts/login_counter.sh
+  0 0 * * * sudo /bin/bash ~/saps-dispatcher/stats/stats_archived.sh > ~/saps-dispatcher/scripts/summary.csv 
+  0 0 * * * sudo /bin/bash ~/saps-dispatcher/stats/logins_accumulator.sh >> ~/saps-dispatcher/scripts/summary.csv
+  0 0 * * * sudo python3 ~/saps-dispatcher/stats/stats_tasks_raw_data.py
+  ```
 
--   afterglow -> database cleanup script crontab
-        0 0 * * *   sudo bash /home/ubuntu/arrebol/bin/db_cleaner.sh
+* arrebol -> database cleanup script crontab
+  ```
+  0 0 * * *   sudo bash /home/ubuntu/arrebol/bin/db_cleaner.sh
+  ```
 
--   workers -> crontab of unfinished containers
-        0 0 * * *  sudo docker ps -aq | sudo xargs docker stop | sudo xargs docker rm
-
-test
+* workers -> crontab of unfinished containers
+  ```
+  0 0 * * *  sudo docker ps -aq | sudo xargs docker stop | sudo xargs docker rm
+  ```
