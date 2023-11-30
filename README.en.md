@@ -207,7 +207,7 @@ Configure the /config/archiver.conf file according to the other components
 
 ### Installation:
 
-1.  Configure the [saps-common](#common)
+1.  Configure the[saps-common](#common)
 
 2.  Install the dependencies from[saps-archiver](#archiver)
         git clone https://github.com/ufcg-lsd/saps-archiver ~/temp/saps-archiver
@@ -363,7 +363,7 @@ To avoid conflicts in the Arrebol configuration, it is important that the**Arbol
         cd ~/arrebol
         sudo mvn install
 
-3.  Configure the afterglow DB
+3.  Configure the arrebol DB
         sudo su postgres
         export arrebol_db_user=arrebol_db_user
         export arrebol_db_passwd=@rrebol
@@ -385,9 +385,9 @@ Configure the files**src/main/resources/application.properties**e**src/main/reso
 -   Example:[application.properties](./confs/arrebol/clean/application.properties)
 -   Example:[arrebol.json](./confs/arrebol/clean/arrebol.json)
 
-### Before running, configure the afterglow workers
+### Before running, configure the arrebol workers
 
--   This configuration must be done in**same machine that will perform the afterglow**.
+-   This configuration must be done in**same machine that will perform the arrebol**.
 -   To configure the worker, follow these[steps](#workers)
 
 ### Execution:
@@ -444,17 +444,17 @@ Configure folder files**deploy/config/**according to the other components
 -   Example:[arrebol.json](./confs/arrebol/container/arrebol.json)
 -   Example:[init.sql](./confs/arrebol/container/init.sql)
 
-### Before running, configure the afterglow workers
+### Before running, configure the arrebol workers
 
 -   This configuration must be done in**same machine that will run**the arrebol\*\*.
 -   To configure the worker, follow these[steps](#workers)
 
 ### Execution:
 
--   Performing aarrebol
+-   Performing arrebol
         sudo bash deploy.sh start
 
--   Stopping afterglow
+-   Stopping arrebol
         sudo bash deploy.sh stop
 
 ### Check
@@ -482,7 +482,7 @@ Configure folder files**deploy/config/**according to the other components
         sudo apt-get update
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
-### Configuring worker for afterglow
+### Configuring worker for arrebol
 
 -   Modify the /lib/systemd/system/docker.service file
         sudo vim /lib/systemd/system/docker.service
