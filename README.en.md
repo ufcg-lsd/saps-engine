@@ -308,14 +308,14 @@ If necessary, you can change the port on which the Dashboard will run (default =
 1.  Access[Mapbox](https://www.mapbox.com).
 2.  Create an account or log in.
 3.  Generate a new token to consume the API.
-4.  Copies they token and cole no field`<Seu Token Aqui>`in the file`.env.local`.
+4.  Copies they token and cole no field`<Your token here>`in the file`.env.local`.
 
 ### 3. Configuring Environment Variables
 
 Create a file called`.env.local`in the project root and add the following lines:
 
-    NEXT_PUBLIC_API_URL=<IP:Porta do Dispatcher>
-    NEXT_PUBLIC_MAP_API_KEY=<Seu Token Aqui>
+    NEXT_PUBLIC_API_URL=<IP:Dispatcher port>
+    NEXT_PUBLIC_MAP_API_KEY=<Your token here>
 
 ### 4. Downloading required dependency
 
