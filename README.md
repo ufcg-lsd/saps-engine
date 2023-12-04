@@ -320,7 +320,7 @@ Configure the file **/config/dispatcher.conf** according to the other components
 
 ### Settings:
 
-Configure the file**/config/scheduler.conf**according to the other components
+Configure the file **/config/scheduler.conf** according to the other components
 
 * Example (nfs):[scheduler.conf](./confs/scheduler/clean/scheduler.conf)
 
