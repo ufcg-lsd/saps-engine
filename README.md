@@ -346,7 +346,20 @@ Configure the file **/config/scheduler.conf** according to the other components
 
 To run the project correctly, follow the steps below:
 
-### 1. Changing the Dashboard Port
+### 1. Install Dashboard dependencies
+
+```
+sudo apt-get update
+sudo apt-get upgrade
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+nvm install --lts
+nvm use --lts
+npm install react@latest
+npm install react-dom@latest
+npm install axios
+```
+
+### 2. Changing the Dashboard Port
 
 If necessary, you can change the port on which the Dashboard will run (default = 3000). Below is an example of how to set the port to 8081:
 
@@ -357,27 +370,20 @@ If necessary, you can change the port on which the Dashboard will run (default =
 "dev": "next dev -p 8081"
 ```
 
-### 2. Generating the Token for the Map
+### 3. Generating the Token for the Map
 
 1.  Access[Mapbox](https://www.mapbox.com).
 2.  Create an account or log in.
 3.  Generate a new token to consume the API.
 4.  Copies they token and cole no field`<Your token here>`in the file`.env.local`.
 
-### 3. Configuring Environment Variables
+### 4. Configuring Environment Variables
 
 Create a file called`.env.local`in the project root and add the following lines:
 
 ```
 NEXT_PUBLIC_API_URL=<IP:Dispatcher port>
 NEXT_PUBLIC_MAP_API_KEY=<Your token here>
-```
-
-### 4. Downloading required dependency
-
-install AXIOS so that requests can be made
-```
-npm install axios
 ```
 
 ## Running the Project
